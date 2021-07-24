@@ -15,9 +15,12 @@ spec:
         name: grafana-operator
     spec:
       serviceAccountName: grafana-operator
+      serviceAccount: grafana-operator
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
       containers:
         - name: grafana-operator
-          image: quay.io/integreatly/grafana-operator:v3.10.2
+          image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           ports:
             - containerPort: 60000
               name: metrics
@@ -27,7 +30,7 @@ spec:
             - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
             - --grafana-image-tag={{ .Values.image.tag }}
             - --scan-all
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
           env:
             - name: TEMPLATE_PATH
               value: /usr/local/bin/templates

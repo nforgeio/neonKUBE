@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_HARBOR-PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -794,7 +797,7 @@ spec:
           "targets": [
             {
               "expr": "(sum(harbor_artifact_pulled{instance=~\"$instance\"}) by (project_name)) - (sum(harbor_artifact_pulled{instance=~\"$instance\"} offset 1m) by (project_name))",
-              "legendFormat": "{{ project_name }}",
+              "legendFormat": "{{"{{"}}project_name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -893,7 +896,7 @@ spec:
           "targets": [
             {
               "expr": "(sum(harbor_core_http_request_total{instance=~\"$instance\"}) by (method,operation)) - sum(harbor_core_http_request_total{instance=~\"$instance\"} offset 1m) by (method,operation)",
-              "legendFormat": "{{method}} : {{operation}}",
+              "legendFormat": "{{"{{"}}method{{"}}"}} : {{"{{"}}operation{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -992,7 +995,7 @@ spec:
           "targets": [
             {
               "expr": "avg(harbor_core_http_request_duration_seconds{instance=~\"$instance\",quantile=\"0.99\"}) by (method,operation)",
-              "legendFormat": "{{method}} : {{operation}}",
+              "legendFormat": "{{"{{"}}method{{"}}"}} : {{"{{"}}operation{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1089,7 +1092,7 @@ spec:
           "targets": [
             {
               "expr": "(sum(harbor_project_artifact_total{instance=~\"$instance\",artifact_type=\"IMAGE\"}) by (project_name)) - sum(harbor_project_artifact_total{instance=~\"$instance\",artifact_type=\"IMAGE\"} offset 7d) by (project_name)",
-              "legendFormat": "{{project_name}}",
+              "legendFormat": "{{"{{"}}project_name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1184,7 +1187,7 @@ spec:
           "targets": [
             {
               "expr": "(sum(harbor_project_quota_usage_byte{instance=~\"$instance\"}) by (project_name)) - sum(harbor_project_quota_usage_byte{instance=~\"$instance\"} offset 7d) by (project_name)",
-              "legendFormat": "{{project_name}}",
+              "legendFormat": "{{"{{"}}project_name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1295,7 +1298,7 @@ spec:
           "targets": [
             {
               "expr": "(sum(registry_http_requests_total{instance=~\"$instance\"}) by (method,handler)) - sum(registry_http_requests_total{instance=~\"$instance\"} offset 1m) by (method,handler)",
-              "legendFormat": "{{method}} : {{handler}}",
+              "legendFormat": "{{"{{"}}method{{"}}"}} : {{"{{"}}handler{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1392,7 +1395,7 @@ spec:
           "targets": [
             {
               "expr": "histogram_quantile(0.99, sum(rate(registry_http_request_duration_seconds_bucket{instance=~\"$instance\"}[1m]))by(method,handler,le))",
-              "legendFormat": "{{method}} : {{handler}}",
+              "legendFormat": "{{"{{"}}method{{"}}"}} : {{"{{"}}handler{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1489,7 +1492,7 @@ spec:
           "targets": [
             {
               "expr": "histogram_quantile(0.99, sum(rate(registry_http_request_size_bytes_bucket[1m])) by (handler,le) ) ",
-              "legendFormat": "{{handler}} ",
+              "legendFormat": "{{"{{"}}handler{{"}}"}} ",
               "refId": "A"
             }
           ],
@@ -1586,7 +1589,7 @@ spec:
           "targets": [
             {
               "expr": "histogram_quantile(0.99, sum(rate(registry_http_response_size_bytes_bucket[1m])) by (handler,le))",
-              "legendFormat": "{{handler}}",
+              "legendFormat": "{{"{{"}}handler{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1683,7 +1686,7 @@ spec:
           "targets": [
             {
               "expr": "sum(registry_storage_cache_total{instance=~\"$instance\"}) by (type) - sum(registry_storage_cache_total{instance=~\"$instance\"} offset 1m) by (type)",
-              "legendFormat": "{{type}}",
+              "legendFormat": "{{"{{"}}type{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1780,7 +1783,7 @@ spec:
           "targets": [
             {
               "expr": "histogram_quantile(0.99, sum(rate(registry_storage_action_seconds_bucket[1m]))by(action,driver,le))",
-              "legendFormat": "{{action}} : {{driver}}",
+              "legendFormat": "{{"{{"}}action{{"}}"}} : {{"{{"}}driver{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1891,7 +1894,7 @@ spec:
           "targets": [
             {
               "expr": "sum(go_memstats_alloc_bytes{instance=~\"$instance\"}) by (instance)",
-              "legendFormat": "{{ instance }} ",
+              "legendFormat": "{{"{{"}}instance{{"}}"}} ",
               "refId": "A"
             }
           ],
@@ -1988,7 +1991,7 @@ spec:
           "targets": [
             {
               "expr": "sum(process_open_fds{instance=~\"$instance\"}) by (instance)",
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -2085,7 +2088,7 @@ spec:
           "targets": [
             {
               "expr": "sum(go_goroutines{instance=~\"$instance\"}) by (instance)",
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}",
               "refId": "A"
             }
           ],

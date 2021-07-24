@@ -48,8 +48,16 @@ livenessProbe:
 ##
 # schedulerName: "default-scheduler"
 
+operator:
+  image:
+    organization: neon-registry.node.local
+    repository: integreatly-grafana-operator
+    tag: v3.10.2
+    sha: ""
+    pullPolicy: IfNotPresent
+
 image:
-  organization: ghcr.io/neonrelease-dev
+  organization: neon-registry.node.local
   repository: grafana-grafana
   tag: 8.0.4
   sha: ""

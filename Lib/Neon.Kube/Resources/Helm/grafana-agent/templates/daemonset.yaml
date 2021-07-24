@@ -3,6 +3,8 @@ kind: DaemonSet
 metadata:
   name: grafana-agent-node
   namespace: neon-monitor
+  annotations:
+    reloader.stakater.com/auto: 'true'
 spec:
   minReadySeconds: 10
   selector:
@@ -19,6 +21,9 @@ spec:
         - -prometheus.wal-directory=/tmp/agent/data
         command:
         - /bin/agent
+        envFrom:
+          - secretRef:
+              name: grafana-agent-node
         env:
         - name: HOSTNAME
           valueFrom:

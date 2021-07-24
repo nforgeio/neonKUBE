@@ -5,6 +5,12 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_LOKI"
+      datasourceName: "Loki"
+  plugins:
+    - name: "grafana-piechart-panel"
+      version: "1.3.6"
   json: >
     {
       "__inputs": [

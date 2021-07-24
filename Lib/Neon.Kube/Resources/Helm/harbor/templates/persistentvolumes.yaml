@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: registry-trivy-cache
 spec:
-  storageClass: neon-internal-registry
+  storageClassName: neon-internal-registry
   accessModes:
   - ReadWriteOnce
   resources:
@@ -16,7 +16,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: registry-trivy-reports
 spec:
-  storageClass: neon-internal-registry
+  storageClassName: neon-internal-registry
   accessModes:
   - ReadWriteOnce
   resources:

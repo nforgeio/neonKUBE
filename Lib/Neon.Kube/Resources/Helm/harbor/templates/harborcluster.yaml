@@ -4,8 +4,9 @@ metadata:
   name: registry
   namespace: {{ .Release.Namespace | quote }}
 spec:
+  version: 2.3.0
   imageSource: # Optional
-    repository: ghcr.io/goharbor # Required
+    repository: neon-registry.node.local # Required
     imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
     imagePullSecrets: []
   logLevel: debug
@@ -19,34 +20,31 @@ spec:
         passwordRef: registry
         sslMode: disable
         username: neon_service
-        prefix: harbor
+        prefix: harbor_
   storage:
     kind: S3
     spec:
       s3:
         region: neon
         bucket: harbor
-        regionendpoint: http://minio.neon-system
+        regionendpoint: minio.neon-system
+        accesskey: {{ .Values.storage.s3.accessKey }}
+        secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
+
   cache:
     kind: Redis
     spec:
       redis:
-        host: {{ .Values.redis.external.addr }}
+        host: registry-redis
         port: 26379
-        sentinelMasterSet: {{ .Values.redis.external.sentinelMasterSet }}
-  version: 2.2.1
-  chartmuseum: {}
-  core:
-    tokenIssuer:
-      kind: Issuer
-      name: neon-system-selfsigned-issuer
+        sentinelMasterSet: master
   expose: 
     core: # Required
       # TLS setting
       # Expose service with ingress way
       ingress:
         # Host of the exposed service
-        host: registry.{{ .Values.neon.clusterDomain }} # Required
+        host: registry.{{ .Values.clusterDomain }} # Required
         # Ingress controller type, support ["gce","ncp","default"]
         controller: default # Optional, default value = "default"
         # Annotations applied to the ingress
@@ -54,27 +52,64 @@ spec:
           key: value
     notary: # Required
       # TLS setting
-      tls: # Optional
-        # Certificate reference
-        certificateRef: {{ .Values.neon.clusterDomain }} # Optional
-      # Expose service with ingress way
       ingress:
         # Host of the exposed service
-        host: notary.{{ .Values.neon.clusterDomain }} # Required
+        host: notary.{{ .Values.clusterDomain }} # Required
         # Ingress controller type, support ["gce","ncp","default"]
         controller: default # Optional, default value = "default"
         # Annotations applied to the ingress
         annotations: # Optional
           key: value
-  externalURL: https://registry.{{ .Values.neon.clusterDomain }}
+      tls: # Optional
+        # Certificate reference\
+        certificateRef: {{ .Values.clusterDomain }} # Optional
+  externalURL: https://registry.{{ .Values.clusterDomain }}
   harborAdminPasswordRef: registry
   internalTLS:
     enabled: false
+  chartmuseum:
+    image: neon-registry.node.local/harbor-chartmuseum-photon:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+  core:
+    image: neon-registry.node.local/harbor-core:v2.3.0
+    tokenIssuer:
+      kind: Issuer
+      name: neon-system-selfsigned-issuer
+  #exporter:
+  #  image: neon-registry.node.local/harbor-exporter:v2.3.0
+  #  nodeSelector:
+  #  {{- toYaml .Values.nodeSelector | nindent 6 }}
+  jobservice:
+    image: neon-registry.node.local/harbor-jobservice:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   notary:
+    server:
+      image: neon-registry.node.local/harbor-notary-server-photon:v2.3.0
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+    signer:
+      image: neon-registry.node.local/harbor-notary-signer-photon:v2.3.0
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
     migrationEnabled: true
-  portal: {}
-  registry: {}
+  portal:
+    image: neon-registry.node.local/harbor-portal:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+  registry:
+    image: neon-registry.node.local/harbor-registry-photon:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+  registryctl:
+    image: neon-registry.node.local/harbor-registryctl:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
   trivy:
+    image: neon-registry.node.local/harbor-trivy-adapter-photon:v2.3.0
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
     skipUpdate: false
     storage:
       cachePersistentVolume:

@@ -5,6 +5,8 @@ metadata:
   namespace: neon-monitor
   labels:
     app: grafana-agent-operator
+  annotations:
+    reloader.stakater.com/auto: 'true'
 spec:
   replicas: 1
   selector:
@@ -16,6 +18,8 @@ spec:
         app: grafana-agent-operator
     spec:
       serviceAccountName: grafana-agent-operator
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
       containers:
       - name: operator
         image: "{{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"

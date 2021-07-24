@@ -19,10 +19,10 @@ spec:
         app: {{ template "citus-postgresql.name" . }}-master
         release: {{ .Release.Name }}
         citusType: {{ .Values.master.citusType }}
-      {{- if .Values.prometheus.enabled }}
+      {{- if .Values.metrics.enabled }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: {{ .Values.prometheus.port | quote }}
+        prometheus.io/port: {{ .Values.metrics.port | quote }}
       {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
@@ -77,23 +77,33 @@ spec:
           readOnly: true
         {{ end }}
       containers:
-      {{- if .Values.prometheus.enabled }}
+      {{- if .Values.metrics.enabled }}
       - name: prometheus-metrics
-        image: "{{ .Values.prometheus.image.organization }}/{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}"
+        image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
         imagePullPolicy: "{{ .Values.imagePullPolicy }}"
         ports:
-        - containerPort: {{ .Values.prometheus.port }}
+        - containerPort: {{ .Values.metrics.port }}
         resources:
-        {{ toYaml .Values.prometheus.resources | nindent 10 }}
+        {{ toYaml .Values.metrics.resources | nindent 10 }}
         env:
-        - name: DATA_SOURCE_NAME
-          value: postgresql://postgres@127.0.0.1:{{ .Values.superuser.port }}?sslmode=disable
+        - name: DATA_SOURCE_URI
+          value: localhost?sslmode=disable
+        - name: DATA_SOURCE_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "citus-postgresql.fullname" . }}-secret
+              key: superuser-username
+        - name: DATA_SOURCE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "citus-postgresql.fullname" . }}-secret
+              key: superuser-password
         args:
-        {{- if .Values.prometheus.disableDefaultMetrics }}
+        {{- if .Values.metrics.disableDefaultMetrics }}
         - "--disable-default-metrics"
         {{- end }}
         - "--extend.query-path=/etc/queries.yaml"
-        - "--log.level={{ .Values.prometheus.logLevel }}"
+        - "--log.level={{ .Values.metrics.logLevel }}"
         volumeMounts:
         - name: queries
           mountPath: /etc/queries.yaml
@@ -169,7 +179,7 @@ spec:
           configMap:
             name: {{ template "citus-postgresql.fullname" . }}-ssl-settings
         {{ end }}
-        {{- if .Values.prometheus.enabled }}
+        {{- if .Values.metrics.enabled }}
         - name: queries
           configMap:
             name: {{ template "citus-postgresql.fullname" . }}-metric-exporter-queries

@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -707,7 +710,7 @@ spec:
               "expr": "rate(redis_net_input_bytes_total{instance=~\"$instance\"}[5m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{ input }}",
+              "legendFormat": "{{"{{"}} input {{"}}"}}",
               "refId": "A",
               "step": 240
             },
@@ -716,7 +719,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{ output }}",
+              "legendFormat": "{{"{{"}} output {{"}}"}}",
               "refId": "B",
               "step": 240
             }
@@ -815,7 +818,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{ db }} ",
+              "legendFormat": "{{"{{"}} db {{"}}"}}",
               "refId": "A",
               "step": 240,
               "target": ""
@@ -1139,7 +1142,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{ cmd }}",
+              "legendFormat": "{{"{{"}} cmd {{"}}"}}",
               "metric": "redis_command_calls_total",
               "refId": "A",
               "step": 240

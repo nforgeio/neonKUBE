@@ -5,7 +5,7 @@
 image:
   organization: neon-registry.node.local
   repository: cortexproject-cortex
-  tag: v1.6.0
+  tag: v1.9.0
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -125,6 +125,9 @@ affinity: {}
 
 tolerations:
   - key: "neonkube.io/metrics"
+    operator: Exists
+    effect: NoSchedule
+  - key: "neonkube.io/metrics-internal"
     operator: Exists
     effect: NoSchedule
 

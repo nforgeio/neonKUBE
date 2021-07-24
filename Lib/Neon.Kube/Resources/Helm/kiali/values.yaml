@@ -54,6 +54,8 @@ cr:
   spec:
     version: default
     istio_namespace: neon-ingress
+    auth:
+      strategy: anonymous
     deployment:
       image_name: neon-registry.node.local/kiali-kiali
       image_version: v1.28.0
@@ -67,5 +69,7 @@ cr:
         enabled: true
       prometheus:
         enabled: true
+        url: cortex.neon-monitor:9009
       tracing:
         enabled: true
+        url: tempo.neon-monitor:3100

@@ -28,6 +28,8 @@ using Helm.Helm;
 using k8s;
 using k8s.Models;
 
+using Minio;
+
 using Newtonsoft.Json;
 
 using Npgsql;
@@ -41,7 +43,6 @@ namespace NeonSetupHarbor
         public const string StateTable = "state";
      
         private static Kubernetes k8s;
-        private static string connString;
 
         /// <summary>
         /// Constructor.
@@ -73,17 +74,20 @@ namespace NeonSetupHarbor
         }
 
         /// <summary>
-        /// Gets the connection string used to connect to the neon-system database.
+        /// Gets a connection string for connecting to Citus.
         /// </summary>
+        /// <param name="database"></param>
         /// <returns></returns>
-        private async Task GetConnectionStringAsync()
+        public async Task<string> GetConnectionStringAsync(string database = "postgres")
         {
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
+            var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
+
+            return $"Host={dbHost};Username={username};Password={password};Database={database}";
         }
 
         private async Task SetupHarborAsync()
@@ -94,31 +98,61 @@ namespace NeonSetupHarbor
 
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
-            var harborSecret = new V1Secret();
+            var harborSecret = new V1Secret()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = KubeConst.RegistrySecretKey,
+                    NamespaceProperty = KubeNamespaces.NeonSystem
+                },
+                Data = new Dictionary<string, byte[]>(),
+                StringData = new Dictionary<string, string>()
+            };
+
             if ((await k8s.ListNamespacedSecretAsync(KubeNamespaces.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
             {
                 harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+
+                if (harborSecret.Data == null)
+                {
+                    harborSecret.Data = new Dictionary<string, byte[]>();
+                }
+                harborSecret.StringData = new Dictionary<string, string>();
             }
 
-            if (!harborSecret.Data.ContainsKey("harbor-database-password"))
+            if (!harborSecret.Data.ContainsKey("postgresql-password"))
             {
-                harborSecret.Data["harbor-database-password"] = secret.Data["password"];
-                await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+                harborSecret.Data["postgresql-password"] = secret.Data["password"];
+                await UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
             }
 
             if (!harborSecret.Data.ContainsKey("secret"))
             {
                 harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(20);
-                await k8s.ReplaceNamespacedSecretAsync(harborSecret, KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+                await UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
             }
 
             var databases = new string[] { "core", "clair", "notaryserver", "notarysigner" };
 
             foreach (var db in databases)
             {
-                await CreateDatabaseAsync($"{KubeConst.NeonSystemDbHarborPrefix}-{db}", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
+                await CreateDatabaseAsync($"{KubeConst.NeonSystemDbHarborPrefix}_{db}", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
             }
-            
+
+            var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+
+            var endpoint = "minio.neon-system";
+            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+
+            var minio = new MinioClient(endpoint, accessKey, secretKey);
+
+            var buckets = await minio.ListBucketsAsync();
+            if (!await minio.BucketExistsAsync("harbor"))
+            {
+                await minio.MakeBucketAsync("harbor");
+            }
+
             await UpdateStatusAsync("complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Harbor.");
@@ -134,7 +168,7 @@ namespace NeonSetupHarbor
         {
             try
             {
-                await using var conn = new NpgsqlConnection(connString);
+                await using var conn = new NpgsqlConnection(await GetConnectionStringAsync());
                 await conn.OpenAsync();
 
                 var dbInitialized = true;
@@ -214,7 +248,7 @@ namespace NeonSetupHarbor
 
         private async Task UpdateStatusAsync(string status)
         {
-            await using var conn = new NpgsqlConnection(connString);
+            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase));
             {
                 await conn.OpenAsync();
                 await using (var cmd = new NpgsqlCommand($@"
@@ -231,6 +265,18 @@ SET
                     cmd.Parameters.AddWithValue("v", status);
                     await cmd.ExecuteNonQueryAsync();
                 }
+            }
+        }
+
+        private async Task<V1Secret> UpsertSecretAsync(V1Secret secret, string @namespace = null)
+        {
+            if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            {
+                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), @namespace);
+            }
+            else
+            {
+                return await k8s.CreateNamespacedSecretAsync(secret, @namespace);
             }
         }
     }

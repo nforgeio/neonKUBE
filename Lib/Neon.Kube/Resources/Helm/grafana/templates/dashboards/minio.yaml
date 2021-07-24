@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -147,7 +150,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}",
               "metric": "process_start_time_seconds",
               "refId": "A",
               "step": 60
@@ -220,7 +223,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}",
               "metric": "process_start_time_seconds",
               "refId": "A",
               "step": 60
@@ -445,7 +448,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{range}}",
+              "legendFormat": "{{"{{"}}range{{"}}"}}",
               "refId": "A",
               "step": 300
             }
@@ -967,7 +970,7 @@ spec:
               "expr": "sum by (server) (rate(minio_s3_traffic_received_bytes[$__rate_interval]))",
               "interval": "1m",
               "intervalFactor": 2,
-              "legendFormat": "Data Received [{{server}}]",
+              "legendFormat": "Data Received [{{"{{"}}server{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -1067,7 +1070,7 @@ spec:
               "expr": "sum by (server) (rate(minio_s3_traffic_sent_bytes[$__rate_interval]))",
               "interval": "1m",
               "intervalFactor": 2,
-              "legendFormat": "Data Sent [{{server}}]",
+              "legendFormat": "Data Sent [{{"{{"}}server{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -1401,7 +1404,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{server}}",
+              "legendFormat": "{{"{{"}}server{{"}}"}}",
               "metric": "process_start_time_seconds",
               "refId": "A",
               "step": 60
@@ -1469,7 +1472,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{server}}",
+              "legendFormat": "{{"{{"}}server{{"}}"}}",
               "metric": "process_start_time_seconds",
               "refId": "A",
               "step": 60
@@ -1533,7 +1536,7 @@ spec:
               "expr": "sum by (server,api) (rate(minio_s3_requests_total[$__rate_interval]))",
               "interval": "1m",
               "intervalFactor": 2,
-              "legendFormat": "{{server,api}}",
+              "legendFormat": "{{"{{"}}server,api{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1633,7 +1636,7 @@ spec:
               "expr": "rate(minio_s3_requests_errors_total[$__rate_interval])",
               "interval": "1m",
               "intervalFactor": 2,
-              "legendFormat": "{{server,api}}",
+              "legendFormat": "{{"{{"}}server,api{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1740,7 +1743,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "Internode Bytes Received [{{server}}]",
+              "legendFormat": "Internode Bytes Received [{{"{{"}}server{{"}}"}}]",
               "metric": "minio_http_requests_duration_seconds_count",
               "refId": "A",
               "step": 4
@@ -1749,7 +1752,7 @@ spec:
               "exemplar": true,
               "expr": "rate(minio_inter_node_traffic_received_bytes{job=\"minio-job\"}[$__rate_interval])",
               "interval": "",
-              "legendFormat": "Internode Bytes Sent [{{server}}]",
+              "legendFormat": "Internode Bytes Sent [{{"{{"}}server{{"}}"}}]",
               "refId": "B"
             }
           ],
@@ -1955,7 +1958,7 @@ spec:
               "exemplar": true,
               "expr": "rate(minio_node_process_cpu_total_seconds[$__rate_interval])",
               "interval": "",
-              "legendFormat": "CPU Usage Rate [{{server}}]",
+              "legendFormat": "CPU Usage Rate [{{"{{"}}server{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -2051,7 +2054,7 @@ spec:
               "exemplar": true,
               "expr": "minio_node_process_resident_memory_bytes",
               "interval": "",
-              "legendFormat": "Memory Used [{{server}}]",
+              "legendFormat": "Memory Used [{{"{{"}}server{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -2149,7 +2152,7 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "Used Capacity [{{server}}:{{disk}}]",
+              "legendFormat": "Used Capacity [{{"{{"}}server{{"}}"}}:{{"{{"}}disk{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -2247,7 +2250,7 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "Free Inodes [{{server}}:{{disk}}]",
+              "legendFormat": "Free Inodes [{{"{{"}}server{{"}}"}}:{{"{{"}}disk{{"}}"}}]",
               "refId": "A"
             }
           ],
@@ -2354,7 +2357,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "Read Syscalls [{{server}}]",
+              "legendFormat": "Read Syscalls [{{"{{"}}server{{"}}"}}]",
               "metric": "process_start_time_seconds",
               "refId": "A",
               "step": 60
@@ -2363,7 +2366,7 @@ spec:
               "exemplar": true,
               "expr": "rate(minio_node_syscall_write_total[$__rate_interval])",
               "interval": "",
-              "legendFormat": "Write Syscalls [{{server}}]",
+              "legendFormat": "Write Syscalls [{{"{{"}}server{{"}}"}}]",
               "refId": "B"
             }
           ],
@@ -2469,7 +2472,7 @@ spec:
               "exemplar": true,
               "expr": "minio_node_file_descriptor_open_total",
               "interval": "",
-              "legendFormat": "Open FDs [{{server}}]",
+              "legendFormat": "Open FDs [{{"{{"}}server{{"}}"}}]",
               "refId": "B"
             }
           ],
@@ -2568,14 +2571,14 @@ spec:
               "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "Node RChar [{{server}}]",
+              "legendFormat": "Node RChar [{{"{{"}}server{{"}}"}}]",
               "refId": "A"
             },
             {
               "exemplar": true,
               "expr": "rate(minio_node_io_wchar_bytes[$__rate_interval])",
               "interval": "",
-              "legendFormat": "Node WChar [{{server}}]",
+              "legendFormat": "Node WChar [{{"{{"}}server{{"}}"}}]",
               "refId": "B"
             }
           ],

@@ -18,7 +18,6 @@ data:
         scrape_interval: 15s
       wal_directory: /var/lib/agent/data
       configs:
-        
         - host_filter: true
           name: agent
           remote_write:
