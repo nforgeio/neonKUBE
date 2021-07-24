@@ -297,12 +297,26 @@ namespace Neon.IO
         }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
+
         /// <inheritdoc/>
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Write(buffer, offset, count);
             await Task.CompletedTask;
         }
+
+        /// <inheritdoc/>
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            Write(buffer.ToArray(), 0, buffer.Length);
+        }
+
+        /// <inheritdoc/>
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await WriteAsync(buffer.ToArray(), 0, buffer.Length, cancellationToken);
+        }
+
 #endif
 
         //---------------------------------------------------------------------
@@ -355,7 +369,8 @@ namespace Neon.IO
             throw new NotImplementedException();
         }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+
         /// <summary>
         /// <b>Not Implemented</b>
         /// </summary>
@@ -366,9 +381,7 @@ namespace Neon.IO
         {
             throw new NotImplementedException();
         }
-#endif
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
         /// <summary>
         /// <b>Not Implemented</b>
         /// </summary>
@@ -378,33 +391,7 @@ namespace Neon.IO
         {
             throw new NotImplementedException();
         }
-#endif
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
-        /// <param name="buffer"></param>
-        public override void Write(ReadOnlySpan<byte> buffer)
-        {
-            throw new NotImplementedException();
-        }
-#endif
-
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-        /// <summary>
-        /// <b>Not Implemented</b>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-#endif
-
-#if !NETFRAMEWORK && !NETSTANDARD2_0
         /// <summary>
         /// <b>Not Implemented</b>
         /// </summary>
