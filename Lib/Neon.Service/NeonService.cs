@@ -1279,28 +1279,26 @@ namespace Neon.Service
                     ExitCode = exitCode;
                 }
 
-                new Thread(
-                    new ThreadStart(
-                        () =>
+                NeonHelper.StartThread(
+                    () =>
+                    {
+                        // $hack(jefflill):
+                        //
+                        // Give the Exit() method a bit of time to throw the 
+                        // ProgramExitException to make termination handling
+                        // a bit more deterministic.
+
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
+
+                        try
                         {
-                            // $hack(jefflill):
-                            //
-                            // Give the Exit() method a bit of time to throw the 
-                            // ProgramExitException to make termination handling
-                            // a bit more deterministic.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
-
-                            try
-                            {
-                                Stop();
-                            }
-                            catch
-                            {
-                                // Ignoring any errors.
-                            }
-
-                        })).Start();
+                            Stop();
+                        }
+                        catch
+                        {
+                            // Ignoring any errors.
+                        }
+                    });
 
                 throw new ProgramExitException(ExitCode);
             }

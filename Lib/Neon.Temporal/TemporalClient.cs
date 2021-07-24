@@ -958,11 +958,8 @@ namespace Neon.Temporal
             // Crank up the background threads which will handle [temporal-proxy]
             // request timeouts.
 
-            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
-            client.heartbeatThread.Start();
-
-            client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
-            client.timeoutThread.Start();
+            client.heartbeatThread = NeonHelper.StartThread(client.HeartbeatThread);
+            client.timeoutThread   = NeonHelper.StartThread(client.TimeoutThread);
 
             // Initialize the cache size to a known value.
 

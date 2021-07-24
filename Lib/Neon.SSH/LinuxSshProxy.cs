@@ -352,12 +352,9 @@ namespace Neon.SSH
             //      https://github.com/nforgeio/neonKUBE/issues/230
             //      https://github.com/sshnet/SSH.NET/issues/355
 
-            var threadStart = new ThreadStart(action);
-            var thread      = new Thread(threadStart);
-
             //LogLine($"*** DEADLOCK EXECUTE: {actionName}");
 
-            thread.Start();
+            var thread = NeonHelper.StartThread(action);
 
             if (!thread.Join(timeout))
             {

@@ -667,7 +667,7 @@ namespace Neon.Kube
                     MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
                 };
 
-                NeonHelper.ThreadRun(
+                NeonHelper.StartThread(
                     () =>
                     {
                         currentStep = step;

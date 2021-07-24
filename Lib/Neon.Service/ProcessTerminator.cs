@@ -214,7 +214,7 @@ namespace Neon.Service
             {
                 foreach (var handler in handlers)
                 {
-                    new Thread(new ThreadStart(handler)).Start();
+                    NeonHelper.StartThread(handler);
                 }
             }
 
@@ -276,7 +276,7 @@ namespace Neon.Service
             {
                 foreach (var handler in handlers)
                 {
-                    new Thread(new ThreadStart(handler)).Start();
+                    NeonHelper.StartThread(handler);
                 }
             }
 
