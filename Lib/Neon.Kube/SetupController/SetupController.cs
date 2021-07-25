@@ -1137,103 +1137,124 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public SetupDisposition Run(bool leaveNodesConnected = false)
+        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false)
         {
+            // This method had been synchronous for a very long time (maybe 5 years)
+            // but we need to make this async now so that it would integrate well
+            // with the neonDESKTOP UX. 
+            //
+            // We're simply going to wrap the main setup loop into a new thread and
+            // have setup execute there.  We'll use a task completion source to signal
+            // the caller when we're done.
+
             var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
+            var tcs     = new TaskCompletionSource<SetupDisposition>();
 
-            try
-            {
-                cluster?.LogLine(LogBeginMarker);
-
-                // We're going to time how long this takes.
-
-                var stopWatch = new Stopwatch();
-
-                stopWatch.Start();
-
-                // Number the steps.  Note that quiet steps don't 
-                // get their own step number.
-
-                var position = 1;
-
-                foreach (var step in steps)
+            NeonHelper.StartThread(
+                () =>
                 {
-                    if (step.IsQuiet)
+                    try
                     {
-                        step.Number = 0;
-                    }
-                    else
-                    {
-                        step.Number = position++;
-                    }
-                }
+                        cluster?.LogLine(LogBeginMarker);
 
-                // NOTE: We don't display node status if there aren't any node specific steps.
+                        // We're going to time how long this takes.
 
-                try
-                {
-                    foreach (var step in steps)
-                    {
-                        if (cancelPending)
+                        var stopWatch = new Stopwatch();
+
+                        stopWatch.Start();
+
+                        // Number the steps.  Note that quiet steps don't get their own step number.
+
+                        var position = 1;
+
+                        foreach (var step in steps)
                         {
-                            return SetupDisposition.Cancelled;
+                            if (step.IsQuiet)
+                            {
+                                step.Number = 0;
+                            }
+                            else
+                            {
+                                step.Number = position++;
+                            }
                         }
 
-                        if (!ExecuteStep(step))
+                        // NOTE: We don't display node status if there aren't any node specific steps.
+
+                        try
                         {
-                            break;
+                            foreach (var step in steps)
+                            {
+                                if (cancelPending)
+                                {
+                                    tcs.SetResult(SetupDisposition.Cancelled);
+                                    return;
+                                }
+
+                                if (!ExecuteStep(step))
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (isFaulted)
+                            {
+                                cluster?.LogLine(LogFailedMarker);
+
+                                tcs.SetResult(SetupDisposition.Failed);
+                                return;
+                            }
+
+                            foreach (var node in nodes)
+                            {
+                                node.Status = "[x] READY";
+                            }
+
+                            cluster?.LogLine(LogEndMarker);
+
+                            tcs.SetResult(SetupDisposition.Succeeded);
+                            return;
+                        }
+                        finally
+                        {
+                            Runtime = stopWatch.Elapsed;
+
+                            if (!leaveNodesConnected)
+                            {
+                                // Disconnect all of the nodes.
+
+                                foreach (var node in nodes)
+                                {
+                                    node.Disconnect();
+                                }
+                            }
                         }
                     }
-
-                    if (isFaulted)
+                    catch (Exception e)
                     {
-                        cluster?.LogLine(LogFailedMarker);
-
-                        return SetupDisposition.Failed;
+                        tcs.SetException(e);
                     }
-
-                    foreach (var node in nodes)
+                    finally
                     {
-                        node.Status = "[x] READY";
-                    }
+                        // Dispose any disposables.
 
-                    cluster?.LogLine(LogEndMarker);
-
-                    return SetupDisposition.Succeeded;
-                }
-                finally
-                {
-                    Runtime = stopWatch.Elapsed;
-
-                    if (!leaveNodesConnected)
-                    {
-                        // Disconnect all of the nodes.
-
-                        foreach (var node in nodes)
+                        foreach (var disposable in disposables)
                         {
-                            node.Disconnect();
+                            disposable.Dispose();
+                        }
+
+                        // Raise one more status changed and wait for a bit so any
+                        // listening UI will have a chance to display the status.
+
+                        if (StatusChangedEvent != null)
+                        {
+                            StatusChangedEvent.Invoke(new SetupClusterStatus(this));
+                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
                         }
                     }
-                }
-            }
-            finally
-            {
-                // Dispose any disposables.
+                });
 
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
-
-                // Raise one more status changed and wait for a bit so any
-                // listening UI can display the status.
-
-                if (StatusChangedEvent != null)
-                {
-                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
-                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                }
-            }
+            return tcs.Task;
         }
 
         /// <inheritdoc/>

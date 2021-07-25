@@ -214,7 +214,7 @@ OPTIONS:
                     status.WriteToConsole();
                 };
 
-            switch (controller.Run())
+            switch (await controller.RunAsync())
             {
                 case SetupDisposition.Succeeded:
 

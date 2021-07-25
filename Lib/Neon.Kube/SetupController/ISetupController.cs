@@ -206,11 +206,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
         /// <returns>The final disposition of the setup run.</returns>
-        SetupDisposition Run(bool leaveNodesConnected = false);
+        Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
-        /// can be properly disposed when <see cref="Run(bool)"/> exits.
+        /// can be properly disposed when <see cref="RunAsync(bool)"/> exits.
         /// </summary>
         /// <param name="disposable"></param>
         void AddDisposable(IDisposable disposable);
