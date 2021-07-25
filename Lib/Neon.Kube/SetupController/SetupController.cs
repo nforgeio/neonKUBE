@@ -1236,6 +1236,13 @@ namespace Neon.Kube
                     }
                     finally
                     {
+                        // Dispose all node proxies.
+
+                        foreach (var node in cluster.Nodes)
+                        {
+                            node.Dispose();
+                        }
+
                         // Dispose any disposables.
 
                         foreach (var disposable in disposables)
