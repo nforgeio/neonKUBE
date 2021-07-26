@@ -468,7 +468,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            controller.LogProgress(verb: "created", message: "cluster");
+                            controller.LogBaseProgress(verb: "created", message: "cluster");
                         });
 
                     master.InvokeIdempotent("setup/kubectl",

@@ -367,7 +367,7 @@ namespace Neon.Kube
                             }
                         }
 
-                        LogError(sb.ToString());
+                        LogBaseError(sb.ToString());
                     }
                 });
         }
@@ -917,21 +917,21 @@ namespace Neon.Kube
         public event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <inheritdoc/>
-        public event SetupProgressDelegate ProgressEvent;
+        public event SetupProgressDelegate BaseProgressEvent;
 
         /// <inheritdoc/>
-        public void LogProgress(string message)
+        public void LogBaseProgress(string message)
         {
             if (string.IsNullOrEmpty(message))
             {
                 return;
             }
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Text       = message,
@@ -942,16 +942,16 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(string verb, string message)
+        public void LogBaseProgress(string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Verb          = verb,
@@ -963,18 +963,18 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(LinuxSshProxy node, string message)
+        public void LogBaseProgress(LinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
             ((NodeSshProxy<NodeMetadata>)node).Status = message;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
@@ -994,11 +994,11 @@ namespace Neon.Kube
 
             ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
@@ -1011,18 +1011,18 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogError(string message)
+        public void LogBaseError(string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
             this.isFaulted = true;
-            this.LastError = message;
+            this.LastBaseError = message;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Text       = message,
@@ -1042,11 +1042,11 @@ namespace Neon.Kube
             ((NodeSshProxy<NodeMetadata>)node).Status    = message;
             ((NodeSshProxy<NodeMetadata>)node).IsFaulted = true;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
@@ -1062,7 +1062,7 @@ namespace Neon.Kube
         public bool IsFaulted => isFaulted || nodes.Any(node => node.IsFaulted);
 
         /// <inheritdoc/>
-        public string LastError { get; private set; }
+        public string LastBaseError { get; private set; }
 
         /// <inheritdoc/>
         public bool HasNodeSteps => steps.Any(step => step.AsyncNodeAction != null || step.SyncNodeAction != null);

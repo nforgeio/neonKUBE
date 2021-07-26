@@ -64,7 +64,7 @@ namespace Neon.Kube
     }
 
     /// <summary>
-    /// Used for raising the <see cref="ISetupController.ProgressEvent"/>.
+    /// Used for raising the <see cref="ISetupController.BaseProgressEvent"/>.
     /// </summary>
     /// <param name="message">The status message.</param>
     public delegate void SetupProgressDelegate(SetupProgressMessage message);
