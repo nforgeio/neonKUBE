@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -27,16 +28,28 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Data;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Describes the current state of a node during cluster setup.
     /// </summary>
-    public class SetupNodeStatus
+    public class SetupNodeStatus : NotifyPropertyChanged
     {
-        private string      status;
+        private bool        isClone;
         private bool        isReady;
+        private bool        isFaulted;
+        private string      status;
+        private object      metadata;
+
+        /// <summary>
+        /// Default cluster used by <see cref="Clone"/>.
+        /// </summary>
+        private SetupNodeStatus()
+        {
+            this.isClone = true;
+        }
 
         /// <summary>
         /// Constructor.
@@ -49,9 +62,10 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
+            this.isClone   = false;
             this.Name      = name;
             this.Metadata  = metadata;
-            this.isReady   = false;
+            this.IsReady   = false;
             this.IsFaulted = false;
             this.status    = status;
         }
@@ -62,45 +76,121 @@ namespace Neon.Kube
         public string Name { get; private set; }
 
         /// <summary>
-        /// Indicates that the node has successfully  completed the current setup step.
+        /// Indicates when the node has successfully completed the current setup step.
         /// Note that this will always return <c>false</c> when the node is faulted.
         /// </summary>
         public bool IsReady
         {
             get => isReady && !IsFaulted;
-            set => isReady = value;
+
+            set
+            {
+                if (value != isReady)
+                {
+                    isReady = value;
+                    RaisePropertyChanged();
+                }
+            }
         }
 
         /// <summary>
-        /// Returns an indication that a setup step failed on the node.
+        /// Indicates whether a setup step failed on the node.
         /// </summary>
-        public bool IsFaulted { get; internal set; }
+        public bool IsFaulted
+        {
+            get => isFaulted;
+
+            set
+            {
+                if (value != isFaulted)
+                {
+                    isFaulted = value;
+
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(IsReady));  // Raise this too because it depends on [IsFaulted].
+                }
+            }
+        }
 
         /// <summary>
-        /// Returns the node status.
+        /// The node status.
         /// </summary>
         public string Status
         {
-            get { return status; }
-            set { status = value ?? string.Empty; }
+            get => status;
+
+            set
+            {
+                value ??= string.Empty;  // Status will never be set to NULL
+
+                if (value != status)
+                {
+                    status = value;
+                    RaisePropertyChanged();
+                }
+            }
         }
 
         /// <summary>
-        /// Returns the node metadata as an object.  The actual type can be determined
+        /// The node metadata as an object.  The actual type can be determined
         /// by examining <see cref="ISetupController.NodeMetadataType"/>.
         /// </summary>
         [JsonIgnore]
-        public object Metadata { get; internal set; }
+        public object Metadata
+        {
+            get => metadata;
+
+            set
+            {
+                if (!ReferenceEquals(value, metadata))
+                {
+                    metadata = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         /// <summary>
-        /// Copies the state properties of this instance to another.
+        /// Returns a clone of the instance.
         /// </summary>
-        /// <param name="target">The target instance.</param>
-        internal void CopyTo(SetupNodeStatus target)
+        /// <returns>The clone.</returns>
+        public SetupNodeStatus Clone()
         {
-            target.isReady   = this.isReady;
-            target.IsFaulted = this.IsFaulted;
-            target.status    = this.Status;
+            if (this.isClone)
+            {
+                throw new NotSupportedException("Cannot clone a cloned instance.");
+            }
+
+            return new SetupNodeStatus()
+            {
+                Name      = this.Name,
+                IsFaulted = this.IsFaulted,
+                Status    = this.status,
+                Metadata  = this.Metadata
+            };
+        }
+
+        /// <summary>
+        /// Copies the properties from the source status to this instance, raising
+        /// <see cref="INotifyPropertyChanged"/> related events as require.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        internal void UpdateFrom(SetupNodeStatus source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Assert(this.isClone, "Target must be cloned.");
+            Covenant.Assert(!source.isClone, "Source cannot be cloned.");
+
+            this.Name      = source.Name;
+            this.IsFaulted = source.IsFaulted;
+            this.Status    = source.status;
+            this.Metadata  = source.Metadata;
+
+            if (this.isReady != source.isReady)
+            {
+                this.isReady = source.isReady;
+                RaisePropertyChanged(nameof(isReady));
+            }
         }
     }
 }

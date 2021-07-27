@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -27,19 +28,30 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Data;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Describes the current state of cluster setup.
     /// </summary>
-    public partial class SetupClusterStatus
+    public partial class SetupClusterStatus : NotifyPropertyChanged
     {
-        private object                              syncLock = new object();
-        private ISetupController                    controller;
-        private ClusterProxy                        cluster;
-        private bool                                isFaulted;
-        private Dictionary<string, SetupNodeStatus> nameToNodeState;
+        private object              syncLock = new object();
+        private bool                isClone;
+        private ISetupController    controller;
+        private ClusterProxy        cluster;
+        private bool                isFaulted;
+        private SetupStepStatus     currentStep;
+        private string              globalStatus;
+
+        /// <summary>
+        /// Default constructor used by <see cref="Clone"/>.
+        /// </summary>
+        private SetupClusterStatus()
+        {
+            isClone = true;
+        }
 
         /// <summary>
         /// Constructor.
@@ -49,19 +61,30 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            this.controller      = controller;
-            this.cluster         = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            this.GlobalStatus    = controller.GlobalStatus;
-            this.Steps           = controller.GetStepStatus().Where(step => !step.IsQuiet).ToList();
-            this.CurrentStep     = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
-            this.nameToNodeState = new Dictionary<string, SetupNodeStatus>(StringComparer.OrdinalIgnoreCase);
+            this.isClone      = false;
+            this.controller   = controller;
+            this.cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            this.GlobalStatus = controller.GlobalStatus;
+            this.CurrentStep  = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
+            this.globalStatus = string.Empty;
+
+            // Initialize the cluster nodes.
+
+            this.Nodes = new List<SetupNodeStatus>();
 
             foreach (var node in cluster.Nodes)
             {
-                nameToNodeState.Add(node.Name, new SetupNodeStatus(node.Name, node.Status, node.NodeDefinition));
+                Nodes.Add(new SetupNodeStatus(node.Name, node.Status, node.NodeDefinition));
             }
 
-            this.Hosts = controller.GetHostStatus();
+            // Initialize the setup steps.
+
+            this.Steps = new List<SetupStepStatus>();
+
+            foreach (var step in controller.GetStepStatus().Where(step => !step.IsQuiet))
+            {
+                Steps.Add(step);
+            }
         }
 
         /// <summary>
@@ -79,9 +102,17 @@ namespace Neon.Kube
 
             set
             {
+                var changed = false;
+
                 lock (syncLock)
                 {
+                    changed   = isFaulted != value;
                     isFaulted = value;
+                }
+
+                if (changed)
+                {
+                    RaisePropertyChanged();
                 }
             }
         }
@@ -89,45 +120,121 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the current node setup state.
         /// </summary>
-        public IEnumerable<SetupNodeStatus> Nodes => nameToNodeState.Values;
-
-        /// <summary>
-        /// Returns status for any VM hosts.
-        /// </summary>
-        public IEnumerable<SetupNodeStatus> Hosts { get; private set; }
+        public List<SetupNodeStatus> Nodes { get; private set; }
 
         /// <summary>
         /// Returns information about the setup steps in order of execution. 
         /// </summary>
-        public List<SetupStepStatus> Steps { get; private set; } = new List<SetupStepStatus>();
+        public List<SetupStepStatus> Steps { get; private set; }
 
         /// <summary>
         /// Returns the currently executing step status (or <c>null</c>).
         /// </summary>
-        public SetupStepStatus CurrentStep { get; private set; }
+        public SetupStepStatus CurrentStep
+        {
+            get => currentStep;
+
+            set
+            {
+                if (value != currentStep)
+                {
+                    currentStep = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         /// <summary>
         /// Returns any status for the overall setup operation.
         /// </summary>
-        public string GlobalStatus { get; private set; }
+        public string GlobalStatus
+        {
+            get => globalStatus;
+
+            set
+            {
+                if (value != globalStatus)
+                {
+                    globalStatus = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         /// <summary>
-        /// Returns a copy of the instance.
+        /// Returns a deep clone of the instance.
         /// </summary>
-        /// <returns>The copy.</returns>
-        private SetupClusterStatus Clone()
+        /// <returns>The clone.</returns>
+        public SetupClusterStatus Clone()
         {
-            var clone = new SetupClusterStatus(controller)
-            {
-                IsFaulted = this.IsFaulted
-            };
+            Covenant.Assert(!isClone, "Cannot clone a cloned instance.");
 
-            foreach (var node in this.nameToNodeState.Values)
+            var clone = new SetupClusterStatus();
+
+            clone.controller   = this.controller;
+            clone.cluster      = this.cluster;
+            clone.GlobalStatus = this.globalStatus;
+            clone.currentStep  = this.currentStep;
+            clone.globalStatus = this.globalStatus;
+
+            // Initialize the cluster nodes.
+
+            clone.Nodes = new List<SetupNodeStatus>();
+
+            foreach (var node in this.Nodes)
             {
-                node.CopyTo(nameToNodeState[node.Name]);
+                clone.Nodes.Add(node.Clone());
+            }
+
+            // Initialize the setup steps.
+
+            clone.Steps = new List<SetupStepStatus>();
+
+            foreach (var step in this.Steps)
+            {
+                clone.Steps.Add(step.Clone());
             }
 
             return clone;
+        }
+
+        /// <summary>
+        /// Updates this clone of the cluster setup status from the source status passed,
+        /// raising <see cref="INotifyPropertyChanged"/> on local properties as well as
+        /// the collection items as required.
+        /// </summary>
+        /// <param name="source">The source status.</param>
+        public void UpdateFrom(SetupClusterStatus source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<NotSupportedException>(isClone, "This method is intended only for cloned status instances.");
+
+            this.controller   = source.controller;
+            this.cluster      = source.cluster;
+            this.CurrentStep  = source.CurrentStep;
+            this.GlobalStatus = source.GlobalStatus;
+
+            // We're assuming here that the sets of nodes and steps do not change during
+            // cluster setup bit that the properties of the items in these lists will
+            // change as cluster setup proceeds.
+
+            Covenant.Assert(this.Steps.Count == source.Steps.Count, "Source and target step counts must be the same.");
+            Covenant.Assert(this.Nodes.Count == source.Nodes.Count, "Source and target node counts must be the same.");
+
+            // Since we're assuming that the number and order of the source and target
+            // lists are the same, all we need to do is iterate through the source lists
+            // and copy the source item properties to the target items and allow the
+            // property implementations to handle the notifications.
+
+            for (int i = 0; i < source.Steps.Count; i++)
+            {
+                this.Steps[i].UpdateFrom(source.Steps[i]);
+            }
+
+            for (int i = 0; i < source.Nodes.Count; i++)
+            {
+                this.Steps[i].UpdateFrom(source.Steps[i]);
+            }
         }
     }
 }

@@ -72,7 +72,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the current status for a host.
+        /// Returns the current status for a hypervisor hosting one or more cluster nodes.
         /// </summary>
         /// <param name="host">The node being queried.</param>
         /// <returns>The status.</returns>
