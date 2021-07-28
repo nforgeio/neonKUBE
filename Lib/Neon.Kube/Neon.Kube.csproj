@@ -75,13 +75,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Extensions\**" />
     <Compile Remove="Properties\**" />
     <Compile Remove="Resources\Helm\harbor\NewFolder\**" />
-    <EmbeddedResource Remove="Extensions\**" />
     <EmbeddedResource Remove="Properties\**" />
     <EmbeddedResource Remove="Resources\Helm\harbor\NewFolder\**" />
-    <None Remove="Extensions\**" />
     <None Remove="Properties\**" />
     <None Remove="Resources\Helm\harbor\NewFolder\**" />
   </ItemGroup>
@@ -307,6 +304,8 @@
     <None Remove="Resources\Helm\harbor\README.md.gotmpl" />
 
     <None Remove="Resources\Helm\harbor\templates\certificate.yaml" />
+
+    <None Remove="Resources\Helm\harbor\templates\configmap-template.yaml" />
 
     <None Remove="Resources\Helm\harbor\templates\configmap.yaml" />
 
@@ -1018,6 +1017,7 @@
     <EmbeddedResource Include="Resources\Helm\harbor\crds\crds.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap.yaml" />

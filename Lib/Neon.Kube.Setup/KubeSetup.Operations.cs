@@ -137,7 +137,7 @@ $@"
     server {master.Name}         {master.Address}:{KubeNodePorts.IstioIngressHttps}");
             }
 
-            node.UploadText(" /etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
+            node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
 
             var sbHaProxyPod = new StringBuilder();
 
@@ -2840,6 +2840,27 @@ $@"- name: StorageType
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-registryctl"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-trivy")
                         });
+                });
+
+            await master.InvokeIdempotentAsync("setup/harbor-login",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "images", message: "push");
+                    
+                    var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+                    var password = Encoding.UTF8.GetString(secret.Data["secret"]);
+
+
+                    var sbScript = new StringBuilder();
+                    var sbArgs = new StringBuilder();
+
+                    sbScript.AppendLineLinux("#!/bin/bash");
+                    sbScript.AppendLineLinux($"echo '{password}' | docker login neon-registry.node.local --username harbor_registry_user --password-stdin");
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        master.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError);
+                    }
                 });
         }
 

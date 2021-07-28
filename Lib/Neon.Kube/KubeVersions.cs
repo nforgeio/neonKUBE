@@ -126,5 +126,10 @@ namespace Neon.Kube
         /// The version of pause image to beused.
         /// </summary>
         public const string PauseVersion = "3.4.1";
+
+        /// <summary>
+        /// The version of busybox image to beused.
+        /// </summary>
+        public const string BusyboxVersion = "1.32.0";
     }
 }

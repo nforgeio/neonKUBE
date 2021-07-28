@@ -234,7 +234,7 @@ namespace NeonSetupGrafana
     SET
         value = @v", conn))
                 {
-                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
+                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupGrafana);
                     cmd.Parameters.AddWithValue("v", status);
                     await cmd.ExecuteNonQueryAsync();
                 }
