@@ -42,3 +42,27 @@ spec:
   usages:
     - server auth
     - client auth
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  labels:
+    goharbor.io/operator-controller: harbor
+    goharbor.io/operator-version: v1.0.1
+  name: registry-harbor-harbor-notarysigner-authentication
+  namespace: neon-system
+spec:
+  commonName: "notary.{{ .Values.clusterDomain }}"
+  dnsNames:
+    - {{ .Values.clusterDomain }}
+    - "*.{{ .Values.clusterDomain }}"
+  duration: 2160h0m0s
+  issuerRef:
+    name: registry-harbor-harbor-notarysigner-authentication
+  keyAlgorithm: ecdsa
+  privateKey: {}
+  secretName: registry-harbor-harbor-notarysigner-authentication
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth

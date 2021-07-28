@@ -1,0 +1,13 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels: {{- include "chart.labels" . | nindent 4 }}
+  name: harbor-operator-config-template
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  {{- $files := .Files}}
+  {{- range $path, $_ :=  .Files.Glob "assets/*" }}
+    {{- base $path | nindent 2 }}.tmpl: |-
+      {{- $files.Get $path | nindent 4 }}
+  {{- end }}
