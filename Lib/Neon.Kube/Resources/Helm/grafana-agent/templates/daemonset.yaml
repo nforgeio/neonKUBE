@@ -18,9 +18,14 @@ spec:
       containers:
       - args:
         - -config.file=/etc/agent/agent.yml
+        - -config.expand-env=true
         - -prometheus.wal-directory=/tmp/agent/data
         command:
         - /bin/agent
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo ${HOST_IP} ${HOSTNAME} >> /etc/hosts"]
         envFrom:
           - secretRef:
               name: grafana-agent-node
@@ -29,6 +34,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
         imagePullPolicy: IfNotPresent
         name: agent

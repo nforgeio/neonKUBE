@@ -1043,7 +1043,7 @@ NEON_REGISTRY={KubeConst.LocalClusterRegistry}
 cat <<EOF > /etc/containers/registries.conf
 [[registry]]
 prefix = ""${{NEON_REGISTRY}}""
-insecure = false
+insecure = true
 blocked = false
 location = ""${{NEON_REGISTRY}}""
 
@@ -1444,7 +1444,7 @@ plugin_dirs = [
 [crio.metrics]
 
 # Globally enable or disable metrics support.
-enable_metrics = false
+enable_metrics = true
 
 # The port on which the metrics server will listen.
 metrics_port = 9090

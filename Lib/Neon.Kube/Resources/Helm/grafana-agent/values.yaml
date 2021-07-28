@@ -18,6 +18,13 @@ operator:
     tag: v0.16.1
     pullPolicy: IfNotPresent
 
+configReloader:
+  image:
+    organization: neon-registry.node.local
+    repository: prometheus-operator-prometheus-config-reloader
+    tag: v0.47.0
+    pullPolicy: IfNotPresent
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
