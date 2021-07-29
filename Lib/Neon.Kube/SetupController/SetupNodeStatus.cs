@@ -57,7 +57,7 @@ namespace Neon.Kube
         /// <param name="name">The node name.</param>
         /// <param name="status">The node status.</param>
         /// <param name="metadata">The node metadata.</param>
-        internal SetupNodeStatus(string name, string status, object metadata)
+        public SetupNodeStatus(string name, string status, object metadata)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));

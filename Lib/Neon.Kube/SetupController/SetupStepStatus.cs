@@ -58,14 +58,13 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="stepNumber">The step number or zero for quiet steps.</param>
         /// <param name="stepLabel">The setup step label.</param>
-        /// <param name="stepStatus">The current status for the step..</param>
-        /// <param name="runTime">Specifies the runtime for completed steps or <see cref="TimeSpan.Zero"/> when the step hasn't completed execution.</param>
-        /// <param name="internalStep">Specifies the internal setup controller step.</param>
-        internal SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepStatus, TimeSpan runTime, object internalStep)
+        /// <param name="stepStatus">The current status for the step.</param>
+        /// <param name="runTime">Optionally specifies the runtime for completed steps or <see cref="TimeSpan.Zero"/> when the step hasn't completed execution.</param>
+        /// <param name="internalStep">Optionally specifies the internal setup controller step.</param>
+        public SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepStatus, TimeSpan runTime = default, object internalStep = null)
         {
             Covenant.Requires<ArgumentException>(stepNumber >= 0, nameof(stepNumber));
             Covenant.Requires<ArgumentException>(runTime >= TimeSpan.Zero, nameof(runTime));
-            Covenant.Requires<ArgumentNullException>(internalStep != null, nameof(internalStep));
 
             this.isClone      = false;
             this.Number       = stepNumber;
