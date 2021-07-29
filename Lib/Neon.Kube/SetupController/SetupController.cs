@@ -601,6 +601,32 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Sets the <see cref="LinuxSshProxy.IsInvolved"/> property for all nodes passed
+        /// as <paramref name="stepNodes"/> and clears that for any nodes that are not
+        /// involved in the next step.  This also clears the <see cref="LinuxSshProxy.IsConfiguring"/>,
+        /// <see cref="LinuxSshProxy.IsReady"/> and <see cref="LinuxSshProxy.IsFaulted"/> properties
+        /// for all nodes in preparation for executing the next step.
+        /// </summary>
+        /// <param name="stepNodes">The set of node participating in the next setup step.</param>
+        private void SetNodeInvolved(IEnumerable<NodeSshProxy<NodeMetadata>> stepNodes)
+        {
+            Covenant.Requires<ArgumentNullException>(stepNodes != null, nameof(stepNodes));
+
+            foreach (var node in nodes)
+            {
+                node.IsInvolved    = false;
+                node.IsConfiguring = false;
+                node.IsReady       = false;
+                node.IsFaulted     = false;
+            }
+
+            foreach (var node in stepNodes)
+            {
+                node.IsInvolved = true;
+            }
+        }
+
+        /// <summary>
         /// Performs an operation step on the selected nodes (if any).
         /// </summary>
         /// <param name="step">A step being performed.</param>
@@ -643,6 +669,8 @@ namespace Neon.Kube
                 var stepNodes        = nodes.Where(node => step.Predicate(this, node));
                 var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+                SetNodeInvolved(stepNodes);
+
                 foreach (var node in stepNodes)
                 {
                     stepNodeNamesSet.Add(node.Name);
@@ -681,6 +709,8 @@ namespace Neon.Kube
                                 {
                                     try
                                     {
+                                        node.IsConfiguring = true;
+
                                         step.SyncNodeAction(this, node);
 
                                         node.Status  = "[x] DONE";
@@ -703,6 +733,8 @@ namespace Neon.Kube
                                     try
                                     {
                                         var nodeDefinition = node.Metadata as NodeDefinition;
+
+                                        node.IsConfiguring = true;
 
                                         var runTask = Task.Run(
                                             async () =>
@@ -1283,7 +1315,7 @@ namespace Neon.Kube
         {
             return nodes
                 .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
-                .Select(node => new SetupNodeStatus(node.Name, node.Status, node))
+                .Select(node => new SetupNodeStatus(node, node.Metadata))
                 .ToArray();
         }
 

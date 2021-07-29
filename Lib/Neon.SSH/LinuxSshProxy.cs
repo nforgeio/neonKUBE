@@ -563,7 +563,7 @@ namespace Neon.SSH
         /// have an operation in progress on the remote machine.
         /// </para>
         /// <note>
-        /// This will return <b>*** FAULTED ***</b> if the <see cref="IsFaulted"/>=<c>true</c>.
+        /// This will return a variation of <b>*** FAULTED ***</b> if <see cref="IsFaulted"/>=<c>true</c>.
         /// </note>
         /// </remarks>
         public string Status
@@ -617,11 +617,24 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Indicates that the remote machine has completed or has failed the current set of operations.
+        /// Used to indicate that the remote machine will be involved in a configuration step.  
+        /// This property is a bit of a hack used when displaying the status of a neonKUBE cluster setup.
+        /// </summary>
+        public bool IsInvolved { get; set; }
+
+        /// <summary>
+        /// Used to indicate that the remote machine is actively being being configured.  This property is 
+        /// a bit of a hack used when displaying the status of a neonKUBE cluster setup.
+        /// </summary>
+        public bool IsConfiguring { get; set; }
+
+        /// <summary>
+        /// Indicates that the remote machine has completed or has failed the current set of operations.  
+        /// This property is a bit of a hack used when displaying the status of a neonKUBE cluster setup.
         /// </summary>
         /// <remarks>
         /// <note>
-        /// This will always return <c>false</c> if the remote machine has faulted (<see cref="IsFaulted"/>=<c>true</c>).
+        /// This will always return <c>false</c> if the remote machine when <see cref="IsFaulted"/>=<c>true</c>.
         /// </note>
         /// </remarks>
         public bool IsReady
@@ -632,7 +645,8 @@ namespace Neon.SSH
 
         /// <summary>
         /// Indicates that the remote machine is in a faulted state because one or more operations
-        /// have failed.
+        /// have failed.  This property is a bit of a hack used when displaying the status of a neonKUBE
+        /// cluster setup.
         /// </summary>
         public bool IsFaulted { get; set; }
 

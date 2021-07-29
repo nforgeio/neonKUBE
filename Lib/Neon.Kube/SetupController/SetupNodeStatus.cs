@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.SSH;
 
 namespace Neon.Kube
 {
@@ -37,11 +38,10 @@ namespace Neon.Kube
     /// </summary>
     public class SetupNodeStatus : NotifyPropertyChanged
     {
-        private bool        isClone;
-        private bool        isReady;
-        private bool        isFaulted;
-        private string      status;
-        private object      metadata;
+        private bool            isClone;
+        private string          status;
+        private SetupStepState  stepState;
+        private object          metadata;
 
         /// <summary>
         /// Default cluster used by <see cref="Clone"/>.
@@ -54,20 +54,43 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The node name.</param>
-        /// <param name="status">The node status.</param>
+        /// <param name="node">The source node.</param>
         /// <param name="metadata">The node metadata.</param>
-        public SetupNodeStatus(string name, string status, object metadata)
+        public SetupNodeStatus(LinuxSshProxy node, object metadata)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
             this.isClone   = false;
-            this.Name      = name;
+            this.Name      = node.Name;
             this.Metadata  = metadata;
-            this.IsReady   = false;
-            this.IsFaulted = false;
-            this.status    = status;
+            this.Status    = node.Status;
+
+            if (!node.IsInvolved)
+            {
+                this.stepState = SetupStepState.NotInvolved;
+            }
+            else
+            {
+                if (node.IsConfiguring)
+                {
+                    this.stepState = SetupStepState.Running;
+                }
+                else if (node.IsReady)
+                {
+                    this.stepState = SetupStepState.Done;
+                }
+                else if (node.IsFaulted)
+                {
+                    this.stepState = SetupStepState.Failed;
+                }
+                else
+                {
+                    this.stepState = SetupStepState.Pending;
+                }
+            }
+
+            this.StepState = stepState;
         }
 
         /// <summary>
@@ -76,48 +99,35 @@ namespace Neon.Kube
         public string Name { get; private set; }
 
         /// <summary>
-        /// Indicates when the node has successfully completed the current setup step.
-        /// Note that this will always return <c>false</c> when the node is faulted.
-        /// </summary>
-        public bool IsReady
-        {
-            get => isReady && !IsFaulted;
-
-            set
-            {
-                if (value != isReady)
-                {
-                    isReady = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Indicates whether a setup step failed on the node.
-        /// </summary>
-        public bool IsFaulted
-        {
-            get => isFaulted;
-
-            set
-            {
-                if (value != isFaulted)
-                {
-                    isFaulted = value;
-
-                    RaisePropertyChanged();
-                    RaisePropertyChanged(nameof(IsReady));  // Raise this too because it depends on [IsFaulted].
-                }
-            }
-        }
-
-        /// <summary>
-        /// The node status.
+        /// The node status string.
         /// </summary>
         public string Status
         {
-            get => status;
+            get
+            {
+                // $hack(jefflill):
+                //
+                // The status will be prefixed by "[x] " for steps that have completed
+                // and "[!] " for steps that failed.  This set by ancient code and is
+                // used for the status displayed on the console.
+                //
+                // We're going to strip these off here and assume that the GUI apps
+                // will use the new [StepStatus] property for this.
+
+                if (status == null)
+                {
+                    return string.Empty;
+                }
+
+                if (status.StartsWith("[x] ") || status.StartsWith("[!] "))
+                {
+                    return status.Substring(4);
+                }
+                else
+                {
+                    return status;
+                }
+            }
 
             set
             {
@@ -126,6 +136,23 @@ namespace Neon.Kube
                 if (value != status)
                 {
                     status = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Indicates the setup step state for the node.
+        /// </summary>
+        public SetupStepState StepState
+        {
+            get => stepState;
+
+            set
+            {
+                if (value != stepState)
+                {
+                    stepState = value;
                     RaisePropertyChanged();
                 }
             }
@@ -164,15 +191,15 @@ namespace Neon.Kube
             return new SetupNodeStatus()
             {
                 Name      = this.Name,
-                IsFaulted = this.IsFaulted,
                 Status    = this.status,
+                StepState = this.StepState,
                 Metadata  = this.Metadata
             };
         }
 
         /// <summary>
         /// Copies the properties from the source status to this instance, raising
-        /// <see cref="INotifyPropertyChanged"/> related events as require.
+        /// <see cref="INotifyPropertyChanged"/> related events as required.
         /// </summary>
         /// <param name="source">The source instance.</param>
         internal void UpdateFrom(SetupNodeStatus source)
@@ -181,16 +208,9 @@ namespace Neon.Kube
             Covenant.Assert(this.isClone, "Target must be cloned.");
             Covenant.Assert(!source.isClone, "Source cannot be cloned.");
 
-            this.Name      = source.Name;
-            this.IsFaulted = source.IsFaulted;
-            this.Status    = source.status;
-            this.Metadata  = source.Metadata;
-
-            if (this.isReady != source.isReady)
-            {
-                this.isReady = source.isReady;
-                RaisePropertyChanged(nameof(isReady));
-            }
+            this.Name     = source.Name;
+            this.Status   = source.status;
+            this.Metadata = source.Metadata;
         }
     }
 }

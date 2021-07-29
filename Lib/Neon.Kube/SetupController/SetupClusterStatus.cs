@@ -74,7 +74,7 @@ namespace Neon.Kube
 
             foreach (var node in cluster.Nodes)
             {
-                Nodes.Add(new SetupNodeStatus(node.Name, node.Status, node.NodeDefinition));
+                Nodes.Add(new SetupNodeStatus(node, node.NodeDefinition));
             }
 
             // Initialize the setup steps.
