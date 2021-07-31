@@ -162,7 +162,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a deep clone of the instance.
+        /// Returns a deep(ish) clone of the instance.
         /// </summary>
         /// <returns>The clone.</returns>
         public SetupClusterStatus Clone()
@@ -196,45 +196,6 @@ namespace Neon.Kube
             }
 
             return clone;
-        }
-
-        /// <summary>
-        /// Updates this clone of the cluster setup status from the source status passed,
-        /// raising <see cref="INotifyPropertyChanged"/> on local properties as well as
-        /// the collection items as required.
-        /// </summary>
-        /// <param name="source">The source status.</param>
-        public void UpdateFrom(SetupClusterStatus source)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
-            Covenant.Requires<NotSupportedException>(isClone, "This method is intended only for cloned status instances.");
-
-            this.controller   = source.controller;
-            this.cluster      = source.cluster;
-            this.CurrentStep  = source.CurrentStep;
-            this.GlobalStatus = source.GlobalStatus;
-
-            // We're assuming here that the sets of nodes and steps do not change during
-            // cluster setup bit that the properties of the items in these lists will
-            // change as cluster setup proceeds.
-
-            Covenant.Assert(this.Steps.Count == source.Steps.Count, "Source and target step counts must be the same.");
-            Covenant.Assert(this.Nodes.Count == source.Nodes.Count, "Source and target node counts must be the same.");
-
-            // Since we're assuming that the number and order of the source and target
-            // lists are the same, all we need to do is iterate through the source lists
-            // and copy the source item properties to the target items and allow the
-            // property implementations to handle the notifications.
-
-            for (int i = 0; i < source.Steps.Count; i++)
-            {
-                this.Steps[i].UpdateFrom(source.Steps[i]);
-            }
-
-            for (int i = 0; i < source.Nodes.Count; i++)
-            {
-                this.Steps[i].UpdateFrom(source.Steps[i]);
-            }
         }
     }
 }

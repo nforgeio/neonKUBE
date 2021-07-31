@@ -44,9 +44,9 @@ namespace Neon.Kube
         private object          metadata;
 
         /// <summary>
-        /// Default cluster used by <see cref="Clone"/>.
+        /// Default cluster used by <see cref="Clone"/> as well as for UX design mode.
         /// </summary>
-        private SetupNodeStatus()
+        public SetupNodeStatus()
         {
             this.isClone = true;
         }
@@ -94,9 +94,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the node name.
+        /// The node name.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The node role.  This will be one of the <see cref="NodeRole"/> values.
+        /// </summary>
+        public string Role { get; set; }
 
         /// <summary>
         /// The node status string.
@@ -202,7 +207,7 @@ namespace Neon.Kube
         /// <see cref="INotifyPropertyChanged"/> related events as required.
         /// </summary>
         /// <param name="source">The source instance.</param>
-        internal void UpdateFrom(SetupNodeStatus source)
+        public void UpdateFrom(SetupNodeStatus source)
         {
             Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
             Covenant.Assert(this.isClone, "Target must be cloned.");

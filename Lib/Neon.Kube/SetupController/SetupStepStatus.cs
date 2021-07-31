@@ -181,25 +181,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Copies the properties from the source status to this instance, raising
-        /// <see cref="INotifyPropertyChanged"/> related events as require.
-        /// </summary>
-        /// <param name="source">The source instance.</param>
-        internal void UpdateFrom(SetupStepStatus source)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
-            Covenant.Assert(this.isClone, "Target must be cloned.");
-            Covenant.Assert(!source.isClone, "Source cannot be cloned.");
-
-            this.Number       = source.Number;
-            this.Label        = source.Label;
-            this.State        = source.State;
-            this.IsQuiet      = source.IsQuiet;
-            this.Runtime      = source.Runtime;
-            this.InternalStep = source.InternalStep;
-        }
-
-        /// <summary>
         /// Returns a clone of a source (not cloned) instance.
         /// </summary>
         /// <returns>The clone.</returns>
@@ -219,6 +200,25 @@ namespace Neon.Kube
                 Runtime      = this.Runtime,
                 InternalStep = this.InternalStep
             };
+        }
+
+        /// <summary>
+        /// Copies the properties from the source status to this instance, raising
+        /// <see cref="INotifyPropertyChanged"/> related events as require.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        public void UpdateFrom(SetupStepStatus source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Assert(this.isClone, "Target must be cloned.");
+            Covenant.Assert(!source.isClone, "Source cannot be cloned.");
+
+            this.Number       = source.Number;
+            this.Label        = source.Label;
+            this.State        = source.State;
+            this.IsQuiet      = source.IsQuiet;
+            this.Runtime      = source.Runtime;
+            this.InternalStep = source.InternalStep;
         }
     }
 }
