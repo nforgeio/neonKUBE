@@ -65,7 +65,6 @@ namespace Neon.Kube
             this.controller   = controller;
             this.cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             this.GlobalStatus = controller.GlobalStatus;
-            this.CurrentStep  = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
             this.globalStatus = string.Empty;
 
             // Initialize the cluster nodes.
@@ -85,6 +84,8 @@ namespace Neon.Kube
             {
                 Steps.Add(step);
             }
+
+            this.CurrentStep = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
         }
 
         /// <summary>

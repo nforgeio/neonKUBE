@@ -79,6 +79,9 @@ namespace Neon.Kube
         /// current neonDESKTOP state will not be impacted.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
+        /// <param name="disableImageDownload">
+        /// Optionally indicate that the node image is already present locally and does not need to be downloaded.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
@@ -91,7 +94,8 @@ namespace Neon.Kube
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
             bool                        automate              = false,
-            string                      headendUri            = "https://headend.neoncloud.io")
+            string                      headendUri            = "https://headend.neoncloud.io",
+            bool                        disableImageDownload  = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
@@ -205,6 +209,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
 
             // Configure the cluster preparation steps.
 
@@ -350,7 +355,7 @@ namespace Neon.Kube
                     node.PrepareNode(controller);
                 });
 
-            controller.AddGlobalStep("generate neoncluster.io domain",
+            controller.AddGlobalStep("provision neoncluster.io domain",
                 async (controller) =>
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);

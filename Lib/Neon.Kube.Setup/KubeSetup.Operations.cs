@@ -3256,7 +3256,7 @@ kubernetes:
 hosting:
   environment: wsl2
 nodes:
-  master-0:
+  master:
     role: master
 ";
             return ClusterDefinition.FromYaml(yaml);

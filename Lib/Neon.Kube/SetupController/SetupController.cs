@@ -966,7 +966,7 @@ namespace Neon.Kube
                     BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Text       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -987,7 +987,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Verb          = verb,
-                            Text       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -1010,7 +1010,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Text       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -1035,7 +1035,7 @@ namespace Neon.Kube
                         {
                             Node          = node,
                             Verb          = verb,
-                            Text       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -1047,7 +1047,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            this.isFaulted = true;
+            this.isFaulted     = true;
             this.LastBaseError = message;
 
             if (BaseProgressEvent != null)
@@ -1057,7 +1057,7 @@ namespace Neon.Kube
                     BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Text       = message,
+                            Text          = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });
@@ -1082,7 +1082,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Text       = message,
+                            Text          = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });

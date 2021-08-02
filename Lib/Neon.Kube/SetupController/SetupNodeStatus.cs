@@ -91,6 +91,27 @@ namespace Neon.Kube
             }
 
             this.StepState = stepState;
+
+            // $hack(jefflill):
+            //
+            // This isn't super clean.  Currently node metadata will be a NodeDefinition or
+            // something else like a IXenClient (or eventually some kind of HyperV client).
+            // We're going to hardcode metadata type checks to identify the node role.
+
+            var metadataType = metadata.GetType();
+
+            if (metadataType == typeof(NodeDefinition))
+            {
+                this.Role = ((NodeDefinition)metadata).Role;
+            }
+            else if (metadataType is IXenClient)
+            {
+                this.Role = NodeRole.XenServer;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         /// <summary>
@@ -195,6 +216,7 @@ namespace Neon.Kube
 
             return new SetupNodeStatus()
             {
+                isClone   = true,
                 Name      = this.Name,
                 Status    = this.status,
                 StepState = this.StepState,
@@ -213,9 +235,10 @@ namespace Neon.Kube
             Covenant.Assert(this.isClone, "Target must be cloned.");
             Covenant.Assert(!source.isClone, "Source cannot be cloned.");
 
-            this.Name     = source.Name;
-            this.Status   = source.status;
-            this.Metadata = source.Metadata;
+            this.Name      = source.Name;
+            this.Status    = source.status;
+            this.StepState = source.StepState;
+            this.Metadata  = source.Metadata;
         }
     }
 }

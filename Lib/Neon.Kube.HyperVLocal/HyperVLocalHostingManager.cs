@@ -179,7 +179,48 @@ namespace Neon.Kube
                     this.secureSshPassword = clusterLogin.SshPassword;
                 });
 
-            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperVAsync());
+            if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
+            {
+                controller.AddGlobalStep($"Hyper-V node image",
+                    async state =>
+                    {
+                        // Download the GZIPed VHDX template if it's not already present.  Note that we're 
+                        // going to name the file the same as the file name from the URI.
+
+                        string driveTemplateName;
+
+                        if (!string.IsNullOrEmpty(nodeImageUri))
+                        {
+                            var driveTemplateUri = new Uri(nodeImageUri);
+
+                            driveTemplateName = driveTemplateUri.Segments.Last();
+                            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                        }
+                        else
+                        {
+                            Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                            driveTemplateName = Path.GetFileName(nodeImagePath);
+                            driveTemplatePath = nodeImagePath;
+                        }
+
+                        if (!File.Exists(driveTemplatePath))
+                        {
+                            controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+
+                            await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                                (type, progress) =>
+                                {
+                                    controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+
+                                    return !controller.CancelPending;
+                                });
+
+                            controller.SetGlobalStepStatus();
+                        }
+                    });
+            }
+
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
@@ -337,52 +378,6 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(vmDriveFolder);
 
-            // Download the node image when necessary.
-
-            if (!string.IsNullOrEmpty(nodeImagePath))
-            {
-                Covenant.Assert(File.Exists(nodeImagePath));
-
-                driveTemplatePath = nodeImagePath;
-            }
-            else
-            {
-                // Download the GZIPed VHDX template if it's not already present.  Note that we're 
-                // going to name the file the same as the file name from the URI.
-
-                string      driveTemplateName;
-
-                if (!string.IsNullOrEmpty(nodeImageUri))
-                {
-                    var driveTemplateUri  = new Uri(nodeImageUri);
-                    
-                    driveTemplateName = driveTemplateUri.Segments.Last();
-                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-                }
-                else
-                {
-                    Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
-
-                    driveTemplateName = Path.GetFileName(nodeImagePath);
-                    driveTemplatePath = nodeImagePath;
-                }
-                
-                if (!File.Exists(driveTemplatePath))
-                {
-                    controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
-
-                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                        (type, progress) =>
-                        {
-                            controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
-
-                            return !controller.CancelPending;
-                        });
-
-                    controller.SetGlobalStepStatus();
-                }
-            }
-
             // Handle any necessary Hyper-V initialization.
 
             using (var hyperv = new HyperVClient())
@@ -441,6 +436,8 @@ namespace Neon.Kube
 
                 controller.SetGlobalStepStatus();
             }
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
