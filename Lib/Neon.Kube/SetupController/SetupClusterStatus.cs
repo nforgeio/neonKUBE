@@ -198,5 +198,20 @@ namespace Neon.Kube
 
             return clone;
         }
+
+        /// <summary>
+        /// Copies the properties from the source status to this instance, raising
+        /// <see cref="INotifyPropertyChanged"/> related events as required.
+        /// </summary>
+        /// <param name="source">The source instance.</param>
+        public void UpdateFrom(SetupClusterStatus source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Assert(this.isClone, "Target must be cloned.");
+            Covenant.Assert(!source.isClone, "Source cannot be cloned.");
+
+            this.CurrentStep  = source.currentStep;
+            this.GlobalStatus = source.GlobalStatus;
+        }
     }
 }

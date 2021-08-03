@@ -41,7 +41,6 @@ namespace Neon.Kube
         private int             number;
         private string          label;
         private SetupStepState  state;
-        private string          status;
         private bool            isQuiet;
         private TimeSpan        runtime;
         private object          internalStep;
@@ -128,23 +127,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the current step status.
-        /// </summary>
-        public string Status
-        {
-            get => status;
-
-            set
-            {
-                if (value != status)
-                {
-                    status = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> for steps that where progress not intended to be reported 
         /// to the user.
         /// </summary>
@@ -214,7 +196,6 @@ namespace Neon.Kube
                 Number       = this.Number,
                 Label        = this.Label,
                 State        = this.State,
-                Status       = string.Empty,
                 IsQuiet      = this.IsQuiet,
                 Runtime      = this.Runtime,
                 InternalStep = this.InternalStep
@@ -235,7 +216,6 @@ namespace Neon.Kube
             this.Number       = source.Number;
             this.Label        = source.Label;
             this.State        = source.State;
-            this.Status       = source.Status;
             this.IsQuiet      = source.IsQuiet;
             this.Runtime      = source.Runtime;
             this.InternalStep = source.InternalStep;

@@ -90,8 +90,6 @@ namespace Neon.Kube
                 }
             }
 
-            this.StepState = stepState;
-
             // $hack(jefflill):
             //
             // This isn't super clean.  Currently node metadata will be a NodeDefinition or

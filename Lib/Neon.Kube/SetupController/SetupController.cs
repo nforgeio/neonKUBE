@@ -162,9 +162,14 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        public object AddGlobalStep(string stepLabel, Action<ISetupController> action, bool quiet = false, ISetupController subController = null, int position = -1)
+        public object AddGlobalStep(
+            string                                                      stepLabel, 
+            Action<ISetupController>                                    action,
+            bool                                                        quiet         = false, 
+            ISetupController                                            subController = null, 
+            int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             if (position < 0)
             {
@@ -176,7 +181,7 @@ namespace Neon.Kube
                 Label            = stepLabel,
                 IsQuiet          = quiet,
                 SyncGlobalAction = action,
-                Predicate        = (controller, node) => true,
+                Predicate        = (controller, node) => false,
                 SubController    = subController
             };
 
@@ -197,9 +202,14 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        public object AddGlobalStep(string stepLabel, Func<ISetupController, Task> action, bool quiet = false, ISetupController subController = null, int position = -1)
+        public object AddGlobalStep(
+            string stepLabel, 
+            Func<ISetupController, Task>                                action,
+            bool                                                        quiet         = false, 
+            ISetupController                                            subController = null, 
+            int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
 
             if (position < 0)
             {
@@ -211,7 +221,7 @@ namespace Neon.Kube
                 Label             = stepLabel,
                 IsQuiet           = quiet,
                 AsyncGlobalAction = action,
-                Predicate         = (controller, node) => true,
+                Predicate         = (controller, node) => false,
                 SubController     = subController
             };
 
@@ -309,7 +319,7 @@ namespace Neon.Kube
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
 
             return AddGlobalStep(stepLabel,
                 controller =>
@@ -396,7 +406,7 @@ namespace Neon.Kube
             TimeSpan?                                                   timeout       = null, 
             int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             if (timeout == null)
             {
@@ -405,6 +415,11 @@ namespace Neon.Kube
             if (position < 0)
             {
                 position = steps.Count;
+            }
+
+            if (nodePredicate == null)
+            {
+                nodePredicate = (controller, node) => true;
             }
 
             return AddNodeStep(stepLabel,
@@ -444,7 +459,12 @@ namespace Neon.Kube
             bool                                                        quiet         = false, 
             int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+
+            if (nodePredicate == null)
+            {
+                nodePredicate = (controller, node) => true;
+            }
 
             return AddNodeStep(stepLabel,
                 (controller, node) =>
@@ -496,7 +516,7 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -562,7 +582,7 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -607,9 +627,11 @@ namespace Neon.Kube
         /// <see cref="LinuxSshProxy.IsReady"/> and <see cref="LinuxSshProxy.IsFaulted"/> properties
         /// for all nodes in preparation for executing the next step.
         /// </summary>
+        /// <param name="step">The next step.</param>
         /// <param name="stepNodes">The set of node participating in the next setup step.</param>
-        private void SetNodeInvolved(IEnumerable<NodeSshProxy<NodeMetadata>> stepNodes)
+        private void SetNodeInvolved(Step step, IEnumerable<NodeSshProxy<NodeMetadata>> stepNodes)
         {
+            Covenant.Requires<ArgumentNullException>(step != null, nameof(step));
             Covenant.Requires<ArgumentNullException>(stepNodes != null, nameof(stepNodes));
 
             foreach (var node in nodes)
@@ -620,9 +642,15 @@ namespace Neon.Kube
                 node.IsFaulted     = false;
             }
 
-            foreach (var node in stepNodes)
+            // Set [node.IsInvolved = true] for non-quiet steps that involve
+            // the node.
+
+            if (!step.IsQuiet)
             {
-                node.IsInvolved = true;
+                foreach (var node in stepNodes)
+                {
+                    node.IsInvolved = true;
+                }
             }
         }
 
@@ -669,7 +697,7 @@ namespace Neon.Kube
                 var stepNodes        = nodes.Where(node => step.Predicate(this, node));
                 var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                SetNodeInvolved(stepNodes);
+                SetNodeInvolved(step, stepNodes);
 
                 foreach (var node in stepNodes)
                 {
