@@ -107,7 +107,8 @@ namespace Neon.Kube
         /// Raised periodically when the overall status changes during cluster setup.
         /// </para>
         /// <note>
-        /// This event will be raised on a background thread.
+        /// This event will be raised on a background thread and that you <b>MUST NOT</b>
+        /// modify any event parameters.
         /// </note>
         /// </summary>
         event SetupStatusChangedDelegate StatusChangedEvent;
@@ -126,7 +127,8 @@ namespace Neon.Kube
         /// </note>
         /// <note>
         /// This event will be raised on the same thread that logged the progress,
-        /// typically the thread executing the step.
+        /// typically the thread executing the step and that you <b>MUST NOT</b>
+        /// modify any event parameters.
         /// </note>
         /// </summary>
         event SetupProgressDelegate BaseProgressEvent;

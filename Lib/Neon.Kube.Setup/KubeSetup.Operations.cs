@@ -3245,7 +3245,7 @@ $@"- name: StorageType
         {
             var yaml =
 @"
-name: wsl2
+name: neon-desktop
 datacenter: wsl2
 environment: development
 timeSources:

@@ -41,6 +41,7 @@ namespace Neon.Kube
         private int             number;
         private string          label;
         private SetupStepState  state;
+        private string          status;
         private bool            isQuiet;
         private TimeSpan        runtime;
         private object          internalStep;
@@ -58,10 +59,10 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="stepNumber">The step number or zero for quiet steps.</param>
         /// <param name="stepLabel">The setup step label.</param>
-        /// <param name="stepStatus">The current status for the step.</param>
+        /// <param name="stepState">The current status for the step.</param>
         /// <param name="runTime">Optionally specifies the runtime for completed steps or <see cref="TimeSpan.Zero"/> when the step hasn't completed execution.</param>
         /// <param name="internalStep">Optionally specifies the internal setup controller step.</param>
-        public SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepStatus, TimeSpan runTime = default, object internalStep = null)
+        public SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepState, TimeSpan runTime = default, object internalStep = null)
         {
             Covenant.Requires<ArgumentException>(stepNumber >= 0, nameof(stepNumber));
             Covenant.Requires<ArgumentException>(runTime >= TimeSpan.Zero, nameof(runTime));
@@ -69,7 +70,7 @@ namespace Neon.Kube
             this.isClone      = false;
             this.Number       = stepNumber;
             this.Label        = string.IsNullOrEmpty(stepLabel) ? "<unlabeled step>" : stepLabel;
-            this.State        = stepStatus;
+            this.State        = stepState;
             this.IsQuiet      = stepNumber == 0;
             this.Runtime      = runTime > TimeSpan.Zero ? runTime : TimeSpan.Zero;
             this.InternalStep = internalStep;
@@ -121,6 +122,23 @@ namespace Neon.Kube
                 if (value != state)
                 {
                     state = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the current step status.
+        /// </summary>
+        public string Status
+        {
+            get => status;
+
+            set
+            {
+                if (value != status)
+                {
+                    status = value;
                     RaisePropertyChanged();
                 }
             }
@@ -196,6 +214,7 @@ namespace Neon.Kube
                 Number       = this.Number,
                 Label        = this.Label,
                 State        = this.State,
+                Status       = string.Empty,
                 IsQuiet      = this.IsQuiet,
                 Runtime      = this.Runtime,
                 InternalStep = this.InternalStep
@@ -216,6 +235,7 @@ namespace Neon.Kube
             this.Number       = source.Number;
             this.Label        = source.Label;
             this.State        = source.State;
+            this.Status       = source.Status;
             this.IsQuiet      = source.IsQuiet;
             this.Runtime      = source.Runtime;
             this.InternalStep = source.InternalStep;

@@ -116,8 +116,11 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(clusterDefinition,
-                (nodeName, nodeAddress, appendToLog) =>
+            var cluster = new ClusterProxy(
+                clusterDefinition:  clusterDefinition,
+                nodeImageUri:       nodeImageUri,
+                nodeImagePath:      nodeImagePath,
+                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
@@ -363,12 +366,11 @@ namespace Neon.Kube
                     if (hostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-                        var dnsAddress = enterpriseHelper.GetWsl2Address().ToString();
+                        var dnsAddress       = enterpriseHelper.GetWsl2Address().ToString();
 
                         using (var jsonClient = new JsonClient())
                         {
-                            var headendUri = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
-                            jsonClient.BaseAddress = headendUri;
+                            jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={dnsAddress}");
                             clusterLogin.Save();
                         }

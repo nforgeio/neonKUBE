@@ -88,8 +88,9 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(clusterLogin.ClusterDefinition,
-                (nodeName, nodeAddress, appendToLog) =>
+            var cluster = new ClusterProxy(
+                clusterDefinition:  clusterLogin.ClusterDefinition,
+                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);

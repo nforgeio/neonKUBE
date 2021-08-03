@@ -61,7 +61,7 @@ namespace Neon.Kube
             public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>     Predicate;
-            public SetupStepState                                               Status;
+            public SetupStepState                                               State;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
             public TimeSpan                                                     RunTime;
@@ -288,12 +288,12 @@ namespace Neon.Kube
 
                             this.isFaulted = this.isFaulted || subController.nodes.Any(node => node.IsFaulted);
 
-                            parentStep.Status  = substep.Status;
+                            parentStep.State   = substep.State;
                             parentStep.RunTime = substep.RunTime;
                         }
                     },
-                    quiet: substep.IsQuiet,
-                    subController: subController);
+                    quiet:          substep.IsQuiet,
+                    subController:  subController);
 
                 substep.ParentStep = parentStep;
             }
@@ -663,7 +663,7 @@ namespace Neon.Kube
                     return false;
                 }
 
-                step.Status      = SetupStepState.Running;
+                step.State       = SetupStepState.Running;
                 step.WasExecuted = true;
 
                 var stepNodes        = nodes.Where(node => step.Predicate(this, node));
@@ -698,6 +698,8 @@ namespace Neon.Kube
                 NeonHelper.StartThread(
                     () =>
                     {
+                        var stepDisposition = SetupStepState.Done;
+
                         currentStep = step;
 
                         if (step.SyncNodeAction != null)
@@ -718,6 +720,8 @@ namespace Neon.Kube
                                     }
                                     catch (Exception e)
                                     {
+                                        stepDisposition = SetupStepState.Failed;
+
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
                                     }
@@ -756,6 +760,8 @@ namespace Neon.Kube
                                             e = aggregateException.InnerExceptions.Single();
                                         }
 
+                                        stepDisposition = SetupStepState.Done;
+
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
                                     }
@@ -779,6 +785,8 @@ namespace Neon.Kube
                                 // and put this there and also indicate this somewhere in
                                 // the console output, but this is not worth messing with
                                 // right now.
+
+                                stepDisposition = SetupStepState.Done;
 
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
@@ -831,6 +839,8 @@ namespace Neon.Kube
                                 // the console output, but this is not worth messing with
                                 // right now.
 
+                                stepDisposition = SetupStepState.Done;
+
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
                                     var firstMaster = nodes
@@ -850,6 +860,8 @@ namespace Neon.Kube
 
                             SetGlobalStepStatus();
                         }
+
+                        step.State = stepDisposition;
                     });
 
                 // The setup steps are executing above in one or more threads and we're going
@@ -883,18 +895,7 @@ namespace Neon.Kube
 
                 isFaulted = isFaulted || stepNodes.FirstOrDefault(node => node.IsFaulted) != null;
 
-                if (isFaulted)
-                {
-                    step.Status = SetupStepState.Failed;
-
-                    return false;
-                }
-                else
-                {
-                    step.Status = SetupStepState.Done;
-
-                    return true;
-                }
+                return !IsFaulted;
             }
             finally
             {
@@ -1165,7 +1166,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public IEnumerable<SetupStepStatus> GetStepStatus()
         {
-            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.Status, step.RunTime, step));
+            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.State, step.RunTime, step));
         }
 
         /// <inheritdoc/>
