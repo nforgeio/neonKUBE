@@ -379,5 +379,10 @@ namespace Neon.Kube
         /// Identifies the Kubernetes Job that is deployed to setup Harbor.
         /// </summary>
         public static string NeonJobSetupHarbor = "neon-setup-harbor";
+
+        /// <summary>
+        /// Entry storing the last time cluster images were checked.
+        /// </summary>
+        public static string ClusterImagesLastChecked = "cluster-images-last-checked";
     }
 }

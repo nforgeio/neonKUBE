@@ -43,6 +43,9 @@ spec:
         nodePort: 30001
         targetPort: grafana-http
   deployment:
+    envFrom:
+      - secretRef:
+          name: grafana-db-password
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
   dashboardLabelSelector:

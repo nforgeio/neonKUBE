@@ -1,4 +1,3 @@
-{{/* https://github.com/theupdateframework/notary/blob/master/docs/reference/server-config.md */}}
 {
   "server": {
     "tls_cert_file": "/etc/notary-signer/certificates/tls.crt",

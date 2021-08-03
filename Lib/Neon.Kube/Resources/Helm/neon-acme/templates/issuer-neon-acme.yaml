@@ -40,3 +40,26 @@ spec:
         selector:
           dnsZones:
             - neoncluster.io
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: neon-acme-neon-system
+  namespace: neon-system
+spec:
+  acme:
+    email: acme@neonforge.com
+    preferredChain: ''
+    privateKeySecretRef:
+      name: issuer-account-key
+    server: 'https://acme-v02.api.letsencrypt.org/directory'
+    solvers:
+      - dns01:
+          webhook:
+            config:
+              Registrar: route53
+            groupName: acme.neoncloud.io
+            solverName: neon-dns01-solver
+        selector:
+          dnsZones:
+            - neoncluster.io

@@ -75,13 +75,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Extensions\**" />
     <Compile Remove="Properties\**" />
     <Compile Remove="Resources\Helm\harbor\NewFolder\**" />
-    <EmbeddedResource Remove="Extensions\**" />
     <EmbeddedResource Remove="Properties\**" />
     <EmbeddedResource Remove="Resources\Helm\harbor\NewFolder\**" />
-    <None Remove="Extensions\**" />
     <None Remove="Properties\**" />
     <None Remove="Resources\Helm\harbor\NewFolder\**" />
   </ItemGroup>
@@ -308,6 +305,8 @@
 
     <None Remove="Resources\Helm\harbor\templates\certificate.yaml" />
 
+    <None Remove="Resources\Helm\harbor\templates\configmap-template.yaml" />
+
     <None Remove="Resources\Helm\harbor\templates\configmap.yaml" />
 
     <None Remove="Resources\Helm\harbor\templates\deployment.yaml" />
@@ -325,6 +324,28 @@
     <None Remove="Resources\Helm\harbor\templates\service.yaml" />
 
     <None Remove="Resources\Helm\harbor\templates\validatingwebhookconfiguration.yaml" />
+
+    <None Remove="Resources\Helm\istio\Chart.yaml" />
+
+    <None Remove="Resources\Helm\istio\crds\crd-operator.yaml" />
+
+    <None Remove="Resources\Helm\istio\files\gen-operator.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\clusterrole.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\clusterrole_binding.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\crds.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\istio.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\istio\templates\service_account.yaml" />
+
+    <None Remove="Resources\Helm\istio\values.yaml" />
 
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
 
@@ -1018,6 +1039,7 @@
     <EmbeddedResource Include="Resources\Helm\harbor\crds\crds.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap.yaml" />
@@ -1027,6 +1049,17 @@
     <EmbeddedResource Include="Resources\Helm\harbor\templates\persistentvolumes.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\validatingwebhookconfiguration.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\crds\crd-operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\files\gen-operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\clusterrole_binding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\istio.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\templates\service_account.yaml" />
+    <EmbeddedResource Include="Resources\Helm\istio\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\OWNERS" />

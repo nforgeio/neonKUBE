@@ -21,6 +21,7 @@ using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Service;
 using Neon.Postgres;
 
@@ -40,6 +41,8 @@ namespace NeonClusterOperator
         private const string StateTable = "state";
         
         private static Kubernetes k8s;
+
+        private static dynamic ClusterMetadata;
 
         /// <summary>
         /// Constructor.
@@ -65,6 +68,11 @@ namespace NeonClusterOperator
 
             await SetRunningAsync();
 
+            using (var jsonClient = new JsonClient())
+            {
+                ClusterMetadata = await jsonClient.GetAsync<dynamic>("https://neon-public.s3.us-west-2.amazonaws.com/cluster-metadata/neonkube-0.1.0-alpha.json");
+            }
+
             // Wait for Citus and make sure it's initialized.
             await WaitForCitusAsync();
             await WaitForMinioAsync();
@@ -75,11 +83,11 @@ namespace NeonClusterOperator
             await SetupHarborAsync();
 
             // Launch the sub-tasks.  These will run until the service is terminated.
-
             while (true)
             {
-                await Task.Delay(5000);
-                
+                await Task.Delay(60 * 1000);
+
+                await CheckNodeImagesAsync();
             }
 
             //return 0;
@@ -111,7 +119,6 @@ namespace NeonClusterOperator
             Log.LogInfo($"Connecting to citus...");
 
             var connString = await GetConnectionStringAsync();
-            //connString = $"Host=10.100.32.254;Port=30123;Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
 
             var schemaDirectory = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Schema");
 
@@ -223,6 +230,31 @@ namespace NeonClusterOperator
                 pollInterval: TimeSpan.FromSeconds(10));
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] {KubeNamespaces.NeonSystem} database is ready.");
+        }
+
+        /// <summary>
+        /// Method to wait for neon-system Harbor registry to be ready.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task WaitForHarborAsync()
+        {
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-registry] Waiting for registry to be ready.");
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var deployments = (await k8s.ListNamespacedDeploymentAsync(KubeNamespaces.NeonSystem)).Items.Where(d => d.Metadata.Name.Contains("harbor"));
+                    if (deployments == null)
+                    {
+                        return false;
+                    }
+
+                    return deployments.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
+                },
+                timeout: TimeSpan.FromMinutes(30),
+                pollInterval: TimeSpan.FromSeconds(10));
+
+            Log.LogInfo($"[{KubeNamespaces.NeonSystem}-registry] Harbor is ready.");
         }
 
         /// <summary>
@@ -393,6 +425,260 @@ namespace NeonClusterOperator
                             job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupHarbor, KubeNamespaces.NeonSystem);
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Responsible for making sure cluster images are present in the local
+        /// cluster registry.
+        /// </summary>
+        /// <returns></returns>
+        public async Task CheckNodeImagesAsync()
+        {
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+
+            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.ClusterImagesLastChecked}'", conn))
+                {
+                    var result = await cmd.ExecuteScalarAsync();
+
+                    if (result != null && DateTime.Parse((string)result) > DateTime.UtcNow.AddMinutes(-60))
+                    {
+                        return;
+                    }
+                }
+            }
+            
+            await WaitForHarborAsync();
+
+            // check busybox doesn't already exist
+            var pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
+            if (pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox"))
+            {
+                Log.LogInfo($"[check-node-images] Removing existing busybox pod.");
+                
+                await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
+
+                        return !pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox");
+                    }, 
+                    timeout: TimeSpan.FromSeconds(60),
+                    pollInterval: TimeSpan.FromSeconds(2));
+            }
+
+            Log.LogInfo($"[check-node-images] Creating busybox pod.");
+
+            var busybox = await k8s.CreateNamespacedPodAsync(
+                new V1Pod()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = "check-node-images-busybox",
+                        NamespaceProperty = KubeNamespaces.NeonSystem
+                    },
+                    Spec = new V1PodSpec()
+                    {
+                        Tolerations = new List<V1Toleration>()
+                        {
+                            { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                            { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                        },
+                        HostNetwork = true,
+                        HostPID = true,
+                        HostIPC = true,
+                        Volumes = new List<V1Volume>()
+                        {
+                            new V1Volume()
+                            {
+                                Name = "noderoot",
+                                HostPath = new V1HostPathVolumeSource()
+                                {
+                                    Path = "/",
+                                }
+                            }
+                        },
+                        Containers = new List<V1Container>()
+                        {
+                            new V1Container()
+                            {
+                                Name            = "check-node-images-busybox",
+                                Image           = $"{KubeConst.LocalClusterRegistry}/busybox:{KubeVersions.BusyboxVersion}",
+                                Command         = new List<string>() {"sleep", "infinity" },
+                                ImagePullPolicy = "IfNotPresent",
+                                SecurityContext = new V1SecurityContext()
+                                {
+                                    Privileged = true
+                                },
+                                VolumeMounts = new List<V1VolumeMount>()
+                                {
+                                    new V1VolumeMount()
+                                    {
+                                        Name = "noderoot",
+                                        MountPath = "/host"
+                                    }
+                                }
+                            }
+                        },
+                        RestartPolicy = "Always",
+                        ServiceAccount = NeonServices.ClusterOperator,
+                        ServiceAccountName = NeonServices.ClusterOperator
+                    }
+                }, KubeNamespaces.NeonSystem);
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
+
+                    return pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox");
+                },
+                timeout: TimeSpan.FromSeconds(60),
+                pollInterval: TimeSpan.FromSeconds(2));
+
+            Log.LogInfo($"[check-node-images] Getting images currently on node.");
+
+            var nodeImages = await ExecInPodAsync(
+                "check-node-images-busybox", 
+                KubeNamespaces.NeonSystem, 
+                $@"crictl images | grep ""{KubeConst.LocalClusterRegistry}"" | awk '{{ print $1 "":"" $2 }}' | cut -d/ -f2",
+                retry: true);
+
+            foreach (var image in ClusterMetadata.ClusterImages)
+            {
+                var repo = ((string)image).Split(':')[0];
+                var tag = ((string)image).Split(':')[1];
+
+                if (nodeImages.Contains((string)image))
+                {
+                    Log.LogInfo($"[check-node-images] Image [{image}] exists. Pushing to registry.");
+
+                    var pushResult = await ExecInPodAsync(
+                        "check-node-images-busybox",
+                        KubeNamespaces.NeonSystem,
+                        $@"podman push {KubeConst.LocalClusterRegistry}/{image}",
+                        retry: true);
+                } 
+                else
+                {
+                    Log.LogInfo($"[check-node-images] Image [{image}] doesn't exist. Pulling from [{KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion}].");
+                 
+                    var pullResult = await ExecInPodAsync(
+                        "check-node-images-busybox", 
+                        KubeNamespaces.NeonSystem, 
+                        $@"podman pull {KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion}",
+                        retry: true);
+
+                    var tagResult = await ExecInPodAsync(
+                        "check-node-images-busybox", 
+                        KubeNamespaces.NeonSystem,
+                        $@"podman tag {KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion} {KubeConst.LocalClusterRegistry}/{image}");
+
+                    Log.LogInfo($"[check-node-images] Pushing [{image}] to cluster registry.");
+
+                    var pushResult = await ExecInPodAsync(
+                        "check-node-images-busybox", 
+                        KubeNamespaces.NeonSystem, 
+                        $@"podman push {KubeConst.LocalClusterRegistry}/{image}",
+                        retry: true);
+                }
+
+                await UpdateStatusAsync(DateTime.UtcNow.ToString());
+            }
+
+            Log.LogInfo($"[check-node-images] Removing busybox.");
+
+            await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
+
+            Log.LogInfo($"[check-node-images] Finished.");
+        }
+
+        /// <summary>
+        /// Helper method for running node commands via a busybox container.
+        /// </summary>
+        /// <param name="podName"></param>
+        /// <param name="namespace"></param>
+        /// <param name="command"></param>
+        /// <param name="containerName"></param>
+        /// <param name="retry"></param>
+        /// <returns></returns>
+        public async Task<List<string>> ExecInPodAsync(
+            string podName,
+            string @namespace,
+            string command,
+            string containerName = null,
+            bool retry = false)
+        {
+            var podCommand = new string[]
+            {
+                        "chroot",
+                        "/host",
+                        "/bin/bash",
+                        "-c",
+                        command
+            };
+
+            var pod = await k8s.ReadNamespacedPodAsync(podName, @namespace);
+            if (string.IsNullOrEmpty(containerName))
+            {
+                containerName = pod.Spec.Containers.FirstOrDefault().Name;
+            }
+
+            string stdOut = "";
+            string stdErr = "";
+            var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
+            {
+                stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
+                stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
+            });
+
+            var maxAttempts = 0;
+            if (retry)
+            {
+                maxAttempts = 5;
+            }
+
+            var retryPolicy = new ExponentialRetryPolicy(maxAttempts: maxAttempts);
+            var exitcode = await retryPolicy.InvokeAsync(
+                async () =>
+                {
+                    return await k8s.NamespacedPodExecAsync(podName, @namespace, containerName, podCommand, true, handler, CancellationToken.None).ConfigureAwait(false);
+                });
+
+            if (exitcode != 0)
+            {
+                throw new KubernetesException($@"{stdOut}
+
+{stdErr}");
+            }
+
+            return stdOut.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToList();
+        }
+
+        private async Task UpdateStatusAsync(string status)
+        {
+            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase));
+            {
+                await conn.OpenAsync();
+                await using (var cmd = new NpgsqlCommand($@"
+    INSERT
+        INTO
+        {StateTable} (KEY, value)
+    VALUES (@k, @v) ON
+    CONFLICT (KEY) DO
+    UPDATE
+    SET
+        value = @v", conn))
+                {
+                    cmd.Parameters.AddWithValue("k", KubeConst.ClusterImagesLastChecked);
+                    cmd.Parameters.AddWithValue("v", status);
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }

@@ -362,6 +362,11 @@ namespace Neon.Kube
                                     return true;
                                 }
 
+                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                {
+                                    return true;
+                                }
+
                                 // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
                                 if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))

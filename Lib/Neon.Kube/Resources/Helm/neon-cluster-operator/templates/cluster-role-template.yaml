@@ -18,6 +18,13 @@ rules:
     - namespaces
     - services
     - pods
+    - pods/exec
+    - pods/log
+    - pods/attach
+    - pods/binding
+    - pods/eviction
+    - pods/proxy
+    - pods/status
     - deployments
     - deployments/finalizers
     - replicationcontrollers

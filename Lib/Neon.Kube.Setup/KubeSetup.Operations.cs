@@ -137,7 +137,7 @@ $@"
     server {master.Name}         {master.Address}:{KubeNodePorts.IstioIngressHttps}");
             }
 
-            node.UploadText(" /etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
+            node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
 
             var sbHaProxyPod = new StringBuilder();
 
@@ -995,147 +995,62 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
 
-            await master.InvokeIdempotentAsync("setup/istio",
+            await master.InvokeIdempotentAsync("setup/ingress-namespace",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "istio");
+                    await GetK8sClient(controller).CreateNamespaceAsync(new V1Namespace()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = KubeNamespaces.NeonIngress
+                        }
+                    });
+                });
 
-                    var nodePorts = new StringBuilder();
-                    nodePorts.Append(
-$@"
-          ports:
-");
+            await master.InvokeIdempotentAsync("setup/ingress",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "deploy", message: "ingress");
 
+                    var values = new Dictionary<string, object>();
+
+                    var i = 0;
                     foreach (var rule in master.Cluster.Definition.Network.IngressRules)
                     {
-                        nodePorts.Append(
-$@"                        
-          - name: {rule.Name}
-            protocol: {rule.Protocol.ToString().ToUpper()}
-            port: {rule.ExternalPort}
-            targetPort: {rule.TargetPort}
-            nodePort: {rule.NodePort}");
+                        values.Add($"nodePorts[{i}].name", $"{rule.Name}");
+                        values.Add($"nodePorts[{i}].protocol", $"{rule.Protocol.ToString().ToUpper()}");
+                        values.Add($"nodePorts[{i}].port", rule.ExternalPort); 
+                        values.Add($"nodePorts[{i}].targetPort", rule.TargetPort);
+                        values.Add($"nodePorts[{i}].nodePort", rule.NodePort);
+                        i++;
                     }
 
-                    var istioScript0 =
-$@"
-tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
-cd ""$tmp"" || exit
+                    values.Add($"resources.ingress.limits.cpu", $"{ToSiString(ingressAdvice.PodCpuLimit)}");
+                    values.Add($"resources.ingress.limits.memory", $"{ToSiString(ingressAdvice.PodMemoryLimit)}");
+                    values.Add($"resources.ingress.requests.cpu", $"{ToSiString(ingressAdvice.PodCpuRequest)}");
+                    values.Add($"resources.ingress.requests.memory", $"{ToSiString(ingressAdvice.PodMemoryRequest)}");
 
-curl -fsLO {KubeDownloads.IstioLinuxUri}
+                    values.Add($"resources.proxy.limits.cpu", $"{ToSiString(proxyAdvice.PodCpuLimit)}");
+                    values.Add($"resources.proxy.limits.memory", $"{ToSiString(proxyAdvice.PodMemoryLimit)}");
+                    values.Add($"resources.proxy.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
+                    values.Add($"resources.proxy.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
 
-tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
+                    await master.InstallHelmChartAsync(controller, "istio", releaseName: "neon-ingress", @namespace: KubeNamespaces.NeonIngress, values: values);
+                });
 
-# setup istioctl
-cd ""$HOME"" || exit
-mkdir -p "".istioctl/bin""
-mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
-chmod +x "".istioctl/bin/istioctl""
-rm -r ""${{tmp}}""
+            await master.InvokeIdempotentAsync("setup/ingress-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait", message: "for istio");
 
-export PATH=$PATH:$HOME/.istioctl/bin
-
-kubectl create ns {KubeNamespaces.NeonIngress}
-
-istioctl operator init --istioNamespace={KubeNamespaces.NeonIngress} --operatorNamespace={KubeNamespaces.NeonIngress} --watchedNamespaces={KubeNamespaces.NeonIngress} --hub={KubeConst.LocalClusterRegistry} --tag={KubeVersions.IstioVersion}-distroless
-
-cat <<EOF > istio-cni.yaml
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  namespace: {KubeNamespaces.NeonIngress}
-  name: istiocontrolplane
-spec:
-  namespace: {KubeNamespaces.NeonIngress}
-  hub: {KubeConst.LocalClusterRegistry}
-  tag: {KubeVersions.IstioVersion}-distroless
-  meshConfig:
-    rootNamespace: {KubeNamespaces.NeonIngress}
-    enablePrometheusMerge: false
-  components:
-    ingressGateways:
-    - name: istio-ingressgateway
-      enabled: true
-      k8s:
-        overlays:
-          - apiVersion: apps/v1
-            kind: Deployment
-            name: istio-ingressgateway
-            patches:
-              - path: kind
-                value: DaemonSet
-        service:
-{nodePorts}
-        resources:
-          requests:
-            cpu: ""{ToSiString(ingressAdvice.PodCpuRequest)}""
-            memory: {ToSiString(ingressAdvice.PodMemoryRequest)}
-          limits:
-            cpu: ""{ToSiString(ingressAdvice.PodCpuLimit)}""
-            memory: {ToSiString(ingressAdvice.PodMemoryLimit)}
-        strategy:
-          rollingUpdate:
-            maxSurge: ""100%""
-            maxUnavailable: ""25%""
-    cni:
-      enabled: true
-      namespace: kube-system
-  values:
-    global:
-      istioNamespace: {KubeNamespaces.NeonIngress}
-      logging:
-        level: ""default:info""
-      logAsJson: true
-      imagePullPolicy: IfNotPresent
-      jwtPolicy: third-party-jwt
-      proxy:
-        holdApplicationUntilProxyStarts: true
-        resources:
-          requests:
-            cpu: ""{ToSiString(proxyAdvice.PodCpuRequest)}""
-            memory: {ToSiString(proxyAdvice.PodMemoryRequest)}
-          limits:
-            cpu: ""{ToSiString(proxyAdvice.PodCpuLimit)}""
-            memory: {ToSiString(proxyAdvice.PodMemoryLimit)}
-      defaultNodeSelector: 
-        neonkube.io/istio: true
-      tracer:
-        zipkin:
-          address: jaeger-collector.monitoring.svc.cluster.local:9411
-    pilot:
-      traceSampling: 100
-    meshConfig:
-      accessLogFile: """"
-      accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
-      accessLogEncoding: ""JSON""
-    gateways:
-      istio-ingressgateway:
-        type: NodePort
-        externalTrafficPolicy: Local
-        sds:
-          enabled: true
-    prometheus:
-      enabled: false
-    grafana:
-      enabled: false
-    istiocoredns:
-      enabled: true
-      coreDNSImage: {KubeConst.LocalClusterRegistry}/coredns-coredns
-      coreDNSTag: {KubeVersions.CoreDNSVersion}
-      coreDNSPluginImage: {KubeConst.LocalClusterRegistry}/coredns-plugin:{KubeVersions.CoreDNSPluginVersion}
-    cni:
-      excludeNamespaces:
-       - {KubeNamespaces.NeonIngress}
-       - kube-system
-       - kube-node-lease
-       - kube-public
-      logLevel: info
-EOF
-
-kubectl apply -f istio-cni.yaml
-";
-                    master.SudoCommand(CommandBundle.FromScript(istioScript0), RunOptions.FaultOnError);
-                    await Task.CompletedTask;
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "istio-operator"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "istiod"),
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.KubeSystem, "istio-cni-node"),
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonIngress, "istio-ingressgateway"),
+                        });
                 });
         }
 
@@ -1180,7 +1095,7 @@ kubectl apply -f istio-cni.yaml
             await master.InvokeIdempotentAsync("setup/cert-manager-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for grafana agent");
+                    controller.LogProgress(master, verb: "wait", message: "for cert-manager");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -2466,9 +2381,26 @@ $@"- name: StorageType
 
                         //values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
-                        var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                        await master.InvokeIdempotentAsync("setup/db-credentials-grafana",
+                            async () =>
+                            {
+                                var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
-                        values.Add("neon.passwordSecret", KubeConst.NeonSystemDbServiceSecret);
+                                var monitorSecret = new V1Secret()
+                                {
+                                    Metadata = new V1ObjectMeta()
+                                    {
+                                        Name = "grafana-db-password"
+                                    },
+                                    Type = "Opaque",
+                                    Data = new Dictionary<string, byte[]>()
+                                    {
+                                        { "DATABASE_PASSWORD", secret.Data["password"] }
+                                    }
+                                };
+
+                                await GetK8sClient(controller).CreateNamespacedSecretAsync(monitorSecret, KubeNamespaces.NeonMonitor);
+                            });
 
                         int i = 0;
                         foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
@@ -2841,6 +2773,27 @@ $@"- name: StorageType
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "registry-harbor-harbor-trivy")
                         });
                 });
+
+            await master.InvokeIdempotentAsync("setup/harbor-login",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "images", message: "push");
+                    
+                    var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+                    var password = Encoding.UTF8.GetString(secret.Data["secret"]);
+
+
+                    var sbScript = new StringBuilder();
+                    var sbArgs = new StringBuilder();
+
+                    sbScript.AppendLineLinux("#!/bin/bash");
+                    sbScript.AppendLineLinux($"echo '{password}' | docker login neon-registry.node.local --username harbor_registry_user --password-stdin");
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        master.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError);
+                    }
+                });
         }
 
         /// <summary>
@@ -3001,7 +2954,6 @@ $@"- name: StorageType
 
                     await GetK8sClient(controller).CreateNamespacedSecretAsync(secret, KubeNamespaces.NeonSystem);
                 });
-
 
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
