@@ -294,7 +294,6 @@ namespace Neon.Kube
         public IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory)
         {
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
 
             HostingManager hostingManager;
 
@@ -302,9 +301,13 @@ namespace Neon.Kube
             {
                 hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri);
             }
-            else
+            else if (!string.IsNullOrEmpty(nodeImagePath))
             {
                 hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath);
+            }
+            else
+            {
+                hostingManager = hostingManagerFactory.GetManager(this);
             }
 
             if (hostingManager == null)

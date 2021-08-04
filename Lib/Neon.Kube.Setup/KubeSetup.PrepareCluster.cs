@@ -358,7 +358,7 @@ namespace Neon.Kube
                     node.PrepareNode(controller);
                 });
 
-            controller.AddGlobalStep("provision neoncluster.io domain",
+            controller.AddGlobalStep("create neoncluster.io domain",
                 async (controller) =>
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
