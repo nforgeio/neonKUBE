@@ -314,6 +314,7 @@ namespace Neon.Kube
             if (!string.IsNullOrEmpty(GlobalStatus))
             {
                 sbDisplay.AppendLine();
+                sbDisplay.AppendLine();
                 sbDisplay.AppendLine($"*** {GlobalStatus}");
             }
 

@@ -65,7 +65,7 @@ namespace Neon.Kube
             this.controller   = controller;
             this.cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             this.GlobalStatus = controller.GlobalStatus;
-            this.globalStatus = string.Empty;
+            this.globalStatus = this.GlobalStatus;
 
             // Initialize the cluster nodes.
 

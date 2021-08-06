@@ -112,6 +112,20 @@ namespace Neon.Kube
             this.cluster       = cluster;
             this.nodeImageUri  = nodeImageUri;
             this.nodeImagePath = nodeImagePath;
+
+            // Determine where we're going to place the VM hard drive files and
+            // ensure that the directory exists.
+
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
+            {
+                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
+            }
+            else
+            {
+                vmDriveFolder = HyperVClient.DefaultDriveFolder;
+            }
+
+            Directory.CreateDirectory(vmDriveFolder);
         }
 
         /// <inheritdoc/>
@@ -181,11 +195,13 @@ namespace Neon.Kube
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                controller.AddGlobalStep($"Hyper-V node image",
+                controller.AddGlobalStep($"hyper-v node image",
                     async state =>
                     {
-                        // Download the GZIPed VHDX template if it's not already present.  Note that we're 
-                        // going to name the file the same as the file name from the URI.
+                        // Download the GZIPed VHDX template if it's not already present and has a valid
+                        // MD5 hash file.
+                        //
+                        // Note that we're going to name the file the same as the file name from the URI.
 
                         string driveTemplateName;
 
@@ -204,23 +220,21 @@ namespace Neon.Kube
                             driveTemplatePath = nodeImagePath;
                         }
 
-                        if (!File.Exists(driveTemplatePath))
-                        {
-                            controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+                        controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
-                            await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                                (type, progress) =>
-                                {
-                                    controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                            (type, progress) =>
+                            {
+                                controller.SetGlobalStepStatus($"{type} VHDX: [{progress}%] [{driveTemplateName}]");
 
-                                    return !controller.CancelPending;
-                                });
+                                return !controller.CancelPending;
+                            });
 
-                            controller.SetGlobalStepStatus();
-                        }
+                        controller.SetGlobalStepStatus();
                     });
             }
 
+            controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
@@ -363,20 +377,6 @@ namespace Neon.Kube
             {
                 throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
             }
-
-            // Determine where we're going to place the VM hard drive files and
-            // ensure that the directory exists.
-
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
-            {
-                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
-            }
-            else
-            {
-                vmDriveFolder = HyperVClient.DefaultDriveFolder;
-            }
-
-            Directory.CreateDirectory(vmDriveFolder);
 
             // Handle any necessary Hyper-V initialization.
 

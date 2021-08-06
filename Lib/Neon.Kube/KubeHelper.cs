@@ -1922,22 +1922,24 @@ public class ISOFile
             }
 
             var changePasswordScript =
-$@"#------------------------------------------------------------------------------
+$@"
+#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
-# to something secure.  Doing this here before the network is configured means 
-# that there's no time when bad guys can SSH into the node using the insecure
+# to something secure.  We're doing this here before the network is configured means 
+# that there will be no time when bad guys can SSH into the node using the insecure
 # password.
 
 echo 'sysadmin:{securePassword}' | chpasswd
 ";
             if (String.IsNullOrWhiteSpace(securePassword))
             {
-                changePasswordScript = string.Empty;
+                changePasswordScript = "\r\n";
             }
 
             var nodePrepScript =
 $@"# This script is called by the [neon-init] service when the prep DVD
-# is inserted on boot.  This script handles configuring the network.
+# is inserted on boot.  This script handles setting a secure SSH password
+# as well as configuring the network interface to a static IP address.
 #
 # The first parameter will be passed as the path where the DVD is mounted.
 
@@ -1995,9 +1997,8 @@ cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
-# Static network configuration initialized during first boot by the 
-# [neon-init] service from a virtual ISO inserted during
-# cluster prepare.
+# Static network configuration is initialized during first boot by the 
+# [neon-init] service from a virtual ISO inserted during cluster prepare.
 
 network:
   version: 2

@@ -251,7 +251,7 @@ namespace Neon.Kube
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                xenController.AddNodeStep("XenServer node image", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
+                xenController.AddNodeStep("xenserver node image", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
             }
 
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
@@ -425,20 +425,22 @@ namespace Neon.Kube
                         driveTemplatePath = nodeImagePath;
                     }
 
-                    if (!File.Exists(driveTemplatePath))
-                    {
-                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+                    // Download the GZIPed VHDX template if it's not already present and has a valid
+                    // MD5 hash file.
+                    //
+                    // Note that we're going to name the file the same as the file name from the URI.
 
-                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            (type, progress) =>
-                            {
-                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                    xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
 
-                                return !xenController.CancelPending;
-                            });
+                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                        (type, progress) =>
+                        {
+                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
 
-                        xenController.SetGlobalStepStatus();
-                    }
+                            return !xenController.CancelPending;
+                        });
+
+                    xenController.SetGlobalStepStatus();
                 }
 
                 xenController.SetGlobalStepStatus();

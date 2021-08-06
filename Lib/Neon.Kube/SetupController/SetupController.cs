@@ -121,6 +121,7 @@ namespace Neon.Kube
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps          = new List<Step>();
         }
+
         /// <inheritdoc/>
         public void AddDisposable(IDisposable disposable)
         {
@@ -694,8 +695,10 @@ namespace Neon.Kube
                 step.State       = SetupStepState.Running;
                 step.WasExecuted = true;
 
-                var stepNodes        = nodes.Where(node => step.Predicate(this, node));
-                var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var isGlobalStep      = false;
+                var isGlobalStepReady = false;
+                var stepNodes         = nodes.Where(node => step.Predicate(this, node));
+                var stepNodeNamesSet  = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 SetNodeInvolved(step, stepNodes);
 
@@ -799,7 +802,11 @@ namespace Neon.Kube
                         {
                             try
                             {
+                                isGlobalStep = true;
+
                                 step.SyncGlobalAction(this);
+
+                                isGlobalStepReady = true;
                             }
                             catch (Exception e)
                             {
@@ -814,6 +821,7 @@ namespace Neon.Kube
                                 // the console output, but this is not worth messing with
                                 // right now.
 
+                                isFaulted       = true;
                                 stepDisposition = SetupStepState.Done;
 
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
@@ -842,7 +850,11 @@ namespace Neon.Kube
                                 var runTask = Task.Run(
                                     async () =>
                                     {
+                                        isGlobalStep = true;
+
                                         await step.AsyncGlobalAction(this);
+
+                                        isGlobalStepReady = true;
                                     });
 
                                 runTask.Wait();
@@ -867,6 +879,7 @@ namespace Neon.Kube
                                 // the console output, but this is not worth messing with
                                 // right now.
 
+                                isFaulted       = true;
                                 stepDisposition = SetupStepState.Done;
 
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
@@ -892,8 +905,9 @@ namespace Neon.Kube
                         step.State = stepDisposition;
                     });
 
-                // The setup steps are executing above in one or more threads and we're going
-                // to loop here to raise [StatusChangedEvent] when we detect a change.
+                // The setup step is executing above in one or more threads/tasks and
+                // we're going to loop here to raise [StatusChangedEvent] when we detect
+                // a status change giving any UI a chance to update.
 
                 var statusInterval = TimeSpan.FromMilliseconds(100);
                 var lastJson       = (string)null;
@@ -911,9 +925,16 @@ namespace Neon.Kube
                         lastJson = newJson;
                     }
 
-                    if (stepNodes.Count(node => !node.IsReady) == 0)
+                    if (isGlobalStep)
                     {
-                        // Looks like we're done.
+                        if (isGlobalStepReady || IsFaulted)
+                        {
+                            break;  // Looks like we're done executing the global step.
+                        }
+                    }
+                    else if (stepNodes.Count(node => !node.IsReady) == 0)
+                    {
+                        // Looks like we're done executing the node step.
 
                         break;
                     }
