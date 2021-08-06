@@ -539,10 +539,10 @@ namespace Neon.Deployment
 
             // If the target file already exists along with its MD5 hash file, then compare the
             // existing MD5 against the download's MD5 as well as the computed MD5 for the current
-            // file and skip the download when the match.
+            // file and skip the download when these match.
             //
-            // We're going to use the new .NET 5.0 [IncrementalHash] class to report progress 
-            // for .NET 5+ builds.
+            // We're going to use the new .NET 5.0 [IncrementalHash] class so we can report progress 
+            // for .NET 5.0+ builds.
 
             if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
             {
