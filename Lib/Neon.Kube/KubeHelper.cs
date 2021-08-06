@@ -2029,7 +2029,7 @@ done
 echo ""Node is prepared.""
 exit 0
 ";
-            nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
+            nodePrepScript = NeonHelper.ToLinuxLineEndings(nodePrepScript);
 
             // Create an ISO that includes the script and return the ISO TempFile.
             //

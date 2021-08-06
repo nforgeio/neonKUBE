@@ -1529,7 +1529,7 @@ namespace Neon.Service
 
             if (linuxLineEndings)
             {
-                contents = contents.Replace("\r\n", "\n");
+                contents = NeonHelper.ToLinuxLineEndings(contents);
             }
 
             lock (syncLock)
