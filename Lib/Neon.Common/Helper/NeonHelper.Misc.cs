@@ -196,7 +196,8 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Starts a new <see cref="Thread"/> to perform a parameterized action.
+        /// Starts a new <see cref="Thread"/> to perform a parameterized action with
+        /// an object parameter.
         /// </summary>
         /// <param name="action">The action to be performed.</param>
         /// <param name="parameter">The parameter to be passed to the thread action.</param>
@@ -205,7 +206,32 @@ namespace Neon.Common
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
+            // Wrap the user's action with another action here so we can
+            // cast the parameter to required type.
+
             var thread = new Thread(new ParameterizedThreadStart(action));
+
+            thread.Start(parameter);
+
+            return thread;
+        }
+
+        /// <summary>
+        /// Starts a new <see cref="Thread"/> to perform a parameterized action with
+        /// a typed parameter.
+        /// </summary>
+        /// <typeparam name="TParam">Identifies the type of the thread action parameter.</typeparam>
+        /// <param name="action">The action to be performed.</param>
+        /// <param name="parameter">The parameter to be passed to the thread action.</param>
+        /// <returns>The <see cref="Thread"/>.</returns>
+        public static Thread StartThreadTyped<TParam>(Action<TParam> action, TParam parameter)
+        {
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            // Wrap the user's action with another action here so we can
+            // cast the parameter to required type.
+
+            var thread = new Thread(new ParameterizedThreadStart(arg => action((TParam)arg)));
 
             thread.Start(parameter);
 
