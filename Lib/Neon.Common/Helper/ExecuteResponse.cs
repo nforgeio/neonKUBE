@@ -29,11 +29,26 @@ namespace Neon.Common
     /// </summary>
     public class ExecuteResponse
     {
+        private string      cachedAllText = null;
+
         /// <summary>
         /// Internal constructor.
         /// </summary>
         internal ExecuteResponse()
         {
+        }
+
+        /// <summary>
+        /// Constuctor.
+        /// </summary>
+        /// <param name="exitCode">The exit code.</param>
+        /// <param name="outputText">Optionally specifies the output text.</param>
+        /// <param name="errorText">Optionally specifies the error text.</param>
+        public ExecuteResponse(int exitCode, string outputText = null, string errorText = null)
+        {
+            this.ExitCode   = exitCode;
+            this.OutputText = outputText ?? string.Empty;
+            this.ErrorText  = errorText ?? string.Empty;
         }
 
         /// <summary>
@@ -56,7 +71,15 @@ namespace Neon.Common
         /// </summary>
         public string AllText
         {
-            get { return OutputText + ErrorText; }
+            get
+            {
+                if (cachedAllText != null)
+                {
+                    return cachedAllText;
+                }
+
+                return cachedAllText = OutputText + ErrorText;
+            }
         }
 
         /// <summary>
