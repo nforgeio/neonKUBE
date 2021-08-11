@@ -224,7 +224,7 @@ namespace Neon.Common
         /// <param name="action">The action to be performed.</param>
         /// <param name="parameter">The parameter to be passed to the thread action.</param>
         /// <returns>The <see cref="Thread"/>.</returns>
-        public static Thread StartThreadTyped<TParam>(Action<TParam> action, TParam parameter)
+        public static Thread StartTypedThread<TParam>(Action<TParam> action, TParam parameter)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
