@@ -174,13 +174,16 @@ namespace Neon.SSH
         /// <summary>
         /// Ensures that the response has a zero exit code.
         /// </summary>
+        /// <returns>The same <see cref="CommandResponse"/> to support fluent coding styles.</returns>
         /// <exception cref="ExecuteException">Thrown if when <see cref="ExitCode"/> is non-zero.</exception>
-        public void EnsureSuccess()
+        public CommandResponse EnsureSuccess()
         {
             if (!Success)
             {
                 throw new ExecuteException(ExitCode, ErrorSummary, OutputText, ErrorText);
             }
+
+            return this;
         }
     }
 }
