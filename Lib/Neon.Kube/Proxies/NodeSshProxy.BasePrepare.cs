@@ -633,10 +633,22 @@ done
         /// The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
         /// for debugging purposes.
         /// </note>
+        /// <note>
+        /// This is not required or installed for WSL2 clusters.
+        /// </note>
         /// </remarks>
         public void BaseInstallNeonInit(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            // We don't control the distro IP address for WSL2 and there really
+            // isn't a way to mount a DVD either, so we're not going to install
+            // the [neon-init] service for this environment.
+
+            if (controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) == HostingEnvironment.Wsl2)
+            {
+                return;
+            }
 
             InvokeIdempotent("base/neon-init",
                 () =>
@@ -770,6 +782,8 @@ chmod 744 {KubeNodeFolders.Bin}/neon-init
 
 systemctl enable neon-init
 systemctl daemon-reload
+
+# ---------------------------------------------------
 ";
                     SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
