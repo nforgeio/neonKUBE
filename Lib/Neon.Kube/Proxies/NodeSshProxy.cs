@@ -510,9 +510,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
-        /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
-        /// compress better.
+        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, journald
+        /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
+        /// trims the file system (when possible) so the image will compress better.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void Clean(ISetupController controller)
@@ -546,10 +546,31 @@ namespace Neon.Kube
 
             var cleanScript =
 $@"#!/bin/bash
-cloud-init clean
+
+# Remove the journald log files by removing all subdirectories under: 
+#
+#       /var/log/journal
+#
+# journald will recreate these as required.
+
+orgDir=$(pwd)
+cd /var/log/journal
+
+for folder in */ ; do
+    rm -r $folder
+done
+
+cd $orgDir
+
+# Misc cleaning
+
+cloud - init clean
 safe-apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
+
+# Filesystem cleaning
+
 {cleanCommand}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
