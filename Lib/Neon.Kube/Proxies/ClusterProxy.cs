@@ -284,7 +284,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hostingManagerFactory">The hosting manager factory.</param>
         /// <returns>The <see cref="IHostingManager"/>.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if no valid node image URI or path were passed to the constructor.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if no valid node image URI or path were passed to the constructor.</exception>
         /// <remarks>
         /// <note>
         /// A valid node image URI or path must have been passed to the constructor for
@@ -307,7 +307,7 @@ namespace Neon.Kube
             }
             else
             {
-                hostingManager = hostingManagerFactory.GetManager(this);
+                throw new InvalidOperationException($"One of [{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] needed to be passed as non-NULL to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to work.");
             }
 
             if (hostingManager == null)
