@@ -23,6 +23,7 @@ spec:
               - path: kind
                 value: DaemonSet
               - path: spec.strategy
+        hpaSpec: {}
         service:
           {{- with .Values.nodePorts }}
             ports:

@@ -1751,7 +1751,7 @@ apt-mark hold kubeadm kubectl kubelet
 mkdir -p /opt/cni/bin
 mkdir -p /etc/cni/net.d
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
 
 # Stop and disable [kubelet] for now.  We'll enable this later during cluster setup.
 

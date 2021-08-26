@@ -379,7 +379,7 @@ namespace Neon.Kube
                         maxAttempts:          int.MaxValue,
                         initialRetryInterval: TimeSpan.FromSeconds(1),
                         maxRetryInterval:     TimeSpan.FromSeconds(5),
-                        timeout:              TimeSpan.FromSeconds(120));
+                        timeout:              TimeSpan.FromMinutes(5));
 
                 controller.Add(KubeSetupProperty.K8sClient, k8sClient);
             }

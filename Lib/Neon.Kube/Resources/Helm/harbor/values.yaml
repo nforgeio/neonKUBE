@@ -131,6 +131,11 @@ resources:
     memory: 200Mi
 
 storage:
+  trivy:
+    cache:
+      size: 1Gi
+    reports:
+      size: 1Gi
   s3:
     accessKey: accesskey
     secretKeyRef: secretkey

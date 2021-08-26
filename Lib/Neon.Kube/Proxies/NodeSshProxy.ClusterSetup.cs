@@ -678,7 +678,7 @@ service kubelet restart
 
                     var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
                     
-                    SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm} || true");
+                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolders.Helm} || true");
                     SudoCommand($"rm -f {zipPath}");
                 });
 
@@ -687,7 +687,7 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "deploy", message: $"helm");
+                    controller.LogProgress(this, verb: "deploy", message: releaseName);
 
                     var valueOverrides = new StringBuilder();
 
