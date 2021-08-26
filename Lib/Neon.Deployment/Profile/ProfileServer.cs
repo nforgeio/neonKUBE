@@ -241,8 +241,7 @@ namespace Neon.Deployment
 
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new Thread(new ParameterizedThreadStart(ServerThread));
-                threads[i].Start(i);
+                threads[i] = NeonHelper.StartThread(ServerThread, i);
             }
         }
 

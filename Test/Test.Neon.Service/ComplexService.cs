@@ -161,8 +161,7 @@ namespace TestNeonService
 
             // Start the worker thread.
 
-            thread = new Thread(new ThreadStart(ThreadFunc));
-            thread.Start();
+            thread = NeonHelper.StartThread(ThreadFunc);
 
             // Start the service task 
 

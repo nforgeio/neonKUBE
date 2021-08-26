@@ -36,9 +36,14 @@ namespace Neon.Kube
     public enum SetupDisposition
     {
         /// <summary>
+        /// The setup run has not been executed.
+        /// </summary>
+        NotExecuted = 0,
+
+        /// <summary>
         /// The setup run completed successfully.
         /// </summary>
-        Success,
+        Succeeded,
 
         /// <summary>
         /// The setup run was cancelled.

@@ -52,7 +52,8 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeImageUri">The node image URI.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
+        /// <param name="nodeImagePath">Optionally specifies the node image path (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
@@ -78,21 +79,26 @@ namespace Neon.Kube
         /// current neonDESKTOP state will not be impacted.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
+        /// <param name="disableImageDownload">
+        /// Optionally indicate that the node image is already present locally and does not need to be downloaded.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition,
-            string                      nodeImageUri,
+            string                      nodeImageUri          = null,
+            string                      nodeImagePath         = null,
             int                         maxParallel           = 500,
             IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
             bool                        automate              = false,
-            string                      headendUri            = "https://headend.neoncloud.io")
+            string                      headendUri            = "https://headend.neoncloud.io",
+            bool                        disableImageDownload  = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
@@ -110,8 +116,11 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(clusterDefinition,
-                (nodeName, nodeAddress, appendToLog) =>
+            var cluster = new ClusterProxy(
+                clusterDefinition:  clusterDefinition,
+                nodeImageUri:       nodeImageUri,
+                nodeImagePath:      nodeImagePath,
+                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
@@ -154,7 +163,16 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
+            HostingManager hostingManager;
+
+            if (!string.IsNullOrEmpty(nodeImageUri))
+            {
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
+            }
+            else
+            {
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageFile(cluster, nodeImagePath);
+            }
 
             if (hostingManager == null)
             {
@@ -194,6 +212,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
 
             // Configure the cluster preparation steps.
 
@@ -208,7 +227,7 @@ namespace Neon.Kube
                         }
                         catch (Exception e)
                         {
-                            controller.LogError(NeonHelper.ExceptionError(e));
+                            controller.LogBaseError(NeonHelper.ExceptionError(e));
                             return;
                         }
                     }
@@ -305,7 +324,7 @@ namespace Neon.Kube
 
                                 if (result.ExitCode != 0)
                                 {
-                                    controller.LogError(result.AllText);
+                                    controller.LogBaseError(result.AllText);
                                     return;
                                 }
 
@@ -339,7 +358,7 @@ namespace Neon.Kube
                     node.PrepareNode(controller);
                 });
 
-            controller.AddGlobalStep("generate neoncluster.io domain",
+            controller.AddGlobalStep("create neoncluster.io domain",
                 async (controller) =>
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
@@ -347,12 +366,11 @@ namespace Neon.Kube
                     if (hostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-                        var dnsAddress = enterpriseHelper.GetWsl2Address().ToString();
+                        var dnsAddress       = enterpriseHelper.GetWsl2Address().ToString();
 
                         using (var jsonClient = new JsonClient())
                         {
-                            var headendUri = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
-                            jsonClient.BaseAddress = headendUri;
+                            jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={dnsAddress}");
                             clusterLogin.Save();
                         }

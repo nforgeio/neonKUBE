@@ -345,7 +345,7 @@ namespace TestNeonService
             // Verify that a service with a specified port and default path actually exposes metrics.
 
             var service     = new TestService();
-            var metricsPort = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var metricsPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
 
             service.MetricsOptions.Mode = MetricsMode.Scrape;
             service.MetricsOptions.Port = metricsPort;
@@ -435,7 +435,7 @@ namespace TestNeonService
             // Verify that a service with the specific port and path actually exposes metrics.
 
             var service     = new TestService();
-            var metricPort  = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var metricPort  = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
             var metricsPath = "foo/";
 
             service.MetricsOptions.Mode = MetricsMode.Scrape;
@@ -483,7 +483,7 @@ namespace TestNeonService
             // simulated Pushgateway.
 
             var service     = new TestService();
-            var gatewayPort = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var gatewayPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
 
             service.MetricsOptions.Mode    = MetricsMode.Push;
             service.MetricsOptions.PushUrl = $"http://127.0.0.1:{gatewayPort}/";
@@ -571,7 +571,7 @@ namespace TestNeonService
             // Verify that we can also expose .NET Runtime exposes metrics via the [GetCollector()] callback.
 
             var service     = new TestService();
-            var metricPort  = NetHelper.GetUnusedIpPort(IPAddress.Loopback);
+            var metricPort  = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
             var metricsPath = "foo/";
 
             service.MetricsOptions.Mode         = MetricsMode.Scrape;

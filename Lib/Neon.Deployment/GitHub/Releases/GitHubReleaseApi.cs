@@ -22,6 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -470,11 +472,11 @@ namespace Neon.Deployment
         /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
         public void Download(
-          Download                          download, 
-          string                            targetPath, 
-          GitHubDownloadProgressDelegate    progressAction = null, 
-          IRetryPolicy                      retry          = null,
-          TimeSpan                          partTimeout    = default)
+            Download                        download, 
+            string                          targetPath, 
+            GitHubDownloadProgressDelegate  progressAction = null, 
+            IRetryPolicy                    retry          = null,
+            TimeSpan                        partTimeout    = default)
         {
             DownloadAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
         }
@@ -490,6 +492,9 @@ namespace Neon.Deployment
         /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 
@@ -534,16 +539,48 @@ namespace Neon.Deployment
 
             // If the target file already exists along with its MD5 hash file, then compare the
             // existing MD5 against the download's MD5 as well as the computed MD5 for the current
-            // file and skip the download when the match.
+            // file and skip the download when these match.
+            //
+            // We're going to use the new .NET 5.0 [IncrementalHash] class so we can report progress 
+            // for .NET 5.0+ builds.
 
             if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
             {
                 using (var input = File.OpenRead(targetPath))
                 {
+#if NET5_0_OR_GREATER
+                    using (var hasher = IncrementalHash.CreateHash(HashAlgorithmName.MD5))
+                    {
+                        var buffer = new byte[8192];
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 0);
+
+                        while (true)
+                        {
+                            var cb = input.Read(buffer, 0, buffer.Length);
+
+                            if (cb == 0)
+                            {
+                                break;
+                            }
+
+                            hasher.AppendData(buffer, 0, cb);
+                            progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)input.Position/(double)input.Length * 100.0));
+                        }
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 100);
+
+                        if (NeonHelper.ToHex(hasher.GetCurrentHash()) == download.Md5)
+                        {
+                            return targetPath;
+                        }
+                    }
+#else
                     if (CryptoHelper.ComputeMD5String(input) == download.Md5)
                     {
                         return targetPath;
                     }
+#endif
                 }
             }
 
@@ -560,6 +597,8 @@ namespace Neon.Deployment
 
                     foreach (var part in download.Parts.OrderBy(part => part.Number))
                     {
+                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)pos / (double)download.Size * 100.0));
+
                         // Handle a partially downloaded part.  We're going to truncate the file to
                         // remove the partial part and then break to start re-downloading the part.
 
@@ -593,14 +632,14 @@ namespace Neon.Deployment
 
             // Download any remaining parts.
 
-            if (progressAction != null && !progressAction.Invoke(0))
+            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, 0))
             {
                 return targetPath;
             }
 
             if (nextPartNumber > download.Parts.Count)
             {
-                progressAction?.Invoke(100);
+                progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
                 return targetPath;
             }
 
@@ -660,7 +699,7 @@ namespace Neon.Deployment
 
                             pos += part.Size;
 
-                            if (progressAction != null && !progressAction.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
                             {
                                 return targetPath;
                             }
@@ -672,7 +711,7 @@ namespace Neon.Deployment
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
                     File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
 
                     return targetPath;

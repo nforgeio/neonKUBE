@@ -99,8 +99,9 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(clusterDefinition,
-                (nodeName, nodeAddress, appendToLog) =>
+            var cluster = new ClusterProxy(
+                clusterDefinition:  clusterDefinition,
+                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
@@ -125,7 +126,7 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster);
+            var hostingManager = cluster.GetHostingManager(new HostingManagerFactory(() => HostingLoader.Initialize()));
 
             if (hostingManager == null)
             {

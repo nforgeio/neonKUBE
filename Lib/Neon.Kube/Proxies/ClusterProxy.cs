@@ -60,12 +60,16 @@ namespace Neon.Kube
     {
         private RunOptions          defaultRunOptions;
         private NodeProxyCreator    nodeProxyCreator;
+        private string              nodeImageUri;
+        private string              nodeImagePath;
         private bool                appendLog;
 
         /// <summary>
         /// Constructs a cluster proxy for a Kubernetes context.
         /// </summary>
         /// <param name="kubeContext">The cluster context.</param>
+        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
+        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
         /// The optional application supplied function that creates a node proxy,
         /// given the node name, public address or FQDN, private address, and
@@ -78,19 +82,27 @@ namespace Neon.Kube
         /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
+        /// <para>
+        /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
+        /// for <see cref="GetHostingManager(IHostingManagerFactory)"/> to work.
+        /// </para>
+        /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
         /// the cluster definition giving the application the chance to create the management
         /// proxy using the node's SSH credentials and also to specify logging.  A default
         /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
         /// is passed.
+        /// </para>
         /// </remarks>
         public ClusterProxy(
             KubeConfigContext   kubeContext,
+            string              nodeImageUri      = null,
+            string              nodeImagePath     = null,
             NodeProxyCreator    nodeProxyCreator  = null,
             bool                appendToLog       = false,
             RunOptions          defaultRunOptions = RunOptions.None)
 
-            : this(kubeContext.Extension.ClusterDefinition, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
+            : this(kubeContext.Extension.ClusterDefinition, nodeImageUri, nodeImagePath, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(kubeContext != null, nameof(kubeContext));
 
@@ -101,6 +113,8 @@ namespace Neon.Kube
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
+        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
         /// The application supplied function that creates a management proxy
         /// given the node name, public address or FQDN, private address, and
@@ -113,19 +127,36 @@ namespace Neon.Kube
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
+        /// <para>
+        /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
+        /// for <see cref="GetHostingManager(IHostingManagerFactory)"/> to work.
+        /// </para>
+        /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
         /// the cluster definition giving the application the chance to create the node
         /// proxy using the node's SSH credentials and also to specify logging.  A default
         /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
         /// is passed.
+        /// </para>
         /// </remarks>
         public ClusterProxy(
             ClusterDefinition   clusterDefinition,
+            string              nodeImageUri      = null,
+            string              nodeImagePath     = null,
             NodeProxyCreator    nodeProxyCreator  = null,
             bool                appendToLog       = false,
             RunOptions          defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            if (!string.IsNullOrEmpty(this.nodeImageUri))
+            {
+                this.nodeImageUri = nodeImageUri;
+            }
+            else
+            {
+                this.nodeImagePath = nodeImagePath;
+            }
 
             if (nodeProxyCreator == null)
             {
@@ -246,6 +277,45 @@ namespace Neon.Kube
         public IEnumerable<NodeSshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
+        }
+
+        /// <summary>
+        /// Returns the hosting manager to use for provisioning and deploying the cluster.
+        /// </summary>
+        /// <param name="hostingManagerFactory">The hosting manager factory.</param>
+        /// <returns>The <see cref="IHostingManager"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if no valid node image URI or path were passed to the constructor.</exception>
+        /// <remarks>
+        /// <note>
+        /// A valid node image URI or path must have been passed to the constructor for
+        /// this to work.
+        /// </note>
+        /// </remarks>
+        public IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory)
+        {
+            Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
+
+            HostingManager hostingManager;
+
+            if (!string.IsNullOrEmpty(nodeImageUri))
+            {
+                hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri);
+            }
+            else if (!string.IsNullOrEmpty(nodeImagePath))
+            {
+                hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath);
+            }
+            else
+            {
+                hostingManager = hostingManagerFactory.GetManager(this);
+            }
+
+            if (hostingManager == null)
+            {
+                throw new KubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
+            }
+
+            return hostingManager;
         }
 
         /// <summary>

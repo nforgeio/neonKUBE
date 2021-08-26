@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupStepState.cs
+// FILE:	    WindowsFeatureStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,36 +15,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon.Kube
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Neon.Common
 {
     /// <summary>
-    /// Enumerates possible status codes for a cluster setup step.
+    /// Enumerates the possible states of an optional Windows feature.
     /// </summary>
-    public enum SetupStepState
+    public enum WindowsFeatureStatus
     {
         /// <summary>
-        /// Used to indicate that a node is not involved with a setup step.
+        /// The feature status couldn't be determined.
         /// </summary>
-        NotInvolved = 0,
+        Unknown = 0,
 
         /// <summary>
-        /// The step is awaiting execution.
+        /// The feature is disabled.
         /// </summary>
-        Pending,
+        Disabled,
 
         /// <summary>
-        /// The step is running.
+        /// The feature is enabled.
         /// </summary>
-        Running,
+        Enabled,
 
         /// <summary>
-        /// The step has completed successfully.
+        /// The feature is currently partially installed and will be enabled after
+        /// Windows is restarted.
         /// </summary>
-        Done,
-
-        /// <summary>
-        /// The step failed.
-        /// </summary>
-        Failed
+        EnabledPending
     }
 }

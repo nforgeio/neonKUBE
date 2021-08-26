@@ -135,7 +135,7 @@ namespace Neon.IO
                     {
                         var text = file.ReadAllText(Encoding.UTF8);
 
-                        text = text.Replace("\r\n", "\n");
+                        text = NeonHelper.ToLinuxLineEndings(text);
 
                         zip.Add(new StaticBytesDataSource(Encoding.UTF8.GetBytes(text)), relativePath);
                     }

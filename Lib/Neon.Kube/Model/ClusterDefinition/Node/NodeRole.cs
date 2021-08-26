@@ -34,5 +34,19 @@ namespace Neon.Kube
         /// The node is a cluster worker.
         /// </summary>
         public const string Worker = "worker";
+
+        /// <summary>
+        /// <b>HACK:</b> The node is actually a XenServer host machine and not an actual Kubernetes node.
+        /// This seemed like the least bad place to define this for <see cref="SetupNodeStatus.Role"/>
+        /// values when preparing a cluster on XenServer.
+        /// </summary>
+        public const string XenServer = "xenserver";
+
+        /// <summary>
+        /// <b>HACK:</b> The node is actually a Hyper-V host machine and not an actual Kubernetes node.
+        /// This seemed like the least bad place to define this for <see cref="SetupNodeStatus.Role"/>
+        /// values when preparing a cluster on Hyper-V servers.
+        /// </summary>
+        public const string HyperV = "hyperv";
     }
 }

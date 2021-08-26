@@ -25,6 +25,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Win32;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
@@ -34,9 +36,10 @@ namespace Neon.Common
         private static NetFramework?    netFramework = null;
         private static string           frameworkDescription;
         private static bool             isWindows;
+        private static WindowsEdition   windowsEdition;
         private static bool             isLinux;
         private static bool             isOSX;
-        private static bool?            is64Bit;
+        private static bool?            is64BitBuild;
         private static bool?            isDevWorkstation;
         private static bool?            isKubernetes;
 
@@ -47,7 +50,7 @@ namespace Neon.Common
         {
             if (osChecked)
             {
-                return;     // Already did a detect
+                return;     // Already competed detection.
             }
 
             try
@@ -57,6 +60,49 @@ namespace Neon.Common
                 isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                 isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
                 isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+                if (isWindows)
+                {
+                    // Examine registry to detect the Windows Edition.
+
+                    var key       = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
+                    var editionID = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue("EditionID").ToString();
+
+                    // $todo(jefflill): We're guessing at the server edition IDs here.
+
+                    switch (editionID.ToLowerInvariant())
+                    {
+                        case "home":
+
+                            windowsEdition = WindowsEdition.Home;
+                            break;
+
+                        case "professional":
+
+                            windowsEdition = WindowsEdition.Professional;
+                            break;
+
+                        case "serverstandard":
+
+                            windowsEdition = WindowsEdition.ServerStandard;
+                            break;
+
+                        case "serverenterprise":
+
+                            windowsEdition = WindowsEdition.ServerEnterprise;
+                            break;
+
+                        case "serverdatacenter":
+
+                            windowsEdition = WindowsEdition.ServerDatacenter;
+                            break;
+
+                        default:
+
+                            windowsEdition = WindowsEdition.Unknown;
+                            break;
+                    }
+                }
             }
             finally
             {
@@ -69,7 +115,7 @@ namespace Neon.Common
         /// <summary>
         /// Returns the operation system description.
         /// </summary>
-        public static string OsDescription
+        public static string OSDescription
         {
             get
             {
@@ -82,6 +128,16 @@ namespace Neon.Common
                 return osDescription;
             }
         }
+
+        /// <summary>
+        /// Returns <c>true</c> for 32-bit operating systems.
+        /// </summary>
+        public static bool Is32BitOS => !Environment.Is64BitOperatingSystem;
+
+        /// <summary>
+        /// Returns <c>true</c> for 64-bit operating systems.
+        /// </summary>
+        public static bool Is64BitOS => Environment.Is64BitOperatingSystem;
 
         /// <summary>
         /// Returns the .NET runtime description.
@@ -103,18 +159,18 @@ namespace Neon.Common
         /// <summary>
         /// Returns <c>true</c> if the application was built as 64-bit.
         /// </summary>
-        public static bool Is64Bit
+        public static bool Is64BitBuild
         {
             get
             {
-                if (is64Bit.HasValue)
+                if (is64BitBuild.HasValue)
                 {
-                    return is64Bit.Value;
+                    return is64BitBuild.Value;
                 }
 
-                is64Bit = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
+                is64BitBuild = System.Runtime.InteropServices.Marshal.SizeOf<IntPtr>() == 8;
 
-                return is64Bit.Value;
+                return is64BitBuild.Value;
             }
         }
 
@@ -123,7 +179,7 @@ namespace Neon.Common
         /// </summary>
         public static bool Is32BitBuild
         {
-            get { return !Is64Bit; }
+            get { return !Is64BitBuild; }
         }
 
         /// <summary>
@@ -160,6 +216,36 @@ namespace Neon.Common
 
                 DetectOS();
                 return isWindows;
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the Windows is the current operating system.
+        /// </summary>
+        private static void EnsureWindows()
+        {
+            if (!isWindows)
+            {
+                throw new NotSupportedException("This property works only on Windows.");
+            }
+        }
+
+        /// <summary>
+        /// Identifies the current Windows edition (home, pro, server,...).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
+        public static WindowsEdition WindowsEdition
+        {
+            get
+            {
+                EnsureWindows();
+
+                if (!osChecked)
+                {
+                    DetectOS();
+                }
+
+                return windowsEdition;
             }
         }
 
@@ -225,6 +311,228 @@ namespace Neon.Common
                 }
 
                 return isKubernetes.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a dictionary mapping optional Windows feature names to a <see cref="WindowsFeatureStatus"/>
+        /// indicating feature installation status.
+        /// </summary>
+        /// <returns>The feature dictionary.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
+        /// <remarks>
+        /// <note>
+        /// The feature names are in English and the lookup is case-insensitive.
+        /// </note>
+        /// </remarks>
+        public static Dictionary<string, WindowsFeatureStatus> GetWindowsOptionalFeatures()
+        {
+            EnsureWindows();
+
+            // We're going to use the DSIM.EXE app to list these.  The table output
+            // will look like:
+            //
+            //      Deployment Image Servicing and Management tool
+            //      Version: 10.0.19041.844
+            //
+            //      Image Version: 10.0.19042.1083
+            //
+            //      Features listing for package : Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.19041.1
+            //
+            //
+            //      ------------------------------------------- | --------
+            //      Feature Name                                | State
+            //      ------------------------------------------- | --------
+            //      Printing - PrintToPDFServices-Features      | Enabled
+            //      Printing - XPSServices-Features             | Enabled
+            //      TelnetClient                                | Disabled
+            //      TFTP                                        | Disabled
+            //      LegacyComponents                            | Disabled
+            //      DirectPlay                                  | Disabled
+            //      Printing-Foundation-Features                | Enabled
+            //      Printing-Foundation-InternetPrinting-Client | Enabled
+            //
+            //      ...
+            //
+            // We're simply going to parse the lines with a pipe ("|").
+
+            var response = NeonHelper.ExecuteCapture("dism.exe",
+                new object[]
+                {
+                    "/Online",
+                    "/English",
+                    "/Get-Features",
+                    "/Format:table"
+                });
+
+            response.EnsureSuccess();
+
+            var featureMap = new Dictionary<string, WindowsFeatureStatus>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var line in response.OutputText.ToLines())
+            {
+                if (!line.StartsWith("----") && line.Contains('|'))
+                {
+                    var fields = line.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                    var status = WindowsFeatureStatus.Unknown;
+
+                    fields[0] = fields[0].Trim();
+                    fields[1] = fields[1].Trim();
+
+                    if (fields[0] == "Feature Name")
+                    {
+                        continue;   // Ignore column headers
+                    }
+
+                    switch (fields[1].ToLowerInvariant())
+                    {
+                        case "disabled":
+
+                            status = WindowsFeatureStatus.Disabled;
+                            break;
+
+                        case "enabled":
+
+                            status = WindowsFeatureStatus.Enabled;
+                            break;
+
+                        case "enable pending":
+
+                            status = WindowsFeatureStatus.EnabledPending;
+                            break;
+                    }
+
+                    featureMap[fields[0]] = status;
+                }
+            }
+
+            return featureMap;
+        }
+
+        /// <summary>
+        /// Returns the installation status for the named feature.
+        /// </summary>
+        /// <param name="feature">Specifies the <b>English</b> name for the feature.</param>
+        /// <returns>The <see cref="WindowsFeatureStatus"/> for the feature.</returns>
+        /// <remarks>
+        /// <para>
+        /// You'll need to pass the feature name in English.  You can list possible feature
+        /// names by executing this in your command shell:
+        /// </para>
+        /// <example>
+        /// dism /Online /English /Get-Features /Format:table
+        /// </example>
+        /// <note>
+        /// <see cref="WindowsFeatureStatus.Unknown"/> will be returned for unknown features.
+        /// </note>
+        /// </remarks>
+        public static WindowsFeatureStatus GetWindowsOptionalFeatureStatus(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            if (GetWindowsOptionalFeatures().TryGetValue(feature, out var status))
+            {
+                return status;
+            }
+            else
+            {
+                return WindowsFeatureStatus.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Enables an optional Windows feature, returning an indication of whether a 
+        /// Windows restart is required to complete the installation.
+        /// </summary>
+        /// <returns><c>true</c> if a restart is required.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the feature does't exist.</exception>
+        /// <remarks>
+        /// This method does nothing when the feature is already enabled
+        /// or has been enabled but is waiting for a restart.
+        /// </remarks>
+        public static bool EnableOptionalWindowsFeature(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            switch (GetWindowsOptionalFeatureStatus(feature))
+            {
+                case WindowsFeatureStatus.Unknown:
+
+                    throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
+
+                case WindowsFeatureStatus.Enabled:
+
+                    var response = NeonHelper.ExecuteCapture("dism.exe",
+                        new object[]
+                        {
+                            "/Online",
+                            "/English",
+                            "/Enable-Feature",
+                            $"/FeatureName:{feature}"
+                        });
+
+                    response.EnsureSuccess();
+
+                    return GetWindowsOptionalFeatureStatus(feature) == WindowsFeatureStatus.EnabledPending;
+
+                case WindowsFeatureStatus.EnabledPending:
+
+                    return true;
+
+                case WindowsFeatureStatus.Disabled:
+
+                    return false;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Disables an optional Windows feature.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the feature does't exist or is enabled and waiting for a Windows restart.
+        /// </exception>
+        /// <remarks>
+        /// This method does nothing when the feature is already disabled.
+        /// </remarks>
+        public static void DisableOptionalWindowsFeature(string feature)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
+
+            switch (GetWindowsOptionalFeatureStatus(feature))
+            {
+                case WindowsFeatureStatus.Unknown:
+
+                    throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
+
+                case WindowsFeatureStatus.Enabled:
+
+                    var response = NeonHelper.ExecuteCapture("dism.exe",
+                        new object[]
+                        {
+                            "/Online",
+                            "/English",
+                            "/Disable-Feature",
+                            $"/FeatureName:{feature}"
+                        });
+
+                    response.EnsureSuccess();
+                    break;
+
+                case WindowsFeatureStatus.EnabledPending:
+
+                    throw new InvalidOperationException($"Windows Feature install is pending: {feature}");
+
+                case WindowsFeatureStatus.Disabled:
+
+                    return;
+
+                default:
+
+                    throw new NotImplementedException();
             }
         }
     }

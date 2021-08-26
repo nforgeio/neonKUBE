@@ -49,7 +49,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the message text.
         /// </summary>
-        public string Message { get; internal set; }
+        public string Text { get; internal set; }
 
         /// <summary>
         /// Indicates whether the message describes an error.
@@ -58,13 +58,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// Indicates whether the setup controller has been signalled to
-        /// cancel thje entire operation.
+        /// cancel the entire operation.
         /// </summary>
         public bool CancelPending { get; internal set; }
     }
 
     /// <summary>
-    /// Used for raising the <see cref="ISetupController.ProgressEvent"/>.
+    /// Used for raising the <see cref="ISetupController.BaseProgressEvent"/>.
     /// </summary>
     /// <param name="message">The status message.</param>
     public delegate void SetupProgressDelegate(SetupProgressMessage message);

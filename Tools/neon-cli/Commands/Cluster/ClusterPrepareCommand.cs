@@ -202,11 +202,7 @@ Server Requirements:
                 // This special-case argument indicates that we should use the built-in 
                 // WSL2 cluster definition.
 
-                using (var tempFile = new TempFile(folder: KubeHelper.TempFolder))
-                {
-                    File.WriteAllText(tempFile.Path, KubeSetup.GetWsl2ClusterDefintion(), Encoding.UTF8);
-                    clusterDefinition = ClusterDefinition.FromFile(tempFile.Path, strict: true);
-                }
+                clusterDefinition = KubeSetup.GetLocalWsl2ClusterDefintion();
             }
             else
             {
@@ -245,7 +241,7 @@ Server Requirements:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                nodeImageUri,
+                nodeImageUri:           nodeImageUri,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
@@ -260,9 +256,9 @@ Server Requirements:
                     status.WriteToConsole();
                 };
 
-            switch (controller.Run())
+            switch (await controller.RunAsync())
             {
-                case SetupDisposition.Success:
+                case SetupDisposition.Succeeded:
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupStepState.cs
+// FILE:	    WindowsEdition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,36 +15,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon.Kube
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Neon.Common
 {
     /// <summary>
-    /// Enumerates possible status codes for a cluster setup step.
+    /// Enumerates the known Windows Editions.
     /// </summary>
-    public enum SetupStepState
+    public enum WindowsEdition
     {
         /// <summary>
-        /// Used to indicate that a node is not involved with a setup step.
+        /// The Windows edition could not be identified.
         /// </summary>
-        NotInvolved = 0,
+        Unknown = 0,
 
         /// <summary>
-        /// The step is awaiting execution.
+        /// Windows Home.
         /// </summary>
-        Pending,
+        Home,
 
         /// <summary>
-        /// The step is running.
+        /// Windows Professional.
         /// </summary>
-        Running,
+        Professional,
 
         /// <summary>
-        /// The step has completed successfully.
+        /// Windows Server (standard).
         /// </summary>
-        Done,
+        ServerStandard,
 
         /// <summary>
-        /// The step failed.
+        /// Windows Server (enterprise).
         /// </summary>
-        Failed
+        ServerEnterprise,
+
+        /// <summary>
+        /// Windows Server (datacenter).
+        /// </summary>
+        ServerDatacenter
     }
 }

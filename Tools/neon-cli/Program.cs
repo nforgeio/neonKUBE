@@ -505,10 +505,6 @@ You can disable the use of this encrypted folder by specifying
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            // Ensure that all sensitive files and folders are encrypted at rest.  We're 
-            // running this after every command just to be super safe.
-
-            KubeHelper.EncryptSensitiveFiles();
             throw new ProgramExitException(exitCode);
         }
 

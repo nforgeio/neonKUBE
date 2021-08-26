@@ -115,9 +115,17 @@ namespace Neon.Kube
         public const string AutomationFolder = "automation-folder";
 
         /// <summary>
-        /// Property for accessing the headend service base URI. This can be overridden
+        /// Property name for accessing the headend service base URI. This can be overridden
         /// for development purposes.
         /// </summary>
         public const string HeadendUri = "headend-uri";
+
+        /// <summary>
+        /// Property name for a boolean indicating that the node image has already been downloaded
+        /// (e.g. by neonDESKTOP) and does not need to be downloaded hosting managers during cluster
+        /// provisioning.  Image downloading should be considered to be enabled when this property
+        /// is not present.
+        /// </summary>
+        public const string DisableImageDownload = "image-download-disabled";
     }
 }

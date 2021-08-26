@@ -32,7 +32,8 @@ namespace Neon.Tasks
     /// <summary>
     /// Used by public <c>async</c> library methods to reset the current
     /// task <see cref="SynchronizationContext"/> so that continuations won't
-    /// be marshalled back to the current thread, improving performance.
+    /// be marshalled back to the current thread improving performance,
+    /// especially when called from a UI context.
     /// </summary>
     /// <remarks>
     /// <para>

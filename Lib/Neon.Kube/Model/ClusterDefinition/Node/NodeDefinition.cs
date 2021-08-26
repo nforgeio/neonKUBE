@@ -323,15 +323,9 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
-
-                    Vm = Vm ?? new VmNodeOptions();
-                    Vm.Validate(clusterDefinition, this.Name);
-                    break;
-
                 case HostingEnvironment.Wsl2:
 
                     Vm = Vm ?? new VmNodeOptions();
-                    this.Name = Dns.GetHostName();
                     Vm.Validate(clusterDefinition, this.Name);
                     break;
 

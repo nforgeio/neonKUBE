@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupStepState.cs
+// FILE:	    GetHubDownloadProgressType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,36 +15,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon.Kube
+namespace Neon.Deployment
 {
     /// <summary>
-    /// Enumerates possible status codes for a cluster setup step.
+    /// Enumerates the types of progress indications raised when downloading 
+    /// a multi-part file from a GitHub release.
     /// </summary>
-    public enum SetupStepState
+    public enum GetHubDownloadProgressType
     {
         /// <summary>
-        /// Used to indicate that a node is not involved with a setup step.
+        /// An existing local file is being verified.
         /// </summary>
-        NotInvolved = 0,
+        Checking,
 
         /// <summary>
-        /// The step is awaiting execution.
+        /// The file is being downloaded.
         /// </summary>
-        Pending,
-
-        /// <summary>
-        /// The step is running.
-        /// </summary>
-        Running,
-
-        /// <summary>
-        /// The step has completed successfully.
-        /// </summary>
-        Done,
-
-        /// <summary>
-        /// The step failed.
-        /// </summary>
-        Failed
+        Downloading
     }
 }

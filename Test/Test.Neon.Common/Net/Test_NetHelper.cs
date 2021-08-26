@@ -671,7 +671,7 @@ namespace TestCommon
 
             for (int i = 0; i < 100; i++)
             {
-                var port = NetHelper.GetUnusedIpPort(address);
+                var port = NetHelper.GetUnusedTcpPort(address);
 
                 Assert.DoesNotContain(ports, p => p == port);
 

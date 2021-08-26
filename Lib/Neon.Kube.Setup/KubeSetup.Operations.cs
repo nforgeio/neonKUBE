@@ -464,7 +464,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            controller.LogProgress(verb: "created", message: "cluster");
+                            controller.LogBaseProgress(verb: "created", message: "cluster");
                         });
 
                     master.InvokeIdempotent("setup/kubectl",
@@ -3208,14 +3208,14 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Returns the built-in cluster definition (as text) for a cluster provisioned on WSL2.
+        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
         /// </summary>
         /// <returns>The cluster definition text.</returns>
-        public static string GetWsl2ClusterDefintion()
+        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
         {
-            var definition =
+            var yaml =
 @"
-name: wsl2
+name: neon-desktop
 datacenter: wsl2
 environment: development
 timeSources:
@@ -3226,10 +3226,10 @@ kubernetes:
 hosting:
   environment: wsl2
 nodes:
-  master-0:
+  master:
     role: master
 ";
-            return definition;
+            return ClusterDefinition.FromYaml(yaml);
         }
     }
 }

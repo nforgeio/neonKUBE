@@ -184,13 +184,56 @@ namespace Neon.Common
         /// </summary>
         /// <param name="action">The action to be performed.</param>
         /// <returns>The <see cref="Thread"/>.</returns>
-        public static Thread ThreadRun(Action action)
+        public static Thread StartThread(Action action)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             var thread = new Thread(new ThreadStart(action));
 
             thread.Start();
+
+            return thread;
+        }
+
+        /// <summary>
+        /// Starts a new <see cref="Thread"/> to perform a parameterized action with
+        /// an object parameter.
+        /// </summary>
+        /// <param name="action">The action to be performed.</param>
+        /// <param name="parameter">The parameter to be passed to the thread action.</param>
+        /// <returns>The <see cref="Thread"/>.</returns>
+        public static Thread StartThread(Action<object> action, object parameter)
+        {
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            // Wrap the user's action with another action here so we can
+            // cast the parameter to required type.
+
+            var thread = new Thread(new ParameterizedThreadStart(action));
+
+            thread.Start(parameter);
+
+            return thread;
+        }
+
+        /// <summary>
+        /// Starts a new <see cref="Thread"/> to perform a parameterized action with
+        /// a typed parameter.
+        /// </summary>
+        /// <typeparam name="TParam">Identifies the type of the thread action parameter.</typeparam>
+        /// <param name="action">The action to be performed.</param>
+        /// <param name="parameter">The parameter to be passed to the thread action.</param>
+        /// <returns>The <see cref="Thread"/>.</returns>
+        public static Thread StartTypedThread<TParam>(Action<TParam> action, TParam parameter)
+        {
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            // Wrap the user's action with another action here so we can
+            // cast the parameter to required type.
+
+            var thread = new Thread(new ParameterizedThreadStart(arg => action((TParam)arg)));
+
+            thread.Start(parameter);
 
             return thread;
         }

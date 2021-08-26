@@ -21,7 +21,8 @@ namespace Neon.Deployment
     /// Describes the callback used to monitor and possibly cancel the download
     /// of file composed from one or more assets from a GitHub Release.
     /// </summary>
+    /// <param name="progressType">Passed indicating the current operation being performed.</param>
     /// <param name="percentComplete">Passed as the approximate percentage of the file downloaded (between 0..100).</param>
     /// <returns><c>true</c> if the download is to continue or <c>false</c> to cancel it.</returns>
-    public delegate bool GitHubDownloadProgressDelegate(int percentComplete);
+    public delegate bool GitHubDownloadProgressDelegate(GetHubDownloadProgressType progressType,  int percentComplete);
 }

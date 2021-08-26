@@ -91,17 +91,6 @@ namespace Neon.Kube
             {
                 BaseUpgradeLinux(controller);
             }
-
-            // We need to reboot to pick up new environment variables and perhaps
-            // some other changes.  We might be able to just reconnect but we'll
-            // reboot, just to be safe.
-
-            //InvokeIdempotent("base/initialize-reboot",
-            //    () =>
-            //    {
-            //        controller.LogProgress(this, verb: "reboot", message: $"[{this.Name}]");
-            //        Reboot(wait: true);
-            //    });
         }
 
         /// <summary>
@@ -214,6 +203,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
                     SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
+                    // $note(jefflill):
+                    //
                     // I've seen some situations after a reboot where the machine complains about
                     // running out of entropy.  Apparently, modern CPUs have an instruction that
                     // returns cryptographically random data, but these CPUs weren't available
@@ -234,7 +225,30 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // [haveged] works by timing running code at very high resolution and hoping to
                     // see execution time jitter and then use that as an entropy source.
 
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    // $note(jefflill):
+                    //
+                    // The official [haveged] releases before [1.9.8-4ubuntu3] have this bug that
+                    // prevents [haveged] from running in a container.  We're also seeing (transient?)
+                    // problems when installing this package on WSL2.
+                    //
+                    //      https://bugs.launchpad.net/ubuntu/+source/haveged/+bug/1894877
+                    //      https://launchpad.net/ubuntu/+source/haveged/1.9.8-4ubuntu3
+                    //
+                    // It appears that WSL2 preloads entropy from the Windows host when the distro
+                    // boots, so we should be OK without [haveged] in this case.
+                    //
+                    //      https://github.com/Microsoft/WSL/issues/4416
+                    //      https://github.com/microsoft/WSL/issues/1789
+                    //
+                    // It looks like Linux kernels beginning with v5.6 integrate the HAVEGED algorithm
+                    // directly, so we don't need to install the [haveged] service in this case:
+                    //
+                    //      https://github.com/jirka-h/haveged/blob/master/README.md
+
+                    if (this.KernelVersion < new Version(5, 6, 0) && controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) != HostingEnvironment.Wsl2)
+                    {
+                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                    }
                 });
         }
 
@@ -619,10 +633,22 @@ done
         /// The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
         /// for debugging purposes.
         /// </note>
+        /// <note>
+        /// This is not required or installed for WSL2 clusters.
+        /// </note>
         /// </remarks>
         public void BaseInstallNeonInit(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            // We don't control the distro IP address for WSL2 and there really
+            // isn't a way to mount a DVD either, so we're not going to install
+            // the [neon-init] service for this environment.
+
+            if (controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) == HostingEnvironment.Wsl2)
+            {
+                return;
+            }
 
             InvokeIdempotent("base/neon-init",
                 () =>
@@ -756,6 +782,8 @@ chmod 744 {KubeNodeFolders.Bin}/neon-init
 
 systemctl enable neon-init
 systemctl daemon-reload
+
+# ---------------------------------------------------
 ";
                     SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

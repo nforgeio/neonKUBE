@@ -447,7 +447,7 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, CadenceSettings settings)
             {
-                var openPort         = NetHelper.GetUnusedIpPort(address);
+                var openPort         = NetHelper.GetUnusedTcpPort(address);
                 var listenerSettings = new WebListenerSettings();
 
                 ListenUri = new Uri($"http://{address}:{openPort}");
@@ -965,11 +965,8 @@ namespace Neon.Cadence
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
-            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
-            client.heartbeatThread.Start();
-
-            client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
-            client.timeoutThread.Start();
+            client.heartbeatThread = NeonHelper.StartThread(client.HeartbeatThread);
+            client.timeoutThread    = NeonHelper.StartThread(client.TimeoutThread);
 
             // Initialize the cache size to a known value.
 
@@ -1611,7 +1608,7 @@ namespace Neon.Cadence
                     // Determine the port we'll have [cadence-proxy] listen on and then
                     // fire up the cadence-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedIpPort(Address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {

@@ -61,10 +61,16 @@ namespace Neon.Kube
             public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
             public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>     Predicate;
-            public SetupStepState                                               Status;
+            public SetupStepState                                               State;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
             public TimeSpan                                                     RunTime;
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return string.IsNullOrEmpty(Label) ? "*** unlabeled step ***" : Label;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -115,6 +121,7 @@ namespace Neon.Kube
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps          = new List<Step>();
         }
+
         /// <inheritdoc/>
         public void AddDisposable(IDisposable disposable)
         {
@@ -156,9 +163,14 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        public object AddGlobalStep(string stepLabel, Action<ISetupController> action, bool quiet = false, ISetupController subController = null, int position = -1)
+        public object AddGlobalStep(
+            string                                                      stepLabel, 
+            Action<ISetupController>                                    action,
+            bool                                                        quiet         = false, 
+            ISetupController                                            subController = null, 
+            int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             if (position < 0)
             {
@@ -170,7 +182,7 @@ namespace Neon.Kube
                 Label            = stepLabel,
                 IsQuiet          = quiet,
                 SyncGlobalAction = action,
-                Predicate        = (controller, node) => true,
+                Predicate        = (controller, node) => false,
                 SubController    = subController
             };
 
@@ -191,9 +203,14 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        public object AddGlobalStep(string stepLabel, Func<ISetupController, Task> action, bool quiet = false, ISetupController subController = null, int position = -1)
+        public object AddGlobalStep(
+            string stepLabel, 
+            Func<ISetupController, Task>                                action,
+            bool                                                        quiet         = false, 
+            ISetupController                                            subController = null, 
+            int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
 
             if (position < 0)
             {
@@ -205,7 +222,7 @@ namespace Neon.Kube
                 Label             = stepLabel,
                 IsQuiet           = quiet,
                 AsyncGlobalAction = action,
-                Predicate         = (controller, node) => true,
+                Predicate         = (controller, node) => false,
                 SubController     = subController
             };
 
@@ -282,12 +299,12 @@ namespace Neon.Kube
 
                             this.isFaulted = this.isFaulted || subController.nodes.Any(node => node.IsFaulted);
 
-                            parentStep.Status  = substep.Status;
+                            parentStep.State   = substep.State;
                             parentStep.RunTime = substep.RunTime;
                         }
                     },
-                    quiet: substep.IsQuiet,
-                    subController: subController);
+                    quiet:          substep.IsQuiet,
+                    subController:  subController);
 
                 substep.ParentStep = parentStep;
             }
@@ -303,7 +320,7 @@ namespace Neon.Kube
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
 
             return AddGlobalStep(stepLabel,
                 controller =>
@@ -361,7 +378,7 @@ namespace Neon.Kube
                             }
                         }
 
-                        LogError(sb.ToString());
+                        LogBaseError(sb.ToString());
                     }
                 });
         }
@@ -390,7 +407,7 @@ namespace Neon.Kube
             TimeSpan?                                                   timeout       = null, 
             int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             if (timeout == null)
             {
@@ -399,6 +416,11 @@ namespace Neon.Kube
             if (position < 0)
             {
                 position = steps.Count;
+            }
+
+            if (nodePredicate == null)
+            {
+                nodePredicate = (controller, node) => true;
             }
 
             return AddNodeStep(stepLabel,
@@ -438,7 +460,12 @@ namespace Neon.Kube
             bool                                                        quiet         = false, 
             int                                                         position      = -1)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+
+            if (nodePredicate == null)
+            {
+                nodePredicate = (controller, node) => true;
+            }
 
             return AddNodeStep(stepLabel,
                 (controller, node) =>
@@ -490,7 +517,7 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -556,7 +583,7 @@ namespace Neon.Kube
             int                                                         position        = -1,
             int                                                         parallelLimit   = 0)
         {
-            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no longer add steps.");
+            Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
 
             nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -592,6 +619,40 @@ namespace Neon.Kube
         public void SetGlobalStepStatus(string status = null)
         {
             globalStatus = status ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="LinuxSshProxy.IsInvolved"/> property for all nodes passed
+        /// as <paramref name="stepNodes"/> and clears that for any nodes that are not
+        /// involved in the next step.  This also clears the <see cref="LinuxSshProxy.IsConfiguring"/>,
+        /// <see cref="LinuxSshProxy.IsReady"/> and <see cref="LinuxSshProxy.IsFaulted"/> properties
+        /// for all nodes in preparation for executing the next step.
+        /// </summary>
+        /// <param name="step">The next step.</param>
+        /// <param name="stepNodes">The set of node participating in the next setup step.</param>
+        private void SetNodeInvolved(Step step, IEnumerable<NodeSshProxy<NodeMetadata>> stepNodes)
+        {
+            Covenant.Requires<ArgumentNullException>(step != null, nameof(step));
+            Covenant.Requires<ArgumentNullException>(stepNodes != null, nameof(stepNodes));
+
+            foreach (var node in nodes)
+            {
+                node.IsInvolved    = false;
+                node.IsConfiguring = false;
+                node.IsReady       = false;
+                node.IsFaulted     = false;
+            }
+
+            // Set [node.IsInvolved = true] for non-quiet steps that involve
+            // the node.
+
+            if (!step.IsQuiet)
+            {
+                foreach (var node in stepNodes)
+                {
+                    node.IsInvolved = true;
+                }
+            }
         }
 
         /// <summary>
@@ -631,11 +692,15 @@ namespace Neon.Kube
                     return false;
                 }
 
-                step.Status      = SetupStepState.Running;
+                step.State       = SetupStepState.Running;
                 step.WasExecuted = true;
 
-                var stepNodes        = nodes.Where(node => step.Predicate(this, node));
-                var stepNodeNamesSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var isGlobalStep      = false;
+                var isGlobalStepReady = false;
+                var stepNodes         = nodes.Where(node => step.Predicate(this, node));
+                var stepNodeNamesSet  = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                SetNodeInvolved(step, stepNodes);
 
                 foreach (var node in stepNodes)
                 {
@@ -661,9 +726,11 @@ namespace Neon.Kube
                     MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
                 };
 
-                NeonHelper.ThreadRun(
+                NeonHelper.StartThread(
                     () =>
                     {
+                        var stepDisposition = SetupStepState.Done;
+
                         currentStep = step;
 
                         if (step.SyncNodeAction != null)
@@ -675,6 +742,8 @@ namespace Neon.Kube
                                 {
                                     try
                                     {
+                                        node.IsConfiguring = true;
+
                                         step.SyncNodeAction(this, node);
 
                                         node.Status  = "[x] DONE";
@@ -682,6 +751,8 @@ namespace Neon.Kube
                                     }
                                     catch (Exception e)
                                     {
+                                        stepDisposition = SetupStepState.Failed;
+
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
                                     }
@@ -697,6 +768,8 @@ namespace Neon.Kube
                                     try
                                     {
                                         var nodeDefinition = node.Metadata as NodeDefinition;
+
+                                        node.IsConfiguring = true;
 
                                         var runTask = Task.Run(
                                             async () =>
@@ -718,6 +791,8 @@ namespace Neon.Kube
                                             e = aggregateException.InnerExceptions.Single();
                                         }
 
+                                        stepDisposition = SetupStepState.Done;
+
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
                                     }
@@ -727,7 +802,11 @@ namespace Neon.Kube
                         {
                             try
                             {
+                                isGlobalStep = true;
+
                                 step.SyncGlobalAction(this);
+
+                                isGlobalStepReady = true;
                             }
                             catch (Exception e)
                             {
@@ -741,6 +820,9 @@ namespace Neon.Kube
                                 // and put this there and also indicate this somewhere in
                                 // the console output, but this is not worth messing with
                                 // right now.
+
+                                isFaulted       = true;
+                                stepDisposition = SetupStepState.Done;
 
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
@@ -768,7 +850,11 @@ namespace Neon.Kube
                                 var runTask = Task.Run(
                                     async () =>
                                     {
+                                        isGlobalStep = true;
+
                                         await step.AsyncGlobalAction(this);
+
+                                        isGlobalStepReady = true;
                                     });
 
                                 runTask.Wait();
@@ -793,6 +879,9 @@ namespace Neon.Kube
                                 // the console output, but this is not worth messing with
                                 // right now.
 
+                                isFaulted       = true;
+                                stepDisposition = SetupStepState.Done;
+
                                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                                 {
                                     var firstMaster = nodes
@@ -812,10 +901,13 @@ namespace Neon.Kube
 
                             SetGlobalStepStatus();
                         }
+
+                        step.State = stepDisposition;
                     });
 
-                // The setup steps are executing above in one or more threads and we're
-                // going to loop here to raise [StatusEvent] when we detect a change.
+                // The setup step is executing above in one or more threads/tasks and
+                // we're going to loop here to raise [StatusChangedEvent] when we detect
+                // a status change giving any UI a chance to update.
 
                 var statusInterval = TimeSpan.FromMilliseconds(100);
                 var lastJson       = (string)null;
@@ -833,9 +925,16 @@ namespace Neon.Kube
                         lastJson = newJson;
                     }
 
-                    if (stepNodes.Count(node => !node.IsReady) == 0)
+                    if (isGlobalStep)
                     {
-                        // Looks like we're done.
+                        if (isGlobalStepReady || IsFaulted)
+                        {
+                            break;  // Looks like we're done executing the global step.
+                        }
+                    }
+                    else if (stepNodes.Count(node => !node.IsReady) == 0)
+                    {
+                        // Looks like we're done executing the node step.
 
                         break;
                     }
@@ -845,18 +944,7 @@ namespace Neon.Kube
 
                 isFaulted = isFaulted || stepNodes.FirstOrDefault(node => node.IsFaulted) != null;
 
-                if (isFaulted)
-                {
-                    step.Status = SetupStepState.Failed;
-
-                    return false;
-                }
-                else
-                {
-                    step.Status = SetupStepState.Done;
-
-                    return true;
-                }
+                return !IsFaulted;
             }
             finally
             {
@@ -911,24 +999,24 @@ namespace Neon.Kube
         public event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <inheritdoc/>
-        public event SetupProgressDelegate ProgressEvent;
+        public event SetupProgressDelegate BaseProgressEvent;
 
         /// <inheritdoc/>
-        public void LogProgress(string message)
+        public void LogBaseProgress(string message)
         {
             if (string.IsNullOrEmpty(message))
             {
                 return;
             }
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -936,20 +1024,20 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(string verb, string message)
+        public void LogBaseProgress(string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Verb          = verb,
-                            Message       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -957,22 +1045,22 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(LinuxSshProxy node, string message)
+        public void LogBaseProgress(LinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
             ((NodeSshProxy<NodeMetadata>)node).Status = message;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Message       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -988,16 +1076,16 @@ namespace Neon.Kube
 
             ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
                             Verb          = verb,
-                            Message       = message,
+                            Text          = message,
                             CancelPending = cancelPending
                         });
                 }
@@ -1005,21 +1093,21 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogError(string message)
+        public void LogBaseError(string message)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            this.isFaulted = true;
-            this.LastError = message;
+            this.isFaulted     = true;
+            this.LastBaseError = message;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
-                            Message       = message,
+                            Text          = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });
@@ -1036,15 +1124,15 @@ namespace Neon.Kube
             ((NodeSshProxy<NodeMetadata>)node).Status    = message;
             ((NodeSshProxy<NodeMetadata>)node).IsFaulted = true;
 
-            if (ProgressEvent != null)
+            if (BaseProgressEvent != null)
             {
                 lock (syncLock)
                 {
-                    ProgressEvent.Invoke(
+                    BaseProgressEvent.Invoke(
                         new SetupProgressMessage()
                         {
                             Node          = node,
-                            Message       = message,
+                            Text          = message,
                             IsError       = true,
                             CancelPending = cancelPending
                         });
@@ -1056,7 +1144,7 @@ namespace Neon.Kube
         public bool IsFaulted => isFaulted || nodes.Any(node => node.IsFaulted);
 
         /// <inheritdoc/>
-        public string LastError { get; private set; }
+        public string LastBaseError { get; private set; }
 
         /// <inheritdoc/>
         public bool HasNodeSteps => steps.Any(step => step.AsyncNodeAction != null || step.SyncNodeAction != null);
@@ -1127,114 +1215,138 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public IEnumerable<SetupStepStatus> GetStepStatus()
         {
-            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.Status, step.RunTime, step));
+            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.State, step.RunTime, step));
         }
 
         /// <inheritdoc/>
-        public SetupDisposition Run(bool leaveNodesConnected = false)
+        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false)
         {
+            // This method had been synchronous for a very long time (maybe 5 years)
+            // but we need to make this async now so that it would integrate well
+            // with the neonDESKTOP UX. 
+            //
+            // We're simply going to wrap the main setup loop into a new thread and
+            // have setup execute there.  We'll use a task completion source to signal
+            // the caller when we're done.
+
             var cluster = Get<ClusterProxy>(KubeSetupProperty.ClusterProxy, null);
+            var tcs     = new TaskCompletionSource<SetupDisposition>();
 
-            try
-            {
-                cluster?.LogLine(LogBeginMarker);
-
-                // We're going to time how long this takes.
-
-                var stopWatch = new Stopwatch();
-
-                stopWatch.Start();
-
-                // Number the steps.  Note that quiet steps don't 
-                // get their own step number.
-
-                var position = 1;
-
-                foreach (var step in steps)
+            NeonHelper.StartThread(
+                () =>
                 {
-                    if (step.IsQuiet)
+                    try
                     {
-                        step.Number = 0;
-                    }
-                    else
-                    {
-                        step.Number = position++;
-                    }
-                }
+                        cluster?.LogLine(LogBeginMarker);
 
-                // NOTE: We don't display node status if there aren't any node specific steps.
+                        // We're going to time how long this takes.
 
-                try
-                {
-                    foreach (var step in steps)
-                    {
-                        if (cancelPending)
+                        var stopWatch = new Stopwatch();
+
+                        stopWatch.Start();
+
+                        // Number the steps.  Note that quiet steps don't get their own step number.
+
+                        var position = 1;
+
+                        foreach (var step in steps)
                         {
-                            return SetupDisposition.Cancelled;
+                            if (step.IsQuiet)
+                            {
+                                step.Number = 0;
+                            }
+                            else
+                            {
+                                step.Number = position++;
+                            }
                         }
 
-                        if (!ExecuteStep(step))
+                        // NOTE: We don't display node status if there aren't any node specific steps.
+
+                        try
                         {
-                            break;
+                            foreach (var step in steps)
+                            {
+                                if (cancelPending)
+                                {
+                                    tcs.SetResult(SetupDisposition.Cancelled);
+                                    return;
+                                }
+
+                                if (!ExecuteStep(step))
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (isFaulted)
+                            {
+                                cluster?.LogLine(LogFailedMarker);
+
+                                tcs.SetResult(SetupDisposition.Failed);
+                                return;
+                            }
+
+                            foreach (var node in nodes)
+                            {
+                                node.Status = "[x] READY";
+                            }
+
+                            cluster?.LogLine(LogEndMarker);
+
+                            tcs.SetResult(SetupDisposition.Succeeded);
+                            return;
+                        }
+                        finally
+                        {
+                            Runtime = stopWatch.Elapsed;
+
+                            if (!leaveNodesConnected)
+                            {
+                                // Disconnect all of the nodes.
+
+                                foreach (var node in nodes)
+                                {
+                                    node.Disconnect();
+                                }
+                            }
                         }
                     }
-
-                    if (isFaulted)
+                    catch (Exception e)
                     {
-                        cluster?.LogLine(LogFailedMarker);
-
-                        return SetupDisposition.Failed;
+                        tcs.SetException(e);
                     }
-
-                    foreach (var node in nodes)
+                    finally
                     {
-                        node.Status = "[x] READY";
-                    }
+                        // Dispose all node proxies.
 
-                    cluster?.LogLine(LogEndMarker);
-
-                    return SetupDisposition.Success;
-                }
-                finally
-                {
-                    Runtime = stopWatch.Elapsed;
-
-                    if (!leaveNodesConnected)
-                    {
-                        // Disconnect all of the nodes.
-
-                        foreach (var node in nodes)
+                        foreach (var node in cluster.Nodes)
                         {
-                            node.Disconnect();
+                            node.Dispose();
+                        }
+
+                        // Dispose any disposables.
+
+                        foreach (var disposable in disposables)
+                        {
+                            disposable.Dispose();
+                        }
+
+                        // Raise one more status changed and wait for a bit so any
+                        // listening UI will have a chance to display the status.
+
+                        if (StatusChangedEvent != null)
+                        {
+                            StatusChangedEvent.Invoke(new SetupClusterStatus(this));
+                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
                         }
                     }
-                }
-            }
-            finally
-            {
-                // Dispose any disposables.
+                });
 
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
-
-                // Raise one more status changed an wait for a bit so any
-                // listening UI can display the status.
-
-                if (StatusChangedEvent != null)
-                {
-                    StatusChangedEvent.Invoke(new SetupClusterStatus(this));
-                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                }
-            }
+            return tcs.Task;
         }
 
-        /// <summary>
-        /// Indicates that setup should be cancelled.  Setting this will request
-        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
-        /// <c>false</c> assignments will be ignored.
-        /// </summary>
+        /// <inheritdoc/>
         public bool CancelPending
         {
             get => cancelPending;
@@ -1253,7 +1365,7 @@ namespace Neon.Kube
         {
             return nodes
                 .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
-                .Select(node => new SetupNodeStatus(node.Name, node.Status, node))
+                .Select(node => new SetupNodeStatus(node, node.Metadata))
                 .ToArray();
         }
 

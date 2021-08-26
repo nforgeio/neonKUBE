@@ -55,6 +55,7 @@ using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Windows;
 
 namespace Neon.Kube
@@ -333,49 +334,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that sensitive folders and files on the local workstation are encrypted at rest
-        /// for security purposes.  These include the users <b>.kube</b>, <b>.neonkube</b>, and any
-        /// the <b>OpenVPN</b> if it exists.
-        /// </summary>
-        public static void EncryptSensitiveFiles()
-        {
-            if (NeonHelper.IsWindows)
-            {
-                var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var neonFolderPath = GetNeonKubeUserFolder();
-
-                var sensitiveFolders = new string[]
-                {
-                    Path.Combine(userFolderPath, ".kube"),
-                    Path.Combine(neonFolderPath, "logins"),
-                    Path.Combine(neonFolderPath, "log")
-                };
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    Directory.CreateDirectory(sensitiveFolder);
-                }
-
-                // We used to encrypt the entire [.neonkube] folder but that caused problems
-                // with WSL2, so we're going to decrypt the folder before encrypting special
-                // subfolders.
-
-                NeonHelper.DecryptFile(neonFolderPath);
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    NeonHelper.EncryptFile(sensitiveFolder);
-                }
-            }
-            else
-            {
-                // $todo(jefflill): Implement this for OS/X
-
-                // throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Returns the <see cref="KubeClientPlatform"/> for the current workstation.
         /// </summary>
         public static KubeClientPlatform HostPlatform
@@ -509,16 +467,6 @@ namespace Neon.Kube
 
                 Directory.CreateDirectory(path);
 
-                try
-                {
-                    NeonHelper.EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
-
                 return cachedNeonKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
@@ -560,7 +508,6 @@ namespace Neon.Kube
                 var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
 
                 Directory.CreateDirectory(path);
-                NeonHelper.EncryptFile(path);
 
                 return cachedKubeUserFolder = path;
             }
@@ -1975,22 +1922,24 @@ public class ISOFile
             }
 
             var changePasswordScript =
-$@"#------------------------------------------------------------------------------
+$@"
+#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
-# to something secure.  Doing this here before the network is configured means 
-# that there's no time when bad guys can SSH into the node using the insecure
+# to something secure.  We're doing this here before the network is configured means 
+# that there will be no time when bad guys can SSH into the node using the insecure
 # password.
 
 echo 'sysadmin:{securePassword}' | chpasswd
 ";
             if (String.IsNullOrWhiteSpace(securePassword))
             {
-                changePasswordScript = string.Empty;
+                changePasswordScript = "\r\n";
             }
 
             var nodePrepScript =
 $@"# This script is called by the [neon-init] service when the prep DVD
-# is inserted on boot.  This script handles configuring the network.
+# is inserted on boot.  This script handles setting a secure SSH password
+# as well as configuring the network interface to a static IP address.
 #
 # The first parameter will be passed as the path where the DVD is mounted.
 
@@ -2048,9 +1997,8 @@ cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
-# Static network configuration initialized during first boot by the 
-# [neon-init] service from a virtual ISO inserted during
-# cluster prepare.
+# Static network configuration is initialized during first boot by the 
+# [neon-init] service from a virtual ISO inserted during cluster prepare.
 
 network:
   version: 2
@@ -2081,7 +2029,7 @@ done
 echo ""Node is prepared.""
 exit 0
 ";
-            nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
+            nodePrepScript = NeonHelper.ToLinuxLineEndings(nodePrepScript);
 
             // Create an ISO that includes the script and return the ISO TempFile.
             //
@@ -2597,7 +2545,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This supports source URIs referencing a single node image file as well
@@ -2606,10 +2558,16 @@ TCPKeepAlive yes
         /// Content-Type.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null, 
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            await SyncContext.ClearAsync;
 
             // $note(jefflill):
             //
@@ -2644,7 +2602,7 @@ TCPKeepAlive yes
                     return imagePath;
                 }
 
-                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
 
                 response.EnsureSuccessStatusCode();
 
@@ -2652,7 +2610,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    progressAction?.Invoke(0);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 0);
 
                     using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2676,13 +2634,13 @@ TCPKeepAlive yes
                                 {
                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                    progressAction?.Invoke(percentComplete);
+                                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, percentComplete);
                                 }
                             }
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
 
                     return imagePath;
                 }
@@ -2707,7 +2665,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image multi-part download information URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This checks to see if the target file already exists and will download
@@ -2716,10 +2678,16 @@ TCPKeepAlive yes
         /// left off.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadMultiPartNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null,
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            await SyncContext.ClearAsync;
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 
@@ -2730,7 +2698,7 @@ TCPKeepAlive yes
             using (var client = new HttpClient())
             {
                 var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
-                var response    = await client.SendAsync(request);
+                var response    = await client.SendAsync(request, cancellationToken: cancellationToken);
                 var contentType = response.Content.Headers.ContentType.MediaType;
 
                 response.EnsureSuccessStatusCode();
@@ -2745,7 +2713,7 @@ TCPKeepAlive yes
 
                 // Download the multi-part file.
 
-                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction);
+                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
     }

@@ -82,30 +82,27 @@ namespace TestCadence
 
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new Thread(
-                    new ThreadStart(
-                        () =>
+                threads[i] = NeonHelper.StartThread(
+                    () =>
+                    {
+                        var stopwatch = new Stopwatch();
+
+                        stopwatch.Start();
+
+                        for (int j = 0; j < iterations; j++)
                         {
-                            var stopwatch = new Stopwatch();
+                            client.PingAsync().Wait();
+                        }
 
-                            stopwatch.Start();
+                        stopwatch.Stop();
 
-                            for (int j = 0; j < iterations; j++)
-                            {
-                                client.PingAsync().Wait();
-                            }
+                        var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
 
-                            stopwatch.Stop();
-
-                            var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
-
-                            lock (syncLock)
-                            {
-                                totalTps += tps;
-                            }
-                        }));
-
-                threads[i].Start();
+                        lock (syncLock)
+                        {
+                            totalTps += tps;
+                        }
+                    });
             }
 
             foreach (var thread in threads)
