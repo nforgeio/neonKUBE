@@ -133,6 +133,13 @@ rules:
     verbs:
       - watch
       - list
+  # Watch for changes to Kubernetes EndpointSlices.
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs:
+      - watch
+      - list
   # Used by Calico for policy information.
   - apiGroups: [""]
     resources:

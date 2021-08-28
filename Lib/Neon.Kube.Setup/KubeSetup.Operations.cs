@@ -194,46 +194,39 @@ spec:
 
                     try
                     {
-                        // Generate a Bash script we'll submit to the first master
-                        // that initializes the labels for all nodes.
-
-                        var sbScript = new StringBuilder();
-                        var sbArgs = new StringBuilder();
-
-                        sbScript.AppendLineLinux("#!/bin/bash");
-
+                        var k8sNodes = (await GetK8sClient(controller).ListNodeAsync()).Items;
                         foreach (var node in cluster.Nodes)
                         {
-                            var labelDefinitions = new List<string>();
+                            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).FirstOrDefault();
+
+                            var patch = new V1Node()
+                            {
+                                Metadata = new V1ObjectMeta()
+                                {
+                                    Labels = k8sNode.Labels()
+                                }
+                            };
 
                             if (node.Metadata.IsWorker)
                             {
                                 // Kubernetes doesn't set the role for worker nodes so we'll do that here.
 
-                                labelDefinitions.Add("kubernetes.io/role=worker");
+                                patch.Metadata.Labels.Add("kubernetes.io/role", "worker");
                             }
 
-                            labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
-                            labelDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Environment.ToString().ToLowerInvariant())}");
+                            patch.Metadata.Labels.Add(NodeLabels.LabelDatacenter, cluster.Definition.Datacenter.ToLowerInvariant());
+                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.Definition.Environment.ToString().ToLowerInvariant());
 
                             foreach (var label in node.Metadata.Labels.All)
                             {
-                                labelDefinitions.Add($"{label.Key}={GetLabelValue(label.Value)}");
+                                if (label.Value != null)
+                                {
+                                    patch.Metadata.Labels.Add(label.Key, label.Value.ToString());
+                                }
                             }
 
-                            sbArgs.Clear();
-
-                            foreach (var label in labelDefinitions)
-                            {
-                                sbArgs.AppendWithSeparator(label);
-                            }
-
-                            sbScript.AppendLine();
-                            sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {sbArgs}");
-
+                            await GetK8sClient(controller).PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
                         }
-
-                        master.SudoCommand(CommandBundle.FromScript(sbScript));
                     }
                     finally
                     {
@@ -275,9 +268,9 @@ spec:
             await CreateNamespacesAsync(controller, master);
             await CreateRootUserAsync(controller, master);
             await InstallCalicoCniAsync(controller, master);
+            await InstallMetricsServerAsync(controller, master);
             await InstallIstioAsync(controller, master);
             await InstallCertManagerAsync(controller, master);
-            await InstallMetricsServerAsync(controller, master);
 
             if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
             {
@@ -428,14 +421,17 @@ logging:
   format: json
 nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
+cgroupDriver: systemd
+runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
 ");
 
+                            var kubeProxyMode = "ipvs";
                             clusterConfig.AppendLine($@"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
-mode: ipvs");
+mode: {kubeProxyMode}");
 
                             var kubeInitScript =
 $@"
@@ -929,11 +925,29 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     if (cluster.Definition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
                     {
-                        master.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do sleep 1; done", master.DefaultRunOptions & ~RunOptions.FaultOnError);
-                        master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", master.DefaultRunOptions & ~RunOptions.FaultOnError);
-                        master.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do sleep 1; done", master.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        var nodes = new V1NodeList();
+                        await NeonHelper.WaitForAsync(
+                           async () =>
+                           {
+                               nodes = await GetK8sClient(controller).ListNodeAsync();
+                               return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
+                           },
+                           timeout: TimeSpan.FromMinutes(5),
+                           pollInterval: TimeSpan.FromSeconds(5));
+
+                        foreach (var master in nodes.Items.Where(n => n.Spec.Taints.Any(t => t.Key == "node-role.kubernetes.io/master")))
+                        {
+                            var patch = new V1Node()
+                            {
+                                Spec = new V1NodeSpec()
+                                {
+                                    Taints = master.Spec.Taints.Where(t => t.Key != "node-role.kubernetes.io/master").ToList()
+                                }
+                            };
+                            await GetK8sClient(controller).PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), master.Metadata.Name);
+
+                        }
                     }
-                    await Task.CompletedTask;
                 });
         }
 
@@ -1048,8 +1062,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "istio-operator"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonIngress, "istiod"),
-                            WaitForDaemonsetAsync(controller, KubeNamespaces.KubeSystem, "istio-cni-node"),
                             WaitForDaemonsetAsync(controller, KubeNamespaces.NeonIngress, "istio-ingressgateway"),
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.KubeSystem, "istio-cni-node"),
                         });
                 });
         }
@@ -2153,7 +2167,8 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
+                            if (cluster.Definition.Hosting.Environment == HostingEnvironment.Wsl2
+                                || cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
                                 values.Add($"cortexConfig.ingester.retain_period", $"120s");
                                 values.Add($"cortexConfig.ingester.metadata_retain_period", $"5m");
@@ -2881,6 +2896,9 @@ $@"- name: StorageType
             {
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");
+
+                values.Add($"worker.persistence.size", "1Gi");
+                values.Add($"master.persistence.size", "1Gi");
             }
             else
             {
