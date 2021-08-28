@@ -66,9 +66,15 @@ OPTIONS:
                                   multi-part download metadata.
 
                                   NOTE: This defaults to the multi-part image
-                                        hosted as a GuitHub release.
+                                        hosted as a GitHub release.
 
                                   NOTE: This is ignored for [--debug] mode.
+
+                                  NOTE: This is ignored when [--node-image-path] is present.
+
+    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
+                                  downloading the node image from GitHub Releases.  This
+                                  is useful for debugging node image changes.
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
@@ -128,7 +134,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -167,6 +173,7 @@ Server Requirements:
             }
            
             var nodeImageUri  = commandLine.GetOption("--node-image-uri");
+            var nodeImagePath = commandLine.GetOption("--node-image-path");
             var debug         = commandLine.HasOption("--debug");
             var baseImageName = commandLine.GetOption("--base-image-name");
             var automate      = commandLine.HasOption("--automate");
@@ -211,9 +218,10 @@ Server Requirements:
                 clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
             }
 
-            // Use the default node image for the hosting environment unless [--node-image-uri] was specified.
+            // Use the default node image for the hosting environment unless [--node-image-uri]
+            // or [--node-image-path] was specified.
 
-            if (string.IsNullOrEmpty(nodeImageUri))
+            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
                 nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
             }
@@ -242,6 +250,7 @@ Server Requirements:
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
                 nodeImageUri:           nodeImageUri,
+                nodeImagePath:          nodeImagePath,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),

@@ -165,7 +165,7 @@ namespace Neon.Kube
 
             HostingManager hostingManager;
 
-            if (!string.IsNullOrEmpty(nodeImageUri))
+            if (!string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
                 hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
             }

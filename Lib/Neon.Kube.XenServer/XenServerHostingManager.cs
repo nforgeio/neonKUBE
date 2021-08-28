@@ -412,10 +412,25 @@ namespace Neon.Kube
 
                     if (!string.IsNullOrEmpty(nodeImageUri))
                     {
+                        // Download the GZIPed VHDX template if it's not already present and has a valid
+                        // MD5 hash file.
+                        //
+                        // Note that we're going to name the file the same as the file name from the URI.
+
                         var driveTemplateUri  = new Uri(nodeImageUri);
                         
                         driveTemplateName = driveTemplateUri.Segments.Last();
                         driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+
+                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                            (type, progress) =>
+                            {
+                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+
+                                return !xenController.CancelPending;
+                            });
                     }
                     else
                     {
@@ -425,20 +440,6 @@ namespace Neon.Kube
                         driveTemplatePath = nodeImagePath;
                     }
 
-                    // Download the GZIPed VHDX template if it's not already present and has a valid
-                    // MD5 hash file.
-                    //
-                    // Note that we're going to name the file the same as the file name from the URI.
-
-                    xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
-
-                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                        (type, progress) =>
-                        {
-                            xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
-
-                            return !xenController.CancelPending;
-                        });
 
                     xenController.SetGlobalStepStatus();
                 }

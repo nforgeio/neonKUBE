@@ -211,6 +211,16 @@ namespace Neon.Kube
 
                             driveTemplateName = driveTemplateUri.Segments.Last();
                             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                            controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
+
+                            await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                                (type, progress) =>
+                                {
+                                    controller.SetGlobalStepStatus($"{type} VHDX: [{progress}%] [{driveTemplateName}]");
+
+                                    return !controller.CancelPending;
+                                });
                         }
                         else
                         {
@@ -219,16 +229,6 @@ namespace Neon.Kube
                             driveTemplateName = Path.GetFileName(nodeImagePath);
                             driveTemplatePath = nodeImagePath;
                         }
-
-                        controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
-
-                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            (type, progress) =>
-                            {
-                                controller.SetGlobalStepStatus($"{type} VHDX: [{progress}%] [{driveTemplateName}]");
-
-                                return !controller.CancelPending;
-                            });
 
                         controller.SetGlobalStepStatus();
                     });
@@ -373,9 +373,9 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task PrepareHyperVAsync()
         {
-            if (string.IsNullOrEmpty(nodeImageUri))
+            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
-                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
+                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
             }
 
             // Handle any necessary Hyper-V initialization.
