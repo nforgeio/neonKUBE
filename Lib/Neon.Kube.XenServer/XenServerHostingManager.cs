@@ -422,8 +422,6 @@ namespace Neon.Kube
                         driveTemplateName = driveTemplateUri.Segments.Last();
                         driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
-                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
-
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                             (type, progress) =>
                             {

@@ -77,6 +77,7 @@ namespace Neon.Kube
         private SetupController<NodeDefinition>     controller;
         private string                              driveTemplatePath;
         private string                              vmDriveFolder;
+        private LocalHyperVHostingOptions           hostingOptions;
         private string                              switchName;
         private string                              secureSshPassword;
 
@@ -109,9 +110,10 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster       = cluster;
-            this.nodeImageUri  = nodeImageUri;
-            this.nodeImagePath = nodeImagePath;
+            this.cluster        = cluster;
+            this.nodeImageUri   = nodeImageUri;
+            this.nodeImagePath  = nodeImagePath;
+            this.hostingOptions = cluster.Definition.Hosting.HyperVLocal;
 
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
@@ -211,8 +213,6 @@ namespace Neon.Kube
 
                             driveTemplateName = driveTemplateUri.Segments.Last();
                             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-                            controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
 
                             await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                                 (type, progress) =>
@@ -382,21 +382,43 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVClient())
             {
-                // We're going to create an external Hyper-V switch if there
-                // isn't already an external switch.
+                // Manage the Hyper-V virtual switch.  This will be an internal switch
+                // when [UseInternalSwitch=TRUE] otherwise this will be external.
 
-                controller.SetGlobalStepStatus("Scanning network adapters");
+                var switches = hyperv.ListSwitches();
 
-                var switches       = hyperv.ListVmSwitches();
-                var externalSwitch = switches.FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
-
-                if (externalSwitch == null)
+                if (hostingOptions.UseInternalSwitch)
                 {
-                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
+                    // We're going to create an internal switch named [neonkube] configured
+                    // with the standard private subnet and a NAT to enable external routing.
+
+                    switchName = "neonkube";
+
+                    if (!switches.Any(@switch => @switch.Type == VirtualSwitchType.Internal && @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        // The internal switch doesn't exist yet, so create it.  Note that
+                        // this switch always includes an external NAT.
+
+                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
+                    }
                 }
                 else
                 {
-                    switchName = externalSwitch.Name;
+                    // We're going to create an external Hyper-V switch if there
+                    // isn't already an external switch.
+
+                    controller.SetGlobalStepStatus("Scanning network adapters");
+
+                    var externalSwitch = switches.FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
+
+                    if (externalSwitch == null)
+                    {
+                        hyperv.NewExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
+                    }
+                    else
+                    {
+                        switchName = externalSwitch.Name;
+                    }
                 }
 
                 // Ensure that the cluster virtual machines exist and are stopped,

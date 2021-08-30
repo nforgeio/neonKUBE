@@ -106,10 +106,10 @@ namespace Neon.Kube
         /// Microsoft Hyper-V hypervisor.  This is typically used for development or
         /// test purposes.
         /// </summary>
-        [JsonProperty(PropertyName = "HyperVDev", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hyperVDev", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "HyperVLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hypervLocal", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public LocalHyperVHostingOptions HyperVDev { get; set; } = null;
+        public LocalHyperVHostingOptions HyperVLocal { get; set; } = null;
 
         /// <summary>
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
@@ -265,8 +265,8 @@ namespace Neon.Kube
 
                 case HostingEnvironment.HyperVLocal:
 
-                    HyperVDev = HyperVDev ?? new LocalHyperVHostingOptions();
-                    HyperVDev.Validate(clusterDefinition);
+                    HyperVLocal = HyperVLocal ?? new LocalHyperVHostingOptions();
+                    HyperVLocal.Validate(clusterDefinition);
 
                     Vm = Vm ?? new VmHostingOptions();
                     Vm.Validate(clusterDefinition);
@@ -306,7 +306,7 @@ namespace Neon.Kube
             Azure     = null;
             Google    = null;
             HyperV    = null;
-            HyperVDev = null;
+            HyperVLocal = null;
             Machine   = null;
             Vm        = null;
             XenServer = null;

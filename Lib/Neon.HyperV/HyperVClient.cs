@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 
 using Neon.Common;
+using Neon.Net;
 using Neon.Windows;
 
 using Newtonsoft.Json.Linq;
@@ -58,6 +59,11 @@ namespace Neon.HyperV
         /// like the VMware cmdlets.
         /// </summary>
         private const string hyperVNamespace = @"Hyper-V\";
+
+        /// <summary>
+        /// The Hyper-V namespace prefix for the TCP/IP related cmdlets.
+        /// </summary>
+        private const string netTcpIpNamespace = @"NetTCPIP";
 
         /// <summary>
         /// Returns the path to the default Hyper-V virtual drive folder.
@@ -644,7 +650,7 @@ namespace Neon.HyperV
         /// Returns the virtual network switches.
         /// </summary>
         /// <returns>The list of switches.</returns>
-        public List<VirtualSwitch> ListVmSwitches()
+        public List<VirtualSwitch> ListSwitches()
         {
             CheckDisposed();
 
@@ -696,12 +702,11 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Adds a virtual ethernet switch to Hyper-V with external connectivity
-        /// to the ethernet adapter named <b>Ethernet</b>.
+        /// Adds a virtual Hyper-V switch that has external connectivity.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
         /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
-        public void NewVmExternalSwitch(string switchName, IPAddress gateway)
+        public void NewExternalSwitch(string switchName, IPAddress gateway)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
             Covenant.Requires<ArgumentNullException>(gateway != null, nameof(gateway));
@@ -777,6 +782,30 @@ namespace Neon.HyperV
             catch (Exception e)
             {
                 throw new HyperVException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Adds an internal Hyper-V switch configured for the specified subnet and gateway as well
+        /// as an optional NAT enabling external connectivity.
+        /// </summary>
+        /// <param name="switchName">The new switch name.</param>
+        /// <param name="subnet">Specifies the internal subnet.</param>
+        /// <param name="addNAT">Optionally configure an NAT to support external routing.</param>
+        public void NewInternalSwitch(string switchName, NetworkCidr subnet, bool addNAT = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            Covenant.Requires<ArgumentNullException>(subnet != null, nameof(subnet));
+            CheckDisposed();
+
+            var gatewayAddress = subnet.FirstUsableAddress;
+
+            powershell.Execute($"{hyperVNamespace}New-VMSwitch -Name \"{switchName}\" -SwitchType Internal");
+            powershell.Execute($"{netTcpIpNamespace}New-NetIPAddress -IPAddress {subnet.FirstUsableAddress} -PrefixLength {subnet.PrefixLength} -InterfaceAlias \"vEthernet ({switchName})\"");
+
+            if (addNAT)
+            {
+                powershell.Execute($"{netTcpIpNamespace}New-NetNAT -Name \"{switchName}\" -InternalIPInterfaceAddressPrefix {subnet}");
             }
         }
 
