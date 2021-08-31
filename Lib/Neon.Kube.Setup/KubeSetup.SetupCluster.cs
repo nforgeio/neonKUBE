@@ -126,7 +126,7 @@ namespace Neon.Kube
 
             // Configure the hosting manager.
 
-            var hostingManager = cluster.GetHostingManager(new HostingManagerFactory(() => HostingLoader.Initialize()));
+            var hostingManager = cluster.GetHostingManager(new HostingManagerFactory(() => HostingLoader.Initialize()), ClusterProxy.Operation.Setup);
 
             if (hostingManager == null)
             {
