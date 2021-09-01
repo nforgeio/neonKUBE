@@ -114,6 +114,12 @@ namespace Neon.Kube
         event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <summary>
+        /// Returns the console updater used internally to write the setup status to the
+        /// <see cref="Console"/> without flickering.
+        /// </summary>
+        SetupConsoleUpdater ConsoleUpdater { get; }
+
+        /// <summary>
         /// <para>
         /// Raised when individual progress/error messages are logged during
         /// base image setup where where only limited status needs to be

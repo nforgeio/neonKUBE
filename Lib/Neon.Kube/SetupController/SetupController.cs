@@ -921,7 +921,11 @@ namespace Neon.Kube
 
                     if (lastJson == null || lastJson != newJson)
                     {
-                        StatusChangedEvent?.Invoke(status);
+                        lock (syncLock)
+                        {
+                            StatusChangedEvent?.Invoke(status.Clone());
+                        }
+
                         lastJson = newJson;
                     }
 
@@ -997,6 +1001,9 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public event SetupStatusChangedDelegate StatusChangedEvent;
+
+        /// <inheritdoc/>
+        public SetupConsoleUpdater ConsoleUpdater { get; private set; } = new SetupConsoleUpdater();
 
         /// <inheritdoc/>
         public event SetupProgressDelegate BaseProgressEvent;
@@ -1337,8 +1344,11 @@ namespace Neon.Kube
 
                         if (StatusChangedEvent != null)
                         {
-                            StatusChangedEvent.Invoke(new SetupClusterStatus(this));
-                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                            lock (syncLock)
+                            {
+                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                            }
                         }
                     }
                 });
