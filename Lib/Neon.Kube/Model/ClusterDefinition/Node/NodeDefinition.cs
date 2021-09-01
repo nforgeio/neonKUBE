@@ -266,7 +266,7 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
-            if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
+            if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && !clusterDefinition.IsSpecialNeonCluster)
             {
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
             }
