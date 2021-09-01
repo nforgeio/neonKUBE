@@ -828,6 +828,21 @@ namespace Neon.HyperV
         }
 
         /// <summary>
+        /// Removes a named virtual switch, it it exists.
+        /// </summary>
+        /// <param name="switchName">The target switch name.</param>
+        public void RemoveSwitch(string switchName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            CheckDisposed();
+
+            if (ListSwitches().Any(@switch => @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                powershell.Execute($"{hyperVNamespace}Remove-VMSwitch -Name \"{switchName}\" -Force");
+            }
+        }
+
+        /// <summary>
         /// Returns the virtual network adapters attached to the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
