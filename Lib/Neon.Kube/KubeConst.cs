@@ -384,5 +384,12 @@ namespace Neon.Kube
         /// Entry storing the last time cluster images were checked.
         /// </summary>
         public const string ClusterImagesLastChecked = "cluster-images-last-checked";
+
+        /// <summary>
+        /// The name used by the <see cref="HostingEnvironment.HyperVLocal"/> hosting manager
+        /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
+        /// as well as internal user-defined clusters will be attached.
+        /// </summary>
+        public const string HyperVLocalInternalSwitchName = "neonkube";
     }
 }

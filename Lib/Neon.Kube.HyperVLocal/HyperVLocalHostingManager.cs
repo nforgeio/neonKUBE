@@ -392,7 +392,7 @@ namespace Neon.Kube
                     // We're going to create an internal switch named [neonkube] configured
                     // with the standard private subnet and a NAT to enable external routing.
 
-                    switchName = "neonkube";
+                    switchName = KubeConst.HyperVLocalInternalSwitchName;
 
                     if (!switches.Any(@switch => @switch.Type == VirtualSwitchType.Internal && @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
                     {
