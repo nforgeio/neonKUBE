@@ -720,6 +720,19 @@ namespace Neon.HyperV
         }
 
         /// <summary>
+        /// Looks for a Hyper-V switch by name.
+        /// </summary>
+        /// <param name="switchName">The switch name.</param>
+        /// <returns>The <see cref="VirtualSwitch"/> when present or <c>null</c>.</returns>
+        public VirtualSwitch GetSwitch(string switchName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            CheckDisposed();
+
+            return ListSwitches().FirstOrDefault(@switch => @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        /// <summary>
         /// Adds a virtual Hyper-V switch that has external connectivity.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
