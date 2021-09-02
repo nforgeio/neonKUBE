@@ -63,7 +63,7 @@ namespace Neon.HyperV
         /// <summary>
         /// The Hyper-V namespace prefix for the TCP/IP related cmdlets.
         /// </summary>
-        private const string NetTcpIpNamespace = @"\";
+        private const string NetTcpIpNamespace = @"NetTCPIP\";
 
         /// <summary>
         /// The Hyper-V namespace prefix for the NAT related cmdlets.
