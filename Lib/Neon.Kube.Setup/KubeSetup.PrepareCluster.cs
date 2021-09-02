@@ -213,6 +213,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
+            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer);
 
             // Configure the cluster preparation steps.
 
@@ -366,13 +367,16 @@ namespace Neon.Kube
                     if (hostingEnvironment == HostingEnvironment.Wsl2)
                     {
                         var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-                        var dnsAddress       = enterpriseHelper.GetWsl2Address().ToString();
+                        var clusterIp = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
-                        using (var jsonClient = new JsonClient())
+                        if (IPAddress.TryParse(clusterIp, out var ip))
                         {
-                            jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
-                            clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={dnsAddress}");
-                            clusterLogin.Save();
+                            using (var jsonClient = new JsonClient())
+                            {
+                                jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                                clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
+                                clusterLogin.Save();
+                            }
                         }
                     }
                 });
