@@ -1125,6 +1125,8 @@ rm {HostFolders.Home(Username)}/askpass
                         {
                             // [/dev/shm/neonssh/rebooting] file is not present, so we're done.
 
+                            LogLine($"*** WAITFORBOOT: DONE");
+
                             break;
                         }
                         else
@@ -1173,6 +1175,8 @@ rm {HostFolders.Home(Username)}/askpass
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
+
+            LogLine($"*** WAITFORBOOT: Connected");
 
             Status = "connected";
 
