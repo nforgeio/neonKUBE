@@ -932,22 +932,10 @@ namespace Neon.Kube
                         lastJson = newJson;
                     }
 
-                    if (isGlobalStep)
-                    {
-                        if (isGlobalStepReady || IsFaulted)
-                        {
-                            break;  // Looks like we're done executing the global step.
-                        }
-                    }
-                    else if (stepNodes.Count(node => !node.IsReady) == 0)
-                    {
-                        // Looks like we're done executing the node step.
-
-                        break;
-                    }
-
                     if (stepThread.Join(statusInterval))
                     {
+                        // The step has completed executing.
+
                         break;
                     }
                 }
