@@ -307,7 +307,7 @@ namespace Neon.Kube
             }
             else
             {
-                throw new InvalidOperationException($"One of [{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] needed to be passed as non-NULL to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to work.");
+                hostingManager = hostingManagerFactory.GetManager(this);
             }
 
             if (hostingManager == null)
