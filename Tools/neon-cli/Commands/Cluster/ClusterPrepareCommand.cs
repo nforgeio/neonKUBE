@@ -278,7 +278,7 @@ Server Requirements:
                 case SetupDisposition.Cancelled:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more prepare steps failed.");
+                    Console.WriteLine(" *** ERROR: One or more prepare steps cancelled.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
@@ -286,7 +286,7 @@ Server Requirements:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
+                    Console.WriteLine(" *** CANCELLED: Cluster prepare was failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;

@@ -226,8 +226,8 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
+                    Console.WriteLine(" *** CANCELLED: Setup was cancelled.");
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more setup steps failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
@@ -235,7 +235,7 @@ OPTIONS:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Setup was cancelled.");
+                    Console.WriteLine(" *** ERROR: One or more setup steps failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
