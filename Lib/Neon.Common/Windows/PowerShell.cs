@@ -176,7 +176,7 @@ try {{
     {command} | Out-String -Width {PowershellBufferWidth}
 }}
 catch [Exception] {{
-    write-host $_Exception.Message
+    write-error $_Exception.Message
     exit 1
 }}
 ");
@@ -237,7 +237,7 @@ try {{
     {command} | ConvertTo-Json -Depth 4 -EnumsAsStrings -AsArray
 }}
 catch [Exception] {{
-    write-host $_Exception.Message
+    write-error $_Exception.Message
     exit 1
 }}
 ");
