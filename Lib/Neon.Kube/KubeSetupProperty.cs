@@ -127,5 +127,10 @@ namespace Neon.Kube
         /// is not present.
         /// </summary>
         public const string DisableImageDownload = "image-download-disabled";
+
+        /// <summary>
+        /// The IP address of the cluster. This is used to create the neoncluster.io subdomain pointing to the cluster.
+        /// </summary>
+        public const string ClusterIp = "cluster-ip";
     }
 }
