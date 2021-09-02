@@ -164,6 +164,31 @@ namespace Neon.Kube
 
             if (UseInternalSwitch)
             {
+                if (!NeonDesktopBuiltInCluster)
+                {
+                    // Ensure that no node addresses for a user defined cluster conflict with the
+                    // reserved addresses in the internal subnet.
+
+                    var reservedAddresses = new string[]
+                    {
+                        NeonKubeInternalSubnet.FirstAddress.ToString(),
+                        NeonKubeInternalGateway.ToString(),
+                        NeonDesktopNodeAddress.ToString(),
+                        NeonKubeInternalSubnet.LastAddress.ToString()
+                    };
+
+                    foreach (var reservedAddress in reservedAddresses)
+                    {
+                        foreach (var nodeDefinition in clusterDefinition.SortedNodes)
+                        {
+                            if (nodeDefinition.Address == reservedAddress)
+                            {
+                                throw new ClusterDefinitionException($"Node [{nodeDefinition.Name}]'s address [{nodeDefinition.Address}] conflicts with the reserved [{reservedAddress}].");
+                            }
+                        }
+                    }
+                }
+
                 // Ensure that the cluster network subnet and gateway options are set to the correct
                 // internal switch values.
 

@@ -153,7 +153,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Prepare [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################",
@@ -347,7 +347,7 @@ namespace Neon.Kube
             hostingManager.AddProvisioningSteps(controller);
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("verify node OS", (state, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check node os", (state, node) => node.VerifyNodeOS());
             controller.AddNodeStep("node credentials",
                 (state, node) =>
                 {

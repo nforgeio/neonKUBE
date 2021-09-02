@@ -532,8 +532,6 @@ namespace Neon.Kube
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-
-                    node.Status = $"connecting...";
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 

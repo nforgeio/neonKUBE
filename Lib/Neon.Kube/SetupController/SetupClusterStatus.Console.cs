@@ -141,35 +141,55 @@ namespace Neon.Kube
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {controller.OperationTitle}");
 
-            var displaySteps     = Steps.Where(step => !step.IsQuiet);
+            var nonQuietSteps    = Steps.Where(step => !step.IsQuiet).ToList();
+            var displaySteps     = new List<SetupStepStatus>();
             var showStepProgress = false;
 
-            if (maxDisplayedSteps > 0 && maxDisplayedSteps < displaySteps.Count())
+            if (maxDisplayedSteps > 0 && maxDisplayedSteps < nonQuietSteps.Count())
             {
                 // Limit the display steps to just those around the currently
                 // executing step.
 
-                var displayStepsCount = displaySteps.Count();
-                var runningStep       = Steps.FirstOrDefault(s => s.State == SetupStepState.Running);
+                var runningStep = CurrentStep;
+
+                if (CurrentStep != null && !CurrentStep.IsQuiet)
+                {
+                    runningStep = CurrentStep;
+                }
 
                 if (runningStep != null)
                 {
                     showStepProgress = true;
 
-                    if (runningStep.Number <= 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number <= maxDisplayedSteps);
-                    }
-                    else if (runningStep.Number >= displayStepsCount - maxDisplayedSteps + 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number >= displayStepsCount - maxDisplayedSteps + 1);
-                    }
-                    else
-                    {
-                        var firstDisplayedNumber = runningStep.Number - maxDisplayedSteps / 2;
-                        var lastDisplayedNumber  = firstDisplayedNumber + maxDisplayedSteps - 1;
+                    // Determine the number of steps before the running step as well as the
+                    // number of steps after to include in the display steps.
 
-                        displaySteps = displaySteps.Where(s => firstDisplayedNumber <= s.Number && s.Number <= lastDisplayedNumber);
+                    var maxStepsBefore = (maxDisplayedSteps - 1) / 2;
+                    var maxStepsAfter  = maxDisplayedSteps - maxStepsBefore - 1;
+                    var stepsBefore    = Math.Min(runningStep.Number - 1, maxStepsBefore);
+                    var stepsAfter     = Math.Min(nonQuietSteps.Max(step => step.Number) - runningStep.Number, (maxDisplayedSteps - 1) - stepsBefore);
+
+                    if (stepsAfter < maxStepsAfter)
+                    {
+                        // Adjust the number of steps displayed before the current step
+                        // so that [maxDisplayedSteps] steps will be displayed, adjusting
+                        // for situations where there aren't enough steps.
+
+                        stepsBefore = Math.Min(maxStepsAfter - stepsAfter, runningStep.Number - 1);
+                    }
+
+                    // Build the list of steps we'll be displaying.
+
+                    if (stepsBefore > 0)
+                    {
+                        displaySteps.AddRange(nonQuietSteps.Where(step => step.Number >= runningStep.Number - stepsBefore && step.Number < runningStep.Number));
+                    }
+
+                    displaySteps.Add(runningStep);
+
+                    if (stepsAfter > 0)
+                    {
+                        displaySteps.AddRange(nonQuietSteps.Where(step => step.Number <= runningStep.Number + stepsAfter && step.Number > runningStep.Number));
                     }
                 }
             }
@@ -205,14 +225,49 @@ namespace Neon.Kube
             {
                 switch (step.State)
                 {
+                    case SetupStepState.NotInvolved:
                     case SetupStepState.Pending:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
+                        // $hack(jefflill):
+                        //
+                        // It's possible for a step to indicate that it's PENDING even when
+                        // it has actually been completed, due to the fact that the setup
+                        // controller is executing steps on a different thread from the
+                        // controller's status update thread.
+                        //
+                        // We're going to hack around this by treating all steps with numbers
+                        // less than the current step as completed.
+
+                        if (step.Number > CurrentStep.Number)
+                        {
+                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
+                        }
+                        else
+                        {
+                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
+                        }
                         break;
 
                     case SetupStepState.Running:
 
-                        sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
+                        if (step == CurrentStep)
+                        {
+                            sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
+                        }
+                        else
+                        {
+                            // $hack(jefflill):
+                            //
+                            // It's possible for there to be multiple RUNNING steps with at the same
+                            // time, due to the fact that the setup controller is executing steps on
+                            // a different thread from the controller's status update thread.
+                            //
+                            // We're going to hack around this by only displaying the current step
+                            // arrow for the current step and display any other "running" steps as
+                            // pending.
+
+                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
+                        }
                         break;
 
                     case SetupStepState.Done:
@@ -360,8 +415,11 @@ namespace Neon.Kube
                 sbDisplay.AppendLine();
             }
 
-            Console.Clear();
-            Console.Write(sbDisplay.ToString());
+            sbDisplay.AppendLine();
+
+            // This updates the console without flickering.
+
+            controller.ConsoleUpdater.Update(sbDisplay.ToString());
         }
     }
 }

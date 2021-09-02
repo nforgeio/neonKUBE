@@ -224,6 +224,31 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns <c>true</c> for cluster definitions that describe a special neonKUBE/CLOUD
+        /// cluster like the the neonCLOUD built-in cluster.  This is used to relax constraints
+        /// on user cluster definitions like cluster node names not being able to use the "neon-"
+        /// prefix.
+        /// </summary>
+        internal bool IsSpecialNeonCluster
+        {
+            get
+            {
+                switch (Hosting.Environment)
+                {
+                    case HostingEnvironment.HyperVLocal:
+
+                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltInCluster;
+
+                    case HostingEnvironment.Wsl2:
+
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// The cluster name.
         /// </para>

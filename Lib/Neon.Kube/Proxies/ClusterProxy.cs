@@ -58,6 +58,30 @@ namespace Neon.Kube
     /// </summary>
     public class ClusterProxy : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Enumerates the possible operations that can be performed with an
+        /// <see cref="IHostingManager"/> returned by the <see cref="ClusterProxy"/>
+        /// class.
+        /// </summary>
+        public enum Operation
+        {
+            /// <summary>
+            /// A cluster will be prepared.
+            /// </summary>
+            Prepare,
+
+            /// <summary>
+            /// A cluster will be setup.
+            /// </summary>
+            Setup
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private RunOptions          defaultRunOptions;
         private NodeProxyCreator    nodeProxyCreator;
         private string              nodeImageUri;
@@ -84,7 +108,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, Operation)"/> to work.
         /// </para>
         /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -129,7 +153,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, Operation)"/> to work.
         /// </para>
         /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -283,15 +307,23 @@ namespace Neon.Kube
         /// Returns the hosting manager to use for provisioning and deploying the cluster.
         /// </summary>
         /// <param name="hostingManagerFactory">The hosting manager factory.</param>
+        /// <param name="operation">
+        /// Specifies the operation that will be performed using the <see cref="IHostingManager"/> returned.
+        /// This is used to ensure that this instance already has the information required to complete the
+        /// operation.
+        /// </param>
         /// <returns>The <see cref="IHostingManager"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no valid node image URI or path were passed to the constructor.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if no valid node image URI or path were passed to the constructor when required for
+        /// the specified <paramref name="operation"/>.
+        /// </exception>
         /// <remarks>
         /// <note>
         /// A valid node image URI or path must have been passed to the constructor for
         /// this to work.
         /// </note>
         /// </remarks>
-        public IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory)
+        public IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, Operation operation)
         {
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
 
@@ -307,7 +339,21 @@ namespace Neon.Kube
             }
             else
             {
-                hostingManager = hostingManagerFactory.GetManager(this);
+                switch (operation)
+                {
+                    case Operation.Prepare:
+
+                        throw new InvalidOperationException($"One of [{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] needed to be passed as non-NULL to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to support [{operation}].");
+
+                    case Operation.Setup:
+
+                        hostingManager = hostingManagerFactory.GetManager(this);
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
             }
 
             if (hostingManager == null)

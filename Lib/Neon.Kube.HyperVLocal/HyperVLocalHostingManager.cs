@@ -392,7 +392,7 @@ namespace Neon.Kube
                     // We're going to create an internal switch named [neonkube] configured
                     // with the standard private subnet and a NAT to enable external routing.
 
-                    switchName = "neonkube";
+                    switchName = KubeConst.HyperVLocalInternalSwitchName;
 
                     if (!switches.Any(@switch => @switch.Type == VirtualSwitchType.Internal && @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
                     {
@@ -567,8 +567,6 @@ namespace Neon.Kube
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-
-                    node.Status = $"connecting...";
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 

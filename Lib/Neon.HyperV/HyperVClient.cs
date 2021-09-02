@@ -141,7 +141,11 @@ namespace Neon.HyperV
         {
             var vm = new VirtualMachine();
 
+            // Extract the VM name.
+
             vm.Name = rawMachine.Name;
+
+            // Extract the VM state.
 
             switch ((string)rawMachine.State)
             {
@@ -174,6 +178,20 @@ namespace Neon.HyperV
 
                     vm.State = VirtualMachineState.Unknown;
                     break;
+            }
+
+            // Extract the connected switch name from the first network adapter (if any).
+
+            // $note(jefflill):
+            // 
+            // We don't currently support VMs with multiple network adapters; we'll
+            // only capture the name of the switch connected to the first adapter.
+
+            var adapters = (JArray)rawMachine.NetworkAdapters;
+
+            if (adapters.Count > 0)
+            {
+                vm.SwitchName = ((dynamic)adapters[0]).SwitchName;
             }
 
             return vm;
@@ -806,6 +824,21 @@ namespace Neon.HyperV
             if (addNAT)
             {
                 powershell.Execute($"{netTcpIpNamespace}New-NetNAT -Name \"{switchName}\" -InternalIPInterfaceAddressPrefix {subnet}");
+            }
+        }
+
+        /// <summary>
+        /// Removes a named virtual switch, it it exists.
+        /// </summary>
+        /// <param name="switchName">The target switch name.</param>
+        public void RemoveSwitch(string switchName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            CheckDisposed();
+
+            if (ListSwitches().Any(@switch => @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                powershell.Execute($"{hyperVNamespace}Remove-VMSwitch -Name \"{switchName}\" -Force");
             }
         }
 
