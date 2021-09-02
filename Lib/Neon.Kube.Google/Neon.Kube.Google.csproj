@@ -7,7 +7,7 @@
     <Version>2.10.0-internal</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>[Internal use only]: neonKUBE hosting manager for Google Cloud.</Description>
+    <Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Authors>neonFORGE Team</Authors>

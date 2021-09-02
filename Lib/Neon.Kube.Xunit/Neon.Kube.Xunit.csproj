@@ -8,7 +8,7 @@
     <Version>2.11.1-internal</Version>
     <Authors>neonFORGE Team</Authors>
     <Product>neonLIBRARY</Product>
-    <Description>Xunit extensions for neonKUBE</Description>
+    <Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
