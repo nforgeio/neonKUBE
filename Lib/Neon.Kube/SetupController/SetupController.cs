@@ -726,7 +726,7 @@ namespace Neon.Kube
                     MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
                 };
 
-                NeonHelper.StartThread(
+                var stepThread = NeonHelper.StartThread(
                     () =>
                     {
                         var stepDisposition = SetupStepState.Done;
@@ -905,9 +905,12 @@ namespace Neon.Kube
                         step.State = stepDisposition;
                     });
 
-                // The setup step is executing above in one or more threads/tasks and
-                // we're going to loop here to raise [StatusChangedEvent] when we detect
-                // a status change giving any UI a chance to update.
+                // The setup step is executing above in a thread and we're going to loop here
+                // to raise [StatusChangedEvent] when we detect a status change giving any UI
+                // a chance to update.
+                //
+                // Note that we're going to loop here until the step execution thread above
+                // terminates.
 
                 var statusInterval = TimeSpan.FromMilliseconds(100);
                 var lastJson       = (string)null;
@@ -943,7 +946,10 @@ namespace Neon.Kube
                         break;
                     }
 
-                    Thread.Sleep(statusInterval);
+                    if (stepThread.Join(statusInterval))
+                    {
+                        break;
+                    }
                 }
 
                 isFaulted = isFaulted || stepNodes.FirstOrDefault(node => node.IsFaulted) != null;
