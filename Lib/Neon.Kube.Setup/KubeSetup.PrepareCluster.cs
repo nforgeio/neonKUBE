@@ -213,7 +213,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
-            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer);
+            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
 
             // Configure the cluster preparation steps.
 
@@ -364,19 +364,15 @@ namespace Neon.Kube
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-                    if (hostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-                        var clusterIp = controller.Get<string>(KubeSetupProperty.ClusterIp);
+                    var clusterIp = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
-                        if (IPAddress.TryParse(clusterIp, out var ip))
+                    if (IPAddress.TryParse(clusterIp, out var ip))
+                    {
+                        using (var jsonClient = new JsonClient())
                         {
-                            using (var jsonClient = new JsonClient())
-                            {
-                                jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
-                                clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
-                                clusterLogin.Save();
-                            }
+                            jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                            clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
+                            clusterLogin.Save();
                         }
                     }
                 });
