@@ -347,7 +347,7 @@ namespace Neon.Kube
             hostingManager.AddProvisioningSteps(controller);
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("check node os", (state, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check node OS", (state, node) => node.VerifyNodeOS());
             controller.AddNodeStep("node credentials",
                 (state, node) =>
                 {

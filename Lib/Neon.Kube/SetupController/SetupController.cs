@@ -726,7 +726,7 @@ namespace Neon.Kube
                     MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
                 };
 
-                NeonHelper.StartThread(
+                var stepThread = NeonHelper.StartThread(
                     () =>
                     {
                         var stepDisposition = SetupStepState.Done;
@@ -905,9 +905,12 @@ namespace Neon.Kube
                         step.State = stepDisposition;
                     });
 
-                // The setup step is executing above in one or more threads/tasks and
-                // we're going to loop here to raise [StatusChangedEvent] when we detect
-                // a status change giving any UI a chance to update.
+                // The setup step is executing above in a thread and we're going to loop here
+                // to raise [StatusChangedEvent] when we detect a status change giving any UI
+                // a chance to update.
+                //
+                // Note that we're going to loop here until the step execution thread above
+                // terminates.
 
                 var statusInterval = TimeSpan.FromMilliseconds(100);
                 var lastJson       = (string)null;
@@ -929,21 +932,12 @@ namespace Neon.Kube
                         lastJson = newJson;
                     }
 
-                    if (isGlobalStep)
+                    if (stepThread.Join(statusInterval))
                     {
-                        if (isGlobalStepReady || IsFaulted)
-                        {
-                            break;  // Looks like we're done executing the global step.
-                        }
-                    }
-                    else if (stepNodes.Count(node => !node.IsReady) == 0)
-                    {
-                        // Looks like we're done executing the node step.
+                        // The step has completed executing.
 
                         break;
                     }
-
-                    Thread.Sleep(statusInterval);
                 }
 
                 isFaulted = isFaulted || stepNodes.FirstOrDefault(node => node.IsFaulted) != null;

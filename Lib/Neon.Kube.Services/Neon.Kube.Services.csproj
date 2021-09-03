@@ -9,7 +9,7 @@
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>[Internal use only]: Core library used by neonKUBE related tooling.</Description>
+    <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Services/README.md</PackageProjectUrl>

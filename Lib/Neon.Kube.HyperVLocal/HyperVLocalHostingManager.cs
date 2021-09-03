@@ -385,21 +385,37 @@ namespace Neon.Kube
                 // Manage the Hyper-V virtual switch.  This will be an internal switch
                 // when [UseInternalSwitch=TRUE] otherwise this will be external.
 
-                var switches = hyperv.ListSwitches();
-
                 if (hostingOptions.UseInternalSwitch)
                 {
+                    switchName = KubeConst.HyperVLocalInternalSwitchName;
+
+                    controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch");
+
                     // We're going to create an internal switch named [neonkube] configured
                     // with the standard private subnet and a NAT to enable external routing.
 
-                    switchName = KubeConst.HyperVLocalInternalSwitchName;
+                    var @switch = hyperv.GetSwitch(switchName);
 
-                    if (!switches.Any(@switch => @switch.Type == VirtualSwitchType.Internal && @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
+                    if (@switch == null)
                     {
                         // The internal switch doesn't exist yet, so create it.  Note that
                         // this switch always includes an external NAT.
 
+                        controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
                         hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
+                        controller.SetGlobalStepStatus();
+                    }
+                    else
+                    {
+                        // The switch exists.  We need to ensure that it has an attached IP address and NAT.
+                        // It's possible that these haven't been created yet when previous cluster deployments
+                        // may have failed.
+
+                        controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
+
+                        // $todo(jefflill): Implement this
+
+                        controller.SetGlobalStepStatus();
                     }
                 }
                 else
@@ -409,7 +425,7 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("Scanning network adapters");
 
-                    var externalSwitch = switches.FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
+                    var externalSwitch = hyperv.ListSwitches().FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
 
                     if (externalSwitch == null)
                     {
@@ -453,7 +469,7 @@ namespace Neon.Kube
 
                 if (!string.IsNullOrEmpty(conflicts))
                 {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
+                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exists.");
                 }
 
                 controller.SetGlobalStepStatus();
@@ -472,20 +488,11 @@ namespace Neon.Kube
             {
                 var vmName = GetVmName(node.Metadata);
 
-                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
-
-                var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch      = new Stopwatch();
-
-                stopwatch.Start();
-
                 // Decompress the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
                 var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
-
-                node.Status = $"create: disk";
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
@@ -499,7 +506,8 @@ namespace Neon.Kube
 
                             while (true)
                             {
-                                cb = decompressor.Read(buffer, 0, buffer.Length);
+                                cb     = decompressor.Read(buffer, 0, buffer.Length);
+                                cbRead = input.Position;
 
                                 if (cb == 0)
                                 {
@@ -508,16 +516,12 @@ namespace Neon.Kube
 
                                 output.Write(buffer, 0, cb);
 
-                                cbRead += cb;
+                                var percentComplete = (int)((double)cbRead / (double)input.Length * 100.0);
 
-                                var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
-
-                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                {
-                                    node.Status = $"create: disk [{percentComplete}%]";
-                                    stopwatch.Restart();
-                                }
+                                node.Status = $"decompress: VHDX [{percentComplete}%]";
                             }
+
+                            node.Status = $"decompress: VHDX [100]";
                         }
                     }
                 }

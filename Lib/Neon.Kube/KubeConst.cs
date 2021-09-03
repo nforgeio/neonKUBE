@@ -304,11 +304,6 @@ namespace Neon.Kube
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
-        /// Identifies the main WSL2 distro hosting neonDESKTOP.
-        /// </summary>
-        public const string NeonDesktopWsl2Distro = "neon-desktop";
-
-        /// <summary>
         /// Identifies the production neonKUBE container image registry.
         /// </summary>
         public const string NeonKubeProdRegistry = "ghcr.io/neonkube-release";
@@ -391,5 +386,15 @@ namespace Neon.Kube
         /// as well as internal user-defined clusters will be attached.
         /// </summary>
         public const string HyperVLocalInternalSwitchName = "neonkube";
+
+        /// <summary>
+        /// Identifies the WSL2 distro used to host the neonDESKTOP built-in cluster.
+        /// </summary>
+        public const string NeonDesktopWsl2BuiltInDistroName = "neon-desktop";
+
+        /// <summary>
+        /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.
+        /// </summary>
+        public const string NeonDesktopHyperVBuiltInVmName = NeonDesktopWsl2BuiltInDistroName;
     }
 }
