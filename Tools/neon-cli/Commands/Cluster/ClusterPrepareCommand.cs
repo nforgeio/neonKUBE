@@ -286,7 +286,7 @@ Server Requirements:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster prepare was failed.");
+                    Console.WriteLine(" *** CANCELLED: Cluster prepare has failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
