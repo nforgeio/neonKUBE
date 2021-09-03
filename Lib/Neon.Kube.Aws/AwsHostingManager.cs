@@ -1353,6 +1353,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.SetGlobalStepStatus("connect: AWS");
+
             if (isConnected)
             {
                 await GetResourcesAsync();
@@ -1757,7 +1759,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Verifies that the requested AWS region and availability mzone exists and supports 
+        /// Verifies that the requested AWS region and availability zone exists and supports 
         /// the requested VM sizes.  We'll also verify that the requested VMs have the minimum 
         /// required number or cores and RAM.
         /// </para>
@@ -1770,6 +1772,8 @@ namespace Neon.Kube
         private async Task VerifyRegionAndInstanceTypesAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.SetGlobalStepStatus("verify: AWS region, availibility zone, and machine types exist");
 
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;
@@ -1861,6 +1865,8 @@ namespace Neon.Kube
         private async Task LocateAmiAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.SetGlobalStepStatus("locate: VM AMI image");
 
             // $hack(jefflill):
             //
@@ -1961,6 +1967,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.SetGlobalStepStatus($"create: [{resourceGroupName}] resource group");
+
             Group group;
 
             try
@@ -2029,8 +2037,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+
             if (masterPlacementGroup == null)
             {
+                controller.SetGlobalStepStatus($"configure: [{masterPlacementGroupName}] placement group");
+
                 var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
                     new CreatePlacementGroupRequest(masterPlacementGroupName, PlacementStrategy.Partition)
                     {
@@ -2043,6 +2054,8 @@ namespace Neon.Kube
 
             if (workerPlacementGroup == null)
             {
+                controller.SetGlobalStepStatus($"configure: [{workerPlacementGroupName}] placement group");
+
                 var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
                     new CreatePlacementGroupRequest(workerPlacementGroupName, PlacementStrategy.Partition)
                     {
@@ -2085,6 +2098,8 @@ namespace Neon.Kube
         private async Task CreateAddressesAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.SetGlobalStepStatus("create: elastic IP address");
 
             if (ingressAddress == null)
             {
@@ -2240,6 +2255,8 @@ namespace Neon.Kube
         private async Task ConfigureNetworkAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.SetGlobalStepStatus("configure: cluster network");
 
             // Create the VPC.
 
@@ -2528,6 +2545,8 @@ namespace Neon.Kube
 
             if (loadBalancer == null)
             {
+                controller.SetGlobalStepStatus("create: cluster load balancer");
+
                 await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
                     {
@@ -2547,6 +2566,8 @@ namespace Neon.Kube
 
             // Configure the ingress/egress listeners and target groups.
 
+            controller.SetGlobalStepStatus("configure: cluster routing");
+
             await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
         }
 
@@ -2562,6 +2583,8 @@ namespace Neon.Kube
             if (keyPairId == null)
             {
                 Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
+
+                controller.SetGlobalStepStatus("import: SSH keypair");
 
                 var keyPairResponse = await ec2Client.ImportKeyPairAsync(
                     new ImportKeyPairRequest()
@@ -3155,6 +3178,8 @@ groupmod -n sysadmin ubuntu
             // to persist the current external SSH access status for the cluster.
             //
             // Update the tag for state changes.
+
+            controller.SetGlobalStepStatus("configure: network security");
 
             var externalSshEnabledTag = vpc.Tags.SingleOrDefault(tag => tag.Key == neonVpcSshEnabledTagKey);
 

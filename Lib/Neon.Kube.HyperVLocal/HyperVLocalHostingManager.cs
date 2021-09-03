@@ -192,7 +192,7 @@ namespace Neon.Kube
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-                    controller.SetGlobalStepStatus("set ssh password");
+                    controller.SetGlobalStepStatus("set: ssh password");
 
                     this.secureSshPassword = clusterLogin.SshPassword;
 
@@ -255,7 +255,7 @@ namespace Neon.Kube
                             await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                                 (progressType, progress) =>
                                 {
-                                    controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)} VHDX: [{progress}%] [{driveTemplateName}]");
+                                    controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
                                     return !controller.CancelPending;
                                 });
@@ -267,8 +267,6 @@ namespace Neon.Kube
                             driveTemplateName = Path.GetFileName(nodeImagePath);
                             driveTemplatePath = nodeImagePath;
                         }
-
-                        controller.SetGlobalStepStatus();
                     });
             }
 
@@ -451,7 +449,7 @@ namespace Neon.Kube
                     // We're going to create an external Hyper-V switch if there
                     // isn't already an external switch.
 
-                    controller.SetGlobalStepStatus("scanning network adapters");
+                    controller.SetGlobalStepStatus("scan: network adapters");
 
                     var externalSwitch = hyperv.ListSwitches().FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
 
@@ -469,12 +467,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                controller.SetGlobalStepStatus("scanning virtual machines");
+                controller.SetGlobalStepStatus("scan: virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                controller.SetGlobalStepStatus("stopping virtual machines");
+                controller.SetGlobalStepStatus("stop: virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -549,7 +547,7 @@ namespace Neon.Kube
                                 controller.SetGlobalStepStatus($"decompress: node VHDX [{percentComplete}%]");
                             }
 
-                            controller.SetGlobalStepStatus($"decompress: node VHDX [100]");
+                            controller.SetGlobalStepStatus($"decompress: node VHDX [100%]");
                         }
                     }
 

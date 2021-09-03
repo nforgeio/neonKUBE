@@ -173,6 +173,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.SetGlobalStepStatus("download: workstation binaries");
+
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master            = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
@@ -218,7 +220,7 @@ namespace Neon.Kube
             {
                 if (!File.Exists(cachedKubeCtlPath))
                 {
-                    controller.LogProgress(master, verb: "download", message: "kubectl");
+                    controller.SetGlobalStepStatus("download: kubectl");
 
                     using (var response = await httpClient.GetStreamAsync(kubeCtlUri))
                     {
@@ -231,7 +233,7 @@ namespace Neon.Kube
 
                 if (!File.Exists(cachedHelmPath))
                 {
-                    controller.LogProgress(master, verb: "download", message: "Helm");
+                    controller.SetGlobalStepStatus("download: helm");
 
                     using (var response = await httpClient.GetStreamAsync(helmUri))
                     {

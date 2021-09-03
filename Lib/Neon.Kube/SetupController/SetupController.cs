@@ -34,6 +34,18 @@ using Neon.SSH;
 namespace Neon.Kube
 {
     /// <summary>
+    /// Interface implemented by internal <see cref="SetupController{NodeMetadata}.Step"/>
+    /// implementations.
+    /// </summary>
+    public interface ISetupControllerStep
+    {
+        /// <summary>
+        /// Returns <c>true</c> for global (non-node) steps or <c>false</c> for node related steps.
+        /// </summary>
+        public bool IsGlobalStep { get; }
+    }
+
+    /// <summary>
     /// Manages a cluster setup operation consisting of a series of setup steps
     /// while displaying status to the <see cref="Console"/>.
     /// </summary>
@@ -47,9 +59,9 @@ namespace Neon.Kube
         where NodeMetadata : class
     {
         //---------------------------------------------------------------------
-        // Private types
+        // Local types
 
-        private class Step
+        internal class Step : ISetupControllerStep
         {
             public int                                                          Number;
             public string                                                       Label;
@@ -65,6 +77,9 @@ namespace Neon.Kube
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
             public TimeSpan                                                     RunTime;
+
+            /// <inheritdoc/>
+            public bool IsGlobalStep => SyncGlobalAction != null || AsyncGlobalAction != null;
 
             /// <inheritdoc/>
             public override string ToString()
@@ -692,8 +707,6 @@ namespace Neon.Kube
                 step.State       = SetupStepState.Running;
                 step.WasExecuted = true;
 
-                var isGlobalStep      = false;
-                var isGlobalStepReady = false;
                 var stepNodes         = nodes.Where(node => step.Predicate(this, node));
                 var stepNodeNamesSet  = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -799,11 +812,7 @@ namespace Neon.Kube
                         {
                             try
                             {
-                                isGlobalStep = true;
-
                                 step.SyncGlobalAction(this);
-
-                                isGlobalStepReady = true;
                             }
                             catch (Exception e)
                             {
@@ -847,11 +856,7 @@ namespace Neon.Kube
                                 var runTask = Task.Run(
                                     async () =>
                                     {
-                                        isGlobalStep = true;
-
                                         await step.AsyncGlobalAction(this);
-
-                                        isGlobalStepReady = true;
                                     });
 
                                 runTask.Wait();
@@ -1213,7 +1218,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public IEnumerable<SetupStepStatus> GetStepStatus()
         {
-            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.State, step.RunTime, step));
+            return steps.Select(step => new SetupStepStatus(step.Number, step.Label, step.State, step, step.RunTime));
         }
 
         /// <inheritdoc/>

@@ -267,9 +267,9 @@ namespace Neon.Kube
             }
 
             //-----------------------------------------------------------------
-            // Display the node status
+            // Display the node status when executing a node step.
 
-            if (controller.HasNodeSteps && showNodeStatus && CurrentStep != null)
+            if (controller.HasNodeSteps && showNodeStatus)
             {
                 // $hack(jefflill):
                 //
@@ -336,9 +336,9 @@ namespace Neon.Kube
 
             sbDisplay.AppendLine();
 
-            if (!string.IsNullOrWhiteSpace(GlobalStatus))
+            if (CurrentStep != null && currentStep.IsGlobalStep && !string.IsNullOrWhiteSpace(GlobalStatus))
             {
-                sbDisplay.AppendLine($" Global Operation:");
+                sbDisplay.AppendLine($" Action:");
                 sbDisplay.AppendLine($"    {GlobalStatus}");
             }
             else

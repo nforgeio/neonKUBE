@@ -220,6 +220,8 @@ namespace Neon.Kube
             controller.AddGlobalStep("configure hosting manager",
                 controller =>
                 {
+                    controller.SetGlobalStepStatus("configure: hosting manager");
+
                     if (hostingManager.RequiresAdminPrivileges)
                     {
                         try
@@ -280,6 +282,8 @@ namespace Neon.Kube
                     }
                     else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
                     {
+                        controller.SetGlobalStepStatus("generate: SSH password");
+
                         clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                         // Append a string that guarantees that the generated password meets
@@ -297,6 +301,8 @@ namespace Neon.Kube
                     if (clusterLogin.SshKey == null)
                     {
                         // Generate a 2048 bit SSH key pair.
+
+                        controller.SetGlobalStepStatus("generate: SSH key pair");
 
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
 
@@ -362,15 +368,16 @@ namespace Neon.Kube
             controller.AddGlobalStep("create neoncluster.io domain",
                 async (controller) =>
                 {
-                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+                    controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
 
-                    var clusterIp = controller.Get<string>(KubeSetupProperty.ClusterIp);
+                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+                    var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
                     if (IPAddress.TryParse(clusterIp, out var ip))
                     {
                         using (var jsonClient = new JsonClient())
                         {
-                            jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                            jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
                             clusterLogin.Save();
                         }

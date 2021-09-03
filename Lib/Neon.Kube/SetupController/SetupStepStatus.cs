@@ -37,13 +37,13 @@ namespace Neon.Kube
     /// </summary>
     public class SetupStepStatus : NotifyPropertyChanged
     {
-        private bool            isClone;
-        private int             number;
-        private string          label;
-        private SetupStepState  state;
-        private bool            isQuiet;
-        private TimeSpan        runtime;
-        private object          internalStep;
+        private bool                    isClone;
+        private int                     number;
+        private string                  label;
+        private SetupStepState          state;
+        private bool                    isQuiet;
+        private TimeSpan                runtime;
+        private ISetupControllerStep    internalStep;
 
         /// <summary>
         /// Default constructor used by <see cref="Clone"/>.
@@ -59,11 +59,12 @@ namespace Neon.Kube
         /// <param name="stepNumber">The step number or zero for quiet steps.</param>
         /// <param name="stepLabel">The setup step label.</param>
         /// <param name="stepState">The current status for the step.</param>
+        /// <param name="internalStep">Specifies the internal setup controller step.</param>
         /// <param name="runTime">Optionally specifies the runtime for completed steps or <see cref="TimeSpan.Zero"/> when the step hasn't completed execution.</param>
-        /// <param name="internalStep">Optionally specifies the internal setup controller step.</param>
-        public SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepState, TimeSpan runTime = default, object internalStep = null)
+        public SetupStepStatus(int stepNumber, string stepLabel, SetupStepState stepState, ISetupControllerStep internalStep, TimeSpan runTime = default)
         {
             Covenant.Requires<ArgumentException>(stepNumber >= 0, nameof(stepNumber));
+            Covenant.Requires<ArgumentException>(internalStep != null, nameof(internalStep));
             Covenant.Requires<ArgumentException>(runTime >= TimeSpan.Zero, nameof(runTime));
 
             this.isClone      = false;
@@ -145,6 +146,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns <c>true</c> for global steps, <c>false</c> for node steps.
+        /// </summary>
+        public bool IsGlobalStep => internalStep.IsGlobalStep;
+
+        /// <summary>
         /// Returns how long the step has been executing for the current step or
         /// the total runtime for when the step has completed or failed.
         /// </summary>
@@ -166,7 +172,7 @@ namespace Neon.Kube
         /// Returns the internal <see cref="SetupController{NodeMetadata}"/> step.
         /// </summary>
         [JsonIgnore]
-        public object InternalStep
+        public ISetupControllerStep InternalStep
         {
             get => internalStep;
 

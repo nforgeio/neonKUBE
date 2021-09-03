@@ -115,13 +115,17 @@ namespace Neon.Kube
 
                 for (int lineIndex = previousLines.Count - 1; lineIndex >= 1; lineIndex--)
                 {
-                    if (previousLines[lineIndex].Trim() == string.Empty)
+                    if (string.IsNullOrWhiteSpace(previousLines[lineIndex]))
                     {
                         previousLines.RemoveAt(lineIndex);
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
-                Console.SetCursorPosition(0, previousLines.Count + 2);
+                Console.SetCursorPosition(0, previousLines.Count + 1);
                 Console.CursorVisible = true;
             }
         }
