@@ -25,32 +25,29 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
 namespace Neon.HyperV
 {
     /// <summary>
-    /// Describes the state of a Hyper-V based virtual machine.
+    /// Describes a IP address.
     /// </summary>
-    public class VirtualMachine
+    public class VirtualIPAddress
     {
         /// <summary>
-        /// The machine name.
+        /// The associated IP address.
         /// </summary>
-        public string Name { get; set; }
+        public string Address { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// The IP address subnet.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        public NetworkCidr Subnet { get; set; }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached. 
+        /// Identifies the network interface or switch to which this address
+        /// is connected.
         /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned.
-        /// </summary>
-        public string InterfaceName { get; set; }
+        public string InterfaceName { get; set;}
     }
 }

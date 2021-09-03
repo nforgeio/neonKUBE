@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    VirtualNAT.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,28 +29,18 @@ using Neon.Common;
 namespace Neon.HyperV
 {
     /// <summary>
-    /// Describes the state of a Hyper-V based virtual machine.
+    /// Describes a virtual NAT.
     /// </summary>
-    public class VirtualMachine
+    public class VirtualNAT
     {
         /// <summary>
-        /// The machine name.
+        /// The NAT's name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// The NAT source subnet.
         /// </summary>
-        public VirtualMachineState State { get; set; }
-
-        /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached. 
-        /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned.
-        /// </summary>
-        public string InterfaceName { get; set; }
+        public string Subnet { get; set; }
     }
 }

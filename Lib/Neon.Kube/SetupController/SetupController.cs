@@ -612,10 +612,7 @@ namespace Neon.Kube
             return step;
         }
 
-        /// <summary>
-        /// Sets the operation status text.
-        /// </summary>
-        /// <param name="status">The optional operation status text.</param>
+        /// <inheritdoc/>
         public void SetGlobalStepStatus(string status = null)
         {
             globalStatus = status ?? string.Empty;

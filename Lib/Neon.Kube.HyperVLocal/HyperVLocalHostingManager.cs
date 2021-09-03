@@ -192,7 +192,50 @@ namespace Neon.Kube
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
+                    controller.SetGlobalStepStatus("set ssh password");
+
                     this.secureSshPassword = clusterLogin.SshPassword;
+
+                    // If the cluster is being deployed to the internal [neonkube] switch, we need to
+                    // check to see whether the switch already exists, and if it does, we'll need to
+                    // ensure that it's configureed correctly with a virtual address and NAT.  We're
+                    // going to fail setup when an existing switch isn't configured correctly.
+
+                    if (cluster.Definition.Hosting.HyperVLocal.UseInternalSwitch)
+                    {
+                        using (var hyperv = new HyperVClient())
+                        {
+                            controller.SetGlobalStepStatus($"check [{KubeConst.HyperVLocalInternalSwitchName}] virtual switch status");
+
+                            var localHyperVOptions = cluster.Definition.Hosting.HyperVLocal;
+                            var @switch            = hyperv.GetSwitch(KubeConst.HyperVLocalInternalSwitchName);
+                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonKubeInternalSubnet);
+                            var nat                = hyperv.GetNATByName(KubeConst.HyperVLocalInternalSwitchName);
+
+                            if (@switch != null)
+                            {
+                                if (@switch.Type != VirtualSwitchType.Internal)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
+                                }
+
+                                if (address == null)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  No [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is defined.");
+                                }
+
+                                if (!address.InterfaceName.Equals(@switch.Name))
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                }
+
+                                if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
+                                }
+                            }
+                        }
+                    }
                 });
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
@@ -399,24 +442,14 @@ namespace Neon.Kube
                     if (@switch == null)
                     {
                         // The internal switch doesn't exist yet, so create it.  Note that
-                        // this switch always includes an external NAT.
+                        // this switch requires a virtual NAT.
 
                         controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
                         hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
                         controller.SetGlobalStepStatus();
                     }
-                    else
-                    {
-                        // The switch exists.  We need to ensure that it has an attached IP address and NAT.
-                        // It's possible that these haven't been created yet when previous cluster deployments
-                        // may have failed.
 
-                        controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
-
-                        // $todo(jefflill): Implement this
-
-                        controller.SetGlobalStepStatus();
-                    }
+                    controller.SetGlobalStepStatus();
                 }
                 else
                 {

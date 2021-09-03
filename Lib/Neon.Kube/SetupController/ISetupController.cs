@@ -278,6 +278,12 @@ namespace Neon.Kube
         IEnumerable<SetupNodeStatus> GetHostStatus();
 
         /// <summary>
+        /// Sets the operation status text.
+        /// </summary>
+        /// <param name="status">The optional operation status text.</param>
+        void SetGlobalStepStatus(string status = null);
+
+        /// <summary>
         /// Indicates that setup should be cancelled.  Setting this will request
         /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
         /// <c>false</c> assignments will be ignored.
