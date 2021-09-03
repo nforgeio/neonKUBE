@@ -423,9 +423,9 @@ namespace Neon.Kube
                         driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            (type, progress) =>
+                            (progressType, progress) =>
                             {
-                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                                xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)} VHDX: [{progress}%] [{driveTemplateName}]");
 
                                 return !xenController.CancelPending;
                             });

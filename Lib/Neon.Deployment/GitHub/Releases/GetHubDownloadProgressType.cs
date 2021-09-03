@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Runtime.Serialization;
+
 namespace Neon.Deployment
 {
     /// <summary>
@@ -26,11 +28,13 @@ namespace Neon.Deployment
         /// <summary>
         /// An existing local file is being verified.
         /// </summary>
-        Checking,
+        [EnumMember(Value = "check")]
+        Check,
 
         /// <summary>
         /// The file is being downloaded.
         /// </summary>
-        Downloading
+        [EnumMember(Value = "download")]
+        Download
     }
 }

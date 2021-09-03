@@ -447,7 +447,7 @@ namespace TestDeployment
                     await GitHub.Release.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Downloading)
+                            if (type == GetHubDownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -520,7 +520,7 @@ namespace TestDeployment
                     await GitHub.Release.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Downloading)
+                            if (type == GetHubDownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -548,7 +548,7 @@ namespace TestDeployment
                     await GitHub.Release.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Downloading)
+                            if (type == GetHubDownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -575,7 +575,7 @@ namespace TestDeployment
                     await GitHub.Release.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Downloading)
+                            if (type == GetHubDownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }

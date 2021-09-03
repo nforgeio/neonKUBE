@@ -278,7 +278,7 @@ Server Requirements:
                 case SetupDisposition.Cancelled:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more prepare steps cancelled.");
+                    Console.WriteLine(" *** ERROR: One or more cluster prepare steps were cancelled.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;

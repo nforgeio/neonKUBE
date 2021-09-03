@@ -332,14 +332,20 @@ namespace Neon.Kube
                 }
             }
 
-            if (!string.IsNullOrEmpty(GlobalStatus))
+            // Display any global operation status.
+
+            sbDisplay.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(GlobalStatus))
+            {
+                sbDisplay.AppendLine($" Global Operation:");
+                sbDisplay.AppendLine($"    {GlobalStatus}");
+            }
+            else
             {
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine();
-                sbDisplay.AppendLine($"*** {GlobalStatus}");
             }
-
-            sbDisplay.AppendLine();
 
             // Display the runtime for the steps after they all have been executed.
 
@@ -353,7 +359,6 @@ namespace Neon.Kube
                     maxLabelWidth = totalLabel.Length;
                 }
 
-                sbDisplay.AppendLine();
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine(" Step Runtime");
                 sbDisplay.AppendLine(" ------------");

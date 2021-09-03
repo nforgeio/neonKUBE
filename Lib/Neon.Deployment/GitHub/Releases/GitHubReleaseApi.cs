@@ -553,7 +553,7 @@ namespace Neon.Deployment
                     {
                         var buffer = new byte[8192];
 
-                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 0);
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 0);
 
                         while (true)
                         {
@@ -565,10 +565,10 @@ namespace Neon.Deployment
                             }
 
                             hasher.AppendData(buffer, 0, cb);
-                            progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)input.Position/(double)input.Length * 100.0));
+                            progressAction?.Invoke(GetHubDownloadProgressType.Check, (int)((double)input.Position/(double)input.Length * 100.0));
                         }
 
-                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, 100);
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 100);
 
                         if (NeonHelper.ToHex(hasher.GetCurrentHash()) == download.Md5)
                         {
@@ -597,7 +597,7 @@ namespace Neon.Deployment
 
                     foreach (var part in download.Parts.OrderBy(part => part.Number))
                     {
-                        progressAction?.Invoke(GetHubDownloadProgressType.Checking, (int)((double)pos / (double)download.Size * 100.0));
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, (int)((double)pos / (double)download.Size * 100.0));
 
                         // Handle a partially downloaded part.  We're going to truncate the file to
                         // remove the partial part and then break to start re-downloading the part.
@@ -632,14 +632,14 @@ namespace Neon.Deployment
 
             // Download any remaining parts.
 
-            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, 0))
+            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Download, 0))
             {
                 return targetPath;
             }
 
             if (nextPartNumber > download.Parts.Count)
             {
-                progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
+                progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
                 return targetPath;
             }
 
@@ -699,7 +699,7 @@ namespace Neon.Deployment
 
                             pos += part.Size;
 
-                            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Downloading, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Download, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
                             {
                                 return targetPath;
                             }
@@ -711,7 +711,7 @@ namespace Neon.Deployment
                         }
                     }
 
-                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
                     File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
 
                     return targetPath;
