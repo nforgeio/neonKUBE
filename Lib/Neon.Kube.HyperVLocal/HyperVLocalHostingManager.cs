@@ -209,7 +209,7 @@ namespace Neon.Kube
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperVLocal;
                             var @switch            = hyperv.GetSwitch(KubeConst.HyperVLocalInternalSwitchName);
-                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonKubeInternalSubnet);
+                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
                             var nat                = hyperv.GetNATByName(KubeConst.HyperVLocalInternalSwitchName);
 
                             if (@switch != null)
@@ -219,12 +219,7 @@ namespace Neon.Kube
                                     throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
                                 }
 
-                                if (address == null)
-                                {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  No [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is defined.");
-                                }
-
-                                if (!address.InterfaceName.Equals(@switch.Name))
+                                if (address != null && !address.InterfaceName.Equals(@switch.Name))
                                 {
                                     throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
                                 }
