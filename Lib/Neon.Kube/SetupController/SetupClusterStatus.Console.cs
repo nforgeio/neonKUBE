@@ -351,12 +351,21 @@ namespace Neon.Kube
 
             if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
             {
-                var totalLabel    = " Total Setup Time";
+                var totalLabel    = "Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);
 
                 if (maxLabelWidth < totalLabel.Length)
                 {
                     maxLabelWidth = totalLabel.Length;
+                }
+
+                // Compute the total run time.
+
+                var totalRuntime = TimeSpan.Zero;
+
+                foreach (var step in Steps)
+                {
+                    totalRuntime += step.InternalStep.RunTime;
                 }
 
                 sbDisplay.AppendLine();
@@ -382,7 +391,7 @@ namespace Neon.Kube
                 filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
                 sbDisplay.AppendLine(" " + new string('-', totalLabel.Length + 1));
-                sbDisplay.AppendLine($" {totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
+                sbDisplay.AppendLine($" {totalLabel}:    {filler}{totalRuntime} ({totalRuntime.TotalSeconds} sec)");
                 sbDisplay.AppendLine();
             }
 

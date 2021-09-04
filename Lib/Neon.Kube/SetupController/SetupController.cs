@@ -34,18 +34,6 @@ using Neon.SSH;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Interface implemented by internal <see cref="SetupController{NodeMetadata}.Step"/>
-    /// implementations.
-    /// </summary>
-    public interface ISetupControllerStep
-    {
-        /// <summary>
-        /// Returns <c>true</c> for global (non-node) steps or <c>false</c> for node related steps.
-        /// </summary>
-        public bool IsGlobalStep { get; }
-    }
-
-    /// <summary>
     /// Manages a cluster setup operation consisting of a series of setup steps
     /// while displaying status to the <see cref="Console"/>.
     /// </summary>
@@ -76,10 +64,12 @@ namespace Neon.Kube
             public SetupStepState                                               State;
             public int                                                          ParallelLimit;
             public bool                                                         WasExecuted;
-            public TimeSpan                                                     RunTime;
 
             /// <inheritdoc/>
             public bool IsGlobalStep => SyncGlobalAction != null || AsyncGlobalAction != null;
+
+            /// <inheritdoc/>
+            public TimeSpan RunTime { get; set; }
 
             /// <inheritdoc/>
             public override string ToString()
@@ -1246,9 +1236,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public TimeSpan Runtime { get; private set; }
-
-        /// <inheritdoc/>
         public bool ShowRuntime { get; set; } = false;
 
         /// <inheritdoc/>
@@ -1286,12 +1273,6 @@ namespace Neon.Kube
                     {
                         LogGlobal(LogBeginMarker);
                         cluster?.LogLine(LogBeginMarker);
-
-                        // We're going to time how long this takes.
-
-                        var stopWatch = new Stopwatch();
-
-                        stopWatch.Start();
 
                         // Number the steps.  Note that quiet steps don't get their own step number.
 
@@ -1369,8 +1350,6 @@ namespace Neon.Kube
                         }
                         finally
                         {
-                            Runtime = stopWatch.Elapsed;
-
                             if (!leaveNodesConnected)
                             {
                                 // Disconnect all of the nodes.

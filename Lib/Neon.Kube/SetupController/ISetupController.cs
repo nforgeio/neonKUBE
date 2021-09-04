@@ -92,11 +92,6 @@ namespace Neon.Kube
         int CurrentStepNumber { get; }
 
         /// <summary>
-        /// Returns the time spent performing setup after setup has completed (or failed).
-        /// </summary>
-        TimeSpan Runtime { get; }
-
-        /// <summary>
         /// Optionally displays the elapsed time for each step as well as the overall
         /// operation when setup completes (or fails).
         /// </summary>
