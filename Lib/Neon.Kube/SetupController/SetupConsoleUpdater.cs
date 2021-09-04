@@ -33,8 +33,10 @@ namespace Neon.Kube
     /// </summary>
     public class SetupConsoleUpdater
     {
+        private object          syncLock      = new object();
         private string          previousText  = null;
         private List<string>    previousLines = new List<string>();
+        private bool            stopped       = false;
 
         /// <summary>
         /// Writes the text passed to the <see cref="Console"/> without flickering.
@@ -42,51 +44,86 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
-            text ??= string.Empty;
-
-            var newLines = text.Split('\n')
-                .Select(line => line.TrimEnd())
-                .ToList();
-
-            if (previousText == null)
+            lock (syncLock)
             {
-                // This is the first Update() has been called so we need configure
-                // and clear the console.
-
-                Console.CursorVisible = false;
-                Console.Clear();
-            }
-
-            if (text == previousText)
-            {
-                return;     // The text hasn't changed
-            }
-
-            // We're going to write the new lines by comparing them against the previous lines and rewriting
-            // only the lines that are different. 
-
-            for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
-            {
-                var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
-                var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
-
-                // When the new line is shorter than the previous one, we need to append enough spaces
-                // to the new line such that the previous line will be completely overwritten.
-
-                if (newLine.Length < previousLine.Length)
+                if (stopped)
                 {
-                    newLine += new string(' ', previousLine.Length - newLine.Length);
+                    return;
                 }
 
-                if (newLine != previousLine)
-                {
-                    Console.SetCursorPosition(0, lineIndex);
-                    Console.Write(newLine);
-                }
-            }
+                text ??= string.Empty;
 
-            previousLines = newLines;
-            previousText  = text;
+                var newLines = text.Split('\n')
+                    .Select(line => line.TrimEnd())
+                    .ToList();
+
+                if (previousText == null)
+                {
+                    // This is the first Update() has been called so we need configure
+                    // and clear the console.
+
+                    Console.CursorVisible = false;
+                    Console.Clear();
+                }
+
+                if (text == previousText)
+                {
+                    return;     // The text hasn't changed
+                }
+
+                // We're going to write the new lines by comparing them against the previous lines and rewriting
+                // only the lines that are different. 
+
+                for (int lineIndex = 0; lineIndex < Math.Max(previousLines.Count, newLines.Count); lineIndex++)
+                {
+                    var previousLine = lineIndex < previousLines.Count ? previousLines[lineIndex] : string.Empty;
+                    var newLine      = lineIndex < newLines.Count ? newLines[lineIndex] : string.Empty;
+
+                    // When the new line is shorter than the previous one, we need to append enough spaces
+                    // to the new line such that the previous line will be completely overwritten.
+
+                    if (newLine.Length < previousLine.Length)
+                    {
+                        newLine += new string(' ', previousLine.Length - newLine.Length);
+                    }
+
+                    if (newLine != previousLine)
+                    {
+                        Console.SetCursorPosition(0, lineIndex);
+                        Console.Write(newLine);
+                    }
+                }
+
+                previousLines = newLines;
+                previousText  = text;
+            }
+        }
+
+        /// <summary>
+        /// Disables <see cref="Update(string)"/> from writing any more updates to the console
+        /// and restores the console for normal write operations.
+        /// </summary>
+        public void Stop()
+        {
+            lock (syncLock)
+            {
+                stopped = true;
+
+                // Move the cursor to the beginning of the second line after the last
+                // non-blank line written by Update() and then re-enable the cursor
+                // such that the next Console write will happen there.
+
+                for (int lineIndex = previousLines.Count - 1; lineIndex >= 1; lineIndex--)
+                {
+                    if (previousLines[lineIndex].Trim() == string.Empty)
+                    {
+                        previousLines.RemoveAt(lineIndex);
+                    }
+                }
+
+                Console.SetCursorPosition(0, previousLines.Count + 2);
+                Console.CursorVisible = true;
+            }
         }
     }
 }

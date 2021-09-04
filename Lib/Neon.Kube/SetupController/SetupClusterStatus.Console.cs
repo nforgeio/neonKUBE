@@ -228,46 +228,12 @@ namespace Neon.Kube
                     case SetupStepState.NotInvolved:
                     case SetupStepState.Pending:
 
-                        // $hack(jefflill):
-                        //
-                        // It's possible for a step to indicate that it's PENDING even when
-                        // it has actually been completed, due to the fact that the setup
-                        // controller is executing steps on a different thread from the
-                        // controller's status update thread.
-                        //
-                        // We're going to hack around this by treating all steps with numbers
-                        // less than the current step as completed.
-
-                        if (step.Number > CurrentStep.Number)
-                        {
-                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
-                        }
-                        else
-                        {
-                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
-                        }
+                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
                         break;
 
                     case SetupStepState.Running:
 
-                        if (step == CurrentStep)
-                        {
-                            sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
-                        }
-                        else
-                        {
-                            // $hack(jefflill):
-                            //
-                            // It's possible for there to be multiple RUNNING steps with at the same
-                            // time, due to the fact that the setup controller is executing steps on
-                            // a different thread from the controller's status update thread.
-                            //
-                            // We're going to hack around this by only displaying the current step
-                            // arrow for the current step and display any other "running" steps as
-                            // pending.
-
-                            sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
-                        }
+                        sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
                         break;
 
                     case SetupStepState.Done:
@@ -366,14 +332,20 @@ namespace Neon.Kube
                 }
             }
 
-            if (!string.IsNullOrEmpty(GlobalStatus))
+            // Display any global operation status.
+
+            sbDisplay.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(GlobalStatus))
+            {
+                sbDisplay.AppendLine($" Global Operation:");
+                sbDisplay.AppendLine($"    {GlobalStatus}");
+            }
+            else
             {
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine();
-                sbDisplay.AppendLine($"*** {GlobalStatus}");
             }
-
-            sbDisplay.AppendLine();
 
             // Display the runtime for the steps after they all have been executed.
 
@@ -387,7 +359,6 @@ namespace Neon.Kube
                     maxLabelWidth = totalLabel.Length;
                 }
 
-                sbDisplay.AppendLine();
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine(" Step Runtime");
                 sbDisplay.AppendLine(" ------------");

@@ -612,10 +612,7 @@ namespace Neon.Kube
             return step;
         }
 
-        /// <summary>
-        /// Sets the operation status text.
-        /// </summary>
-        /// <param name="status">The optional operation status text.</param>
+        /// <inheritdoc/>
         public void SetGlobalStepStatus(string status = null)
         {
             globalStatus = status ?? string.Empty;
@@ -1295,6 +1292,18 @@ namespace Neon.Kube
 
                             cluster?.LogLine(LogEndMarker);
 
+                            // Raise one more status changed and then stop the console
+                            // updater so the console will be configure to write normally.
+
+                            if (StatusChangedEvent != null)
+                            {
+                                lock (syncLock)
+                                {
+                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                }
+                            }
+
+                            ConsoleUpdater.Stop();
                             tcs.SetResult(SetupDisposition.Succeeded);
                             return;
                         }
@@ -1315,6 +1324,18 @@ namespace Neon.Kube
                     }
                     catch (Exception e)
                     {
+                        // Raise one more status changed and then stop the console
+                        // updater so the console will be configure to write normally.
+
+                        if (StatusChangedEvent != null)
+                        {
+                            lock (syncLock)
+                            {
+                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                            }
+                        }
+
+                        ConsoleUpdater.Stop();
                         tcs.SetException(e);
                     }
                     finally
@@ -1331,18 +1352,6 @@ namespace Neon.Kube
                         foreach (var disposable in disposables)
                         {
                             disposable.Dispose();
-                        }
-
-                        // Raise one more status changed and wait for a bit so any
-                        // listening UI will have a chance to display the status.
-
-                        if (StatusChangedEvent != null)
-                        {
-                            lock (syncLock)
-                            {
-                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
-                                Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                            }
                         }
                     }
                 });

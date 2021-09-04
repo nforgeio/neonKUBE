@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GetHubDownloadProgressType.cs
+// FILE:	    VirtualNAT.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,26 +15,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Runtime.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Dynamic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Neon.Deployment
+using Neon.Common;
+
+namespace Neon.HyperV
 {
     /// <summary>
-    /// Enumerates the types of progress indications raised when downloading 
-    /// a multi-part file from a GitHub release.
+    /// Describes a virtual NAT.
     /// </summary>
-    public enum GetHubDownloadProgressType
+    public class VirtualNAT
     {
         /// <summary>
-        /// An existing local file is being verified.
+        /// The NAT's name.
         /// </summary>
-        [EnumMember(Value = "check")]
-        Check,
+        public string Name { get; set; }
 
         /// <summary>
-        /// The file is being downloaded.
+        /// The NAT source subnet.
         /// </summary>
-        [EnumMember(Value = "download")]
-        Download
+        public string Subnet { get; set; }
     }
 }

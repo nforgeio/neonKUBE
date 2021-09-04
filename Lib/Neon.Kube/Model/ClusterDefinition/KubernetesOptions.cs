@@ -113,7 +113,7 @@ namespace Neon.Kube
         /// For on-premise environments like Hyper-V and XenServer, we use the
         /// HAProxy based load balancer deployed to the first master node (as sorted
         /// by node name).  This forwards traffic to port 5000 to the Kubernetes
-        /// API servers running on the masters.  This is not reeally HA though,
+        /// API servers running on the masters.  This is not really HA though,
         /// because the loss of the first master will result in the loss of 
         /// API server connectivity.  This does help some though.  For example,
         /// stopping the API server on the first master won't take the cluster

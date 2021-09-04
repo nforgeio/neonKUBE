@@ -26,6 +26,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -951,6 +952,169 @@ namespace Neon.HyperV
 
         /// <summary>
         /// <para>
+        /// Lists the virtual IPv4 addresses.
+        /// </para>
+        /// <note>
+        /// Only IPv4 addresses are returned.  IPv6 and any other address types will be ignored.
+        /// </note>
+        /// </summary>
+        /// <returns>A list of <see cref="VirtualIPAddress"/>.</returns>
+        public List<VirtualIPAddress> ListIPAddresses()
+        {
+            CheckDisposed();
+
+            try
+            {
+                var addresses    = new List<VirtualIPAddress>();
+                var rawAddresses = powershell.ExecuteJson($"{NetTcpIpNamespace}Get-NetIPAddress");
+                var switchRegex  = new Regex(@"^.*\((?<switch>.+)\)$");
+
+                foreach (dynamic rawAddress in rawAddresses)
+                {
+                    // We're only listing IPv4  addresses.
+
+                    var address = (string)rawAddress.IPv4Address;
+
+                    if (string.IsNullOrEmpty(address))
+                    {
+                        continue;
+                    }
+
+                    // Extract the interface/switch name from the [InterfaceAlias] field,
+                    // which will look something like:
+                    //
+                    //      vEthernet (neonkube)
+                    //
+                    // We'll extract the name within the parens if present, otherwise we'll
+                    // take the entire property value as the name.
+
+                    var interfaceAlias = (string)rawAddress.InterfaceAlias;
+                    var match          = switchRegex.Match(interfaceAlias);
+                    var interfaceName  = string.Empty;
+
+                    if (match.Success)
+                    {
+                        interfaceName = match.Groups["switch"].Value;
+                    }
+                    else
+                    {
+                        interfaceName = interfaceAlias;
+                    }
+
+                    var virtualIPAddress
+                        = new VirtualIPAddress()
+                        {
+                            Address       = address,
+                            Subnet        = NetworkCidr.Parse($"{address}/{rawAddress.PrefixLength}"),
+                            InterfaceName = interfaceName
+                        };
+
+                    addresses.Add(virtualIPAddress);
+                }
+
+                return addresses;
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Looks for the specified IP address.
+        /// </summary>
+        /// <param name="address">The desired IP address.</param>
+        /// <returns>The <see cref="VirtualIPAddress"/> or <c>null</c> when it doesn't exist.</returns>
+        public VirtualIPAddress GetIPAddress(string address)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
+            CheckDisposed();
+
+            return ListIPAddresses().SingleOrDefault(addr => addr.Address == address);
+        }
+
+        /// <summary>
+        /// Lists the virtual NATs.
+        /// </summary>
+        /// <returns>A list of <see cref="VirtualNAT"/>.</returns>
+        public List<VirtualNAT> ListNATs()
+        {
+            CheckDisposed();
+
+            try
+            {
+                var nats    = new List<VirtualNAT>();
+                var rawNats = powershell.ExecuteJson($"{NetNatNamespace}Get-NetNAT");
+
+                foreach (dynamic rawNat in rawNats)
+                {
+                    var name   = (string)null;
+                    var subnet = (string)null;
+
+                    foreach (dynamic rawProperty in rawNat.CimInstanceProperties)
+                    {
+                        switch ((string)rawProperty.Name)
+                        {
+                            case "Name":
+
+                                name = rawProperty.Value;
+                                break;
+
+                            case "InternalIPInterfaceAddressPrefix":
+
+                                subnet = rawProperty.Value;
+                                break;
+                        }
+
+                        if (name != null && subnet != null)
+                        {
+                            break;
+                        }
+                    }
+
+                    var nat = new VirtualNAT()
+                    {
+                        Name   = name,
+                        Subnet = subnet
+                    };
+
+                    nats.Add(nat);
+                }
+
+                return nats;
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Looks for a virtual NAT by name.
+        /// </summary>
+        /// <param name="name">The desired NAT name.</param>
+        /// <returns>The <see cref="VirtualNAT"/> or <c>null</c> if the NAT doesn't exist.</returns>
+        public VirtualNAT GetNATByName(string name)
+        {
+            CheckDisposed();
+
+            return ListNATs().FirstOrDefault(nat => nat.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        /// <summary>
+        /// Looks for a virtual NAT by subnet.
+        /// </summary>
+        /// <param name="subnet">The desired NAT subnet.</param>
+        /// <returns>The <see cref="VirtualNAT"/> or <c>null</c> if the NAT doesn't exist.</returns>
+        public VirtualNAT GetNATBySubnet(string subnet)
+        {
+            CheckDisposed();
+
+            return ListNATs().FirstOrDefault(nat => nat.Subnet == subnet);
+        }
+
+        /// <summary>
+        /// <para>
         /// Compacts a dynamic VHD or VHDX virtual disk file.
         /// </para>
         /// <note>
@@ -960,7 +1124,7 @@ namespace Neon.HyperV
         /// <param name="drivePath">Path to the virtual drive file.</param>
         public void CompactDrive(string drivePath)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath), nameof(drivePath));
 
             powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
             powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");

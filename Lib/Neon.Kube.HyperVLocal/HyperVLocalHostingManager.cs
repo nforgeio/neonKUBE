@@ -192,7 +192,45 @@ namespace Neon.Kube
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
+                    controller.SetGlobalStepStatus("set ssh password");
+
                     this.secureSshPassword = clusterLogin.SshPassword;
+
+                    // If the cluster is being deployed to the internal [neonkube] switch, we need to
+                    // check to see whether the switch already exists, and if it does, we'll need to
+                    // ensure that it's configureed correctly with a virtual address and NAT.  We're
+                    // going to fail setup when an existing switch isn't configured correctly.
+
+                    if (cluster.Definition.Hosting.HyperVLocal.UseInternalSwitch)
+                    {
+                        using (var hyperv = new HyperVClient())
+                        {
+                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVLocalInternalSwitchName}] virtual switch status");
+
+                            var localHyperVOptions = cluster.Definition.Hosting.HyperVLocal;
+                            var @switch            = hyperv.GetSwitch(KubeConst.HyperVLocalInternalSwitchName);
+                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
+                            var nat                = hyperv.GetNATByName(KubeConst.HyperVLocalInternalSwitchName);
+
+                            if (@switch != null)
+                            {
+                                if (@switch.Type != VirtualSwitchType.Internal)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
+                                }
+
+                                if (address != null && !address.InterfaceName.Equals(@switch.Name))
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                }
+
+                                if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
+                                }
+                            }
+                        }
+                    }
                 });
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
@@ -215,9 +253,9 @@ namespace Neon.Kube
                             driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
                             await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                                (type, progress) =>
+                                (progressType, progress) =>
                                 {
-                                    controller.SetGlobalStepStatus($"{type} VHDX: [{progress}%] [{driveTemplateName}]");
+                                    controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)} VHDX: [{progress}%] [{driveTemplateName}]");
 
                                     return !controller.CancelPending;
                                 });
@@ -399,31 +437,21 @@ namespace Neon.Kube
                     if (@switch == null)
                     {
                         // The internal switch doesn't exist yet, so create it.  Note that
-                        // this switch always includes an external NAT.
+                        // this switch requires a virtual NAT.
 
                         controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
                         hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
                         controller.SetGlobalStepStatus();
                     }
-                    else
-                    {
-                        // The switch exists.  We need to ensure that it has an attached IP address and NAT.
-                        // It's possible that these haven't been created yet when previous cluster deployments
-                        // may have failed.
 
-                        controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
-
-                        // $todo(jefflill): Implement this
-
-                        controller.SetGlobalStepStatus();
-                    }
+                    controller.SetGlobalStepStatus();
                 }
                 else
                 {
                     // We're going to create an external Hyper-V switch if there
                     // isn't already an external switch.
 
-                    controller.SetGlobalStepStatus("Scanning network adapters");
+                    controller.SetGlobalStepStatus("scanning network adapters");
 
                     var externalSwitch = hyperv.ListSwitches().FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
 
@@ -441,12 +469,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                controller.SetGlobalStepStatus("Scanning virtual machines");
+                controller.SetGlobalStepStatus("scanning virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                controller.SetGlobalStepStatus("Stopping virtual machines");
+                controller.SetGlobalStepStatus("stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -518,12 +546,14 @@ namespace Neon.Kube
 
                                 var percentComplete = (int)((double)cbRead / (double)input.Length * 100.0);
 
-                                node.Status = $"decompress: VHDX [{percentComplete}%]";
+                                controller.SetGlobalStepStatus($"decompress: node VHDX [{percentComplete}%]");
                             }
 
-                            node.Status = $"decompress: VHDX [100]";
+                            controller.SetGlobalStepStatus($"decompress: node VHDX [100]");
                         }
                     }
+
+                    controller.SetGlobalStepStatus();
                 }
 
                 // Create the virtual machine.

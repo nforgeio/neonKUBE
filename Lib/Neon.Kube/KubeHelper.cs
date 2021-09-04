@@ -2610,7 +2610,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 0);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 0);
 
                     using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2634,13 +2634,13 @@ TCPKeepAlive yes
                                 {
                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, percentComplete);
+                                    progressAction?.Invoke(GetHubDownloadProgressType.Download, percentComplete);
                                 }
                             }
                         }
                     }
 
-                    progressAction?.Invoke(GetHubDownloadProgressType.Downloading, 100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
 
                     return imagePath;
                 }
