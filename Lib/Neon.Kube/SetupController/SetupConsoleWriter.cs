@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetupConsoleUpdater.cs
+// FILE:	    SetupConsoleWriter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// <summary>
     /// Used internally to update .NET console window without flickering.
     /// </summary>
-    public class SetupConsoleUpdater
+    public class SetupConsoleWriter
     {
         private object          syncLock      = new object();
         private string          previousText  = null;

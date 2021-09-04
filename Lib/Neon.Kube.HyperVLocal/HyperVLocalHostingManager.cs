@@ -205,7 +205,7 @@ namespace Neon.Kube
                     {
                         using (var hyperv = new HyperVClient())
                         {
-                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVLocalInternalSwitchName}] virtual switch status");
+                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVLocalInternalSwitchName}] virtual switch");
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperVLocal;
                             var @switch            = hyperv.GetSwitch(KubeConst.HyperVLocalInternalSwitchName);

@@ -390,7 +390,7 @@ namespace Neon.Kube
 
             // This updates the console without flickering.
 
-            controller.ConsoleUpdater.Update(sbDisplay.ToString());
+            controller.ConsoleWriter.Update(sbDisplay.ToString());
         }
     }
 }

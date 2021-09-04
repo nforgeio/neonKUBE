@@ -972,7 +972,8 @@ rm {HostFolders.Home(Username)}/askpass
         public void LogException(Exception e)
         {
             LogLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            LogLine($"*** STACK:");
+            LogLine(e.StackTrace);
         }
 
         /// <summary>
@@ -983,7 +984,8 @@ rm {HostFolders.Home(Username)}/askpass
         public void LogException(string message, Exception e)
         {
             LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            LogLine($"*** STACK:");
+            LogLine(e.StackTrace);
         }
 
         /// <summary>

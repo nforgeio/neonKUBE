@@ -226,7 +226,7 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
-                    Console.WriteLine(" *** CANCELLED: Setup was cancelled.");
+                    Console.WriteLine(" *** CANCELLED: Cluster setup was cancelled.");
                     Console.WriteLine();
                     Console.WriteLine();
                     Program.Exit(1);
@@ -235,7 +235,7 @@ OPTIONS:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more setup steps failed.");
+                    Console.WriteLine(" *** ERROR: Cluster setup failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;

@@ -117,7 +117,7 @@ namespace Neon.Kube
         /// Returns the console updater used internally to write the setup status to the
         /// <see cref="Console"/> without flickering.
         /// </summary>
-        SetupConsoleUpdater ConsoleUpdater { get; }
+        SetupConsoleWriter ConsoleWriter { get; }
 
         /// <summary>
         /// <para>
@@ -208,6 +208,26 @@ namespace Neon.Kube
         /// </param>
         /// <param name="message">The message.</param>
         void LogError(LinuxSshProxy node, string message);
+
+        /// <summary>
+        /// Writes a line to the global cluster log file.  This is used to log information
+        /// that pertains to a global operation rather than a specific node.
+        /// </summary>
+        /// <param name="message">Optionally specifies the message to be logged.</param>
+        void LogGlobal(string message = null);
+
+        /// <summary>
+        /// Writes an error line to the global cluster log file.  This is used to log errors
+        /// that pertain to a global operation rather than a specific node.
+        /// </summary>
+        /// <param name="message">Optionally specifies the message to be logged.</param>
+        void LogGlobalError(string message = null);
+
+        /// <summary>
+        /// Writes information about an exception to the global cluster log file.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        void LogGlobalException(Exception e);
 
         /// <summary>
         /// Indicates whether cluster setup is faulted due to a global problem or when

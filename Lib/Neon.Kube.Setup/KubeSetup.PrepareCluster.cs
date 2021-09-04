@@ -153,7 +153,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################",
