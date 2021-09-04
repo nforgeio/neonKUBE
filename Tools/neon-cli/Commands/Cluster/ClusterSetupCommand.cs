@@ -194,7 +194,7 @@ OPTIONS:
 #if ENTERPRISE
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.Wsl2)
             {
-                var distro = new Wsl2Proxy(KubeConst.NeonDesktopWsl2Distro, KubeConst.SysAdminUser);
+                var distro = new Wsl2Proxy(KubeConst.NeonDesktopWsl2BuiltInDistroName, KubeConst.SysAdminUser);
 
                 clusterDefinition.Masters.FirstOrDefault().Address = distro.Address;
             }
