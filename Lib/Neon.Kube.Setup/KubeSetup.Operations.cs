@@ -338,7 +338,7 @@ spec:
                             {
                                 // Tweak the API server endpoint for WSL2.
 
-                                controlPlaneEndpoint = $"neon-desktop:{KubeNodePorts.KubeApiServer}";
+                                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
                             }
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
@@ -357,10 +357,11 @@ spec:
                                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
                             }
 
-                            if (hostingEnvironment == HostingEnvironment.Wsl2)
+                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName)
                             {
                                 sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
-                                sbCertSANs.AppendLine($"  - \"neon-desktop\"");
+                                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
                             }
 
                             var kubeletFailSwapOnLine           = string.Empty;
@@ -1749,7 +1750,8 @@ spec:
                             await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
                         });
 
-                    if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
+                        || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
@@ -1803,7 +1805,8 @@ spec:
                                 });
                         });
 
-                    if (cluster.HostingManager.HostingEnvironment != HostingEnvironment.Wsl2)
+                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
+                        || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
                         controller.LogProgress(master, verb: "deploy", message: "openebs pool");
 
@@ -2167,7 +2170,8 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.Hosting.Environment == HostingEnvironment.Wsl2
+                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
                                 || cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
                                 values.Add($"cortexConfig.ingester.retain_period", $"120s");
@@ -2232,7 +2236,8 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
+                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                        || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
                         || cluster.Definition.Nodes.Count() == 1)
                     {
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
@@ -2483,8 +2488,8 @@ $@"- name: StorageType
 
                             if (advice.PodMemoryRequest.HasValue && advice.PodMemoryLimit.HasValue)
                             {
-                                values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
-                                values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
+                                values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                                values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(advice.PodMemoryLimit));
                             }
 
                             values.Add($"tenants[0].secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
@@ -2742,7 +2747,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                        || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
+                        || cluster.Definition.Nodes.Count() == 1)
                     {
                         await CreateHostPathStorageClass(controller, master, "neon-internal-registry");
                     }
@@ -2892,7 +2899,9 @@ $@"- name: StorageType
 
             values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2 || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+               || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName 
+               || cluster.Definition.Nodes.Count() == 1)
             {
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");

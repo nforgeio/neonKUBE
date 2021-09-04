@@ -215,6 +215,19 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Grafana);
 
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+               || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
+               || cluster.Definition.Nodes.Count() == 1)
+            {
+                advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+            }
+            else
+            {
+                advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+            }
+
             return advice;
         }
 
@@ -359,8 +372,9 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count()));
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
-                        || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
+                || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -389,8 +403,9 @@ namespace Neon.Kube
                 advice.ReplicaCount = 1;
             }
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
-                        || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
+                || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -529,8 +544,9 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.MetricsInternal).Count()));
 
-            if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2
-                        || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
+                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
+                || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");

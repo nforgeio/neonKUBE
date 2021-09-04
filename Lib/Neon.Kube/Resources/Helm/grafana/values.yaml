@@ -161,13 +161,11 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
-#  limits:
-#    cpu: 100m
-#    memory: 128Mi
-#  requests:
-#    cpu: 100m
-#    memory: 128Mi
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    memory: 256Mi
 
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/

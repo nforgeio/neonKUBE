@@ -62,8 +62,6 @@ spec:
   resources:
     # Optionally specify container resources
     limits:
-      cpu: 2000m
-      memory: 8000Mi
+      memory: {{ .Values.resources.limits.memory }}
     requests:
-      cpu: 100m
-      memory: 200Mi
+      memory: {{ .Values.resources.requests.memory }}
