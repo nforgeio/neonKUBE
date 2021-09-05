@@ -195,6 +195,7 @@ spec:
                     try
                     {
                         var k8sNodes = (await GetK8sClient(controller).ListNodeAsync()).Items;
+
                         foreach (var node in cluster.Nodes)
                         {
                             var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).FirstOrDefault();
@@ -232,6 +233,7 @@ spec:
                     {
                         master.Status = string.Empty;
                     }
+
                     await Task.CompletedTask;
                 });
         }
@@ -357,8 +359,8 @@ spec:
                                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
                             }
 
-                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
-                                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName)
                             {
                                 sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
                                 sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
@@ -465,7 +467,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            controller.LogBaseProgress(verb: "created", message: "cluster");
+                            controller.LogProgress(verb: "created", message: "cluster");
                         });
 
                     master.InvokeIdempotent("setup/kubectl",

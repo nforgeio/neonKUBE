@@ -118,7 +118,7 @@ namespace Neon.Kube
         /// <para>
         /// Raised when individual progress/error messages are logged during
         /// base image setup where where only limited status needs to be
-        /// displayed or logged
+        /// displayed or logged.
         /// </para>
         /// <note>
         /// This event is not raised during normal cluster prepare or setup
@@ -132,13 +132,13 @@ namespace Neon.Kube
         /// modify any event parameters.
         /// </note>
         /// </summary>
-        event SetupProgressDelegate BaseProgressEvent;
+        event SetupProgressDelegate ProgressEvent;
 
         /// <summary>
         /// Logs a progress message.
         /// </summary>
         /// <param name="message">The message.</param>
-        void LogBaseProgress(string message);
+        void LogProgress(string message);
 
         /// <summary>
         /// Logs a progress message with a verb.  This will be formatted
@@ -146,7 +146,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogBaseProgress(string verb, string message);
+        void LogProgress(string verb, string message);
 
         /// <summary>
         /// Logs a progress message for a specific node.  This sets the <b>status</b>
@@ -157,7 +157,7 @@ namespace Neon.Kube
         /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="message">The message.</param>
-        void LogBaseProgress(LinuxSshProxy node, string message);
+        void LogProgress(LinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>
@@ -169,12 +169,12 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="message">The message.</param>
-        void LogBaseError(string message);
+        void LogProgressError(string message);
 
         /// <summary>
-        /// Returns the last error message logged by <see cref="LogBaseError(string)"/>.
+        /// Returns the last error message logged by <see cref="LogProgressError(string)"/>.
         /// </summary>
-        string LastBaseError { get; }
+        string LastProgressError { get; }
 
         /// <summary>
         /// Logs a progress for a specific node with a verb and message.  
@@ -202,24 +202,39 @@ namespace Neon.Kube
         /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="message">The message.</param>
-        void LogError(LinuxSshProxy node, string message);
+        void LogProgressError(LinuxSshProxy node, string message);
 
         /// <summary>
+        /// <para>
         /// Writes a line to the global cluster log file.  This is used to log information
         /// that pertains to a global operation rather than a specific node.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
         /// </summary>
         /// <param name="message">Optionally specifies the message to be logged.</param>
         void LogGlobal(string message = null);
 
         /// <summary>
+        /// <para>
         /// Writes an error line to the global cluster log file.  This is used to log errors
         /// that pertain to a global operation rather than a specific node.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
         /// </summary>
         /// <param name="message">Optionally specifies the message to be logged.</param>
         void LogGlobalError(string message = null);
 
         /// <summary>
+        /// <para>
         /// Writes information about an exception to the global cluster log file.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
         /// </summary>
         /// <param name="e">The exception.</param>
         void LogGlobalException(Exception e);

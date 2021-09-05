@@ -275,21 +275,13 @@ namespace Neon.Kube
                 //
                 // I'm hardcoding the status display here for two scenarios:
                 //
-                //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
+                //      1. Configuring cluster nodes with [NodeDefinition] metadata.
                 //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
                 //
                 // It would be more flexible to implement some kind of callback or virtual
                 // method to handle this.
 
                 var stepNodeNamesSet = controller.GetStepNodeNames(CurrentStep.InternalStep);
-
-                foreach (var node in Nodes)
-                {
-                    if (!stepNodeNamesSet.Contains(node.Name))
-                    {
-                        node.Status = string.Empty;
-                    }
-                }
 
                 if (controller.NodeMetadataType == typeof(NodeDefinition))
                 {
@@ -338,7 +330,7 @@ namespace Neon.Kube
 
             if (CurrentStep != null && currentStep.IsGlobalStep && !string.IsNullOrWhiteSpace(GlobalStatus))
             {
-                sbDisplay.AppendLine($" Action:");
+                sbDisplay.AppendLine($" Cluster:");
                 sbDisplay.AppendLine($"    {GlobalStatus}");
             }
             else

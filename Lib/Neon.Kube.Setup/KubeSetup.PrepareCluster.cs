@@ -230,7 +230,7 @@ namespace Neon.Kube
                         }
                         catch (Exception e)
                         {
-                            controller.LogBaseError(NeonHelper.ExceptionError(e));
+                            controller.LogProgressError(NeonHelper.ExceptionError(e));
                             return;
                         }
                     }
@@ -331,7 +331,7 @@ namespace Neon.Kube
 
                                 if (result.ExitCode != 0)
                                 {
-                                    controller.LogBaseError(result.AllText);
+                                    controller.LogProgressError(result.AllText);
                                     return;
                                 }
 
