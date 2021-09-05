@@ -617,6 +617,24 @@ namespace Neon.HyperV
         }
 
         /// <summary>
+        /// <para>
+        /// Compacts a dynamic VHD or VHDX virtual disk file.
+        /// </para>
+        /// <note>
+        /// The disk may be mounted to a VM but the VM cannot be running.
+        /// </note>
+        /// </summary>
+        /// <param name="drivePath">Path to the virtual drive file.</param>
+        public void CompactDrive(string drivePath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath), nameof(drivePath));
+
+            powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
+            powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");
+            powershell.Execute($"Dismount-VHD \"{drivePath}\"");
+        }
+
+        /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any
         /// existing disc first.
         /// </summary>
@@ -1111,24 +1129,6 @@ namespace Neon.HyperV
             CheckDisposed();
 
             return ListNATs().FirstOrDefault(nat => nat.Subnet == subnet);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Compacts a dynamic VHD or VHDX virtual disk file.
-        /// </para>
-        /// <note>
-        /// The disk may be mounted to a VM but the VM cannot be running.
-        /// </note>
-        /// </summary>
-        /// <param name="drivePath">Path to the virtual drive file.</param>
-        public void CompactDrive(string drivePath)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath), nameof(drivePath));
-
-            powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
-            powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");
-            powershell.Execute($"Dismount-VHD \"{drivePath}\"");
         }
     }
 }
