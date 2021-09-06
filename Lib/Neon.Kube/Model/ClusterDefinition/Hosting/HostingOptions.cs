@@ -297,19 +297,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Clears all hosting provider details because they may
-        /// include hosting related secrets.
+        /// Clears all hosting related secrets.
         /// </summary>
-        public void ClearSecrets()
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        public void ClearSecrets(ClusterDefinition clusterDefinition)
         {
-            Aws       = null;
-            Azure     = null;
-            Google    = null;
-            HyperV    = null;
-            HyperVLocal = null;
-            Machine   = null;
-            Vm        = null;
-            XenServer = null;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            clusterDefinition.Hosting.Aws?.ClearSecrets();
+            clusterDefinition.Hosting.Azure?.ClearSecrets();
+            clusterDefinition.Hosting.Google?.ClearSecrets();
+            clusterDefinition.Hosting.HyperV?.ClearSecrets();
+            clusterDefinition.Hosting.HyperVLocal?.ClearSecrets();
+            clusterDefinition.Hosting.Machine?.ClearSecrets();
+            clusterDefinition.Hosting.Vm?.ClearSecrets();
+            clusterDefinition.Hosting.XenServer?.ClearSecrets();
         }
     }
 }

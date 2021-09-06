@@ -593,7 +593,7 @@ namespace Neon.Kube
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.
 
-                    node.Status = $"start: virtual machine (first boot)";
+                    node.Status = $"start: virtual machine";
                     hyperv.StartVm(vmName);
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.

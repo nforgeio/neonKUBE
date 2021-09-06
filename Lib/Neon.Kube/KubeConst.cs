@@ -400,6 +400,6 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.
         /// </summary>
-        public const string ClusterSetupLogName = "neon-cluster.log";
+        public const string ClusterSetupLogName = "cluster.log";
     }
 }

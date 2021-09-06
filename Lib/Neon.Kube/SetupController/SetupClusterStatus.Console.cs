@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <returns>The status.</returns>
         private string GetStatus(HashSet<string> stepNodeNames, SetupNodeStatus node)
         {
-            if (stepNodeNames != null && !stepNodeNames.Contains(node.Name))
+            if (false && stepNodeNames != null && !stepNodeNames.Contains(node.Name))
             {
                 return "  -";
             }
@@ -328,7 +328,7 @@ namespace Neon.Kube
 
             sbDisplay.AppendLine();
 
-            if (CurrentStep != null && currentStep.IsGlobalStep && !string.IsNullOrWhiteSpace(GlobalStatus))
+            if (!string.IsNullOrWhiteSpace(GlobalStatus))
             {
                 sbDisplay.AppendLine($" Cluster:");
                 sbDisplay.AppendLine($"    {GlobalStatus}");

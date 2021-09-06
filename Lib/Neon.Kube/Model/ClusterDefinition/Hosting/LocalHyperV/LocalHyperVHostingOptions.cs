@@ -131,10 +131,10 @@ namespace Neon.Kube
         /// This defaults to <c>false</c>.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "NeonDesktopBuiltInCluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "neonDesktopBuiltInCluster", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "NeonDesktopBuiltIn", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "neonDesktopBuiltIn", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool NeonDesktopBuiltInCluster { get; set; } = false;
+        public bool NeonDesktopBuiltIn { get; set; } = false;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -147,7 +147,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (NeonDesktopBuiltInCluster)
+            if (NeonDesktopBuiltIn)
             {
                 UseInternalSwitch = true;   // neonDESKTOP built-in clusters always use the internal switch.
 
@@ -164,7 +164,7 @@ namespace Neon.Kube
 
             if (UseInternalSwitch)
             {
-                if (!NeonDesktopBuiltInCluster)
+                if (!NeonDesktopBuiltIn)
                 {
                     // Ensure that no node addresses for a user defined cluster conflict with the
                     // reserved addresses in the internal subnet.
@@ -202,7 +202,7 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.Gateway)} must be set to [{NeonKubeInternalGateway}] for the clusters deployed to the internal Hyper-V switch.");
                 }
 
-                if (NeonDesktopBuiltInCluster)
+                if (NeonDesktopBuiltIn)
                 {
                     // Ensure that the cluster includes only one node and that it's address 
                     // set to the second to last address in the private subnet.
@@ -229,6 +229,13 @@ namespace Neon.Kube
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
+        }
+
+        /// <summary>
+        /// Clears all hosting related secrets.
+        /// </summary>
+        public void ClearSecrets()
+        {
         }
     }
 }

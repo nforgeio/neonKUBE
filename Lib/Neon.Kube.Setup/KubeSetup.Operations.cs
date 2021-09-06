@@ -467,7 +467,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             clusterLogin.Save();
 
-                            controller.LogProgress(verb: "created", message: "cluster");
+                            controller.LogProgress(master, verb: "created", message: "cluster");
                         });
 
                     master.InvokeIdempotent("setup/kubectl",
@@ -929,6 +929,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     if (cluster.Definition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
                     {
                         var nodes = new V1NodeList();
+
                         await NeonHelper.WaitForAsync(
                            async () =>
                            {
@@ -948,7 +949,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 }
                             };
                             await GetK8sClient(controller).PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), master.Metadata.Name);
-
                         }
                     }
                 });
@@ -978,10 +978,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -1032,6 +1033,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var values = new Dictionary<string, object>();
 
                     var i = 0;
+
                     foreach (var rule in master.Cluster.Definition.Network.IngressRules)
                     {
                         values.Add($"nodePorts[{i}].name", $"{rule.Name}");
@@ -1096,10 +1098,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -1134,10 +1137,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("clusterDomain", cluster.Definition.Domain);
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -1205,7 +1209,7 @@ subjects:
 
             var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+            var advice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
 
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
@@ -1232,7 +1236,7 @@ subjects:
                             masterAddresses.Add(master.Address.ToString());
                         }
 
-                        var utcNow = DateTime.UtcNow;
+                        var utcNow     = DateTime.UtcNow;
                         var utc10Years = utcNow.AddYears(10);
 
                         var certificate = TlsCertificate.CreateSelfSigned(
@@ -1652,10 +1656,10 @@ spec:
                     values.Add("cr.spec.deployment.image_name", $"{KubeConst.LocalClusterRegistry}/kiali-kiali");
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -2040,7 +2044,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
 
             await master.InvokeIdempotentAsync("setup/monitoring-etc",
                 async () =>
@@ -2056,10 +2060,11 @@ $@"- name: StorageType
                     values.Add($"volumeClaimTemplate.resources.requests.storage", "1Gi");
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -2097,12 +2102,12 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "deploy", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
+                    var i      = 0;
 
-                    int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
 
                         i++;
@@ -2154,10 +2159,9 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-cortex-all",
                 async () =>
                 {
-                    var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Cortex);
-
-                    var values         = new Dictionary<string, object>();
+                    var values  = new Dictionary<string, object>();
 
                     values.Add($"replicas", advice.ReplicaCount);
 
@@ -2184,10 +2188,11 @@ $@"- name: StorageType
                             }
 
                             int i = 0;
-                            foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+
+                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                             {
-                                values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                                values.Add($"tolerations[{i}].effect", t.Effect);
+                                values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                                values.Add($"tolerations[{i}].effect", taint.Effect);
                                 values.Add($"tolerations[{i}].operator", "Exists");
                                 i++;
                             }
@@ -2219,7 +2224,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Loki);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Loki);
 
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
@@ -2275,7 +2280,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Tempo);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Tempo);
 
             await master.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
@@ -2324,7 +2329,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
 
             await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
                 async () =>
@@ -2332,7 +2337,6 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "deploy", message: "kube-state-metrics");
 
                     var values = new Dictionary<string, object>();
-
 
                     await master.InstallHelmChartAsync(controller, "kube_state_metrics", releaseName: "kube-state-metrics", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
@@ -2358,7 +2362,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
 
             await master.InvokeIdempotentAsync("setup/reloader",
                 async () =>
@@ -2366,7 +2370,6 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "deploy", message: "reloader");
 
                     var values = new Dictionary<string, object>();
-
 
                     await master.InstallHelmChartAsync(controller, "reloader", releaseName: "reloader", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
@@ -2392,7 +2395,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Grafana);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Grafana);
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
                     async () =>
@@ -2425,10 +2428,11 @@ $@"- name: StorageType
                             });
 
                         int i = 0;
-                        foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+
+                        foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                         {
-                            values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                            values.Add($"tolerations[{i}].effect", t.Effect);
+                            values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"tolerations[{i}].effect", taint.Effect);
                             values.Add($"tolerations[{i}].operator", "Exists");
                             i++;
                         }
@@ -2464,7 +2468,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Minio);
+            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Minio);
 
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
@@ -2503,18 +2507,19 @@ $@"- name: StorageType
                             values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(20));
 
                             int i = 0;
-                            foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+
+                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
                             {
                                 values.Add($"tenants[0].pools[0].tolerations[{i}].key", advice.ReplicaCount);
                                 values.Add($"tenants[0].pools[0].tolerations[{i}].effect", advice.ReplicaCount);
                                 values.Add($"tenants[0].pools[0].tolerations[{i}].operator", advice.ReplicaCount);
 
-                                values.Add($"console.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                                values.Add($"console.tolerations[{i}].effect", t.Effect);
+                                values.Add($"console.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                                values.Add($"console.tolerations[{i}].effect", taint.Effect);
                                 values.Add($"console.tolerations[{i}].operator", "Exists");
 
-                                values.Add($"operator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                                values.Add($"operator.tolerations[{i}].effect", t.Effect);
+                                values.Add($"operator.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                                values.Add($"operator.tolerations[{i}].effect", taint.Effect);
                                 values.Add($"operator.tolerations[{i}].operator", "Exists");
                                 i++;
                             }
@@ -2611,26 +2616,27 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelLogs, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelLogs, "true"))
                     {
-                        values.Add($"ingester.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"ingester.tolerations[{i}].effect", t.Effect);
+                        values.Add($"ingester.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"ingester.tolerations[{i}].effect", taint.Effect);
                         values.Add($"ingester.tolerations[{i}].operator", "Exists");
 
-                        values.Add($"agent.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"agent.tolerations[{i}].effect", t.Effect);
+                        values.Add($"agent.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"agent.tolerations[{i}].effect", taint.Effect);
                         values.Add($"agent.tolerations[{i}].operator", "Exists");
 
-                        values.Add($"collector.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"collector.tolerations[{i}].effect", t.Effect);
+                        values.Add($"collector.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"collector.tolerations[{i}].effect", taint.Effect);
                         values.Add($"collector.tolerations[{i}].operator", "Exists");
 
-                        values.Add($"query.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"query.tolerations[{i}].effect", t.Effect);
+                        values.Add($"query.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"query.tolerations[{i}].effect", taint.Effect);
                         values.Add($"query.tolerations[{i}].operator", "Exists");
 
-                        values.Add($"esIndexCleaner.tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"esIndexCleaner.tolerations[{i}].effect", t.Effect);
+                        values.Add($"esIndexCleaner.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"esIndexCleaner.tolerations[{i}].effect", taint.Effect);
                         values.Add($"esIndexCleaner.tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -2647,6 +2653,7 @@ $@"- name: StorageType
                         async () =>
                         {
                             var deployments = await GetK8sClient(controller).ListNamespacedDeploymentAsync(KubeNamespaces.NeonMonitor, labelSelector: "release=jaeger");
+
                             if (deployments == null || deployments.Items.Count < 2)
                             {
                                 return false;
@@ -2674,7 +2681,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var redisAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.HarborRedis);
 
             await master.InvokeIdempotentAsync("setup/harbor-redis",
@@ -2697,10 +2704,11 @@ $@"- name: StorageType
                     }
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -2767,6 +2775,7 @@ $@"- name: StorageType
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
 
                     int j = 0;
+
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
                     {
                         values.Add($"tolerations[{j}].key", $"{taint.Key.Split("=")[0]}");
@@ -2803,12 +2812,10 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "images", message: "push");
                     
-                    var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+                    var secret   = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
                     var password = Encoding.UTF8.GetString(secret.Data["secret"]);
-
-
                     var sbScript = new StringBuilder();
-                    var sbArgs = new StringBuilder();
+                    var sbArgs   = new StringBuilder();
 
                     sbScript.AppendLineLinux("#!/bin/bash");
                     sbScript.AppendLineLinux($"echo '{password}' | docker login neon-registry.node.local --username harbor_registry_user --password-stdin");
@@ -2887,10 +2894,10 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var managerAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager);
-            var masterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
-            var workerAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker);
+            var masterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
+            var workerAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker);
 
             var values = new Dictionary<string, object>();
 
@@ -2898,7 +2905,6 @@ $@"- name: StorageType
             values.Add($"busybox.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"prometheus.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
-
             values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
 
             if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
@@ -3004,10 +3010,11 @@ $@"- name: StorageType
                     }
 
                     int i = 0;
-                    foreach (var t in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemDb, "true"))
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemDb, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", t.Effect);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
@@ -3068,6 +3075,7 @@ $@"- name: StorageType
                     try
                     {
                         var deployments = await GetK8sClient(controller).ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
                         if (deployments == null || deployments.Items.Count == 0)
                         {
                             return false;
@@ -3121,6 +3129,7 @@ $@"- name: StorageType
                     try
                     {
                         var statefulsets = await GetK8sClient(controller).ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
                             return false;
@@ -3172,6 +3181,7 @@ $@"- name: StorageType
                     try
                     {
                         var daemonsets = await GetK8sClient(controller).ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
                             return false;

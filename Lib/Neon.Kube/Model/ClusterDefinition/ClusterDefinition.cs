@@ -237,7 +237,7 @@ namespace Neon.Kube
                 {
                     case HostingEnvironment.HyperVLocal:
 
-                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltInCluster;
+                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltIn;
 
                     case HostingEnvironment.Wsl2:
 
@@ -558,15 +558,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes any temporary setup related state including <see cref="SetupState"/> as well
-        /// as temporary state used by the hosting managers.
+        /// Removes any temporary setup related state including <see cref="SetupState"/>, hosting
+        /// related secrets, as well as temporary state used by the hosting managers.
         /// </summary>
         public void ClearSetupState()
         {
             lock (syncLock)
             {
                 SetupState = null;
-                Hosting?.ClearSecrets();
+                Hosting?.ClearSecrets(this);
             }
         }
 

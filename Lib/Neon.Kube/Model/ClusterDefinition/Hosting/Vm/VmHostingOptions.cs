@@ -286,5 +286,14 @@ namespace Neon.Kube
                 }
             }
         }
+
+        /// <summary>
+        /// Clears all hosting related secrets.
+        /// </summary>
+        public void ClearSecrets()
+        {
+            HostUsername = null;
+            HostPassword = null;
+        }
     }
 }

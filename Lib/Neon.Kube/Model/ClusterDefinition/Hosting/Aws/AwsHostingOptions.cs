@@ -535,5 +535,14 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] and [{nameof(PublicSubnet)}={PublicSubnet}] cannot overlap.");
             }
         }
+
+        /// <summary>
+        /// Clears all hosting related secrets.
+        /// </summary>
+        public void ClearSecrets()
+        {
+            AccessKeyId     = null;
+            SecretAccessKey = null;
+        }
     }
 }

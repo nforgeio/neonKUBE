@@ -271,6 +271,19 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
             }
 
+            if (name.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // $hack(jefflill):
+                //
+                // The node name [cluster] is reserved because we want to persist the
+                // global cluster log file as [cluster.log] and we don't want this to
+                // conflict with any of the node log files.
+                //
+                // See: KubeConst.ClusterSetupLogName
+
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
+            }
+
             if (string.IsNullOrEmpty(Role))
             {
                 Role = NodeRole.Worker;
