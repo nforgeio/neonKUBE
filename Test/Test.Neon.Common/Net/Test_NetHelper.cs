@@ -528,12 +528,13 @@ namespace TestCommon
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Address.ToString());
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, ReachableHostMode.ReturnFirst).Host);
 
-            // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
-            // some addresses in there to simulate offline hosts.
+            // The [100.64.0.0/20] subnet is never supposed to be routable although neonKUBE
+            // does use 100.64.0.0/24 for neonDESKTOP built-in (an other internal clusters)
+            // so we'll use some addresses at the upper end of 100.64.0.0/20.
 
-            const string badIP0 = "192.0.2.1";
-            const string badIP1 = "192.0.2.2";
-            const string badIP2 = "192.0.2.3";
+            const string badIP0 = "100.64.15.252";
+            const string badIP1 = "100.64.15.253";
+            const string badIP2 = "100.64.15.254";
 
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", badIP0, badIP1 }).Host);
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badIP0, "127.0.0.1", badIP1 }).Host);
@@ -589,12 +590,13 @@ namespace TestCommon
                 TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Address.ToString()));
             }
 
-            // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
-            // some addresses in there to simulate offline hosts.
+            // The [100.64.0.0/20] subnet is never supposed to be routable although neonKUBE
+            // does use 100.64.0.0/24 for neonDESKTOP built-in (an other internal clusters)
+            // so we'll use some addresses at the upper end of 100.64.0.0/20.
 
-            const string badIP0 = "192.0.2.1";
-            const string badIP1 = "192.0.2.2";
-            const string badIP2 = "192.0.2.3";
+            const string badIP0 = "100.64.15.252";
+            const string badIP1 = "100.64.15.253";
+            const string badIP2 = "100.64.15.254";
 
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", badIP0, badIP1 }).Select(rh => rh.Host));
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { badIP0, "127.0.0.1", badIP1 }).Select(rh => rh.Host));
