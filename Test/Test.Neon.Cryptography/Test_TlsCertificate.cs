@@ -693,7 +693,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
             var cert = new TlsCertificate();
 
             cert.Hosts.Add("foo.com");
-            cert.ValidFrom  = DateTime.UtcNow - TimeSpan.FromMinutes(5);
+            cert.ValidFrom = DateTime.UtcNow - TimeSpan.FromMinutes(5);
             cert.ValidUntil = DateTime.UtcNow + TimeSpan.FromMinutes(5);
 
             Assert.True(cert.IsValidDate());
@@ -864,13 +864,13 @@ NOrsafukaeMnu7sKsM5jeCimps8GlBJUM6bVrlbAgUuPl5B0oWg=
 
             Assert.Equal("CN=kubernetes", x509.Issuer);
             Assert.Equal("43EE9CFF1FBFBCCEA1A73C7F941F7921E2B688EF", x509.Thumbprint);
-            Assert.Equal(new DateTime(2019, 2, 14, 15, 46, 05), x509.NotBefore);
-            Assert.Equal(new DateTime(2020, 2, 14, 15, 46, 07), x509.NotAfter);
+            Assert.Equal(new DateTime(2019, 2, 14, 15, 46, 05, DateTimeKind.Utc), x509.NotBefore);
+            Assert.Equal(new DateTime(2020, 2, 14, 15, 46, 07, DateTimeKind.Utc), x509.NotAfter);
 
             Assert.False(x509.HasPrivateKey);
         }
 
-        [Fact(Skip = "Enable for .NET Standard 2.0")]
+        [Fact(Skip = "Library needs to be updgraded to .NETStandard 2.1 for this to work")]
         public void X509_WithPrivateKey()
         {
             // $todo(jefflill):
@@ -935,8 +935,8 @@ UUHWzDpotXDXwAwuIxh71LVCBnQRPryVc6Ynx3YF8HD8in600zw=
 
             Assert.Equal("CN=kubernetes", x509.Issuer);
             Assert.Equal("43EE9CFF1FBFBCCEA1A73C7F941F7921E2B688EF", x509.Thumbprint);
-            Assert.Equal(new DateTime(2019, 2, 14, 15, 46, 05), x509.NotBefore);
-            Assert.Equal(new DateTime(2020, 2, 14, 15, 46, 07), x509.NotAfter);
+            Assert.Equal(new DateTime(2019, 2, 14, 15, 46, 05, DateTimeKind.Utc), x509.NotBefore);
+            Assert.Equal(new DateTime(2020, 2, 14, 15, 46, 07, DateTimeKind.Utc), x509.NotAfter);
             Assert.True(x509.HasPrivateKey);
         }
     }

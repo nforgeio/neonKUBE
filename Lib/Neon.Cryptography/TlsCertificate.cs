@@ -1272,17 +1272,14 @@ subjectAltName         = @alt_names
 
                 var hasPrivateKey = !string.IsNullOrEmpty(KeyPem);
                 var storageFlags  = hasPrivateKey ? X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable : (X509KeyStorageFlags)0;
-                var x509Cert      = new X509Certificate2(certPath, string.Empty, storageFlags);
-
-                x509Cert.FriendlyName = this.FriendlyName;
+                var x509Cert      = new X509Certificate2(certPath, string.Empty, storageFlags)
+                {
+                    FriendlyName = this.FriendlyName
+                };
 
                 if (hasPrivateKey && !publicOnly)
                 {
-                    // $todo(jefflill):
-                    //
-                    // Enable this when we upgrade to .NET Standard 2.1
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/new
+                    // $todo(jefflill): Enable this when we upgrade to .NET Standard 2.1
 
                     // x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
 
