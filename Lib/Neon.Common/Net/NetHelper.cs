@@ -858,6 +858,35 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Converts an <see cref="IPAddress"/> into a host name suitable for using as
+        /// a <see cref="Uri"/> host name.  For IPv4 addresses, this just returns the
+        /// address as a string.  For IPv6 address, this returns the address surrounded
+        /// by "[...]" to make it compatible with URI standards.
+        /// </summary>
+        /// <param name="address">The IP address.</param>
+        /// <returns>The host name suitable for including in a URI.</returns>
+        /// <exception cref="NotSupportedException">Thrown for non IPv4 or IPv6 addresses.</exception>
+        public static string GetAddressUriHost(IPAddress address)
+        {
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+
+            switch (address.AddressFamily)
+            {
+                case AddressFamily.InterNetwork:
+
+                    return address.ToString();
+
+                case AddressFamily.InterNetworkV6:
+
+                    return $"[{address}]";
+
+                default:
+
+                    throw new NotSupportedException($"Address type [{address.AddressFamily}] is not supported.  Only IPv4 or IPv6 addresses are allowed.");
+            }
+        }
+
+        /// <summary>
         /// Computes the TCP maximum segment size for a given MTU, optionally taking a
         /// VXLAN wrapper headers into account.
         /// </summary>
