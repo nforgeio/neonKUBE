@@ -179,6 +179,7 @@ namespace TestNeonService
 
             thread.Join();
             await task;
+            Terminator.ReadyToExit();
 
             // Return the exit code specified by the configuration.
 

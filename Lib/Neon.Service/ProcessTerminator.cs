@@ -37,7 +37,7 @@ namespace Neon.Service
     /// <remarks>
     /// <para>
     /// This class listens for a termination signal and then gives the process some time
-    /// to gracefully save state.  The termination timeout defaults to 10 seconds but
+    /// to gracefully save state.  The termination timeout defaults to 30 seconds but
     /// a custom value may be passed to the constructor.
     /// </para>
     /// <note>
@@ -83,14 +83,14 @@ namespace Neon.Service
         /// Constructor.
         /// </summary>
         /// <param name="log">The optional <see cref="INeonLogger"/> used for logging.</param>
-        /// <param name="timeout">The optional termination timeout (defaults to 10 seconds).</param>
+        /// <param name="timeout">The optional termination timeout (defaults to 30 seconds).</param>
         public ProcessTerminator(INeonLogger log = null, TimeSpan timeout = default)
         {
             this.log = log;
 
             if (timeout <= TimeSpan.Zero)
             {
-                timeout = TimeSpan.FromSeconds(10);
+                timeout = TimeSpan.FromSeconds(30);
             }
 
             this.Timeout  = timeout;
@@ -289,7 +289,7 @@ namespace Neon.Service
             }
             catch (TimeoutException)
             {
-                log?.LogWarn(() => $"Process did not stop within [{Timeout}].");
+                log?.LogWarn(() => $"Process did not signal a gracefull stop by calling [{nameof(ReadyToExit)}()] within [{Timeout}].");
             }
 
             if (!DisableProcessExit)
