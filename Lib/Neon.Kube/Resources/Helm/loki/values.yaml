@@ -1,7 +1,7 @@
 image:
   organization: neon-registry.node.local
   repository: grafana-loki
-  tag: 2.3.0../builden  
+  tag: 2.3.0
   pullPolicy: IfNotPresent
 
   ## Optionally specify an array of imagePullSecrets.
