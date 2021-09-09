@@ -6,7 +6,7 @@ operator:
   image:
     organization: neon-registry.node.local
     repository: minio-operator
-    tag: v4.1.2
+    tag: v4.2.5
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   replicaCount: 1
@@ -29,7 +29,7 @@ console:
   image:
     organization: neon-registry.node.local
     repository: minio-console
-    tag: v0.7.4
+    tag: v0.9.8
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   replicaCount: 1
@@ -54,7 +54,7 @@ tenants:
     image:
       organization: neon-registry.node.local
       repository: minio-minio
-      tag: RELEASE.2021-06-17T00-10-46Z
+      tag: RELEASE.2021-09-03T03-56-13Z
       pullPolicy: IfNotPresent
     ## Customize namespace for tenant deployment
     namespace: neon-system

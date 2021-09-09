@@ -15,6 +15,10 @@ spec:
   serviceAccountName: grafana-agent
   nodeSelector:
   {{- toYaml .Values.nodeSelector | nindent 4 }}
+  logs:
+    logsExternalLabelName: {{ .Values.clusterName }}
+  metrics:
+    metricsExternalLabelName: {{ .Values.clusterName }}
   prometheus:
     shards: {{ .Values.shards }}
     instanceSelector:
