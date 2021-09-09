@@ -50,7 +50,7 @@ namespace TestNeonService
 
         public Test_QueueService(ComposedFixture fixture)
         {
-            TestHelper.ResetDocker(null);   // Reset Docker for every test
+            TestHelper.ResetDocker(this.GetType());
 
             this.composedFixture = fixture;
 
@@ -102,28 +102,29 @@ namespace TestNeonService
         }
 
         [Fact]
-        public async Task Success()
+        public void Success()
         {
             // Restart the service with with valid environment variables,
             // let it run for a vew seconds and verify that it actually
             // sent and received some queue messages.
 
-            var service = CreateQueueService();
+            using (var service = CreateQueueService())
+            {
+                queueServiceFixture.Restart(() => service);
+                Assert.True(queueServiceFixture.IsRunning);
 
-            queueServiceFixture.Restart(() => service);
-            Assert.True(queueServiceFixture.IsRunning);
+                // Give the service some time to process some messages.
 
-            // Give the service some time to process some messages.
+                NeonHelper.WaitFor(() => service.SentCount > 0 && service.ReceiveCount > 0, timeout: TimeSpan.FromSeconds(60));
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+                Assert.True(service.SentCount > 0);
+                Assert.True(service.ReceiveCount > 0);
 
-            Assert.True(service.SentCount > 0);
-            Assert.True(service.ReceiveCount > 0);
+                // Signal the service to stop and verify that it returned [exitcode=0].
 
-            // Signal the service to stop and verify that it returned [exitcode=0].
-
-            service.Stop();
-            Assert.Equal(0, service.ExitCode);
+                service.Stop();
+                Assert.Equal(0, service.ExitCode);
+            }
         }
 
         [Fact]
@@ -131,22 +132,21 @@ namespace TestNeonService
         {
             // Restart the service with with a missing configuration
             // environment variable and verify that the service failed
-            // immediately by ensuring that no messages were sent or
-            // received and also that it returned a non-zero
-            // exit code.
+            // immediately by ensuring it returned a non-zero exit code.
 
-            var service = CreateQueueService();
+            using (var service = CreateQueueService())
+            {
+                service.SetEnvironmentVariable("NATS_QUEUE", null);     // Delete this variable
 
-            service.SetEnvironmentVariable("NATS_QUEUE", null);     // Delete this variable
+                queueServiceFixture.Restart(() => service);
+                Assert.False(queueServiceFixture.IsRunning);
 
-            queueServiceFixture.Restart(() => service);
-            Assert.False(queueServiceFixture.IsRunning);
+                // Signal the service to stop and verify that it returned a
+                // non-zero exit code indicating an error.
 
-            // Signal the service to stop and verify that it returned a
-            // non-zero exit code indicating an error.
-
-            service.Stop();
-            Assert.NotEqual(0, service.ExitCode);
+                service.Stop();
+                Assert.NotEqual(0, service.ExitCode);
+            }
         }
     }
 }

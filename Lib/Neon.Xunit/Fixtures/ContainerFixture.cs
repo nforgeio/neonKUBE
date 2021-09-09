@@ -446,7 +446,7 @@ namespace Neon.Xunit
             {
                 try
                 {
-                    var args   = new string[] { "rm", "--force", "-v", ContainerId };
+                    var args   = new string[] { "rm", "--force", "--volumes", ContainerId };
                     var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
 
                     if (result.ExitCode != 0)

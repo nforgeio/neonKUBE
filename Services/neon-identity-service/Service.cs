@@ -71,6 +71,7 @@ namespace NeonIdentityService
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
 
             return 0;
         }

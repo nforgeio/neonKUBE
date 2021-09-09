@@ -792,6 +792,10 @@ namespace Neon.Service
                 {
                     return;
                 }
+                else if (this.Status == NeonServiceStatus.Terminated)
+                {
+                    throw new InvalidOperationException($"Service status cannot be set to [{status}] when the service status is [{NeonServiceStatus.Terminated}].");
+                }
 
                 this.Status = status;
 
@@ -1140,7 +1144,7 @@ namespace Neon.Service
             }
             catch (ProgramExitException e)
             {
-                // Don't override a non-zero ExitCode that was set earlier
+                // Don't override a non-zero exit code that was set earlier
                 // with a zero exit code.
 
                 if (e.ExitCode != 0)
@@ -1188,7 +1192,6 @@ namespace Neon.Service
             }
 
             Terminator.ReadyToExit();
-
             await SetStatusAsync(NeonServiceStatus.Terminated);
 
             return ExitCode;
@@ -1285,7 +1288,7 @@ namespace Neon.Service
                         // $hack(jefflill):
                         //
                         // Give the Exit() method a bit of time to throw the 
-                        // ProgramExitException to make termination handling
+                        // [ProgramExitException] to make termination handling
                         // a bit more deterministic.
 
                         Thread.Sleep(TimeSpan.FromSeconds(0.5));

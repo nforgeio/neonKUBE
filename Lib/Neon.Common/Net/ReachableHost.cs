@@ -41,7 +41,7 @@ namespace Neon.Net
         /// <param name="host">The target hostname.</param>
         /// <param name="address">The target IP address or <c>null</c> if the target is un reachable.</param>
         /// <param name="time">The ping and answer round trip time.</param>
-        /// <param name="unreachable">Optionally specifies that the host was unrechable.</param>
+        /// <param name="unreachable">Optionally specifies that the host was reachable.</param>
         public ReachableHost(string host, IPAddress address, TimeSpan time, bool unreachable = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(host), nameof(host));
@@ -59,9 +59,10 @@ namespace Neon.Net
         /// </summary>
         /// <param name="host">The target hostname.</param>
         /// <param name="pingReply">The ping reply.</param>
-        /// <param name="unreachable">Optionally specifies that the host was unrechable.</param>
+        /// <param name="unreachable">Optionally specifies that the host was reachable.</param>
         internal ReachableHost(string host, PingReply pingReply, bool unreachable = false)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(host), nameof(host));
             Covenant.Requires<ArgumentNullException>(pingReply != null, nameof(pingReply));
 
             this.Host        = host;
@@ -71,7 +72,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// The target host]name.
+        /// The target host name.
         /// </summary>
         public string Host { get; private set; }
 
