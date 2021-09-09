@@ -143,6 +143,8 @@
 
     <None Remove="Resources\Helm\citus-postgresql\templates\provision-map - Copy.yaml" />
 
+    <None Remove="Resources\Helm\citus-postgresql\templates\servicemonitor.yaml" />
+
     <None Remove="Resources\Helm\grafana-agent\.helmignore" />
 
     <None Remove="Resources\Helm\grafana-agent\Chart.yaml" />
@@ -283,6 +285,8 @@
 
     <None Remove="Resources\Helm\grafana\templates\service_account.yaml" />
 
+    <None Remove="Resources\Helm\harbor\.gitignore" />
+
     <None Remove="Resources\Helm\harbor\assets\chartmuseum-config.yaml" />
 
     <None Remove="Resources\Helm\harbor\assets\core-config.conf" />
@@ -299,7 +303,11 @@
 
     <None Remove="Resources\Helm\harbor\assets\registryctl-config.yaml" />
 
+    <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
+
     <None Remove="Resources\Helm\harbor\crds\crds.yaml" />
+
+    <None Remove="Resources\Helm\harbor\LICENSE._" />
 
     <None Remove="Resources\Helm\harbor\README.md.gotmpl" />
 
@@ -459,11 +467,8 @@
     <None Remove="Resources\Helm\grafana\OWNERS._" />
     <None Remove="Resources\Helm\grafana\README.md" />
     <None Remove="Resources\Helm\grafana\values.yaml" />
-    <None Remove="Resources\Helm\harbor\.gitignore" />
     <None Remove="Resources\Helm\harbor\.helmignore" />
     <None Remove="Resources\Helm\harbor\Chart.yaml" />
-    <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
-    <None Remove="Resources\Helm\harbor\LICENSE._" />
     <None Remove="Resources\Helm\harbor\README.md" />
     <None Remove="Resources\Helm\harbor\templates\NOTES.txt" />
     <None Remove="Resources\Helm\harbor\templates\_helpers.tpl" />
@@ -534,7 +539,6 @@
     <None Remove="Resources\Helm\minio\templates\configmap.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-deployment.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-ingress.yaml" />
-    <None Remove="Resources\Helm\minio\templates\console-secret.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-service.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-ui.yaml" />
     <None Remove="Resources\Helm\minio\templates\deployment.yaml" />
@@ -918,6 +922,7 @@
     <None Remove="Resources\Helm\tempo\.helmignore" />
     <None Remove="Resources\Helm\tempo\Chart.yaml" />
     <None Remove="Resources\Helm\tempo\README.md" />
+    <None Remove="Resources\Helm\tempo\README.md.gotmpl" />
     <None Remove="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
     <None Remove="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
     <None Remove="Resources\Helm\tempo\templates\service.yaml" />
@@ -958,6 +963,7 @@
     <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-serviceaccount.yaml" />
     <EmbeddedResource Include="Resources\Helm\cert-manager\templates\webhook-validating-webhook.yaml" />
     <EmbeddedResource Include="Resources\Helm\cert-manager\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\citus-postgresql\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana-agent\crds\crds.yaml" />
@@ -1028,6 +1034,7 @@
     <EmbeddedResource Include="Resources\Helm\grafana\templates\role.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\role_binding.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\service_account.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\.gitignore" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\chartmuseum-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\core-config.conf" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\jobservice-config.yaml" />
@@ -1036,7 +1043,9 @@
     <EmbeddedResource Include="Resources\Helm\harbor\assets\portal-config.conf" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\registry-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\registryctl-config.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\CONTRIBUTING.md" />
     <EmbeddedResource Include="Resources\Helm\harbor\crds\crds.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\LICENSE._" />
     <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
@@ -1086,7 +1095,6 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\cluster-role.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ingress.yaml" />
-    <EmbeddedResource Include="Resources\Helm\minio\templates\console-secret.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ui.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-deployment.yaml" />
@@ -1581,6 +1589,7 @@
     <EmbeddedResource Include="Resources\Helm\tempo\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\tempo\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\tempo\README.md" />
+    <EmbeddedResource Include="Resources\Helm\tempo\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo-query.yaml" />
     <EmbeddedResource Include="Resources\Helm\tempo\templates\configmap-tempo.yaml" />
     <EmbeddedResource Include="Resources\Helm\tempo\templates\service.yaml" />
@@ -1639,8 +1648,11 @@
     <Resource Include="Resources\Helm\cert-manager\templates\cainjector-serviceaccount.yaml" />
   </ItemGroup>
 
-  <Target Name="ModelGen" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\netcoreapp3.1\prebuilder.exe')">
+  <Target Name="K8sWithRetry" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder.exe')">
     <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)KubernetesWithRetry.cs&quot; Neon.Kube" />
+  </Target>
+
+  <Target Name="EmbedCheck" BeforeTargets="BeforeCompile">
     <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)Resources&quot;" />
   </Target>
 

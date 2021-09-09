@@ -322,7 +322,7 @@ namespace {targetNamespace}
 
                             if (method.ReturnType == typeof(Task))
                             {
-                                writer.WriteLine($"            await NormalizedRetryPolicy.Invoke(");
+                                writer.WriteLine($"            await NormalizedRetryPolicy.InvokeAsync(");
                                 writer.WriteLine($"                async () =>");
                                 writer.WriteLine($"                {{");
                                 writer.WriteLine($"                    await kubernetes.{method.Name}({GetParameterNames(parameters)});");
@@ -330,7 +330,7 @@ namespace {targetNamespace}
                             }
                             else
                             {
-                                writer.WriteLine($"            return await NormalizedRetryPolicy.Invoke(");
+                                writer.WriteLine($"            return await NormalizedRetryPolicy.InvokeAsync(");
                                 writer.WriteLine($"                async () =>");
                                 writer.WriteLine($"                {{");
                                 writer.WriteLine($"                    return await kubernetes.{method.Name}({GetParameterNames(parameters)});");
