@@ -2096,6 +2096,9 @@ $@"- name: StorageType
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
+            var agentAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.GrafanaAgent);
+            var agentNodeAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.GrafanaAgentNode);
+
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
@@ -2105,6 +2108,18 @@ $@"- name: StorageType
                     var i      = 0;
 
                     values.Add($"clusterName", cluster.Definition.Name);
+
+                    if (agentAdvice.PodMemoryRequest != null && agentAdvice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest.Value));
+                        values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit.Value));
+                    }
+
+                    if (agentNodeAdvice.PodMemoryRequest != null && agentNodeAdvice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest.Value));
+                        values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit.Value));
+                    }
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
@@ -2171,6 +2186,12 @@ $@"- name: StorageType
                     {
                         values.Add($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd");
                         values.Add($"cortexConfig.ingester.lifecycler.ring.kvstore.replication_factor", 3);
+                    }
+
+                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
                     }
 
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex",
@@ -2558,7 +2579,6 @@ $@"- name: StorageType
                                 new List<Task>()
                                 {
                                     WaitForStatefulSetAsync(controller, KubeNamespaces.NeonSystem, labelSelector: "app=minio"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "neon-system-console"),
                                     WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-console"),
                                     WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-operator"),
                                 });
