@@ -15,6 +15,8 @@ data:
         enabled: true
     prometheus:
       global:
+		    external_labels:
+		      cluster: {{ .Values.clusterName }}
         scrape_interval: 15s
       wal_directory: /var/lib/agent/data
       configs:

@@ -2104,6 +2104,8 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
                     var i      = 0;
 
+                    values.Add($"clusterName", cluster.Definition.Name);
+
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");

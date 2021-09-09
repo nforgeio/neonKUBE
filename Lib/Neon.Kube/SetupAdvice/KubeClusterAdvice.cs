@@ -175,6 +175,11 @@ namespace Neon.Kube
         public static string GrafanaAgent = "grafana-agent";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> daemonset service.
+        /// </summary>
+        public static string GrafanaAgentNode = "grafana-agent-node";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
         /// </summary>
         public static string GrafanaAgentOperator = "grafana-agent-operator";

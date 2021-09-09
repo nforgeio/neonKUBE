@@ -79,6 +79,10 @@ spec:
         - mountPath: /etc/machine-id
           name: etcmachineid
           readOnly: true
+        {{- if .Values.resources.agentNode }}
+        resources:
+        {{- toYaml .Values.resources.agentNode | nindent 10 }}
+        {{- end }}
       serviceAccount: grafana-agent-node
       tolerations:
       - effect: NoSchedule
