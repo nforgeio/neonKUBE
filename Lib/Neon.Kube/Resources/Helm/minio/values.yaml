@@ -1,14 +1,25 @@
 # Default values for minio-operator.
 
 operator:
-  clusterDomain: ""
-  nsToWatch: ""
+  ## DEPRECATED: Please use the "CLUSTER_DOMAIN" or "WATCHED_NAMESPACE" env variable
+  ## instead of clusterDomain and nsToWatch.
+  # clusterDomain: "cluster.local"
+  # nsToWatch: ""
+  ## Setup environment variables for the Operator
+  # env:
+  #   - name: MINIO_OPERATOR_TLS_ENABLE
+  #     value: "off"
+  #   - name: CLUSTER_DOMAIN
+  #     value: "cluster.domain"
+  #   - name: WATCHED_NAMESPACE
+  #     value: ""
   image:
     organization: neon-registry.node.local
     repository: minio-operator
     tag: v4.2.5
     pullPolicy: IfNotPresent
   imagePullSecrets: []
+  initcontainers: []
   replicaCount: 1
   securityContext:
     runAsUser: 1000
@@ -32,12 +43,16 @@ console:
     tag: v0.9.8
     pullPolicy: IfNotPresent
   imagePullSecrets: []
+  initcontainers: []
   replicaCount: 1
   nodeSelector:
     neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
   tolerations: []
   resources: {}
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
   ingress:
     enabled: false
     labels: {}
@@ -101,6 +116,7 @@ tenants:
     subPath: /data
     # pool secrets
     secrets:
+      # create a kubernetes secret object with the accessKey and secretKey as defined here.
       enabled: true
       name: minio
       accessKey: minio
@@ -110,6 +126,10 @@ tenants:
       enabled: true
       port: 9000
     certificate:
+      ## Use this field to provide one or more external CA certificates. This is used by MinIO
+      ## to verify TLS connections with other applications:
+      ## https://github.com/minio/minio/tree/master/docs/tls/kubernetes#2-create-kubernetes-secret
+      externalCaCertSecret: {}
       ## Use this field to provide a list of Secrets with external certificates. This can be used to to configure
       ## TLS for MinIO Tenant pods. Create secrets as explained here:
       ## https://github.com/minio/minio/tree/master/docs/tls/kubernetes#2-create-kubernetes-secret
@@ -138,25 +158,10 @@ tenants:
     ## PriorityClassName indicates the Pod priority and hence importance of a Pod relative to other Pods.
     ## This is applied to MinIO pods only.
     ## Refer Kubernetes documentation for details https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass/
-    priorityClassName : ""
-    ## Define configuration for Console (Graphical user interface for MinIO)
-    ## Refer https://github.com/minio/console
-    console:
-      image:
-        organization: neon-registry.node.local
-        repository: minio-console
-        tag: v0.7.4
-        pullPolicy: IfNotPresent
-      replicaCount: 1
-      secrets:
-        enabled: true
-        name: minio-console
-        passphrase: SECRET
-        salt: SECRET
-        accessKey: YOURCONSOLEACCESS
-        secretKey: YOURCONSOLESECRET
 
     ## Prometheus Operator's Service Monitor for MinIO Tenant Pods.
     prometheusOperator:
       labels:
         app: minio-sm
+
+    priorityClassName: ""

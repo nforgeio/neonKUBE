@@ -8,9 +8,13 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 4222
-      name: http
-    - port: 4233
-      name: https
+    - name: https
+      port: 4222
+      protocol: TCP
+      targetPort: 4222
+    - name: https2
+      port: 4233
+      protocol: TCP
+      targetPort: 4233
   selector:
     {{- include "minio-operator.selectorLabels" . | nindent 4 }}

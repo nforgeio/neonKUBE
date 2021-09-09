@@ -89,13 +89,4 @@ spec:
   {{ if .priorityClassName }}
   priorityClassName: {{ .priorityClassName }}
   {{ end }}
-  console:
-    image: {{ .console.image.organization }}/{{ .console.image.repository }}:{{ .console.image.tag }}
-    replicas: {{ .console.replicaCount }}
-    consoleSecret:
-      name: {{ .console.secrets.name }}
-    {{- with .securityContext }}
-    securityContext:
-      {{ toYaml . | nindent 6 }}
-    {{ end }}
 {{ end }}
