@@ -129,8 +129,16 @@ namespace Neon.Kube
         public const string DisableImageDownload = "image-download-disabled";
 
         /// <summary>
-        /// The IP address of the cluster. This is used to create the neoncluster.io subdomain pointing to the cluster.
+        /// Property name for the IP address of the cluster. This is used to create the <b>neoncluster.io</b> 
+        /// DNS subdomain pointing to the cluster.
         /// </summary>
         public const string ClusterIp = "cluster-ip";
+
+        /// <summary>
+        /// Property name for the <see cref="ReadyToGoMode"/> controlling whether cluster setup will 
+        /// configure a ready-to-go image that nearly completes cluster setup, completes setup for
+        /// a ready-to-go cluster node or just performs a normal setup.
+        /// </summary>
+        public const string ReadyToGoMode = "readytogo-mode";
     }
 }
