@@ -42,7 +42,8 @@ namespace TestDeployment
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Aws : IClassFixture<EnvironmentFixture>
     {
-        private const string TestBucket = "s3://neon-unit-test";
+        private const string TestBucketS3Ref    = "s3://neon-unit-test";
+        private const string TestBucketHttpsRef = "https://neon-unit-test.s3.us-west-2.amazonaws.com";
 
         private EnvironmentFixture  fixture;
 
@@ -54,15 +55,41 @@ namespace TestDeployment
             {
                 fixture.Restore();
             }
-            else
+
+            AwsCli.SetCredentials();
+        }
+
+        /// <summary>
+        /// Checks the AWS credentials for the non-CI environments.  This works because
+        /// neonKUBE developers generally have their AWS credentials persisted as environment
+        /// variables.  For CI environments, this is a NOP and we'll rely on fetching credentials
+        /// from 1Password.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// Thrown for non-CI environments when the AWS credentials are not present as
+        /// environment variables.
+        /// </exception>
+        private void CheckCredentials()
+        {
+            if (!NeonHelper.IsCI)
             {
-                AwsCli.SetCredentials();
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")))
+                {
+                    throw new ArgumentException($"Missing AWS credential environment variable: AWS_ACCESS_KEY_ID");
+                }
+
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
+                {
+                    throw new ArgumentException($"Missing AWS credential environment variable: AWS_SECRET_ACCESS_KEY");
+                }
             }
         }
 
-        [Fact(Skip = "Must be run manually")]
-        public void S3UploadDownload()
+        [Fact]
+        public void S3UploadDownload_WithS3Ref()
         {
+            CheckCredentials();
+
             using (var tempUploadFile = new TempFile())
             {
                 using (var tempDownloadFile = new TempFile())
@@ -77,14 +104,43 @@ namespace TestDeployment
 
                     // Upload the file
 
-                    var keyID = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
-                    var key   = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
-
-                    AwsCli.S3Upload(tempUploadFile.Path, $"{TestBucket}/upload.txt");
+                    AwsCli.S3Upload(tempUploadFile.Path, $"{TestBucketS3Ref}/upload.txt");
 
                     // Download the file
 
-                    AwsCli.S3Download($"{TestBucket}/upload.txt", tempDownloadFile.Path);
+                    AwsCli.S3Download($"{TestBucketS3Ref}/upload.txt", tempDownloadFile.Path);
+
+                    // Ensure that downloaded file maches the upload
+
+                    Assert.Equal(File.ReadAllText(tempUploadFile.Path), File.ReadAllText(tempDownloadFile.Path));
+                }
+            }
+        }
+
+        [Fact]
+        public void S3UploadDownload_WithHttpsRef()
+        {
+            CheckCredentials();
+
+            using (var tempUploadFile = new TempFile())
+            {
+                using (var tempDownloadFile = new TempFile())
+                {
+                    using (var writer = new StreamWriter(tempUploadFile.Path))
+                    {
+                        for (int i = 0; i < 10000; i++)
+                        {
+                            writer.WriteLine($"LINE #{i}");
+                        }
+                    }
+
+                    // Upload the file
+
+                    AwsCli.S3Upload(tempUploadFile.Path, $"{TestBucketHttpsRef}/upload.txt");
+
+                    // Download the file
+
+                    AwsCli.S3Download($"{TestBucketS3Ref}/upload.txt", tempDownloadFile.Path);
 
                     // Ensure that downloaded file maches the upload
 
