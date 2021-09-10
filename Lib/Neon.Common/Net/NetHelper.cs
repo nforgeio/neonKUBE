@@ -1160,10 +1160,10 @@ namespace Neon.Net
 
                     var domainLabels = uriValue.DnsSafeHost.Split('.');
 
-                    if (domainLabels.Length != 4 ||
-                        !domainLabels[1].StartsWith("s3-", StringComparison.InvariantCultureIgnoreCase) ||
-                        !domainLabels[2].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
-                        !domainLabels[3].Equals("com", StringComparison.InvariantCultureIgnoreCase))
+                    if (domainLabels.Length != 5 ||
+                        !domainLabels[1].Equals("s3", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[3].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[4].Equals("com", StringComparison.InvariantCultureIgnoreCase))
                     {
                         throw new ArgumentException($"URI doesn't reference an S3 bucket: {uri}", nameof(uri));
                     }
