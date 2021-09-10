@@ -72,18 +72,28 @@ namespace Neon.Kube
         /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
         /// current neonDESKTOP state will not be impacted.
         /// </param>
+        /// <param name="readyToGoMode">
+        /// Optionally creates a setup controller that prepares a ready-to-go image or completes the
+        /// cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.None"/>.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition, 
-            int                 maxParallel  = 500, 
-            bool                unredacted   = false, 
-            bool                debugMode    = false, 
-            bool                uploadCharts = false,
-            bool                automate     = false)
+            int                 maxParallel   = 500, 
+            bool                unredacted    = false, 
+            bool                debugMode     = false, 
+            bool                uploadCharts  = false,
+            bool                automate      = false,
+            ReadyToGoMode       readyToGoMode = ReadyToGoMode.None)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
+
+            if (debugMode && readyToGoMode != ReadyToGoMode.None)
+            {
+                throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.None}] when [{nameof(debugMode)}=TRUE].");
+            }
 
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
@@ -173,6 +183,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, hostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
+            controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
 
             // Configure the setup steps.
 

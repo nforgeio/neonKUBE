@@ -16,6 +16,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,6 @@ using Neon.Kube;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
-using System.Net.NetworkInformation;
 
 namespace Neon.Kube
 {

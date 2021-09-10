@@ -16,6 +16,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Templates\**" />
+    <EmbeddedResource Remove="Templates\**" />
+    <None Remove="Templates\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Schema\schema-0000.script" />
     <None Remove="Schema\schema-0001.script" />
   </ItemGroup>
@@ -44,10 +50,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Postgres\Neon.Postgres.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Templates\" />
   </ItemGroup>
 
 </Project>
