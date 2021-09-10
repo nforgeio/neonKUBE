@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterManifest.cs
-// CONTRIBUTOR: Marcus Bowyer
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
 // The contents of this repository are for private use by neonFORGE, LLC. and may not be
@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft;
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Kube;
@@ -55,8 +56,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the list of references to the container images that need to be 
+        /// Returns information about the container images deployed to a new neonKUBE cluster.
         /// </summary>
-        public List<string> ContainerImages { get; set; }
+        [JsonProperty(PropertyName = "ContainerImages", Required = Required.Always)]
+        [YamlMember(Alias = "containerImages", ApplyNamingConventions = false)]
+        public List<ClusterContainerImage> ContainerImages { get; set; } = new List<ClusterContainerImage>();
     }
 }

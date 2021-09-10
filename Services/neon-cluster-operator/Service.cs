@@ -40,9 +40,8 @@ namespace NeonClusterOperator
     {
         private const string StateTable = "state";
         
-        private static Kubernetes k8s;
-
-        private static dynamic ClusterMetadata;
+        private static Kubernetes   k8s;
+        private static dynamic      ClusterMetadata;
 
         /// <summary>
         /// Constructor.
@@ -289,7 +288,7 @@ namespace NeonClusterOperator
 
                     if (result != "complete")
                     {
-                        Log.LogInfo($"Grafana setup incomplete [{(string)result}].");
+                        Log.LogInfo($"Grafana setup incomplete [{result}].");
 
                         var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
 
@@ -366,7 +365,7 @@ namespace NeonClusterOperator
 
                     if (result != "complete")
                     {
-                        Log.LogInfo($"Harbor setup incomplete [{(string)result}].");
+                        Log.LogInfo($"Harbor setup incomplete [{result}].");
 
                         var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
 
@@ -427,7 +426,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Responsible for making sure cluster images are present in the local
+        /// Responsible for making sure cluster container images are present in the local
         /// cluster registry.
         /// </summary>
         /// <returns></returns>
@@ -545,12 +544,13 @@ namespace NeonClusterOperator
 
             var nodeImages = await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images | grep ""{KubeConst.LocalClusterRegistry}"" | awk '{{ print $1 "":"" $2 }}' | cut -d/ -f2",  retry: true);
 
-            foreach (var image in ClusterMetadata.ClusterImages)
+            foreach (string image in ClusterMetadata.ClusterImages)
             {
-                var repo = ((string)image).Split(':')[0];
-                var tag  = ((string)image).Split(':')[1];
+                var fields = image.Split(':');
+                var repo   = fields[0];
+                var tag    = fields[1];
 
-                if (nodeImages.Contains((string)image))
+                if (nodeImages.Contains(image))
                 {
                     Log.LogInfo($"[check-node-images] Image [{image}] exists. Pushing to registry.");
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {KubeConst.LocalClusterRegistry}/{image}", retry: true);

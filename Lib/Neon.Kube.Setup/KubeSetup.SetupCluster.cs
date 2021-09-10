@@ -74,7 +74,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares a ready-to-go image or completes the
-        /// cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.None"/>.
+        /// cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
@@ -85,14 +85,14 @@ namespace Neon.Kube
             bool                debugMode     = false, 
             bool                uploadCharts  = false,
             bool                automate      = false,
-            ReadyToGoMode       readyToGoMode = ReadyToGoMode.None)
+            ReadyToGoMode       readyToGoMode = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            if (debugMode && readyToGoMode != ReadyToGoMode.None)
+            if (debugMode && readyToGoMode != ReadyToGoMode.Normal)
             {
-                throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.None}] when [{nameof(debugMode)}=TRUE].");
+                throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.Normal}] when [{nameof(debugMode)}=TRUE].");
             }
 
             // Create the automation subfolder for the operation if required and determine

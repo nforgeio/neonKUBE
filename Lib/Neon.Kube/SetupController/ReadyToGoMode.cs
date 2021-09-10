@@ -20,15 +20,15 @@ using System;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used by <see cref="KubeSetup.CreateClusterSetupController"/> to enable
+    /// Used by <b>KubeSetup.CreateClusterSetupController()</b> to enable
     /// the preparation or setup of a ready-to-go node image.
     /// </summary>
     public enum ReadyToGoMode
     {
         /// <summary>
-        /// Used to prepare a normal node (non ready-to-go) image.
+        /// Used to prepare a normal node from a non ready-to-go image.
         /// </summary>
-        None,
+        Normal,
 
         /// <summary>
         /// Used to prepare a ready-to-go node image that can be used to
