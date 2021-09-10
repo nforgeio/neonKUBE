@@ -86,7 +86,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        public void S3UploadDownload_WithS3Ref()
+        public void S3_File_UploadDownload_WithS3Ref()
         {
             CheckCredentials();
 
@@ -110,7 +110,7 @@ namespace TestDeployment
 
                     AwsCli.S3Download($"{TestBucketS3Ref}/upload.txt", tempDownloadFile.Path);
 
-                    // Ensure that downloaded file maches the upload
+                    // Ensure that downloaded file matches the upload
 
                     Assert.Equal(File.ReadAllText(tempUploadFile.Path), File.ReadAllText(tempDownloadFile.Path));
                 }
@@ -118,7 +118,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        public void S3UploadDownload_WithHttpsRef()
+        public void S3_File_UploadDownload_WithHttpsRef()
         {
             CheckCredentials();
 
@@ -142,11 +142,111 @@ namespace TestDeployment
 
                     AwsCli.S3Download($"{TestBucketS3Ref}/upload.txt", tempDownloadFile.Path);
 
-                    // Ensure that downloaded file maches the upload
+                    // Ensure that downloaded file matches the upload
 
                     Assert.Equal(File.ReadAllText(tempUploadFile.Path), File.ReadAllText(tempDownloadFile.Path));
                 }
             }
+        }
+
+        [Fact]
+        public void S3_Text_UploadDownload_WithS3Ref()
+        {
+            CheckCredentials();
+
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < 10000; i++)
+            {
+                sb.AppendLine($"LINE #{i}");
+            }
+
+            // Upload the file
+
+            AwsCli.S3UploadText(sb.ToString(), $"{TestBucketS3Ref}/upload.txt");
+
+            // Download the file
+
+            var download = AwsCli.S3DownloadText($"{TestBucketS3Ref}/upload.txt");
+
+            // Ensure that downloaded file matches the upload
+
+            Assert.Equal(sb.ToString(), download);
+        }
+
+        [Fact]
+        public void S3_Text_UploadDownload_WithHttpsRef()
+        {
+            CheckCredentials();
+
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < 10000; i++)
+            {
+                sb.AppendLine($"LINE #{i}");
+            }
+
+            // Upload the file
+
+            AwsCli.S3UploadText(sb.ToString(), $"{TestBucketHttpsRef}/upload.txt");
+
+            // Download the file
+
+            var download = AwsCli.S3DownloadText($"{TestBucketHttpsRef}/upload.txt");
+
+            // Ensure that downloaded file matches the upload
+
+            Assert.Equal(sb.ToString(), download);
+        }
+
+        [Fact]
+        public void S3_Bytes_UploadDownload_WithS3Ref()
+        {
+            CheckCredentials();
+
+            var bytes = new byte[10000];
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                bytes[i] = (byte)i;
+            }
+
+            // Upload the file
+
+            AwsCli.S3UploadBytes(bytes, $"{TestBucketS3Ref}/upload.txt");
+
+            // Download the file
+
+            var download = AwsCli.S3DownloadBytes($"{TestBucketS3Ref}/upload.txt");
+
+            // Ensure that downloaded file matches the upload
+
+            Assert.Equal(bytes, download);
+        }
+
+        [Fact]
+        public void S3_Bytes_UploadDownload_WithHttpsRef()
+        {
+            CheckCredentials();
+
+            var bytes = new byte[10000];
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                bytes[i] = (byte)i;
+            }
+
+            // Upload the file
+
+            AwsCli.S3UploadBytes(bytes, $"{TestBucketHttpsRef}/upload.txt");
+
+            // Download the file
+
+            var download = AwsCli.S3DownloadBytes($"{TestBucketHttpsRef}/upload.txt");
+
+            // Ensure that downloaded file matches the upload
+
+            Assert.Equal(bytes, download);
         }
     }
 }
