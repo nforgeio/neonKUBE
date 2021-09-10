@@ -40,7 +40,7 @@ namespace NeonClusterOperator
     {
         private const string StateTable = "state";
         
-        private static Kubernetes k8s;
+        private static KubernetesWithRetry k8s;
 
         private static dynamic ClusterMetadata;
 
@@ -52,7 +52,14 @@ namespace NeonClusterOperator
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, serviceMap: serviceMap)
         {
-            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            k8s.RetryPolicy = new ExponentialRetryPolicy(
+                e => true,
+                maxAttempts: int.MaxValue,
+                initialRetryInterval: TimeSpan.FromSeconds(0.25),
+                maxRetryInterval: TimeSpan.FromSeconds(10),
+                timeout: TimeSpan.FromMinutes(5));
         }
 
         /// <inheritdoc/>
@@ -638,18 +645,7 @@ namespace NeonClusterOperator
                 stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
             });
 
-            var maxAttempts = 0;
-            if (retry)
-            {
-                maxAttempts = 5;
-            }
-
-            var retryPolicy = new ExponentialRetryPolicy(maxAttempts: maxAttempts);
-            var exitcode = await retryPolicy.InvokeAsync(
-                async () =>
-                {
-                    return await k8s.NamespacedPodExecAsync(podName, @namespace, containerName, podCommand, true, handler, CancellationToken.None).ConfigureAwait(false);
-                });
+            var exitcode = await k8s.NamespacedPodExecAsync(podName, @namespace, containerName, podCommand, true, handler, CancellationToken.None);
 
             if (exitcode != 0)
             {
