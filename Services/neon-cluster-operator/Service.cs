@@ -90,8 +90,6 @@ namespace NeonClusterOperator
                 await Task.Delay(TimeSpan.FromSeconds(60));
                 await CheckNodeImagesAsync();
             }
-
-            //return 0;
         }
 
         /// <summary>
@@ -539,6 +537,11 @@ namespace NeonClusterOperator
                 },
                 timeout:      TimeSpan.FromSeconds(60),
                 pollInterval: TimeSpan.FromSeconds(2));
+
+            Log.LogInfo($"[check-node-images] Loading cluster manifest.");
+
+            var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
+            var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
 
             Log.LogInfo($"[check-node-images] Getting images currently on node.");
 
