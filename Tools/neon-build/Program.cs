@@ -163,6 +163,30 @@ neon-build hexdump
 Reads standard input as binary, converts it to hex and writes it to
 standard output as one line.
 
+----------------------------------------
+neon-build download URI TARGET-PATH
+
+Downloads a file from a URI and writes it to a file.  Note that
+S3 URIs are not supported.
+
+ARGUMENTS:
+
+    URI         - The S3 source URI (formatted as http://... or https://...
+    TARGET-PATH - Path to the output file
+
+----------------------------------------
+neon-build download-const-uri ASSEMBLY-PATH TYPE-NAME CONST-NAME TARGET-PATH
+
+Extracts a constant value from an assembly file and then downloads
+the URI and writes it to a file.  Note that S3 URIs are not supported.
+
+ARGUMENTS:
+
+    ASSEMBLY-PATH   - Path to the assembly with the constant
+    TYPE-NAME       - Fully qualified name of the type with the constant
+    CONST-NAME      - Name of the constant within the class
+    TARGET-PATH     - Path to the output file
+
 ";
         private static CommandLine commandLine;
 
@@ -396,6 +420,16 @@ standard output as one line.
                         }
                         break;
 
+                    case "download":
+
+                        Download(commandLine);
+                        break;
+
+                    case "download-const-uri":
+
+                        DownloadConstUri(commandLine);
+                        break;
+
                     default:
 
                         Console.Error.WriteLine($"*** ERROR: Unexpected command [{command}].");
@@ -407,7 +441,7 @@ standard output as one line.
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"*** ERROR: {e.GetType().FullName}: {e.Message}");
+                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Program.Exit(1);
             }
         }

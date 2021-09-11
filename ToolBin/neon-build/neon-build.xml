@@ -42,6 +42,18 @@
             </summary>
             <param name="commandLine">The command line.</param>
         </member>
+        <member name="M:NeonBuild.Program.Download(Neon.Common.CommandLine)">
+            <summary>
+            Implements the <b>download</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.DownloadConstUri(Neon.Common.CommandLine)">
+            <summary>
+            Implements the <b>download-const-uri</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.EmbedCheck(Neon.Common.CommandLine)">
             <summary>
             Ensures that all of the files within a specified directory are also 
