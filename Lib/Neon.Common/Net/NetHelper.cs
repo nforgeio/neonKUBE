@@ -1156,7 +1156,7 @@ namespace Neon.Net
                     // Ensure that the URI actually references an S3 bucket.  The host
                     // should look something like:
                     //
-                    //      neonkube.s3-us-west-2.amazonaws.com
+                    //      neonkube.s3.us-west-2.amazonaws.com
 
                     var domainLabels = uriValue.DnsSafeHost.Split('.');
 
