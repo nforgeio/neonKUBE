@@ -203,8 +203,8 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            advice.PodMemoryLimit = ByteUnits.Parse("1Gi");
-            advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+            advice.PodMemoryLimit = ByteUnits.Parse("512Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
 
             return advice;
         }
@@ -261,8 +261,8 @@ namespace Neon.Kube
                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
                || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.PodMemoryLimit = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.PodMemoryLimit = ByteUnits.Parse("256Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("256Gi");
             }
 
             return advice;
@@ -437,8 +437,8 @@ namespace Neon.Kube
                 || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
                 || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+                advice.PodMemoryLimit = ByteUnits.Parse("512Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
             }
 
             return advice;
