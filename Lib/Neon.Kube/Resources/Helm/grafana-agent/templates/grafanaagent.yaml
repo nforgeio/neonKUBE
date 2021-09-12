@@ -16,7 +16,9 @@ spec:
   nodeSelector:
   {{- toYaml .Values.nodeSelector | nindent 4 }}
   prometheus:
-    prometheusExternalLabelName: {{ .Values.clusterName }}
+    prometheusExternalLabelName: ""
+    externalLabels:
+      cluster: {{ .Values.clusterName }}
     shards: {{ .Values.shards }}
     instanceSelector:
       matchLabels:
