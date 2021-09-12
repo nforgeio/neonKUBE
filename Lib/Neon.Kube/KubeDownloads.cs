@@ -89,10 +89,16 @@ namespace Neon.Kube
         public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz";
 
         /// <summary>
-        /// The HTTPS URI to the public AWS S3 bucket where we persist cluster VM images 
-        /// and perhaps other things.
+        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
+        /// and other things.
         /// </summary>
-        public const string NeonPublicBucketUri = "https://neon-public.s3-us-west-2.amazonaws.com";
+        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
+        /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
+        /// neonKUBE cluster version.
+        /// </summary>
+        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifest/neonkube-" + KubeVersions.NeonKubeVersion + ".json";
 
         /// <summary>
         /// The GitHub repository path where public node images will be published.

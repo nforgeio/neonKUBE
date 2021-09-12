@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ReadyToGoMode.cs
+// FILE:	    KubeKVException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,31 +16,41 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using k8s.Models;
+
+using Neon.Collections;
+using Neon.Common;
+using Neon.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used by <b>KubeSetup.CreateClusterSetupController()</b> to enable
-    /// the preparation or setup of a ready-to-go node image.
+    /// Thrown by <see cref="KubeKV"/> when errors are detected.
     /// </summary>
-    public enum ReadyToGoMode
+    public class KubeKVException : KubeException
     {
         /// <summary>
-        /// Used to prepare a normal node from a non ready-to-go image.
+        /// Default constructor.
         /// </summary>
-        Normal,
+        public KubeKVException()
+            : base("Unspecified KubeKV error.")
+        {
+        }
 
         /// <summary>
-        /// Used to prepare a ready-to-go node image that can be used to
-        /// deploy a nearly fully configured single-node neonKUBE cluster
-        /// for some hosting environments.
+        /// Parameterized constructor.
         /// </summary>
-        Prepare,
-
-        /// <summary>
-        /// Used to complete the setup of an already prepared ready-to-go
-        /// and deployed node image.
-        /// </summary>
-        Setup
+        /// <param name="message">Specifies the exception message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public KubeKVException(string message, Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
     }
 }

@@ -19,11 +19,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 
@@ -168,9 +170,11 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="sourcePath">The source file path.</param>
         /// <param name="targetUri">
-        /// The target S3 URI.  This may be either an <b>s3://...</b> or 
-        /// <b>https://...</b> URI that references to an S3 bucket.=
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
         /// </param>
+        /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
         /// <param name="metadata">
         /// <para>
         /// Optionally specifies HTTP metadata headers to be returned when the object
@@ -194,7 +198,6 @@ namespace Neon.Deployment
         /// </para>
         /// </note>
         /// </param>
-        /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
         public static void S3Upload(string sourcePath, string targetUri, bool gzip = false, string metadata = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
@@ -204,7 +207,7 @@ namespace Neon.Deployment
             //
             // Hardcoding [max_concurrent_requests = 5] for now, down from the default value: 10.
             // I believe the higher setting is making uploads less reliable and may also consume
-            // too much bandwidth.  We should probebly make this a parameter.
+            // too much bandwidth.  We should probably make this a parameter.
             //
             // Note this changes this setting system side.
 
@@ -215,7 +218,7 @@ namespace Neon.Deployment
             var s3Uri = NetHelper.ToAwsS3Uri(targetUri);
             var args  = new List<string>()
             {
-                "s3", "cp", sourcePath, targetUri
+                "s3", "cp", sourcePath, s3Uri
             };
 
             if (gzip)
@@ -297,11 +300,103 @@ namespace Neon.Deployment
         }
 
         /// <summary>
+        /// Uploads text to an S3 bucket.
+        /// </summary>
+        /// <param name="text">The text being uploaded.</param>
+        /// <param name="targetUri">
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
+        /// </param>
+        /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
+        /// <param name="metadata">
+        /// <para>
+        /// Optionally specifies HTTP metadata headers to be returned when the object
+        /// is downloaded from S3.  This formatted as as comma separated a list of 
+        /// key/value pairs like:
+        /// </para>
+        /// <example>
+        /// Content-Type=text,app-version=1.0.0
+        /// </example>
+        /// <note>
+        /// <para>
+        /// AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
+        /// include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
+        /// Custom headers are required to include the <b>x-amz-meta-</b> prefix.
+        /// </para>
+        /// <para>
+        /// You don't need to specify the <b>x-amz-meta-</b> prefix for setting custom 
+        /// headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+        /// This method will strip the prefix if present before calling the AWS-CLI to ensure 
+        /// the prefix doesn't end up being duplicated.
+        /// </para>
+        /// </note>
+        /// </param>
+        /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <see cref="Encoding.UTF8"/>.</param>
+        public static void S3UploadText(string text, string targetUri, bool gzip = false, string metadata = null, Encoding encoding = null)
+        {
+            text     ??= string.Empty;
+            encoding ??= Encoding.UTF8;
+
+            using (var tempFile = new TempFile())
+            {
+                File.WriteAllText(tempFile.Path, text, encoding);
+
+                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+            }
+        }
+
+        /// <summary>
+        /// Uploads a byte array to an S3 bucket.
+        /// </summary>
+        /// <param name="bytes">The byte array being uploaded.</param>
+        /// <param name="targetUri">
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
+        /// </param>
+        /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
+        /// <param name="metadata">
+        /// <para>
+        /// Optionally specifies HTTP metadata headers to be returned when the object
+        /// is downloaded from S3.  This formatted as as comma separated a list of 
+        /// key/value pairs like:
+        /// </para>
+        /// <example>
+        /// Content-Type=text,app-version=1.0.0
+        /// </example>
+        /// <note>
+        /// <para>
+        /// AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
+        /// include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
+        /// Custom headers are required to include the <b>x-amz-meta-</b> prefix.
+        /// </para>
+        /// <para>
+        /// You don't need to specify the <b>x-amz-meta-</b> prefix for setting custom 
+        /// headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+        /// This method will strip the prefix if present before calling the AWS-CLI to ensure 
+        /// the prefix doesn't end up being duplicated.
+        /// </para>
+        /// </note>
+        /// </param>
+        public static void S3UploadBytes(byte[] bytes, string targetUri, bool gzip = false, string metadata = null)
+        {
+            bytes ??= Array.Empty<byte>();
+
+            using (var tempFile = new TempFile())
+            {
+                File.WriteAllBytes(tempFile.Path, bytes);
+                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+            }
+        }
+
+        /// <summary>
         /// Downloads a file from S3.
         /// </summary>
         /// <param name="sourceUri">
-        /// The source S3 URI.  This may be either an <b>s3://...</b> or 
-        /// <b>https://...</b> URI that references to an S3 bucket.=
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
         /// </param>
         /// <param name="targetPath">The target file path.</param>
         public static void S3Download(string sourceUri, string targetPath)
@@ -310,6 +405,45 @@ namespace Neon.Deployment
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
             s3Retry.Invoke(() => ExecuteSafe("s3", "cp", NetHelper.ToAwsS3Uri(sourceUri), targetPath));
+        }
+
+        /// <summary>
+        /// Downloads a file from S3 as text.
+        /// </summary>
+        /// <param name="sourceUri">
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
+        /// </param>
+        /// <param name="encoding">Optionally specifies the character encoding.  This defaults to <see cref="Encoding.UTF8"/>.</param>
+        public static string S3DownloadText(string sourceUri, Encoding encoding = null)
+        {
+            encoding ??= Encoding.UTF8;
+
+            using (var tempFile = new TempFile())
+            {
+                S3Download(sourceUri, tempFile.Path);
+
+                return File.ReadAllText(tempFile.Path, encoding);
+            }
+        }
+
+        /// <summary>
+        /// Downloads a file from S3 as a byte array.
+        /// </summary>
+        /// <param name="sourceUri">
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
+        /// </param>
+        public static byte[] S3DownloadBytes(string sourceUri)
+        {
+            using (var tempFile = new TempFile())
+            {
+                S3Download(sourceUri, tempFile.Path);
+
+                return File.ReadAllBytes(tempFile.Path);
+            }
         }
     }
 }

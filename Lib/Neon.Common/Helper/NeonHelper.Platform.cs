@@ -31,17 +31,17 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static bool             osChecked;
-        private static string           osDescription;
-        private static NetFramework?    netFramework = null;
-        private static string           frameworkDescription;
-        private static bool             isWindows;
-        private static WindowsEdition   windowsEdition;
-        private static bool             isLinux;
-        private static bool             isOSX;
-        private static bool?            is64BitBuild;
-        private static bool?            isDevWorkstation;
-        private static bool?            isKubernetes;
+        private static bool osChecked;
+        private static string osDescription;
+        private static NetFramework? netFramework = null;
+        private static string frameworkDescription;
+        private static bool isWindows;
+        private static WindowsEdition windowsEdition;
+        private static bool isLinux;
+        private static bool isOSX;
+        private static bool? is64BitBuild;
+        private static bool? isDevWorkstation;
+        private static bool? isKubernetes;
 
         /// <summary>
         /// Detects the current operating system.
@@ -55,17 +55,17 @@ namespace Neon.Common
 
             try
             {
-                osDescription        = RuntimeInformation.OSDescription;
+                osDescription = RuntimeInformation.OSDescription;
                 frameworkDescription = RuntimeInformation.FrameworkDescription;
-                isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
                 if (isWindows)
                 {
                     // Examine registry to detect the Windows Edition.
 
-                    var key       = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
+                    var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
                     var editionID = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue("EditionID").ToString();
 
                     // $todo(jefflill): We're guessing at the server edition IDs here.
@@ -281,6 +281,25 @@ namespace Neon.Common
 
                 DetectOS();
                 return isOSX;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the current process is running within a CI environment
+        /// such as GitHub Actions.  This checks for this environment variable: <b>CI=true</b>.
+        /// </summary>
+        public static bool IsCI
+        {
+            get
+            {
+                var value = Environment.GetEnvironmentVariable("CI");
+
+                if (value == null)
+                {
+                    return false;
+                }
+
+                return value.Equals("true", StringComparison.InvariantCultureIgnoreCase);
             }
         }
 

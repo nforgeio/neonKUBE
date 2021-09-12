@@ -33,9 +33,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    // IMPORTANT NOTE!:
-    // ----------------
-    // These unit tests require that [neon-assistant] be running.
+    // IMPORTANT NOTE!: These unit tests require that [neon-assistant] be running.
 
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
