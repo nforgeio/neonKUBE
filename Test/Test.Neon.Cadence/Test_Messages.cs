@@ -41,7 +41,6 @@ namespace TestCadence
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public sealed partial class Test_Messages : IClassFixture<CadenceFixture>, IDisposable
     {
         //---------------------------------------------------------------------

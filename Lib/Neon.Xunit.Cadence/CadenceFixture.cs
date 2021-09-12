@@ -396,7 +396,7 @@ services:
             {
                 if (client == null)
                 {
-                    throw new Exception("Cadence client could not be connected to the Cadence cluster.");
+                    throw new Exception("Cadence client could not connect to the Cadence cluster.");
                 }
 
                 return client;
