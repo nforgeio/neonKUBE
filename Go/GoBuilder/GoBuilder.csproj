@@ -30,7 +30,7 @@
   </PropertyGroup>
 
   <Target Name="GoBuild" AfterTargets="BeforeCompile">
-    <Exec Command="pwsh -file &quot;$(SolutionDir)Go\build-all.ps1&quot; -buildConfig $(Configuration)" />
+    <Exec Command="pwsh -file &quot;$(NF_ROOT)\Go\build-all.ps1&quot; -buildConfig $(Configuration)" />
   </Target>
 
 </Project>
