@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO.Compression;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,13 +27,17 @@ using Neon.Service;
 using Neon.Postgres;
 
 using Helm.Helm;
-using Newtonsoft.Json;
-using YamlDotNet.RepresentationModel;
 
 using k8s;
 using k8s.Models;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Npgsql;
-using System.Reflection;
+
+using YamlDotNet.RepresentationModel;
+
 
 namespace NeonClusterOperator
 {
@@ -550,7 +555,8 @@ namespace NeonClusterOperator
 
             Log.LogInfo($"[check-node-images] Getting images currently on node.");
 
-            var nodeImages = await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images | grep ""{KubeConst.LocalClusterRegistry}"" | awk '{{ print $1 "":"" $2 }}' | cut -d/ -f2",  retry: true);
+            var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
+            var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
 
             foreach (var image in ClusterMetadata.ClusterImages)
             {
@@ -590,7 +596,7 @@ namespace NeonClusterOperator
         /// <param name="containerName"></param>
         /// <param name="retry"></param>
         /// <returns>The command output as lines of text.</returns>
-        public async Task<List<string>> ExecInPodAsync(
+        public async Task<string> ExecInPodAsync(
             string      podName,
             string      @namespace,
             string      command,
@@ -631,7 +637,13 @@ namespace NeonClusterOperator
 {stdErr}");
             }
 
-            return stdOut.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToList();
+            var result = new StringBuilder();
+            foreach (var line in stdOut.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
+            {
+                result.AppendLine(line);
+            }
+
+            return result.ToString();
         }
 
         private async Task UpdateStatusAsync(string status)

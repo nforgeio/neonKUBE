@@ -1099,6 +1099,7 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ui.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\tenant-secret.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\tenant.yaml" />
