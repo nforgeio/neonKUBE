@@ -234,6 +234,7 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
+        [Trait(TestTrait.Category, TestTrait.Buggy)] // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_UtcNow()
         {
             await SyncContext.ClearAsync;
