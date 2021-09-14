@@ -33,7 +33,8 @@
 
 $buildConfig = "Debug"
 
-$env:NF_GOROOT = "$env:NF_ROOT\Go"
+$env:NF_GOROOT   = "$env:NF_ROOT\Go"
+$env:GO111MODULE = "on"
 
 # Import the global solution include file.
 
