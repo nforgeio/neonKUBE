@@ -317,7 +317,7 @@ namespace Neon.Xunit
                 }
 
 #pragma warning disable CS1574, CS8632
-                if (!comparer.Equals((TValue?)expected, (TValue?)found))
+                if (!comparer.Equals((TValue?)item.Value, (TValue?)found))
                 {
                     throw new AssertException($"Item value for [expected[{item.Key}={item.Value}] != [dictionary[{item.Key}]={found}]");
                 }
