@@ -24,7 +24,7 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>data utility</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
