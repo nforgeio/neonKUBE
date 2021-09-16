@@ -411,6 +411,21 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
+        public const string LabelNeonSystem = ClusterDefinition.ReservedLabelPrefix + "neon-system";
+
+        /// <summary>
+        /// <b>io.neonkube.neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
+        /// services will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystem", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystem", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NeonSystem { get; set; } = false;
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// </summary>
         public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
 
         /// <summary>
@@ -564,6 +579,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
+                list.Add(new KeyValuePair<string, object>(LabelNeonSystem,                  NeonHelper.ToBoolString(NeonSystem)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemRegistry,          NeonHelper.ToBoolString(NeonSystemRegistry)));
 
