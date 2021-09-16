@@ -6,7 +6,7 @@
     <RootNamespace>TestIdentity</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

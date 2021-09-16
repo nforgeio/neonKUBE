@@ -45,7 +45,7 @@ namespace TestCommon
         private bool VerifyInterval(DateTime time0, DateTime time1, TimeSpan minInterval)
         {
             // Verify that [time1] is greater than [time0] by at least [minInterval]
-            // allowing 100ms of slop due to the fact that Task.Delay() sometimes 
+            // allowing 200ms of slop due to the fact that Task.Delay() sometimes 
             // delays for less than the requested timespan.
 
             return time1 - time0 > minInterval - TimeSpan.FromMilliseconds(100);
@@ -54,8 +54,8 @@ namespace TestCommon
         /// <summary>
         /// Verify that operation retry times are consistent with the retry policy.
         /// </summary>
-        /// <param name="times"></param>
-        /// <param name="policy"></param>
+        /// <param name="times">Actual retry timestamps.</param>
+        /// <param name="policy">The retry policy.</param>
         private void VerifyIntervals(List<DateTime> times, ExponentialRetryPolicy policy)
         {
             var interval = policy.InitialRetryInterval;

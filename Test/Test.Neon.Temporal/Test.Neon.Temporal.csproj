@@ -8,7 +8,7 @@
     <RootNamespace>TestTemporal</RootNamespace>
     <AssemblyName>Test.Neon.Temporal</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

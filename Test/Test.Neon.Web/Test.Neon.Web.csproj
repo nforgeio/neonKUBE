@@ -8,7 +8,7 @@
     <RootNamespace>Test.Neon.Web</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 

@@ -477,7 +477,7 @@ function Write-ActionOutput
 
     if (![System.String]::IsNullOrEmpty($text))
     {
-        Switch ($color)
+        switch ($color)
         {
             "red"
             {
@@ -704,7 +704,7 @@ function Write-ActionOutputFile
     {
         $color = $null
 
-        Switch ($type)
+        switch ($type)
         {
             $null
             {

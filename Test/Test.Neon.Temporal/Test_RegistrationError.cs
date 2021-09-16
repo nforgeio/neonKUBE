@@ -43,6 +43,7 @@ namespace TestTemporal
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     public partial class Test_RegistrationError : IClassFixture<TemporalFixture>, IDisposable
     {
         private TemporalFixture     fixture;
