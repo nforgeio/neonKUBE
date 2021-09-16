@@ -17,6 +17,7 @@ spec:
   {{- toYaml .Values.nodeSelector | nindent 4 }}
   prometheus:
     prometheusExternalLabelName: ""
+    scrape_interval: 60s
     externalLabels:
       cluster: {{ .Values.clusterName }}
     shards: {{ .Values.shards }}

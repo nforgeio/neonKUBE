@@ -13,11 +13,15 @@ data:
         enabled: true
       node_exporter:
         enabled: true
+        wal_truncate_frequency: 15m
+        rootfs_path: /host/root
+        sysfs_path: /host/sys
+        procfs_path: /host/proc
     prometheus:
       global:
         external_labels:
           cluster: {{ .Values.clusterName }}
-        scrape_interval: 15s
+        scrape_interval: 60s
       wal_directory: /var/lib/agent/data
       configs:
         - host_filter: true
