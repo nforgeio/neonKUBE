@@ -360,6 +360,11 @@ namespace Neon.Kube
         public static string PrometheusOperator = "prometheus-operator";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Reloader</b> service.
+        /// </summary>
+        public static string Reloader = "reloader";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>PromTail</b> service.
         /// </summary>
         public static string Tempo = "promtail";
