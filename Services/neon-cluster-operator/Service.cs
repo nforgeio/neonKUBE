@@ -45,7 +45,6 @@ namespace NeonClusterOperator
     {
         private const string StateTable = "state";
         
-        private static dynamic      ClusterMetadata;
         private static KubernetesWithRetry k8s;
 
         /// <summary>
@@ -78,11 +77,6 @@ namespace NeonClusterOperator
             // Let KubeService know that we're running.
 
             await SetRunningAsync();
-
-            using (var jsonClient = new JsonClient())
-            {
-                ClusterMetadata = await jsonClient.GetAsync<dynamic>("https://neon-public.s3.us-west-2.amazonaws.com/cluster-metadata/neonkube-0.1.0-alpha.json");
-            }
 
             // Wait for Citus and make sure it's initialized.
 
@@ -560,25 +554,21 @@ namespace NeonClusterOperator
             var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
             var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
 
-            foreach (string image in ClusterMetadata.ClusterImages)
+            foreach (var image in clusterManifest.ContainerImages)
             {
-                var fields = image.Split(':');
-                var repo   = fields[0];
-                var tag    = fields[1];
-
-                if (nodeImages.Contains(image))
+                if (nodeImages.Contains(image.InternalRef))
                 {
-                    Log.LogInfo($"[check-node-images] Image [{image}] exists. Pushing to registry.");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {KubeConst.LocalClusterRegistry}/{image}", retry: true);
+                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] exists. Pushing to registry.");
+                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
                 } 
                 else
                 {
-                    Log.LogInfo($"[check-node-images] Image [{image}] doesn't exist. Pulling from [{KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion}].");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman pull {KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion}", retry: true);
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman tag {KubeConst.NeonKubeBranchRegistry}/{repo}:neonkube-{KubeConst.NeonKubeVersion} {KubeConst.LocalClusterRegistry}/{image}");
+                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] doesn't exist. Pulling from [{image.SourceRef}].");
+                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman pull {image.SourceRef}", retry: true);
+                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman tag {image.SourceRef} {image.InternalRef}");
 
-                    Log.LogInfo($"[check-node-images] Pushing [{image}] to cluster registry.");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {KubeConst.LocalClusterRegistry}/{image}", retry: true);
+                    Log.LogInfo($"[check-node-images] Pushing [{image.InternalRef}] to cluster registry.");
+                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
                 }
 
                 await UpdateStatusAsync(DateTime.UtcNow.ToString());
