@@ -32,7 +32,8 @@ resources: {}
   #  cpu: 100m
   #  memory: 128Mi
 
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/neon-system: 'true'
 
 tolerations: []
 
