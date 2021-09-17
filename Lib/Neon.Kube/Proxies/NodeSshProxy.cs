@@ -88,9 +88,11 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
-        private static readonly Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly Regex   idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private const string            imageTypePath   = "/etc/neonkube/image-type";
 
         private ClusterProxy    cluster;
+        private KubeImageType?  cachedImageType;
         private StringBuilder   internalLogBuilder;
         private TextWriter      internalLogWriter;
 
@@ -155,6 +157,39 @@ namespace Neon.Kube
                 }
 
                 return nodeDefinition;
+            }
+        }
+
+        /// <summary>
+        /// Indicates the type of node image used to when deploying the attached
+        /// node.  This information is determined by <b>/etc/neonkube/image-type</b>.
+        /// </summary>
+        public KubeImageType ImageType
+        {
+            get
+            {
+                if (cachedImageType.HasValue)
+                {
+                    return cachedImageType.Value;
+                }
+
+                if (FileExists(imageTypePath))
+                {
+                    cachedImageType = NeonHelper.ParseEnum<KubeImageType>(DownloadText(imageTypePath).Trim(), KubeImageType.Unknown);
+                }
+                else
+                {
+                    cachedImageType = KubeImageType.Unknown;
+                }
+
+                return cachedImageType.Value;
+            }
+
+            set
+            {
+                cachedImageType = value;
+
+                UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
             }
         }
 
