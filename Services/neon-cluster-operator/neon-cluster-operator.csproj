@@ -29,12 +29,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\cluster-manifest.json" />
-    <EmbeddedResource Include="Schema\schema-0001.script">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Schema\schema-0000.script">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

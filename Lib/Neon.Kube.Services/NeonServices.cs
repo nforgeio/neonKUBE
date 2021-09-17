@@ -28,6 +28,11 @@ namespace Neon.Kube
         public const string ClusterOperator = "neon-cluster-operator";
 
         /// <summary>
+        /// Key value service.
+        /// </summary>
+        public const string NeonKubeKvService = "neon-kubekv-service";
+
+        /// <summary>
         /// Neon identity service, AKA a Secure Token Service (STS).
         /// </summary>
         public const string IdentityService = "neon-identity-service";
