@@ -137,7 +137,8 @@ namespace Neon.Kube
         /// <summary>
         /// Property name for the <see cref="ReadyToGoMode"/> controlling whether cluster setup will 
         /// configure a ready-to-go image that nearly completes cluster setup, completes setup for
-        /// a ready-to-go cluster node or just performs a normal setup.
+        /// a ready-to-go cluster node or just performs a normal setup.  This property is optional
+        /// and should default to <see cref="ReadyToGoMode.Normal"/>.
         /// </summary>
         public const string ReadyToGoMode = "readytogo-mode";
     }
