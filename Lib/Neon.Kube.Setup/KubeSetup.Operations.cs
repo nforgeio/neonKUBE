@@ -253,10 +253,11 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var master       = cluster.FirstMaster;
-            var debugMode    = controller.Get<bool>(KubeSetupProperty.DebugMode);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var master        = cluster.FirstMaster;
+            var debugMode     = controller.Get<bool>(KubeSetupProperty.DebugMode);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
             cluster.ClearStatus();
 
@@ -286,8 +287,41 @@ spec:
             await InstallPrometheusAsync(controller, master);
             await InstallSystemDbAsync(controller, master);
             await InstallMinioAsync(controller, master);
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
+            // $note(jefflill):
+            //
+            // You'll need to start the new Cluster KV service here, which
+            // also means that the Citus system DB will also need to have
+            // been already deployed.
+            //
+            // This method should accept a list of KeyValuePair<string, string> values
+            // the specify the initial keys to be persisted to the database.
+
+            var defaultKVs = new List<KeyValuePair<string, object>>()
+            {
+                new KeyValuePair<string, object>(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, readyToGoMode == ReadyToGoMode.Setup)
+            };
+
+            // await InstallKubeKVAsync(controller, master, defaultKVs);
+
             await InstallClusterOperatorAsync(controller, master);
             await InstallContainerRegistryAsync(controller, master);
+
+            // We need to enable Harbor container image synchronization when
+            // we're not configuring a ready-to-go node image.
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
+            // $note(jefflill):     This is some placeholder code.
+
+            if (readyToGoMode != ReadyToGoMode.Setup)
+            {
+                using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**"))
+                {
+                    kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, false).Wait();
+                }
+            }
+
             await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
         }
 
@@ -2759,7 +2793,7 @@ $@"- name: StorageType
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name = "registry-minio",
+                                    Name              = "registry-minio",
                                     NamespaceProperty = KubeNamespaces.NeonSystem
                                 },
                                 Type = "Opaque",
@@ -3057,6 +3091,10 @@ $@"- name: StorageType
                             WaitForStatefulSetAsync(controller, KubeNamespaces.NeonSystem, "db-citus-postgresql-worker")
                         });
                 });
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
+            //
+            // You'll also need to configure the KubeKV database here.
 
             await Task.CompletedTask;
         }

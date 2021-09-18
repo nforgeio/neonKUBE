@@ -487,8 +487,32 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Ensures that the node image is actually ready-to-go.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns><c>true</c> if the operation system is supported.</returns>
+        public void VerifyImageIsReadyToGo(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            if (readyToGoMode != ReadyToGoMode.Setup)
+            {
+                return;
+            }
+
+            controller.LogProgress(this, verb: "check", message: "read-to-go image");
+
+            if (!FileExists(LinuxPath.Combine(KubeNodeFolders.Config, "read-to-go")))
+            {
+                Fault("The node image was not configured to be READY-TO-GO.");
+            }
+        }
+
+        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the node proxy on faliure.
+        /// cluster.  This faults the node proxy on failure.
         /// </summary>
         /// <param name="controller">Optional setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
