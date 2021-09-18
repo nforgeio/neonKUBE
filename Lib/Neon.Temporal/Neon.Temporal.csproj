@@ -101,6 +101,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Go\GoBuilder\GoBuilder.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
