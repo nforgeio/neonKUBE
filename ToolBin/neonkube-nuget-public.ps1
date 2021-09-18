@@ -23,6 +23,20 @@
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
+# Verify that the user has the required environment variables.  These will
+# be available only for maintainers and are intialized by the neonCLOUD
+# [buildenv.cmd] script.
+
+if (!(Test-Path env:NC_ROOT))
+{
+    "*** ERROR: This script is intended for maintainers only:"
+    "           [NC_ROOT] environment variable is not defined."
+    ""
+    "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+    return 1
+}
+
 # This needs to run with elevated privileges.
 
 Request-AdminPermissions
