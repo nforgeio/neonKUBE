@@ -69,7 +69,7 @@ namespace Neon.Xunit
         /// <typeparam name="T">The item type.</typeparam>
         /// <param name="item">The item being checked.</param>
         /// <param name="collection">The item collection.</param>
-        ///<exception cref="AssertException">Thrown on faliure.</exception>
+        ///<exception cref="AssertException">Thrown on failure.</exception>
         private static void EnsureContains<T>(T item, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
@@ -88,7 +88,7 @@ namespace Neon.Xunit
         /// <param name="item">The item being checked.</param>
         /// <param name="collection">The item collection.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         private static void EnsureContains<T>(T item, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
@@ -107,7 +107,7 @@ namespace Neon.Xunit
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -143,7 +143,7 @@ namespace Neon.Xunit
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -170,7 +170,7 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -208,7 +208,7 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -234,7 +234,7 @@ namespace Neon.Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -269,7 +269,7 @@ namespace Neon.Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -294,7 +294,7 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <param name="comparer">The equality comparer to be used.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -332,7 +332,7 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <param name="comparer">The equality comparer to be used.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -358,7 +358,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="expected">The expected value.</param>
         /// <param name="actual">The actual valut.</param>
-        /// <exception cref="AssertException">Thrown on faliure.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEqualLines(string expected, string actual)
         {
             if (expected != null)
