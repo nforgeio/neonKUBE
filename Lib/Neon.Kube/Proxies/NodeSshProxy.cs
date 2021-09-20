@@ -487,7 +487,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that the node image is actually ready-to-go.
+        /// Ensures that the provisioned node image is actually a ready-to-go node image.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
@@ -504,9 +504,11 @@ namespace Neon.Kube
 
             controller.LogProgress(this, verb: "check", message: "read-to-go image");
 
-            if (!FileExists(LinuxPath.Combine(KubeNodeFolders.Config, "read-to-go")))
+            var imageType = ImageType;
+
+            if (imageType != KubeImageType.ReadToGo)
             {
-                Fault("The node image was not configured to be READY-TO-GO.");
+                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadToGo}].");
             }
         }
 

@@ -81,8 +81,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// Node images prepared as <b>ready-to-go</b> can be identified by the presence of a 
-        /// <b>/etc/neonkube.ready-to-go</b> file.  This file will be created when preparing the
-        /// ready-to-go image and the presence of this file is required when <see cref="ReadyToGoMode.ReadyToGoMode"/>
+        /// <b>/etc/neonkube/image-type</b> file set to <see cref="KubeImageType.ReadToGo"/>.
         /// is passed.
         /// </para>
         /// </remarks>
