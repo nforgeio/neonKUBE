@@ -78,6 +78,13 @@ namespace Neon.Kube
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
+        /// <remarks>
+        /// <para>
+        /// Node images prepared as <b>ready-to-go</b> can be identified by the presence of a 
+        /// <b>/etc/neonkube/image-type</b> file set to <see cref="KubeImageType.ReadToGo"/>.
+        /// is passed.
+        /// </para>
+        /// </remarks>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition, 
             int                 maxParallel   = 500, 
@@ -164,13 +171,17 @@ namespace Neon.Kube
                 clusterLogin.Save();
             }
 
-            // Update the cluster node SSH credentials to use the secure password.
+            // Update the cluster node SSH credentials to use the secure password
+            // when we're not preparing a ready-to-go image.
 
-            var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
-
-            foreach (var node in cluster.Nodes)
+            if (readyToGoMode != ReadyToGoMode.Prepare)
             {
-                node.UpdateCredentials(sshCredentials);
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
+
+                foreach (var node in cluster.Nodes)
+                {
+                    node.UpdateCredentials(sshCredentials);
+                }
             }
 
             // Configure the setup controller state.
@@ -191,6 +202,12 @@ namespace Neon.Kube
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                controller.AddNodeStep("verify ready-to-go image", (controller, node) => node.VerifyImageIsReadyToGo(controller));
+            }
+
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
 

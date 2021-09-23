@@ -122,7 +122,7 @@ namespace NeonClusterOperator
         {
             Log.LogInfo($"Connecting to citus...");
 
-            var connString        = await GetConnectionStringAsync();
+            var connectionString  = await GetConnectionStringAsync();
             var schemaDirectory   = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Schema");
             var serviceUserSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
@@ -134,11 +134,11 @@ namespace NeonClusterOperator
                 { "state_table", StateTable }
             };
 
-            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            await using (var connection = new NpgsqlConnection(connectionString))
             {
-                await conn.OpenAsync();
+                await connection.OpenAsync();
 
-                using (var schemaManager = new SchemaManager(conn, KubeConst.NeonClusterOperatorDatabase, schemaDirectory, variables))
+                using (var schemaManager = new SchemaManager(connection, KubeConst.NeonClusterOperatorDatabase, schemaDirectory, variables))
                 {
                     var status = await schemaManager.GetStatusAsync();
 
@@ -281,12 +281,13 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task SetupGrafanaAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+            var connectionString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
-            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            await using (var connection = new NpgsqlConnection(connectionString))
             {
-                conn.Open();
-                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", conn))
+                connection.Open();
+
+                await using (var cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", connection))
                 {
                     var result = (string)(await cmd.ExecuteScalarAsync());
 
@@ -358,12 +359,13 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task SetupHarborAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+            var connectionString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
-            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            await using (var connection = new NpgsqlConnection(connectionString))
             {
-                conn.Open();
-                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", conn))
+                connection.Open();
+
+                await using (var cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.NeonJobSetupHarbor}'", connection))
                 {
                     var result = (string)(await cmd.ExecuteScalarAsync());
 
@@ -436,12 +438,13 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task CheckNodeImagesAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
+            var connectionString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
-            await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+            await using (var connection = new NpgsqlConnection(connectionString))
             {
-                conn.Open();
-                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.ClusterImagesLastChecked}'", conn))
+                connection.Open();
+
+                await using (var cmd = new NpgsqlCommand($"SELECT value FROM {StateTable} WHERE key='{KubeConst.ClusterImagesLastChecked}'", connection))
                 {
                     var result = (string)(await cmd.ExecuteScalarAsync());
 
@@ -554,7 +557,7 @@ namespace NeonClusterOperator
             var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
             var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
 
-            foreach (var image in clusterManifest.ContainerImages)
+            foreach (var image in ClusterMetadata.ClusterImages)
             {
                 if (nodeImages.Contains(image.InternalRef))
                 {
@@ -641,9 +644,9 @@ namespace NeonClusterOperator
 
         private async Task UpdateStatusAsync(string status)
         {
-            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase));
+            await using (var connection = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase)))
             {
-                await conn.OpenAsync();
+                await connection.OpenAsync();
                 await using (var cmd = new NpgsqlCommand($@"
     INSERT
         INTO
@@ -652,7 +655,7 @@ namespace NeonClusterOperator
     CONFLICT (KEY) DO
     UPDATE
     SET
-        value = @v", conn))
+        value = @v", connection))
                 {
                     cmd.Parameters.AddWithValue("k", KubeConst.ClusterImagesLastChecked);
                     cmd.Parameters.AddWithValue("v", status);

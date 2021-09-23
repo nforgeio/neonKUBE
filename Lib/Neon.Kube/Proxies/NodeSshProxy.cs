@@ -88,9 +88,11 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
-        private static readonly Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly Regex   idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private const string            imageTypePath   = "/etc/neonkube/image-type";
 
         private ClusterProxy    cluster;
+        private KubeImageType?  cachedImageType;
         private StringBuilder   internalLogBuilder;
         private TextWriter      internalLogWriter;
 
@@ -155,6 +157,39 @@ namespace Neon.Kube
                 }
 
                 return nodeDefinition;
+            }
+        }
+
+        /// <summary>
+        /// Indicates the type of node image used to when deploying the attached
+        /// node.  This information is determined by <b>/etc/neonkube/image-type</b>.
+        /// </summary>
+        public KubeImageType ImageType
+        {
+            get
+            {
+                if (cachedImageType.HasValue)
+                {
+                    return cachedImageType.Value;
+                }
+
+                if (FileExists(imageTypePath))
+                {
+                    cachedImageType = NeonHelper.ParseEnum<KubeImageType>(DownloadText(imageTypePath).Trim(), KubeImageType.Unknown);
+                }
+                else
+                {
+                    cachedImageType = KubeImageType.Unknown;
+                }
+
+                return cachedImageType.Value;
+            }
+
+            set
+            {
+                cachedImageType = value;
+
+                UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
             }
         }
 
@@ -452,8 +487,34 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Ensures that the provisioned node image is actually a ready-to-go node image.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns><c>true</c> if the operation system is supported.</returns>
+        public void VerifyImageIsReadyToGo(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            if (readyToGoMode != ReadyToGoMode.Setup)
+            {
+                return;
+            }
+
+            controller.LogProgress(this, verb: "check", message: "read-to-go image");
+
+            var imageType = ImageType;
+
+            if (imageType != KubeImageType.ReadToGo)
+            {
+                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadToGo}].");
+            }
+        }
+
+        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the node proxy on faliure.
+        /// cluster.  This faults the node proxy on failure.
         /// </summary>
         /// <param name="controller">Optional setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>

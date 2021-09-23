@@ -28,6 +28,8 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 
+using Npgsql;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -63,14 +65,30 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private HttpClient      httpClient;
+        private HttpClient          httpClient = null;
+        private NpgsqlConnection    database   = null;
 
         /// <summary>
-        /// Default constructor.
+        /// Default constructor.  Use this to access the KV store via a REST API.
         /// </summary>
         public KubeKV()
         {
             httpClient = new HttpClient();
+        }
+
+        /// <summary>
+        /// Constructs a client that will operate directly on the KV store within the system database.
+        /// </summary>
+        /// <param name="connectionString"></param>
+        public KubeKV(string connectionString)
+        {
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(connectionString), nameof(connectionString));
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
+            //
+            // You'll need to connect the [database] field to the KV database here
+            // and then modify the methods below to access the database directly when
+            // this isn't NULL rather than going through the KV service.
         }
 
         /// <summary>
@@ -95,6 +113,9 @@ namespace Neon.Kube
         {
             httpClient?.Dispose();
             httpClient = null;
+
+            database?.Dispose();
+            database = null;
 
             if (disposing)
             {
