@@ -108,6 +108,8 @@ namespace Neon.Kube
         {
             serviceMaps["production"] = new NeonServiceMap();
             serviceMaps["production"].AddServiceDescription(NeonServices.ClusterOperator, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(NeonServices.NeonKubeKvService, new ServiceEndpoint() { ServiceDescription = new ServiceDescription() { Namespace = KubeNamespaces.NeonSystem } }) ;
+            serviceMaps["production"].AddServiceDescription(NeonServices.NeonSystemDb, new ServiceEndpoint() { Port = 5432, ServiceDescription = new ServiceDescription() { Namespace = KubeNamespaces.NeonSystem } });
             serviceMaps["production"].AddServiceDescription(NeonServices.SetupGrafana, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(NeonServices.SetupHarbor, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(NeonServices.TestCadence, new ServiceEndpoint());

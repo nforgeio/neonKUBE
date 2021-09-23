@@ -36,8 +36,6 @@ namespace NeonKubeKv
         /// </summary>
         private Service service;
 
-
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -65,7 +63,7 @@ namespace NeonKubeKv
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
+            var dbHost = service.ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri;;
 
             service.DbConnectionString = $"Host={dbHost};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
 

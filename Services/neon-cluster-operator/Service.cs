@@ -109,7 +109,7 @@ namespace NeonClusterOperator
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
+            var dbHost = service.ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri;;
 
             return $"Host={dbHost};Username={username};Password={password};Database={database}";
         }

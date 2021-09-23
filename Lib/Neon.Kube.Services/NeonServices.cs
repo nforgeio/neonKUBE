@@ -54,6 +54,11 @@ namespace Neon.Kube
         public const string SetupHarbor = "neon-setup-harbor";
 
         /// <summary>
+        /// Neon system database.
+        /// </summary>
+        public const string NeonSystemDb = "db-citus-postgresql";
+
+        /// <summary>
         /// Non-production service used to test Cadence running in a Linux container.
         /// </summary>
         public const string TestCadence = "test-cadence";

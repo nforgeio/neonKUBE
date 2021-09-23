@@ -85,7 +85,7 @@ namespace NeonSetupGrafana
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.FullUri;
 
             return $"Host={dbHost};Username={username};Password={password};Database={database}";
         }

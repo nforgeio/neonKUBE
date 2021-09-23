@@ -108,7 +108,7 @@ namespace NeonKubeKv
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = $"db-citus-postgresql.{KubeNamespaces.NeonSystem}";
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.FullUri;
 
             return $"Host={dbHost};Username={username};Password={password};Database={database}";
         }
@@ -127,7 +127,7 @@ namespace NeonKubeKv
 
             var variables = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
             {
-                { "database", KubeConst.NeonKubeKvDatabase },
+                { "database", KubeConst.NeonClusterOperatorDatabase },
                 { "service_user", Encoding.UTF8.GetString(serviceUserSecret.Data["username"]) },
                 { "service_password", Encoding.UTF8.GetString(serviceUserSecret.Data["password"]) },
                 { "state_table", StateTable }
@@ -137,7 +137,7 @@ namespace NeonKubeKv
             {
                 await conn.OpenAsync();
 
-                using (var schemaManager = new SchemaManager(conn, KubeConst.NeonKubeKvDatabase, schemaDirectory, variables))
+                using (var schemaManager = new SchemaManager(conn, KubeConst.NeonClusterOperatorDatabase, schemaDirectory, variables))
                 {
                     var status = await schemaManager.GetStatusAsync();
 
@@ -145,27 +145,27 @@ namespace NeonKubeKv
                     {
                         case SchemaStatus.ExistsNoSchema:
 
-                            Log.LogInfo($"[{KubeConst.NeonKubeKvDatabase}] database exists but is not initialized.");
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database exists but is not initialized.");
                             break;
 
                         case SchemaStatus.ExistsWithSchema:
 
-                            Log.LogInfo($"[{KubeConst.NeonKubeKvDatabase}] database exists with [version={status.Version}].");
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database exists with [version={status.Version}].");
                             break;
 
                         case SchemaStatus.NotFound:
 
-                            Log.LogInfo($"[{KubeConst.NeonKubeKvDatabase}] database does not exist.");
+                            Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database does not exist.");
                             await schemaManager.CreateDatabaseAsync();
                             break;
 
                         case SchemaStatus.Updating:
 
-                            throw new SchemaManagerException($"[{KubeConst.NeonKubeKvDatabase}] database is currently being updated by [updater={status.Updater}].");
+                            throw new SchemaManagerException($"[{KubeConst.NeonClusterOperatorDatabase}] database is currently being updated by [updater={status.Updater}].");
 
                         case SchemaStatus.UpgradeError:
 
-                            throw new SchemaManagerException($"[{KubeConst.NeonKubeKvDatabase}] database is in an inconsistent state due to a previous update failure [updater={status.Updater}] [error={status.Error}].  This will require manual intervention.");
+                            throw new SchemaManagerException($"[{KubeConst.NeonClusterOperatorDatabase}] database is in an inconsistent state due to a previous update failure [updater={status.Updater}] [error={status.Error}].  This will require manual intervention.");
 
                         default:
 
@@ -176,11 +176,11 @@ namespace NeonKubeKv
 
                     if (version == status.Version)
                     {
-                        Log.LogInfo($"[{KubeConst.NeonKubeKvDatabase}] database is up to date at [version={version}]");
+                        Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database is up to date at [version={version}]");
                     }
                     else
                     {
-                        Log.LogInfo($"[{KubeConst.NeonKubeKvDatabase}] database is upgraded from [version={status.Version}] to [version={version}].");
+                        Log.LogInfo($"[{KubeConst.NeonClusterOperatorDatabase}] database is upgraded from [version={status.Version}] to [version={version}].");
                     }
                 }
             }
@@ -280,7 +280,7 @@ namespace NeonKubeKv
         /// <returns></returns>
         public async Task SetupGrafanaAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonKubeKvDatabase);
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
@@ -357,7 +357,7 @@ namespace NeonKubeKv
         /// <returns></returns>
         public async Task SetupHarborAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonKubeKvDatabase);
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
@@ -435,7 +435,7 @@ namespace NeonKubeKv
         /// <returns></returns>
         public async Task CheckNodeImagesAsync()
         {
-            var connString = await GetConnectionStringAsync(KubeConst.NeonKubeKvDatabase);
+            var connString = await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase);
 
             await using (NpgsqlConnection conn = new NpgsqlConnection(connString))
             {
@@ -640,7 +640,7 @@ namespace NeonKubeKv
 
         private async Task UpdateStatusAsync(string status)
         {
-            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonKubeKvDatabase));
+            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase));
             {
                 await conn.OpenAsync();
                 await using (var cmd = new NpgsqlCommand($@"
