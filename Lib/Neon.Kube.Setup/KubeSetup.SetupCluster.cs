@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -47,6 +48,49 @@ namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
+        private static IStaticDirectory cachedClusterDefinitions = null;
+
+        /// <summary>
+        /// Returns the cluster definition required to prepare a ready-to-go cluster for 
+        /// a specific hosting environment.
+        /// </summary>
+        /// <param name="hostEnvironment">Specifies the target environment.</param>
+        /// <returns>The cluster definition.</returns>
+        /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
+        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment)
+        {
+            // $todo(jefflill):
+            //
+            // We'll need to flesh this out as we support ready-to-go for more hosting environments.
+
+            if (cachedClusterDefinitions == null)
+            {
+                cachedClusterDefinitions = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.ClusterDefinitions");
+            }
+
+            switch (hostEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
+
+                    return ClusterDefinition.FromYaml(cachedClusterDefinitions.GetFile("/neon-desktop.hyperv.cluster.yaml").ReadAllText(), strict: true);
+
+                case HostingEnvironment.Wsl2:
+
+                    return ClusterDefinition.FromYaml(cachedClusterDefinitions.GetFile("/neon-desktop.wsl2.cluster.yaml").ReadAllText(), strict: true);
+
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.BareMetal:
+                case HostingEnvironment.Google:
+                case HostingEnvironment.XenServer:
+
+                default:
+
+                    throw new NotSupportedException($"Ready-To-Go is not yet supported for [{hostEnvironment}].");
+            }
+        }
+
         /// <summary>
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>

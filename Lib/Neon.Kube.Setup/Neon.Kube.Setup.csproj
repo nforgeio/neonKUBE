@@ -50,6 +50,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <None Remove="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />

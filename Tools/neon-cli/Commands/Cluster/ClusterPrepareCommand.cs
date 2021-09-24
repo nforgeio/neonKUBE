@@ -209,7 +209,7 @@ Server Requirements:
                 // This special-case argument indicates that we should use the built-in 
                 // WSL2 cluster definition.
 
-                clusterDefinition = KubeSetup.GetLocalWsl2ClusterDefintion();
+                clusterDefinition = KubeSetup.GetReadyToGoClusterDefinition(HostingEnvironment.Wsl2);
             }
             else
             {

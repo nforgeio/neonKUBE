@@ -198,7 +198,7 @@ namespace Neon.Kube
 
                     // If the cluster is being deployed to the internal [neonkube] switch, we need to
                     // check to see whether the switch already exists, and if it does, we'll need to
-                    // ensure that it's configureed correctly with a virtual address and NAT.  We're
+                    // ensure that it's configured correctly with a virtual address and NAT.  We're
                     // going to fail setup when an existing switch isn't configured correctly.
 
                     if (cluster.Definition.Hosting.HyperVLocal.UseInternalSwitch)

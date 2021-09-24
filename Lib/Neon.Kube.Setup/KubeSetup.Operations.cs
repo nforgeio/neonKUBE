@@ -3287,30 +3287,5 @@ $@"- name: StorageType
 
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
         }
-
-        /// <summary>
-        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
-        /// </summary>
-        /// <returns>The cluster definition text.</returns>
-        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
-        {
-            var yaml =
-@"
-name: neon-desktop
-datacenter: wsl2
-environment: development
-timeSources:
-- pool.ntp.org
-allowUnitTesting: true
-kubernetes:
-  allowPodsOnMasters: true
-hosting:
-  environment: wsl2
-nodes:
-  master:
-    role: master
-";
-            return ClusterDefinition.FromYaml(yaml);
-        }
     }
 }
