@@ -88,6 +88,7 @@ namespace Neon.Kube
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
+        private static string               cachedReadyToGoImageFolder;
         private static string               cachedAutomationFolder;
         private static string               cacheDashboardStateFolder;
 
@@ -138,6 +139,7 @@ namespace Neon.Kube
             cachedPwshPath            = null;
             cachedResources           = null;
             cachedNodeImageFolder     = null;
+            cachedReadyToGoImageFolder      = null;
             cachedAutomationFolder    = null;
             cacheDashboardStateFolder = null;
         }
@@ -858,6 +860,29 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedNodeImageFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the current user's cluster virtual machine 
+        /// <b>ready-to-go</b> node image cache, creating the directory if 
+        /// it doesn't already exist.
+        /// </summary>
+        /// <returns>The path to the cluster setup folder.</returns>
+        public static string ReadyToGoImageFolder
+        {
+            get
+            {
+                if (cachedReadyToGoImageFolder != null)
+                {
+                    return cachedReadyToGoImageFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "ready-to-go-images");
+
+                Directory.CreateDirectory(path);
+
+                return cachedReadyToGoImageFolder = path;
             }
         }
 

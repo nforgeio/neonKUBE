@@ -628,12 +628,5 @@ namespace Neon.Kube
                 }
             }
         }
-
-        /// <summary>
-        /// Perform any necessary global post Hyper-V provisioning steps.
-        /// </summary>
-        private void Finish()
-        {
-        }
     }
 }
