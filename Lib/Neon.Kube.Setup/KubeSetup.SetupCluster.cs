@@ -48,8 +48,6 @@ namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
-        private static IStaticDirectory cachedClusterDefinitions = null;
-
         /// <summary>
         /// Returns the cluster definition required to prepare a ready-to-go cluster for 
         /// a specific hosting environment.
@@ -63,21 +61,20 @@ namespace Neon.Kube
             //
             // We'll need to flesh this out as we support ready-to-go for more hosting environments.
 
-            if (cachedClusterDefinitions == null)
-            {
-                cachedClusterDefinitions = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.ClusterDefinitions");
-            }
+            var resourceName = "Neon.Kube.ClusterDefinitions.";
 
             switch (hostEnvironment)
             {
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
 
-                    return ClusterDefinition.FromYaml(cachedClusterDefinitions.GetFile("/neon-desktop.hyperv.cluster.yaml").ReadAllText(), strict: true);
+                    resourceName += "neon-desktop.hyperv.cluster.yaml";
+                    break;
 
                 case HostingEnvironment.Wsl2:
 
-                    return ClusterDefinition.FromYaml(cachedClusterDefinitions.GetFile("/neon-desktop.wsl2.cluster.yaml").ReadAllText(), strict: true);
+                    resourceName += "neon-desktop.wsl2.cluster.yaml";
+                    break;
 
                 case HostingEnvironment.Aws:
                 case HostingEnvironment.Azure:
@@ -88,6 +85,14 @@ namespace Neon.Kube
                 default:
 
                     throw new NotSupportedException($"Ready-To-Go is not yet supported for [{hostEnvironment}].");
+            }
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            {
+                using (var reader = new StreamReader(stream, encoding: Encoding.UTF8))
+                {
+                    return ClusterDefinition.FromYaml(reader.ReadToEnd());
+                }
             }
         }
 
