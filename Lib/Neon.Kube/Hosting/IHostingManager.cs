@@ -182,7 +182,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 
-        /// name when an unitialized data disk exists or "PRIMARY" when the  OS disk
+        /// name when an uninitialized data disk exists or "PRIMARY" when the  OS disk
         /// will be used for data.
         /// </summary>
         /// <returns>The disk device name or "PRIMARY".</returns>
@@ -192,5 +192,49 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
+
+        /// <summary>
+        /// <para>
+        /// Starts a cluster if it's not already running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Shuts down a cluster if it's running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Removes an existing cluster by terminating any nodes and then removing node VMs
+        /// and any related resources.  The cluster does not need to be running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
     }
 }
