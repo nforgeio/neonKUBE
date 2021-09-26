@@ -768,5 +768,50 @@ namespace Neon.Kube
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public override async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+            Validate(clusterDefinition);
+
+            if (!clusterDefinition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            {
+                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster definition.");
+            }
+
+            using (var hyperv = new HyperVClient())
+            {
+                var vmName = GetVmName(nodeDefinition);
+                var vm     = hyperv.GetVm(vmName);
+
+                if (vm == null)
+                {
+                    throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
+                }
+
+                if (vm.State != VirtualMachineState.Off)
+                {
+                    throw new InvalidOperationException($"Node [{nodeName}] current state is [{vm.State}].  The node must be stopped first.");
+                }
+
+                var drives = hyperv.GetVmDrives(vmName);
+
+                if (drives.Count != 1)
+                {
+                    throw new InvalidOperationException($"Node [{nodeName}] has [{drives.Count}] drives.  Only nodes with a single drive are supported.");
+                }
+
+                var sourceImagePath = drives.Single();
+                var targetImagePath = Path.GetFullPath(Path.Combine(folder, $"{nodeName}.vhdx"));
+
+                File.Copy(sourceImagePath, targetImagePath);
+                hyperv.CompactDrive(targetImagePath);
+
+                return await Task.FromResult(targetImagePath);
+            }
+        }
     }
 }

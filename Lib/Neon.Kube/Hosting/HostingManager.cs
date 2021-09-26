@@ -303,5 +303,16 @@ namespace Neon.Kube
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
+
+        /// <inheritdoc/>
+        public virtual async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
     }
 }

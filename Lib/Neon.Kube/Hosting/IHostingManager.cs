@@ -236,5 +236,26 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
+        /// must already be stopped.  The node image file will look like <b>NODE-NAME.EXTENSION</b>
+        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
+        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
+        /// XenServer or <b>.tar</b> for WSL2).
+        /// </para>
+        /// <note>
+        /// This works only for nodes deployed with a single drive and is not supported at all
+        /// for some environments (like <see cref="HostingEnvironment.BareMetal"/>).
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeName">Identifies the node being captured.</param>
+        /// <param name="folder">Path to the output folder.</param>
+        /// <returns>The fully qualified path to the downloaded file.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
+        Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder);
     }
 }
