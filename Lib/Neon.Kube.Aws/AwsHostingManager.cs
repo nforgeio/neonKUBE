@@ -1069,6 +1069,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.Aws)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Aws}].");
+            }
+
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Aws.AccessKeyId))
             {
                 throw new ClusterDefinitionException($"{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AccessKeyId)}] must be specified for AWS clusters.");

@@ -878,6 +878,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.Azure)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Azure}].");
+            }
+
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.AppId))
             {
                 throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.AppId)}] must be specified for Azure clusters.");
