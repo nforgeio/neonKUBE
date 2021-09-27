@@ -91,7 +91,11 @@ namespace Neon.Kube
             {
                 using (var reader = new StreamReader(stream, encoding: Encoding.UTF8))
                 {
-                    return ClusterDefinition.FromYaml(reader.ReadToEnd());
+                    var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
+
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 0, "Ready-to-go cluster definitions must include only one node.");
+
+                    return clusterDefinition;
                 }
             }
         }
