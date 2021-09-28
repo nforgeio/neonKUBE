@@ -708,6 +708,16 @@ namespace Neon.Kube
                     return false;
                 }
 
+                ProgressEvent?.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        IsError       = false,
+                        CancelPending = false,
+                        Node          = null,
+                        Verb          = $"step {step.Number}",
+                        Text          = step.Label
+                    });
+
                 LogGlobal($"");
                 LogGlobal($"===============================================================================");
                 LogGlobal($"STEP {step.Number}: {step.Label}");
@@ -1269,7 +1279,7 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(Path.GetDirectoryName(globalLogPath));
 
-            globalLogWriter = new StreamWriter(globalLogPath);
+            globalLogWriter = new StreamWriter(new FileStream(globalLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
 
             // Start the step execution thread.
 

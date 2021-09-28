@@ -89,7 +89,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
 
             if (readyToGoMode == ReadyToGoMode.Prepare)
             {

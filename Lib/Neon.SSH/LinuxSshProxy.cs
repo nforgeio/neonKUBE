@@ -276,9 +276,14 @@ namespace Neon.SSH
         }
 
         /// <summary>
+        /// <para>
         /// Returns a clone of the SSH proxy.  This can be useful for situations where you
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
+        /// </para>
+        /// <note>
+        /// This does not clone any attached log writer.
+        /// </note>
         /// </summary>
         /// <returns>The cloned <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
         public LinuxSshProxy Clone()

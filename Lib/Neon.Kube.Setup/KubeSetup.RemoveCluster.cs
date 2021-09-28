@@ -92,7 +92,14 @@ namespace Neon.Kube
                 clusterDefinition:  clusterLogin.ClusterDefinition,
                 nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
-                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
+                    var logStream = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    if (appendToLog)
+                    {
+                        logStream.Seek(0, SeekOrigin.End);
+                    }
+
+                    var logWriter      = new StreamWriter(logStream);
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);

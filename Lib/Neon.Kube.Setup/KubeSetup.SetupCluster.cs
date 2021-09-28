@@ -93,7 +93,8 @@ namespace Neon.Kube
                 {
                     var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
 
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 0, "Ready-to-go cluster definitions must include only one node.");
+                    clusterDefinition.Validate();
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
 
                     return clusterDefinition;
                 }
@@ -173,7 +174,14 @@ namespace Neon.Kube
                 clusterDefinition:  clusterDefinition,
                 nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
-                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
+                    var logStream = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    if (appendToLog)
+                    {
+                        logStream.Seek(0, SeekOrigin.End);
+                    }
+
+                    var logWriter      = new StreamWriter(logStream);
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
