@@ -43,6 +43,7 @@ namespace NeonSetupHarbor
         public const string StateTable = "state";
      
         private static Kubernetes k8s;
+        private static KubeKV kubeKV;
 
         /// <summary>
         /// Constructor.
@@ -53,6 +54,7 @@ namespace NeonSetupHarbor
             : base(name, serviceMap: serviceMap)
         {
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            kubeKV = new KubeKV();
         }
 
         /// <inheritdoc/>
@@ -94,7 +96,7 @@ namespace NeonSetupHarbor
         {
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Configuring for Harbor.");
 
-            await UpdateStatusAsync("in-progress");
+            await kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorJobHarborSetup, "in-progress");
 
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
@@ -153,7 +155,7 @@ namespace NeonSetupHarbor
                 await minio.MakeBucketAsync("harbor");
             }
 
-            await UpdateStatusAsync("complete");
+            await kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorJobHarborSetup, "complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Harbor.");
         }
@@ -243,28 +245,6 @@ namespace NeonSetupHarbor
             catch (Exception e)
             {
                 Log.LogError(e);
-            }
-        }
-
-        private async Task UpdateStatusAsync(string status)
-        {
-            await using var conn = new NpgsqlConnection(await GetConnectionStringAsync(KubeConst.NeonClusterOperatorDatabase));
-            {
-                await conn.OpenAsync();
-                await using (var cmd = new NpgsqlCommand($@"
-INSERT
-    INTO
-    {StateTable} (KEY, value)
-VALUES (@k, @v) ON
-CONFLICT (KEY) DO
-UPDATE
-SET
-    value = @v", conn))
-                {
-                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
-                    cmd.Parameters.AddWithValue("v", status);
-                    await cmd.ExecuteNonQueryAsync();
-                }
             }
         }
 

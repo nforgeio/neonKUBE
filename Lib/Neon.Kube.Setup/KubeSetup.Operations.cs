@@ -298,6 +298,8 @@ spec:
             // This method should accept a list of KeyValuePair<string, string> values
             // the specify the initial keys to be persisted to the database.
 
+            await InstallClusterApiAsync(controller, master);
+
             var defaultKVs = new List<KeyValuePair<string, object>>()
             {
                 new KeyValuePair<string, object>(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, readyToGoMode == ReadyToGoMode.Setup)
@@ -2884,6 +2886,40 @@ $@"- name: StorageType
         }
 
         /// <summary>
+        /// Installs the Neon Cluster API.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallClusterApiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            await master.InvokeIdempotentAsync("setup/cluster-api-service",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-cluster-api");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+
+                    await master.InstallHelmChartAsync(controller, "neon_cluster_api", releaseName: "neon-cluster-api", @namespace: KubeNamespaces.NeonSystem, values: values);
+                });
+
+            await master.InvokeIdempotentAsync("setup/cluster-api-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-api");
+
+                    await WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "neon-cluster-api");
+                });
+        }
+
+        /// <summary>
         /// Installs the Neon Cluster Operator.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2902,7 +2938,7 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "setup", message: "neon-cluster-operator");
 
                     var values = new Dictionary<string, object>();
-                    
+
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
                     await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);

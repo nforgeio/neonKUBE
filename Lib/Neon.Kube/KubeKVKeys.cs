@@ -48,5 +48,23 @@ namespace Neon.Kube
         /// This defaults to <c>false</c>.
         /// </summary>
         public const string NeonClusterOperatorDisableHarborImageSync = "neon.cluster-operator.disable-harbor-image-sync";
+
+        /// <summary>
+        /// <b>string:</b> The datetime of the last time that container images were synced.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        public const string NeonClusterOperatorLastHarborImageSync = "neon.cluster-operator.last-harbor-image-sync";
+
+        /// <summary>
+        /// <b>string:</b> The state of the Harbor setup job.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        public const string NeonClusterOperatorJobHarborSetup = "neon.cluster-operator.job.harbor-setup";
+
+        /// <summary>
+        /// <b>string:</b> The state of the Grafana setup job.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        public const string NeonClusterOperatorJobGrafanaSetup = "neon.cluster-operator.job.grafana-setup";
     }
 }
