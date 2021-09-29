@@ -4,7 +4,7 @@
 # CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
-# Builds the Neon [neon-kubekv-service] image.
+# Builds the Neon [neon-cluster-api] image.
 #
 # USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
 
@@ -14,7 +14,7 @@ param
 	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
-$appname      = "neon-kubekv-service"
+$appname      = "neon-cluster-api"
 $organization = KubeSetupRegistryOrg
 
 # Copy the common scripts.

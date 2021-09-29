@@ -10,4 +10,4 @@ PATH=${PATH}:/
 
 # Launch the service.
 
-exec neon-kubekv-service
+exec neon-cluster-api

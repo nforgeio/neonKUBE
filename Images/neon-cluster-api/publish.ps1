@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neon-kubekv-service images and pushes them to Docker Hub.
+# Builds the neon-cluster-api images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeSetupRegistry "neon-kubekv-service"
+	$registry    = GetKubeSetupRegistry "neon-cluster-api"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 
