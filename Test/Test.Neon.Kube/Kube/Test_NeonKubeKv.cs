@@ -87,7 +87,7 @@ namespace TestKube
             this.citusFixture = (DockerFixture)composedFixture[NeonServices.NeonSystemDb];
             this.NeonClusterApiFixture = (NeonServiceFixture<NeonClusterApi.Service>)composedFixture[NeonServices.NeonClusterApiService];
 
-            client = new KubeKV();
+            client = new KubeKV(serviceMap);
         }
 
         /// <summary>
@@ -248,6 +248,9 @@ namespace TestKube
 
             var result = await client.GetAsync<int>(key, 101);
             Assert.Equal(101, result);
+
+            var nullResult = await client.GetAsync<string>(key, null);
+            Assert.Null(nullResult);
 
             var value = 1;
 
