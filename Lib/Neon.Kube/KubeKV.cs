@@ -133,7 +133,7 @@ namespace Neon.Kube
         private void CheckKey(string key, bool allowPattern = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(key), nameof(key));
-            Covenant.Requires<ArgumentException>(key.Length > maxKeyLength, nameof(key), $"Key is exceeds [{maxKeyLength}] characters.");
+            Covenant.Requires<ArgumentException>(key.Length <= maxKeyLength, nameof(key), $"Key is exceeds [{maxKeyLength}] characters.");
             Covenant.Requires<ArgumentException>(!allowPattern && key.IndexOfAny(wildcards) == -1, nameof(key), "Key may not include wildcards: [*] or [?].");
         }
 

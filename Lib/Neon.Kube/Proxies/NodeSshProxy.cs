@@ -287,14 +287,14 @@ namespace Neon.Kube
         private ConnectionInfo GetConnectionInfo()
         {
             var address = string.Empty;
-            var port = SshPort;
+            var port    = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
                 var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
-                port = ep.Port;
+                port    = ep.Port;
             }
             else
             {
@@ -406,7 +406,7 @@ namespace Neon.Kube
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId = actionId.Substring(slashPos + 1);
+                actionId    = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }

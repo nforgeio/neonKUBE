@@ -1602,8 +1602,8 @@ rm {HostFolders.Home(Username)}/askpass
                 // SUDO password prompting is not disabled yet.
                 //
                 // We need to obtain the SSH password used to establish the current connection.  This means
-                // that SSH public key based credentials won't work for the first connection to a host.  We're 
-                // going use reflection to get the password from SSH.NET.
+                // that SSH public key based credentials won't work for the first connection to a host.
+                // We're going use reflection to get the password from SSH.NET.
 
                 var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
 
@@ -3474,10 +3474,17 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
+        /// <para>
         /// Returns an indication of whether the <b>neon-init</b> service has been executed
         /// on the remote machine.  This service is deployed to neonKUBE cluster nodes to
-        /// act as a poor-man's <b>cloud-init</b> to configure the network and credentials 
+        /// act as a poor-man's <b>cloud-init</b> used to configure the network and credentials 
         /// by mounting a virual ISO drive with a configuration script for non-cloud environments.
+        /// </para>
+        /// <note>
+        /// The <b>neon-init</b> service disables itself after running for the first time.
+        /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
+        /// the reenable this service when required.
+        /// </note>
         /// </summary>
         /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
         public bool GetNeonInitStatus()
@@ -3486,13 +3493,36 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Manually sets the <b>neon-init</b> service execution status.
+        /// <para>
+        /// Manually sets the <b>neon-init</b> service execution status. 
+        /// </para>
+        /// <para>
+        /// The <b>neon-init</b> service is deployed to neonKUBE cluster nodes to act
+        /// as a poor-man's <b>cloud-init</b> to configure the network and credentials 
+        /// by mounting a virual ISO drive with a configuration script for non-cloud 
+        /// environments.
+        /// </para>
+        /// <para>
+        /// Calling this with <c>true</c> will prevent the <b>neon-init</b> service from
+        /// looking for a mounted ISO on next boot and executing the special script  there.
+        /// Calling this with <c>false</c> will reenable the <b>neon-init</b> service
+        /// when the machine is rebooted.
+        /// </para>
+        /// <note>
+        /// The <b>neon-init</b> service disables itself after running for the first time.
+        /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
+        /// the reenable this service when required.
+        /// </note>
         /// </summary>
         /// <param name="initialized">
         /// Pass <c>true</c> to indicate that the <b>neon-init</b> service has been executed, 
         /// <c>false</c> to clear the status.
         /// </param>
-        public void SetNeonInitStatus(bool initialized)
+        /// <param name="keepNetworkSettings">
+        /// Optionally retains the static network settings when <paramref name="initialized"/> is
+        /// passed as <c>false</c>, otherwise the original (probably DHCP) settings will be restored.
+        /// </param>
+        public void SetNeonInitStatus(bool initialized, bool keepNetworkSettings = false)
         {
             if (initialized)
             {
@@ -3503,7 +3533,7 @@ touch /etc/neon-init/ready
 ";
                 SudoCommand(CommandBundle.FromScript(setScript));
             }
-            else
+            else if (!keepNetworkSettings)
             {
                 // We need to delete the [/etc/neon-init/ready] file and re-enable
                 // network DHCP by restoring the original network configuration

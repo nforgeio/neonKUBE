@@ -197,8 +197,6 @@ namespace Neon.Kube
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-                    controller.SetGlobalStepStatus("set: ssh password");
-
                     this.secureSshPassword = clusterLogin.SshPassword;
 
                     // If the cluster is being deployed to the internal [neonkube] switch, we need to

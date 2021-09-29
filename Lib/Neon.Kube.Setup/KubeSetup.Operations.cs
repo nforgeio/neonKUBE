@@ -312,7 +312,19 @@ spec:
             // we're not configuring a ready-to-go node image.
 
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-            // $note(jefflill):     This is some placeholder code.
+
+            // $note(jefflill):
+            //
+            // This is some placeholder code.  This assumes that we'd be able to 
+            // access the Citus database from outside the cluster somehow, which
+            // probably isn't going to work.
+            //
+            // Perhaps we'll need to implement some kind of service that allows
+            // us to execute commands within its main container.  Perhaps this
+            // could become a generic way to handle this.
+            //
+            // Idea: Perhaps we could deploy some custom commands within the 
+            //       cluster-operator for this.
 
             if (readyToGoMode != ReadyToGoMode.Setup)
             {

@@ -127,8 +127,8 @@ namespace Neon.Kube
         /// current neonDESKTOP state will not be impacted.
         /// </param>
         /// <param name="readyToGoMode">
-        /// Optionally creates a setup controller that prepares a ready-to-go image or completes the
-        /// cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
+        /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
+        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
