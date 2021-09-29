@@ -31,6 +31,17 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            - name: CITUS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-citus-postgresql-secret
+                  key: superuser-username
+            - name: CITUS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-citus-postgresql-secret
+                  key: superuser-password
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

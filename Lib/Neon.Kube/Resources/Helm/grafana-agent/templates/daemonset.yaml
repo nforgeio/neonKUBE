@@ -15,8 +15,12 @@ spec:
       labels:
         name: grafana-agent-node
     spec:
+      hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - args:
+      - name: agent
+        args:
         - -config.file=/etc/agent/agent.yml
         - -config.expand-env=true
         - -prometheus.wal-directory=/tmp/agent/data
@@ -40,10 +44,6 @@ spec:
               fieldPath: status.hostIP
         image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
         imagePullPolicy: IfNotPresent
-        name: agent
-        hostPID: true
-        hostNetwork: true
-        dnsPolicy: ClusterFirstWithHostNet
         ports:
         - containerPort: 80
           name: http-metrics

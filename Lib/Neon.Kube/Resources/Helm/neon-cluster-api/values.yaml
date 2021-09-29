@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  organization: neon-registry.node.local
+  organization: ghcr.io/neonkube-dev
   repository: neon-cluster-api
   tag: neonkube-0.1.0-alpha
   pullPolicy: IfNotPresent

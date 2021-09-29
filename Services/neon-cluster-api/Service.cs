@@ -109,7 +109,11 @@ namespace NeonClusterApi
             var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Host;
             var dbPort = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Port;
 
-            return await Task.FromResult($"Host={dbHost};Username={username};Password={password};Database={database};Port={dbPort}");
+            var connectionString = $"Host={dbHost};Username={username};Password={password};Database={database};Port={dbPort}";
+
+            Log.LogDebug($"Connection string: [{connectionString.Replace(password, "REDACTED")}]");
+
+            return await Task.FromResult(connectionString);
         }
 
         /// <summary>

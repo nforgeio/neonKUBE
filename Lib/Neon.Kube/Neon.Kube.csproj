@@ -554,6 +554,7 @@
     <None Remove="Resources\Helm\neon-cluster-api\Chart.yaml" />
     <None Remove="Resources\Helm\neon-cluster-api\templates\authorizationpolicy.yaml" />
     <None Remove="Resources\Helm\neon-cluster-api\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\neon-cluster-api\templates\service.yaml" />
     <None Remove="Resources\Helm\neon-cluster-api\templates\serviceaccount.yaml" />
     <None Remove="Resources\Helm\neon-cluster-api\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\neon-cluster-api\values.yaml" />
@@ -1157,6 +1158,7 @@
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\templates\authorizationpolicy.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\neon-cluster-api\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\templates\serviceaccount.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-api\values.yaml" />

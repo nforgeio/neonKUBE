@@ -312,19 +312,7 @@ spec:
             // we're not configuring a ready-to-go node image.
 
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-
-            // $note(jefflill):
-            //
-            // This is some placeholder code.  This assumes that we'd be able to 
-            // access the Citus database from outside the cluster somehow, which
-            // probably isn't going to work.
-            //
-            // Perhaps we'll need to implement some kind of service that allows
-            // us to execute commands within its main container.  Perhaps this
-            // could become a generic way to handle this.
-            //
-            // Idea: Perhaps we could deploy some custom commands within the 
-            //       cluster-operator for this.
+            // $note(jefflill):     This is some placeholder code.
 
             if (readyToGoMode != ReadyToGoMode.Setup)
             {
@@ -3298,6 +3286,31 @@ $@"- name: StorageType
             }
 
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+        }
+
+        /// <summary>
+        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
+        /// </summary>
+        /// <returns>The cluster definition text.</returns>
+        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
+        {
+            var yaml =
+@"
+name: neon-desktop
+datacenter: wsl2
+environment: development
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: wsl2
+nodes:
+  master:
+    role: master
+";
+            return ClusterDefinition.FromYaml(yaml);
         }
     }
 }

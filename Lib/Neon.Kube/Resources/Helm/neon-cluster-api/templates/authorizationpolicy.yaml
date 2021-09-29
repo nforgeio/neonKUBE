@@ -11,4 +11,4 @@ spec:
   rules:
   - from:
     - source:
-        principals: {{- printf "cluster.local/ns/%s/sa/%s" {{ .Release.Namespace }} "neon-cluster-operator" -}}
+        principals: [{{- printf "cluster.local/ns/%s/sa/%s" .Release.Namespace "neon-cluster-operator" -}}]

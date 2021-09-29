@@ -63,10 +63,6 @@ namespace NeonClusterApi
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var secret = service.k8s.ReadNamespacedSecret(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
-            var username = Encoding.UTF8.GetString(secret.Data["username"]);
-            var password = Encoding.UTF8.GetString(secret.Data["password"]);
-
             services
                 .AddMvc(options => {
                     options.OutputFormatters.RemoveType<StringOutputFormatter>();
