@@ -27,7 +27,7 @@ using k8s.Models;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
-
+using Neon.Service;
 using Npgsql;
 
 namespace Neon.Kube
@@ -68,13 +68,18 @@ namespace Neon.Kube
         private JsonClient          jsonClient = null;
         private string              dbConnectionString = null;
         private string              stateTable = null;
+        private ServiceMap          serviceMap = null;
+
         /// <summary>
         /// Default constructor.  Use this to access the KV store via a REST API.
         /// </summary>
-        public KubeKV()
+        /// <param name="serviceMap"></param>
+        public KubeKV(ServiceMap serviceMap)
         {
+            this.serviceMap = serviceMap;
+
             jsonClient = new JsonClient();
-            jsonClient.HttpClient.BaseAddress = new Uri("http://127.0.0.10:1234");
+            jsonClient.HttpClient.BaseAddress = serviceMap[NeonServices.NeonClusterApiService].Endpoints.Default.FullUri;
         }
 
         /// <summary>

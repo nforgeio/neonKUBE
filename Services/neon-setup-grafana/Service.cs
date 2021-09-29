@@ -44,6 +44,7 @@ namespace NeonSetupGrafana
 
         private static Kubernetes k8s;
         private static KubeKV kubeKV;
+        private static MinioClient minio;
 
         /// <summary>
         /// Constructor.
@@ -54,7 +55,7 @@ namespace NeonSetupGrafana
             : base(name, serviceMap: serviceMap)
         {
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-            kubeKV = new KubeKV();
+            kubeKV = new KubeKV(serviceMap);
         }
 
         /// <inheritdoc/>
@@ -87,9 +88,14 @@ namespace NeonSetupGrafana
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.FullUri;
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Host;
+            var dbPort = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Port;
 
-            return $"Host={dbHost};Username={username};Password={password};Database={database}";
+            var connectionString = $"Host={dbHost};Username={username};Password={password};Database={database};Port={dbPort}";
+
+            Log.LogDebug($"Connection string: [{connectionString.Replace(password, "REDACTED")}]");
+
+            return await Task.FromResult(connectionString);
         }
 
         /// <summary>
@@ -112,25 +118,30 @@ namespace NeonSetupGrafana
             var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
             var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
 
-            var minio = new MinioClient(endpoint, accessKey, secretKey);
+            minio = new MinioClient(endpoint, accessKey, secretKey);
 
             var buckets = await minio.ListBucketsAsync();
-            if (!await minio.BucketExistsAsync("loki"))
-            {
-                await minio.MakeBucketAsync("loki");
-            }
-            if (!await minio.BucketExistsAsync("cortex"))
-            {
-                await minio.MakeBucketAsync("cortex");
-            }
-            if (!await minio.BucketExistsAsync("tempo"))
-            {
-                await minio.MakeBucketAsync("tempo");
-            }
+
+            await CreateBucketAsync("loki");
+            await CreateBucketAsync("cortex");
+            await CreateBucketAsync("tempo");
 
             await kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup, "complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Grafana.");
+        }
+
+        public async Task CreateBucketAsync(string bucketName)
+        {
+            if (!await minio.BucketExistsAsync(bucketName))
+            {
+                await minio.MakeBucketAsync(bucketName);
+            }
+
+            if (!await minio.BucketExistsAsync(bucketName))
+            {
+                throw new Exception("Failed to create bucket.");
+            }
         }
 
         /// <summary>
@@ -218,6 +229,8 @@ namespace NeonSetupGrafana
             catch (Exception e)
             {
                 Log.LogError(e);
+
+                throw e;
             }
         }
     }

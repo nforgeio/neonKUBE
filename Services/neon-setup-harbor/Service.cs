@@ -54,7 +54,7 @@ namespace NeonSetupHarbor
             : base(name, serviceMap: serviceMap)
         {
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-            kubeKV = new KubeKV();
+            kubeKV = new KubeKV(serviceMap);
         }
 
         /// <inheritdoc/>
@@ -87,9 +87,14 @@ namespace NeonSetupHarbor
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = $"neon-system-db.{KubeNamespaces.NeonSystem}";
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Host;
+            var dbPort = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Port;
 
-            return $"Host={dbHost};Username={username};Password={password};Database={database}";
+            var connectionString = $"Host={dbHost};Username={username};Password={password};Database={database};Port={dbPort}";
+
+            Log.LogDebug($"Connection string: [{connectionString.Replace(password, "REDACTED")}]");
+
+            return await Task.FromResult(connectionString);
         }
 
         private async Task SetupHarborAsync()
@@ -245,6 +250,8 @@ namespace NeonSetupHarbor
             catch (Exception e)
             {
                 Log.LogError(e);
+
+                throw e;
             }
         }
 

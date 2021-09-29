@@ -66,7 +66,7 @@ namespace NeonClusterOperator
                 maxRetryInterval: TimeSpan.FromSeconds(10),
                 timeout: TimeSpan.FromMinutes(5));
 
-            kubeKv = new KubeKV();
+            kubeKv = new KubeKV(serviceMap);
         }
 
         /// <inheritdoc/>
@@ -102,7 +102,7 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task SetupGrafanaAsync()
         {
-            var grafanaState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup);
+            var grafanaState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup, null);
 
             if (grafanaState != "complete")
             {
@@ -134,7 +134,8 @@ namespace NeonClusterOperator
                                                     new V1Container()
                                                     {
                                                         Name  = KubeConst.NeonJobSetupGrafana,
-                                                        Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-grafana:neonkube-{KubeConst.NeonKubeVersion}"
+                                                        Image = $"{KubeConst.NeonKubeDevRegistry}/neon-setup-grafana:neonkube-{KubeConst.NeonKubeVersion}",
+                                                        ImagePullPolicy = "Always"
                                                     },
                                         },
                                         RestartPolicy = "OnFailure",
@@ -170,7 +171,7 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task SetupHarborAsync()
         {
-            var harborState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobHarborSetup);
+            var harborState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobHarborSetup, null);
 
             if (harborState != "complete")
             {
@@ -202,7 +203,8 @@ namespace NeonClusterOperator
                                             new V1Container()
                                             {
                                                 Name  = KubeConst.NeonJobSetupHarbor,
-                                                Image = $"{KubeConst.LocalClusterRegistry}/neon-setup-harbor:neonkube-{KubeConst.NeonKubeVersion}"
+                                                Image = $"{KubeConst.NeonKubeDevRegistry}/neon-setup-harbor:neonkube-{KubeConst.NeonKubeVersion}",
+                                                ImagePullPolicy = "Always"
                                             },
                                         },
                                         RestartPolicy      = "OnFailure",
@@ -239,7 +241,7 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task CheckNodeImagesAsync()
         {
-            var lastChecked = await kubeKv.GetAsync<string>(KubeConst.ClusterImagesLastChecked);
+            var lastChecked = await kubeKv.GetAsync<string>(KubeConst.ClusterImagesLastChecked, null);
 
             if (lastChecked != null && DateTime.Parse(lastChecked) > DateTime.UtcNow.AddMinutes(-60))
             {
