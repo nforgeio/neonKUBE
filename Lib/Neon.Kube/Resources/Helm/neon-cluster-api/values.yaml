@@ -1,4 +1,4 @@
-# Default values for neon-kubekv-service.
+# Default values for neon-cluster-api.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   organization: neon-registry.node.local
-  repository: neon-kubekv-service
+  repository: neon-cluster-api
   tag: neonkube-0.1.0-alpha
   pullPolicy: IfNotPresent
 

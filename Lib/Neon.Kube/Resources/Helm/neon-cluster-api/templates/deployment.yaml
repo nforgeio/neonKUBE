@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "neon-kubekv-service.fullname" . }}
+  name: {{ include "neon-cluster-api.fullname" . }}
   labels:
-    app: {{ include "neon-kubekv-service.name" . }}
-    helm.sh/chart: {{ include "neon-kubekv-service.chart" . }}
+    app: {{ include "neon-cluster-api.name" . }}
+    helm.sh/chart: {{ include "neon-cluster-api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -12,17 +12,17 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "neon-kubekv-service.name" . }}
+      app: {{ include "neon-cluster-api.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "neon-kubekv-service.name" . }}
+        app: {{ include "neon-cluster-api.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         readiness.status.sidecar.istio.io/applicationPorts: ""
     spec:
-      serviceAccount: {{ include "neon-kubekv-service.name" . }}
+      serviceAccount: {{ include "neon-cluster-api.name" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
