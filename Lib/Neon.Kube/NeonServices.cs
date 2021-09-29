@@ -30,7 +30,7 @@ namespace Neon.Kube
         /// <summary>
         /// Key value service.
         /// </summary>
-        public const string NeonKubeKvService = "neon-kubekv-service";
+        public const string NeonClusterApiService = "neon-cluster-api";
 
         /// <summary>
         /// Neon identity service, AKA a Secure Token Service (STS).

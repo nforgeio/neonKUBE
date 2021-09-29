@@ -16,7 +16,7 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 
-namespace NeonKubeKv
+namespace NeonClusterApi
 {
     /// <summary>
     /// The Neon cluster initialization operator.
@@ -35,9 +35,9 @@ namespace NeonKubeKv
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonKubeKv.Resources");
+            Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterApi.Resources");
 
-            await new Service(NeonServices.NeonKubeKvService, serviceMap: NeonServiceMap.Production).RunAsync();
+            await new Service(NeonServices.NeonClusterApiService, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }
 }

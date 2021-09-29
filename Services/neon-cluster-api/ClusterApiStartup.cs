@@ -16,15 +16,20 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Neon.Common;
+using Neon.Data;
 using Neon.Kube;
 using Neon.Retry;
+using Neon.Web;
 
 using k8s;
 
 using Npgsql;
-using Neon.Web;
 
-namespace NeonKubeKv
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc.Formatters;
+
+namespace NeonClusterApi
 {
     /// <summary>
     /// Handles ASP.NET related service configuration.
@@ -58,18 +63,16 @@ namespace NeonKubeKv
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-
             var secret = service.k8s.ReadNamespacedSecret(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = service.ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri;;
-
-            service.DbConnectionString = $"Host={dbHost};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
-
             services
-                .AddMvc()
-                .AddNeon();
+                .AddMvc(options => {
+                    options.OutputFormatters.RemoveType<StringOutputFormatter>();
+                })
+                .AddNeon()
+                .AddNewtonsoftJson();
         }
 
         /// <summary>

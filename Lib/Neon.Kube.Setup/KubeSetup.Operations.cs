@@ -316,7 +316,7 @@ spec:
 
             if (readyToGoMode != ReadyToGoMode.Setup)
             {
-                using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**"))
+                using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**", ""))
                 {
                     kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, false).Wait();
                 }
@@ -1764,7 +1764,7 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "deploy", message: "openebs");
+                            controller.LogProgress(master, verb: "deploy", message: "openebs-base");
 
                             var values = new Dictionary<string, object>();
 
@@ -1796,7 +1796,7 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
                             {
-                                controller.LogProgress(master, verb: "deploy", message: "openebs cstor");
+                                controller.LogProgress(master, verb: "deploy", message: "openebs-cstor");
 
                                 var values = new Dictionary<string, object>();
 
@@ -1848,7 +1848,7 @@ spec:
                     if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
                         || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
-                        controller.LogProgress(master, verb: "deploy", message: "openebs pool");
+                        controller.LogProgress(master, verb: "deploy", message: "openebs-pool");
 
                         await master.InvokeIdempotentAsync("setup/openebs-pool",
                         async () =>

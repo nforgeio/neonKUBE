@@ -109,7 +109,7 @@ namespace NeonClusterOperator
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var dbHost = service.ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri;;
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri;;
 
             return $"Host={dbHost};Username={username};Password={password};Database={database}";
         }
@@ -557,7 +557,7 @@ namespace NeonClusterOperator
             var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
             var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
 
-            foreach (var image in ClusterMetadata.ClusterImages)
+            foreach (var image in clusterManifest.ContainerImages)
             {
                 if (nodeImages.Contains(image.InternalRef))
                 {

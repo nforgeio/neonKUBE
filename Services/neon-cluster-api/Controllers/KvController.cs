@@ -29,8 +29,11 @@ using Neon.Service;
 using Neon.Web;
 using Neon.Postgres;
 using Npgsql;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System.Runtime.Serialization;
 
-namespace NeonKubeKv
+namespace NeonClusterApi
 {
     [Route("v1/kv")]
     [ApiController]
@@ -40,10 +43,11 @@ namespace NeonKubeKv
         /// 
         /// </summary>
         private Service kubeKv;
-
+        private KubeKV kvClient;
         public KvController(Service kubeKv)
         {
             this.kubeKv = kubeKv;
+            this.kvClient = new KubeKV(kubeKv.DbConnectionString, kubeKv.StateTable);
         }
 
         /// <summary>
@@ -53,24 +57,7 @@ namespace NeonKubeKv
         [HttpPut("{key}")]
         public async Task SetAsync([FromRoute] string key, [FromBody] object value)
         {
-            await using var conn = new NpgsqlConnection(kubeKv.DbConnectionString);
-            {
-                await conn.OpenAsync();
-                await using (var cmd = new NpgsqlCommand($@"
-    INSERT
-        INTO
-        {kubeKv.StateTable} (KEY, value)
-    VALUES (@k, @v) ON
-    CONFLICT (KEY) DO
-    UPDATE
-    SET
-        value = @v", conn))
-                {
-                    cmd.Parameters.AddWithValue("k", key);
-                    cmd.Parameters.AddWithValue("v", value);
-                    await cmd.ExecuteNonQueryAsync();
-                }
-            }
+            await kvClient.SetAsync(key, value);
         }
 
         /// <summary>
@@ -78,16 +65,18 @@ namespace NeonKubeKv
         /// </summary>
         /// <returns></returns>
         [HttpGet("{key}")]
-        public async Task<ActionResult<object>> GetAsync([FromRoute] string key)
+        [Produces("application/json")]
+        public async Task<ActionResult<dynamic>> GetAsync([FromRoute] string key)
         {
-
-            await using var conn = new NpgsqlConnection(kubeKv.DbConnectionString);
+            try
             {
-                await conn.OpenAsync();
-                await using (NpgsqlCommand cmd = new NpgsqlCommand($"SELECT value FROM {kubeKv.StateTable} WHERE key='{key}'", conn))
-                {
-                    return await cmd.ExecuteScalarAsync();
-                }
+                return await kvClient.GetAsync<dynamic>(key);
+            }
+            catch (Exception e)
+            {
+                LogError(e);
+
+                return NotFound();
             }
         }
 
@@ -95,19 +84,21 @@ namespace NeonKubeKv
         ///  
         /// </summary>
         /// <returns></returns>
-        [HttpDelete("{key}")]
-        public async Task<ActionResult> RemoveAsync([FromRoute] string key)
+        [HttpDelete("{keyPattern}")]
+        public async Task<ActionResult> RemoveAsync([FromRoute] string keyPattern, [FromQuery] bool regex = false)
         {
+            await kvClient.RemoveAsync(keyPattern, regex);
+            return NoContent();
+        }
 
-            await using var conn = new NpgsqlConnection(kubeKv.DbConnectionString);
-            {
-                await conn.OpenAsync();
-                await using (NpgsqlCommand cmd = new NpgsqlCommand($"DELETE value FROM {kubeKv.StateTable} WHERE key='{key}'", conn))
-                {
-                    await cmd.ExecuteNonQueryAsync();
-                    return NoContent();
-                }
-            }
+        /// <summary>
+        ///  
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("")]
+        public async Task<ActionResult<Dictionary<string, object>>> ListAsync([FromQuery] string keyPattern)
+        {
+            return await kvClient.ListAsync<dynamic>(keyPattern);
         }
     }
 }
