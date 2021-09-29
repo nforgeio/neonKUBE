@@ -1,0 +1,13 @@
+name: neon-desktop
+datacenter: neondesktop
+environment: development
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: wsl2
+nodes:
+  neon-desktop:
+    role: master

@@ -88,6 +88,7 @@ namespace Neon.Kube
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
+        private static string               cachedReadyToGoImageFolder;
         private static string               cachedAutomationFolder;
         private static string               cacheDashboardStateFolder;
 
@@ -138,6 +139,7 @@ namespace Neon.Kube
             cachedPwshPath            = null;
             cachedResources           = null;
             cachedNodeImageFolder     = null;
+            cachedReadyToGoImageFolder      = null;
             cachedAutomationFolder    = null;
             cacheDashboardStateFolder = null;
         }
@@ -858,6 +860,29 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedNodeImageFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the current user's cluster virtual machine 
+        /// <b>ready-to-go</b> node image cache, creating the directory if 
+        /// it doesn't already exist.
+        /// </summary>
+        /// <returns>The path to the cluster setup folder.</returns>
+        public static string ReadyToGoImageFolder
+        {
+            get
+            {
+                if (cachedReadyToGoImageFolder != null)
+                {
+                    return cachedReadyToGoImageFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "ready-to-go-images");
+
+                Directory.CreateDirectory(path);
+
+                return cachedReadyToGoImageFolder = path;
             }
         }
 
@@ -1833,7 +1858,7 @@ public class ISOFile
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The node definition.</param>
-        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
+        /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1850,9 +1875,9 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            ClusterDefinition clusterDefinition,
-            NodeDefinition nodeDefinition,
-            string securePassword = null)
+            ClusterDefinition   clusterDefinition,
+            NodeDefinition      nodeDefinition,
+            string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
@@ -1864,7 +1889,7 @@ public class ISOFile
                 subnet:         clusterNetwork.PremiseSubnet,
                 gateway:        clusterNetwork.Gateway,
                 nameServers:    clusterNetwork.Nameservers,
-                securePassword: securePassword);
+                newPassword:    newPassword);
         }
 
         /// <summary>
@@ -1883,7 +1908,7 @@ public class ISOFile
         /// <param name="subnet">The network subnet to be configured.</param>
         /// <param name="gateway">The network gateway to be configured.</param>
         /// <param name="nameServers">The nameserver addresses to be configured.</param>
-        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
+        /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1904,7 +1929,7 @@ public class ISOFile
             string              subnet,
             string              gateway,
             IEnumerable<string> nameServers,
-            string              securePassword = null)
+            string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
@@ -1929,10 +1954,12 @@ $@"
 # that there will be no time when bad guys can SSH into the node using the insecure
 # password.
 
-echo 'sysadmin:{securePassword}' | chpasswd
+echo 'sysadmin:{newPassword}' | chpasswd
 ";
-            if (String.IsNullOrWhiteSpace(securePassword))
+            if (String.IsNullOrWhiteSpace(newPassword))
             {
+                // Clear the change password script when there's no password.
+
                 changePasswordScript = "\r\n";
             }
 

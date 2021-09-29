@@ -130,6 +130,11 @@ namespace Neon.Kube
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.HyperV)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.HyperV}].");
+            }
         }
 
         /// <inheritdoc/>

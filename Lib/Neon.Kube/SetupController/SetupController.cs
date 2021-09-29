@@ -51,19 +51,19 @@ namespace Neon.Kube
 
         internal class Step : ISetupControllerStep
         {
-            public int                                                          Number;
-            public string                                                       Label;
-            public bool                                                         IsQuiet;
-            public ISetupController                                             SubController;
-            public object                                                       ParentStep;
-            public Action<ISetupController>                                     SyncGlobalAction;
-            public Func<ISetupController, Task>                                 AsyncGlobalAction;
-            public Action<ISetupController, NodeSshProxy<NodeMetadata>>         SyncNodeAction;
-            public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>     AsyncNodeAction;
-            public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>     Predicate;
-            public SetupStepState                                               State;
-            public int                                                          ParallelLimit;
-            public bool                                                         WasExecuted;
+            public int                                                      Number;
+            public string                                                   Label;
+            public bool                                                     IsQuiet;
+            public ISetupController                                         SubController;
+            public object                                                   ParentStep;
+            public Action<ISetupController>                                 SyncGlobalAction;
+            public Func<ISetupController, Task>                             AsyncGlobalAction;
+            public Action<ISetupController, NodeSshProxy<NodeMetadata>>     SyncNodeAction;
+            public Func<ISetupController, NodeSshProxy<NodeMetadata>, Task> AsyncNodeAction;
+            public Func<ISetupController, NodeSshProxy<NodeMetadata>, bool> Predicate;
+            public SetupStepState                                           State;
+            public int                                                      ParallelLimit;
+            public bool                                                     WasExecuted;
 
             /// <inheritdoc/>
             public bool IsGlobalStep => SyncGlobalAction != null || AsyncGlobalAction != null;
@@ -86,6 +86,7 @@ namespace Neon.Kube
         private object                              syncLock    = new object();
         private List<IDisposable>                   disposables = new List<IDisposable>();
         private ISetupController                    parent      = null;
+        private bool                                isRunning   = false;
         private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
@@ -166,6 +167,18 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Ensures that controller execution has not started.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
+        private void EnsureNotRunning()
+        {
+            if (isRunning)
+            {
+                throw new InvalidOperationException("Cannot modify setup controller steps after execution has started.");
+            }
+        }
+
+        /// <summary>
         /// Adds a synchronous global configuration step.
         /// </summary>
         /// <param name="stepLabel">Specifies the step label.</param>
@@ -178,13 +191,14 @@ namespace Neon.Kube
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddGlobalStep(
-            string                      stepLabel, 
+            string                      stepLabel,
             Action<ISetupController>    action,
-            bool                        quiet         = false, 
-            ISetupController            subController = null, 
+            bool                        quiet         = false,
+            ISetupController            subController = null,
             int                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             if (position < 0)
             {
@@ -218,13 +232,14 @@ namespace Neon.Kube
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddGlobalStep(
-            string stepLabel, 
+            string                          stepLabel,
             Func<ISetupController, Task>    action,
-            bool                            quiet         = false, 
-            ISetupController                subController = null, 
+            bool                            quiet         = false,
+            ISetupController                subController = null,
             int                             position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
+            EnsureNotRunning();
 
             if (position < 0)
             {
@@ -317,8 +332,8 @@ namespace Neon.Kube
                             parentStep.RunTime = substep.RunTime;
                         }
                     },
-                    quiet:          substep.IsQuiet,
-                    subController:  subController);
+                    quiet:         substep.IsQuiet,
+                    subController: subController);
 
                 substep.ParentStep = parentStep;
             }
@@ -385,10 +400,10 @@ namespace Neon.Kube
                         using (var writer = new StringWriter(sb))
                         {
                             writer.WriteLine($"Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the following cluster nodes:");
-                            
+
                             foreach (var node in pingConflicts.OrderBy(node => NetHelper.AddressToUint(NetHelper.ParseIPv4Address(node.Address))))
                             {
-                                writer.WriteLine($"{node.Address, 16}:    {node.Name}");
+                                writer.WriteLine($"{node.Address,16}:    {node.Name}");
                             }
                         }
 
@@ -414,11 +429,11 @@ namespace Neon.Kube
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddWaitUntilOnlineStep(
-            string                                                      stepLabel     = "connect", 
-            string                                                      status        = null, 
-            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
-            bool                                                        quiet         = false, 
-            TimeSpan?                                                   timeout       = null, 
+            string                                                      stepLabel     = "connect",
+            string                                                      status        = null,
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null,
+            bool                                                        quiet         = false,
+            TimeSpan?                                                   timeout       = null,
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
@@ -447,7 +462,7 @@ namespace Neon.Kube
                 nodePredicate,
                 quiet,
                 noParallelLimit: true,
-                position: position);
+                position:        position);
         }
 
         /// <summary>
@@ -467,11 +482,11 @@ namespace Neon.Kube
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
         public object AddDelayStep(
-            string                                                      stepLabel, 
-            TimeSpan                                                    delay, 
+            string                                                      stepLabel,
+            TimeSpan                                                    delay,
             string                                                      status        = null,
-            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null, 
-            bool                                                        quiet         = false, 
+            Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>    nodePredicate = null,
+            bool                                                        quiet         = false,
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
@@ -488,10 +503,10 @@ namespace Neon.Kube
                     Thread.Sleep(delay);
                     node.IsReady = true;
                 },
-                nodePredicate, 
+                nodePredicate,
                 quiet,
                 noParallelLimit: true,
-                position: position);
+                position:        position);
         }
 
         /// <summary>
@@ -522,6 +537,7 @@ namespace Neon.Kube
         /// in parallel for this step, overriding the controller default.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
         public object AddNodeStep(
             string stepLabel,
             Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
@@ -532,6 +548,7 @@ namespace Neon.Kube
             int                                                         parallelLimit   = 0)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             nodeAction    = nodeAction ?? new Action<ISetupController, NodeSshProxy<NodeMetadata>>((controller, node) => { });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -598,6 +615,7 @@ namespace Neon.Kube
             int                                                         parallelLimit   = 0)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             nodeAction    = nodeAction ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, Task>((controller, node) => { return Task.CompletedTask; });
             nodePredicate = nodePredicate ?? new Func<ISetupController, NodeSshProxy<NodeMetadata>, bool>((controller, node) => true);
@@ -707,6 +725,16 @@ namespace Neon.Kube
                 {
                     return false;
                 }
+
+                ProgressEvent?.Invoke(
+                    new SetupProgressMessage()
+                    {
+                        IsError       = false,
+                        CancelPending = false,
+                        Node          = null,
+                        Verb          = $"step {step.Number}",
+                        Text          = step.Label
+                    });
 
                 LogGlobal($"");
                 LogGlobal($"===============================================================================");
@@ -1209,7 +1237,7 @@ namespace Neon.Kube
         public string GlobalStatus => globalStatus;
 
         /// <inheritdoc/>
-        public string OperationTitle { get; private set; }
+        public string OperationTitle { get; set; }
 
         /// <inheritdoc/>
         public bool ShowStatus { get; set; } = false;
@@ -1254,6 +1282,11 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false)
         {
+            // Set this so we can ensure that the step list can no longer be modifie
+            // after execution has started.
+
+            isRunning = true;
+
             // This method had been synchronous for a very long time (maybe 5 years)
             // but we need to make this async now so that it would integrate well
             // with the neonDESKTOP UX. 
@@ -1269,7 +1302,7 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(Path.GetDirectoryName(globalLogPath));
 
-            globalLogWriter = new StreamWriter(globalLogPath);
+            globalLogWriter = new StreamWriter(new FileStream(globalLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
 
             // Start the step execution thread.
 

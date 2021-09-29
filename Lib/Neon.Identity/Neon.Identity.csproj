@@ -22,30 +22,19 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
-    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DefineConstants />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
   <ItemGroup>

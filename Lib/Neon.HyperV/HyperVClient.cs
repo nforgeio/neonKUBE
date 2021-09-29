@@ -479,7 +479,7 @@ namespace Neon.HyperV
         /// Gets the current status for a named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <returns>The <see cref="VirtualMachine"/>.</returns>
+        /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist..</returns>
         public VirtualMachine GetVm(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
@@ -489,6 +489,11 @@ namespace Neon.HyperV
             {
                 var machines = new List<VirtualMachine>();
                 var table    = powershell.ExecuteJson($"{HyperVNamespace}Get-VM -Name \"{machineName}\"");
+
+                if (table.Count == 0)
+                {
+                    return null;
+                }
 
                 Covenant.Assert(table.Count == 1);
 
@@ -559,6 +564,26 @@ namespace Neon.HyperV
                 {
                     powershell.Execute($"{HyperVNamespace}Stop-VM -Name \"{machineName}\"");
                 }
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Persists the state of a running virtual machine and then stops it.  This is 
+        /// equivalent to hibernation for a physical machine.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        public void SaveVm(string machineName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
+            try
+            {
+                powershell.Execute($"{HyperVNamespace}Save-VM -Name \"{machineName}\"");
             }
             catch (Exception e)
             {

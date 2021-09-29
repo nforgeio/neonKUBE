@@ -182,7 +182,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 
-        /// name when an unitialized data disk exists or "PRIMARY" when the  OS disk
+        /// name when an uninitialized data disk exists or "PRIMARY" when the  OS disk
         /// will be used for data.
         /// </summary>
         /// <returns>The disk device name or "PRIMARY".</returns>
@@ -192,5 +192,70 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
+
+        /// <summary>
+        /// <para>
+        /// Starts a cluster if it's not already running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Shuts down a cluster if it's running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Removes an existing cluster by terminating any nodes and then removing node VMs
+        /// and any related resources.  The cluster does not need to be running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
+        /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
+        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
+        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
+        /// XenServer or <b>.tar</b> for WSL2).
+        /// </para>
+        /// <note>
+        /// This works only for nodes deployed with a single drive and is not supported at all
+        /// for some environments (like <see cref="HostingEnvironment.BareMetal"/>).
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeName">Identifies the node being captured.</param>
+        /// <param name="folder">Path to the output folder.</param>
+        /// <returns>The fully qualified path to the downloaded image file.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
+        Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder);
     }
 }

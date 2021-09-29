@@ -52,9 +52,9 @@ namespace Neon.Kube
         string LogFailedMarker { get; set; }
 
         /// <summary>
-        /// Returns the operation title.
+        /// Specifies the operation title.
         /// </summary>
-        string OperationTitle { get; }
+        string OperationTitle { get; set; }
 
         /// <summary>
         /// Specifies whether the class should print setup status to the console.

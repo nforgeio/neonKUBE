@@ -287,14 +287,14 @@ namespace Neon.Kube
         private ConnectionInfo GetConnectionInfo()
         {
             var address = string.Empty;
-            var port = SshPort;
+            var port    = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
                 var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
-                port = ep.Port;
+                port    = ep.Port;
             }
             else
             {
@@ -321,14 +321,19 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
         /// Returns a clone of the SSH proxy.  This can be useful for situations where you
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
+        /// </para>
+        /// <note>
+        /// This does not clone any attached log writer.
+        /// </note>
         /// </summary>
         /// <returns>The cloned <see cref="NodeSshProxy{TMetadata}"/>.</returns>
         public new NodeSshProxy<TMetadata> Clone()
         {
-            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort, logWriter);
+            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort);
 
             CloneTo(clone);
 
@@ -401,7 +406,7 @@ namespace Neon.Kube
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId = actionId.Substring(slashPos + 1);
+                actionId    = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }

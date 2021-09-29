@@ -1,0 +1,24 @@
+name: neon-desktop
+datacenter: neondesktop
+environment: development
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: hyperv-local
+  hypervLocal:
+    neonDesktopBuiltIn: true
+    useInternalSwitch: true
+  vm:
+    namePrefix: ""
+    cores: 4
+    memory: 12 GiB
+network:
+  premiseSubnet: 100.64.0.0/24
+  gateway: 100.64.0.1
+nodes:
+  neon-desktop:
+    role: master
+    address: 100.64.0.254

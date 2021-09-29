@@ -167,15 +167,15 @@ namespace Neon.XenServer
             {
                 Directory.CreateDirectory(logFolder);
 
-                this.logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
+                this.logWriter = new StreamWriter(new FileStream(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
             }
 
-            this.Address   = addressOrFQDN;
-            this.username  = username;
-            this.password  = password;
-            this.Name      = name;
-            this.xePath    = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
-            this.xeFolder  = Path.GetDirectoryName(xePath);
+            this.Address  = addressOrFQDN;
+            this.username = username;
+            this.password = password;
+            this.Name     = name;
+            this.xePath   = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
+            this.xeFolder = Path.GetDirectoryName(xePath);
 
             // Connect via SFTP.
 

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -47,6 +48,59 @@ namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
+        /// <summary>
+        /// Returns the cluster definition required to prepare a ready-to-go cluster for 
+        /// a specific hosting environment.
+        /// </summary>
+        /// <param name="hostEnvironment">Specifies the target environment.</param>
+        /// <returns>The cluster definition.</returns>
+        /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
+        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment)
+        {
+            // $todo(jefflill):
+            //
+            // We'll need to flesh this out as we support ready-to-go for more hosting environments.
+
+            var resourceName = "Neon.Kube.ClusterDefinitions.";
+
+            switch (hostEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
+
+                    resourceName += "neon-desktop.hyperv.cluster.yaml";
+                    break;
+
+                case HostingEnvironment.Wsl2:
+
+                    resourceName += "neon-desktop.wsl2.cluster.yaml";
+                    break;
+
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.BareMetal:
+                case HostingEnvironment.Google:
+                case HostingEnvironment.XenServer:
+
+                default:
+
+                    throw new NotSupportedException($"Ready-To-Go is not yet supported for [{hostEnvironment}].");
+            }
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            {
+                using (var reader = new StreamReader(stream, encoding: Encoding.UTF8))
+                {
+                    var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
+
+                    clusterDefinition.Validate();
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
+
+                    return clusterDefinition;
+                }
+            }
+        }
+
         /// <summary>
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>
@@ -73,8 +127,8 @@ namespace Neon.Kube
         /// current neonDESKTOP state will not be impacted.
         /// </param>
         /// <param name="readyToGoMode">
-        /// Optionally creates a setup controller that prepares a ready-to-go image or completes the
-        /// cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
+        /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
+        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
@@ -120,7 +174,14 @@ namespace Neon.Kube
                 clusterDefinition:  clusterDefinition,
                 nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
                 {
-                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
+                    var logStream = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    if (appendToLog)
+                    {
+                        logStream.Seek(0, SeekOrigin.End);
+                    }
+
+                    var logWriter      = new StreamWriter(logStream);
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);

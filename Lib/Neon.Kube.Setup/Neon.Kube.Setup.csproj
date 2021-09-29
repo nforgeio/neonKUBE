@@ -27,27 +27,30 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netstandard2.1|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
-  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <None Remove="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
-    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
-  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />

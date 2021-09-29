@@ -80,6 +80,15 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="yaml">The JSON text.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <param name="validate">
+        /// <para>
+        /// Optionally validate the cluster definition.
+        /// </para>
+        /// <note>
+        /// You must have already called <b>HostingLoader.Initialize()</b> for 
+        /// validation to work.
+        /// </note>
+        /// </param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <remarks>
         /// <note>
@@ -87,7 +96,7 @@ namespace Neon.Kube
         /// and then is parsed as YAML.
         /// </note>
         /// </remarks>
-        public static ClusterDefinition FromYaml(string yaml, bool strict = false)
+        public static ClusterDefinition FromYaml(string yaml, bool strict = false, bool validate = false)
         {
             Covenant.Requires<ArgumentNullException>(yaml != null, nameof(yaml));
 
@@ -100,7 +109,11 @@ namespace Neon.Kube
                     var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
                     PopulateNodeNames(clusterDefinition);
-                    clusterDefinition.Validate();
+
+                    if (validate)
+                    {
+                        clusterDefinition.Validate();
+                    }
 
                     return clusterDefinition;
                 }

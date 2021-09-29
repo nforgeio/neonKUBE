@@ -20,12 +20,14 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn></NoWarn>
+    <DefineConstants />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn></NoWarn>
+    <DefineConstants />
   </PropertyGroup>
 
   <Target Name="GoBuild" AfterTargets="BeforeCompile">

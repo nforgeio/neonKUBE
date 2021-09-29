@@ -11,22 +11,22 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\unix-text.xml</DocumentationFile>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\unix-text.xml</DocumentationFile>
     <OutputPath>bin\Release</OutputPath>
+    <DefineConstants />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\unix-text.xml</DocumentationFile>
     <OutputPath>bin\Release</OutputPath>
+    <DefineConstants />
   </PropertyGroup>
 
   <ItemGroup>

@@ -14,18 +14,19 @@
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\Debug\neon.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\Release\neon.xml</DocumentationFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Tools\neon-cli\bin\CodeDoc\neon.xml</DocumentationFile>
+    <DefineConstants />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
   <ItemGroup>
