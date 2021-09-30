@@ -31,7 +31,7 @@ $buildPath       = "$env:NF_BUILD\go-test"
 $logPath         = "$buildPath\build.log"
 $orgDirectory    = Get-Cwd
 
-Set-Cwd $projectPath
+Set-Cwd $projectPath | Out-Null
 
 # Ensure that the build output folder exist.
 
@@ -60,7 +60,7 @@ cp config.yaml "$outputPath\config.yaml"
 #----------------------------------------------------------
 # cwf-args
 
-Set-Cwd "$projectPath\cadence\cwf-args"
+Set-Cwd "$projectPath\cadence\cwf-args" | Out-Null
 
 echo "Building cwf-args" > "$logPath"
 
@@ -74,13 +74,13 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory
+    Set-Cwd $orgDirectory | Out-Null
     exit $exitCode
 }
 
 echo "Build success" >> "$logPath" 2>&1
 
-Set-Cwd $orgDirectory
+Set-Cwd $orgDirectory | Out-Null
 
 #==============================================================================
 # BUILD TEMPORAL TESTS
@@ -98,13 +98,13 @@ if (!(test-path $outputPath))
 
 # Common Cadence client configuration
 
-Set-Cwd "$projectPath\temporal"
+Set-Cwd "$projectPath\temporal" | Out-Null
 cp config.yaml "$outputPath\config.yaml"
 
 #----------------------------------------------------------
 # cwf-args
 
-Set-Cwd "$projectPath\temporal\twf-args"
+Set-Cwd "$projectPath\temporal\twf-args" | Out-Null
 
 echo "Building twf-args" > "$logPath"
 
@@ -118,10 +118,10 @@ $exitCode = $lastExitCode
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory
+    Set-Cwd $orgDirectory | Out-Null
     exit $exitCode
 }
 
 echo "Build success" >> "$logPath" 2>&1
 
-Set-Cwd $orgDirectory
+Set-Cwd $orgDirectory | Out-Null

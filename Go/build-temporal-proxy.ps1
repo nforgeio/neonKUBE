@@ -49,7 +49,7 @@ try
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
-    Write-Output "*                            WINDOWS CADENCE-PROXY                            *" >> $logPath 2>&1
+    Write-Output "*                            WINDOWS TEMPORAL-PROXY                           *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
 
@@ -67,7 +67,7 @@ try
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
-    Write-Output "*                             LINUX CADENCE-PROXY                             *" >> $logPath 2>&1
+    Write-Output "*                             LINUX TEMPORAL-PROXY                            *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
 
@@ -85,7 +85,7 @@ try
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
-    Write-Output "*                             OS/X CADENCE-PROXY                              *" >> $logPath 2>&1
+    Write-Output "*                             OS/X TEMPORAL-PROXY                             *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
 
