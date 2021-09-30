@@ -37,7 +37,7 @@ Set-Cwd $projectPath | Out-Null
 
 if (!(test-path $buildPath))
 {
-    New-Item -ItemType Directory -Force -Path $buildPath
+    New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
 }
 
 #==============================================================================
