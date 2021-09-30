@@ -2743,5 +2743,81 @@ TCPKeepAlive yes
                 return await GitHub.Release.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
+
+        private static string harborImageSyncDisabled = "harbor-image-sync-disabled";
+
+        /// <summary>
+        /// Helper method to Get the Harbor image sync status.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<bool> GetDisableHarborImageSyncAsync()
+        {
+            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            var configs = await k8s.ListNamespacedConfigMapAsync(KubeNamespaces.NeonSystem, labelSelector: "neon-kv=true");
+
+            if (!configs.Items.Any(c => c.Metadata.Name == harborImageSyncDisabled))
+            {
+                await k8s.CreateNamespacedConfigMapAsync(new V1ConfigMap()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = harborImageSyncDisabled,
+                        NamespaceProperty = KubeNamespaces.NeonSystem,
+                        Labels = new Dictionary<string, string>()
+                        {
+                            { "neon-kv", "true" }
+                        }
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "value", "false" }
+                    }
+                },
+                namespaceParameter: KubeNamespaces.NeonSystem);
+            }
+
+            var value = await k8s.ReadNamespacedConfigMapAsync(harborImageSyncDisabled, KubeNamespaces.NeonSystem);
+
+            return bool.Parse(value.Data["value"]);
+        }
+
+        /// <summary>
+        /// Helper method to set the Harbor image sync status.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task SetDisableHarborImageSyncAsync(bool value)
+        {
+            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            var configMap = new V1ConfigMap()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = harborImageSyncDisabled,
+                    NamespaceProperty = KubeNamespaces.NeonSystem,
+                    Labels = new Dictionary<string, string>()
+                    {
+                        { "neon-kv", "true" }
+                    }
+                },
+                Data = new Dictionary<string, string>()
+                {
+                    { "value", value.ToString() }
+                }
+            };
+
+            var configs = await k8s.ListNamespacedConfigMapAsync(KubeNamespaces.NeonSystem, labelSelector: "neon-kv=true");
+
+            if (!configs.Items.Any(c => c.Metadata.Name == harborImageSyncDisabled))
+            {
+                await k8s.CreateNamespacedConfigMapAsync(configMap, KubeNamespaces.NeonSystem);
+            }
+            else
+            {
+                await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), KubeNamespaces.NeonSystem);
+
+            }
+        }
     }
 }
