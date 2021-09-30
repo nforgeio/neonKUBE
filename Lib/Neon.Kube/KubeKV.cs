@@ -149,7 +149,6 @@ namespace Neon.Kube
             CheckKey(key);
 
             await Task.CompletedTask;
-            throw new NotImplementedException("$todo(marcusbooyah)");
         }
 
         /// <summary>
@@ -165,8 +164,7 @@ namespace Neon.Kube
         {
             CheckKey(key);
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(marcusbooyah)");
+            return await Task.FromResult(default(TValue));
         }
 
         /// <summary>
@@ -184,8 +182,7 @@ namespace Neon.Kube
         {
             CheckKey(key);
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(marcusbooyah)");
+            return await Task.FromResult(default(TValue));
         }
 
         /// <summary>
@@ -205,7 +202,6 @@ namespace Neon.Kube
             CheckKey(keyPattern, allowPattern: true);
 
             await Task.CompletedTask;
-            throw new NotImplementedException("$todo(marcusbooyah)");
         }
 
         /// <summary>
@@ -220,8 +216,7 @@ namespace Neon.Kube
         {
             CheckKey(keyPattern, allowPattern: true);
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(marcusbooyah)");
+            return await Task.FromResult(new List<KeyValuePair<string, TValue>>());
         }
     }
 }

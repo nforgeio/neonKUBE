@@ -288,51 +288,27 @@ spec:
             await InstallSystemDbAsync(controller, master);
             await InstallMinioAsync(controller, master);
 
-            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-            // $note(jefflill):
-            //
-            // You'll need to start the new Cluster KV service here, which
-            // also means that the Citus system DB will also need to have
-            // been already deployed.
-            //
-            // This method should accept a list of KeyValuePair<string, string> values
-            // the specify the initial keys to be persisted to the database.
+            // $hack(jefflill): This is some placeholder code.
 
-            var defaultKVs = new List<KeyValuePair<string, object>>()
+            // We need to prevent the [neon-cluster-operator] from copying container
+            // images into Harbor when we're generating a ready-to-go node image to
+            // prevent these images from appearing twice on the disk which bloats
+            // the node image by about 1GB.  We need to disable this before we deploy
+            // the the cluster operator.
+            //
+            // We're going to disable this via a cluster config when we're preparing
+            // a ready-to-go node image and enable this when deploying a cluster.
+
+            using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**"))
             {
-                new KeyValuePair<string, object>(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, readyToGoMode == ReadyToGoMode.Setup)
-            };
-
-            // await InstallKubeKVAsync(controller, master, defaultKVs);
+                kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, readyToGoMode == ReadyToGoMode.Prepare).Wait();
+            }
 
             await InstallClusterOperatorAsync(controller, master);
             await InstallContainerRegistryAsync(controller, master);
 
             // We need to enable Harbor container image synchronization when
             // we're not configuring a ready-to-go node image.
-
-            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-
-            // $note(jefflill):
-            //
-            // This is some placeholder code.  This assumes that we'd be able to 
-            // access the Citus database from outside the cluster somehow, which
-            // probably isn't going to work.
-            //
-            // Perhaps we'll need to implement some kind of service that allows
-            // us to execute commands within its main container.  Perhaps this
-            // could become a generic way to handle this.
-            //
-            // Idea: Perhaps we could deploy some custom commands within the 
-            //       cluster-operator for this.
-
-            if (readyToGoMode != ReadyToGoMode.Setup)
-            {
-                using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**"))
-                {
-                    kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, false).Wait();
-                }
-            }
 
             await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
         }
