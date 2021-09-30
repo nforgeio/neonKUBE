@@ -49,7 +49,7 @@ $outputPath = Join-Path -Path $buildPath -ChildPath "cadence"
 
 if (!(test-path $outputPath))
 {
-    New-Item -ItemType Directory -Force -Path $outputPath
+    New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 }
 
 # Common Cadence client configuration
@@ -93,7 +93,7 @@ $outputPath = Join-Path -Path $buildPath -ChildPath "temporal"
 
 if (!(test-path $outputPath))
 {
-    New-Item -ItemType Directory -Force -Path $outputPath
+    New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 }
 
 # Common Cadence client configuration
