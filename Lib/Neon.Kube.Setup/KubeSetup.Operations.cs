@@ -288,41 +288,23 @@ spec:
             await InstallSystemDbAsync(controller, master);
             await InstallMinioAsync(controller, master);
 
-            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-            // $note(jefflill):
+            // We need to prevent the [neon-cluster-operator] from copying container
+            // images into Harbor when we're generating a ready-to-go node image to
+            // prevent these images from appearing twice on the disk which bloats
+            // the node image by about 1GB.  We need to disable this before we deploy
+            // the the cluster operator.
             //
-            // You'll need to start the new Cluster KV service here, which
-            // also means that the Citus system DB will also need to have
-            // been already deployed.
-            //
-            // This method should accept a list of KeyValuePair<string, string> values
-            // the specify the initial keys to be persisted to the database.
+            // We're going to disable this via a cluster config when we're preparing
+            // a ready-to-go node image and enable this when deploying a cluster.
 
-            await InstallClusterApiAsync(controller, master);
+            await KubeHelper.SetDisableHarborImageSyncAsync(readyToGoMode == ReadyToGoMode.Prepare);
 
-            var defaultKVs = new List<KeyValuePair<string, object>>()
-            {
-                new KeyValuePair<string, object>(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, readyToGoMode == ReadyToGoMode.Setup)
-            };
-
-            // await InstallKubeKVAsync(controller, master, defaultKVs);
+            // Install the cluster operator and Harbor.
 
             await InstallClusterOperatorAsync(controller, master);
             await InstallContainerRegistryAsync(controller, master);
 
-            // We need to enable Harbor container image synchronization when
-            // we're not configuring a ready-to-go node image.
-
-            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
-            // $note(jefflill):     This is some placeholder code.
-
-            if (readyToGoMode != ReadyToGoMode.Setup)
-            {
-                using (var kubeKV = new KubeKV("**REAL CONNECTION STRING GOES HERE**", ""))
-                {
-                    kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorDisableHarborImageSync, false).Wait();
-                }
-            }
+            // Setup cluster monitoring.
 
             await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
         }
