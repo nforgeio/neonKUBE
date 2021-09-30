@@ -45,7 +45,7 @@ try
 
     # Change to project path
 
-    Set-Cwd $projectPath
+    Set-Cwd $projectPath | Out-Null
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
