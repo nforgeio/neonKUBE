@@ -119,7 +119,7 @@ if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
     Set-Cwd $orgDirectory | Out-Null
-    exit $exitCode
+    exit 1
 }
 
 echo "Build success" >> "$logPath" 2>&1

@@ -46,11 +46,32 @@ try
 {
     # Perform the build
 
+    # $hack(jefflill):
+    #
+    # We'e seeing intermittent GO build failures where GO complains about a bad command line
+    # (or something) the first time a proxy binary is built for an OS/architecture but then
+    # the same exact build command works the next time it's run.  Perhaps this is due to
+    # vendoring weirdness but I don't really know.
+    #
+    # We're going to address this by running the build once again on failures.
+
     & pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-    ThrowOnExitCode
+    
+    if ($lastExitCode -ne 0)
+    {
+        & pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
+        ThrowOnExitCode
+    }
 
     & pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
-    ThrowOnExitCode
+    
+    if ($lastExitCode -ne 0)
+    {
+        & pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
+        ThrowOnExitCode
+    }
+
+    # The tests don't seem to have the intermittent build issue.
 
     & pwsh ./build-test.ps1
     ThrowOnExitCode
@@ -58,6 +79,7 @@ try
 catch
 {
     Write-Exception $_
+    exit 1
 }
 finally
 {

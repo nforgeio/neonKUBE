@@ -29,6 +29,7 @@ $env:GOPATH  = "$env:NF_ROOT\Go"
 $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath     = "$buildPath\build-cadence-proxy.log"
+$errors      = $false
 
 Push-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
 
@@ -62,7 +63,7 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
@@ -80,7 +81,7 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
@@ -98,7 +99,7 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
@@ -106,6 +107,11 @@ try
     Write-Output "*                      COMPRESSING CADENCE-PROXY BINARIES                     *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
+
+    if ($errors)
+    {
+        throw "*** ERROR[exitcode=$exitCode]: One or more [cadence-proxy] builds failed.  Check build logs: $logPath"
+    }
 
     # Compress the binaries to the [Neon.Cadence] project where they'll
     # be embedded as binary resources.
@@ -119,6 +125,7 @@ try
 catch
 {
     Write-Exception $_
+    exit 1
 }
 finally
 {

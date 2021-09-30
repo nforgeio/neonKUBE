@@ -29,6 +29,7 @@ $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
+$errors      = $false
 
 Push-Cwd "$projectpath\cmd\temporalproxy" | Out-Null
 
@@ -62,7 +63,7 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
@@ -80,7 +81,7 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
@@ -98,14 +99,19 @@ try
 
     if ($exitCode -ne 0)
     {
-        throw "*** ERROR[exitcode=$exitCode]: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
+        $errors = $true
     }
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
-    Write-Output "*                      COMPRESSING CADENCE-PROXY BINARIES                     *" >> $logPath 2>&1
+    Write-Output "*                      COMPRESSING TEMPORAL-PROXY BINARIES                    *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
+
+    if ($errors)
+    {
+        throw "*** ERROR[exitcode=$exitCode]: One or more [temporal-proxy] builds failed.  Check build logs: $logPath"
+    }
 
     # Compress the binaries to the [Neon.Temporal] project where they'll
     # be embedded as binary resources.
@@ -119,6 +125,7 @@ try
 catch
 {
     Write-Exception $_
+    exit 1
 }
 finally
 {
