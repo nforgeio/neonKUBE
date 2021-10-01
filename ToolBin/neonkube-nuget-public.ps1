@@ -225,6 +225,10 @@ Publish Neon.Xunit.Temporal         $libraryVersion
 Publish Neon.Xunit.YugaByte         $libraryVersion
 Publish Neon.YugaByte               $libraryVersion
 
+# Remove all of the generated nuget files so these don't accumulate.
+
+Remove-Item "$env:NF_BUILD\nuget\*"
+
 ""
 "** Package publication completed"
 ""

@@ -423,6 +423,10 @@ RestoreVersion Neon.Kube.Services
 RestoreVersion Neon.Kube.XenServer
 RestoreVersion Neon.Kube.Xunit
 
+# Remove all of the generated nuget files so these don't accumulate.
+
+Remove-Item "$env:NF_BUILD\nuget\*"
+
 ""
 "** Package publication completed"
 ""
