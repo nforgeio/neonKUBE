@@ -39,28 +39,28 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the node associated with this message, if any.
         /// </summary>
-        public object Node { get; internal set; }
+        public object Node { get; set; }
 
         /// <summary>
         /// Returns the verb assiciated with this message, if any.
         /// </summary>
-        public string Verb { get; internal set; }
+        public string Verb { get; set; }
 
         /// <summary>
         /// Returns the message text.
         /// </summary>
-        public string Text { get; internal set; }
+        public string Text { get; set; }
 
         /// <summary>
         /// Indicates whether the message describes an error.
         /// </summary>
-        public bool IsError { get; internal set; }
+        public bool IsError { get; set; }
 
         /// <summary>
         /// Indicates whether the setup controller has been signalled to
         /// cancel the entire operation.
         /// </summary>
-        public bool CancelPending { get; internal set; }
+        public bool CancelPending { get; set; }
     }
 
     /// <summary>

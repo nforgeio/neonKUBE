@@ -95,6 +95,7 @@ namespace Neon.Kube
         private KubeImageType?  cachedImageType;
         private StringBuilder   internalLogBuilder;
         private TextWriter      internalLogWriter;
+        private bool            rootCertsUpdated = false;
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -544,15 +545,25 @@ namespace Neon.Kube
         /// <summary>
         /// Checks for and installs any new root certificates.
         /// </summary>
-        public void UpdateCaCertificates()
+        public void UpdateRootCertificates()
         {
+            // We're going to use [rootCertsUpdated] instance variable to avoid the overhead
+            // of checking for and updating root certificates multiple times for cluster nodes.
+
+            if (rootCertsUpdated)
+            {
+                return;
+            }
+
             // We need to ensure that the root certificate authority certs are up to date.
             // We're not making this idempotent because we want to re-run this on every
             // cluster install because the our node images will be archived for some time
             // after we create them.
 
-            SudoCommand("apt-get update");
-            SudoCommand("apt-get install ca-certificates -yq");
+            SudoCommand("safe-apt-get update");
+            SudoCommand("safe-apt-get install ca-certificates -yq");
+
+            rootCertsUpdated = true;
         }
 
         /// <summary>
