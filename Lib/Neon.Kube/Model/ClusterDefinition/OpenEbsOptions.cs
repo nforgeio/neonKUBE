@@ -47,7 +47,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
-        /// to <b>10 GiB</b> and cannot be any smaller than this.
+        /// to <b>10 GiB</b> and cannot be any smaller.
         /// </summary>
         [JsonProperty(PropertyName = "NfsSize", Required = Required.Default)]
         [YamlMember(Alias = "nfsSize", ApplyNamingConventions = false)]
