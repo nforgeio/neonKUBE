@@ -64,7 +64,7 @@ namespace Neon.Kube
                 {
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
-                        controller.LogProgress(this, verb: "deploy", message: "tools");
+                        controller.LogProgress(this, verb: "setup", message: "tools");
 
                         // Upload each tool script, removing the extension.
 
@@ -929,7 +929,7 @@ systemctl daemon-reload
 
             using (var ms = new MemoryStream())
             {
-                controller.LogProgress(this, verb: "install", message: "helm charts (zip)");
+                controller.LogProgress(this, verb: "setup", message: "helm charts (zip)");
 
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
@@ -972,7 +972,7 @@ systemctl daemon-reload
             InvokeIdempotent("setup/ipvs",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "ipvs");
+                    controller.LogProgress(this, verb: "setup", message: "ipvs");
 
                     var setupScript =
 $@"
@@ -997,7 +997,7 @@ $@"
             InvokeIdempotent("setup/cri-o",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "cri-o");
+                    controller.LogProgress(this, verb: "setup", message: "cri-o");
 
                     if (hostEnvironment != HostingEnvironment.Wsl2)
                     {
@@ -1516,7 +1516,7 @@ apt-mark hold cri-o cri-o-runc
             InvokeIdempotent("setup/podman",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "podman");
+                    controller.LogProgress(this, verb: "setup", message: "podman");
 
                     var setupScript =
 $@"
@@ -1547,7 +1547,7 @@ apt-mark hold podman
             InvokeIdempotent("setup/helm-client",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "helm client");
+                    controller.LogProgress(this, verb: "setup", message: "helm client");
 
                     var script =
 $@"
@@ -1771,7 +1771,7 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    controller.LogProgress(this, verb: "install", message: "kubernetes");
+                    controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
                     SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
 

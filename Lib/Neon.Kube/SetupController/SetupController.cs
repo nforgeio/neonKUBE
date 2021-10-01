@@ -1237,7 +1237,7 @@ namespace Neon.Kube
         public string GlobalStatus => globalStatus;
 
         /// <inheritdoc/>
-        public string OperationTitle { get; set; }
+        public string OperationTitle { get; private set; }
 
         /// <inheritdoc/>
         public bool ShowStatus { get; set; } = false;

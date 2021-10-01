@@ -989,7 +989,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "metrics-server");
+                    controller.LogProgress(master, verb: "setup", message: "metrics-server");
 
                     var values = new Dictionary<string, object>();
 
@@ -1046,7 +1046,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/ingress",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "ingress");
+                    controller.LogProgress(master, verb: "setup", message: "ingress");
 
                     var values = new Dictionary<string, object>();
 
@@ -1109,7 +1109,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "cert-manager");
+                    controller.LogProgress(master, verb: "setup", message: "cert-manager");
 
                     var values = new Dictionary<string, object>();
 
@@ -1147,7 +1147,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/neon-acme",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "neon-acme");
+                    controller.LogProgress(master, verb: "setup", message: "neon-acme");
 
                     var values = new Dictionary<string, object>();
 
@@ -1270,7 +1270,7 @@ subjects:
                     // encoded certificate and key PEM into the dashboard configuration
                     // YAML first.
 
-                    controller.LogProgress(master, verb: "deploy", message: "kubernetes dashboard");
+                    controller.LogProgress(master, verb: "setup", message: "kubernetes dashboard");
 
                     var dashboardYaml =
 $@"# Copyright 2017 The Kubernetes Authors.
@@ -1666,7 +1666,7 @@ spec:
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "kaili");
+                    controller.LogProgress(master, verb: "setup", message: "kaili");
 
                     var values = new Dictionary<string, object>();
 
@@ -1743,12 +1743,12 @@ spec:
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "openebs");
+                    controller.LogProgress(master, verb: "setup", message: "openebs");
 
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "deploy", message: "openebs-base");
+                            controller.LogProgress(master, verb: "setup", message: "openebs-base");
 
                             var values = new Dictionary<string, object>();
 
@@ -1780,7 +1780,7 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
                             {
-                                controller.LogProgress(master, verb: "deploy", message: "openebs-cstor");
+                                controller.LogProgress(master, verb: "setup", message: "openebs-cstor");
 
                                 var values = new Dictionary<string, object>();
 
@@ -1832,7 +1832,7 @@ spec:
                     if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
                         || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
-                        controller.LogProgress(master, verb: "deploy", message: "openebs-pool");
+                        controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
                         await master.InvokeIdempotentAsync("setup/openebs-pool",
                         async () =>
@@ -2120,7 +2120,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "prometheus");
+                    controller.LogProgress(master, verb: "setup", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
                     var i      = 0;
@@ -2270,7 +2270,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "loki");
+                    controller.LogProgress(master, verb: "setup", message: "loki");
 
                     var values = new Dictionary<string, object>();
 
@@ -2326,7 +2326,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "tempo");
+                    controller.LogProgress(master, verb: "setup", message: "tempo");
 
                     var values = new Dictionary<string, object>();
 
@@ -2408,7 +2408,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/reloader",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "reloader");
+                    controller.LogProgress(master, verb: "setup", message: "reloader");
 
                     var values = new Dictionary<string, object>();
 
@@ -2519,7 +2519,7 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "deploy", message: "minio");
+                            controller.LogProgress(master, verb: "setup", message: "minio");
 
                             var values = new Dictionary<string, object>();
 
@@ -2793,7 +2793,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "harbor");
+                    controller.LogProgress(master, verb: "setup", message: "harbor");
 
                     var values = new Dictionary<string, object>();
 
@@ -3067,7 +3067,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "deploy", message: "system database");
+                    controller.LogProgress(master, verb: "setup", message: "cluster database (citus)");
 
                     values.Add($"manager.replicas", managerAdvice.ReplicaCount);
                     values.Add($"master.replicas", masterAdvice.ReplicaCount);
@@ -3093,7 +3093,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "cluster database (citus)", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",

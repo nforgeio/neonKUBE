@@ -196,7 +196,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/base-packages",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "base packages");
+                    controller.LogProgress(this, verb: "setup", message: "base packages");
 
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
@@ -266,7 +266,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "security updates");
+                    controller.LogProgress(this, verb: "setup", message: "security updates");
 
                     PatchLinux(hostingEnvironment);
                 });
@@ -286,7 +286,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/update-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "linux security patches");
+                    controller.LogProgress(this, verb: "setup", message: "linux security patches");
 
                     UpdateLinux(hostingEnvironment);
                 });
@@ -363,7 +363,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/guest-integration",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "guest integration services");
+                    controller.LogProgress(this, verb: "setup", message: "guest integration services");
 
                     var guestServicesScript =
 $@"#!/bin/bash
@@ -654,7 +654,7 @@ done
             InvokeIdempotent("base/neon-init",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "neon-init.service");
+                    controller.LogProgress(this, verb: "setup", message: "neon-init.service");
 
                     var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
@@ -843,7 +843,7 @@ chmod 750 {KubeNodeFolders.State}/setup
             InvokeIdempotent("base/tool-scripts",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "tools");
+                    controller.LogProgress(this, verb: "setup", message: "tools");
 
                     // Upload any tool scripts to the neonKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute

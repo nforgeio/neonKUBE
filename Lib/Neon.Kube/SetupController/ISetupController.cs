@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the operation title.
         /// </summary>
-        string OperationTitle { get; set; }
+        string OperationTitle { get; }
 
         /// <summary>
         /// Specifies whether the class should print setup status to the console.

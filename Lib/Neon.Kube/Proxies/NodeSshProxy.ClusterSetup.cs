@@ -627,7 +627,7 @@ EOF
             InvokeIdempotent("setup/kublet",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "deploy", message: "kublet");
+                    controller.LogProgress(this, verb: "setup", message: "kublet");
 
                     var script =
 @"
@@ -687,7 +687,7 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "deploy", message: releaseName);
+                    controller.LogProgress(this, verb: "helm install", message: releaseName);
 
                     var valueOverrides = new StringBuilder();
 
