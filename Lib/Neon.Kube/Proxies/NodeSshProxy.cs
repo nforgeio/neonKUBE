@@ -551,6 +551,7 @@ namespace Neon.Kube
             // cluster install because the our node images will be archived for some time
             // after we create them.
 
+            SudoCommand("apt-get update");
             SudoCommand("apt-get install ca-certificates -yq");
         }
 
