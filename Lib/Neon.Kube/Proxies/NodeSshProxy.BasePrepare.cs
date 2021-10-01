@@ -73,6 +73,7 @@ namespace Neon.Kube
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);
+            UpdateCaCertificates();
             BaseInstallPackages(controller);
             BaseConfigureApt(controller);
             BaseConfigureBashEnvironment(controller);

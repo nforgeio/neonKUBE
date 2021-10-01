@@ -542,6 +542,19 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Checks for and installs any new root certificates.
+        /// </summary>
+        public void UpdateCaCertificates()
+        {
+            // We need to ensure that the root certificate authority certs are up to date.
+            // We're not making this idempotent because we want to re-run this on every
+            // cluster install because the our node images will be archived for some time
+            // after we create them.
+
+            SudoCommand("apt-get install ca-certificates -yq");
+        }
+
+        /// <summary>
         /// Installs any security related updates on the node.  These are
         /// the <b>unattended updates</b>.
         /// </summary>

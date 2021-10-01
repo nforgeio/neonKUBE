@@ -269,6 +269,7 @@ namespace Neon.Kube
                 controller.AddNodeStep("verify ready-to-go image", (controller, node) => node.VerifyImageIsReadyToGo(controller));
             }
 
+            controller.AddNodeStep("update root certificates", (controller, node) => node.UpdateCaCertificates());
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
 
