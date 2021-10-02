@@ -45,7 +45,7 @@ spec:
         image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           name: http-metrics
         - containerPort: 6831
           name: thrift-compact

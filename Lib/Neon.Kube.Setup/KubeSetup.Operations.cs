@@ -301,6 +301,7 @@ spec:
 
             // Install the cluster operator and Harbor.
 
+            await InstallClusterApiAsync(controller, master);
             await InstallClusterOperatorAsync(controller, master);
             await InstallContainerRegistryAsync(controller, master);
 
@@ -3093,7 +3094,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "cluster database (citus)", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, message: "cluster database (citus)");
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",
