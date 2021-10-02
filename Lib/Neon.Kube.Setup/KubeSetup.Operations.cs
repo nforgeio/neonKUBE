@@ -3094,7 +3094,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, message: "cluster database (citus)");
+                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",
