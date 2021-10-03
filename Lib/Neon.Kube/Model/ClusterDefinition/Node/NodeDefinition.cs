@@ -166,7 +166,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Indicates that this node will provide a cStor block device for the cStorePool
+        /// Indicates that this node will provide a cStor block device for the cStorPool
         /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
         /// This defaults to <c>false</c>
         /// </para>

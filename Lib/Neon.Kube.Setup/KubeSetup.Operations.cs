@@ -1775,8 +1775,8 @@ spec:
                             await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
                         });
 
-                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
-                        || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                        cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
@@ -1830,72 +1830,72 @@ spec:
                                 });
                         });
 
-                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName
-                        || cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                        cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
                     {
                         controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
                         await master.InvokeIdempotentAsync("setup/openebs-pool",
-                        async () =>
-                        {
-                            var cStorPoolCluster = new V1CStorPoolCluster()
+                            async () =>
                             {
-                                Metadata = new V1ObjectMeta()
+                                var cStorPoolCluster = new V1CStorPoolCluster()
                                 {
-                                    Name              = "cspc-stripe",
-                                    NamespaceProperty = KubeNamespaces.NeonStorage
-                                },
-                                Spec = new V1CStorPoolClusterSpec()
-                                {
-                                    Pools = new List<V1CStorPoolSpec>()
-                                }
-                            };
-
-                            var blockDevices = ((JObject)await GetK8sClient(controller).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
-
-                            foreach (var n in cluster.Definition.Nodes)
-                            {
-                                if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
-                                {
-                                    var pool = new V1CStorPoolSpec()
+                                    Metadata = new V1ObjectMeta()
                                     {
-                                        NodeSelector = new Dictionary<string, string>()
+                                        Name              = "cspc-stripe",
+                                        NamespaceProperty = KubeNamespaces.NeonStorage
+                                    },
+                                    Spec = new V1CStorPoolClusterSpec()
+                                    {
+                                        Pools = new List<V1CStorPoolSpec>()
+                                    }
+                                };
+
+                                var blockDevices = ((JObject)await GetK8sClient(controller).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
+
+                                foreach (var n in cluster.Definition.Nodes)
+                                {
+                                    if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                                    {
+                                        var pool = new V1CStorPoolSpec()
+                                        {
+                                            NodeSelector = new Dictionary<string, string>()
                                             {
-                                               { "kubernetes.io/hostname", n.Name }
+                                                { "kubernetes.io/hostname", n.Name }
                                             },
-                                        DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                                            DataRaidGroups = new List<V1CStorDataRaidGroup>()
                                             {
                                                 new V1CStorDataRaidGroup()
                                                 {
                                                     BlockDevices = new List<V1CStorBlockDeviceRef>()
                                                 }
                                             },
-                                        PoolConfig = new V1CStorPoolConfig()
-                                        {
-                                            DataRaidGroupType = DataRaidGroupType.Stripe,
-                                            Tolerations       = new List<V1Toleration>()
-                                                {
-                                                    { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                                    { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                                }
-                                        }
-                                    };
-
-                                    foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
-                                    {
-                                        pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
-                                            new V1CStorBlockDeviceRef()
+                                            PoolConfig = new V1CStorPoolConfig()
                                             {
-                                                BlockDeviceName = device.Metadata.Name
-                                            });
+                                                DataRaidGroupType = DataRaidGroupType.Stripe,
+                                                Tolerations       = new List<V1Toleration>()
+                                                    {
+                                                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                                    }
+                                            }
+                                        };
+
+                                        foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                                        {
+                                            pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
+                                                new V1CStorBlockDeviceRef()
+                                                {
+                                                    BlockDeviceName = device.Metadata.Name
+                                                });
+                                        }
+
+                                        cStorPoolCluster.Spec.Pools.Add(pool);
                                     }
-
-                                    cStorPoolCluster.Spec.Pools.Add(pool);
                                 }
-                            }
 
-                            GetK8sClient(controller).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", KubeNamespaces.NeonStorage, "cstorpoolclusters");
-                        });
+                                GetK8sClient(controller).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", KubeNamespaces.NeonStorage, "cstorpoolclusters");
+                            });
 
                         await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
                             async () =>
@@ -2218,9 +2218,9 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
-                                || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
-                                || cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
+                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
+                                cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
                             {
                                 values.Add($"cortexConfig.ingester.retain_period", $"120s");
                                 values.Add($"cortexConfig.ingester.metadata_retain_period", $"5m");
@@ -2285,9 +2285,9 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
-                        || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
-                        || cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                        cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
+                        cluster.Definition.Nodes.Count() == 1)
                     {
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
@@ -2798,9 +2798,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
-                        || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName
-                        || cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                        cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
+                        cluster.Definition.Nodes.Count() == 1)
                     {
                         await CreateHostPathStorageClass(controller, master, "neon-internal-registry");
                     }
@@ -2982,9 +2982,9 @@ $@"- name: StorageType
             values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
 
-            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName
-               || cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName 
-               || cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
+                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName  ||
+                cluster.Definition.Nodes.Count() == 1)
             {
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");
