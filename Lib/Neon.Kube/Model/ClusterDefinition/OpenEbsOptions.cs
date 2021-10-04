@@ -88,9 +88,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine)}.{nameof(OpenEbsEngine.Jiva)}] is not currently supported.");
             }
 
-            if (Engine == OpenEbsEngine.None && clusterDefinition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.OpenEBS))
+            if (Engine == OpenEbsEngine.None && clusterDefinition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.OpenEbsStorage))
             {
-                throw new ClusterDefinitionException($"One or more nodes have [{nameof(NodeDefinition.OpenEBS)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.None)}].");
+                throw new ClusterDefinitionException($"One or more nodes have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.None)}].");
             }
         }
     }

@@ -1007,7 +1007,7 @@ namespace Neon.Kube
                             .Apply();
                     }
                 },
-                (state, node) => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>

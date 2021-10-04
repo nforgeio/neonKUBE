@@ -1250,7 +1250,7 @@ namespace Neon.Kube
                             }
                         });
                 },
-                (controller, node) => node.Metadata.OpenEBS);
+                (controller, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>

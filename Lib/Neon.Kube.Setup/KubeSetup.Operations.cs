@@ -1911,7 +1911,7 @@ spec:
 
                         var replicas = 3;
 
-                        if (cluster.Definition.Nodes.Where(node => node.OpenEBS).Count() < 3)
+                        if (cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < 3)
                         {
                             replicas = 1;
                         }
@@ -2020,9 +2020,9 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
-                    if (master.Cluster.Definition.Nodes.Where(node => node.OpenEBS).Count() < replicaCount)
+                    if (master.Cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicaCount)
                     {
-                        replicaCount = master.Cluster.Definition.Nodes.Where(node => node.OpenEBS).Count();
+                        replicaCount = master.Cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
                     }
 
                     var storageClass = new V1StorageClass()

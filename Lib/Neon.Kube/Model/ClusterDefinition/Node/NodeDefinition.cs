@@ -171,22 +171,22 @@ namespace Neon.Kube
         /// This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// If all nodes have <see cref="OpenEBS"/> set to <c>false</c> then most neonKUBE 
+        /// If all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> then most neonKUBE 
         /// hosting managers will automatically choose the nodes that will host the cStor
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
         /// over masters when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
-        /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
+        /// from the others.  It requires that at least one node have <see cref="OpenEbsStorage"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
         /// as an cStor.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbsStorage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsStorage", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool OpenEBS { get; set; } = false;
+        public bool OpenEbsStorage { get; set; } = false;
 
         /// <summary>
         /// Specifies the labels to be assigned to the cluster node.  These can describe
