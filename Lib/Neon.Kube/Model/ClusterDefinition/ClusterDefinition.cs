@@ -242,6 +242,7 @@ namespace Neon.Kube
         /// on user cluster definitions like cluster node names not being able to use the "neon-"
         /// prefix.
         /// </summary>
+        [JsonIgnore]
         internal bool IsSpecialNeonCluster
         {
             get
@@ -260,6 +261,13 @@ namespace Neon.Kube
                 return false;
             }
         }
+
+        /// <summary>
+        /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsDesktopCluster", Required = Required.Always)]
+        [YamlMember(Alias = "isDesktopCluster", ApplyNamingConventions = false)]
+        public bool IsDesktopCluster { get; set; }
 
         /// <summary>
         /// <para>
@@ -827,6 +835,16 @@ namespace Neon.Kube
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
+
+            if (IsDesktopCluster && Nodes.Count() > 1)
+            {
+                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only for single node clusters.");
+            }
+
+            if (IsDesktopCluster && !IsSpecialNeonCluster)
+            {
+                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+            }
 
             Debug.Validate(this);
             OpenEbs.Validate(this);

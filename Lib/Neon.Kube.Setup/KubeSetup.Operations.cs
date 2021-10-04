@@ -378,8 +378,7 @@ spec:
                                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
                             }
 
-                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                            if (cluster.Definition.IsDesktopCluster)
                             {
                                 sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
                                 sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
@@ -1775,8 +1774,7 @@ spec:
                             await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
                         });
 
-                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                        cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                    if (cluster.Definition.IsDesktopCluster)
                     {
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
@@ -1830,8 +1828,7 @@ spec:
                                 });
                         });
 
-                    if (cluster.Definition.Name != KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                        cluster.Definition.Name != KubeConst.NeonDesktopWsl2BuiltInDistroName)
+                    if (cluster.Definition.IsDesktopCluster)
                     {
                         controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
@@ -2218,9 +2215,8 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
-                                cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < 4294965097L))
+                            if (cluster.Definition.IsDesktopCluster ||
+                                cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < ByteUnits.Parse("4 GiB")))
                             {
                                 values.Add($"cortexConfig.ingester.retain_period", $"120s");
                                 values.Add($"cortexConfig.ingester.metadata_retain_period", $"5m");
@@ -2285,9 +2281,7 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                        cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
-                        cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.IsDesktopCluster)
                     {
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
@@ -2798,9 +2792,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                        cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName ||
-                        cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.IsDesktopCluster)
                     {
                         await CreateHostPathStorageClass(controller, master, "neon-internal-registry");
                     }
@@ -2982,9 +2974,7 @@ $@"- name: StorageType
             values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
             values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
 
-            if (cluster.Definition.Name == KubeConst.NeonDesktopHyperVBuiltInVmName ||
-                cluster.Definition.Name == KubeConst.NeonDesktopWsl2BuiltInDistroName  ||
-                cluster.Definition.Nodes.Count() == 1)
+            if (cluster.Definition.IsDesktopCluster)
             {
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
                 await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");

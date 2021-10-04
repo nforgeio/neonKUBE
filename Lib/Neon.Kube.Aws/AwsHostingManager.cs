@@ -1101,11 +1101,6 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
-
             // AWS doesn't initialize a password for new instance so we need to specify
             // the SSH key when the instances are provisioned and then upload and enable 
             // the SSH password ourselves.

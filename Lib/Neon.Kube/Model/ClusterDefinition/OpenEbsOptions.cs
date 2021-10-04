@@ -46,6 +46,21 @@ namespace Neon.Kube
         private const string minNfsSize = "10 GiB";
 
         /// <summary>
+        /// <para>
+        /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
+        /// to <see cref="OpenEbsEngine.None"/>.
+        /// </para>
+        /// <note>
+        /// Currently only <see cref="OpenEbsEngine.None"/> and <see cref="OpenEbsEngine.cStor"/> 
+        /// are supported.  <see cref="OpenEbsEngine.Jiva"/> may be supported in the future.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
+        [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
+        [DefaultValue(OpenEbsEngine.None)]
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.None;
+
+        /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
         /// to <b>10 GiB</b> and cannot be any smaller.
         /// </summary>
@@ -62,11 +77,21 @@ namespace Neon.Kube
         [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
             NfsSize = NfsSize ?? minNfsSize;
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            KubeHelper.EnsureOpenEbsNodes(clusterDefinition);
+            if (Engine == OpenEbsEngine.Jiva)
+            {
+                throw new ClusterDefinitionException($"[{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine)}.{nameof(OpenEbsEngine.Jiva)}] is not currently supported.");
+            }
+
+            if (Engine == OpenEbsEngine.None && clusterDefinition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.OpenEBS))
+            {
+                throw new ClusterDefinitionException($"One or more nodes have [{nameof(NodeDefinition.OpenEBS)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.None)}].");
+            }
         }
     }
 }

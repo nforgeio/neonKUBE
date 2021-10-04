@@ -911,11 +911,6 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
-
             // Update the node credentials.
 
             this.nodeUsername = KubeConst.SysAdminUser;
