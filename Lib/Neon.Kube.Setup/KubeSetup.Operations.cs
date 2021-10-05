@@ -951,14 +951,19 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await NeonHelper.WaitForAsync(
                            async () =>
                            {
-                               nodes = await GetK8sClient(controller).ListNodeAsync();
+                               nodes = await GetK8sClient(controller).ListNodeAsync(labelSelector: "node-role.kubernetes.io/master=");
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
                            timeout: TimeSpan.FromMinutes(5),
                            pollInterval: TimeSpan.FromSeconds(5));
 
-                        foreach (var master in nodes.Items.Where(n => n.Spec.Taints.Any(t => t.Key == "node-role.kubernetes.io/master")))
+                        foreach (var master in nodes.Items)
                         {
+                            if (master.Spec.Taints == null)
+                            {
+                                continue;
+                            }
+
                             var patch = new V1Node()
                             {
                                 Spec = new V1NodeSpec()
