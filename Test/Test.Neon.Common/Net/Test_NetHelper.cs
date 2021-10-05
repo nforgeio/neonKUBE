@@ -554,9 +554,9 @@ namespace TestCommon
             // Verify that we always return the first host if it's healthy
             // when we're using [ReachableHostMode.ReturnFirst].
 
-            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }).Host);
-            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Host);
-            Assert.False(NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Unreachable);
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }).Host);
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, ReachableHostMode.ReturnFirst).Host);
+            Assert.False(NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, ReachableHostMode.ReturnFirst).Unreachable);
 
             const string badHost0 = "bad0.host.baddomain";
             const string badHost1 = "bad1.host.baddomain";
@@ -592,7 +592,7 @@ namespace TestCommon
 
             // The [100.64.0.0/20] subnet is never supposed to be routable although neonKUBE
             // does use 100.64.0.0/24 for neonDESKTOP built-in (an other internal clusters)
-            // so we'll use some addresses at the upper end of 100.64.0.0/20.
+            // so we'll use some addresses at the upper end of 100.64.0.0/20 instead.
 
             const string badIP0 = "100.64.15.252";
             const string badIP1 = "100.64.15.253";
@@ -612,7 +612,7 @@ namespace TestCommon
             // Verify that we always return the first host if it's healthy
             // when we're using [ReachableHostMode.ReturnFirst].
 
-            TestHelper.AssertEquivalent(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, NetHelper.GetReachableHosts(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }).Select(rh => rh.Host));
+            TestHelper.AssertEquivalent(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, NetHelper.GetReachableHosts(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }).Select(rh => rh.Host));
 
             const string badHost0 = "bad0.host.baddomain";
             const string badHost1 = "bad1.host.baddomain";
