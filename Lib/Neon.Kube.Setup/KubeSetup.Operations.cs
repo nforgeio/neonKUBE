@@ -1153,11 +1153,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 async () =>
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
+                    
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("clusterDomain", cluster.Definition.Domain);
+                    values.Add("clusterDomain", clusterLogin.ClusterDefinition.Domain);
 
                     int i = 0;
 
@@ -2868,11 +2870,13 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "setup", message: "harbor");
 
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
                     var values = new Dictionary<string, object>();
 
                     await CreateStorageClass(controller, master, "neon-internal-registry");
 
-                    values.Add($"clusterDomain", cluster.Definition.Domain);
+                    values.Add($"clusterDomain", clusterLogin.ClusterDefinition.Domain);
 
                     var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(secret.Data["accesskey"]));
