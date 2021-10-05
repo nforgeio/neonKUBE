@@ -48,17 +48,13 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
-        /// to <see cref="OpenEbsEngine.None"/>.
+        /// to <see cref="OpenEbsEngine.Jiva"/>.
         /// </para>
-        /// <note>
-        /// Currently only <see cref="OpenEbsEngine.None"/> and <see cref="OpenEbsEngine.cStor"/> 
-        /// are supported.  <see cref="OpenEbsEngine.Jiva"/> may be supported in the future.
-        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
         [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
-        [DefaultValue(OpenEbsEngine.None)]
-        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.None;
+        [DefaultValue(OpenEbsEngine.Jiva)]
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Jiva;
 
         /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
@@ -83,14 +79,9 @@ namespace Neon.Kube
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            if (Engine == OpenEbsEngine.Jiva)
+            if (Engine == OpenEbsEngine.cStor && clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) == 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine)}.{nameof(OpenEbsEngine.Jiva)}] is not currently supported.");
-            }
-
-            if (Engine == OpenEbsEngine.None && clusterDefinition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.OpenEbsStorage))
-            {
-                throw new ClusterDefinitionException($"One or more nodes have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.None)}].");
+                throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.cStor)}].");
             }
         }
     }

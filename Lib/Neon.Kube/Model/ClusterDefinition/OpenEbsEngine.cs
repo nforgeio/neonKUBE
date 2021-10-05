@@ -26,12 +26,6 @@ namespace Neon.Kube
     public enum OpenEbsEngine
     {
         /// <summary>
-        /// Indicates that no OpenEBS storage engines will be provisioned.
-        /// </summary>
-        [EnumMember(Value = "none")]
-        None = 0,
-
-        /// <summary>
         /// The recommended OpenEBS storage engine.  This is very feature rich but
         /// requires one or more raw block devices and quite a bit of RAM.  See: 
         /// <a href="https://docs.openebs.io/v090/docs/next/cstor.html">cStor Overview</a>
