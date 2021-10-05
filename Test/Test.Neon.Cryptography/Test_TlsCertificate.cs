@@ -864,8 +864,8 @@ NOrsafukaeMnu7sKsM5jeCimps8GlBJUM6bVrlbAgUuPl5B0oWg=
 
             Assert.Equal("CN=kubernetes", x509.Issuer);
             Assert.Equal("43EE9CFF1FBFBCCEA1A73C7F941F7921E2B688EF", x509.Thumbprint);
-            Assert.Equal(new DateTime(2019, 2, 14, 23, 46, 05, DateTimeKind.Utc), x509.NotBefore);
-            Assert.Equal(new DateTime(2020, 2, 14, 23, 46, 07, DateTimeKind.Utc), x509.NotAfter);
+            Assert.Equal(new DateTime(2019, 2, 14, 15, 46, 05, DateTimeKind.Utc), x509.NotBefore);
+            Assert.Equal(new DateTime(2020, 2, 14, 15, 46, 07, DateTimeKind.Utc), x509.NotAfter);
 
             Assert.False(x509.HasPrivateKey);
         }
