@@ -135,7 +135,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// Node images prepared as <b>ready-to-go</b> can be identified by the presence of a 
-        /// <b>/etc/neonkube/image-type</b> file set to <see cref="KubeImageType.ReadToGo"/>.
+        /// <b>/etc/neonkube/image-type</b> file set to <see cref="KubeImageType.ReadyToGo"/>.
         /// is passed.
         /// </para>
         /// </remarks>

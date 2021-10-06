@@ -951,14 +951,19 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await NeonHelper.WaitForAsync(
                            async () =>
                            {
-                               nodes = await GetK8sClient(controller).ListNodeAsync();
+                               nodes = await GetK8sClient(controller).ListNodeAsync(labelSelector: "node-role.kubernetes.io/master=");
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
                            timeout: TimeSpan.FromMinutes(5),
                            pollInterval: TimeSpan.FromSeconds(5));
 
-                        foreach (var master in nodes.Items.Where(n => n.Spec.Taints.Any(t => t.Key == "node-role.kubernetes.io/master")))
+                        foreach (var master in nodes.Items)
                         {
+                            if (master.Spec.Taints == null)
+                            {
+                                continue;
+                            }
+
                             var patch = new V1Node()
                             {
                                 Spec = new V1NodeSpec()
@@ -1148,11 +1153,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 async () =>
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
+                    
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("clusterDomain", cluster.Definition.Domain);
+                    values.Add("clusterDomain", clusterLogin.ClusterDefinition.Domain);
 
                     int i = 0;
 
@@ -1774,7 +1781,7 @@ spec:
                             await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
                         });
 
-                    if (cluster.Definition.IsDesktopCluster)
+                    if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
                     {
                         await master.InvokeIdempotentAsync("setup/openebs-cstor",
                             async () =>
@@ -1828,7 +1835,7 @@ spec:
                                 });
                         });
 
-                    if (cluster.Definition.IsDesktopCluster)
+                    if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
                     {
                         controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
@@ -1913,16 +1920,10 @@ spec:
 
                         if (cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < 3)
                         {
-                            replicas = 1;
+                            replicas = cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
                         }
 
                         await CreateCstorStorageClass(controller, master, "openebs-cstor", replicaCount: replicas);
-                        await CreateCstorStorageClass(controller, master, "openebs-cstor-unreplicated", replicaCount: 1);
-                    }
-                    else
-                    {
-                        await CreateHostPathStorageClass(controller, master, "openebs-cstor");
-                        await CreateHostPathStorageClass(controller, master, "openebs-cstor-unreplicated");
                     }
                 });
         }
@@ -1967,11 +1968,61 @@ spec:
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="replicaCount">Specifies the data replication factor.</param>
+        /// <param name="storagePool">Specifies the OpenEBS storage pool.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateJivaStorageClass(
+            ISetupController controller,
+            NodeSshProxy<NodeDefinition> master,
+            string name,
+            int replicaCount = 3,
+            string storagePool = "default")
+        {
+            await master.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
+                async () =>
+                {
+
+                    if (master.Cluster.Definition.Nodes.Count() < replicaCount)
+                    {
+                        replicaCount = master.Cluster.Definition.Nodes.Count();
+                    }
+
+                    var storageClass = new V1StorageClass()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = name,
+                            Annotations = new Dictionary<string, string>()
+                    {
+                        {  "cas.openebs.io/config",
+$@"- name: ReplicaCount
+  value: ""{replicaCount}""
+- name: StoragePool
+  value: {storagePool}
+" },
+                        {"openebs.io/cas-type", "jiva" }
+                    },
+                        },
+                        Provisioner = "openebs.io/provisioner-iscsi",
+                        ReclaimPolicy = "Delete",
+                        VolumeBindingMode = "WaitForFirstConsumer"
+                    };
+
+                    await GetK8sClient(controller).CreateStorageClassAsync(storageClass);
+                });
+        }
+
+        /// <summary>
+        /// Creates a Kubernetes Storage Class.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
-            ISetupController                controller,
-            NodeSshProxy<NodeDefinition>    master,
-            string                          name)
+            ISetupController controller,
+            NodeSshProxy<NodeDefinition> master,
+            string name)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
@@ -1980,10 +2031,10 @@ spec:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name        = name,
+                            Name = name,
                             Annotations = new Dictionary<string, string>()
                     {
-                        {  "cas.openebs.io/config", 
+                        {  "cas.openebs.io/config",
 $@"- name: StorageType
   value: ""hostpath""
 - name: BasePath
@@ -1992,8 +2043,8 @@ $@"- name: StorageType
                         {"openebs.io/cas-type", "local" }
                     },
                         },
-                        Provisioner       = "openebs.io/local",
-                        ReclaimPolicy     = "Delete",
+                        Provisioner = "openebs.io/local",
+                        ReclaimPolicy = "Delete",
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
@@ -2011,11 +2062,11 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
-            ISetupController                controller,
-            NodeSshProxy<NodeDefinition>    master,
-            string                          name,
-            string                          cstorPoolCluster = "cspc-stripe",
-            int                             replicaCount     = 3)
+            ISetupController controller,
+            NodeSshProxy<NodeDefinition> master,
+            string name,
+            string cstorPoolCluster = "cspc-stripe",
+            int replicaCount = 3)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
@@ -2039,13 +2090,42 @@ $@"- name: StorageType
 
                         },
                         AllowVolumeExpansion = true,
-                        Provisioner          = "cstor.csi.openebs.io",
-                        ReclaimPolicy        = "Delete",
-                        VolumeBindingMode    = "Immediate"
+                        Provisioner = "cstor.csi.openebs.io",
+                        ReclaimPolicy = "Delete",
+                        VolumeBindingMode = "Immediate"
                     };
 
                     await GetK8sClient(controller).CreateStorageClassAsync(storageClass);
                 });
+        }
+
+        /// <summary>
+        /// Creates an OpenEBS cStor Kubernetes Storage Class.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="replicaCount">Specifies the data replication factor.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateStorageClass(
+            ISetupController controller,
+            NodeSshProxy<NodeDefinition> master,
+            string name,
+            int replicaCount = 3)
+        {
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            switch (cluster.Definition.OpenEbs.Engine)
+            {
+                case OpenEbsEngine.cStor:
+                    await CreateCstorStorageClass(controller, master, name);
+                    break;
+                case OpenEbsEngine.Jiva:
+                    await CreateJivaStorageClass(controller, master, name);
+                    break;
+                default:
+                    throw new Exception("OpenEBS engine not defined.");
+            };
         }
 
         /// <summary>
@@ -2067,7 +2147,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "setup", message: "etc");
 
-                    await CreateCstorStorageClass(controller, master, "neon-internal-etcd");
+                    await CreateStorageClass(controller, master, "neon-internal-etcd");
 
                     var values = new Dictionary<string, object>();
 
@@ -2790,18 +2870,13 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "setup", message: "harbor");
 
+                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
                     var values = new Dictionary<string, object>();
 
-                    if (cluster.Definition.IsDesktopCluster)
-                    {
-                        await CreateHostPathStorageClass(controller, master, "neon-internal-registry");
-                    }
-                    else
-                    {
-                        await CreateCstorStorageClass(controller, master, "neon-internal-registry", replicaCount: 3);
-                    }
+                    await CreateStorageClass(controller, master, "neon-internal-registry");
 
-                    values.Add($"clusterDomain", cluster.Definition.Domain);
+                    values.Add($"clusterDomain", clusterLogin.ClusterDefinition.Domain);
 
                     var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(secret.Data["accesskey"]));
@@ -2976,17 +3051,12 @@ $@"- name: StorageType
 
             if (cluster.Definition.IsDesktopCluster)
             {
-                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-master");
-                await CreateHostPathStorageClass(controller, master, "neon-internal-citus-worker");
-
                 values.Add($"worker.persistence.size", "1Gi");
                 values.Add($"master.persistence.size", "1Gi");
             }
-            else
-            {
-                await CreateCstorStorageClass(controller, master, "neon-internal-citus-master", replicaCount: 3);
-                await CreateCstorStorageClass(controller, master, "neon-internal-citus-worker", replicaCount: 1);
-            }
+
+            await CreateStorageClass(controller, master, "neon-internal-citus-master");
+            await CreateStorageClass(controller, master, "neon-internal-citus-worker");
 
             if (managerAdvice.PodMemoryRequest.HasValue && managerAdvice.PodMemoryLimit.HasValue)
             {
