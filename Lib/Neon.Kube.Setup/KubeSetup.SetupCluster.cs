@@ -232,6 +232,14 @@ namespace Neon.Kube
                 clusterLogin.Save();
             }
 
+            if (cluster.Nodes.Count() == 1 && readyToGoMode != ReadyToGoMode.Prepare)
+            {
+                if (cluster.Nodes.First().ImageType == KubeImageType.ReadyToGo)
+                {
+                    readyToGoMode = ReadyToGoMode.Setup;
+                }
+            }
+
             // Update the cluster node SSH credentials to use the secure password
             // when we're not preparing a ready-to-go image.
 
