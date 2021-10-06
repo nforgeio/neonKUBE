@@ -26,24 +26,30 @@ namespace Neon.Kube
     public enum KubeImageType
     {
         /// <summary>
-        /// Indicates an unknown image types like base or virgin images.
+        /// Identifies a virgin images.
         /// </summary>
         [EnumMember(Value = "unknown")]
         Unknown = 0,
 
         /// <summary>
-        /// Indicates a node image that can be used to deploy a multi-node
-        /// cluster.
+        /// Identifies a base image.
+        /// </summary>
+        [EnumMember(Value = "base")]
+        Base,
+
+        /// <summary>
+        /// Identifies the general purpose image that can be used to deploy 
+        /// single or multi-node clusters.
         /// </summary>
         [EnumMember(Value = "node")]
         Node,
 
         /// <summary>
-        /// Indicates a node image that has completed nearly all setup for
-        /// a single node cluster.  This is used for neonDESKTOP built-in
-        /// clusters.
+        /// Identifies a specialized nearly configured (ready-to-go) image that 
+        /// used for specialized single-node clusters such as a neonDESKTOP
+        /// built-in cluster.
         /// </summary>
         [EnumMember(Value = "ready-to-go")]
-        ReadToGo
+        ReadyToGo
     }
 }

@@ -508,13 +508,13 @@ namespace Neon.Kube
                 return;
             }
 
-            controller.LogProgress(this, verb: "check", message: "read-to-go image");
+            controller.LogProgress(this, verb: "check", message: "ready-to-go image");
 
             var imageType = ImageType;
 
-            if (imageType != KubeImageType.ReadToGo)
+            if (imageType != KubeImageType.ReadyToGo)
             {
-                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadToGo}].");
+                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadyToGo}].");
             }
         }
 

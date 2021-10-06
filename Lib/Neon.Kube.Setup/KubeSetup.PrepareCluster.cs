@@ -389,6 +389,15 @@ namespace Neon.Kube
             controller.AddNodeStep("prepare nodes",
                 (state, node) =>
                 {
+                    // Mark the node as ready-to-go if we're creating a ready-to-go image.
+
+                    if (readyToGoMode == ReadyToGoMode.Prepare)
+                    {
+                        node.ImageType = KubeImageType.ReadyToGo;
+                    }
+
+                    // Prepare the node.
+
                     node.PrepareNode(controller);
 
                     // When preparing a ready-to-go image, we need to reenable the [neon-init]
