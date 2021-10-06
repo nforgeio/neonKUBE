@@ -743,22 +743,12 @@ namespace Neon.Xunit
 
                 // Leave the swarm, effectively reseting all swarm state.
 
-                result = DockerExecute(new object[] { "swarm", "leave", "--force" });
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception(result.AllText);
-                }
+                DockerExecute(new object[] { "swarm", "leave", "--force" });
             }
 
             // Initialize swarm mode.
 
-            result = DockerExecute(new object[] { "swarm", "init" });
-
-            if (result.ExitCode != 0)
-            {
-                throw new Exception(result.AllText);
-            }
+            result = DockerExecute(new object[] { "swarm", "init" }).EnsureSuccess();
 
             // We also need to remove any running containers except for
             // any containers belonging to child ContainerFixtures.
