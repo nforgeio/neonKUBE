@@ -42,6 +42,8 @@ using Neon.IO;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
+using Neon.Net;
+using System.Dynamic;
 
 namespace Neon.Kube
 {
@@ -323,6 +325,7 @@ spec:
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             
             master.InvokeIdempotent("setup/cluster-init",
                 () =>
@@ -722,6 +725,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             controller.LogProgress(worker, verb: "joined", message: "to cluster");
                         });
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                master.SudoCommand("kubeadm", "certs", "renew", "all");
+                master.SudoCommand("systemctl", "restart", "kubelet");
+            }
         }
 
         /// <summary>
@@ -1106,10 +1115,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
+            var proxyAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
             await master.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
@@ -1154,7 +1167,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
                     
-                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
                     var values = new Dictionary<string, object>();
 
@@ -1174,6 +1188,62 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await master.InstallHelmChartAsync(controller, "neon_acme", releaseName: "neon-acme", @namespace: KubeNamespaces.NeonIngress, values: values);
 
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("setup/neon-acme-change-domain",
+                    async () =>
+                    {
+                        controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
+                        
+                        if (IPAddress.TryParse(clusterIp, out var ip))
+                        {
+                            using (var jsonClient = new JsonClient())
+                            {
+                                jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                                clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
+                                clusterLogin.Save();
+                            }
+                        }
+                    });
+
+                await master.InvokeIdempotentAsync("setup/neon-acme-renew-cert",
+                    async () =>
+                    {
+                        controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
+
+                        var cert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
+
+                        cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
+                        cert.Spec.DnsNames = new List<string>()
+                        {
+                            $"{clusterLogin.ClusterDefinition.Domain}",
+                            $"*.{clusterLogin.ClusterDefinition.Domain}"
+                        };
+
+                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(cert, "cert-manager.io", "v1", "certificates", "neon-cluster-certificate");
+
+                        var harborCert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "registry-harbor")).ToObject<Certificate>();
+
+                        harborCert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
+                        harborCert.Spec.DnsNames = new List<string>()
+                        {
+                            $"{clusterLogin.ClusterDefinition.Domain}",
+                            $"*.{clusterLogin.ClusterDefinition.Domain}"
+                        };
+
+                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(harborCert, "cert-manager.io", "v1", "certificates", "registry-harbor");
+
+                        dynamic harborCluster = ((ExpandoObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("goharbor.io", "v1alpha3", "harborclusters", "neon-cluster-certificate"));
+
+                        harborCluster.spec.expose.core.ingress.host = clusterLogin.ClusterDefinition.Domain;
+                        harborCluster.spec.expose.notary.ingress.host = clusterLogin.ClusterDefinition.Domain;
+                        harborCluster.spec.externalURL = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+
+                    });
+
+
+            }
         }
 
         /// <summary>
@@ -1220,6 +1290,38 @@ subjects:
                 });
         }
 
+        public static TlsCertificate GenerateDashboardCert(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+            // We're going to tie the custom certificate to the IP addresses
+            // of the master nodes only.  This means that only these nodes
+            // can accept the traffic and also that we'd need to regenerate
+            // the certificate if we add/remove a master node.
+            //
+            // Here's the tracking task:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/441
+
+            var masterAddresses = new List<string>();
+
+            foreach (var m in cluster.Masters)
+            {
+                masterAddresses.Add(m.Address.ToString());
+            }
+
+            var utcNow = DateTime.UtcNow;
+            var utc10Years = utcNow.AddYears(10);
+
+            var certificate = TlsCertificate.CreateSelfSigned(
+                hostnames: masterAddresses,
+                validDays: (int)(utc10Years - utcNow).TotalDays,
+                issuedBy: "kubernetes-dashboard");
+
+            return certificate;
+        }
+
         /// <summary>
         /// Configures the root Kubernetes user.
         /// </summary>
@@ -1232,9 +1334,10 @@ subjects:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var advice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var advice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
             master.InvokeIdempotent("setup/kube-dashboard",
                 () =>
@@ -1245,31 +1348,9 @@ subjects:
                     {
                         controller.LogProgress(master, verb: "generate", message: "kubernetes dashboard certificate");
 
-                        // We're going to tie the custom certificate to the IP addresses
-                        // of the master nodes only.  This means that only these nodes
-                        // can accept the traffic and also that we'd need to regenerate
-                        // the certificate if we add/remove a master node.
-                        //
-                        // Here's the tracking task:
-                        //
-                        //      https://github.com/nforgeio/neonKUBE/issues/441
+                        var newCert = GenerateDashboardCert(controller, master);
 
-                        var masterAddresses = new List<string>();
-
-                        foreach (var master in cluster.Masters)
-                        {
-                            masterAddresses.Add(master.Address.ToString());
-                        }
-
-                        var utcNow     = DateTime.UtcNow;
-                        var utc10Years = utcNow.AddYears(10);
-
-                        var certificate = TlsCertificate.CreateSelfSigned(
-                            hostnames: masterAddresses,
-                            validDays: (int)(utc10Years - utcNow).TotalDays,
-                            issuedBy:  "kubernetes-dashboard");
-
-                        clusterLogin.DashboardCertificate = certificate.CombinedPem;
+                        clusterLogin.DashboardCertificate = newCert.CombinedPem;
                         clusterLogin.Save();
                     }
 
@@ -1529,6 +1610,8 @@ spec:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
+  annotations:
+    reloader.stakater.com/auto: ""true""
   labels:
     k8s-app: dashboard-metrics-scraper
   name: dashboard-metrics-scraper
@@ -1591,6 +1674,18 @@ spec:
 
                     master.KubectlApply(dashboardYaml, RunOptions.FaultOnError);
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                var newCert = GenerateDashboardCert(controller, master);
+
+                clusterLogin.DashboardCertificate = newCert.CombinedPem;
+                clusterLogin.Save();
+
+                var cert = await GetK8sClient(controller).ReadNamespacedSecretAsync("kubernetes-dashboard-certs", KubeNamespaces.NeonSystem);
+                cert.Data["cert.pem"] = Encoding.UTF8.GetBytes(newCert.CertPemNormalized);
+                cert.Data["key.pem"]  = Encoding.UTF8.GetBytes(newCert.KeyPemNormalized);
+            }
 
             await Task.CompletedTask;
         }
@@ -2510,8 +2605,9 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Grafana);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var advice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Grafana);
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
                     async () =>
@@ -2583,8 +2679,9 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Minio);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var advice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.Minio);
 
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
@@ -2796,8 +2893,9 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var redisAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.HarborRedis);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var redisAdvice   = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.HarborRedis);
 
             await master.InvokeIdempotentAsync("setup/harbor-redis",
                 async () =>
@@ -3037,6 +3135,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var managerAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager);
             var masterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
             var workerAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker);
