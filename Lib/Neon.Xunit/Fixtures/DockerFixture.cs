@@ -743,12 +743,16 @@ namespace Neon.Xunit
 
                 // Leave the swarm, effectively reseting all swarm state.
 
+NeonHelper.LogDebug("DockerFixture.Reset: 1");
                 DockerExecute(new object[] { "swarm", "leave", "--force" });
+NeonHelper.LogDebug("DockerFixture.Reset: 2");
             }
 
             // Initialize swarm mode.
 
+NeonHelper.LogDebug("DockerFixture.Reset: 3");
             result = DockerExecute(new object[] { "swarm", "init" }).EnsureSuccess();
+NeonHelper.LogDebug("DockerFixture.Reset: 4");
 
             // We also need to remove any running containers except for
             // any containers belonging to child ContainerFixtures.

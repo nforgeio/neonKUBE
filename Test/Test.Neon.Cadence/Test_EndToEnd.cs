@@ -74,7 +74,6 @@ namespace TestCadence
         public Test_EndToEnd(CadenceFixture fixture, ITestOutputHelper outputHelper)
         {
 NeonHelper.DebugLogPath = @"C:\Temp\log.txt";
-NeonHelper.ClearDebugLog();
 NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0");
             TestHelper.ResetDocker(this.GetType());
 NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0A");

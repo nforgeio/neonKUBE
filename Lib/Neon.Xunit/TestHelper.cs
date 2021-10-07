@@ -650,7 +650,10 @@ namespace Neon.Xunit
             // Make sure we're not in Swarm mode.  Note we're not checking the error code here
             // because it returns an error when Docker isn't in swarm mode.
 
+NeonHelper.DebugLogPath = @"C:\Temp\log.txt";
+NeonHelper.LogDebug("TestHelper.ResetDocker: 1");
             NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "swarm", "leave", "--force" });
+NeonHelper.LogDebug("TestHelper.ResetDocker: 2");
 
             // Remove all containers
 

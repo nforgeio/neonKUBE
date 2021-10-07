@@ -901,6 +901,7 @@ NeonHelper.LogDebug("ConnectAsync: 3");
 
                     using (var initClient = new HttpClient())
                     {
+NeonHelper.LogDebug($"ConnectAsync: base address = {client.proxyClient.BaseAddress}");
                         initClient.BaseAddress = client.proxyClient.BaseAddress;
                         initClient.Timeout     = TimeSpan.FromSeconds(1);
 
@@ -928,7 +929,7 @@ NeonHelper.LogDebug("ConnectAsync: 6");
                     // Send the [InitializeRequest] to the [cadence-proxy] so it will know
                     // where the .NET Client is listening.
 
-NeonHelper.LogDebug("ConnectAsync: 7");
+NeonHelper.LogDebug($"ConnectAsync: 7: host={client.ListenUri.Host} port={client.ListenUri.Port}");
                     var initializeRequest =
                         new InitializeRequest()
                         {
@@ -1979,6 +1980,7 @@ NeonHelper.LogDebug("CadenceClient: 12");
         /// <returns>The reply message.</returns>
         internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
+NeonHelper.LogDebug("CallProxyAsync: 0");
             request.ClientId = this.ClientId;
 
             try
@@ -1991,30 +1993,39 @@ NeonHelper.LogDebug("CadenceClient: 12");
                     operations.Add(requestId, operation);
                 }
 
+NeonHelper.LogDebug("CallProxyAsync: 1");
                 if (cancellationToken != default)
                 {
+NeonHelper.LogDebug("CallProxyAsync: 2");
                     request.IsCancellable = true;
 
                     cancellationToken.Register(
                         async () =>
                         {
+NeonHelper.LogDebug("CallProxyAsync: 3");
                             await CallProxyAsync(new CancelRequest() { RequestId = requestId });
+NeonHelper.LogDebug("CallProxyAsync: 4");
                         });
                 }
 
+NeonHelper.LogDebug("CallProxyAsync: 5");
                 var response = await proxyClient.SendRequestAsync(request);
+NeonHelper.LogDebug("CallProxyAsync: 6");
 
                 response.EnsureSuccessStatusCode();
+NeonHelper.LogDebug("CallProxyAsync: 7");
 
                 return await operation.CompletionSource.Task;
             }
             catch (Exception e)
             {
+NeonHelper.LogDebug($"CallProxyAsync: 8: {NeonHelper.ExceptionError(e)}");
                 if (closingConnection && (request is HeartbeatRequest))
                 {
                     // Special-case heartbeat replies while we're closing
                     // the connection to make things more deterministic.
 
+NeonHelper.LogDebug("CallProxyAsync: 9");
                     return new HeartbeatReply() { RequestId = request.RequestId };
                 }
 
@@ -2031,6 +2042,7 @@ NeonHelper.LogDebug("CadenceClient: 12");
                 closingConnection = true;
 
                 log.LogCritical(e);
+NeonHelper.LogDebug("CallProxyAsync: 10");
                 throw;
             }
         }
