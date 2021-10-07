@@ -297,10 +297,13 @@ services:
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeFile), nameof(composeFile));
 
+NeonHelper.LogDebug("StartAsComposed: 0");
             base.CheckWithinAction();
+NeonHelper.LogDebug("StartAsComposed: 1");
 
             if (!IsRunning)
             {
+NeonHelper.LogDebug("StartAsComposed: 2");
                 // $hack(jefflill):
                 //
                 // The [temporal-dev] Docker test stack may be running from a previous test run.  
@@ -310,13 +313,19 @@ services:
                 // This is somewhat fragile because it hardcodes the container names and won't
                 // remove any other stack assets like networks.
 
-                NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force",
-                    new string[]
-                    {
-                        "temporal-dev_cassandra_1",
-                        "temporal-dev_temporal-web_1",
-                        "temporal-dev_temporal_1"
-                    } });
+NeonHelper.LogDebug("StartAsComposed: 3");
+                NeonHelper.ExecuteCapture(NeonHelper.DockerCli, 
+                    new object[]
+                    { 
+                        "rm", "--force",
+                        new string[]
+                        {
+                            "temporal-dev_cassandra_1",
+                            "temporal-dev_temporal-web_1",
+                            "temporal-dev_temporal_1"
+                        } 
+                    });
+NeonHelper.LogDebug("StartAsComposed: 4");
 
                 // Reset CadenceClient to its initial state.
 
@@ -324,12 +333,15 @@ services:
 
                 if (!noReset)
                 {
+NeonHelper.LogDebug("StartAsComposed: 5");
                     CadenceClient.Reset();
                 }
+NeonHelper.LogDebug("StartAsComposed: 6");
 
                 // Start the Cadence container.
 
                 base.StartAsComposed(name, composeFile, keepRunning);
+NeonHelper.LogDebug("StartAsComposed: 7");
 
                 // It can take Cadence server some time to start.  Rather than relying on [cadence-proxy]
                 // to handle retries (which may take longer than the connect timeout), we're going to wait
@@ -348,6 +360,7 @@ services:
                         socket.Connect(IPAddress.IPv6Loopback, NetworkPorts.Cadence);
                         socket.Close();
                     });
+NeonHelper.LogDebug("StartAsComposed: 8");
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));  // Wait a bit longer for luck!
 
@@ -368,17 +381,21 @@ services:
                 this.settings  = settings;
                 this.reconnect = reconnect;
 
+NeonHelper.LogDebug("StartAsComposed: 9");
                 if (!noClient)
                 {
-                    // Establish the Cadence connection *via the cadence proxy).
+NeonHelper.LogDebug("StartAsComposed: 10");
+                    // Establish the Cadence connection via the cadence proxy).
 
                     Client = CadenceClient.ConnectAsync(settings).Result;
+NeonHelper.LogDebug("StartAsComposed: 11");
 
                     HttpClient = new HttpClient()
                     {
                         BaseAddress = Client.ListenUri
                     };
                 }
+NeonHelper.LogDebug("StartAsComposed: 12");
             }
         }
 

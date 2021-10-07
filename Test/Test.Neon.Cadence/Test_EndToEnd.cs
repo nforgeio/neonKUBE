@@ -73,9 +73,14 @@ namespace TestCadence
 
         public Test_EndToEnd(CadenceFixture fixture, ITestOutputHelper outputHelper)
         {
+NeonHelper.DebugLogPath = @"C:\Temp\log.txt";
+NeonHelper.ClearDebugLog();
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0");
             TestHelper.ResetDocker(this.GetType());
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0A");
 
             testWriter = new TestOutputWriter(outputHelper);
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0B");
 
             // Initialize the Cadence fixture.
 
@@ -89,35 +94,48 @@ namespace TestCadence
                 DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
                 ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 0C");
 
             if (fixture.Start(settings, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1");
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1A");
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1B");
 
                 // Setup a service for activity dependency injection testing if it doesn't
                 // already exist.
 
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1C");
                 if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
                 {
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1D");
                     NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 1E");
                 }
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 2");
 
                 // Auto register the test workflow and activity implementations.
 
                 client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 3");
 
                 // Start the worker.
 
                 client.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 4");
             }
             else
             {
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 5");
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 6");
             }
+NeonHelper.LogDebug("Test_EndToEnd::Constructor: 7");
         }
 
         public void Dispose()

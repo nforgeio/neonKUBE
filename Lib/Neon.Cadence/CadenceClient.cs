@@ -875,11 +875,14 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
+NeonHelper.LogDebug("ConnectAsync: 0");
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specify a non-empty default Cadence domain.");
+NeonHelper.LogDebug("ConnectAsync: 1");
 
             var client = new CadenceClient(settings);
+NeonHelper.LogDebug("ConnectAsync: 2");
 
             // Initialize the [cadence-proxy].
 
@@ -887,6 +890,7 @@ namespace Neon.Cadence
             {
                 try
                 {
+NeonHelper.LogDebug("ConnectAsync: 3");
                     // We're going to wait up to 30 seconds for [cadence-proxy] to initialize
                     // itself to become ready to receive requests.  We're going to ping the proxy's
                     // HTTP endpoint with GET requests until we see an HTTP response.
@@ -905,12 +909,15 @@ namespace Neon.Cadence
                             {
                                 try
                                 {
+NeonHelper.LogDebug("ConnectAsync: 4");
                                     await initClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"));
+NeonHelper.LogDebug("ConnectAsync: 5");
 
                                     return true;
                                 }
                                 catch
                                 {
+NeonHelper.LogDebug("ConnectAsync: 6");
                                     return false;
                                 }
                             },
@@ -921,6 +928,7 @@ namespace Neon.Cadence
                     // Send the [InitializeRequest] to the [cadence-proxy] so it will know
                     // where the .NET Client is listening.
 
+NeonHelper.LogDebug("ConnectAsync: 7");
                     var initializeRequest =
                         new InitializeRequest()
                         {
@@ -930,6 +938,7 @@ namespace Neon.Cadence
                         };
 
                     await client.CallProxyAsync(initializeRequest);
+NeonHelper.LogDebug("ConnectAsync: 8");
 
                     // Send the [ConnectRequest] to the [cadence-proxy] telling it
                     // how to connect to the Cadence cluster.
@@ -953,10 +962,13 @@ namespace Neon.Cadence
                             CreateDomain  = settings.CreateDomain
                         };
 
+NeonHelper.LogDebug("ConnectAsync: 9");
                     client.CallProxyAsync(connectRequest).Result.ThrowOnError();
+NeonHelper.LogDebug("ConnectAsync: 10");
                 }
                 catch (Exception e)
                 {
+NeonHelper.LogDebug("ConnectAsync: 11");
                     client.Dispose();
                     throw new ConnectException("Cannot connect to Cadence cluster.", e);
                 }
@@ -965,8 +977,10 @@ namespace Neon.Cadence
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
+NeonHelper.LogDebug("ConnectAsync: 12");
             client.heartbeatThread = NeonHelper.StartThread(client.HeartbeatThread);
-            client.timeoutThread    = NeonHelper.StartThread(client.TimeoutThread);
+            client.timeoutThread   = NeonHelper.StartThread(client.TimeoutThread);
+NeonHelper.LogDebug("ConnectAsync: 13");
 
             // Initialize the cache size to a known value.
 
@@ -978,6 +992,7 @@ namespace Neon.Cadence
             {
                 // Ignoring these.
             }
+NeonHelper.LogDebug("ConnectAsync: 14");
 
             return client;
         }
@@ -1544,6 +1559,7 @@ namespace Neon.Cadence
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         private CadenceClient(CadenceSettings settings)
         {
+NeonHelper.LogDebug("CadenceClient: 0");
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));
 
@@ -1554,6 +1570,7 @@ namespace Neon.Cadence
             {
                 throw new ConnectException("No Cadence servers were specified.");
             }
+NeonHelper.LogDebug("CadenceClient: 1");
 
             foreach (var server in settings.Servers)
             {
@@ -1569,6 +1586,7 @@ namespace Neon.Cadence
                     throw new ConnectException($"Invalid Cadence server URI: {server}");
                 }
             }
+NeonHelper.LogDebug("CadenceClient: 2");
 
             if (settings.DebugIgnoreTimeouts)
             {
@@ -1581,6 +1599,7 @@ namespace Neon.Cadence
                 Settings.DebugHttpTimeout    = TimeSpan.FromHours(48);
                 Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
+NeonHelper.LogDebug("CadenceClient: 3");
 
             DataConverter      = new JsonDataConverter();
             cadenceLogger      = LogManager.Default.GetLogger("cadence", isLogEnabledFunc: () => Settings.LogCadence);
@@ -1595,9 +1614,11 @@ namespace Neon.Cadence
                 maxRetryInterval:     TimeSpan.FromSeconds(1), 
                 timeout:              TimeSpan.FromSeconds(60), 
                 sourceModule:         nameof(CadenceClient));
+NeonHelper.LogDebug("CadenceClient: 4");
 
             lock (syncLock)
             {
+NeonHelper.LogDebug("CadenceClient: 5");
                 try
                 {
                     idToClient.Add(this.ClientId, this);
@@ -1610,16 +1631,21 @@ namespace Neon.Cadence
 
                     proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
 
+NeonHelper.LogDebug("CadenceClient: 6");
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {
+NeonHelper.LogDebug("CadenceClient: 7");
                         proxyProcess = StartProxy(new IPEndPoint(Address, proxyPort), settings, ClientId);
+NeonHelper.LogDebug("CadenceClient: 8");
                     }
                 }
                 catch
                 {
+NeonHelper.LogDebug("CadenceClient: 9");
                     idToClient.Remove(this.ClientId);
                     throw;
                 }
+NeonHelper.LogDebug("CadenceClient: 10");
             }
 
             // Create the HTTP client we'll use to communicate with the [cadence-proxy].
@@ -1633,11 +1659,13 @@ namespace Neon.Cadence
                 AutomaticDecompression = DecompressionMethods.None
             };
 
+NeonHelper.LogDebug("CadenceClient: 11");
             proxyClient = new HttpClient(httpHandler, disposeHandler: true)
             {
                 BaseAddress = new Uri($"http://{Address}:{proxyPort}"),
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
+NeonHelper.LogDebug("CadenceClient: 12");
         }
 
         /// <summary>

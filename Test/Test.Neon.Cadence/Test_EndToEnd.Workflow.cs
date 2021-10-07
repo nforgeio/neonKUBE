@@ -144,14 +144,18 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_WithResult()
         {
+NeonHelper.LogDebug("Test_EndToEnd::Workflow_WithResult: 0");
             await SyncContext.ClearAsync;
+NeonHelper.LogDebug("Test_EndToEnd::Workflow_WithResult: 1");
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
 
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
+NeonHelper.LogDebug("Test_EndToEnd::Workflow_WithResult: 2");
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+NeonHelper.LogDebug("Test_EndToEnd::Workflow_WithResult: 3");
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
