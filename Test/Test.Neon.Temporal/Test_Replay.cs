@@ -59,11 +59,11 @@ namespace TestTemporal
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
 
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestTrait.Incomplete)]
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Buggy)]
     public class Test_Replay : IClassFixture<TemporalFixture>
     {
         private const int maxWaitSeconds = 5;
