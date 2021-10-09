@@ -417,7 +417,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("create neoncluster.io domain",
                 async (controller) =>
                 {
-                    controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
+                    controller.SetGlobalStepStatus("create: neoncluster.io subdomain for TLS");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                     var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);

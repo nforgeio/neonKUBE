@@ -106,11 +106,11 @@ namespace Neon.Kube
 
             if (NeonHelper.IsWindows)
             {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
             }
             else
             {
@@ -582,6 +582,8 @@ namespace Neon.Kube
         {
             get
             {
+                string kubeFolder;
+
                 if (cachedKubeConfigPath != null)
                 {
                     return cachedKubeConfigPath;
@@ -591,14 +593,18 @@ namespace Neon.Kube
                 {
                     case KubeAutomationMode.Disabled:
 
-                        return cachedKubeConfigPath = Path.Combine(userHomeFolder, ".kube", "config");
+                        kubeFolder = Path.Combine(userHomeFolder, ".kube");
+
+                        Directory.CreateDirectory(kubeFolder);
+
+                        return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
 
                     case KubeAutomationMode.Enabled:
                     case KubeAutomationMode.EnabledWithSharedCache:
 
                         Covenant.Assert(automationFolder != null);
                         
-                        var kubeFolder = Path.Combine(automationFolder, ".kube");
+                        kubeFolder = Path.Combine(automationFolder, ".kube");
 
                         Directory.CreateDirectory(kubeFolder);
 
