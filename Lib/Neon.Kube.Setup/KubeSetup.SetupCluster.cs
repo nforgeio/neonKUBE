@@ -122,9 +122,10 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name="automate">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
-        /// current neonDESKTOP state will not be impacted.
+        /// <param name="automationFolder">
+        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
+        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
+        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
@@ -141,12 +142,12 @@ namespace Neon.Kube
         /// </remarks>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition, 
-            int                 maxParallel   = 500, 
-            bool                unredacted    = false, 
-            bool                debugMode     = false, 
-            bool                uploadCharts  = false,
-            bool                automate      = false,
-            ReadyToGoMode       readyToGoMode = ReadyToGoMode.Normal)
+            int                 maxParallel      = 500, 
+            bool                unredacted       = false, 
+            bool                debugMode        = false, 
+            bool                uploadCharts     = false,
+            string              automationFolder = null,
+            ReadyToGoMode       readyToGoMode    = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
@@ -159,13 +160,11 @@ namespace Neon.Kube
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
-            var automationFolder = (string)null;
-            var logFolder        = KubeHelper.LogFolder;
+            var logFolder = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.

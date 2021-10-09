@@ -58,14 +58,15 @@ namespace Neon.Kube.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="mode">Optionally specifies the test mode.  This defaults to <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.</param>
         /// <exception cref="InvalidOperationException">Thrown if another test manager instance is active.</exception>
-        public KubeTestManager()
+        public KubeTestManager(KubeAutomationMode mode = KubeAutomationMode.EnabledWithSharedCache)
         {
             lock (syncLock)
             {
                 if (Current != null)
                 {
-                    throw new InvalidOperationException("Another test manager is active.");
+                    throw new InvalidOperationException("Another test manager is already active.");
                 }
 
                 try
@@ -73,12 +74,11 @@ namespace Neon.Kube.Xunit
                     tempFolder = new TempFolder();
                     Current    = this;
 
-                    KubeHelper.SetTestMode(tempFolder.Path);
-                    Environment.SetEnvironmentVariable(NeonHelper.TestModeFolderVar, tempFolder.Path);
+                    KubeHelper.SetAutomationMode(tempFolder.Path, mode);
                 }
                 catch
                 {
-                    Environment.SetEnvironmentVariable(NeonHelper.TestModeFolderVar, null);
+                    KubeHelper.ResetAutomationMode();
                     Current = null;
                     throw;
                 }
@@ -88,9 +88,10 @@ namespace Neon.Kube.Xunit
         /// <inheritdoc/>
         public void Dispose()
         {
+            KubeHelper.ResetAutomationMode();
+
             if (tempFolder != null)
             {
-                KubeHelper.ResetTestMode();
                 tempFolder.Dispose();
 
                 tempFolder = null;

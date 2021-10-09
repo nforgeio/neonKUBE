@@ -69,7 +69,7 @@ namespace Test.NeonCli
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -135,7 +135,7 @@ TEST_D=D-VALUE
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -206,7 +206,7 @@ TEST_D=D-VALUE
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -248,7 +248,7 @@ TEST_D=D-VALUE
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -305,7 +305,7 @@ $<<TEST_D>>
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -365,7 +365,7 @@ $<<TEST_D>>
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -441,7 +441,7 @@ $<<TEST_D>>
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {
@@ -471,7 +471,7 @@ $<<TEST_D>>
 
             try
             {
-                using (var manager = new KubeTestManager())
+                using (var testManager = new KubeTestManager())
                 {
                     using (var runner = new ProgramRunner())
                     {

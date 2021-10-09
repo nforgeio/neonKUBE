@@ -111,11 +111,12 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --automate                  - Indicates that the command must not impact neonDESKTOP
-                                  by changing the current login or Kubernetes config or
+    --automation-folder         - Indicates that the command must not impact normal clusters
+                                  by changing the current login, Kubernetes config or
                                   other files like cluster deployment logs.  This is
-                                  used for automated deployments that can proceed while
-                                  neonDESKTOP is doing other things.
+                                  used for automated CI/CD or unit test cluster deployments 
+                                  while not disrupting the built-in neonDESKTOP or
+                                  other normal clusters.
 
     --headend-uri               - Set the URI for the headend service.
 
@@ -134,7 +135,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -172,12 +173,12 @@ Server Requirements:
                 }
             }
            
-            var nodeImageUri  = commandLine.GetOption("--node-image-uri");
-            var nodeImagePath = commandLine.GetOption("--node-image-path");
-            var debug         = commandLine.HasOption("--debug");
-            var baseImageName = commandLine.GetOption("--base-image-name");
-            var automate      = commandLine.HasOption("--automate");
-            var headendUri    = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var nodeImageUri     = commandLine.GetOption("--node-image-uri");
+            var nodeImagePath    = commandLine.GetOption("--node-image-path");
+            var debug            = commandLine.HasOption("--debug");
+            var baseImageName    = commandLine.GetOption("--base-image-name");
+            var automationFolder = commandLine.GetOption("--automation-folder");
+            var headendUri       = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -187,7 +188,7 @@ Server Requirements:
 
             // Implement the command.
 
-            if (KubeHelper.CurrentContext != null && !automate)
+            if (KubeHelper.CurrentContext != null)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before preparing another.");
                 Program.Exit(1);
@@ -256,7 +257,7 @@ Server Requirements:
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automate:               automate,
+                automationFolder:       automationFolder,
                 headendUri:             headendUri);
 
             controller.StatusChangedEvent +=

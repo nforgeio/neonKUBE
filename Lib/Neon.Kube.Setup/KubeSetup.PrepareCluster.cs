@@ -74,9 +74,10 @@ namespace Neon.Kube
         /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
-        /// <param name="automate">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
-        /// current neonDESKTOP state will not be impacted.
+        /// <param name="automationFolder">
+        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
+        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
+        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="disableImageDownload">
@@ -97,7 +98,7 @@ namespace Neon.Kube
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
-            bool                        automate              = false,
+            string                      automationFolder      = null,
             string                      headendUri            = "https://headend.neoncloud.io",
             bool                        disableImageDownload  = false,
             ReadyToGoMode               readyToGoMode         = ReadyToGoMode.Normal)
@@ -110,13 +111,11 @@ namespace Neon.Kube
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
-            var automationFolder = (string)null;
-            var logFolder        = KubeHelper.LogFolder;
+            var logFolder = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.
