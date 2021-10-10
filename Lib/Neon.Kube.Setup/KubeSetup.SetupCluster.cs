@@ -182,7 +182,8 @@ namespace Neon.Kube
                     }
 
                     var logWriter      = new StreamWriter(logStream);
-                    var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var context = KubeHelper.CurrentContext;
+                    var sshCredentials = context.Extension.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
@@ -264,6 +265,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
+            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
 
             // Configure the setup steps.
 

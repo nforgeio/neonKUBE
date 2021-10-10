@@ -3533,7 +3533,18 @@ touch /etc/neon-init/ready
 ";
                 SudoCommand(CommandBundle.FromScript(setScript));
             }
-            else if (!keepNetworkSettings)
+            else
+            {
+                var resetScript =
+@"
+mkdir -p /etc/neon-init
+
+rm -rf /etc/neon-init/*
+";
+                SudoCommand(CommandBundle.FromScript(resetScript));
+            }
+            
+            if (!keepNetworkSettings)
             {
                 // We need to delete the [/etc/neon-init/ready] file and re-enable
                 // network DHCP by restoring the original network configuration
