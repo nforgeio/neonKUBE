@@ -309,7 +309,11 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(ClusterDefinition clusterDefinition, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
+        public TestFixtureStatus Deploy(
+            ClusterDefinition   clusterDefinition,
+            string              imageUriOrPath        = null, 
+            bool                removeOrphansByPrefix = false, 
+            bool                unredacted            = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
@@ -405,7 +409,11 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(string clusterDefinitionYaml, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
+        public TestFixtureStatus Deploy(
+            string  clusterDefinitionYaml, 
+            string  imageUriOrPath        = null, 
+            bool    removeOrphansByPrefix = false, 
+            bool    unredacted            = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
 
@@ -451,7 +459,11 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(FileInfo clusterDefinitionFile, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
+        public TestFixtureStatus Deploy(
+            FileInfo    clusterDefinitionFile,
+            string      imageUriOrPath        = null,
+            bool        removeOrphansByPrefix = false,
+            bool        unredacted            = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
 
