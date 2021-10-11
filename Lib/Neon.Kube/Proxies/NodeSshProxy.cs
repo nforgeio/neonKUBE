@@ -88,8 +88,9 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
-        private static readonly Regex   idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
-        private const string            imageTypePath   = "/etc/neonkube/image-type";
+        private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private const string            imageTypePath    = "/etc/neonkube/image-type";
+        private const string            imageVersionPath = "/etc/neonkube/image-version";
 
         private ClusterProxy    cluster;
         private KubeImageType?  cachedImageType;
@@ -162,8 +163,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Indicates the type of node image used to when deploying the attached
-        /// node.  This information is determined by <b>/etc/neonkube/image-type</b>.
+        /// Indicates the type of node image type.  This is stored in the <b>/etc/neonkube/image-type</b> file.
         /// </summary>
         public KubeImageType ImageType
         {
@@ -191,6 +191,44 @@ namespace Neon.Kube
                 cachedImageType = value;
 
                 UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Indicates the neonKUBE node image version.  This is stored in the <b>/etc/neonkube/image-version</b> file.
+        /// This can be used to ensure that the node image is compatible with the code configuring the cluster.
+        /// </para>
+        /// <node>
+        /// This returns <c>null</c> when the <b>/etc/neonkube/image-version</b> file doesn't exist.
+        /// </node>
+        /// </summary>
+        /// <exception cref="FormatException">Thrown when the version file could not be parsed.</exception>
+        public SemanticVersion ImageVersion
+        {
+            get
+            {
+                if (!FileExists(imageVersionPath))
+                {
+                    return null;
+                }
+
+                return SemanticVersion.Parse(base.DownloadText(imageVersionPath));
+            }
+
+            set
+            {
+                if (value == null)
+                {
+                    if (FileExists(imageVersionPath))
+                    {
+                        RemoveFile(imageVersionPath);
+                    }
+                }
+                else
+                {
+                    UploadText(imageVersionPath, value.ToString());
+                }
             }
         }
 
