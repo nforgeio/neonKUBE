@@ -320,15 +320,23 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies cluster debugging options.
+        /// Optionally specifies cluster debugging options.
         /// </para>
         /// <note>
-        /// These options are generally intended for neonKUBE developers only.
+        /// These options are generally intended for neonKUBE maintainers only.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
         [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
         public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
+        /// Optionally specifies <b>KubernetesFixture</b> related configuration for cluster
+        /// based unit testing.
+        /// </summary>
+        [JsonProperty(PropertyName = "Test", Required = Required.Always)]
+        [YamlMember(Alias = "test", ApplyNamingConventions = false)]
+        public TestOptions Test { get; set; } = new TestOptions();
 
         /// <summary>
         /// Specifies the cluster OpenEbs related options.
@@ -827,6 +835,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Debug       = Debug ?? new DebugOptions();
+            Test        = Test ?? new TestOptions();
             OpenEbs     = OpenEbs ?? new OpenEbsOptions();
             Security    = Security ?? new SecurityOptions();
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
@@ -847,6 +856,7 @@ namespace Neon.Kube
             }
 
             Debug.Validate(this);
+            Test.Validate(this);
             OpenEbs.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);

@@ -66,7 +66,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
     <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 

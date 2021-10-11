@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -24,8 +25,8 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
 using Neon.Net;
+using Neon.SSH;
 using Neon.Xunit;
-using System.IO;
 
 namespace Neon.Kube.Xunit
 {
@@ -66,7 +67,10 @@ namespace Neon.Kube.Xunit
     /// <para>
     /// This fixture can be used to run tests against any existing Kubernetes cluster
     /// as well as a new neonKUBE cluster deployed by the fixture.  The idea here is
-    /// that you'll have your unit test inherit from 
+    /// that you'll have your unit test class inherit from <see cref="IClassFixture{TFixture}"/>,
+    /// passing <see cref="KubernetesFixture"/> as the type parameter and then implementing
+    /// a test class constructor that has a <see cref="KubernetesFixture"/> parameter that
+    /// will receive an instance of the the fixture.
     /// </para>
     /// <para>
     /// <b>To connect to an existing cluster</b>, you'll need to call one of the <see cref="Connect(K8SConfiguration, string, string)"/>,
@@ -75,8 +79,8 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <para>
     /// <b>To deploy a temporary neonKUBE cluster</b>, you'll need to call one of
-    /// the <see cref="Deploy(ClusterDefinition)"/>, <see cref="Deploy(FileInfo)"/>, or
-    /// <see cref="Deploy(string)"/> methods within the constructor to provision
+    /// the <see cref="Deploy(ClusterDefinition, string, bool, bool)"/>, <see cref="Deploy(FileInfo, string, bool, bool)"/>,
+    /// or <see cref="Deploy(string, string, bool, bool)"/> methods within the constructor to provision
     /// and setup the cluster using the specified cluster definition.  The <see cref="ClusterDefinition"/>
     /// property will be set in this case.
     /// </para>
@@ -86,10 +90,42 @@ namespace Neon.Kube.Xunit
     /// <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/> when the
     /// fixture is already managing a cluster.
     /// </para>
+    /// <note>
+    /// Any existing neonKUBE cluster will be removed by the <b>Deploy()</b> methods and any neonKUBE clusters 
+    /// created by <b>Deploy()</b> methods will be automatically removed when <see cref="Reset"/> is called 
+    /// or when xUnit finishes running the tests in your class.
+    /// </note>
+    /// <para><b>CLUSTER DEPLOYMENT CONFLICTS</b></para>
+    /// <para>
+    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Deploy()</b> 
+    /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
+    /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
+    /// within separate directories named like <b>$(USERPROFILE)\.neonkube\automation\CLUSTER-NAME</b>.
+    /// This effectively isolates clusters deployed by the fixture from the user's clusters as well as from
+    /// each other.
+    /// </para>
+    /// <para>
+    /// <b>IMPORTANT:</b> You'll need to ensure that your cluster name does not conflict with any existing
+    /// clusters deployed to the same environment and also that the node IP addresses don't conflict with
+    /// existing clusters deployed on shared infrastructure such as local machines, Hyper-V or XenServer
+    /// instances.  You don't need to worry about IP address conflicts for cloud environments because nodes
+    /// run on private networks there.
+    /// </para>
+    /// <para>
+    /// We recommend that you prefix your cluster name with something identifying the machine deploying
+    /// the cluster.  This could be the machine name, user or a combination of the machine and the current
+    /// username, like <b>runner0-</b> or <b>jeff-</b>, or <b>runner0-jeff-</b>...
+    /// </para>
+    /// <para>
+    /// The idea here is prevent cluster and/or VM naming conflicts for test clusters deployed in parallel
+    /// by different runners or developers on their own machines.
+    /// </para>
     /// </remarks>
     public class KubernetesFixture : TestFixture
     {
-        private bool        deployed = false;
+        private bool    deployed              = false;
+        private bool    unredacted            = false;
+        bool            removeOrphansByPrefix = false;
 
         /// <summary>
         /// Constructor.
@@ -113,9 +149,16 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// <para>
         /// Connects the Kubernetes cluster specified in the default kubeconfig.  You can explicitly specify
         /// the configuration file location via <paramref name="kubeconfigPath"/> and override the current 
         /// context and API server endpoint using the remaining optional parameters.
+        /// </para>
+        /// <note>
+        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
+        /// operations via the <see cref="Client"/>
+        /// </note>
         /// </summary>
         /// <param name="kubeconfigPath">Optionally specifies a specific kubeconfig file.</param>
         /// <param name="currentContext">Optionally overrides the current context.</param>
@@ -126,7 +169,7 @@ namespace Neon.Kube.Xunit
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Deploy()</b> method has already been called on the fixture.  This fixture
+        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
         public TestFixtureStatus Connect(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
@@ -147,7 +190,14 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// <para>
         /// Connects the Kubernetes cluster specified by <see cref="KubernetesClientConfiguration"/>.
+        /// </para>
+        /// <note>
+        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
+        /// operations via the <see cref="Client"/>
+        /// </note>
         /// </summary>
         /// <param name="kubeconfig">Specifies the <see cref="KubernetesClientConfiguration"/>.</param>
         /// <returns>
@@ -156,7 +206,7 @@ namespace Neon.Kube.Xunit
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Deploy()</b> method has already been called on the fixture.  This fixture
+        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
         public TestFixtureStatus Connect(KubernetesClientConfiguration kubeconfig)
@@ -179,8 +229,15 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// <para>
         /// Connects the Kubernetes cluster specified by <see cref="K8SConfiguration"/>.  You can override the current  
         /// context and API server endpoint using the remaining optional parameters.
+        /// </para>
+        /// <note>
+        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
+        /// operations via the <see cref="Client"/>
+        /// </note>
         /// </summary>
         /// <param name="k8sConfig">The configuration.</param>
         /// <param name="currentContext">Optionally overrides the current context.</param>
@@ -191,7 +248,7 @@ namespace Neon.Kube.Xunit
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Deploy()</b> method has already been called on the fixture.  This fixture
+        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
         public TestFixtureStatus Connect(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
@@ -214,114 +271,204 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// <para>
         /// Deploys a new cluster as specified by the cluster definition model passed.
+        /// </para>
+        /// <note>
+        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition model.</param>
+        /// <param name="imageUriOrPath">
+        /// Optionally specifies the (compressed) node image URI or file path to use when
+        /// provisioning the cluster.  This defaults to the published image for the current
+        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// </param>
+        /// <param name="removeOrphansByPrefix">
+        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
+        /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="unredacted">
+        /// Optionally disables the redaction of potentially sensitive information from cluster
+        /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Delpoy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Connect()</b> method has already been called on the fixture.  This fixture
+        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Deploy(ClusterDefinition clusterDefinition)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
+        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
+        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// </para>
+        /// </remarks>
+        public TestFixtureStatus Deploy(ClusterDefinition clusterDefinition, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (Client != null)
+            try
             {
-                if (!deployed)
+                this.removeOrphansByPrefix = removeOrphansByPrefix;
+                this.unredacted            = unredacted;
+
+                if (this.Client != null)
                 {
-                    throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
+                    if (!this.deployed)
+                    {
+                        throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
+                    }
+
+                    return TestFixtureStatus.AlreadyRunning;
                 }
 
-                return TestFixtureStatus.AlreadyRunning;
-            }
+                // Set the automation mode, using any previously downloaded node image unless
+                // the user specifies a custom image.
 
-            throw new NotImplementedException();
+                KubeHelper.SetAutomationMode(KubeHelper.StandardNeonKubeAutomationFolder, imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled);
+
+                // Figure out whether the user passed an image URI or path.
+
+                var imageUri  = (string)null;
+                var imagePath = (string)null;
+
+                if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    imageUri = imageUriOrPath;
+                }
+                else
+                {
+                    imagePath = imageUriOrPath;
+                }
+
+                // Remove any existing cluster that may have been provisioned earlier using
+                // this (or a similar) cluster definition.  We shouldn't typically need to
+                // do this because the fixture removes the cluster when [Reset()] is called,
+                // but it's possible that a test was interrupted leaving the last cluster
+                // still running.
+
+                RemoveCluster(clusterDefinition);
+            }
+            finally
+            {
+                if (KubeHelper.AutomationMode != KubeAutomationMode.Disabled)
+                {
+                    KubeHelper.ResetAutomationMode();
+                }
+            }
 
             return TestFixtureStatus.Started;
         }
 
         /// <summary>
+        /// <para>
         /// Deploys a new cluster as specified by the cluster definition YAML definition.
+        /// </para>
+        /// <note>
+        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// </note>
         /// </summary>
         /// <param name="clusterDefinitionYaml">The cluster definition YAML.</param>
+        /// <param name="imageUriOrPath">
+        /// Optionally specifies the (compressed) node image URI or file path to use when
+        /// provisioning the cluster.  This defaults to the published image for the current
+        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// </param>
+        /// <param name="removeOrphansByPrefix">
+        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
+        /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="unredacted">
+        /// Optionally disables the redaction of potentially sensitive information from cluster
+        /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Delpoy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Connect()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This
+        /// fixture does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Deploy(string clusterDefinitionYaml)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
+        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
+        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// </para>
+        /// </remarks>
+        public TestFixtureStatus Deploy(string clusterDefinitionYaml, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
 
-            if (Client != null)
-            {
-                if (!deployed)
-                {
-                    throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
-                }
-
-                return TestFixtureStatus.AlreadyRunning;
-            }
-
-            throw new NotImplementedException();
-
-            return TestFixtureStatus.Started;
+            return Deploy(Neon.Kube.ClusterDefinition.FromYaml(clusterDefinitionYaml), imageUriOrPath, removeOrphansByPrefix, unredacted);
         }
 
         /// <summary>
+        /// <para>
         /// Deploys a new cluster as specified by a cluster definition YAML file.
+        /// </para>
+        /// <note>
+        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// </note>
         /// </summary>
-        /// <param name="clusterDefinitionPath">Path to the cluster definition YAML file.</param>
+        /// <param name="clusterDefinitionFile"><see cref="FileInfo"/> for the cluster definition YAML file.</param>
+        /// <param name="imageUriOrPath">
+        /// Optionally specifies the (compressed) node image URI or file path to use when
+        /// provisioning the cluster.  This defaults to the published image for the current
+        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// </param>
+        /// <param name="removeOrphansByPrefix">
+        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
+        /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="unredacted">
+        /// Optionally disables the redaction of potentially sensitive information from cluster
+        /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Delpoy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown a <b>Connect()</b> method has already been called on the fixture.  This fixture
+        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Deploy(FileInfo clusterDefinitionPath)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
+        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
+        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// </para>
+        /// </remarks>
+        public TestFixtureStatus Deploy(FileInfo clusterDefinitionFile, string imageUriOrPath = null, bool removeOrphansByPrefix = false, bool unredacted = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinitionPath != null, nameof(clusterDefinitionPath));
+            Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
 
-            if (Client != null)
-            {
-                if (!deployed)
-                {
-                    throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
-                }
-
-                return TestFixtureStatus.AlreadyRunning;
-            }
-
-            throw new NotImplementedException();
-
-            return TestFixtureStatus.Started;
+            return Deploy(Neon.Kube.ClusterDefinition.FromFile(clusterDefinitionFile.FullName), imageUriOrPath, removeOrphansByPrefix, unredacted);
         }
 
         /// <summary>
-        /// Returns the standard <see cref="Kubernetes"/> client instance that can be used to
+        /// Returns a standard <see cref="Kubernetes"/> client instance that can be used to
         /// manage the attached cluster.  This property is set when a cluster is connected or
         /// deployed.
         /// </summary>
         public Kubernetes Client { get; private set; }
 
         /// <summary>
-        /// Returns the cluster definition for cluster deployed by this fixture or <c>null</c>
-        /// when the fixture just connected to the cluster.
+        /// Returns the cluster definition for cluster deployed by this fixture via one of the
+        /// <b>Deploy()</b> methods or <c>null</c> when the fixture was connected to the cluster
+        /// via one of the <b>Connect()</b> methods.
         /// </summary>
         public ClusterDefinition ClusterDefinition { get; private set; }
 
@@ -330,8 +477,7 @@ namespace Neon.Kube.Xunit
         {
             if (deployed)
             {
-                // 1. Stop and remove the cluster
-                // 2. Remove the temporary cluster folder
+                RemoveCluster(ClusterDefinition);
             }
 
             deployed          = false;
@@ -339,6 +485,50 @@ namespace Neon.Kube.Xunit
             ClusterDefinition = null;
 
             base.Reset();
+        }
+
+        /// <summary>
+        /// Removes any cluster associated with a cluster defintion.
+        /// </summary>
+        /// <param name="clusterDefinition">The target cluster definition.</param>
+        private void RemoveCluster(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Initialize the cluster proxy.
+
+            var cluster = new ClusterProxy(
+                clusterDefinition:  clusterDefinition,
+                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
+                {
+                    var logStream = new FileStream(Path.Combine(KubeHelper.LogFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    if (appendToLog)
+                    {
+                        logStream.Seek(0, SeekOrigin.End);
+                    }
+
+                    var logWriter      = new StreamWriter(logStream);
+                    var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+
+                    return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
+                });
+
+            if (unredacted)
+            {
+                cluster.SecureRunOptions = RunOptions.None;
+            }
+
+            // Configure the hosting manager.
+
+            var hostingManager = cluster.GetHostingManager(new HostingManagerFactory(() => HostingLoader.Initialize()), ClusterProxy.Operation.Setup);
+
+            if (hostingManager == null)
+            {
+                throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+            }
+
+            hostingManager.RemoveClusterAsync(clusterDefinition, removeOrphansByPrefix: removeOrphansByPrefix);
         }
     }
 }

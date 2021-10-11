@@ -851,7 +851,7 @@ namespace Neon.Kube
             this.networkOptions     = cluster.Definition.Network;
             this.region             = awsOptions.Region;
             this.availabilityZone   = awsOptions.AvailabilityZone;
-            this.resourceGroupName  = awsOptions.ResourceGroup;
+            this.resourceGroupName  = cluster.Definition.Test.GetPrefixedName(awsOptions.ResourceGroup);
             this.clusterFilter      = new List<Filter>()
             {
                 new Filter()

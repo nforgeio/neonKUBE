@@ -226,6 +226,36 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the path to the current user's <b>.neonkube</b> folder.  This value does not
+        /// change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
+        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// </summary>
+        public static string StandardNeonKubeFolder
+        {
+            get
+            {
+                Directory.CreateDirectory(neonkubeFolder);
+                return neonkubeFolder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the current user's <b>.neonkube/automation</b> folder.  This value does
+        /// not change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
+        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// </summary>
+        public static string StandardNeonKubeAutomationFolder
+        {
+            get
+            {
+                var path = Path.Combine(StandardNeonKubeFolder, "automation");
+
+                Directory.CreateDirectory(path);
+                return path;
+            }
+        }
+
+        /// <summary>
         /// Accesses the neonDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
@@ -438,6 +468,17 @@ namespace Neon.Kube
             orgKUBECONFIG    = Environment.GetEnvironmentVariable("KUBECONFIG");
 
             var kubeFolder = Path.Combine(automationFolder, ".kube");
+
+            // Remove any existing automation folder that was potentially left over
+            // from a previous test or other automation run.
+
+            if (Directory.Exists(folder))
+            {
+                NeonHelper.DeleteFolder(folder);
+            }
+
+            // Create the new automation folder and set the environment variable that
+            // references where the Kubernetes config file will be located.
 
             Directory.CreateDirectory(kubeFolder);
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
@@ -1021,29 +1062,6 @@ namespace Neon.Kube
         {
             cachedConfig = null;
             return Config;
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns the path to the automation folder for an automated cluster deployment.  This is intended
-        /// to be passed to <see cref="SetAutomationMode(string, KubeAutomationMode)"/> which will actually
-        /// create the folder.
-        /// </para>
-        /// <para>
-        /// Automation deplyment folders will be named like <b>$(USERPROGILE)/.neonkube/automation/CLUSTERNAME-GUID</b>
-        /// where <b>CLUSTERNAME</b> is the cluster name as defined by the definition passed and
-        /// GUID is a generated UUID.
-        /// </para>
-        /// </summary>
-        /// <param name="clusterDefinition">The target cluster definition.</param>
-        /// <returns>The new deployment automation folder path.</returns>
-        public static string CreateAutomatedDeploymentFolder(ClusterDefinition clusterDefinition)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            var guid = Guid.NewGuid().ToString("d");
-            
-            return Path.Combine(StandardAutomationFolder, $"{clusterDefinition.Name}-{guid}");
         }
 
         /// <summary>

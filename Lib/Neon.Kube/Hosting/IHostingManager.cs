@@ -225,7 +225,9 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Removes an existing cluster by terminating any nodes and then removing node VMs
-        /// and any related resources.  The cluster does not need to be running.
+        /// and any related resources.  The cluster does not need to be running.  This method
+        /// can optionally remove clusters or VMs potentially orphaned by interrupted unit tests
+        /// as identified by a resource group or VM name prefix.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
@@ -233,9 +235,20 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <param name="removeOrphansByPrefix">
+        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
+        /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
+        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
+        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// </para>
+        /// </remarks>
+        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false);
 
         /// <summary>
         /// <para>
@@ -246,8 +259,7 @@ namespace Neon.Kube
         /// XenServer or <b>.tar</b> for WSL2).
         /// </para>
         /// <note>
-        /// This works only for nodes deployed with a single drive and is not supported at all
-        /// for some environments (like <see cref="HostingEnvironment.BareMetal"/>).
+        /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

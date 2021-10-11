@@ -163,13 +163,18 @@ namespace Neon.Kube
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
         /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperVLocal"/>,
-        /// and <see cref="HostingEnvironment.XenServer"/> environments.
+        /// and <see cref="HostingEnvironment.XenServer"/> environments.  This is used to avoid
+        /// VM naming conflicts between different clusters.
         /// </para>
+        /// <note>
+        /// This property is ignored for cloud hosting environments because cluster VMs will be
+        /// isolated in their own resource groups and private networks.
+        /// </note>
         /// <para>
         /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
         /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
-        /// value followed by a dash will be used.  If this is empty or whitespace, machine
-        /// names will not be prefixed.
+        /// value followed by a dash will be used.  If this is <c>null</c> or whitespace then the
+        /// machine names will not be prefixed.
         /// </para>
         /// <note>
         /// Virtual machine name prefixes will always be converted to lowercase.
