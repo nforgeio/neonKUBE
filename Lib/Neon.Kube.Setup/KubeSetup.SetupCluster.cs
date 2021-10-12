@@ -261,7 +261,25 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect nodes");
-            controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
+
+            controller.AddNodeStep("check image version",
+                (state, node) =>
+                {
+                    // Ensure that the node image version matches the current neonKUBE (build) version.
+
+                    var imageVersion = node.ImageVersion;
+
+                    if (imageVersion == null)
+                    {
+                        throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
+                    }
+
+                    if (imageVersion != SemanticVersion.Parse(KubeConst.NeonKubeVersion))
+                    {
+                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
+                    }
+                });
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {

@@ -149,6 +149,20 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// Returns a standard <see cref="Kubernetes"/> client instance that can be used to
+        /// manage the attached cluster.  This property is set when a cluster is connected or
+        /// deployed.
+        /// </summary>
+        public Kubernetes Client { get; private set; }
+
+        /// <summary>
+        /// Returns the cluster definition for cluster deployed by this fixture via one of the
+        /// <b>Deploy()</b> methods or <c>null</c> when the fixture was connected to the cluster
+        /// via one of the <b>Connect()</b> methods.
+        /// </summary>
+        public ClusterDefinition ClusterDefinition { get; private set; }
+
+        /// <summary>
         /// <para>
         /// Connects the Kubernetes cluster specified in the default kubeconfig.  You can explicitly specify
         /// the configuration file location via <paramref name="kubeconfigPath"/> and override the current 
@@ -172,7 +186,7 @@ namespace Neon.Kube.Xunit
         /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Connect(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
+        public async Task<TestFixtureStatus> ConnectAsync(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
         {
             if (Client != null)
             {
@@ -181,12 +195,12 @@ namespace Neon.Kube.Xunit
                     throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
                 }
 
-                return TestFixtureStatus.AlreadyRunning;
+                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
             Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
 
-            return TestFixtureStatus.Started;
+            return await Task.FromResult(TestFixtureStatus.Started);
         }
 
         /// <summary>
@@ -209,7 +223,7 @@ namespace Neon.Kube.Xunit
         /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Connect(KubernetesClientConfiguration kubeconfig)
+        public async Task<TestFixtureStatus> Connect(KubernetesClientConfiguration kubeconfig)
         {
             Covenant.Requires<ArgumentNullException>(kubeconfig != null, nameof(kubeconfig));
 
@@ -220,12 +234,12 @@ namespace Neon.Kube.Xunit
                     throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
                 }
 
-                return TestFixtureStatus.AlreadyRunning;
+                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
             Client = new Kubernetes(kubeconfig);
 
-            return TestFixtureStatus.Started;
+            return await Task.FromResult(TestFixtureStatus.Started);
         }
 
         /// <summary>
@@ -251,7 +265,7 @@ namespace Neon.Kube.Xunit
         /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
-        public TestFixtureStatus Connect(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
+        public async Task<TestFixtureStatus> Connect(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
         {
             Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
 
@@ -262,12 +276,12 @@ namespace Neon.Kube.Xunit
                     throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
                 }
 
-                return TestFixtureStatus.AlreadyRunning;
+                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
             Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
 
-            return TestFixtureStatus.Started;
+            return await Task.FromResult(TestFixtureStatus.Started);
         }
 
         /// <summary>
@@ -284,6 +298,11 @@ namespace Neon.Kube.Xunit
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
         /// </param>
+        /// <param name="readyToGo">
+        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
+        /// image when <paramref name="imageUriOrPath"/> is not specified.  Note that only
+        /// single node clusters are supported for ready-to-go mode.
+        /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -291,6 +310,13 @@ namespace Neon.Kube.Xunit
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
         /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="maxParallel">
+        /// Optionally specifies the maximum number of cluster node operations to be performed
+        /// in parallel.  This defaults to <b>500</b> which is effectively infinite.
+        /// </param>
+        /// <param name="headendUri">
+        /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
@@ -309,13 +335,17 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(
+        public async Task<TestFixtureStatus> DeployAsync(
             ClusterDefinition   clusterDefinition,
-            string              imageUriOrPath        = null, 
+            string              imageUriOrPath        = null,
+            bool                readyToGo             = false,
             bool                removeOrphansByPrefix = false, 
-            bool                unredacted            = false)
+            bool                unredacted            = false,
+            int                 maxParallel           = 500,
+            string              headendUri            = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
             try
             {
@@ -329,7 +359,14 @@ namespace Neon.Kube.Xunit
                         throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
                     }
 
-                    return TestFixtureStatus.AlreadyRunning;
+                    return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
+                }
+
+                // Ensure that ready-to-mode is used only for single node clusters.
+
+                if (readyToGo && clusterDefinition.NodeDefinitions.Count > 1)
+                {
+                    throw new NotSupportedException("Ready-to-go mode supports only single node clusters.");
                 }
 
                 // Set the automation mode, using any previously downloaded node image unless
@@ -337,10 +374,16 @@ namespace Neon.Kube.Xunit
 
                 KubeHelper.SetAutomationMode(KubeHelper.StandardNeonKubeAutomationFolder, imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled);
 
-                // Figure out whether the user passed an image URI or path.
+                // Figure out whether the user passed an image URI or file path or neither,
+                // when we'll select the default published image for the current build.
 
                 var imageUri  = (string)null;
                 var imagePath = (string)null;
+
+                if (string.IsNullOrEmpty(imageUriOrPath))
+                {
+                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
+                }
 
                 if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -356,8 +399,74 @@ namespace Neon.Kube.Xunit
                 // do this because the fixture removes the cluster when [Reset()] is called,
                 // but it's possible that a test was interrupted leaving the last cluster
                 // still running.
+                //
+                // This will also remove any clusters and/or VMs prefixed by [ClusterDefinition.Test.Prefix]
+                // when set.
 
                 RemoveCluster(clusterDefinition);
+
+                // Provision the cluster, writing any logs to the test output.
+
+                try
+                {
+                    var controller = KubeSetup.CreateClusterPrepareController(
+                        clusterDefinition,
+                        nodeImageUri:   imageUri,
+                        nodeImagePath:  imagePath,
+                        maxParallel:    maxParallel,
+                        unredacted:     unredacted,
+                        headendUri:     headendUri);
+
+                    switch (await controller.RunAsync())
+                    {
+                        case SetupDisposition.Succeeded:
+
+                            break;
+
+                        case SetupDisposition.Failed:
+
+                            throw new KubeException("Cluster prepare failed.");
+
+                        case SetupDisposition.Cancelled:
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+                }
+                finally
+                {
+                    // $todo(jefflill): handle the logs.
+                }
+
+                // Setup the cluster, writing any logs to the test output.
+
+                try
+                {
+                    var controller = KubeSetup.CreateClusterSetupController(
+                        clusterDefinition,
+                        maxParallel:    maxParallel,
+                        unredacted:     unredacted);
+
+                    switch (await controller.RunAsync())
+                    {
+                        case SetupDisposition.Succeeded:
+
+                            break;
+
+                        case SetupDisposition.Failed:
+
+                            throw new KubeException("Cluster setup failed.");
+
+                        case SetupDisposition.Cancelled:
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+                }
+                finally
+                {
+                    // $todo(jefflill): handle the logs.
+                }
             }
             finally
             {
@@ -367,7 +476,7 @@ namespace Neon.Kube.Xunit
                 }
             }
 
-            return TestFixtureStatus.Started;
+            return await Task.FromResult(TestFixtureStatus.Started);
         }
 
         /// <summary>
@@ -384,6 +493,11 @@ namespace Neon.Kube.Xunit
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
         /// </param>
+        /// <param name="readyToGo">
+        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
+        /// image when <paramref name="clusterDefinitionYaml"/> is not specified.  Note that only
+        /// single node clusters are supported for ready-to-go mode.
+        /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -391,6 +505,13 @@ namespace Neon.Kube.Xunit
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
         /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="maxParallel">
+        /// Optionally specifies the maximum number of cluster node operations to be performed
+        /// in parallel.  This defaults to <b>500</b> which is effectively infinite.
+        /// </param>
+        /// <param name="headendUri">
+        /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
@@ -409,15 +530,26 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(
+        public async Task<TestFixtureStatus> Deploy(
             string  clusterDefinitionYaml, 
             string  imageUriOrPath        = null, 
+            bool    readyToGo             = false,
             bool    removeOrphansByPrefix = false, 
-            bool    unredacted            = false)
+            bool    unredacted            = false,
+            int     maxParallel           = 500,
+            string  headendUri            = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
+            Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return Deploy(Neon.Kube.ClusterDefinition.FromYaml(clusterDefinitionYaml), imageUriOrPath, removeOrphansByPrefix, unredacted);
+            return await DeployAsync(
+                clusterDefinition:      ClusterDefinition.FromYaml(clusterDefinitionYaml),
+                imageUriOrPath:         imageUriOrPath, 
+                readyToGo:              readyToGo,
+                removeOrphansByPrefix:  removeOrphansByPrefix,
+                unredacted:             unredacted,
+                maxParallel:            maxParallel,
+                headendUri:             headendUri);
         }
 
         /// <summary>
@@ -434,6 +566,11 @@ namespace Neon.Kube.Xunit
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
         /// </param>
+        /// <param name="readyToGo">
+        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
+        /// image when <paramref name="imageUriOrPath"/> is not specified.  Note that only
+        /// single node clusters are supported for ready-to-go mode.
+        /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -441,6 +578,13 @@ namespace Neon.Kube.Xunit
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
         /// deployment logs.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="maxParallel">
+        /// Optionally specifies the maximum number of cluster node operations to be performed
+        /// in parallel.  This defaults to <b>500</b> which is effectively infinite.
+        /// </param>
+        /// <param name="headendUri">
+        /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
@@ -459,30 +603,27 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Deploy(
+        public async Task<TestFixtureStatus> Deploy(
             FileInfo    clusterDefinitionFile,
             string      imageUriOrPath        = null,
+            bool        readyToGo             = false,
             bool        removeOrphansByPrefix = false,
-            bool        unredacted            = false)
+            bool        unredacted            = false, 
+            int         maxParallel           = 500,
+            string      headendUri            = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
+            Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return Deploy(Neon.Kube.ClusterDefinition.FromFile(clusterDefinitionFile.FullName), imageUriOrPath, removeOrphansByPrefix, unredacted);
+            return await DeployAsync(
+                clusterDefinition:      ClusterDefinition.FromFile(clusterDefinitionFile.FullName),
+                imageUriOrPath:         imageUriOrPath, 
+                readyToGo:              readyToGo,
+                removeOrphansByPrefix:  removeOrphansByPrefix,
+                unredacted:             unredacted,
+                maxParallel:            maxParallel,
+                headendUri:             headendUri);
         }
-
-        /// <summary>
-        /// Returns a standard <see cref="Kubernetes"/> client instance that can be used to
-        /// manage the attached cluster.  This property is set when a cluster is connected or
-        /// deployed.
-        /// </summary>
-        public Kubernetes Client { get; private set; }
-
-        /// <summary>
-        /// Returns the cluster definition for cluster deployed by this fixture via one of the
-        /// <b>Deploy()</b> methods or <c>null</c> when the fixture was connected to the cluster
-        /// via one of the <b>Connect()</b> methods.
-        /// </summary>
-        public ClusterDefinition ClusterDefinition { get; private set; }
 
         /// <inheritdoc/>
         public override void Reset()
