@@ -767,9 +767,9 @@ namespace Neon.Kube
 
                 // Remove any potentially orphaned VMs when enabled and a prefix is specified.
 
-                if (removeOrphansByPrefix && !string.IsNullOrEmpty(clusterDefinition.Test.Prefix))
+                if (removeOrphansByPrefix && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
                 {
-                    var prefix = clusterDefinition.Test.Prefix + "-";
+                    var prefix = clusterDefinition.Deployment.Prefix + "-";
 
                     Parallel.ForEach(hyperv.ListVms(),
                         vm =>

@@ -73,31 +73,31 @@ namespace Neon.Kube.Xunit
     /// will receive an instance of the the fixture.
     /// </para>
     /// <para>
-    /// <b>To connect to an existing cluster</b>, you'll need to call one of the <see cref="Connect(K8SConfiguration, string, string)"/>,
-    /// <see cref="Connect(KubernetesClientConfiguration)"/>, or <see cref="Connect(string, string, string)"/>
+    /// <b>To connect to an existing cluster</b>, you'll need to call one of the <see cref="ConnectAsync(K8SConfiguration, string, string)"/>,
+    /// <see cref="ConnectAsync(KubernetesClientConfiguration)"/>, or <see cref="ConnectAsync(string, string, string)"/>
     /// methods to connect to an existing cluster within the constructor.
     /// </para>
     /// <para>
     /// <b>To deploy a temporary neonKUBE cluster</b>, you'll need to call one of
-    /// the <see cref="Deploy(ClusterDefinition, string, bool, bool)"/>, <see cref="Deploy(FileInfo, string, bool, bool)"/>,
-    /// or <see cref="Deploy(string, string, bool, bool)"/> methods within the constructor to provision
+    /// the <see cref="DeployAsync(ClusterDefinition, string, bool, bool, bool, int, string)"/>, <see cref="DeployAsync(FileInfo, string, bool, bool, bool, int, string)"/>,
+    /// or <see cref="DeployAsync(string, string, bool, bool, bool, int, string)"/> methods within the constructor to provision
     /// and setup the cluster using the specified cluster definition.  The <see cref="ClusterDefinition"/>
     /// property will be set in this case.
     /// </para>
     /// <para>
-    /// The <b>Connect()</b> and <b>Deploy()</b> methods return <see cref="TestFixtureStatus.Started"/>
+    /// The <b>ConnectAsync()</b> and <b>DeployAsync()</b> methods return <see cref="TestFixtureStatus.Started"/>
     /// the first time one of these methods have been called on a fixture instance or after a
     /// <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/> when the
     /// fixture is already managing a cluster.
     /// </para>
     /// <note>
-    /// Any existing neonKUBE cluster will be removed by the <b>Deploy()</b> methods and any neonKUBE clusters 
-    /// created by <b>Deploy()</b> methods will be automatically removed when <see cref="Reset"/> is called 
+    /// Any existing neonKUBE cluster will be removed by the <b>DeployAsync()</b> methods and any neonKUBE clusters 
+    /// created by <b>DeployAsync()</b> methods will be automatically removed when <see cref="Reset"/> is called 
     /// or when xUnit finishes running the tests in your class.
     /// </note>
     /// <para><b>CLUSTER DEPLOYMENT CONFLICTS</b></para>
     /// <para>
-    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Deploy()</b> 
+    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>DeployAsync()</b> 
     /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
     /// within separate directories named like <b>$(USERPROFILE)\.neonkube\automation\CLUSTER-NAME</b>.
@@ -157,8 +157,8 @@ namespace Neon.Kube.Xunit
 
         /// <summary>
         /// Returns the cluster definition for cluster deployed by this fixture via one of the
-        /// <b>Deploy()</b> methods or <c>null</c> when the fixture was connected to the cluster
-        /// via one of the <b>Connect()</b> methods.
+        /// <b>DeployAsync()</b> methods or <c>null</c> when the fixture was connected to the cluster
+        /// via one of the <b>ConnectAsync()</b> methods.
         /// </summary>
         public ClusterDefinition ClusterDefinition { get; private set; }
 
@@ -169,7 +169,7 @@ namespace Neon.Kube.Xunit
         /// context and API server endpoint using the remaining optional parameters.
         /// </para>
         /// <note>
-        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
         /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
         /// operations via the <see cref="Client"/>
         /// </note>
@@ -178,13 +178,13 @@ namespace Neon.Kube.Xunit
         /// <param name="currentContext">Optionally overrides the current context.</param>
         /// <param name="masterUrl">Optionally overrides the URI for the API server endpoint.</param>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Connect()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
+        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
         {
@@ -192,7 +192,7 @@ namespace Neon.Kube.Xunit
             {
                 if (deployed)
                 {
-                    throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
+                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
                 }
 
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
@@ -208,22 +208,22 @@ namespace Neon.Kube.Xunit
         /// Connects the Kubernetes cluster specified by <see cref="KubernetesClientConfiguration"/>.
         /// </para>
         /// <note>
-        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
         /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
         /// operations via the <see cref="Client"/>
         /// </note>
         /// </summary>
         /// <param name="kubeconfig">Specifies the <see cref="KubernetesClientConfiguration"/>.</param>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Connect()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
+        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
-        public async Task<TestFixtureStatus> Connect(KubernetesClientConfiguration kubeconfig)
+        public async Task<TestFixtureStatus> ConnectAsync(KubernetesClientConfiguration kubeconfig)
         {
             Covenant.Requires<ArgumentNullException>(kubeconfig != null, nameof(kubeconfig));
 
@@ -231,7 +231,7 @@ namespace Neon.Kube.Xunit
             {
                 if (deployed)
                 {
-                    throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
+                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
                 }
 
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
@@ -248,7 +248,7 @@ namespace Neon.Kube.Xunit
         /// context and API server endpoint using the remaining optional parameters.
         /// </para>
         /// <note>
-        /// Unlike the <b>Deploy()</b> methods, the <b>Connect()</b> methods make no attempt to reset the
+        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
         /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
         /// operations via the <see cref="Client"/>
         /// </note>
@@ -257,15 +257,15 @@ namespace Neon.Kube.Xunit
         /// <param name="currentContext">Optionally overrides the current context.</param>
         /// <param name="masterUrl">Optionally overrides the URI for the API server endpoint.</param>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Connect()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Deploy()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
+        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
-        public async Task<TestFixtureStatus> Connect(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
+        public async Task<TestFixtureStatus> ConnectAsync(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
         {
             Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
 
@@ -273,7 +273,7 @@ namespace Neon.Kube.Xunit
             {
                 if (deployed)
                 {
-                    throw new InvalidOperationException("[Deploy()] has already been called on this fixture.");
+                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
                 }
 
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
@@ -320,13 +320,13 @@ namespace Neon.Kube.Xunit
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This fixture
+        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
         /// <remarks>
         /// <note>
@@ -369,7 +369,7 @@ namespace Neon.Kube.Xunit
                 {
                     if (!this.deployed)
                     {
-                        throw new InvalidOperationException("[Connect()] has already been called on this fixture.");
+                        throw new InvalidOperationException("[ConnectAsync() has already been called on this fixture.");
                     }
 
                     return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
@@ -542,13 +542,13 @@ namespace Neon.Kube.Xunit
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This
-        /// fixture does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This
+        /// fixture does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -557,7 +557,7 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> Deploy(
+        public async Task<TestFixtureStatus> DeployAsync(
             string  clusterDefinitionYaml, 
             string  imageUriOrPath        = null, 
             bool    readyToGo             = false,
@@ -615,13 +615,13 @@ namespace Neon.Kube.Xunit
         /// </param>
         /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>Deploy()</b> methods have been called 
+        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
         /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
         /// when the fixture is already managing a cluster.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>Connect()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
+        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This fixture
+        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -630,7 +630,7 @@ namespace Neon.Kube.Xunit
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> Deploy(
+        public async Task<TestFixtureStatus> DeployAsync(
             FileInfo    clusterDefinitionFile,
             string      imageUriOrPath        = null,
             bool        readyToGo             = false,

@@ -685,7 +685,7 @@ namespace Neon.Kube
             this.networkOptions        = cluster.Definition.Network;
             this.nameToAvailabilitySet = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
-            this.resourceGroupName     = cluster.Definition.Test.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
+            this.resourceGroupName     = cluster.Definition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
 
             switch (cloudOptions.PrefixResourceNames)
             {

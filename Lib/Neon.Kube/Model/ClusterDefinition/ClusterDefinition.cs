@@ -49,10 +49,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter       = "DATACENTER";
-        private const string        defaultProvisioner      = "unknown";
-        private readonly string[]   defaultTimeSources      = new string[] { "pool.ntp.org" };
-        private const bool          defaultAllowUnitTesting = false;
+        private const string        defaultDatacenter  = "DATACENTER";
+        private const string        defaultProvisioner = "unknown";
+        private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -331,12 +330,12 @@ namespace Neon.Kube
         public DebugOptions Debug { get; set; } = new DebugOptions();
 
         /// <summary>
-        /// Optionally specifies <b>KubernetesFixture</b> related configuration for cluster
-        /// based unit testing.
+        /// Optionally specifies options used by <b>KubernetesFixture</b> and possibly
+        /// custom tools for customizing cluster and node names to avoid conflicts.
         /// </summary>
-        [JsonProperty(PropertyName = "Test", Required = Required.Always)]
-        [YamlMember(Alias = "test", ApplyNamingConventions = false)]
-        public TestOptions Test { get; set; } = new TestOptions();
+        [JsonProperty(PropertyName = "Deployment", Required = Required.Always)]
+        [YamlMember(Alias = "deployment", ApplyNamingConventions = false)]
+        public DeploymentOptions Deployment { get; set; } = new DeploymentOptions();
 
         /// <summary>
         /// Specifies the cluster OpenEbs related options.
@@ -377,15 +376,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "monitor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public MonitorOptions Monitor { get; set; } = new MonitorOptions();
-
-        /// <summary>
-        /// Optionally enable unit testing on this cluster.  This is disabled by 
-        /// default for safety.
-        /// </summary>
-        [JsonProperty(PropertyName = "AllowUnitTesting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "allowUnitTesting", ApplyNamingConventions = false)]
-        [DefaultValue(defaultAllowUnitTesting)]
-        public bool AllowUnitTesting { get; set; } = defaultAllowUnitTesting;
 
         /// <summary>
         /// Specifies hosting related settings (e.g. the cloud provider).  This defaults to
@@ -835,7 +825,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Debug       = Debug ?? new DebugOptions();
-            Test        = Test ?? new TestOptions();
+            Deployment  = Deployment ?? new DeploymentOptions();
             OpenEbs     = OpenEbs ?? new OpenEbsOptions();
             Security    = Security ?? new SecurityOptions();
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
@@ -856,7 +846,7 @@ namespace Neon.Kube
             }
 
             Debug.Validate(this);
-            Test.Validate(this);
+            Deployment.Validate(this);
             OpenEbs.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestOptions.cs
+// FILE:	    DeploymentOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -39,22 +39,23 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies cluster test options used by <b>KubernetesFixture</b>.
+    /// Specifies cluster deployment options used by <b>KubernetesFixture</b> as wells
+    /// as potentially by custom tools.
     /// </summary>
-    public class TestOptions
+    public class DeploymentOptions
     {
         /// <summary>
         /// <para>
         /// Optional prefix combined with the cluster name to generate the resource group name
         /// when deploying the cluster to a cloud environment or combined with the node name
-        /// for other environments.  This is typically used by unit tests to avoid conflicts 
-        /// when multiple tests may be running in parallel (probably on different machines) 
-        /// as well as providing a way to identify and remove clusters
-        /// or VMs orphaned by previous interrupted tests.
+        /// for other environments.  This is typically used by unit tests deployed by <b>KubernetesFixture</b>
+        /// but can also be used by custom tools to avoid conflicts when multiple tests may be 
+        /// running in parallel (probably on different machines) as well as providing a way to 
+        /// identify and remove clusters or VMs orphaned by previous interrupted tests or tool runs.
         /// </para>
         /// <para>
-        /// This will typically be set to something identifying the machine and/or user running 
-        /// the test like <b>runner0</b>, <b>jeff</b>, or <b>runner0-jeff</b>.
+        /// This will typically be set to something identifying the machine, user, and/or tool
+        /// running the test like <b>runner0</b>, <b>jeff</b>, or <b>runner0-jeff</b>.
         /// </para>
         /// <note>
         /// A dash will be appended automatically to non-<c>null</c> prefixes before prepending this
@@ -76,7 +77,7 @@ namespace Neon.Kube
         {
             if (!string.IsNullOrEmpty(Prefix) && !ClusterDefinition.NameRegex.IsMatch(Prefix))
             {
-                throw new ClusterDefinitionException($"[{nameof(TestOptions)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
+                throw new ClusterDefinitionException($"[{nameof(DeploymentOptions)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
             }
         }
 
