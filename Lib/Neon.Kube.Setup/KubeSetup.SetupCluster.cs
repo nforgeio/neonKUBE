@@ -53,9 +53,20 @@ namespace Neon.Kube
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
+        /// <param name="deploymentPrefix">
+        /// <para>
+        /// Optionally specifies a deployment prefix string to be set as <see cref="DeploymentOptions.Prefix"/>
+        /// in the cluster definition returned.  This can be used by <b>KubernetesFixture</b> and custom tools
+        /// to help isolated temporary cluster assets from production clusters.
+        /// </para>
+        /// <note>
+        /// This parameter has no effect unless <see cref="KubeHelper.AutomationMode"/> is set to something
+        /// other than <see cref="KubeAutomationMode.Disabled"/>.
+        /// </note>
+        /// </param>
         /// <returns>The cluster definition.</returns>
         /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
-        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment)
+        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
             // $todo(jefflill):
             //
@@ -95,6 +106,11 @@ namespace Neon.Kube
 
                     clusterDefinition.Validate();
                     Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
+
+                    if (!string.IsNullOrEmpty(deploymentPrefix))
+                    {
+                        clusterDefinition.Deployment.Prefix = deploymentPrefix;
+                    }
 
                     return clusterDefinition;
                 }

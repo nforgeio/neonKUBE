@@ -192,18 +192,27 @@ namespace Neon.Kube
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
+            var prefix = string.Empty;
+
             if (NamePrefix == null)
             {
-                return $"{clusterDefinition.Name}-".ToLowerInvariant();
+                prefix = $"{clusterDefinition.Name}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(NamePrefix))
             {
-                return string.Empty;
+                prefix = string.Empty;
             }
             else
             {
-                return $"{NamePrefix}-".ToLowerInvariant();
+                prefix = $"{NamePrefix}-".ToLowerInvariant();
             }
+
+            if (KubeHelper.AutomationMode != KubeAutomationMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+            {
+                prefix = $"{clusterDefinition.Deployment.Prefix}-{prefix}";
+            }
+
+            return prefix;
         }
 
         /// <summary>

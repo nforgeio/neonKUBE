@@ -74,7 +74,7 @@ namespace Neon.Kube.Xunit
                     tempFolder = new TempFolder();
                     Current    = this;
 
-                    KubeHelper.SetAutomationMode(tempFolder.Path, mode);
+                    KubeHelper.SetAutomationMode(mode, tempFolder.Path);
                 }
                 catch
                 {

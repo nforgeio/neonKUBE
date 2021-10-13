@@ -445,7 +445,6 @@ namespace Neon.Kube
         /// cluster related assets such as the KubeConfig file, cluster login, logs,
         /// etc. are saved.
         /// </summary>
-        /// <param name="folder">The automation folder.</param>
         /// <param name="mode">
         /// Passed as one of <see cref="KubeAutomationMode.Enabled"/> or <see cref="KubeAutomationMode.EnabledWithSharedCache"/>,
         /// where <see cref="KubeAutomationMode.Enabled"/> relocates all folders from the
@@ -454,14 +453,27 @@ namespace Neon.Kube
         /// continues to use the shared neon image cache to avoid downloading multiple
         /// copies of node images.
         /// </param>
-        public static void SetAutomationMode(string folder, KubeAutomationMode mode)
+        /// <param name="folder">
+        /// <para>
+        /// Specifies the root folder where global cluster-specific files will
+        /// be folders will be located as long as automation mode is set.  You may
+        /// pass an fully qualified or relative folder path.  Relative paths will be
+        /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
+        /// </para>
+        /// </param>
+        public static void SetAutomationMode(KubeAutomationMode mode, string folder)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
             Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
             Covenant.Assert(AutomationMode == KubeAutomationMode.Disabled);
             Covenant.Assert(automationFolder == null);
 
             ClearCachedItems();
+
+            if (!Path.IsPathFullyQualified(folder))
+            {
+                folder = Path.Combine(NeonKubeUserFolder, "automation", folder);
+            }
 
             AutomationMode   = mode;
             automationFolder = folder;
@@ -509,6 +521,19 @@ namespace Neon.Kube
             orgKUBECONFIG    = null;
 
             ClearCachedItems();
+        }
+
+        /// <summary>
+        /// Returns a special prefix based on <paramref name="prefix"/> that can be used to distinguish
+        /// between automation related assets and those belonging to production clusters.  This is used
+        /// by <b>KubernetesFixture</b> and custom tools to ensure that automation related cluster and
+        /// file/folder names don't conflict.
+        /// </summary>
+        /// <param name="prefix">The prefix string.</param>
+        /// <returns>A string like: (PREFIX)</returns>
+        public static string AutomationPrefix(string prefix)
+        {
+            return $"({prefix})";
         }
 
         /// <summary>

@@ -333,7 +333,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="KubernetesFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/$fixture/*.*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/(fixture)/*.*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -386,7 +386,7 @@ namespace Neon.Kube.Xunit
                 // the user specifies a custom image.  We're going to host the fixture state
                 // files in this fixed folder:
                 //
-                //      $(USERPROFILE)\.neonkube\automation\$fixture\*.*
+                //      $(USERPROFILE)\.neonkube\automation\(fixture)\*.*
                 //
                 // for the time being to ensure that we don't accumulate automation folders over
                 // time.  We're prefixing the last path segment with a "$" to avoid possible
@@ -397,9 +397,7 @@ namespace Neon.Kube.Xunit
                 // It may make sense to include the cluster name in the folder path at some point in
                 // the future but I'm not going to worry about this now.
 
-                var fixtureAutomationFolder = Path.Combine(KubeHelper.StandardNeonKubeAutomationFolder, "$fixture");
-
-                KubeHelper.SetAutomationMode(fixtureAutomationFolder, imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled);
+                KubeHelper.SetAutomationMode(imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled, KubeHelper.AutomationPrefix("fixture"));
 
                 // Figure out whether the user passed an image URI or file path or neither,
                 // when we'll select the default published image for the current build.

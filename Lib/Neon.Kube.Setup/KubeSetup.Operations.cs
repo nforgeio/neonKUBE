@@ -3380,7 +3380,6 @@ datacenter: wsl2
 environment: development
 timeSources:
 - pool.ntp.org
-allowUnitTesting: true
 kubernetes:
   allowPodsOnMasters: true
 hosting:
