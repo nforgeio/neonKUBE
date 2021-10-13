@@ -169,6 +169,11 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
+            var contextName  = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var kubeContext  = new KubeConfigContext(contextName);
+
+            KubeHelper.InitContext(kubeContext);
+
             var cluster = new ClusterProxy(
                 clusterDefinition:  clusterDefinition,
                 nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>

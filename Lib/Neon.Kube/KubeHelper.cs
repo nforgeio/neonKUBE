@@ -1115,7 +1115,7 @@ namespace Neon.Kube
         /// Sets the current Kubernetes config context.
         /// </summary>
         /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
-        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(KubeContextName contextName)
         {
             if (contextName == null)
@@ -1150,7 +1150,7 @@ namespace Neon.Kube
         /// Sets the current Kubernetes config context by string name.
         /// </summary>
         /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
-        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(string contextName)
         {
             SetCurrentContext((KubeContextName)contextName);
@@ -1401,20 +1401,30 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        // The [KUBECONFIG] environment variable exists but we still need to
-                        // ensure that the path to our [USER/.neonkube] config is present.
+                        // The [KUBECONFIG] environment variable exists.  We need to ensure that the
+                        // path to our [USER/.neonkube] config is present.  We're also going to ensure
+                        // that no paths are duplicated within the variable.
 
                         var sb    = new StringBuilder();
+                        var paths = new HashSet<string>();
                         var found = false;
 
                         foreach (var path in kubeConfigVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
                         {
+                            if (paths.Contains(path))
+                            {
+                                // Ignore duplicate paths.
+
+                                continue;
+                            }
+
                             if (path == KubeConfigPath)
                             {
                                 found = true;
                             }
 
                             sb.AppendWithSeparator(path, ";");
+                            paths.Add(path);
                         }
 
                         if (!found)

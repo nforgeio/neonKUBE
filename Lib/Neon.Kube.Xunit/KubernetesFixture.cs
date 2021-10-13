@@ -329,6 +329,19 @@ namespace Neon.Kube.Xunit
         /// does not support mixing <b>Connect()</b> and <b>Deploy()</b> calls.
         /// </exception>
         /// <remarks>
+        /// <note>
+        /// <para>
+        /// <b>IMPORTANT:</b> Only one <see cref="KubernetesFixture"/> can be run at a time on
+        /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
+        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/$fixture/*.*</b>
+        /// so multiple fixture instances will be confused when trying to manage these same files.
+        /// </para>
+        /// <para>
+        /// This means that not only will running <see cref="KubernetesFixture"/> based tests in parallel
+        /// within the same instance of Visual Studio fail, but but running these tests in different
+        /// Visual Studio instances will also fail.
+        /// </para>
+        /// </note>
         /// <para>
         /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
         /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
@@ -370,9 +383,23 @@ namespace Neon.Kube.Xunit
                 }
 
                 // Set the automation mode, using any previously downloaded node image unless
-                // the user specifies a custom image.
+                // the user specifies a custom image.  We're going to host the fixture state
+                // files in this fixed folder:
+                //
+                //      $(USERPROFILE)\.neonkube\automation\$fixture\*.*
+                //
+                // for the time being to ensure that we don't accumulate automation folders over
+                // time.  We're prefixing the last path segment with a "$" to avoid possible
+                // collisions with cluster names which don't allow "$" characters.
 
-                KubeHelper.SetAutomationMode(KubeHelper.StandardNeonKubeAutomationFolder, imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled);
+                // $todo(jefflill):
+                // 
+                // It may make sense to include the cluster name in the folder path at some point in
+                // the future but I'm not going to worry about this now.
+
+                var fixtureAutomationFolder = Path.Combine(KubeHelper.StandardNeonKubeAutomationFolder, "$fixture");
+
+                KubeHelper.SetAutomationMode(fixtureAutomationFolder, imageUriOrPath == null ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled);
 
                 // Figure out whether the user passed an image URI or file path or neither,
                 // when we'll select the default published image for the current build.
