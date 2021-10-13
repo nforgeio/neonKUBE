@@ -310,21 +310,21 @@ namespace Neon.HyperV
 
             if (diskSize != null)
             {
-                powershell.Execute($"{HyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
+                powershell.Execute($"{HyperVNamespace}Resize-VHD -Path '{drivePath}' -SizeBytes {diskSize}");
             }
 
             // Create the virtual machine.
 
-            var command = $"{HyperVNamespace}New-VM -Name \"{machineName}\" -MemoryStartupBytes {memorySize}  -Generation 1";
+            var command = $"{HyperVNamespace}New-VM -Name '{machineName}' -MemoryStartupBytes {memorySize}  -Generation 1";
 
             if (!string.IsNullOrEmpty(drivePath))
             {
-                command += $" -VHDPath \"{drivePath}\"";
+                command += $" -VHDPath '{drivePath}'";
             }
 
             if (!string.IsNullOrEmpty(switchName))
             {
-                command += $" -SwitchName \"{switchName}\"";
+                command += $" -SwitchName '{switchName}'";
             }
 
             try
@@ -340,7 +340,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"{HyperVNamespace}Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -StaticMemory -MemoryStartupBytes {memorySize}");
+                powershell.Execute($"{HyperVNamespace}Set-VM -Name '{machineName}' -ProcessorCount {processorCount} -StaticMemory -MemoryStartupBytes {memorySize}");
             }
             catch (Exception e)
             {
@@ -371,8 +371,8 @@ namespace Neon.HyperV
 
                     try
                     {
-                        powershell.Execute($"{HyperVNamespace}New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
-                        powershell.Execute($"{HyperVNamespace}Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+                        powershell.Execute($"{HyperVNamespace}New-VHD -Path '{drive.Path}' {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
+                        powershell.Execute($"{HyperVNamespace}Add-VMHardDiskDrive -VMName '{machineName}' -Path \"{drive.Path}\"");
                     }
                     catch (Exception e)
                     {
@@ -391,7 +391,7 @@ namespace Neon.HyperV
             {
                 try
                 {
-                    powershell.Execute($"{HyperVNamespace}Set-VM -CheckpointType Disabled -Name \"{machineName}\"");
+                    powershell.Execute($"{HyperVNamespace}Set-VM -CheckpointType Disabled -Name '{machineName}'");
                 }
                 catch (Exception e)
                 {
@@ -407,11 +407,11 @@ namespace Neon.HyperV
             {
                 // Enable nested virtualization for the VM.
 
-                powershell.Execute($"{HyperVNamespace}Set-VMProcessor -VMName \"{machineName}\" -ExposeVirtualizationExtensions $true");
+                powershell.Execute($"{HyperVNamespace}Set-VMProcessor -VMName '{machineName}' -ExposeVirtualizationExtensions $true");
 
                 // Enable MAC address spoofing for the VMs network adapter.
 
-                powershell.Execute($"{HyperVNamespace}Set-VMNetworkAdapter -VMName \"{machineName}\" -MacAddressSpoofing On");
+                powershell.Execute($"{HyperVNamespace}Set-VMNetworkAdapter -VMName '{machineName}' -MacAddressSpoofing On");
             }
         }
 
@@ -432,7 +432,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"{HyperVNamespace}Remove-VM -Name \"{machineName}\" -Force");
+                powershell.Execute($"{HyperVNamespace}Remove-VM -Name '{machineName}' -Force");
             }
             catch (Exception e)
             {
@@ -488,7 +488,7 @@ namespace Neon.HyperV
             try
             {
                 var machines = new List<VirtualMachine>();
-                var table    = powershell.ExecuteJson($"{HyperVNamespace}Get-VM -Name \"{machineName}\"");
+                var table    = powershell.ExecuteJson($"{HyperVNamespace}Get-VM -Name '{machineName}'");
 
                 if (table.Count == 0)
                 {
@@ -529,7 +529,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"{HyperVNamespace}Start-VM -Name \"{machineName}\"");
+                powershell.Execute($"{HyperVNamespace}Start-VM -Name '{machineName}'");
             }
             catch (Exception e)
             {
@@ -558,11 +558,11 @@ namespace Neon.HyperV
             {
                 if (turnOff)
                 {
-                    powershell.Execute($"{HyperVNamespace}Stop-VM -Name \"{machineName}\" -TurnOff");
+                    powershell.Execute($"{HyperVNamespace}Stop-VM -Name '{machineName}' -TurnOff");
                 }
                 else
                 {
-                    powershell.Execute($"{HyperVNamespace}Stop-VM -Name \"{machineName}\"");
+                    powershell.Execute($"{HyperVNamespace}Stop-VM -Name '{machineName}'");
                 }
             }
             catch (Exception e)
@@ -583,7 +583,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"{HyperVNamespace}Save-VM -Name \"{machineName}\"");
+                powershell.Execute($"{HyperVNamespace}Save-VM -Name '{machineName}'");
             }
             catch (Exception e)
             {
@@ -605,7 +605,7 @@ namespace Neon.HyperV
             try
             {
                 var drives    = new List<string>();
-                var rawDrives = powershell.ExecuteJson($"{HyperVNamespace}Get-VMHardDiskDrive -VMName \"{machineName}\"");
+                var rawDrives = powershell.ExecuteJson($"{HyperVNamespace}Get-VMHardDiskDrive -VMName '{machineName}'");
 
                 foreach (dynamic rawDrive in rawDrives)
                 {
@@ -637,8 +637,8 @@ namespace Neon.HyperV
 
             var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
-            powershell.Execute($"{HyperVNamespace}New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
-            powershell.Execute($"{HyperVNamespace}Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+            powershell.Execute($"{HyperVNamespace}New-VHD -Path '{drive.Path}' {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
+            powershell.Execute($"{HyperVNamespace}Add-VMHardDiskDrive -VMName '{machineName}' -Path '{drive.Path}'");
         }
 
         /// <summary>
@@ -654,9 +654,9 @@ namespace Neon.HyperV
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(drivePath), nameof(drivePath));
 
-            powershell.Execute($"Mount-VHD \"{drivePath}\" -ReadOnly");
-            powershell.Execute($"Optimize-VHD \"{drivePath}\" -Mode Full");
-            powershell.Execute($"Dismount-VHD \"{drivePath}\"");
+            powershell.Execute($"Mount-VHD '{drivePath}' -ReadOnly");
+            powershell.Execute($"Optimize-VHD '{drivePath}' -Mode Full");
+            powershell.Execute($"Dismount-VHD '{drivePath}'");
         }
 
         /// <summary>
@@ -671,7 +671,7 @@ namespace Neon.HyperV
             CheckDisposed();
 
             EjectVmDvd(machineName);
-            powershell.Execute($"Add-VMDvdDrive -VMName \"{machineName}\" -Path \"{isoPath}\" -ControllerNumber 1 -ControllerLocation 0");
+            powershell.Execute($"Add-VMDvdDrive -VMName '{machineName}' -Path '{isoPath}' -ControllerNumber 1 -ControllerLocation 0");
         }
 
         /// <summary>
@@ -683,7 +683,7 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
-            powershell.Execute($"Remove-VMDvdDrive -VMName \"{machineName}\" -ControllerNumber 1 -ControllerLocation 0");
+            powershell.Execute($"Remove-VMDvdDrive -VMName '{machineName}' -ControllerNumber 1 -ControllerLocation 0");
         }
 
         /// <summary>
@@ -698,7 +698,7 @@ namespace Neon.HyperV
             CheckDisposed();
 
             EjectVmFloppy(machineName);
-            powershell.Execute($"Set-VMFloppyDiskDrive -VMName \"{machineName}\" -Path \"{vfdPath}\"");
+            powershell.Execute($"Set-VMFloppyDiskDrive -VMName '{machineName}' -Path '{vfdPath}'");
         }
 
         /// <summary>
@@ -710,7 +710,7 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
-            powershell.Execute($"Set-VMFloppyDiskDrive -VMName \"{machineName}\" -Path $null");
+            powershell.Execute($"Set-VMFloppyDiskDrive -VMName '{machineName}' -Path $null");
         }
 
         /// <summary>
@@ -857,7 +857,7 @@ namespace Neon.HyperV
                     throw new HyperVException($"Internal Error: Cannot identify a connected network adapter.");
                 }
 
-                powershell.Execute($"{HyperVNamespace}New-VMSwitch -Name \"{switchName}\" -NetAdapterName \"{targetAdapter}\"");
+                powershell.Execute($"{HyperVNamespace}New-VMSwitch -Name '{switchName}' -NetAdapterName '{targetAdapter}'");
             }
             catch (Exception e)
             {
@@ -880,12 +880,12 @@ namespace Neon.HyperV
 
             var gatewayAddress = subnet.FirstUsableAddress;
 
-            powershell.Execute($"{HyperVNamespace}New-VMSwitch -Name \"{switchName}\" -SwitchType Internal");
-            powershell.Execute($"{NetTcpIpNamespace}New-NetIPAddress -IPAddress {subnet.FirstUsableAddress} -PrefixLength {subnet.PrefixLength} -InterfaceAlias \"vEthernet ({switchName})\"");
+            powershell.Execute($"{HyperVNamespace}New-VMSwitch -Name '{switchName}' -SwitchType Internal");
+            powershell.Execute($"{NetTcpIpNamespace}New-NetIPAddress -IPAddress {subnet.FirstUsableAddress} -PrefixLength {subnet.PrefixLength} -InterfaceAlias 'vEthernet ({switchName})'");
 
             if (addNAT)
             {
-                powershell.Execute($"{NetNatNamespace}New-NetNAT -Name \"{switchName}\" -InternalIPInterfaceAddressPrefix {subnet}");
+                powershell.Execute($"{NetNatNamespace}New-NetNAT -Name '{switchName}' -InternalIPInterfaceAddressPrefix {subnet}");
             }
         }
 
@@ -900,7 +900,7 @@ namespace Neon.HyperV
 
             if (ListSwitches().Any(@switch => @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
             {
-                powershell.Execute($"{HyperVNamespace}Remove-VMSwitch -Name \"{switchName}\" -Force");
+                powershell.Execute($"{HyperVNamespace}Remove-VMSwitch -Name '{switchName}' -Force");
             }
         }
 
@@ -922,7 +922,7 @@ namespace Neon.HyperV
                 while (true)
                 {
                     var adapters    = new List<VirtualNetworkAdapter>();
-                    var rawAdapters = powershell.ExecuteJson($"{HyperVNamespace}Get-VMNetworkAdapter -VMName \"{machineName}\"");
+                    var rawAdapters = powershell.ExecuteJson($"{HyperVNamespace}Get-VMNetworkAdapter -VMName '{machineName}'");
 
                     adapters.Clear();
 
