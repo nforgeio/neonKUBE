@@ -126,6 +126,7 @@ namespace Neon.Kube
         /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
         /// current neonDESKTOP state will not be impacted.
         /// </param>
+        /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
         /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
@@ -146,6 +147,7 @@ namespace Neon.Kube
             bool                debugMode     = false, 
             bool                uploadCharts  = false,
             bool                automate      = false,
+            string              headendUri    = "https://headend.neoncloud.io",
             ReadyToGoMode       readyToGoMode = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -266,6 +268,8 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
+            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+
 
             // Configure the setup steps.
 
