@@ -277,6 +277,9 @@ namespace Neon.Kube
             }
         }
 
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
         {
@@ -296,7 +299,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false)
+        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool removeLogins = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 

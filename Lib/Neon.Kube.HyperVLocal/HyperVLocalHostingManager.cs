@@ -90,18 +90,19 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
+        /// Creates an instance that is capable of managing and/or provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
-        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI.</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
         /// <remarks>
         /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified to be able
+        /// to provision a cluster but these can be <c>null</c> when you need to manage a cluster lifecycle.
         /// </note>
         /// </remarks>
         public HyperVLocalHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
@@ -406,11 +407,6 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task PrepareHyperVAsync()
         {
-            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
-            {
-                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
-            }
-
             // Handle any necessary Hyper-V initialization.
 
             using (var hyperv = new HyperVClient())
@@ -626,6 +622,9 @@ namespace Neon.Kube
             }
         }
 
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
         /// <inheritdoc/>
         public override async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
         {
@@ -730,7 +729,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false)
+        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
@@ -780,6 +779,13 @@ namespace Neon.Kube
                             }
                         });
                 }
+            }
+
+            if (!noRemoveLogins)
+            {
+                var context = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+
+                KubeHelper.Config.RemoveContext(context);
             }
         }
 

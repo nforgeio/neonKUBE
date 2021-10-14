@@ -193,6 +193,9 @@ namespace Neon.Kube
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
         /// <summary>
         /// <para>
         /// Starts a cluster if it's not already running.
@@ -225,9 +228,10 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Removes an existing cluster by terminating any nodes and then removing node VMs
-        /// and any related resources.  The cluster does not need to be running.  This method
-        /// can optionally remove clusters or VMs potentially orphaned by interrupted unit tests
-        /// as identified by a resource group or VM name prefix.
+        /// and any related resources as well as the related local cluster login by default.  
+        /// The cluster does not need to be running.  This method can optionally remove clusters
+        /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
+        /// group or VM name prefix.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
@@ -239,6 +243,10 @@ namespace Neon.Kube
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
         /// </param>
+        /// <param name="noRemoveLogins">
+        /// Optionally specifies that any cluster login file and KubeConfig records related to to the 
+        /// cluster definition <b>will not be removed</b>.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
@@ -248,7 +256,7 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false);
+        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false);
 
         /// <summary>
         /// <para>
@@ -256,7 +264,7 @@ namespace Neon.Kube
         /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
         /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
         /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer or <b>.tar</b> for WSL2).
+        /// XenServer or <b>.tar</b> for WSL2.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
