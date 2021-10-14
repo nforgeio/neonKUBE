@@ -48,13 +48,13 @@ namespace Neon.Kube
         /// <summary>
         /// RSA#1
         /// </summary>
-        [EnumMember(Value = "RSA")]
+        [EnumMember(Value = "rsa")]
         RSA = 0,
 
         /// <summary>
         /// ECDSA#8
         /// </summary>
-        [EnumMember(Value = "ECDSA")]
+        [EnumMember(Value = "ecdsa")]
         ECDSA
     }
 }
