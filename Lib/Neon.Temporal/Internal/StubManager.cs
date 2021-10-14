@@ -29,6 +29,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Basic.Reference.Assemblies;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -1138,14 +1140,12 @@ namespace Neon.Temporal.Internal
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new List<MetadataReference>();
 
-            // Reference these required assemblies.
+            // Reference the required assemblies.
 
-            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
-
-            // Reference all loaded assemblies.
+            references.AddRange(ReferenceAssemblies.NetStandard20);
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))
+                .Where(assembly => !assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location)))
             {
                 references.Add(MetadataReference.CreateFromFile(assembly.Location));
             }
@@ -1670,11 +1670,9 @@ namespace Neon.Temporal.Internal
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new List<MetadataReference>();
 
-            // Reference these required assemblies.
+            // Reference the required assemblies.
 
-            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
-
-            // Reference all loaded assemblies.
+            references.AddRange(ReferenceAssemblies.NetStandard20);
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))

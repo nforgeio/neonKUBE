@@ -1350,7 +1350,7 @@ namespace Neon.Temporal
         /// <remarks>
         /// <para>
         /// Activity and workflow stubs are generated and compiled on demand by default.  
-        /// This takes  about 500ms for each stub.  This generally works fine but may cause 
+        /// This takes about 500ms for each stub.  This generally works fine but may cause 
         /// decision task timeouts for workflows that call a lot of different child
         /// workflows or activities.
         /// </para>

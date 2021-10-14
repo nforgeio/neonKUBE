@@ -80,10 +80,9 @@ namespace Neon.Kube
             var automationFolder = (string)null;
             var logFolder        = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.

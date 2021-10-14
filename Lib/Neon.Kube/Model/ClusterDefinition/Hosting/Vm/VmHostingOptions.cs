@@ -163,13 +163,18 @@ namespace Neon.Kube
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
         /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperVLocal"/>,
-        /// and <see cref="HostingEnvironment.XenServer"/> environments.
+        /// and <see cref="HostingEnvironment.XenServer"/> environments.  This is used to avoid
+        /// VM naming conflicts between different clusters.
         /// </para>
+        /// <note>
+        /// This property is ignored for cloud hosting environments because cluster VMs will be
+        /// isolated in their own resource groups and private networks.
+        /// </note>
         /// <para>
         /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
         /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
-        /// value followed by a dash will be used.  If this is empty or whitespace, machine
-        /// names will not be prefixed.
+        /// value followed by a dash will be used.  If this is <c>null</c> or whitespace then the
+        /// machine names will not be prefixed.
         /// </para>
         /// <note>
         /// Virtual machine name prefixes will always be converted to lowercase.
@@ -187,18 +192,27 @@ namespace Neon.Kube
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
+            var prefix = string.Empty;
+
             if (NamePrefix == null)
             {
-                return $"{clusterDefinition.Name}-".ToLowerInvariant();
+                prefix = $"{clusterDefinition.Name}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(NamePrefix))
             {
-                return string.Empty;
+                prefix = string.Empty;
             }
             else
             {
-                return $"{NamePrefix}-".ToLowerInvariant();
+                prefix = $"{NamePrefix}-".ToLowerInvariant();
             }
+
+            if (KubeHelper.AutomationMode != KubeAutomationMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+            {
+                prefix = $"{clusterDefinition.Deployment.Prefix}-{prefix}";
+            }
+
+            return prefix;
         }
 
         /// <summary>

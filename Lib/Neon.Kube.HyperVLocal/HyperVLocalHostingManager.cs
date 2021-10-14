@@ -730,7 +730,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
@@ -746,6 +746,8 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVClient())
             {
+                // Remove all of the cluster VMs.
+
                 Parallel.ForEach(clusterDefinition.Nodes,
                     nodeDefinition =>
                     {
@@ -762,6 +764,22 @@ namespace Neon.Kube
 
                         hyperv.RemoveVm(vmName);
                     });
+
+                // Remove any potentially orphaned VMs when enabled and a prefix is specified.
+
+                if (removeOrphansByPrefix && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+                {
+                    var prefix = clusterDefinition.Deployment.Prefix + "-";
+
+                    Parallel.ForEach(hyperv.ListVms(),
+                        vm =>
+                        {
+                            if (vm.Name.StartsWith(prefix))
+                            {
+                                hyperv.RemoveVm(vm.Name);
+                            }
+                        });
+                }
             }
         }
 

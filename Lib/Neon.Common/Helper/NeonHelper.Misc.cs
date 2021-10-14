@@ -65,9 +65,9 @@ namespace Neon.Common
 
         /// <summary>
         /// The environment variable used for unit testing that indicates
-        /// that <c>Neon.Service.NeonService</c> and <c>Neon.Kube.HubeHelper</c>
-        /// should run in test mode and locate user test files in in the
-        /// folder specified by this variable when set.
+        /// that <c>Neon.Service.NeonService</c> should run in test mode and 
+        /// locate user test files in the folder specified by this variable
+        /// (when set).
         /// </summary>
         public const string TestModeFolderVar = "NF_TESTMODE_FOLDER";
 

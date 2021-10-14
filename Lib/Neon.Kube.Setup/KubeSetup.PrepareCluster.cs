@@ -74,9 +74,10 @@ namespace Neon.Kube
         /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
-        /// <param name="automate">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
-        /// current neonDESKTOP state will not be impacted.
+        /// <param name="automationFolder">
+        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
+        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
+        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="disableImageDownload">
@@ -97,7 +98,7 @@ namespace Neon.Kube
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
-            bool                        automate              = false,
+            string                      automationFolder      = null,
             string                      headendUri            = "https://headend.neoncloud.io",
             bool                        disableImageDownload  = false,
             ReadyToGoMode               readyToGoMode         = ReadyToGoMode.Normal)
@@ -110,13 +111,11 @@ namespace Neon.Kube
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
-            var automationFolder = (string)null;
-            var logFolder        = KubeHelper.LogFolder;
+            var logFolder = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.
@@ -380,6 +379,24 @@ namespace Neon.Kube
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("check node OS", (state, node) => node.VerifyNodeOS());
 
+            controller.AddNodeStep("check image version",
+                (state, node) =>
+                {
+                    // Ensure that the node image version matches the current neonKUBE version.
+
+                    var imageVersion = node.ImageVersion;
+
+                    if (imageVersion == null)
+                    {
+                        throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
+                    }
+
+                    if (imageVersion != SemanticVersion.Parse(KubeConst.NeonKubeVersion))
+                    {
+                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
+                    }
+                });
+
             controller.AddNodeStep("node credentials",
                 (state, node) =>
                 {
@@ -418,7 +435,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("create neoncluster.io domain",
                 async (controller) =>
                 {
-                    controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
+                    controller.SetGlobalStepStatus("create: neoncluster.io subdomain for TLS");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                     var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);

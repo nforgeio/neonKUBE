@@ -966,7 +966,7 @@ namespace Neon.Cadence
             // request timeouts.
 
             client.heartbeatThread = NeonHelper.StartThread(client.HeartbeatThread);
-            client.timeoutThread    = NeonHelper.StartThread(client.TimeoutThread);
+            client.timeoutThread   = NeonHelper.StartThread(client.TimeoutThread);
 
             // Initialize the cache size to a known value.
 

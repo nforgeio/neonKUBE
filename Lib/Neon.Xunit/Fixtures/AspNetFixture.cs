@@ -299,8 +299,8 @@ namespace Neon.Xunit
         {
             if (!IsDisposed)
             {
-                JsonClient.Dispose();
-                WebHost.StopAsync().Wait();
+                JsonClient?.Dispose();
+                WebHost?.StopAsync().Wait();
 
                 JsonClient = null;
                 WebHost    = null;

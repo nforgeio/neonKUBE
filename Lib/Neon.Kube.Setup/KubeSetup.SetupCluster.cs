@@ -53,9 +53,20 @@ namespace Neon.Kube
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
+        /// <param name="deploymentPrefix">
+        /// <para>
+        /// Optionally specifies a deployment prefix string to be set as <see cref="DeploymentOptions.Prefix"/>
+        /// in the cluster definition returned.  This can be used by <b>KubernetesFixture</b> and custom tools
+        /// to help isolated temporary cluster assets from production clusters.
+        /// </para>
+        /// <note>
+        /// This parameter has no effect unless <see cref="KubeHelper.AutomationMode"/> is set to something
+        /// other than <see cref="KubeAutomationMode.Disabled"/>.
+        /// </note>
+        /// </param>
         /// <returns>The cluster definition.</returns>
         /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
-        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment)
+        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
             // $todo(jefflill):
             //
@@ -96,6 +107,11 @@ namespace Neon.Kube
                     clusterDefinition.Validate();
                     Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
 
+                    if (!string.IsNullOrEmpty(deploymentPrefix))
+                    {
+                        clusterDefinition.Deployment.Prefix = deploymentPrefix;
+                    }
+
                     return clusterDefinition;
                 }
             }
@@ -122,9 +138,10 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name="automate">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
-        /// current neonDESKTOP state will not be impacted.
+        /// <param name="automationFolder">
+        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
+        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
+        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="readyToGoMode">
@@ -142,11 +159,12 @@ namespace Neon.Kube
         /// </remarks>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition, 
-            int                 maxParallel   = 500, 
-            bool                unredacted    = false, 
-            bool                debugMode     = false, 
-            bool                uploadCharts  = false,
-            bool                automate      = false,
+            int                 maxParallel      = 500, 
+            bool                unredacted       = false, 
+            bool                debugMode        = false, 
+            bool                uploadCharts     = false,
+            string              automationFolder = null,
+            ReadyToGoMode       readyToGoMode    = ReadyToGoMode.Normal)
             string              headendUri    = "https://headend.neoncloud.io",
             ReadyToGoMode       readyToGoMode = ReadyToGoMode.Normal)
         {
@@ -161,16 +179,19 @@ namespace Neon.Kube
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
-            var automationFolder = (string)null;
-            var logFolder        = KubeHelper.LogFolder;
+            var logFolder = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.
+
+            var contextName  = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var kubeContext  = new KubeConfigContext(contextName);
+
+            KubeHelper.InitContext(kubeContext);
 
             var cluster = new ClusterProxy(
                 clusterDefinition:  clusterDefinition,
@@ -276,7 +297,25 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
             controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
             controller.AddWaitUntilOnlineStep("connect nodes");
-            controller.AddNodeStep("verify os", (controller, node) => node.VerifyNodeOS());
+            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
+
+            controller.AddNodeStep("check image version",
+                (state, node) =>
+                {
+                    // Ensure that the node image version matches the current neonKUBE (build) version.
+
+                    var imageVersion = node.ImageVersion;
+
+                    if (imageVersion == null)
+                    {
+                        throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
+                    }
+
+                    if (imageVersion != SemanticVersion.Parse(KubeConst.NeonKubeVersion))
+                    {
+                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
+                    }
+                });
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {

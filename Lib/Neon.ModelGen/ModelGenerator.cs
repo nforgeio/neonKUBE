@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CodeDom.Compiler;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -32,6 +33,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
+using Basic.Reference.Assemblies;
 using Newtonsoft.Json;
 
 using Neon.Common;
@@ -55,9 +57,8 @@ namespace Neon.ModelGen
         //---------------------------------------------------------------------
         // Static members
 
-        private static MetadataReference    cachedNetStandard;
-        private static Regex                routeConstraintRegex = new Regex(@"\{[^:\}]*:[^:\}]*\}");   // Matches route template parameters with constraints (like: "{param:int}").
-        private static Regex                routeParameterRegex  = new Regex(@"\{([^\}]*)\}");          // Matches route template parameters (like: "{param}") capturing just the parameter name.
+        private static Regex    routeConstraintRegex = new Regex(@"\{[^:\}]*:[^:\}]*\}");   // Matches route template parameters with constraints (like: "{param:int}").
+        private static Regex    routeParameterRegex  = new Regex(@"\{([^\}]*)\}");          // Matches route template parameters (like: "{param}") capturing just the parameter name.
 
         /// <summary>
         /// Compiles C# source code into an assembly.
@@ -65,7 +66,7 @@ namespace Neon.ModelGen
         /// <param name="source">The C# source code.</param>
         /// <param name="assemblyName">The generated assembly name.</param>
         /// <param name="referenceHandler">Called to manage metadata/assembly references (see remarks).</param>
-        /// <param name="options">Optional compilation options.  This defaults to building a release assembly.</param>
+        /// <param name="compilerOptions">Optional compilation options.  This defaults to building a release assembly.</param>
         /// <returns>The compiled assembly as a <see cref="MemoryStream"/>.</returns>
         /// <exception cref="CompilerErrorException">Thrown for compiler errors.</exception>
         /// <remarks>
@@ -96,57 +97,28 @@ namespace Neon.ModelGen
             string                          source, 
             string                          assemblyName, 
             Action<MetadataReferences>      referenceHandler = null,
-            CSharpCompilationOptions        options          = null)
+            CSharpCompilationOptions        compilerOptions  = null)
         {
             Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
 
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var references = new MetadataReferences();
 
+            // Add assembly references.
+
+            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.Add(typeof(NeonHelper));
+
             // Allow the caller to add references.
 
             referenceHandler?.Invoke(references);
 
-            // Add the [Neon.Common] assembly.
-
-            references.Add(typeof(IRoundtripData));
-
-            // NOTE: 
-            // 
-            // We need the the NETStandard reference assembly so that
-            // compilation will actually work.
-            // 
-            // We've set [PreserveCompilationContext=true] in [Neon.ModelGen.csproj]
-            // so that the reference assemblies will be written to places like:
-            //
-            //      bin/Debug/netstandard2.1/refs/*
-            //
-            // This is where we obtained the these assemblies and added them
-            // all as resources within the [Netstandard] project folder.
-            //
-            // We'll need to replace this when/if we upgrade the 
-            // library to a new version of NETStandard.
-
-            if (cachedNetStandard == null)
+            if (compilerOptions == null)
             {
-                var thisAssembly = Assembly.GetExecutingAssembly();
-
-                using (var resourceStream = thisAssembly.GetManifestResourceStream("Neon.ModelGen.Netstandard.netstandard.dll"))
-                {
-                    cachedNetStandard = MetadataReference.CreateFromStream(resourceStream);
-                }
+                compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
             }
 
-            references.Add(cachedNetStandard);
-
-            if (options == null)
-            {
-                options = new CSharpCompilationOptions(
-                    OutputKind.DynamicallyLinkedLibrary,
-                    optimizationLevel: OptimizationLevel.Release);
-            }
-
-            var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, options);
+            var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
             var dllStream   = new MemoryStream();
 
             using (var pdbStream = new MemoryStream())

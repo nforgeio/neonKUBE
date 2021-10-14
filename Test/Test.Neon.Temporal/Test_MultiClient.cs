@@ -40,11 +40,11 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestTrait.Incomplete)]
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Buggy)]
     public class Test_MultiClient : IClassFixture<TemporalFixture>
     {
         private TemporalFixture  fixture;

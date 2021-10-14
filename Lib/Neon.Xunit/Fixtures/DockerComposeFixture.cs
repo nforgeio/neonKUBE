@@ -295,7 +295,7 @@ namespace Neon.Xunit
             // execute a command to leave the swarm.  We're not going to check the 
             // exit code to ignore the error when Docker isn't in swarm mode.
 
-            NeonHelper.Execute(NeonHelper.DockerComposeCli, new string[] { "swarm", "leave", "--force" });
+            NeonHelper.Execute(NeonHelper.DockerCli, new string[] { "swarm", "leave", "--force" });
 
             StartApplication();
         }

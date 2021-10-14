@@ -296,7 +296,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
