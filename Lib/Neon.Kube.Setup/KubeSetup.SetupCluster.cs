@@ -164,9 +164,8 @@ namespace Neon.Kube
             bool                debugMode        = false, 
             bool                uploadCharts     = false,
             string              automationFolder = null,
+            string              headendUri       = "https://headend.neoncloud.io",
             ReadyToGoMode       readyToGoMode    = ReadyToGoMode.Normal)
-            string              headendUri    = "https://headend.neoncloud.io",
-            ReadyToGoMode       readyToGoMode = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
