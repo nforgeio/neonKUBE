@@ -728,8 +728,76 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                master.SudoCommand("kubeadm", "certs", "renew", "all");
-                master.SudoCommand("systemctl", "restart", "kubelet");
+
+                master.InvokeIdempotent("ready-to-go/renew-certs",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
+
+                    master.SudoCommand("kubeadm", "certs", "renew", "all");
+                    master.SudoCommand("systemctl", "restart", "kubelet");
+
+                    // Edit the Kubernetes configuration file to rename the context:
+                    //
+                    //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                    //
+                    // rename the user:
+                    //
+                    //      CLUSTERNAME-admin --> CLUSTERNAME-root 
+
+                    var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+
+                    adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                    adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+
+                    master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                });
+
+                master.InvokeIdempotent("setup/ready-to-go-download-certs",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
+
+                    // Download the boot master files that will need to be provisioned on
+                    // the remaining masters and may also be needed for other purposes
+                    // (if we haven't already downloaded these).
+
+                    if (clusterLogin.SetupDetails.MasterFiles != null)
+                    {
+                        clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
+                    }
+
+                    if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
+                    {
+                        // I'm hardcoding the permissions and owner here.  It would be nice to
+                        // scrape this from the source files in the future but it's not worth
+                        // the bother at this point.
+
+                        var files = new RemoteFile[]
+                        {
+                    new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                    new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+                        };
+
+
+                        foreach (var file in files)
+                        {
+                            var text = master.DownloadText(file.Path);
+
+                            clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                        }
+
+                        clusterLogin.Save();
+
+                    }
+                });
             }
         }
 
@@ -743,7 +811,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            firstMaster.InvokeIdempotent("setup/workstation",
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            firstMaster.InvokeIdempotent($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/workstation",
                 (Action)(() =>
                 {
                     controller.LogProgress(firstMaster, verb: "configure", message: "workstation");
@@ -1191,11 +1261,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                await master.InvokeIdempotentAsync("setup/neon-acme-change-domain",
+                await master.InvokeIdempotentAsync("ready-to-go/cluster-domain",
                     async () =>
                     {
-                        controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
-                        
+                        controller.LogProgress(master, verb: "ready-to-go", message: "set cluster domain");
+
                         if (IPAddress.TryParse(clusterIp, out var ip))
                         {
                             using (var jsonClient = new JsonClient())
@@ -1207,10 +1277,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     });
 
-                await master.InvokeIdempotentAsync("setup/neon-acme-renew-cert",
+                await master.InvokeIdempotentAsync("ready-to-go/cluster-cert",
                     async () =>
                     {
-                        controller.SetGlobalStepStatus("create: neoncluster.io domain for TLS support");
+                        controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
 
                         var cert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
 
@@ -1241,8 +1311,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         harborCluster.spec.externalURL = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
 
                     });
-
-
             }
         }
 
@@ -1677,17 +1745,23 @@ spec:
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                var newCert = GenerateDashboardCert(controller, master);
+                await master.InvokeIdempotentAsync("ready-to-go/dashboard-certs",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "renew dashboard cert");
 
-                clusterLogin.DashboardCertificate = newCert.CombinedPem;
-                clusterLogin.Save();
+                    var newCert = GenerateDashboardCert(controller, master);
 
-                var cert = await GetK8sClient(controller).ReadNamespacedSecretAsync("kubernetes-dashboard-certs", KubeNamespaces.NeonSystem);
-                cert.Data["cert.pem"] = Encoding.UTF8.GetBytes(newCert.CertPemNormalized);
-                cert.Data["key.pem"]  = Encoding.UTF8.GetBytes(newCert.KeyPemNormalized);
+                    clusterLogin.DashboardCertificate = newCert.CombinedPem;
+                    clusterLogin.Save();
+
+                    var cert = await GetK8sClient(controller).ReadNamespacedSecretAsync("kubernetes-dashboard-certs", KubeNamespaces.NeonSystem);
+                    cert.Data["cert.pem"] = Encoding.UTF8.GetBytes(newCert.CertPemNormalized);
+                    cert.Data["key.pem"] = Encoding.UTF8.GetBytes(newCert.KeyPemNormalized);
+
+                    await GetK8sClient(controller).ReplaceNamespacedSecretAsync(cert, "kubernetes-dashboard-certs", KubeNamespaces.NeonSystem);
+                });
             }
-
-            await Task.CompletedTask;
         }
 
         /// <summary>
