@@ -528,12 +528,13 @@ namespace TestCommon
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Address.ToString());
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, ReachableHostMode.ReturnFirst).Host);
 
-            // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
-            // some addresses in there to simulate offline hosts.
+            // The [100.64.0.0/20] subnet is never supposed to be routable although neonKUBE
+            // does use 100.64.0.0/24 for neonDESKTOP built-in (an other internal clusters)
+            // so we'll use some addresses at the upper end of 100.64.0.0/20.
 
-            const string badIP0 = "192.0.2.1";
-            const string badIP1 = "192.0.2.2";
-            const string badIP2 = "192.0.2.3";
+            const string badIP0 = "100.64.15.252";
+            const string badIP1 = "100.64.15.253";
+            const string badIP2 = "100.64.15.254";
 
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", badIP0, badIP1 }).Host);
             Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badIP0, "127.0.0.1", badIP1 }).Host);
@@ -553,9 +554,9 @@ namespace TestCommon
             // Verify that we always return the first host if it's healthy
             // when we're using [ReachableHostMode.ReturnFirst].
 
-            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }).Host);
-            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Host);
-            Assert.False(NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Unreachable);
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }).Host);
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, ReachableHostMode.ReturnFirst).Host);
+            Assert.False(NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, ReachableHostMode.ReturnFirst).Unreachable);
 
             const string badHost0 = "bad0.host.baddomain";
             const string badHost1 = "bad1.host.baddomain";
@@ -589,12 +590,13 @@ namespace TestCommon
                 TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Address.ToString()));
             }
 
-            // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
-            // some addresses in there to simulate offline hosts.
+            // The [100.64.0.0/20] subnet is never supposed to be routable although neonKUBE
+            // does use 100.64.0.0/24 for neonDESKTOP built-in (an other internal clusters)
+            // so we'll use some addresses at the upper end of 100.64.0.0/20 instead.
 
-            const string badIP0 = "192.0.2.1";
-            const string badIP1 = "192.0.2.2";
-            const string badIP2 = "192.0.2.3";
+            const string badIP0 = "100.64.15.252";
+            const string badIP1 = "100.64.15.253";
+            const string badIP2 = "100.64.15.254";
 
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", badIP0, badIP1 }).Select(rh => rh.Host));
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { badIP0, "127.0.0.1", badIP1 }).Select(rh => rh.Host));
@@ -610,7 +612,7 @@ namespace TestCommon
             // Verify that we always return the first host if it's healthy
             // when we're using [ReachableHostMode.ReturnFirst].
 
-            TestHelper.AssertEquivalent(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, NetHelper.GetReachableHosts(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }).Select(rh => rh.Host));
+            TestHelper.AssertEquivalent(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }, NetHelper.GetReachableHosts(new string[] { "www.google.com", "www.microsoft.com", "www.akamai.com" }).Select(rh => rh.Host));
 
             const string badHost0 = "bad0.host.baddomain";
             const string badHost1 = "bad1.host.baddomain";
@@ -671,7 +673,7 @@ namespace TestCommon
 
             for (int i = 0; i < 100; i++)
             {
-                var port = NetHelper.GetUnusedIpPort(address);
+                var port = NetHelper.GetUnusedTcpPort(address);
 
                 Assert.DoesNotContain(ports, p => p == port);
 
@@ -749,7 +751,7 @@ namespace TestCommon
         public void ToAwsS3Uri()
         {
             Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("s3://bucket/path/to/object"));
-            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws.com/path/to/object"));
+            Assert.Equal("s3://bucket/path/to/object", NetHelper.ToAwsS3Uri("https://bucket.s3.us-west-2.amazonaws.com/path/to/object"));
 
             Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("http://bucket/path/to/object"));                                       // Only HTTPS is allowed
             Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://127.0.0.1/path/to/object"));                                   // Host IPv4 address are not allowed
@@ -757,13 +759,13 @@ namespace TestCommon
 
             // Ensure that we check that HTTP URIs actually reference an S3 bucket.
 
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws.net/path/to/object"));           // Doesn't end with:                ".com"
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.XXXXXXXXX.com/path/to/object"));           // Domain label isn't:              "amazonaws"
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.xx-us-west-2.amazonaws.com/path/to/object"));           // Domain label doesn't start with: "s3-"
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3us-west-2.amazonaws.com/path/to/object"));            // Domain label doesn't start with: "s3-"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3.us-west-2.amazonaws.net/path/to/object"));           // Doesn't end with:                ".com"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3.us-west-2.XXXXXXXXX.com/path/to/object"));           // Domain label isn't:              "amazonaws"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.xx.us-west-2.amazonaws.com/path/to/object"));           // Domain label doesn't start with: "s3-"
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3us.west-2.amazonaws.com/path/to/object"));            // Domain label doesn't start with: "s3-"
             Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket/path/to/object"));                                      // Not enough labels
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2/path/to/object"));                         // Not enough labels
-            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3-us-west-2.amazonaws/path/to/object"));               // Not enough labels
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3.us-west-2/path/to/object"));                         // Not enough labels
+            Assert.Throws<ArgumentException>(() => NetHelper.ToAwsS3Uri("https://bucket.s3.us-west-2.amazonaws/path/to/object"));               // Not enough labels
         }
     }
 }

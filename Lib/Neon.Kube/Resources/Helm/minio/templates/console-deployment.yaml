@@ -20,6 +20,10 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       serviceAccountName: console-sa
+    {{- with .Values.console.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
     {{- with .Values.console.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -48,3 +52,7 @@ spec:
             value: "on"
           resources:
             {{- toYaml .Values.console.resources | nindent 12 }}
+      {{- with .Values.console.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}

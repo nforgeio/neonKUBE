@@ -66,9 +66,19 @@ OPTIONS:
                                   multi-part download metadata.
 
                                   NOTE: This defaults to the multi-part image
-                                        hosted as a GuitHub release.
+                                        hosted as a GitHub release.
 
                                   NOTE: This is ignored for [--debug] mode.
+
+                                  NOTE: This is ignored when [--node-image-path] is present.
+
+    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
+                                  downloading the node image from GitHub Releases.  This
+                                  is useful for debugging node image changes.
+
+    --ready-to-go               - Optionally indicates that the default ready-to-go image
+                                  should be used when [--node-image-uri] and [node-image-path]
+                                  aren't specified.  This is not compatible with [--debug].
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
@@ -105,11 +115,12 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --automate                  - Indicates that the command must not impact neonDESKTOP
-                                  by changing the current login or Kubernetes config or
+    --automation-folder         - Indicates that the command must not impact normal clusters
+                                  by changing the current login, Kubernetes config or
                                   other files like cluster deployment logs.  This is
-                                  used for automated deployments that can proceed while
-                                  neonDESKTOP is doing other things.
+                                  used for automated CI/CD or unit test cluster deployments 
+                                  while not disrupting the built-in neonDESKTOP or
+                                  other normal clusters.
 
     --headend-uri               - Set the URI for the headend service.
 
@@ -128,7 +139,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automate", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--ready-to-go",  "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -166,11 +177,13 @@ Server Requirements:
                 }
             }
            
-            var nodeImageUri  = commandLine.GetOption("--node-image-uri");
-            var debug         = commandLine.HasOption("--debug");
-            var baseImageName = commandLine.GetOption("--base-image-name");
-            var automate      = commandLine.HasOption("--automate");
-            var headendUri    = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var nodeImageUri     = commandLine.GetOption("--node-image-uri");
+            var nodeImagePath    = commandLine.GetOption("--node-image-path");
+            var readyToGo        = commandLine.HasOption("--ready-to-go");
+            var debug            = commandLine.HasOption("--debug");
+            var baseImageName    = commandLine.GetOption("--base-image-name");
+            var automationFolder = commandLine.GetOption("--automation-folder");
+            var headendUri       = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -178,9 +191,15 @@ Server Requirements:
                 Program.Exit(1);
             }
 
+            if (debug && readyToGo)
+            {
+                Console.Error.WriteLine($"*** ERROR: [--ready-to-go] is not compatible with [--debug] mode.");
+                Program.Exit(1);
+            }
+
             // Implement the command.
 
-            if (KubeHelper.CurrentContext != null && !automate)
+            if (KubeHelper.CurrentContext != null)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before preparing another.");
                 Program.Exit(1);
@@ -202,11 +221,7 @@ Server Requirements:
                 // This special-case argument indicates that we should use the built-in 
                 // WSL2 cluster definition.
 
-                using (var tempFile = new TempFile(KubeHelper.TempFolder))
-                {
-                    File.WriteAllText(tempFile.Path, KubeSetup.GetWsl2ClusterDefintion(), Encoding.UTF8);
-                    clusterDefinition = ClusterDefinition.FromFile(tempFile.Path, strict: true);
-                }
+                clusterDefinition = KubeSetup.GetReadyToGoClusterDefinition(HostingEnvironment.Wsl2);
             }
             else
             {
@@ -215,11 +230,20 @@ Server Requirements:
                 clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
             }
 
-            // Use the default node image for the hosting environment unless [--node-image-uri] was specified.
+            // Use the default node image for the hosting environment unless [--node-image-uri]
+            // or [--node-image-path] was specified.
 
-            if (string.IsNullOrEmpty(nodeImageUri))
+            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
+            }
+
+            // Ensure that the cluster only has a single node for ready-to-go mode.
+
+            if (readyToGo && clusterDefinition.NodeDefinitions.Count > 1)
+            {
+                Console.Error.WriteLine("*** ERROR: Only single node clusters can be deployed for [--ready-to-go] mode.");
+                Program.Exit(1);
             }
 
             // Parse any specified package cache endpoints.
@@ -245,13 +269,14 @@ Server Requirements:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                nodeImageUri,
+                nodeImageUri:           nodeImageUri,
+                nodeImagePath:          nodeImagePath,
                 maxParallel:            Program.MaxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automate:               automate,
+                automationFolder:       automationFolder,
                 headendUri:             headendUri);
 
             controller.StatusChangedEvent +=
@@ -260,9 +285,9 @@ Server Requirements:
                     status.WriteToConsole();
                 };
 
-            switch (controller.Run())
+            switch (await controller.RunAsync())
             {
-                case SetupDisposition.Success:
+                case SetupDisposition.Succeeded:
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");
@@ -273,7 +298,7 @@ Server Requirements:
                 case SetupDisposition.Cancelled:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more prepare steps failed.");
+                    Console.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
@@ -281,7 +306,7 @@ Server Requirements:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
+                    Console.WriteLine(" *** ERROR: Cluster prepare has failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;

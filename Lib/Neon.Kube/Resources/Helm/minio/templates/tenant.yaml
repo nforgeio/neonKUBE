@@ -8,13 +8,6 @@ metadata:
   ## Optionally pass labels to be applied to the statefulset pods
   labels:
     app: minio
-  {{ if .metrics.enabled }}
-  ## Annotations for MinIO Tenant Pods
-  annotations:
-    prometheus.io/path: /minio/v2/metrics/cluster
-    prometheus.io/port: {{ .metrics.port |quote }}
-    prometheus.io/scrape: "true"
-  {{ end }}
   {{ if .scheduler.name }}
   scheduler:
     name: {{ .scheduler.name }}
@@ -89,13 +82,4 @@ spec:
   {{ if .priorityClassName }}
   priorityClassName: {{ .priorityClassName }}
   {{ end }}
-  console:
-    image: {{ .console.image.repository }}:{{ .console.image.tag }}
-    replicas: {{ .console.replicaCount }}
-    consoleSecret:
-      name: {{ .console.secrets.name }}
-    {{- with .securityContext }}
-    securityContext:
-      {{ toYaml . | nindent 6 }}
-    {{ end }}
 {{ end }}

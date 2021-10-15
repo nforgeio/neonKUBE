@@ -598,7 +598,7 @@ namespace TestModelGen.DataModel
             }
         }
 
-        [Fact(Skip = "Manually testing required")]
+        [Fact(Skip = "Manual testing required")]
         public void NullableProperties()
         {
             // NOTE: 

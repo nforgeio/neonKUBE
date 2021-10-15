@@ -685,7 +685,7 @@ namespace Neon.Kube
             this.networkOptions        = cluster.Definition.Network;
             this.nameToAvailabilitySet = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
-            this.resourceGroupName         = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
+            this.resourceGroupName     = cluster.Definition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
 
             switch (cloudOptions.PrefixResourceNames)
             {
@@ -878,6 +878,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.Azure)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Azure}].");
+            }
+
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.AppId))
             {
                 throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.AppId)}] must be specified for Azure clusters.");
@@ -906,11 +911,6 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
-
             // Update the node credentials.
 
             this.nodeUsername = KubeConst.SysAdminUser;
@@ -932,6 +932,8 @@ namespace Neon.Kube
             controller.AddGlobalStep("listing virtual machines",
                 state =>
                 {
+                    controller.SetGlobalStepStatus("list: virtual machines");
+
                     // Update [azureNodes] with any existing Azure nodes and their NICs.
                     // Note that it's possible for VMs that are unrelated to the cluster
                     // to be in the resource group, so we'll have to ignore those.
@@ -1005,7 +1007,7 @@ namespace Neon.Kube
                             .Apply();
                     }
                 },
-                (state, node) => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>
@@ -1103,6 +1105,8 @@ namespace Neon.Kube
                 GetResources();
                 return;
             }
+
+            controller.SetGlobalStepStatus("connect: Azure");
 
             var environment = AzureEnvironment.AzureGlobalCloud;
 
@@ -1254,6 +1258,8 @@ namespace Neon.Kube
         /// </summary>
         private void VerifyRegionAndVmSizes()
         {
+            controller.SetGlobalStepStatus("verify: Azure region and VM image availability");
+
             var regionName   = cluster.Definition.Hosting.Azure.Region;
             var vmSizes      = azure.VirtualMachines.Sizes.ListByRegion(regionName);
             var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
@@ -1356,6 +1362,8 @@ namespace Neon.Kube
         {
             if (!resourceGroupExists)
             {
+                controller.SetGlobalStepStatus("create: resource group");
+
                 azure.ResourceGroups
                     .Define(resourceGroupName)
                     .WithRegion(region)
@@ -1373,6 +1381,8 @@ namespace Neon.Kube
         private void CreateAvailabilitySets()
         {
             // Create the availability sets defined for the cluster nodes.
+
+            controller.SetGlobalStepStatus("create: availability sets");
 
             foreach (var azureNode in nameToVm.Values)
             {
@@ -1422,6 +1432,8 @@ namespace Neon.Kube
         {
             if (subnetNsg == null)
             {
+                controller.SetGlobalStepStatus("create: network security groups");
+
                 // Note that we're going to add rules later.
 
                 subnetNsg = azure.NetworkSecurityGroups
@@ -1440,6 +1452,8 @@ namespace Neon.Kube
         {
             if (vnet == null)
             {
+                controller.SetGlobalStepStatus("create: vnet");
+
                 var vnetCreator = azure.Networks
                     .Define(vnetName)
                     .WithRegion(region)
@@ -1473,6 +1487,8 @@ namespace Neon.Kube
         {
             if (publicAddress == null)
             {
+                controller.SetGlobalStepStatus("create: public IPv4 address");
+
                 publicAddress = azure.PublicIPAddresses
                     .Define(publicAddressName)
                         .WithRegion(azureOptions.Region)
@@ -1502,6 +1518,8 @@ namespace Neon.Kube
             // This simply does static port assignments.  We don't currently handle clusters
             // that add/remove nodes after the cluster has been deployed.
 
+            controller.SetGlobalStepStatus("assign: load balancer SSH ports");
+
             var nextExternalSshPort = cluster.Definition.Network.FirstExternalSshPort;
 
             foreach (var azureVm in SortedMasterThenWorkerNodes)
@@ -1517,6 +1535,8 @@ namespace Neon.Kube
         {
             if (loadBalancer == null)
             {
+                controller.SetGlobalStepStatus("create: load balancer");
+
                 // The Azure fluent API does not support creating a load balancer without
                 // any rules.  So we're going to create the load balancer with a dummy rule
                 // and then delete that rule straight away.
@@ -1648,16 +1668,19 @@ namespace Neon.Kube
         {
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
+                controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
                 UpdateIngressEgressRules();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
             {
+                controller.SetGlobalStepStatus("add: SSH rules");
                 AddSshRules();
             }
 
             if ((operations & NetworkOperations.DisableSsh) != 0)
             {
+                controller.SetGlobalStepStatus("remove: SSH rules");
                 RemoveSshRules();
             }
         }

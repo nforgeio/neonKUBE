@@ -28,6 +28,8 @@ using Helm.Helm;
 using k8s;
 using k8s.Models;
 
+using Minio;
+
 using Newtonsoft.Json;
 
 using Npgsql;
@@ -41,7 +43,8 @@ namespace NeonSetupGrafana
         public const string StateTable = "state";
 
         private static Kubernetes k8s;
-        private static string connString;
+        private static KubeKV kubeKV;
+        private static MinioClient minio;
 
         /// <summary>
         /// Constructor.
@@ -52,6 +55,7 @@ namespace NeonSetupGrafana
             : base(name, serviceMap: serviceMap)
         {
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            kubeKV = new KubeKV(serviceMap);
         }
 
         /// <inheritdoc/>
@@ -73,17 +77,25 @@ namespace NeonSetupGrafana
         }
 
         /// <summary>
-        /// Gets the connection string used to connect to the neon-system database.
+        /// Gets a connection string for connecting to Citus.
         /// </summary>
+        /// <param name="database"></param>
         /// <returns></returns>
-        private async Task GetConnectionStringAsync()
+        public async Task<string> GetConnectionStringAsync(string database = "postgres")
         {
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
 
             var username = Encoding.UTF8.GetString(secret.Data["username"]);
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            connString = $"Host=db-citus-postgresql.{KubeNamespaces.NeonSystem};Username={username};Password={password};Database={KubeConst.NeonClusterOperatorDatabase}";
+            var dbHost = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Host;
+            var dbPort = ServiceMap[NeonServices.NeonSystemDb].Endpoints.Default.Uri.Port;
+
+            var connectionString = $"Host={dbHost};Username={username};Password={password};Database={database};Port={dbPort}";
+
+            Log.LogDebug($"Connection string: [{connectionString.Replace(password, "REDACTED")}]");
+
+            return await Task.FromResult(connectionString);
         }
 
         /// <summary>
@@ -94,15 +106,42 @@ namespace NeonSetupGrafana
         {
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Configuring for Grafana.");
 
-            await UpdateStatusAsync("in-progress");
+            await kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup, "in-progress");
 
             var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
             await CreateDatabaseAsync("grafana", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(secret.Data["password"]));
 
-            await UpdateStatusAsync("complete");
+            var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+
+            var endpoint = "minio.neon-system";
+            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+
+            minio = new MinioClient(endpoint, accessKey, secretKey);
+
+            var buckets = await minio.ListBucketsAsync();
+
+            await CreateBucketAsync("loki");
+            await CreateBucketAsync("cortex");
+            await CreateBucketAsync("tempo");
+
+            await kubeKV.SetAsync(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup, "complete");
 
             Log.LogInfo($"[{KubeNamespaces.NeonSystem}-db] Finished setup for Grafana.");
+        }
+
+        public async Task CreateBucketAsync(string bucketName)
+        {
+            if (!await minio.BucketExistsAsync(bucketName))
+            {
+                await minio.MakeBucketAsync(bucketName);
+            }
+
+            if (!await minio.BucketExistsAsync(bucketName))
+            {
+                throw new Exception("Failed to create bucket.");
+            }
         }
 
         /// <summary>
@@ -115,7 +154,7 @@ namespace NeonSetupGrafana
         {
             try
             {
-                await using var conn = new NpgsqlConnection(connString);
+                await using var conn = new NpgsqlConnection(await GetConnectionStringAsync());
                 await conn.OpenAsync();
 
                 var dbInitialized = true;
@@ -190,28 +229,8 @@ namespace NeonSetupGrafana
             catch (Exception e)
             {
                 Log.LogError(e);
-            }
-        }
 
-        private async Task UpdateStatusAsync(string status)
-        {
-            await using var conn = new NpgsqlConnection(connString);
-            {
-                await conn.OpenAsync();
-                await using (var cmd = new NpgsqlCommand($@"
-    INSERT
-        INTO
-        {StateTable} (KEY, value)
-    VALUES (@k, @v) ON
-    CONFLICT (KEY) DO
-    UPDATE
-    SET
-        value = @v", conn))
-                {
-                    cmd.Parameters.AddWithValue("k", KubeConst.NeonJobSetupHarbor);
-                    cmd.Parameters.AddWithValue("v", status);
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                throw e;
             }
         }
     }

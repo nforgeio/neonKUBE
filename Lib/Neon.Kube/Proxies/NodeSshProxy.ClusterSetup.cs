@@ -627,7 +627,7 @@ EOF
             InvokeIdempotent("setup/kublet",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "deploy", message: "kublet");
+                    controller.LogProgress(this, verb: "setup", message: "kublet");
 
                     var script =
 @"
@@ -647,6 +647,7 @@ service kubelet restart
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
+        /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
@@ -657,9 +658,10 @@ service kubelet restart
         public async Task InstallHelmChartAsync(
             ISetupController                    controller,
             string                              chartName,
-            string                              releaseName  = null,
-            string                              @namespace   = "default",
-            Dictionary<string, object>          values       = null)
+            string                              releaseName     = null,
+            string                              @namespace      = "default",
+            Dictionary<string, object>          values          = null,
+            string                              progressMessage = null)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
@@ -678,7 +680,7 @@ service kubelet restart
 
                     var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
                     
-                    SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm} || true");
+                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolders.Helm} || true");
                     SudoCommand($"rm -f {zipPath}");
                 });
 
@@ -687,7 +689,7 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "deploy", message: $"helm");
+                    controller.LogProgress(this, verb: "helm install", message: progressMessage ?? releaseName);
 
                     var valueOverrides = new StringBuilder();
 

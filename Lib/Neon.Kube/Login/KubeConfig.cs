@@ -42,11 +42,10 @@ namespace Neon.Kube
     /// <a href="https://github.com/eBay/Kubernetes/blob/master/docs/user-guide/kubeconfig-file.md">more information</a>.
     /// </summary>
     /// <remarks>
-    /// <note>
-    /// This implementation currently supports only the a single kubeconfig
-    /// located at <c>$HOME/.kube/config</c> (within the current user's
-    /// HOME folder).  The <c>KUBECONFIG</c> environment variable is ignored.
-    /// </note>
+    /// <para>
+    /// neonKUBE client side tools like <b>neon-cli</b> and <b>neonDESKTOP</b> maintain 
+    /// cluster login information within 
+    /// </para>
     /// </remarks>
     public class KubeConfig
     {
@@ -178,7 +177,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the named cluster.
+        /// Returns the named neonKUBE related cluster.
         /// </summary>
         /// <param name="name">The cluster name.</param>
         /// <returns>The <see cref="KubeConfigCluster"/> or <c>null</c>.</returns>
@@ -186,7 +185,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return Clusters.SingleOrDefault(c => c.Name == name);
+            return Clusters.SingleOrDefault(context => context.Name == name);
         }
 
         /// <summary>
@@ -198,11 +197,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return Users.SingleOrDefault(c => c.Name == name);
+            return Users.SingleOrDefault(context => context.Name == name);
         }
 
         /// <summary>
-        /// Returns the named context (using a raw context name).
+        /// Returns the named neonKUBE related context (using a raw context name).
         /// </summary>
         /// <param name="rawName">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
@@ -210,11 +209,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(c => c.Name == rawName && c.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
         }
 
         /// <summary>
-        /// Returns the named context (using a structured context name).
+        /// Returns the named neonKUBE related context (using a structured context name).
         /// </summary>
         /// <param name="name">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
@@ -224,7 +223,7 @@ namespace Neon.Kube
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(c => c.Name == rawName && c.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
         }
 
         /// <summary>
@@ -249,7 +248,7 @@ namespace Neon.Kube
                 if (Contexts[i].Name == context.Name)
                 {
                     Contexts[i] = context;
-                    updated = true;
+                    updated     = true;
                     break;
                 }
             }
@@ -268,7 +267,7 @@ namespace Neon.Kube
                 if (Clusters[i].Name == context.Properties.Cluster)
                 {
                     Clusters[i] = cluster;
-                    updated = true;
+                    updated     = true;
                     break;
                 }
             }
@@ -285,7 +284,7 @@ namespace Neon.Kube
                 if (Users[i].Name == context.Properties.User)
                 {
                     Users[i] = user;
-                    updated = true;
+                    updated  = true;
                     break;
                 }
             }
@@ -304,7 +303,22 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes a kubecontext if it exists.
+        /// Removes a neonKUBE related kubecontext if it exists.
+        /// </summary>
+        /// <param name="name">The context name.</param>
+        /// <param name="noSave">Optionally prevent context save after the change.</param>
+        public void RemoveContext(KubeContextName name, bool noSave = false)
+        {
+            var context = GetContext(name);
+
+            if (context != null)
+            {
+                RemoveContext(context);
+            }
+        }
+
+        /// <summary>
+        /// Removes a neonKUBE related kubecontext if it exists.
         /// </summary>
         /// <param name="context">The context to be removed.</param>
         /// <param name="noSave">Optionally prevent context save after the change.</param>
@@ -444,7 +458,7 @@ namespace Neon.Kube
 
                 // Persist any cluster logins.
 
-                foreach (var context in Contexts.Where(c => c.Extension != null))
+                foreach (var context in Contexts.Where(context => context.Extension != null))
                 {
                     var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
 

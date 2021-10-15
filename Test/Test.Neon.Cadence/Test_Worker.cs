@@ -42,10 +42,10 @@ using Xunit;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public class Test_Worker : IClassFixture<CadenceFixture>, IDisposable
     {
         private CadenceFixture  fixture;

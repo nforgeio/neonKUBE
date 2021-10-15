@@ -116,8 +116,6 @@ namespace Neon.Windows
             if (disposing)
             {
                 GC.SuppressFinalize(this);
-
-                // Nothing to dispose for the current implementation.
             }
         }
 
@@ -178,11 +176,11 @@ try {{
     {command} | Out-String -Width {PowershellBufferWidth}
 }}
 catch [Exception] {{
-    write-host $_Exception.Message
+    write-error $_Exception.Message
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
+                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jefflill):
                 //
@@ -239,11 +237,11 @@ try {{
     {command} | ConvertTo-Json -Depth 4 -EnumsAsStrings -AsArray
 }}
 catch [Exception] {{
-    write-host $_Exception.Message
+    write-error $_Exception.Message
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
+                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jefflill):
                 //

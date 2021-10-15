@@ -35,7 +35,7 @@ namespace Neon.Data
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        /// Derived classes will call this when an property instance property value has changed.
+        /// Derived classes will call this when a property instance property value has changed.
         /// </summary>
         /// <param name="propertyName">
         /// The optional property name.  This defaults to the name of the caller, typically

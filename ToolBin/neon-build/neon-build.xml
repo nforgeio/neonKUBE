@@ -15,7 +15,7 @@
             </summary>
             <param name="args">The command line arguments.</param>
         </member>
-        <member name="P:NeonBuild.Program.RepoRootFolder">
+        <member name="P:NeonBuild.Program.NeonKubeRepoPath">
             <summary>
             Returns the path to the neonKUBE local repository root folder.
             </summary>
@@ -39,6 +39,18 @@
             Executes the <b>dotnet</b> tool passing the <paramref name="commandLine"/> while
             limiting the environment variables passed to the <b>dotnet</b> tool to avoid
             conflicts.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.Download(Neon.Common.CommandLine)">
+            <summary>
+            Implements the <b>download</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
+        <member name="M:NeonBuild.Program.DownloadConstUri(Neon.Common.CommandLine)">
+            <summary>
+            Implements the <b>download-const-uri</b> command.
             </summary>
             <param name="commandLine">The command line.</param>
         </member>

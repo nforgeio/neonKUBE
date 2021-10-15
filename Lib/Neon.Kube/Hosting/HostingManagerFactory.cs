@@ -71,9 +71,20 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri = null, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+
+            CheckInitialized();
+
+            return Loader.GetManager(cluster, logFolder);
+        }
+
+        /// <inheritdoc/>
+        public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
 
             CheckInitialized();
 
@@ -81,9 +92,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath = null, string logFolder = null)
+        public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImagePath), nameof(nodeImagePath));
 
             CheckInitialized();
 
@@ -112,7 +124,7 @@ namespace Neon.Kube
 
             if (manager == null)
             {
-                throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.");
+                throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.  This may be an enterprise-only feature.");
             }
 
             manager.Validate(clusterDefinition);

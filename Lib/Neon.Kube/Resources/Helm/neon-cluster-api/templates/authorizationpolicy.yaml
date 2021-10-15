@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name:  {{ include "neon-cluster-api.name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app:  {{ include "neon-cluster-api.name" . }}
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: [{{- printf "cluster.local/ns/%s/sa/%s" .Release.Namespace "neon-cluster-operator" -}}]

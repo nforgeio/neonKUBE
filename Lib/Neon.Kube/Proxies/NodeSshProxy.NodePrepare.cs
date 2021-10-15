@@ -64,7 +64,7 @@ namespace Neon.Kube
                 {
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
-                        controller.LogProgress(this, verb: "deploy", message: "tools");
+                        controller.LogProgress(this, verb: "setup", message: "tools");
 
                         // Upload each tool script, removing the extension.
 
@@ -77,18 +77,30 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
         /// Configures a node's host public SSH key during node provisioning.
+        /// </para>
+        /// <note>
+        /// This does nothing when we're preparing a ready-to-go image.
+        /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void ConfigureSshKey(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
+
+            if (readyToGoMode == ReadyToGoMode.Prepare)
+            {
+                return;
+            }
+
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             // Configure the SSH credentials on the node.
 
-            InvokeIdempotent("base/ssh",
+            InvokeIdempotent("prepare/ssh",
                 () =>
                 {
                     CommandBundle bundle;
@@ -917,7 +929,7 @@ systemctl daemon-reload
 
             using (var ms = new MemoryStream())
             {
-                controller.LogProgress(this, verb: "install", message: "helm charts (zip)");
+                controller.LogProgress(this, verb: "setup", message: "helm charts (zip)");
 
                 var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
@@ -960,7 +972,7 @@ systemctl daemon-reload
             InvokeIdempotent("setup/ipvs",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "ipvs");
+                    controller.LogProgress(this, verb: "setup", message: "ipvs");
 
                     var setupScript =
 $@"
@@ -985,7 +997,7 @@ $@"
             InvokeIdempotent("setup/cri-o",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "cri-o");
+                    controller.LogProgress(this, verb: "setup", message: "cri-o");
 
                     if (hostEnvironment != HostingEnvironment.Wsl2)
                     {
@@ -1012,25 +1024,24 @@ sysctl --system
 ";                      SudoCommand(CommandBundle.FromScript(moduleScript));
                     }
 
+                    var crioVersion = Version.Parse(KubeVersions.CrioVersion);
+
                     var setupScript =
 $@"
 set -euo pipefail
 
 # Configure the CRI-O package respository.
 
-OS=xUbuntu_20.04
-VERSION={KubeVersions.CrioVersion}
-
 cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/ /
+deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
 EOF
 
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/${{VERSION}}/${{OS}}/ /
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.CrioVersion}.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.CrioVersion}/xUbuntu_20.04/ /
 EOF
 
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:${{VERSION}}/${{OS}}/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
 # Install the CRI-O packages.
 
@@ -1044,7 +1055,7 @@ NEON_REGISTRY={KubeConst.LocalClusterRegistry}
 cat <<EOF > /etc/containers/registries.conf
 [[registry]]
 prefix = ""${{NEON_REGISTRY}}""
-insecure = false
+insecure = true
 blocked = false
 location = ""${{NEON_REGISTRY}}""
 
@@ -1445,7 +1456,7 @@ plugin_dirs = [
 [crio.metrics]
 
 # Globally enable or disable metrics support.
-enable_metrics = false
+enable_metrics = true
 
 # The port on which the metrics server will listen.
 metrics_port = 9090
@@ -1505,7 +1516,7 @@ apt-mark hold cri-o cri-o-runc
             InvokeIdempotent("setup/podman",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "podman");
+                    controller.LogProgress(this, verb: "setup", message: "podman");
 
                     var setupScript =
 $@"
@@ -1536,7 +1547,7 @@ apt-mark hold podman
             InvokeIdempotent("setup/helm-client",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "install", message: "helm client");
+                    controller.LogProgress(this, verb: "setup", message: "helm client");
 
                     var script =
 $@"
@@ -1752,7 +1763,7 @@ apt-mark hold kubeadm kubectl kubelet
 mkdir -p /opt/cni/bin
 mkdir -p /etc/cni/net.d
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --container-runtime-endpoint='unix:///var/run/crio/crio.sock' > /etc/default/kubelet
 
 # Stop and disable [kubelet] for now.  We'll enable this later during cluster setup.
 
@@ -1760,7 +1771,7 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    controller.LogProgress(this, verb: "install", message: "kubernetes");
+                    controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
                     SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
 

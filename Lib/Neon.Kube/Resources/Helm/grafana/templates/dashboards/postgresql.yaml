@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -143,7 +146,7 @@ spec:
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "{{short_version}}",
+              "legendFormat": "{{"{{"}}short_version{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1661,7 +1664,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}, s: {{state}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}, s: {{"{{"}}state{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -1754,14 +1757,14 @@ spec:
               "expr": "irate(pg_stat_database_xact_commit{instance=\"$instance\", datname=~\"$datname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{datname}} commits",
+              "legendFormat": "{{"{{"}}datname{{"}}"}} commits",
               "refId": "A"
             },
             {
               "expr": "irate(pg_stat_database_xact_rollback{instance=\"$instance\", datname=~\"$datname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{datname}} rollbacks",
+              "legendFormat": "{{"{{"}}datname{{"}}"}} rollbacks",
               "refId": "B"
             }
           ],
@@ -1855,7 +1858,7 @@ spec:
               "expr": "pg_stat_database_tup_updated{datname=~\"$datname\", instance=~\"$instance\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -1949,7 +1952,7 @@ spec:
               "expr": "pg_stat_database_tup_fetched{datname=~\"$datname\", instance=~\"$instance\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2043,7 +2046,7 @@ spec:
               "expr": "pg_stat_database_tup_inserted{datname=~\"$datname\", instance=~\"$instance\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2139,7 +2142,7 @@ spec:
               "expr": "pg_locks_count{datname=~\"$datname\", instance=~\"$instance\", mode=~\"$mode\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}},{{mode}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}},{{"{{"}}mode{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2234,7 +2237,7 @@ spec:
               "expr": "pg_stat_database_tup_returned{datname=~\"$datname\", instance=~\"$instance\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2328,7 +2331,7 @@ spec:
               "expr": "pg_stat_activity_count{datname=~\"$datname\", instance=~\"$instance\", state=~\"idle|idle in transaction|idle in transaction (aborted)\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}, s: {{state}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}, s: {{"{{"}}state{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2422,7 +2425,7 @@ spec:
               "expr": "pg_stat_database_tup_deleted{datname=~\"$datname\", instance=~\"$instance\"} != 0",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A",
               "step": 2
             }
@@ -2512,7 +2515,7 @@ spec:
               "expr": "pg_stat_database_blks_hit{instance=\"$instance\", datname=~\"$datname\"} / (pg_stat_database_blks_read{instance=\"$instance\", datname=~\"$datname\"} + pg_stat_database_blks_hit{instance=\"$instance\", datname=~\"$datname\"})",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{ datname }}",
+              "legendFormat": "{{"{{"}} datname {{"}}"}}",
               "refId": "A"
             }
           ],
@@ -2716,14 +2719,14 @@ spec:
               "expr": "irate(pg_stat_database_conflicts{instance=\"$instance\", datname=~\"$datname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{datname}} conflicts",
+              "legendFormat": "{{"{{"}}datname{{"}}"}} conflicts",
               "refId": "B"
             },
             {
               "expr": "irate(pg_stat_database_deadlocks{instance=\"$instance\", datname=~\"$datname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{datname}} deadlocks",
+              "legendFormat": "{{"{{"}}datname{{"}}"}} deadlocks",
               "refId": "A"
             }
           ],
@@ -2811,7 +2814,7 @@ spec:
               "expr": "irate(pg_stat_database_temp_bytes{instance=\"$instance\", datname=~\"$datname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{datname}}",
+              "legendFormat": "{{"{{"}}datname{{"}}"}}",
               "refId": "A"
             }
           ],

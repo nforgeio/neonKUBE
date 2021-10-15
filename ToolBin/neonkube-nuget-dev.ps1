@@ -86,10 +86,10 @@ param
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.
 
-if (!(Test-Path env:NC_USER))
+if (!(Test-Path env:NC_ROOT))
 {
     "*** ERROR: This script is intended for maintainers only:"
-    "           [NC_USER] environment variable is not defined."
+    "           [NC_ROOT] environment variable is not defined."
     ""
     "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
 
@@ -422,6 +422,10 @@ RestoreVersion Neon.Kube.Setup
 RestoreVersion Neon.Kube.Services
 RestoreVersion Neon.Kube.XenServer
 RestoreVersion Neon.Kube.Xunit
+
+# Remove all of the generated nuget files so these don't accumulate.
+
+Remove-Item "$env:NF_BUILD\nuget\*"
 
 ""
 "** Package publication completed"

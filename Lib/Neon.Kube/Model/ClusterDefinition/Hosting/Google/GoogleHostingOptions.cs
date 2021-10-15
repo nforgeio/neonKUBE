@@ -99,5 +99,13 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
+
+        /// <summary>
+        /// Clears all hosting related secrets.
+        /// </summary>
+        public void ClearSecrets()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

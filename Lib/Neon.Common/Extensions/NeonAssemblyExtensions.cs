@@ -227,7 +227,7 @@ namespace System.Reflection
         ///             sample2.txt
         /// </code>
         /// <para>
-        /// and it's default namespace is <b>company.mproject</b>, then the following resources embedded 
+        /// and its default namespace is <b>company.mproject</b>, then the following resources embedded 
         /// in your project assembly:
         /// </para>
         /// <code>

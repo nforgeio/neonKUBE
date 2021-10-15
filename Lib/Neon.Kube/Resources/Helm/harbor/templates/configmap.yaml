@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels: {{- include "chart.labels" . | nindent 4 }}
-  name: '{{ include "chart.fullname" . }}-config'
+  name: harbor-operator-config
   namespace: {{ .Release.Namespace | quote }}
 data:
   config.yaml: |-
@@ -112,15 +112,3 @@ data:
       value: {{ . | quote }}
     {{- end}}
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels: {{- include "chart.labels" . | nindent 4 }}
-  name: '{{ include "chart.fullname" . }}-config-template'
-  namespace: {{ .Release.Namespace | quote }}
-data:
-  {{- $files := .Files}}
-  {{- range $path, $_ :=  .Files.Glob "assets/*.tmpl" }}
-    {{- base $path | nindent 2 }}: |-
-      {{- $files.Get $path | nindent 4 }}
-  {{- end }}

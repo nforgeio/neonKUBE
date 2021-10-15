@@ -46,10 +46,10 @@ namespace TestCadence
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client
     /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public partial class Test_FixtureNoConnect : IClassFixture<CadenceFixture>, IDisposable
     {
         private CadenceFixture  fixture;

@@ -256,7 +256,7 @@ namespace Neon.Kube
         public const string NeonKubeImageTag = "neonkube-" + NeonKubeVersion;
 
         /// <summary>
-        /// Lists thje supported neonKUBE cluster versions.
+        /// Lists the supported neonKUBE cluster versions.
         /// </summary>
         public static IReadOnlyList<string> SupportedClusterVersions =
             new List<string>()
@@ -304,11 +304,6 @@ namespace Neon.Kube
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
-        /// Identifies the main WSL2 distro hosting neonDESKTOP.
-        /// </summary>
-        public const string NeonDesktopWsl2Distro = "neon-desktop";
-
-        /// <summary>
         /// Identifies the production neonKUBE container image registry.
         /// </summary>
         public const string NeonKubeProdRegistry = "ghcr.io/neonkube-release";
@@ -328,56 +323,88 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the username of the neon-system-db superuser.
         /// </summary>
-        public static string NeonSystemDbAdminUser = "neon_admin";
+        public const string NeonSystemDbAdminUser = "neon_admin";
 
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbAdminUser"/>.
         /// </summary>
-        public static string NeonSystemDbAdminSecret = "neon-system-db-admin";
+        public const string NeonSystemDbAdminSecret = "neon-system-db-admin";
 
         /// <summary>
         /// Identifies the neon-system-db superuser database.
         /// </summary>
-        public static string NeonClusterOperatorDatabase = "neon_cluster_operator";
+        public const string NeonClusterOperatorDatabase = "neon_cluster_operator";
 
         /// <summary>
         /// Identifies the neon-system-db username used by neon services.
         /// </summary>
-        public static string NeonSystemDbServiceUser = "neon_service";
+        public const string NeonSystemDbServiceUser = "neon_service";
 
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbServiceUser"/>.
         /// </summary>
-        public static string NeonSystemDbServiceSecret = "neon-system-db-service";
+        public const string NeonSystemDbServiceSecret = "neon-system-db-service";
 
         /// <summary>
         /// Identifies the prefix to be used by the Harbor Operator when creating Harbor related databases in neon-system-db.
         /// </summary>
-        public static string NeonSystemDbHarborPrefix = "harbor";
+        public const string NeonSystemDbHarborPrefix = "harbor";
 
         /// <summary>
         /// Identifies the database name to be used by Grafana.
         /// </summary>
-        public static string NeonSystemDbGrafanaDatabase = "grafana";
+        public const string NeonSystemDbGrafanaDatabase = "grafana";
 
         /// <summary>
         /// Identifies the secret name where the harbor credentials are stored.
         /// </summary>
-        public static string RegistrySecretKey = "registry";
+        public const string RegistrySecretKey = "registry";
 
         /// <summary>
         /// Identifies the neon cluster operator config map.
         /// </summary>
-        public static string NeonClusterOperatorConfigMap = "neon-cluster-operator";
+        public const string NeonClusterOperatorConfigMap = "neon-cluster-operator";
 
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Grafana.
         /// </summary>
-        public static string NeonJobSetupGrafana = "neon-setup-grafana";
+        public const string NeonJobSetupGrafana = "neon-setup-grafana";
 
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Harbor.
         /// </summary>
-        public static string NeonJobSetupHarbor = "neon-setup-harbor";
+        public const string NeonJobSetupHarbor = "neon-setup-harbor";
+
+        /// <summary>
+        /// Entry storing the last time cluster images were checked.
+        /// </summary>
+        public const string ClusterImagesLastChecked = "cluster-images-last-checked";
+
+        /// <summary>
+        /// The name used by the <see cref="HostingEnvironment.HyperVLocal"/> hosting manager
+        /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
+        /// as well as internal user-defined clusters will be attached.
+        /// </summary>
+        public const string HyperVLocalInternalSwitchName = "neonkube";
+
+        /// <summary>
+        /// Identifies the WSL2 distro used to host the neonDESKTOP built-in cluster.
+        /// </summary>
+        public const string NeonDesktopWsl2BuiltInDistroName = "neon-desktop";
+
+        /// <summary>
+        /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.
+        /// </summary>
+        public const string NeonDesktopHyperVBuiltInVmName = NeonDesktopWsl2BuiltInDistroName;
+
+        /// <summary>
+        /// Specifies the file name to use for the global cluster (non-node) log file.
+        /// </summary>
+        public const string ClusterSetupLogName = "cluster.log";
+
+        /// <summary>
+        /// The maximum size in bytes of a node image part published as a GitHub release.
+        /// </summary>
+        public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
     }
 }

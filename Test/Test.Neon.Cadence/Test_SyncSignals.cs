@@ -42,10 +42,10 @@ using Xunit;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public class Test_SyncSignals : IClassFixture<CadenceFixture>, IDisposable
     {
         private const int testIterations = 2;

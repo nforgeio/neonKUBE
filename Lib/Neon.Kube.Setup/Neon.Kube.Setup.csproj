@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1; net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
     <Version>2.10.0-preview</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
-    <Description>[Internal use only]: Core library used by neonKUBE related tooling.</Description>
+    <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -25,29 +25,32 @@
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
     <NoDefaultExcludes>true</NoDefaultExcludes>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-    <DocumentationFile>bin/codedoc.netcoreapp31.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <DocumentationFile>bin/codedoc.netstandard20.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netstandard2.1|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <DocumentationFile>bin/codedoc.netstandard21.xml</DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <DefineConstants />
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net48'">
-    <DocumentationFile>bin/codedoc.net48.xml</DocumentationFile>
-  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <None Remove="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net50'">
-    <DocumentationFile>bin/codedoc.net50.xml</DocumentationFile>
-  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />

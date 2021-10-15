@@ -18,6 +18,9 @@ spec:
     targetPort: {{ .Values.superuser.port }}
     protocol: TCP
     name: psql
+  - name: http-metrics
+    port: {{ .Values.metrics.port }}
+    targetPort: http-metrics
   selector:
     app: {{ template "citus-postgresql.name" . }}-master
     release: {{ .Release.Name }}

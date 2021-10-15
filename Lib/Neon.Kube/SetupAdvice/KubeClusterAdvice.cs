@@ -175,6 +175,11 @@ namespace Neon.Kube
         public static string GrafanaAgent = "grafana-agent";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> daemonset service.
+        /// </summary>
+        public static string GrafanaAgentNode = "grafana-agent-node";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Grafana Agent</b> service.
         /// </summary>
         public static string GrafanaAgentOperator = "grafana-agent-operator";
@@ -353,6 +358,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Prometheus Operator</b> service.
         /// </summary>
         public static string PrometheusOperator = "prometheus-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Reloader</b> service.
+        /// </summary>
+        public static string Reloader = "reloader";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>PromTail</b> service.

@@ -9,7 +9,7 @@
     <AssemblyName>Test.Neon.Deployment</AssemblyName>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
@@ -17,17 +17,20 @@
     <WarningsAsErrors>;NU1605</WarningsAsErrors>
     <NoWarn>1701;1702;xUnit1026</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningsAsErrors>;NU1605;xUnit1006</WarningsAsErrors>
     <NoWarn>1701;1702;xUnit1026</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
     <WarningsAsErrors>;NU1605;xUnit1006</WarningsAsErrors>
     <NoWarn>1701;1702;xUnit1026</NoWarn>
+    <DefineConstants />
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,9 +45,9 @@
 
   <ItemGroup>
     <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

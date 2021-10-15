@@ -166,27 +166,27 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Indicates that this node will provide a cStor block device for the cStorePool
+        /// Indicates that this node will provide a cStor block device for the cStorPool
         /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
         /// This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// If all nodes have <see cref="OpenEBS"/> set to <c>false</c> then most neonKUBE 
+        /// If all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> then most neonKUBE 
         /// hosting managers will automatically choose the nodes that will host the cStor
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
         /// over masters when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
-        /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
+        /// from the others.  It requires that at least one node have <see cref="OpenEbsStorage"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
         /// as an cStor.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbsStorage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsStorage", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool OpenEBS { get; set; } = false;
+        public bool OpenEbsStorage { get; set; } = false;
 
         /// <summary>
         /// Specifies the labels to be assigned to the cluster node.  These can describe
@@ -266,9 +266,22 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
-            if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
+            if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && !clusterDefinition.IsSpecialNeonCluster)
             {
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
+            }
+
+            if (name.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // $hack(jefflill):
+                //
+                // The node name [cluster] is reserved because we want to persist the
+                // global cluster log file as [cluster.log] and we don't want this to
+                // conflict with any of the node log files.
+                //
+                // See: KubeConst.ClusterSetupLogName
+
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
             }
 
             if (string.IsNullOrEmpty(Role))
@@ -323,15 +336,9 @@ namespace Neon.Kube
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
-
-                    Vm = Vm ?? new VmNodeOptions();
-                    Vm.Validate(clusterDefinition, this.Name);
-                    break;
-
                 case HostingEnvironment.Wsl2:
 
                     Vm = Vm ?? new VmNodeOptions();
-                    this.Name = Dns.GetHostName();
                     Vm.Validate(clusterDefinition, this.Name);
                     break;
 

@@ -32,10 +32,6 @@ using Neon.Xunit;
 using NeonCli;
 using Xunit;
 
-// $todo(jefflill): 
-//
-// We're not currently testing prompting actions by these commands.
-
 namespace Test.NeonCli
 {
     /// <summary>
@@ -89,7 +85,7 @@ namespace Test.NeonCli
 
             // Verify basic password operations: get, set, list|ls, and remove|rm:
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -105,17 +101,17 @@ namespace Test.NeonCli
 
                     // Add a few passwords via files and verify:
 
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-1"), "one");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-2"), "two");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-3"), "three");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-1"), "one");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-2"), "two");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-3"), "three");
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(manager.TestFolder, "pwd-1"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(testManager.TestFolder, "pwd-1"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(manager.TestFolder, "pwd-2"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(testManager.TestFolder, "pwd-2"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(manager.TestFolder, "pwd-3"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(testManager.TestFolder, "pwd-3"));
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "password", "get", "pwd-1");
@@ -171,7 +167,7 @@ pwd-3
         {
             ExecuteResponse result;
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -183,17 +179,17 @@ pwd-3
 
                     // Add a few passwords via files and verify:
 
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-1"), "one");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-2"), "two");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-3"), "three");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-1"), "one");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-2"), "two");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-3"), "three");
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(manager.TestFolder, "pwd-1"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(testManager.TestFolder, "pwd-1"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(manager.TestFolder, "pwd-2"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(testManager.TestFolder, "pwd-2"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(manager.TestFolder, "pwd-3"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(testManager.TestFolder, "pwd-3"));
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "password", "get", "pwd-1");
@@ -307,7 +303,7 @@ pwd-3
         {
             ExecuteResponse result;
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -375,7 +371,7 @@ pwd-3
         {
             ExecuteResponse result;
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -387,17 +383,17 @@ pwd-3
 
                     // Add a few passwords:
 
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-1"), "one");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-2"), "two");
-                    File.WriteAllText(Path.Combine(manager.TestFolder, "pwd-3"), "three");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-1"), "one");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-2"), "two");
+                    File.WriteAllText(Path.Combine(testManager.TestFolder, "pwd-3"), "three");
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(manager.TestFolder, "pwd-1"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-1", Path.Combine(testManager.TestFolder, "pwd-1"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(manager.TestFolder, "pwd-2"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-2", Path.Combine(testManager.TestFolder, "pwd-2"));
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(manager.TestFolder, "pwd-3"));
+                    result = await runner.ExecuteAsync(Program.Main, $"password", "set", "pwd-3", Path.Combine(testManager.TestFolder, "pwd-3"));
                     Assert.Equal(0, result.ExitCode);
 
                     // Verify that we can list the passwords:
@@ -454,7 +450,7 @@ pwd-3
         {
             ExecuteResponse result;
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -510,7 +506,7 @@ pwd-3
 
             ExecuteResponse result;
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var runner = new ProgramRunner())
                 {
@@ -560,7 +556,7 @@ pwd-3
 
                     // Export all passwords to a ZIP file:
 
-                    var zipPath = Path.Combine(manager.TestFolder, "passwords.zip");
+                    var zipPath = Path.Combine(testManager.TestFolder, "passwords.zip");
 
                     result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "password", "export", "--stdin", zipPath, "*");
                     Assert.Equal(0, result.ExitCode);

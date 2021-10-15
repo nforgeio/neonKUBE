@@ -445,9 +445,12 @@ namespace TestDeployment
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
                     await GitHub.Release.DownloadAsync(download, targetPath,
-                        progress =>
+                        (type, progress) =>
                         {
-                            progressValues.Add(progress);
+                            if (type == GetHubDownloadProgressType.Download)
+                            {
+                                progressValues.Add(progress);
+                            }
 
                             return true;
                         });
@@ -514,10 +517,13 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, 
-                        progress =>
+                    await GitHub.Release.DownloadAsync(download, targetPath,
+                        (type, progress) =>
                         {
-                            progressValues.Add(progress);
+                            if (type == GetHubDownloadProgressType.Download)
+                            {
+                                progressValues.Add(progress);
+                            }
 
                             return true;
                         });
@@ -539,10 +545,13 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath, 
-                        progress =>
+                    await GitHub.Release.DownloadAsync(download, targetPath,
+                        (type, progress) =>
                         {
-                            progressValues.Add(progress);
+                            if (type == GetHubDownloadProgressType.Download)
+                            {
+                                progressValues.Add(progress);
+                            }
 
                             return true;
                         });
@@ -564,9 +573,12 @@ namespace TestDeployment
                     progressValues.Clear();
 
                     await GitHub.Release.DownloadAsync(download, targetPath,
-                        progress =>
+                        (type, progress) =>
                         {
-                            progressValues.Add(progress);
+                            if (type == GetHubDownloadProgressType.Download)
+                            {
+                                progressValues.Add(progress);
+                            }
 
                             return true;
                         });

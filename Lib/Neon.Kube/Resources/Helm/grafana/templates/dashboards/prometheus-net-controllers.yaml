@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -116,7 +119,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(http_requests_received_total{instance =~ \"$instances\", controller =~ \"$controllers\"}[3m])) by (controller)",
-              "legendFormat": "{{controller}}",
+              "legendFormat": "{{"{{"}}controller{{"}}"}}",
               "refId": "A"
             },
             {
@@ -373,7 +376,7 @@ spec:
               "instant": false,
               "interval": "5m",
               "intervalFactor": 1,
-              "legendFormat": "{{le}}",
+              "legendFormat": "{{"{{"}}le{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -449,7 +452,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(http_requests_received_total{instance =~ \"$instances\", controller =~ \"$controllers\", code =~ \"5\\\\d\\\\d|4\\\\d\\\\d\"}[3m])) by (controller)",
-              "legendFormat": "{{controller}}",
+              "legendFormat": "{{"{{"}}controller{{"}}"}}",
               "refId": "A"
             },
             {

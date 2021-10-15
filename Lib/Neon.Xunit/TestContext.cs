@@ -130,16 +130,6 @@ namespace Neon.Xunit
                 neonKubeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
 
                 Directory.CreateDirectory(neonKubeFolder);
-
-                try
-                {
-                    NeonHelper.EncryptFile(neonKubeFolder);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Linux, OS/X, Windows Home, or non-NTFS
-                    // file systems).  Secrets won't be encrypted for these situations.
-                }
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {

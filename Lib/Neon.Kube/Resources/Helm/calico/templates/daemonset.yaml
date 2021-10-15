@@ -166,6 +166,9 @@ spec:
                 configMapKeyRef:
                   name: calico-config
                   key: veth_mtu
+            # Set iptables backend to use nftables
+            - name: FELIX_IPTABLESBACKEND
+              value: Legacy 
             # Set MTU for the VXLAN tunnel device.
             - name: FELIX_VXLANMTU
               valueFrom:

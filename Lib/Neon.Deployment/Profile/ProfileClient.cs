@@ -46,7 +46,7 @@ namespace Neon.Deployment
         /// constructing from Powershell scripts.
         /// </para>
         /// <note>
-        /// <see cref="ProfileClient"/> currently supports only Windows.
+        /// <see cref="ProfileClient"/> currently only supports Windows.
         /// </note>
         /// </summary>
         /// <exception cref="NotSupportedException">Thrown when not running on Windows.</exception>

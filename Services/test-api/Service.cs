@@ -123,6 +123,7 @@ namespace TestApiService
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
 
             // Return the exit code specified by the configuration.
 

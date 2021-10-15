@@ -46,11 +46,11 @@ namespace TestTemporal
     /// These tests prevent the <see cref="TemporalFixture"/> from establishing a client
     /// connection and then explicitly establishes a connection to run some tests.
     /// </summary>
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestTrait.Incomplete)]
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public partial class Test_FixtureNoConnect : IClassFixture<TemporalFixture>, IDisposable
     {
         private TemporalFixture  fixture;

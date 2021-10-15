@@ -104,7 +104,7 @@ spec:
           readOnly: true
         {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        image: "{{ .Values.image.repository }}/{{ .Values.image.organization }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - containerPort: {{ .Values.service.port | default 8080}}
         {{- if .Values.selfMonitor.enabled }}

@@ -1,0 +1,11 @@
+-- Create service user.
+
+CREATE USER ${service_user} WITH PASSWORD '${service_password}';
+GO
+
+--khgv
+CREATE TABLE ${state_table} (
+    KEY						    TEXT PRIMARY KEY NOT NULL,
+    VALUE     				TEXT
+);
+GO

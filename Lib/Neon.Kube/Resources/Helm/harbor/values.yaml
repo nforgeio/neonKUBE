@@ -1,6 +1,6 @@
 image:
+  organization: neon-registry.node.local
   # image.repository -- The image repository whose default is the chart appVersion.
-  repository: ghcr.io/goharbor/harbor-operator
   # image.pullPolicy -- The image pull policy for the controller.
   pullPolicy: IfNotPresent
   # image.tag -- The image tag whose default is the chart appVersion.
@@ -10,7 +10,10 @@ image:
 installCRDs: false
 
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "registry"
+
+harbor:
+  version: 2.2.2
 
 # imagePullSecrets -- Reference to one or more secrets to be used when pulling images
 # <https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/>
@@ -127,6 +130,16 @@ resources:
     cpu: 300m
     memory: 200Mi
 
+storage:
+  trivy:
+    cache:
+      size: 1Gi
+    reports:
+      size: 1Gi
+  s3:
+    accessKey: accesskey
+    secretKeyRef: secretkey
+
 # volumes -- Expects input structure as per specification <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core>
 # For example:
 # `[
@@ -151,10 +164,12 @@ volumes: []
 volumeMounts: []
 
 # deploymentAnnotations -- Additional annotations to add to the controller Deployment
-deploymentAnnotations: {}
+deploymentAnnotations:
+  reloader.stakater.com/auto: "true"
 
 # podAnnotations -- Additional annotations to add to the controller Pods
-podAnnotations: {}
+podAnnotations:
+  reloader.stakater.com/auto: "true"
 
 # podLabels -- Additional labels to add to the controller Pods
 podLabels: {}
@@ -212,7 +227,8 @@ autoscaling:
 #     ]
 #   }
 # ]`
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/neon-system.registry: 'true'
 
 # tolerations -- Expects input structure as per specification <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#toleration-v1-core>
 # For example:

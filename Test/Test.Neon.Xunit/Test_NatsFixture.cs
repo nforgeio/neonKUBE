@@ -374,16 +374,13 @@ namespace TestXunit
                 Msg<Person> request = null;
                 Msg<Person> reply = null;
 
-                var thread = new Thread(
-                    new ThreadStart(
-                        () =>
-                        {
-                            request = subscription.NextMessage();
+                var thread = NeonHelper.StartThread(
+                    () =>
+                    {
+                        request = subscription.NextMessage();
 
-                            connection.Publish(request.Reply, jill);
-                        }));
-
-                thread.Start();
+                        connection.Publish(request.Reply, jill);
+                    });
 
                 reply = connection.Request<Person, Person>("subject", jack);
 
@@ -420,16 +417,13 @@ namespace TestXunit
                 Msg<Person> request = null;
                 Msg<Person> reply = null;
 
-                var thread = new Thread(
-                    new ThreadStart(
-                        () =>
-                        {
-                            request = subscription.NextMessage();
+                var thread = NeonHelper.StartThread(
+                    () =>
+                    {
+                        request = subscription.NextMessage();
 
-                            connection.Publish(request.Reply, jill);
-                        }));
-
-                thread.Start();
+                        connection.Publish(request.Reply, jill);
+                    });
 
                 reply = connection.Request<Person, Person>("subject", jack, 1000);
 
@@ -466,16 +460,13 @@ namespace TestXunit
                 Msg<Person> request = null;
                 Msg<Person> reply = null;
 
-                var thread = new Thread(
-                    new ThreadStart(
-                        () =>
-                        {
-                            request = subscription.NextMessage();
+                var thread = NeonHelper.StartThread(
+                    () =>
+                    {
+                        request = subscription.NextMessage();
 
-                            connection.Publish(request.Reply, jill);
-                        }));
-
-                thread.Start();
+                        connection.Publish(request.Reply, jill);
+                    });
 
                 reply = await connection.RequestAsync<Person, Person>("subject", jack);
 

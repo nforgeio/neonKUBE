@@ -423,16 +423,6 @@ namespace Neon.Service
 
                 Directory.CreateDirectory(path);
 
-                try
-                {
-                    NeonHelper.EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
-
                 return cachedNeonKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
@@ -802,6 +792,10 @@ namespace Neon.Service
                 {
                     return;
                 }
+                else if (this.Status == NeonServiceStatus.Terminated)
+                {
+                    throw new InvalidOperationException($"Service status cannot be set to [{status}] when the service status is [{NeonServiceStatus.Terminated}].");
+                }
 
                 this.Status = status;
 
@@ -1150,7 +1144,7 @@ namespace Neon.Service
             }
             catch (ProgramExitException e)
             {
-                // Don't override a non-zero ExitCode that was set earlier
+                // Don't override a non-zero exit code that was set earlier
                 // with a zero exit code.
 
                 if (e.ExitCode != 0)
@@ -1198,7 +1192,6 @@ namespace Neon.Service
             }
 
             Terminator.ReadyToExit();
-
             await SetStatusAsync(NeonServiceStatus.Terminated);
 
             return ExitCode;
@@ -1289,28 +1282,26 @@ namespace Neon.Service
                     ExitCode = exitCode;
                 }
 
-                new Thread(
-                    new ThreadStart(
-                        () =>
+                NeonHelper.StartThread(
+                    () =>
+                    {
+                        // $hack(jefflill):
+                        //
+                        // Give the Exit() method a bit of time to throw the 
+                        // [ProgramExitException] to make termination handling
+                        // a bit more deterministic.
+
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
+
+                        try
                         {
-                            // $hack(jefflill):
-                            //
-                            // Give the Exit() method a bit of time to throw the 
-                            // ProgramExitException to make termination handling
-                            // a bit more deterministic.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
-
-                            try
-                            {
-                                Stop();
-                            }
-                            catch
-                            {
-                                // Ignoring any errors.
-                            }
-
-                        })).Start();
+                            Stop();
+                        }
+                        catch
+                        {
+                            // Ignoring any errors.
+                        }
+                    });
 
                 throw new ProgramExitException(ExitCode);
             }
@@ -1541,7 +1532,7 @@ namespace Neon.Service
 
             if (linuxLineEndings)
             {
-                contents = contents.Replace("\r\n", "\n");
+                contents = NeonHelper.ToLinuxLineEndings(contents);
             }
 
             lock (syncLock)

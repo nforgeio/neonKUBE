@@ -109,8 +109,8 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
-        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
+        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -164,6 +164,11 @@ namespace Neon.Kube
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.XenServer)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
+            }
         }
 
         /// <inheritdoc/>
@@ -171,21 +176,10 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] must be passed to the constructor.");
 
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // We'll call this to be consistent with the cloud hosting managers even though
-            // the upstream on-premise router currently needs to be configured manually.
-
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
@@ -234,7 +228,7 @@ namespace Neon.Kube
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            xenController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies)
+            xenController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
             {
                 MaxParallel = this.MaxParallel
             };
@@ -249,7 +243,12 @@ namespace Neon.Kube
 
             xenController.AddWaitUntilOnlineStep();
             xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
-            xenController.AddNodeStep("virtual machine template", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
+
+            if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
+            {
+                xenController.AddNodeStep("xenserver node image", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
+            }
+
             xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
 
             controller.AddControllerStep(xenController);
@@ -309,7 +308,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                (state, node) => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>
@@ -404,25 +403,38 @@ namespace Neon.Kube
                 {
                     xenSshProxy.Status = "download: vm template";
 
-                    var driveTemplateUri  = new Uri(nodeImageUri);
-                    var driveTemplateName = driveTemplateUri.Segments.Last();
+                    string      driveTemplateName;
 
-                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-                    if (!File.Exists(driveTemplatePath))
+                    if (!string.IsNullOrEmpty(nodeImageUri))
                     {
-                        xenController.SetGlobalStepStatus($"Download node image XVA: [{nodeImageUri}]");
+                        // Download the GZIPed VHDX template if it's not already present and has a valid
+                        // MD5 hash file.
+                        //
+                        // Note that we're going to name the file the same as the file name from the URI.
+
+                        var driveTemplateUri  = new Uri(nodeImageUri);
+                        
+                        driveTemplateName = driveTemplateUri.Segments.Last();
+                        driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            progress =>
+                            (progressType, progress) =>
                             {
-                                xenController.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
+                                xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
                                 return !xenController.CancelPending;
                             });
-
-                        xenController.SetGlobalStepStatus();
                     }
+                    else
+                    {
+                        Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                        driveTemplateName = Path.GetFileName(nodeImagePath);
+                        driveTemplatePath = nodeImagePath;
+                    }
+
+
+                    xenController.SetGlobalStepStatus();
                 }
 
                 xenController.SetGlobalStepStatus();
@@ -509,14 +521,12 @@ namespace Neon.Kube
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.
 
-                    node.Status = $"start: virtual machine (first boot)";
+                    node.Status = $"start: virtual machine";
                     xenHost.Machine.Start(vm);
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-
-                    node.Status = $"connecting...";
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 

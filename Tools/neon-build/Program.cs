@@ -38,7 +38,8 @@ Internal neonKUBE project build related utilities: v1.1
 neon-build clean [-all] REPO-PATH
 
 Deletes all of the [bin] and [obj] folders within the repo and
-also clears the [Build] folder.
+also clears the [Build] folder as well as [.version] files located
+amywhere within the repo's [$\Images] folder.
 
 ARGUMENTS:
 
@@ -162,6 +163,30 @@ neon-build hexdump
 Reads standard input as binary, converts it to hex and writes it to
 standard output as one line.
 
+----------------------------------------
+neon-build download URI TARGET-PATH
+
+Downloads a file from a URI and writes it to a file.  Note that
+S3 URIs are not supported.
+
+ARGUMENTS:
+
+    URI         - The S3 source URI (formatted as http://... or https://...
+    TARGET-PATH - Path to the output file
+
+----------------------------------------
+neon-build download-const-uri ASSEMBLY-PATH TYPE-NAME CONST-NAME TARGET-PATH
+
+Extracts a constant value from an assembly file and then downloads
+the URI and writes it to a file.  Note that S3 URIs are not supported.
+
+ARGUMENTS:
+
+    ASSEMBLY-PATH   - Path to the assembly with the constant
+    TYPE-NAME       - Fully qualified name of the type with the constant
+    CONST-NAME      - Name of the constant within the class
+    TARGET-PATH     - Path to the output file
+
 ";
         private static CommandLine commandLine;
 
@@ -191,9 +216,9 @@ standard output as one line.
 
             try
             {
-                Program.RepoRootFolder = Environment.GetEnvironmentVariable("NF_ROOT");
+                Program.NeonKubeRepoPath = Environment.GetEnvironmentVariable("NF_ROOT");
 
-                if (string.IsNullOrEmpty(Program.RepoRootFolder) || !Directory.Exists(Program.RepoRootFolder))
+                if (string.IsNullOrEmpty(Program.NeonKubeRepoPath) || !Directory.Exists(Program.NeonKubeRepoPath))
                 {
                     Console.Error.WriteLine("*** ERROR: NF_ROOT environment variable does not reference the local neonKUBE repostory.");
                     Program.Exit(1);
@@ -222,7 +247,7 @@ standard output as one line.
 
                         if (commandLine.HasOption("--all"))
                         {
-                            var buildCacheFolder = Path.Combine(Program.RepoRootFolder, "Build-cache");
+                            var buildCacheFolder = Path.Combine(repoRoot, "Build-cache");
 
                             if (Directory.Exists(buildCacheFolder))
                             {
@@ -230,14 +255,14 @@ standard output as one line.
                             }
                         }
 
-                        var cadenceResourcesPath = Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Cadence", "Resources");
+                        var cadenceResourcesPath = Path.Combine(repoRoot, "Lib", "Neon.Cadence", "Resources");
 
                         if (Directory.Exists(cadenceResourcesPath))
                         {
                             NeonHelper.DeleteFolder(cadenceResourcesPath);
                         }
 
-                        foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "bin", SearchOption.AllDirectories))
+                        foreach (var folder in Directory.EnumerateDirectories(repoRoot, "bin", SearchOption.AllDirectories))
                         {
                             if (Directory.Exists(folder))
                             {
@@ -245,7 +270,7 @@ standard output as one line.
                             }
                         }
 
-                        foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "obj", SearchOption.AllDirectories))
+                        foreach (var folder in Directory.EnumerateDirectories(repoRoot, "obj", SearchOption.AllDirectories))
                         {
                             if (Directory.Exists(folder))
                             {
@@ -253,6 +278,26 @@ standard output as one line.
                             }
                         }
 
+                        // Delete any [$/Images/**/.version] files.  These files are generated for neonCLOUD
+                        // during cluster image builds.  These files are within [.gitignore] and should really
+                        // be cleaned before builds etc.
+                        
+                        // $hack(jefflill):
+                        // 
+                        // This is a bit of a hack since only the neonCLOUD repo currently generates these files,
+                        // but this is somewhat carefully coded to not cause a problem for the other repos.  Just
+                        // be sure that those repos don't include a root [$/Images] folder that has [.version]
+                        // files used for other purposes.
+
+                        var imageFolder = Path.Combine(repoRoot, "Images");
+
+                        if (Directory.Exists(imageFolder))
+                        {
+                            foreach (var file in Directory.GetFiles(imageFolder, ".version", SearchOption.AllDirectories))
+                            {
+                                NeonHelper.DeleteFile(file);
+                            }
+                        }
                         break;
 
                     case "clean-attr":
@@ -375,6 +420,16 @@ standard output as one line.
                         }
                         break;
 
+                    case "download":
+
+                        Download(commandLine);
+                        break;
+
+                    case "download-const-uri":
+
+                        DownloadConstUri(commandLine);
+                        break;
+
                     default:
 
                         Console.Error.WriteLine($"*** ERROR: Unexpected command [{command}].");
@@ -386,7 +441,7 @@ standard output as one line.
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"*** ERROR: {e.GetType().FullName}: {e.Message}");
+                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Program.Exit(1);
             }
         }
@@ -394,7 +449,7 @@ standard output as one line.
         /// <summary>
         /// Returns the path to the neonKUBE local repository root folder.
         /// </summary>
-        public static string RepoRootFolder { get; private set; }
+        public static string NeonKubeRepoPath { get; private set; }
 
         /// <summary>
         /// Terminates the program with a specified exit code.

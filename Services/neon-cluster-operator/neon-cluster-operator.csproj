@@ -11,9 +11,37 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <AssemblyName>neon-cluster-operator</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DefineConstants />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Templates\**" />
+    <EmbeddedResource Remove="Templates\**" />
+    <None Remove="Templates\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\cluster-manifest.json" />
+    <None Remove="Schema\schema-0000.script" />
+    <None Remove="Schema\schema-0001.script" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\cluster-manifest.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Helm" Version="0.1.35" />
@@ -28,11 +56,30 @@
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Services\Neon.Kube.Services.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Postgres\Neon.Postgres.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>
+  
+  <!--
+  The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
+  download the cluster manifest JSON file for the current cluster version.  The manifest
+  will be generated during image builds in neonCLOUD and uploaded to S3.
+  
+  The [neon-build download-const-uri] obtains the URI for the manifest from:
+  
+      assembly:   Neon.Kube.dll (netstandard2.1)
+      constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
+  
+  We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
+  build configuration and target runtime as this project.  This is a bit fragile.
+  
+  Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
+  file so that developers will be able to work offline.  We'll just build with the existing
+  manifest file which is checked into git and won't change very often.
+  -->
 
-  <ItemGroup>
-    <Folder Include="Templates\" />
-  </ItemGroup>
+  <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
+    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\netstandard2.1\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+  </Target>
 
 </Project>

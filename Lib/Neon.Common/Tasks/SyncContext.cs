@@ -32,7 +32,8 @@ namespace Neon.Tasks
     /// <summary>
     /// Used by public <c>async</c> library methods to reset the current
     /// task <see cref="SynchronizationContext"/> so that continuations won't
-    /// be marshalled back to the current thread, improving performance.
+    /// be marshalled back to the current thread improving performance,
+    /// especially when called from a UI context.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -111,8 +112,9 @@ namespace Neon.Tasks
 
         /// <summary>
         /// <c>await</c> this singleton to clear the current synchronization
-        /// context for the scope of the current method.  The original context
-        /// will be restored when the method returns.
+        /// context for the scope of the current method as a potential performance
+        /// optimization.  The original context will be restored when the method 
+        /// returns.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -139,7 +141,7 @@ namespace Neon.Tasks
         /// <para>
         /// This call clears the current synchronization context such that the
         /// subsequent <c>async</c> calls will each marshal back to threads
-        /// obtained from the thread pool and due to compiler async magic,
+        /// obtained from the thread pool and due to the compiler's async magic,
         /// the original synchronization context will be restored before the
         /// <c>HelloAsync()</c> method returns.
         /// </para>

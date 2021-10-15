@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <returns>The status.</returns>
         private string GetStatus(HashSet<string> stepNodeNames, SetupNodeStatus node)
         {
-            if (stepNodeNames != null && !stepNodeNames.Contains(node.Name))
+            if (false && stepNodeNames != null && !stepNodeNames.Contains(node.Name))
             {
                 return "  -";
             }
@@ -72,7 +72,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the current status for a host.
+        /// Returns the current status for a hypervisor hosting one or more cluster nodes.
         /// </summary>
         /// <param name="host">The node being queried.</param>
         /// <returns>The status.</returns>
@@ -141,35 +141,55 @@ namespace Neon.Kube
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {controller.OperationTitle}");
 
-            var displaySteps     = Steps.Where(step => !step.IsQuiet);
+            var nonQuietSteps    = Steps.Where(step => !step.IsQuiet).ToList();
+            var displaySteps     = new List<SetupStepStatus>();
             var showStepProgress = false;
 
-            if (maxDisplayedSteps > 0 && maxDisplayedSteps < displaySteps.Count())
+            if (maxDisplayedSteps > 0 && maxDisplayedSteps < nonQuietSteps.Count())
             {
                 // Limit the display steps to just those around the currently
                 // executing step.
 
-                var displayStepsCount = displaySteps.Count();
-                var runningStep       = Steps.FirstOrDefault(s => s.State == SetupStepState.Running);
+                var runningStep = CurrentStep;
+
+                if (CurrentStep != null && !CurrentStep.IsQuiet)
+                {
+                    runningStep = CurrentStep;
+                }
 
                 if (runningStep != null)
                 {
                     showStepProgress = true;
 
-                    if (runningStep.Number <= 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number <= maxDisplayedSteps);
-                    }
-                    else if (runningStep.Number >= displayStepsCount - maxDisplayedSteps + 1)
-                    {
-                        displaySteps = displaySteps.Where(s => s.Number >= displayStepsCount - maxDisplayedSteps + 1);
-                    }
-                    else
-                    {
-                        var firstDisplayedNumber = runningStep.Number - maxDisplayedSteps / 2;
-                        var lastDisplayedNumber  = firstDisplayedNumber + maxDisplayedSteps - 1;
+                    // Determine the number of steps before the running step as well as the
+                    // number of steps after to include in the display steps.
 
-                        displaySteps = displaySteps.Where(s => firstDisplayedNumber <= s.Number && s.Number <= lastDisplayedNumber);
+                    var maxStepsBefore = (maxDisplayedSteps - 1) / 2;
+                    var maxStepsAfter  = maxDisplayedSteps - maxStepsBefore - 1;
+                    var stepsBefore    = Math.Min(runningStep.Number - 1, maxStepsBefore);
+                    var stepsAfter     = Math.Min(nonQuietSteps.Max(step => step.Number) - runningStep.Number, (maxDisplayedSteps - 1) - stepsBefore);
+
+                    if (stepsAfter < maxStepsAfter)
+                    {
+                        // Adjust the number of steps displayed before the current step
+                        // so that [maxDisplayedSteps] steps will be displayed, adjusting
+                        // for situations where there aren't enough steps.
+
+                        stepsBefore = Math.Min(maxStepsAfter - stepsAfter, runningStep.Number - 1);
+                    }
+
+                    // Build the list of steps we'll be displaying.
+
+                    if (stepsBefore > 0)
+                    {
+                        displaySteps.AddRange(nonQuietSteps.Where(step => step.Number >= runningStep.Number - stepsBefore && step.Number < runningStep.Number));
+                    }
+
+                    displaySteps.Add(runningStep);
+
+                    if (stepsAfter > 0)
+                    {
+                        displaySteps.AddRange(nonQuietSteps.Where(step => step.Number <= runningStep.Number + stepsAfter && step.Number > runningStep.Number));
                     }
                 }
             }
@@ -205,6 +225,7 @@ namespace Neon.Kube
             {
                 switch (step.State)
                 {
+                    case SetupStepState.NotInvolved:
                     case SetupStepState.Pending:
 
                         sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
@@ -246,29 +267,21 @@ namespace Neon.Kube
             }
 
             //-----------------------------------------------------------------
-            // Display the node status
+            // Display the node status when executing a node step.
 
-            if (controller.HasNodeSteps && showNodeStatus && CurrentStep != null)
+            if (controller.HasNodeSteps && showNodeStatus)
             {
                 // $hack(jefflill):
                 //
                 // I'm hardcoding the status display here for two scenarios:
                 //
-                //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
+                //      1. Configuring cluster nodes with [NodeDefinition] metadata.
                 //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
                 //
                 // It would be more flexible to implement some kind of callback or virtual
                 // method to handle this.
 
                 var stepNodeNamesSet = controller.GetStepNodeNames(CurrentStep.InternalStep);
-
-                foreach (var node in Nodes)
-                {
-                    if (!stepNodeNamesSet.Contains(node.Name))
-                    {
-                        node.Status = string.Empty;
-                    }
-                }
 
                 if (controller.NodeMetadataType == typeof(NodeDefinition))
                 {
@@ -311,19 +324,26 @@ namespace Neon.Kube
                 }
             }
 
-            if (!string.IsNullOrEmpty(GlobalStatus))
-            {
-                sbDisplay.AppendLine();
-                sbDisplay.AppendLine($"*** {GlobalStatus}");
-            }
+            // Display any global operation status.
 
             sbDisplay.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(GlobalStatus))
+            {
+                sbDisplay.AppendLine($" Cluster:");
+                sbDisplay.AppendLine($"    {GlobalStatus}");
+            }
+            else
+            {
+                sbDisplay.AppendLine();
+                sbDisplay.AppendLine();
+            }
 
             // Display the runtime for the steps after they all have been executed.
 
             if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
             {
-                var totalLabel    = " Total Setup Time";
+                var totalLabel    = "Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);
 
                 if (maxLabelWidth < totalLabel.Length)
@@ -331,7 +351,15 @@ namespace Neon.Kube
                     maxLabelWidth = totalLabel.Length;
                 }
 
-                sbDisplay.AppendLine();
+                // Compute the total run time.
+
+                var totalRuntime = TimeSpan.Zero;
+
+                foreach (var step in Steps)
+                {
+                    totalRuntime += step.InternalStep.RunTime;
+                }
+
                 sbDisplay.AppendLine();
                 sbDisplay.AppendLine(" Step Runtime");
                 sbDisplay.AppendLine(" ------------");
@@ -355,12 +383,15 @@ namespace Neon.Kube
                 filler = new string(' ', maxLabelWidth - totalLabel.Length);
 
                 sbDisplay.AppendLine(" " + new string('-', totalLabel.Length + 1));
-                sbDisplay.AppendLine($" {totalLabel}:    {filler}{controller.Runtime} ({controller.Runtime.TotalSeconds} sec)");
+                sbDisplay.AppendLine($" {totalLabel}:    {filler}{totalRuntime} ({totalRuntime.TotalSeconds} sec)");
                 sbDisplay.AppendLine();
             }
 
-            Console.Clear();
-            Console.Write(sbDisplay.ToString());
+            sbDisplay.AppendLine();
+
+            // This updates the console without flickering.
+
+            controller.ConsoleWriter.Update(sbDisplay.ToString());
         }
     }
 }

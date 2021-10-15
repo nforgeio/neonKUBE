@@ -310,13 +310,17 @@ services:
                 // This is somewhat fragile because it hardcodes the container names and won't
                 // remove any other stack assets like networks.
 
-                NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force",
-                    new string[]
-                    {
-                        "temporal-dev_cassandra_1",
-                        "temporal-dev_temporal-web_1",
-                        "temporal-dev_temporal_1"
-                    } });
+                NeonHelper.ExecuteCapture(NeonHelper.DockerCli, 
+                    new object[]
+                    { 
+                        "rm", "--force",
+                        new string[]
+                        {
+                            "temporal-dev_cassandra_1",
+                            "temporal-dev_temporal-web_1",
+                            "temporal-dev_temporal_1"
+                        } 
+                    });
 
                 // Reset CadenceClient to its initial state.
 
@@ -370,7 +374,7 @@ services:
 
                 if (!noClient)
                 {
-                    // Establish the Cadence connection *via the cadence proxy).
+                    // Establish the Cadence connection via the cadence proxy).
 
                     Client = CadenceClient.ConnectAsync(settings).Result;
 
@@ -396,7 +400,7 @@ services:
             {
                 if (client == null)
                 {
-                    throw new Exception("Cadence client could not be connected to the Cadence cluster.");
+                    throw new Exception("Cadence client could not connect to the Cadence cluster.");
                 }
 
                 return client;

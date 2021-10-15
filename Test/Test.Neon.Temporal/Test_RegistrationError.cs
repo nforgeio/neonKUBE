@@ -39,6 +39,7 @@ using Xunit;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestTrait.Incomplete)]
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]

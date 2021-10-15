@@ -1,7 +1,7 @@
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ .Values.clusterDomain }}
+  name: neon-cluster-certificate
   namespace: neon-ingress
 spec:
   commonName: {{ .Values.clusterDomain }}
@@ -13,15 +13,18 @@ spec:
     group: cert-manager.io
     kind: ClusterIssuer
     name: neon-acme
-  keyAlgorithm: rsa
-  keyEncoding: pkcs1
-  keySize: 2048
-  organization:
-    - neoncluster.io
-  privateKey: {}
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  subject:
+    organizations:
+      - neoncluster.io
+  privateKey:
+    rotationPolicy: Always
   renewBefore: 360h0m0s
-  secretName: {{ .Values.clusterDomain }}
-  subject: {}
+  secretName: neon-cluster-certificate
   usages:
     - server auth
     - client auth

@@ -22,6 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -33,6 +35,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Models.Headend;
 using Neon.Net;
+using Neon.Retry;
 
 using Octokit;
 
@@ -260,7 +263,7 @@ namespace Neon.Deployment
 
             if (!release.Draft)
             {
-                throw new NotSupportedException("Cannut upload asset to already published release.");
+                throw new NotSupportedException("Cannot upload asset to already published release.");
             }
 
             var repoPath = GitHubRepoPath.Parse(repo);
@@ -466,10 +469,16 @@ namespace Neon.Deployment
         /// <param name="download">The download information.</param>
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
-        public void Download(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default)
+        public void Download(
+            Download                        download, 
+            string                          targetPath, 
+            GitHubDownloadProgressDelegate  progressAction = null, 
+            IRetryPolicy                    retry          = null,
+            TimeSpan                        partTimeout    = default)
         {
-            DownloadAsync(download, targetPath, progressAction, partTimeout).Wait();
+            DownloadAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
         }
 
         /// <summary>
@@ -479,9 +488,13 @@ namespace Neon.Deployment
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 
@@ -499,10 +512,18 @@ namespace Neon.Deployment
         /// The target files (output and MD5) will be deleted when download appears to be corrupt.
         /// </note>
         /// </remarks>
-        public async Task<string> DownloadAsync(Download download, string targetPath, GitHubDownloadProgressDelegate progressAction = null, TimeSpan partTimeout = default, CancellationToken cancellationToken = default)
+        public async Task<string> DownloadAsync(
+            Download                        download, 
+            string                          targetPath, 
+            GitHubDownloadProgressDelegate  progressAction    = null, 
+            TimeSpan                        partTimeout       = default, 
+            IRetryPolicy                    retry             = null,
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
+
+            retry = retry ?? new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, maxAttempts: 5);
 
             if (partTimeout <= TimeSpan.Zero)
             {
@@ -518,16 +539,48 @@ namespace Neon.Deployment
 
             // If the target file already exists along with its MD5 hash file, then compare the
             // existing MD5 against the download's MD5 as well as the computed MD5 for the current
-            // file and skip the download when the match.
+            // file and skip the download when these match.
+            //
+            // We're going to use the new .NET 5.0 [IncrementalHash] class so we can report progress 
+            // for .NET 5.0+ builds.
 
             if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
             {
                 using (var input = File.OpenRead(targetPath))
                 {
+#if NET5_0_OR_GREATER
+                    using (var hasher = IncrementalHash.CreateHash(HashAlgorithmName.MD5))
+                    {
+                        var buffer = new byte[8192];
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 0);
+
+                        while (true)
+                        {
+                            var cb = input.Read(buffer, 0, buffer.Length);
+
+                            if (cb == 0)
+                            {
+                                break;
+                            }
+
+                            hasher.AppendData(buffer, 0, cb);
+                            progressAction?.Invoke(GetHubDownloadProgressType.Check, (int)((double)input.Position/(double)input.Length * 100.0));
+                        }
+
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 100);
+
+                        if (NeonHelper.ToHex(hasher.GetCurrentHash()) == download.Md5)
+                        {
+                            return targetPath;
+                        }
+                    }
+#else
                     if (CryptoHelper.ComputeMD5String(input) == download.Md5)
                     {
                         return targetPath;
                     }
+#endif
                 }
             }
 
@@ -544,6 +597,8 @@ namespace Neon.Deployment
 
                     foreach (var part in download.Parts.OrderBy(part => part.Number))
                     {
+                        progressAction?.Invoke(GetHubDownloadProgressType.Check, (int)((double)pos / (double)download.Size * 100.0));
+
                         // Handle a partially downloaded part.  We're going to truncate the file to
                         // remove the partial part and then break to start re-downloading the part.
 
@@ -577,14 +632,14 @@ namespace Neon.Deployment
 
             // Download any remaining parts.
 
-            if (progressAction != null && !progressAction.Invoke(0))
+            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Download, 0))
             {
                 return targetPath;
             }
 
             if (nextPartNumber > download.Parts.Count)
             {
-                progressAction?.Invoke(100);
+                progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
                 return targetPath;
             }
 
@@ -608,16 +663,20 @@ namespace Neon.Deployment
                             .Where(part => part.Number >= nextPartNumber)
                             .OrderBy(part => part.Number))
                         {
-                            output.Position = pos;
+                            await retry.InvokeAsync(
+                                async () =>
+                                {
+                                    output.Position = pos;
 
-                            var response = await httpClient.GetAsync(part.Uri);
+                                    var response = await httpClient.GetAsync(part.Uri, cancellationToken);
 
-                            response.EnsureSuccessStatusCode();
+                                    response.EnsureSuccessStatusCode();
 
-                            using (var contentStream = await response.Content.ReadAsStreamAsync())
-                            {
-                                await contentStream.CopyToAsync(output);
-                            }
+                                    using (var contentStream = await response.Content.ReadAsStreamAsync())
+                                    {
+                                        await contentStream.CopyToAsync(output, cancellationToken);
+                                    }
+                                });
 
                             // Ensure that the downloaded part size matches the specification.
 
@@ -640,7 +699,7 @@ namespace Neon.Deployment
 
                             pos += part.Size;
 
-                            if (progressAction != null && !progressAction.Invoke((int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            if (progressAction != null && !progressAction.Invoke(GetHubDownloadProgressType.Download, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
                             {
                                 return targetPath;
                             }
@@ -652,7 +711,7 @@ namespace Neon.Deployment
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
                     File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
 
                     return targetPath;

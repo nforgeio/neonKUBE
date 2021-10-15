@@ -46,8 +46,19 @@ namespace Neon.Kube
         private const string minNfsSize = "10 GiB";
 
         /// <summary>
+        /// <para>
+        /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
+        /// to <see cref="OpenEbsEngine.Jiva"/>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
+        [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
+        [DefaultValue(OpenEbsEngine.Jiva)]
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Jiva;
+
+        /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
-        /// to <b>10 GiB</b> and cannot be any smaller than this.
+        /// to <b>10 GiB</b> and cannot be any smaller.
         /// </summary>
         [JsonProperty(PropertyName = "NfsSize", Required = Required.Default)]
         [YamlMember(Alias = "nfsSize", ApplyNamingConventions = false)]
@@ -62,11 +73,16 @@ namespace Neon.Kube
         [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
             NfsSize = NfsSize ?? minNfsSize;
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            KubeHelper.EnsureOpenEbsNodes(clusterDefinition);
+            if (Engine == OpenEbsEngine.cStor && clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) == 0)
+            {
+                throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.cStor)}].");
+            }
         }
     }
 }

@@ -42,10 +42,10 @@ using Xunit.Abstractions;
 
 namespace TestCadence
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
         //---------------------------------------------------------------------

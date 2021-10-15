@@ -1,83 +1,100 @@
-﻿apiVersion: goharbor.io/v1beta1
+﻿apiVersion: goharbor.io/v1alpha3
 kind: HarborCluster
 metadata:
   name: registry
   namespace: {{ .Release.Namespace | quote }}
 spec:
-  imageSource: # Optional
-    repository: ghcr.io/goharbor # Required
-    imagePullPolicy: IfNotPresent # Optional, default = IfNotPresent
-    imagePullSecrets: []
-  logLevel: debug
-  database:
-    kind: PostgreSQL
-    spec:
-      postgresql:
-        hosts:
-          - host: db-citus-postgresql.neon-system
-            port: 5432
-        passwordRef: registry
-        sslMode: disable
-        username: neon_service
-        prefix: harbor
-  storage:
-    kind: S3
-    spec:
-      s3:
-        region: neon
-        bucket: harbor
-        regionendpoint: http://minio.neon-system
-  cache:
-    kind: Redis
-    spec:
-      redis:
-        host: {{ .Values.redis.external.addr }}
-        port: 26379
-        sentinelMasterSet: {{ .Values.redis.external.sentinelMasterSet }}
-  version: 2.2.1
-  chartmuseum: {}
+  version: {{ .Values.harbor.version }}
+  chartmuseum:
+    absoluteUrl: false
+    image: {{ .Values.image.organization }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+      neonkube.io/neon-system.registry: 'true'
+    resources: {}
   core:
+    image: {{ .Values.image.organization }}/harbor-core:v{{ .Values.harbor.version }}
+    resources: {}
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
-  expose: 
-    core: # Required
-      # TLS setting
-      # Expose service with ingress way
+  database:
+    hosts:
+      - host: db-citus-postgresql.neon-system
+        port: 5432
+    passwordRef: registry
+    prefix: harbor_
+    sslMode: disable
+    username: neon_service
+  expose:
+    core:
       ingress:
-        # Host of the exposed service
-        host: registry.{{ .Values.neon.clusterDomain }} # Required
-        # Ingress controller type, support ["gce","ncp","default"]
-        controller: default # Optional, default value = "default"
-        # Annotations applied to the ingress
-        annotations: # Optional
-          key: value
-    notary: # Required
-      # TLS setting
-      tls: # Optional
-        # Certificate reference
-        certificateRef: {{ .Values.neon.clusterDomain }} # Optional
-      # Expose service with ingress way
+        host: registry.{{ .Values.clusterDomain }}
+      tls:
+        certificateRef: registry-harbor-certificate
+    notary:
       ingress:
-        # Host of the exposed service
-        host: notary.{{ .Values.neon.clusterDomain }} # Required
-        # Ingress controller type, support ["gce","ncp","default"]
-        controller: default # Optional, default value = "default"
-        # Annotations applied to the ingress
-        annotations: # Optional
-          key: value
-  externalURL: https://registry.{{ .Values.neon.clusterDomain }}
+        host: notary.{{ .Values.clusterDomain }}
+      tls:
+        certificateRef: registry-harbor-certificate
+  externalURL: https://registry.{{ .Values.clusterDomain }}
   harborAdminPasswordRef: registry
+  imageChartStorage:
+    redirect:
+      disable: true
+    s3:
+      accesskey: {{ .Values.storage.s3.accessKey }}
+      bucket: harbor
+      encrypt: false
+      region: neon
+      regionendpoint: minio.neon-system
+      secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
+      secure: false
+      skipverify: true
+      storageclass: STANDARD
+      v4auth: true
+  imageSource:
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    repository: {{ .Values.image.organization }}
   internalTLS:
     enabled: false
+  jobservice:
+    image: {{ .Values.image.organization }}/harbor-jobservice:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    resources: {}
+    workerCount: 10
+  logLevel: debug
   notary:
     migrationEnabled: true
-  portal: {}
-  registry: {}
+    server:
+      image: {{ .Values.image.organization }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+    signer:
+      image: {{ .Values.image.organization }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+  portal:
+    resources: {}
+  redis:
+    host: registry-redis
+    port: 26379
+    sentinelMasterSet: master
+  registry:
+    image: {{ .Values.image.organization }}/harbor-registry-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    relativeURLs: true
+    resources: {}
+    metrics:
+      enabled: true
   trivy:
+    image: {{ .Values.image.organization }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    resources: {}
     skipUpdate: false
     storage:
       cachePersistentVolume:
         claimName: registry-trivy-cache
-      reportsPersistentVolume:
-        claimName: registry-trivy-reports
+  updateStrategyType: RollingUpdate

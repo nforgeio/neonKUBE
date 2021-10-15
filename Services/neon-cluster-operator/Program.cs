@@ -5,9 +5,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Service;
 
@@ -22,12 +24,19 @@ namespace NeonClusterOperator
     public static class Program
     {
         /// <summary>
-        /// The program entrypoint.
+        /// Returns the static direrctory holding the service embedded resources.
+        /// </summary>
+        public static IStaticDirectory Resources { get; private set; }
+
+        /// <summary>
+        /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
+            Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Resources");
+
             await new Service(NeonServices.ClusterOperator, serviceMap: NeonServiceMap.Production).RunAsync();
         }
     }

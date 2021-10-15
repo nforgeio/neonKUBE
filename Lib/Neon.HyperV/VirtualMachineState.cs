@@ -55,12 +55,15 @@ namespace Neon.HyperV
         Running,
 
         /// <summary>
-        /// The machine is paused.
+        /// The machine is paused.  This can happen for Hyper-V instances
+        /// running on Windows server due to the low available disk space:
+        /// <a href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/virtualization/virtual-machines-enter-paused-state-low-disk-free">More Info</a>
         /// </summary>
         Paused,
 
         /// <summary>
-        /// The machine saved.
+        /// The machine has been saved.  This is equivalent to hibernation
+        /// of a physical machine.
         /// </summary>
         Saved
     }

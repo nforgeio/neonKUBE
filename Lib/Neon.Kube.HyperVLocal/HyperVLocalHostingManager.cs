@@ -77,6 +77,7 @@ namespace Neon.Kube
         private SetupController<NodeDefinition>     controller;
         private string                              driveTemplatePath;
         private string                              vmDriveFolder;
+        private LocalHyperVHostingOptions           hostingOptions;
         private string                              switchName;
         private string                              secureSshPassword;
 
@@ -89,10 +90,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
+        /// Creates an instance that is capable of managing and/or provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI when preparing clusters.</param>
+        /// <param name="nodeImageUri">Optionally specifies the node image URI.</param>
         /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
@@ -100,19 +101,34 @@ namespace Neon.Kube
         /// </param>
         /// <remarks>
         /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified to be able
+        /// to provision a cluster but these can be <c>null</c> when you need to manage a cluster lifecycle.
         /// </note>
         /// </remarks>
         public HyperVLocalHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
 
             cluster.HostingManager = this;
 
-            this.cluster       = cluster;
-            this.nodeImageUri  = nodeImageUri;
-            this.nodeImagePath = nodeImagePath;
+            this.cluster        = cluster;
+            this.nodeImageUri   = nodeImageUri;
+            this.nodeImagePath  = nodeImagePath;
+            this.hostingOptions = cluster.Definition.Hosting.HyperVLocal;
+
+            // Determine where we're going to place the VM hard drive files and
+            // ensure that the directory exists.
+
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
+            {
+                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
+            }
+            else
+            {
+                vmDriveFolder = HyperVClient.DefaultDriveFolder;
+            }
+
+            Directory.CreateDirectory(vmDriveFolder);
         }
 
         /// <inheritdoc/>
@@ -134,6 +150,11 @@ namespace Neon.Kube
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            if (clusterDefinition.Hosting.Environment != HostingEnvironment.HyperVLocal)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.HyperVLocal}].");
+            }
         }
 
         /// <inheritdoc/>
@@ -141,22 +162,15 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<NotSupportedException>(!string.IsNullOrEmpty(nodeImageUri), $"[[{nameof(nodeImageUri)}] was must be passed to the constructor.");
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             this.controller        = controller;
             this.secureSshPassword = clusterLogin.SshPassword;
 
-            // We'll call this to be consistent with the cloud hosting managers even though
-            // the upstream on-premise router currently needs to be configured manually.
+            // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // We need to ensure that at least one node will host the OpenEBS
-            // cStor block device.
-
-            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
 
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
@@ -179,9 +193,82 @@ namespace Neon.Kube
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
                     this.secureSshPassword = clusterLogin.SshPassword;
+
+                    // If the cluster is being deployed to the internal [neonkube] switch, we need to
+                    // check to see whether the switch already exists, and if it does, we'll need to
+                    // ensure that it's configured correctly with a virtual address and NAT.  We're
+                    // going to fail setup when an existing switch isn't configured correctly.
+
+                    if (cluster.Definition.Hosting.HyperVLocal.UseInternalSwitch)
+                    {
+                        using (var hyperv = new HyperVClient())
+                        {
+                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVLocalInternalSwitchName}] virtual switch");
+
+                            var localHyperVOptions = cluster.Definition.Hosting.HyperVLocal;
+                            var @switch            = hyperv.GetSwitch(KubeConst.HyperVLocalInternalSwitchName);
+                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
+                            var nat                = hyperv.GetNATByName(KubeConst.HyperVLocalInternalSwitchName);
+
+                            if (@switch != null)
+                            {
+                                if (@switch.Type != VirtualSwitchType.Internal)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
+                                }
+
+                                if (address != null && !address.InterfaceName.Equals(@switch.Name))
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                }
+
+                                if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
+                                {
+                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
+                                }
+                            }
+                        }
+                    }
                 });
 
-            controller.AddGlobalStep("prepare hyper-v", controller => PrepareHyperVAsync());
+            if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
+            {
+                controller.AddGlobalStep($"hyper-v node image",
+                    async state =>
+                    {
+                        // Download the GZIPed VHDX template if it's not already present and has a valid
+                        // MD5 hash file.
+                        //
+                        // Note that we're going to name the file the same as the file name from the URI.
+
+                        string driveTemplateName;
+
+                        if (!string.IsNullOrEmpty(nodeImageUri))
+                        {
+                            var driveTemplateUri = new Uri(nodeImageUri);
+
+                            driveTemplateName = driveTemplateUri.Segments.Last();
+                            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                            await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                                (progressType, progress) =>
+                                {
+                                    controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
+
+                                    return !controller.CancelPending;
+                                });
+                        }
+                        else
+                        {
+                            Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                            driveTemplateName = Path.GetFileName(nodeImagePath);
+                            driveTemplatePath = nodeImagePath;
+                        }
+                    });
+            }
+
+            controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
             controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
         }
 
@@ -227,7 +314,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                (state, node) => node.Metadata.OpenEBS);
+                (state, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>
@@ -320,90 +407,65 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task PrepareHyperVAsync()
         {
-            if (string.IsNullOrEmpty(nodeImageUri))
-            {
-                throw new InvalidOperationException($"[{nameof(nodeImageUri)}] was not passed to the hosting manager's constructor which is required for preparing a cluster.");
-            }
-
-            // Determine where we're going to place the VM hard drive files and
-            // ensure that the directory exists.
-
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
-            {
-                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
-            }
-            else
-            {
-                vmDriveFolder = HyperVClient.DefaultDriveFolder;
-            }
-
-            Directory.CreateDirectory(vmDriveFolder);
-
-            // Download the node image when necessary.
-
-            if (!string.IsNullOrEmpty(nodeImagePath))
-            {
-                Covenant.Assert(File.Exists(nodeImagePath));
-
-                driveTemplatePath = nodeImagePath;
-            }
-            else
-            {
-                // Download the GZIPed VHDX template if it's not already present.  Note that we're 
-                // going to name the file the same as the file name from the URI.
-
-                var driveTemplateUri  = new Uri(nodeImageUri);
-                var driveTemplateName = driveTemplateUri.Segments.Last();
-
-                driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
-
-                if (!File.Exists(driveTemplatePath))
-                {
-                    controller.SetGlobalStepStatus($"Download node image VHDX: [{nodeImageUri}]");
-
-                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                        progress =>
-                        {
-                            controller.SetGlobalStepStatus($"Downloading VHDX: [{progress}%] [{driveTemplateName}]");
-
-                            return !controller.CancelPending;
-                        });
-
-                    controller.SetGlobalStepStatus();
-                }
-            }
-
             // Handle any necessary Hyper-V initialization.
 
             using (var hyperv = new HyperVClient())
             {
-                // We're going to create an external Hyper-V switch if there
-                // isn't already an external switch.
+                // Manage the Hyper-V virtual switch.  This will be an internal switch
+                // when [UseInternalSwitch=TRUE] otherwise this will be external.
 
-                controller.SetGlobalStepStatus("Scanning network adapters");
-
-                var switches       = hyperv.ListVmSwitches();
-                var externalSwitch = switches.FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
-
-                if (externalSwitch == null)
+                if (hostingOptions.UseInternalSwitch)
                 {
-                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
+                    switchName = KubeConst.HyperVLocalInternalSwitchName;
+
+                    controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch");
+
+                    // We're going to create an internal switch named [neonkube] configured
+                    // with the standard private subnet and a NAT to enable external routing.
+
+                    var @switch = hyperv.GetSwitch(switchName);
+
+                    if (@switch == null)
+                    {
+                        // The internal switch doesn't exist yet, so create it.  Note that
+                        // this switch requires a virtual NAT.
+
+                        controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
+                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
+                        controller.SetGlobalStepStatus();
+                    }
+
+                    controller.SetGlobalStepStatus();
                 }
                 else
                 {
-                    switchName = externalSwitch.Name;
+                    // We're going to create an external Hyper-V switch if there
+                    // isn't already an external switch.
+
+                    controller.SetGlobalStepStatus("scan: network adapters");
+
+                    var externalSwitch = hyperv.ListSwitches().FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External);
+
+                    if (externalSwitch == null)
+                    {
+                        hyperv.NewExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.Definition.Network.Gateway));
+                    }
+                    else
+                    {
+                        switchName = externalSwitch.Name;
+                    }
                 }
 
                 // Ensure that the cluster virtual machines exist and are stopped,
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                controller.SetGlobalStepStatus("Scanning virtual machines");
+                controller.SetGlobalStepStatus("scan: virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                controller.SetGlobalStepStatus("Stopping virtual machines");
+                controller.SetGlobalStepStatus("stop: virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -426,11 +488,13 @@ namespace Neon.Kube
 
                 if (!string.IsNullOrEmpty(conflicts))
                 {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
+                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exists.");
                 }
 
                 controller.SetGlobalStepStatus();
             }
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -443,20 +507,11 @@ namespace Neon.Kube
             {
                 var vmName = GetVmName(node.Metadata);
 
-                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
-
-                var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch      = new Stopwatch();
-
-                stopwatch.Start();
-
                 // Decompress the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
                 var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
-
-                node.Status = $"create: disk";
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
@@ -470,7 +525,8 @@ namespace Neon.Kube
 
                             while (true)
                             {
-                                cb = decompressor.Read(buffer, 0, buffer.Length);
+                                cb     = decompressor.Read(buffer, 0, buffer.Length);
+                                cbRead = input.Position;
 
                                 if (cb == 0)
                                 {
@@ -479,18 +535,16 @@ namespace Neon.Kube
 
                                 output.Write(buffer, 0, cb);
 
-                                cbRead += cb;
+                                var percentComplete = (int)((double)cbRead / (double)input.Length * 100.0);
 
-                                var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
-
-                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                {
-                                    node.Status = $"create: disk [{percentComplete}%]";
-                                    stopwatch.Restart();
-                                }
+                                controller.SetGlobalStepStatus($"decompress: node VHDX [{percentComplete}%]");
                             }
+
+                            controller.SetGlobalStepStatus($"decompress: node VHDX [100%]");
                         }
                     }
+
+                    controller.SetGlobalStepStatus();
                 }
 
                 // Create the virtual machine.
@@ -532,14 +586,12 @@ namespace Neon.Kube
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.
 
-                    node.Status = $"start: virtual machine (first boot)";
+                    node.Status = $"start: virtual machine";
                     hyperv.StartVm(vmName);
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
-
-                    node.Status = $"connecting...";
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 
@@ -570,11 +622,219 @@ namespace Neon.Kube
             }
         }
 
-        /// <summary>
-        /// Perform any necessary global post Hyper-V provisioning steps.
-        /// </summary>
-        private void Finish()
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
+        /// <inheritdoc/>
+        public override async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Validate(clusterDefinition);
+
+            // We just need to start any cluster VMs that aren't already running.
+
+            using (var hyperv = new HyperVClient())
+            {
+                Parallel.ForEach(clusterDefinition.Nodes,
+                    nodeDefinition =>
+                    {
+                        var vmName = GetVmName(nodeDefinition);
+                        var vm     = hyperv.GetVm(vmName);
+
+                        if (vm == null)
+                        {
+                            // We may see this when the cluster definition doesn't match the 
+                            // deployed cluster VMs.  We're just going to ignore this situation.
+
+                            return;
+                        }
+
+                        switch (vm.State)
+                        {
+                            case VirtualMachineState.Off:
+                            case VirtualMachineState.Saved:
+
+                                hyperv.StartVm(vmName);
+                                break;
+
+                            case VirtualMachineState.Running:
+                            case VirtualMachineState.Starting:
+
+                                break;
+
+                            default:
+                            case VirtualMachineState.Paused:
+                            case VirtualMachineState.Unknown:
+
+                                throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.State}");
+                        }
+                    });
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public override async Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Validate(clusterDefinition);
+
+            // We just need to stop any running cluster VMs.
+
+            using (var hyperv = new HyperVClient())
+            {
+                Parallel.ForEach(clusterDefinition.Nodes,
+                    nodeDefinition =>
+                    {
+                        var vmName = GetVmName(nodeDefinition);
+                        var vm     = hyperv.GetVm(vmName);
+
+                        if (vm == null)
+                        {
+                            // We may see this when the cluster definition doesn't match the 
+                            // deployed cluster VMs.  We're just going to ignore this situation.
+
+                            return;
+                        }
+
+                        switch (vm.State)
+                        {
+                            case VirtualMachineState.Off:
+
+                                break;
+
+                            case VirtualMachineState.Saved:
+
+                                throw new NotSupportedException($"Cannot shutdown the saved (hibernating) virtual machine: {vmName}");
+
+                            case VirtualMachineState.Running:
+                            case VirtualMachineState.Starting:
+
+                                hyperv.StopVm(vmName);
+                                break;
+
+                            default:
+                            case VirtualMachineState.Paused:
+                            case VirtualMachineState.Unknown:
+
+                                throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.State}");
+                        }
+                    });
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Validate(clusterDefinition);
+
+            // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
+            // Note that we're just turning nodes off to save time and because we're going
+            // to be deleting them all anyway.
+            //
+            // We're going to leave any virtual switches alone.
+
+            await ShutdownClusterAsync(clusterDefinition, shutdownMode: ShutdownMode.TurnOff);
+
+            using (var hyperv = new HyperVClient())
+            {
+                // Remove all of the cluster VMs.
+
+                Parallel.ForEach(clusterDefinition.Nodes,
+                    nodeDefinition =>
+                    {
+                        var vmName = GetVmName(nodeDefinition);
+                        var vm     = hyperv.GetVm(vmName);
+
+                        if (vm == null)
+                        {
+                            // We may see this when the cluster definition doesn't match the 
+                            // deployed cluster VMs.  We're just going to ignore this situation.
+
+                            return;
+                        }
+
+                        hyperv.RemoveVm(vmName);
+                    });
+
+                // Remove any potentially orphaned VMs when enabled and a prefix is specified.
+
+                if (removeOrphansByPrefix && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+                {
+                    var prefix = clusterDefinition.Deployment.Prefix + "-";
+
+                    Parallel.ForEach(hyperv.ListVms(),
+                        vm =>
+                        {
+                            if (vm.Name.StartsWith(prefix))
+                            {
+                                hyperv.RemoveVm(vm.Name);
+                            }
+                        });
+                }
+            }
+
+            if (!noRemoveLogins)
+            {
+                var context = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+
+                KubeHelper.Config.RemoveContext(context);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+            Validate(clusterDefinition);
+
+            if (!clusterDefinition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            {
+                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster definition.");
+            }
+
+            using (var hyperv = new HyperVClient())
+            {
+                var vmName = GetVmName(nodeDefinition);
+                var vm     = hyperv.GetVm(vmName);
+
+                if (vm == null)
+                {
+                    throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
+                }
+
+                if (vm.State != VirtualMachineState.Off)
+                {
+                    throw new InvalidOperationException($"Node [{nodeName}] current state is [{vm.State}].  The node must be stopped first.");
+                }
+
+                var drives = hyperv.GetVmDrives(vmName);
+
+                if (drives.Count != 1)
+                {
+                    throw new InvalidOperationException($"Node [{nodeName}] has [{drives.Count}] drives.  Only nodes with a single drive are supported.");
+                }
+
+                var sourceImagePath = drives.First();
+                var targetImagePath = Path.GetFullPath(Path.Combine(folder, $"{nodeName}.vhdx"));
+
+                Directory.CreateDirectory(folder);
+                NeonHelper.DeleteFile(targetImagePath);
+                File.Copy(sourceImagePath, targetImagePath);
+                hyperv.CompactDrive(targetImagePath);
+
+                return await Task.FromResult(targetImagePath);
+            }
         }
     }
 }

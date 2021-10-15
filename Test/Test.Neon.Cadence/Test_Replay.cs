@@ -58,11 +58,11 @@ namespace TestCadence
     // workflow is being run for the first time or is replaying.  The test will
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
-    
+
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestArea.NeonCadence)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public class Test_Replay : IClassFixture<CadenceFixture>, IDisposable
     {
         private const int maxWaitSeconds = 5;

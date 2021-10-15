@@ -411,6 +411,21 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
+        public const string LabelNeonSystem = ClusterDefinition.ReservedLabelPrefix + "neon-system";
+
+        /// <summary>
+        /// <b>io.neonkube.neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
+        /// services will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystem", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystem", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NeonSystem { get; set; } = false;
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// </summary>
         public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
 
         /// <summary>
@@ -539,7 +554,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelAddress,                     Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                        Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                     Node.Ingress));
-                list.Add(new KeyValuePair<string, object>(LabelOpenEbs,                     Node.OpenEBS));
+                list.Add(new KeyValuePair<string, object>(LabelOpenEbs,                     Node.OpenEbsStorage));
 
                 if (Node.Azure != null)
                 {
@@ -564,6 +579,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
+                list.Add(new KeyValuePair<string, object>(LabelNeonSystem,                  NeonHelper.ToBoolString(NeonSystem)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemRegistry,          NeonHelper.ToBoolString(NeonSystemRegistry)));
 
@@ -634,7 +650,7 @@ namespace Neon.Kube
                     case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
-                    case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEBS = NeonHelper.ParseBool(label.Value); }); break; 
+                    case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEbsStorage = NeonHelper.ParseBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:

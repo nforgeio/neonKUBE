@@ -102,5 +102,12 @@ namespace Neon.Kube
 
             clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
         }
+
+        /// <summary>
+        /// Clears all hosting related secrets.
+        /// </summary>
+        public void ClearSecrets()
+        {
+        }
     }
 }

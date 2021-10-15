@@ -106,10 +106,10 @@ namespace Neon.Kube
         /// Microsoft Hyper-V hypervisor.  This is typically used for development or
         /// test purposes.
         /// </summary>
-        [JsonProperty(PropertyName = "HyperVDev", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hyperVDev", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "HyperVLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hypervLocal", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public LocalHyperVHostingOptions HyperVDev { get; set; } = null;
+        public LocalHyperVHostingOptions HyperVLocal { get; set; } = null;
 
         /// <summary>
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
@@ -265,8 +265,8 @@ namespace Neon.Kube
 
                 case HostingEnvironment.HyperVLocal:
 
-                    HyperVDev = HyperVDev ?? new LocalHyperVHostingOptions();
-                    HyperVDev.Validate(clusterDefinition);
+                    HyperVLocal = HyperVLocal ?? new LocalHyperVHostingOptions();
+                    HyperVLocal.Validate(clusterDefinition);
 
                     Vm = Vm ?? new VmHostingOptions();
                     Vm.Validate(clusterDefinition);
@@ -297,19 +297,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Clears all hosting provider details because they may
-        /// include hosting related secrets.
+        /// Clears all hosting related secrets.
         /// </summary>
-        public void ClearSecrets()
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        public void ClearSecrets(ClusterDefinition clusterDefinition)
         {
-            Aws       = null;
-            Azure     = null;
-            Google    = null;
-            HyperV    = null;
-            HyperVDev = null;
-            Machine   = null;
-            Vm        = null;
-            XenServer = null;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            clusterDefinition.Hosting.Aws?.ClearSecrets();
+            clusterDefinition.Hosting.Azure?.ClearSecrets();
+            clusterDefinition.Hosting.Google?.ClearSecrets();
+            clusterDefinition.Hosting.HyperV?.ClearSecrets();
+            clusterDefinition.Hosting.HyperVLocal?.ClearSecrets();
+            clusterDefinition.Hosting.Machine?.ClearSecrets();
+            clusterDefinition.Hosting.Vm?.ClearSecrets();
+            clusterDefinition.Hosting.XenServer?.ClearSecrets();
         }
     }
 }

@@ -276,6 +276,17 @@ namespace Neon.Common
         public static string DebugLogPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "debug-log.txt");
 
         /// <summary>
+        /// Clears the debug log file if it exists.
+        /// </summary>
+        public static void ClearDebugLog()
+        {
+            if (!string.IsNullOrEmpty(DebugLogPath) && File.Exists(DebugLogPath))
+            {
+                File.WriteAllText(DebugLogPath, string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Appends a line of text to the file at <see cref="DebugLogPath"/>.  This is intended for
         /// low-level debugging when normal logging via <see cref="LogManager"/> isn't suitable.
         /// </summary>

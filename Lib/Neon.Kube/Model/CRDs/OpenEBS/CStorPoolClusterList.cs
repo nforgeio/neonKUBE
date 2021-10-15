@@ -29,7 +29,7 @@ using Microsoft.Rest;
 namespace Neon.Kube
 {
     /// <summary>
-    /// OpenEBS cStore pool cluster list.
+    /// OpenEBS cStor pool cluster list.
     /// </summary>
     [KubernetesEntity(Group = "openebs.io", Kind = "PoolClusterList", ApiVersion = "v1alpha1", PluralName = "PoolClusters")]
     public class V1CStorPoolClusterList : IKubernetesObject<V1ListMeta>, IItems<V1CStorPoolCluster>, IValidate

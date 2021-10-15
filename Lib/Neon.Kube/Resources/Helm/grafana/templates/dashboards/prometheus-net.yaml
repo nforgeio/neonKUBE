@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -109,7 +112,7 @@ spec:
               "format": "heatmap",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{le}}",
+              "legendFormat": "{{"{{"}}le{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -204,7 +207,7 @@ spec:
               "expr": "http_requests_in_progress",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{job}}",
+              "legendFormat": "{{"{{"}}job{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -383,7 +386,7 @@ spec:
               "expr": "increase(dotnet_collection_count_total[$interval])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "Generation-{{generation}}",
+              "legendFormat": "Generation-{{"{{"}}generation{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -476,7 +479,7 @@ spec:
               "expr": "dotnet_total_memory_bytes /1024/1024",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{job}}",
+              "legendFormat": "{{"{{"}}job{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -569,7 +572,7 @@ spec:
               "expr": "process_num_threads",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{job}}",
+              "legendFormat": "{{"{{"}}job{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -664,7 +667,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{job}}",
+              "legendFormat": "{{"{{"}}job{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -758,7 +761,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{job}}",
+              "legendFormat": "{{"{{"}}job{{"}}"}}",
               "refId": "A"
             }
           ],

@@ -33,9 +33,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    // IMPORTANT NOTE!:
-    // ----------------
-    // These unit tests require that [neon-assistant] be running.
+    // IMPORTANT NOTE!: These unit tests require that [neon-assistant] be running.
 
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
     [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
@@ -44,7 +42,7 @@ namespace TestDeployment
     public partial class Test_GitHubPackages
     {
         [Fact(Skip = "Must be run manually")]
-        public async void ListPackages()
+        public async Task ListPackages()
         {
             // Verify that we can get the list of packages.
 
@@ -63,7 +61,7 @@ namespace TestDeployment
         }
 
         [Fact(Skip = "Must be run manually")]
-        public async void MakePublic()
+        public async Task MakePublic()
         {
             // Verify that we can make a package public.
 
@@ -77,7 +75,7 @@ namespace TestDeployment
         }
 
         [Fact(Skip = "Must be run manually")]
-        public async void MakePrivate()
+        public async Task MakePrivate()
         {
             // Verify that we can make a package private.
 
@@ -92,7 +90,7 @@ namespace TestDeployment
 
         [Fact(Skip = "$todo(marcusbooyah")]
         [Trait(TestTrait.Category, TestTrait.Incomplete)]
-        public async void Delete()
+        public async Task Delete()
         {
             var client = new GitHubPackageApi();
 

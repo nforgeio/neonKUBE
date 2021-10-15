@@ -173,6 +173,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.SetGlobalStepStatus("download: workstation binaries");
+
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master            = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
@@ -218,7 +220,7 @@ namespace Neon.Kube
             {
                 if (!File.Exists(cachedKubeCtlPath))
                 {
-                    controller.LogProgress(master, verb: "download", message: "kubectl");
+                    controller.SetGlobalStepStatus("download: kubectl");
 
                     using (var response = await httpClient.GetStreamAsync(kubeCtlUri))
                     {
@@ -231,7 +233,7 @@ namespace Neon.Kube
 
                 if (!File.Exists(cachedHelmPath))
                 {
-                    controller.LogProgress(master, verb: "download", message: "Helm");
+                    controller.SetGlobalStepStatus("download: helm");
 
                     using (var response = await httpClient.GetStreamAsync(helmUri))
                     {
@@ -362,6 +364,11 @@ namespace Neon.Kube
                                     return true;
                                 }
 
+                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                {
+                                    return true;
+                                }
+
                                 // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
                                 if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
@@ -374,7 +381,7 @@ namespace Neon.Kube
                         maxAttempts:          int.MaxValue,
                         initialRetryInterval: TimeSpan.FromSeconds(1),
                         maxRetryInterval:     TimeSpan.FromSeconds(5),
-                        timeout:              TimeSpan.FromSeconds(120));
+                        timeout:              TimeSpan.FromMinutes(5));
 
                 controller.Add(KubeSetupProperty.K8sClient, k8sClient);
             }

@@ -49,10 +49,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter       = "DATACENTER";
-        private const string        defaultProvisioner      = "unknown";
-        private readonly string[]   defaultTimeSources      = new string[] { "pool.ntp.org" };
-        private const bool          defaultAllowUnitTesting = false;
+        private const string        defaultDatacenter  = "DATACENTER";
+        private const string        defaultProvisioner = "unknown";
+        private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -65,10 +64,30 @@ namespace Neon.Kube
         public const string ReservedLabelPrefix = "neonkube.io/";
 
         /// <summary>
+        /// Parses and validates a YAML cluster definition file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        public static void ValidateFile(string path, bool strict = false)
+        {
+            FromFile(path, strict: strict);
+        }
+
+        /// <summary>
         /// Parses a cluster definition from YAML text.
         /// </summary>
         /// <param name="yaml">The JSON text.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <param name="validate">
+        /// <para>
+        /// Optionally validate the cluster definition.
+        /// </para>
+        /// <note>
+        /// You must have already called <b>HostingLoader.Initialize()</b> for 
+        /// validation to work.
+        /// </note>
+        /// </param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <remarks>
         /// <note>
@@ -76,7 +95,7 @@ namespace Neon.Kube
         /// and then is parsed as YAML.
         /// </note>
         /// </remarks>
-        public static ClusterDefinition FromYaml(string yaml, bool strict = false)
+        public static ClusterDefinition FromYaml(string yaml, bool strict = false, bool validate = false)
         {
             Covenant.Requires<ArgumentNullException>(yaml != null, nameof(yaml));
 
@@ -88,22 +107,16 @@ namespace Neon.Kube
 
                     var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
-                    clusterDefinition.Validate();
+                    PopulateNodeNames(clusterDefinition);
+
+                    if (validate)
+                    {
+                        clusterDefinition.Validate();
+                    }
 
                     return clusterDefinition;
                 }
             }
-        }
-
-        /// <summary>
-        /// Parses and validates a YAML cluster definition file.
-        /// </summary>
-        /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        public static void ValidateFile(string path, bool strict = false)
-        {
-            FromFile(path, strict: strict);
         }
 
         /// <summary>
@@ -140,26 +153,32 @@ namespace Neon.Kube
                             throw new ArgumentException($"Invalid cluster definition in [{path}].", nameof(path));
                         }
 
-                        // Populate the [node.Name] properties from the dictionary name.
-
-                        foreach (var item in clusterDefinition.NodeDefinitions)
-                        {
-                            var node = item.Value;
-
-                            if (string.IsNullOrEmpty(node.Name))
-                            {
-                                node.Name = item.Key;
-                            }
-                            else if (item.Key != node.Name)
-                            {
-                                throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
-                            }
-                        }
-
+                        PopulateNodeNames(clusterDefinition);
                         clusterDefinition.Validate();
 
                         return clusterDefinition;
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Populates the <see cref="NodeDefinition.Name"/> properties from its dictionary name.
+        /// </summary>
+        /// <param name="clusterDefinition"></param>
+        private static void PopulateNodeNames(ClusterDefinition clusterDefinition)
+        {
+            foreach (var item in clusterDefinition.NodeDefinitions)
+            {
+                var node = item.Value;
+
+                if (string.IsNullOrEmpty(node.Name))
+                {
+                    node.Name = item.Key;
+                }
+                else if (item.Key != node.Name)
+                {
+                    throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
                 }
             }
         }
@@ -217,6 +236,39 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns <c>true</c> for cluster definitions that describe a special neonKUBE/CLOUD
+        /// cluster like the the neonCLOUD built-in cluster.  This is used to relax constraints
+        /// on user cluster definitions like cluster node names not being able to use the "neon-"
+        /// prefix.
+        /// </summary>
+        [JsonIgnore]
+        internal bool IsSpecialNeonCluster
+        {
+            get
+            {
+                switch (Hosting.Environment)
+                {
+                    case HostingEnvironment.HyperVLocal:
+
+                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltIn;
+
+                    case HostingEnvironment.Wsl2:
+
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsDesktopCluster", Required = Required.Always)]
+        [YamlMember(Alias = "isDesktopCluster", ApplyNamingConventions = false)]
+        public bool IsDesktopCluster { get; set; }
+
+        /// <summary>
         /// <para>
         /// The cluster name.
         /// </para>
@@ -267,15 +319,23 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies cluster debugging options.
+        /// Optionally specifies cluster debugging options.
         /// </para>
         /// <note>
-        /// These options are generally intended for neonKUBE developers only.
+        /// These options are generally intended for neonKUBE maintainers only.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
         [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
         public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
+        /// Optionally specifies options used by <b>KubernetesFixture</b> and possibly
+        /// custom tools for customizing cluster and node names to avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Deployment", Required = Required.Always)]
+        [YamlMember(Alias = "deployment", ApplyNamingConventions = false)]
+        public DeploymentOptions Deployment { get; set; } = new DeploymentOptions();
 
         /// <summary>
         /// Specifies the cluster OpenEbs related options.
@@ -316,15 +376,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "monitor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public MonitorOptions Monitor { get; set; } = new MonitorOptions();
-
-        /// <summary>
-        /// Optionally enable unit testing on this cluster.  This is disabled by 
-        /// default for safety.
-        /// </summary>
-        [JsonProperty(PropertyName = "AllowUnitTesting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "allowUnitTesting", ApplyNamingConventions = false)]
-        [DefaultValue(defaultAllowUnitTesting)]
-        public bool AllowUnitTesting { get; set; } = defaultAllowUnitTesting;
 
         /// <summary>
         /// Specifies hosting related settings (e.g. the cloud provider).  This defaults to
@@ -526,15 +577,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes any temporary setup related state including <see cref="SetupState"/> as well
-        /// as temporary state used by the hosting managers.
+        /// Removes any temporary setup related state including <see cref="SetupState"/>, hosting
+        /// related secrets, as well as temporary state used by the hosting managers.
         /// </summary>
         public void ClearSetupState()
         {
             lock (syncLock)
             {
                 SetupState = null;
-                Hosting?.ClearSecrets();
+                Hosting?.ClearSecrets(this);
             }
         }
 
@@ -774,6 +825,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Debug       = Debug ?? new DebugOptions();
+            Deployment  = Deployment ?? new DeploymentOptions();
             OpenEbs     = OpenEbs ?? new OpenEbsOptions();
             Security    = Security ?? new SecurityOptions();
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
@@ -783,7 +835,18 @@ namespace Neon.Kube
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
 
+            if (IsDesktopCluster && Nodes.Count() > 1)
+            {
+                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only for single node clusters.");
+            }
+
+            if (IsDesktopCluster && !IsSpecialNeonCluster)
+            {
+                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+            }
+
             Debug.Validate(this);
+            Deployment.Validate(this);
             OpenEbs.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);

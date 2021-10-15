@@ -80,18 +80,27 @@ namespace Neon.Kube
             var automationFolder = (string)null;
             var logFolder        = KubeHelper.LogFolder;
 
-            if (automate)
+            if (!string.IsNullOrEmpty(automationFolder))
             {
-                automationFolder = KubeHelper.CreateAutomationFolder();
-                logFolder        = Path.Combine(automationFolder, logFolder);
+                logFolder = Path.Combine(automationFolder, logFolder);
             }
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(clusterLogin.ClusterDefinition,
-                (nodeName, nodeAddress, appendToLog) =>
+            var cluster = new ClusterProxy(
+                clusterDefinition:      clusterLogin.ClusterDefinition,
+                hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
+                operation:              ClusterProxy.Operation.LifeCycle,
+                nodeProxyCreator:       (nodeName, nodeAddress, appendToLog) =>
                 {
-                    var logWriter      = new StreamWriter(new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
+                    var logStream = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    if (appendToLog)
+                    {
+                        logStream.Seek(0, SeekOrigin.End);
+                    }
+
+                    var logWriter      = new StreamWriter(logStream);
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
@@ -104,7 +113,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Prepare [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>($"Removing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-REMOVE ###########################################################",

@@ -59,7 +59,7 @@ namespace TestXunit
             // Verify that we can load a decrypted settings file into the
             // [TestContext.Settings] dictionary.
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFile = new TempFile())
                 {
@@ -98,7 +98,7 @@ namespace TestXunit
             // Verify that we can load an encrypted settings file into the
             // [TestContext.Settings] dictionary.
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFile = new TempFile())
                 {
@@ -146,7 +146,7 @@ namespace TestXunit
             // Verify that we can load a decrypted settings file into the
             // environment variables.
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 try
                 {
@@ -197,7 +197,7 @@ namespace TestXunit
             // Verify that we can load an encryoted settings file into the
             // environment variables.
 
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 try
                 {

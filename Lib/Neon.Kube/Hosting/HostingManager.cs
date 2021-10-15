@@ -194,7 +194,7 @@ namespace Neon.Kube
             // or neonKUBE.
 
             var nodeSubnetInfo = clusterDefinition.NodeSubnet;
-            var nodeSubnet     = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
+            var nodeSubnet = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
 
             if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - nodeSubnetInfo.ReservedAddresses)
             {
@@ -202,9 +202,9 @@ namespace Neon.Kube
             }
 
             var firstValidAddressUint = NetHelper.AddressToUint(nodeSubnet.FirstAddress) + KubeConst.CloudSubnetStartReservedIPs;
-            var firstValidAddress     = NetHelper.UintToAddress(firstValidAddressUint);
-            var lastValidAddressUint  = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudSubnetEndReservedIPs;
-            var lastValidAddress      = NetHelper.UintToAddress(lastValidAddressUint);
+            var firstValidAddress = NetHelper.UintToAddress(firstValidAddressUint);
+            var lastValidAddressUint = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudSubnetEndReservedIPs;
+            var lastValidAddress = NetHelper.UintToAddress(lastValidAddressUint);
 
             foreach (var node in clusterDefinition.SortedNodes.OrderBy(node => node.Name))
             {
@@ -248,7 +248,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                var address     = NetHelper.ParseIPv4Address(node.Address);
+                var address = NetHelper.ParseIPv4Address(node.Address);
                 var addressUint = NetHelper.AddressToUint(address);
 
                 if (!assignedAddresses.Contains(addressUint))
@@ -275,6 +275,47 @@ namespace Neon.Kube
                     }
                 }
             }
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
+        /// <inheritdoc/>
+        public virtual async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool removeLogins = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+
+            await Task.CompletedTask;
+            throw new NotSupportedException();
         }
     }
 }

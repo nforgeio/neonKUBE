@@ -331,7 +331,8 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Returns the first usable IP address in the subnet.
+        /// Returns the first usable IP address in the subnet.  This is often the
+        /// gateway address.
         /// </summary>
         public IPAddress FirstUsableAddress
         {

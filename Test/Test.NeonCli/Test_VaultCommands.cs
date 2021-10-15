@@ -61,7 +61,7 @@ namespace Test.NeonCli
         [Fact]
         public async Task VaultCreate()
         {
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFolder = new TempFolder())
                 {
@@ -156,7 +156,7 @@ namespace Test.NeonCli
         [Fact]
         public async Task VaulteEdit()
         {
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFolder = new TempFolder())
                 {
@@ -226,7 +226,7 @@ namespace Test.NeonCli
         [Fact]
         public async Task VaultDecrypt()
         {
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFolder = new TempFolder())
                 {
@@ -299,7 +299,7 @@ namespace Test.NeonCli
         [Fact]
         public async Task VaultEncrypt()
         {
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFolder = new TempFolder())
                 {
@@ -446,7 +446,7 @@ namespace Test.NeonCli
         [Fact]
         public async Task VaultPasswordName()
         {
-            using (var manager = new KubeTestManager())
+            using (var testManager = new KubeTestManager())
             {
                 using (var tempFolder = new TempFolder())
                 {

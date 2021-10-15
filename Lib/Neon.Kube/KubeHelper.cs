@@ -55,6 +55,7 @@ using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Windows;
 
 namespace Neon.Kube
@@ -66,11 +67,13 @@ namespace Neon.Kube
     {
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
-        private static string               testFolder;
+        private static string               userHomeFolder;
+        private static string               neonkubeFolder;
+        private static string               automationFolder;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
+        private static string               cachedKubeConfigPath;
         private static string               cachedNeonKubeUserFolder;
-        private static string               cachedKubeUserFolder;
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
         private static string               cachedTempFolder;
@@ -87,7 +90,6 @@ namespace Neon.Kube
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
-        private static string               cachedAutomationFolder;
         private static string               cacheDashboardStateFolder;
 
         /// <summary>
@@ -100,16 +102,22 @@ namespace Neon.Kube
         /// </summary>
         static KubeHelper()
         {
-            // Check if we need to run in test mode.
+            // Initialize the standard home and [.neonkube] folder paths for the current user.
 
-            var folder = Environment.GetEnvironmentVariable(NeonHelper.TestModeFolderVar);
-
-            if (!string.IsNullOrEmpty(folder))
+            if (NeonHelper.IsWindows)
             {
-                // Yep: this is test mode.
-
-                testFolder = folder;
+                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
             }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
+            }
+            else
+            {
+                throw new NotSupportedException("Operating system not supported.");
+            }
+                
+            neonkubeFolder = Path.Combine(userHomeFolder, ".neonkube");
         }
 
         /// <summary>
@@ -119,8 +127,8 @@ namespace Neon.Kube
         {
             cachedConfig              = null;
             cachedContext             = null;
+            cachedKubeConfigPath      = null;
             cachedNeonKubeUserFolder  = null;
-            cachedKubeUserFolder      = null;
             cachedRunFolder           = null;
             cachedLogFolder           = null;
             cachedTempFolder          = null;
@@ -137,7 +145,6 @@ namespace Neon.Kube
             cachedPwshPath            = null;
             cachedResources           = null;
             cachedNodeImageFolder     = null;
-            cachedAutomationFolder    = null;
             cacheDashboardStateFolder = null;
         }
 
@@ -152,55 +159,6 @@ namespace Neon.Kube
 
             KubeHelper.log = log;
         }
-
-        /// <summary>
-        /// Puts <see cref="KubeHelper"/> into test mode to support unit testing.  This
-        /// changes the folders where Kubernetes and neonKUBE persists their state to
-        /// directories beneath the folder passed.  This also modifies the KUBECONFIG
-        /// environment variable to reference the new location.
-        /// </summary>
-        /// <param name="folder">Specifies the folder where the state will be persisted.</param>
-        public static void SetTestMode(string folder)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-
-            if (IsTestMode)
-            {
-                throw new InvalidOperationException("Already running in test mode.");
-            }
-
-            if (!Directory.Exists(folder))
-            {
-                throw new FileNotFoundException($"Folder [{folder}] does not exist.");
-            }
-
-            ClearCachedItems();
-
-            testFolder = folder;
-            orgKUBECONFIG = Environment.GetEnvironmentVariable("KUBECONFIG");
-
-            Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(testFolder, ".kube", "config"));
-        }
-
-        /// <summary>
-        /// Resets the test mode, restoring normal operation.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if a parent process set test mode.</exception>
-        public static void ResetTestMode()
-        {
-            if (string.IsNullOrEmpty(orgKUBECONFIG))
-            {
-                throw new InvalidOperationException("Cannot reset test mode because that was set by a parent process.");
-            }
-
-            ClearCachedItems();
-            testFolder = null;
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> if the class is running in test mode.
-        /// </summary>
-        public static bool IsTestMode => testFolder != null;
 
         /// <summary>
         /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.
@@ -268,6 +226,36 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the path to the current user's <b>.neonkube</b> folder.  This value does not
+        /// change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
+        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// </summary>
+        public static string StandardNeonKubeFolder
+        {
+            get
+            {
+                Directory.CreateDirectory(neonkubeFolder);
+                return neonkubeFolder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the current user's <b>.neonkube/automation</b> folder.  This value does
+        /// not change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
+        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// </summary>
+        public static string StandardNeonKubeAutomationFolder
+        {
+            get
+            {
+                var path = Path.Combine(StandardNeonKubeFolder, "automation");
+
+                Directory.CreateDirectory(path);
+                return path;
+            }
+        }
+
+        /// <summary>
         /// Accesses the neonDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
@@ -330,49 +318,6 @@ namespace Neon.Kube
 
             ClientConfig.Validate();
             WriteFileTextWithRetry(clientStatePath, NeonHelper.JsonSerialize(cachedClientConfig, Formatting.Indented));
-        }
-
-        /// <summary>
-        /// Ensures that sensitive folders and files on the local workstation are encrypted at rest
-        /// for security purposes.  These include the users <b>.kube</b>, <b>.neonkube</b>, and any
-        /// the <b>OpenVPN</b> if it exists.
-        /// </summary>
-        public static void EncryptSensitiveFiles()
-        {
-            if (NeonHelper.IsWindows)
-            {
-                var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var neonFolderPath = GetNeonKubeUserFolder();
-
-                var sensitiveFolders = new string[]
-                {
-                    Path.Combine(userFolderPath, ".kube"),
-                    Path.Combine(neonFolderPath, "logins"),
-                    Path.Combine(neonFolderPath, "log")
-                };
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    Directory.CreateDirectory(sensitiveFolder);
-                }
-
-                // We used to encrypt the entire [.neonkube] folder but that caused problems
-                // with WSL2, so we're going to decrypt the folder before encrypting special
-                // subfolders.
-
-                NeonHelper.DecryptFile(neonFolderPath);
-
-                foreach (var sensitiveFolder in sensitiveFolders)
-                {
-                    NeonHelper.EncryptFile(sensitiveFolder);
-                }
-            }
-            else
-            {
-                // $todo(jefflill): Implement this for OS/X
-
-                // throw new NotImplementedException();
-            }
         }
 
         /// <summary>
@@ -484,97 +429,148 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific Kubernetes files.
+        /// Returns the current <see cref="KubeAutomationMode"/>.
         /// </summary>
-        /// <returns>The folder path.</returns>
-        public static string GetNeonKubeUserFolder()
+        public static KubeAutomationMode AutomationMode { get; private set; } = KubeAutomationMode.Disabled;
+
+        /// <summary>
+        /// Returns the path to the standard automation folder within the user's <b>.neonkube</b>
+        /// directory.  This doesn't change when a non <see cref="KubeAutomationMode.Disabled"/>
+        /// mode is set.
+        /// </summary>
+        public static string StandardAutomationFolder => Path.Combine(neonkubeFolder, "automation");
+
+        /// <summary>
+        /// Sets cluster deployment automation mode by specifying the folder where 
+        /// cluster related assets such as the KubeConfig file, cluster login, logs,
+        /// etc. are saved.
+        /// </summary>
+        /// <param name="mode">
+        /// Passed as one of <see cref="KubeAutomationMode.Enabled"/> or <see cref="KubeAutomationMode.EnabledWithSharedCache"/>,
+        /// where <see cref="KubeAutomationMode.Enabled"/> relocates all folders from the
+        /// standard <b>$(USERPROFILE)\.neonkube</b> to <paramref name="folder"/> including
+        /// the node image cache.  <see cref="KubeAutomationMode.EnabledWithSharedCache"/>
+        /// continues to use the shared neon image cache to avoid downloading multiple
+        /// copies of node images.
+        /// </param>
+        /// <param name="folder">
+        /// <para>
+        /// Specifies the root folder where global cluster-specific files will
+        /// be folders will be located as long as automation mode is set.  You may
+        /// pass an fully qualified or relative folder path.  Relative paths will be
+        /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
+        /// </para>
+        /// </param>
+        public static void SetAutomationMode(KubeAutomationMode mode, string folder)
         {
-            if (cachedNeonKubeUserFolder != null)
+            Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+            Covenant.Assert(AutomationMode == KubeAutomationMode.Disabled);
+            Covenant.Assert(automationFolder == null);
+
+            ClearCachedItems();
+
+            if (!Path.IsPathFullyQualified(folder))
             {
-                return cachedNeonKubeUserFolder;
+                folder = Path.Combine(NeonKubeUserFolder, "automation", folder);
             }
 
-            if (IsTestMode)
+            AutomationMode   = mode;
+            automationFolder = folder;
+            orgKUBECONFIG    = Environment.GetEnvironmentVariable("KUBECONFIG");
+
+            var kubeFolder = Path.Combine(automationFolder, ".kube");
+
+            // Remove any existing automation folder that was potentially left over
+            // from a previous test or other automation run.
+
+            if (Directory.Exists(folder))
             {
-                cachedNeonKubeUserFolder = Path.Combine(testFolder, ".neonkube");
+                NeonHelper.DeleteFolder(folder);
+            }
+
+            // Create the new automation folder and set the environment variable that
+            // references where the Kubernetes config file will be located.
+
+            Directory.CreateDirectory(kubeFolder);
+            Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
+        }
+
+        /// <summary>
+        /// Resets the automation mode to <see cref="KubeAutomationMode.Disabled"/> and deletes
+        /// the current automation folder and its contents.
+        /// </summary>
+        public static void ResetAutomationMode()
+        {
+            if (AutomationMode == KubeAutomationMode.Disabled)
+            {
+                return;
+            }
+
+            Covenant.Assert(automationFolder != null);
+
+            if (cachedNeonKubeUserFolder != null && Directory.Exists(cachedNeonKubeUserFolder))
+            {
+                NeonHelper.DeleteFolder(cachedNeonKubeUserFolder);
+            }
+
+            Environment.SetEnvironmentVariable("KUBECONFIG", orgKUBECONFIG);
+
+            AutomationMode   = KubeAutomationMode.Disabled;
+            automationFolder = null;
+            orgKUBECONFIG    = null;
+
+            ClearCachedItems();
+        }
+
+        /// <summary>
+        /// Returns a special prefix based on <paramref name="prefix"/> that can be used to distinguish
+        /// between automation related assets and those belonging to production clusters.  This is used
+        /// by <b>KubernetesFixture</b> and custom tools to ensure that automation related cluster and
+        /// file/folder names don't conflict.
+        /// </summary>
+        /// <param name="prefix">The prefix string.</param>
+        /// <returns>A string like: (PREFIX)</returns>
+        public static string AutomationPrefix(string prefix)
+        {
+            return $"({prefix})";
+        }
+
+        /// <summary>
+        /// Returns the path the folder holding the user specific cluster login and other files.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string NeonKubeUserFolder
+        {
+            get
+            {
+                if (cachedNeonKubeUserFolder != null)
+                {
+                    return cachedNeonKubeUserFolder;
+                }
+
+                switch (AutomationMode)
+                {
+                    case KubeAutomationMode.Disabled:
+
+                        cachedNeonKubeUserFolder = neonkubeFolder;
+                        break;
+
+                    case KubeAutomationMode.Enabled:
+                    case KubeAutomationMode.EnabledWithSharedCache:
+
+                        Covenant.Assert(automationFolder != null);
+                        cachedNeonKubeUserFolder = automationFolder;
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
 
                 Directory.CreateDirectory(cachedNeonKubeUserFolder);
 
                 return cachedNeonKubeUserFolder;
-            }
-
-            if (NeonHelper.IsWindows)
-            {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
-
-                Directory.CreateDirectory(path);
-
-                try
-                {
-                    NeonHelper.EncryptFile(path);
-                }
-                catch
-                {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
-                }
-
-                return cachedNeonKubeUserFolder = path;
-            }
-            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-            {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
-
-                Directory.CreateDirectory(path);
-
-                return cachedNeonKubeUserFolder = path;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// Returns the path the folder holding the user specific Kubernetes configuration files.
-        /// </summary>
-        /// <returns>The folder path.</returns>
-        public static string GetKubeUserFolder()
-        {
-            if (cachedKubeUserFolder != null)
-            {
-                return cachedKubeUserFolder;
-            }
-
-            if (IsTestMode)
-            {
-                cachedKubeUserFolder = Path.Combine(testFolder, ".kube");
-
-                Directory.CreateDirectory(cachedKubeUserFolder);
-
-                return cachedKubeUserFolder;
-            }
-
-            if (NeonHelper.IsWindows)
-            {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
-
-                Directory.CreateDirectory(path);
-                NeonHelper.EncryptFile(path);
-
-                return cachedKubeUserFolder = path;
-            }
-            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-            {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".kube");
-
-                Directory.CreateDirectory(path);
-
-                return cachedKubeUserFolder = path;
-            }
-            else
-            {
-                throw new NotImplementedException();
             }
         }
 
@@ -591,7 +587,7 @@ namespace Neon.Kube
                     return cachedRunFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "run");
+                var path = Path.Combine(NeonKubeUserFolder, "run");
 
                 Directory.CreateDirectory(path);
 
@@ -612,7 +608,7 @@ namespace Neon.Kube
                     return cachedLogFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "log");
+                var path = Path.Combine(NeonKubeUserFolder, "log");
 
                 Directory.CreateDirectory(path);
 
@@ -621,7 +617,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the neonFORGE temporary folder, creating the folder if it doesn't already exist.
+        /// Returns the path the user specific neonKUBE temporary folder, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
@@ -637,7 +633,7 @@ namespace Neon.Kube
                     return cachedTempFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "temp");
+                var path = Path.Combine(NeonKubeUserFolder, "temp");
 
                 Directory.CreateDirectory(path);
 
@@ -648,7 +644,44 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path to the Kubernetes configuration file.
         /// </summary>
-        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
+        public static string KubeConfigPath
+        {
+            get
+            {
+                string kubeFolder;
+
+                if (cachedKubeConfigPath != null)
+                {
+                    return cachedKubeConfigPath;
+                }
+
+                switch (AutomationMode)
+                {
+                    case KubeAutomationMode.Disabled:
+
+                        kubeFolder = Path.Combine(userHomeFolder, ".kube");
+
+                        Directory.CreateDirectory(kubeFolder);
+
+                        return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
+
+                    case KubeAutomationMode.Enabled:
+                    case KubeAutomationMode.EnabledWithSharedCache:
+
+                        Covenant.Assert(automationFolder != null);
+                        
+                        kubeFolder = Path.Combine(automationFolder, ".kube");
+
+                        Directory.CreateDirectory(kubeFolder);
+
+                        return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the path the folder containing cluster login files, creating the folder 
@@ -673,7 +706,7 @@ namespace Neon.Kube
                     return cachedLoginsFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "logins");
+                var path = Path.Combine(NeonKubeUserFolder, "logins");
 
                 Directory.CreateDirectory(path);
 
@@ -694,7 +727,7 @@ namespace Neon.Kube
                     return cachedPasswordsFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "passwords");
+                var path = Path.Combine(NeonKubeUserFolder, "passwords");
 
                 Directory.CreateDirectory(path);
 
@@ -715,7 +748,7 @@ namespace Neon.Kube
                     return cachedDesktopFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "desktop");
+                var path = Path.Combine(NeonKubeUserFolder, "desktop");
 
                 Directory.CreateDirectory(path);
 
@@ -733,10 +766,10 @@ namespace Neon.Kube
             {
                 if (cachedDesktopWsl2Folder != null)
                 {
-                    return cachedDesktopFolder;
+                    return cachedDesktopWsl2Folder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "desktop", "wsl2");
+                var path = Path.Combine(NeonKubeUserFolder, "desktop", "wsl2");
 
                 Directory.CreateDirectory(path);
 
@@ -757,7 +790,7 @@ namespace Neon.Kube
                     return cachedDesktopHypervFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "desktop", "hyperv");
+                var path = Path.Combine(NeonKubeUserFolder, "desktop", "hyperv");
 
                 Directory.CreateDirectory(path);
 
@@ -778,7 +811,7 @@ namespace Neon.Kube
                     return cachedCacheFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "cache");
+                var path = Path.Combine(NeonKubeUserFolder, "cache");
 
                 Directory.CreateDirectory(path);
 
@@ -906,7 +939,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "node-images");
+                var path = Path.Combine(NeonKubeUserFolder, "node-images");
 
                 Directory.CreateDirectory(path);
 
@@ -915,98 +948,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// <para>
-        /// Creates a new automation folder named by a UUID for the current user.  
-        /// This is where automated cluster deployment related files such as 
-        /// logins, kubeconfigs, and logs will be persisted for automated cluster
-        /// deployments.
-        /// </para>
-        /// <note>
-        /// The folder will be created if it doesn't already exist.
-        /// </note>
-        /// </summary>
-        /// <returns>The fully qualified path to the new folder.</returns>
-        /// <remarks>
-        /// <para>
-        /// This folder will include a temporary subfolder for each automated
-        /// deployment performed via a <b>neon-cli cluster prepare/setup</b>
-        /// command with the <b>--automated</b> option or via a <b>KubernetesFixture</b>
-        /// that deploys a cluster for unit testing.
-        /// </para>
-        /// <para>
-        /// These folders will be named using a GUID and may include these files/folders:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>log/*.log</b></term>
-        ///     <description>
-        ///     The folder holding the operation log files.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>*.login.yaml</b></term>
-        ///     <description>
-        ///     The neonKUBE login for the operation.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>config</b></term>
-        ///     <description>
-        ///     The Kubernetes config file for the operation.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// <remarks>
-        /// <note>
-        /// <para>
-        /// Automation folders are used by the <b>neon cluster prepare/setup</b> commands using the
-        /// <b>--automate</b> option as well as clusters provisioned for unit testing via <b>KubernetesFixture</b>.
-        /// This will be set to <c>null</c> for cluster deployments performed by neonKUBE or <b>neon-cli</b>
-        /// without the <b>--automate</b> option.
-        /// </para>
-        /// <para>
-        /// These folders are used to workaround the neonDESKTOP restrictions that allow neonDESKTOP
-        /// or <b>neon-cli</b> to be logged into a single cluster at a time and also requires that 
-        /// neonDESKTOP be logged out of a cluster before preparing or setting up a new one.
-        /// </para>
-        /// </note>
-        /// </remarks>
-        /// </remarks>
-        public static string CreateAutomationFolder()
-        {
-            if (cachedAutomationFolder == null)
-            {
-                cachedAutomationFolder = Path.Combine(GetNeonKubeUserFolder(), "automation");
-            }
-
-            var subfolder = Path.Combine(cachedAutomationFolder, Guid.NewGuid().ToString("d"));
-
-            Directory.CreateDirectory(subfolder);
-
-            // We're also creating the "log" subfolder.
-
-            Directory.CreateDirectory(Path.Combine(subfolder, "log"));
-
-            return subfolder;
-        }
-
-        /// <summary>
         /// Creates a new folder for holding neonDESKTOP dashboard browser state
         /// if it doesn't exist and returns its path.
         /// </summary>
         /// <returns>Path to the folder.</returns>
-        public static string CreateDashboardStateFolder()
+        public static string DashboardStateFolder
         {
-            if (cacheDashboardStateFolder != null)
+            get
             {
+                if (cacheDashboardStateFolder != null)
+                {
+                    return cacheDashboardStateFolder;
+                }
+
+                cacheDashboardStateFolder = Path.Combine(NeonKubeUserFolder, "dashboards");
+
+                Directory.CreateDirectory(cacheDashboardStateFolder);
+
                 return cacheDashboardStateFolder;
             }
-
-            cacheDashboardStateFolder = Path.Combine(GetNeonKubeUserFolder(), "dashboards");
-
-            Directory.CreateDirectory(cacheDashboardStateFolder);
-
-            return cacheDashboardStateFolder;
         }
 
         /// <summary>
@@ -1014,9 +974,7 @@ namespace Neon.Kube
         /// </summary>
         public static void ClearDashboardStateFolder()
         {
-            var dashboardStateFolder = CreateDashboardStateFolder();
-
-            NeonHelper.DeleteFolderContents(dashboardStateFolder);
+            NeonHelper.DeleteFolderContents(cacheDashboardStateFolder);
         }
 
         /// <summary>
@@ -1182,12 +1140,12 @@ namespace Neon.Kube
         /// Sets the current Kubernetes config context.
         /// </summary>
         /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
-        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(KubeContextName contextName)
         {
             if (contextName == null)
             {
-                cachedContext = null;
+                cachedContext         = null;
                 Config.CurrentContext = null;
             }
             else
@@ -1204,7 +1162,7 @@ namespace Neon.Kube
                     throw new ArgumentException($"[{contextName}] is not a neonKUBE context.", nameof(contextName));
                 }
 
-                cachedContext = newContext;
+                cachedContext         = newContext;
                 Config.CurrentContext = (string)contextName;
             }
 
@@ -1217,7 +1175,7 @@ namespace Neon.Kube
         /// Sets the current Kubernetes config context by string name.
         /// </summary>
         /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
-        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(string contextName)
         {
             SetCurrentContext((KubeContextName)contextName);
@@ -1387,16 +1345,16 @@ namespace Neon.Kube
                 var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                 request.CertificateExtensions.Add(
-                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment
-                    | X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign
-                    | X509KeyUsageFlags.DigitalSignature, true));
+                    new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment |
+                        X509KeyUsageFlags.CrlSign | X509KeyUsageFlags.KeyCertSign |
+                        X509KeyUsageFlags.DigitalSignature, true));
 
                 request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
                 request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension());
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 
-                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
+                var certificate          = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
                 certificate.FriendlyName = friendlyName;
 
                 return certificate;
@@ -1468,20 +1426,30 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        // The [KUBECONFIG] environment variable exists but we still need to
-                        // ensure that the path to our [USER/.neonkube] config is present.
+                        // The [KUBECONFIG] environment variable exists.  We need to ensure that the
+                        // path to our [USER/.neonkube] config is present.  We're also going to ensure
+                        // that no paths are duplicated within the variable.
 
                         var sb    = new StringBuilder();
+                        var paths = new HashSet<string>();
                         var found = false;
 
                         foreach (var path in kubeConfigVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
                         {
+                            if (paths.Contains(path))
+                            {
+                                // Ignore duplicate paths.
+
+                                continue;
+                            }
+
                             if (path == KubeConfigPath)
                             {
                                 found = true;
                             }
 
                             sb.AppendWithSeparator(path, ";");
+                            paths.Add(path);
                         }
 
                         if (!found)
@@ -1678,9 +1646,9 @@ namespace Neon.Kube
 
             demux.Start();
 
-            var buff = new byte[4096];
+            var buff   = new byte[4096];
             var stream = demux.GetStream(1, 1);
-            var read = stream.Read(buff, 0, 4096);
+            var read   = stream.Read(buff, 0, 4096);
 
             return Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
         }
@@ -1886,7 +1854,7 @@ public class ISOFile
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The node definition.</param>
-        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
+        /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1903,9 +1871,9 @@ public class ISOFile
         /// </para>
         /// </remarks>
         public static TempFile CreateNeonInitIso(
-            ClusterDefinition clusterDefinition,
-            NodeDefinition nodeDefinition,
-            string securePassword = null)
+            ClusterDefinition   clusterDefinition,
+            NodeDefinition      nodeDefinition,
+            string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
@@ -1917,7 +1885,7 @@ public class ISOFile
                 subnet:         clusterNetwork.PremiseSubnet,
                 gateway:        clusterNetwork.Gateway,
                 nameServers:    clusterNetwork.Nameservers,
-                securePassword: securePassword);
+                newPassword:    newPassword);
         }
 
         /// <summary>
@@ -1936,7 +1904,7 @@ public class ISOFile
         /// <param name="subnet">The network subnet to be configured.</param>
         /// <param name="gateway">The network gateway to be configured.</param>
         /// <param name="nameServers">The nameserver addresses to be configured.</param>
-        /// <param name="securePassword">Optionally specifies a secure SSH password.</param>
+        /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1957,7 +1925,7 @@ public class ISOFile
             string              subnet,
             string              gateway,
             IEnumerable<string> nameServers,
-            string              securePassword = null)
+            string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(subnet), nameof(subnet));
@@ -1975,22 +1943,26 @@ public class ISOFile
             }
 
             var changePasswordScript =
-$@"#------------------------------------------------------------------------------
+$@"
+#------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
-# to something secure.  Doing this here before the network is configured means 
-# that there's no time when bad guys can SSH into the node using the insecure
+# to something secure.  We're doing this here before the network is configured means 
+# that there will be no time when bad guys can SSH into the node using the insecure
 # password.
 
-echo 'sysadmin:{securePassword}' | chpasswd
+echo 'sysadmin:{newPassword}' | chpasswd
 ";
-            if (String.IsNullOrWhiteSpace(securePassword))
+            if (String.IsNullOrWhiteSpace(newPassword))
             {
-                changePasswordScript = string.Empty;
+                // Clear the change password script when there's no password.
+
+                changePasswordScript = "\r\n";
             }
 
             var nodePrepScript =
 $@"# This script is called by the [neon-init] service when the prep DVD
-# is inserted on boot.  This script handles configuring the network.
+# is inserted on boot.  This script handles setting a secure SSH password
+# as well as configuring the network interface to a static IP address.
 #
 # The first parameter will be passed as the path where the DVD is mounted.
 
@@ -2048,9 +2020,8 @@ cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
-# Static network configuration initialized during first boot by the 
-# [neon-init] service from a virtual ISO inserted during
-# cluster prepare.
+# Static network configuration is initialized during first boot by the 
+# [neon-init] service from a virtual ISO inserted during cluster prepare.
 
 network:
   version: 2
@@ -2081,7 +2052,7 @@ done
 echo ""Node is prepared.""
 exit 0
 ";
-            nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
+            nodePrepScript = NeonHelper.ToLinuxLineEndings(nodePrepScript);
 
             // Create an ISO that includes the script and return the ISO TempFile.
             //
@@ -2349,65 +2320,6 @@ exit 0
         }
 
         /// <summary>
-        /// <para>
-        /// Ensures that the cluster has at least one OpenEBS node.
-        /// </para>
-        /// <note>
-        /// This doesn't work for the <see cref="HostingEnvironment.BareMetal"/> hosting manager which
-        /// needs to actually look for unpartitioned block devices that can be used to provision cStor.
-        /// </note>
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <remarks>
-        /// This method does nothing if the user has already specified one or more OpenEBS nodes
-        /// in the cluster definition.  Otherwise, it will try to enable this on up to three nodes,
-        /// trying to avoid master nodes if possible.
-        /// </remarks>
-        /// <exception cref="NotSupportedException">Thrown for the <see cref="HostingEnvironment.BareMetal"/> hosting manager.</exception>
-        public static void EnsureOpenEbsNodes(ClusterDefinition clusterDefinition)
-        {
-            if (clusterDefinition.Hosting.Environment == HostingEnvironment.BareMetal)
-            {
-                throw new NotSupportedException($"[{nameof(EnsureOpenEbsNodes)}()] is not supported for the [{nameof(HostingEnvironment.BareMetal)}] hosting manager.");
-            }
-
-            if (clusterDefinition.Nodes.Any(node => node.OpenEBS))
-            {
-                // The user has already selected the nodes.
-
-                return;
-            }
-
-            if (clusterDefinition.Workers.Count() >= 3)
-            {
-                // We have enough workers.
-
-                foreach (var worker in clusterDefinition.SortedWorkerNodes.Take(3))
-                {
-                    worker.OpenEBS = true;
-                }
-            }
-            else
-            {
-                // We don't have enough workers, so select the workers we have and
-                // then fall back to masters.
-
-                foreach (var node in clusterDefinition.Workers)
-                {
-                    node.OpenEBS = true;
-                }
-
-                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.Value == true)
-                {
-                    foreach (var node in clusterDefinition.SortedMasterNodes.Take(3 - clusterDefinition.Workers.Count()))
-                    {
-                        node.OpenEBS = true;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the OpenSSH configuration file used for cluster nodes.
         /// </summary>
         public static string OpenSshConfig =>
@@ -2597,7 +2509,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This supports source URIs referencing a single node image file as well
@@ -2606,10 +2522,21 @@ TCPKeepAlive yes
         /// Content-Type.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null, 
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            await SyncContext.ClearAsync;
+
+            // $note(jefflill):
+            //
+            // We're not going to use a retry policy here because restarting a multi-GB download potentially several
+            // times is not likely to be what the user wants and the mult-part download is restartable and does retry.
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 
@@ -2639,7 +2566,7 @@ TCPKeepAlive yes
                     return imagePath;
                 }
 
-                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead);
+                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
 
                 response.EnsureSuccessStatusCode();
 
@@ -2647,7 +2574,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    progressAction?.Invoke(0);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 0);
 
                     using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2671,13 +2598,13 @@ TCPKeepAlive yes
                                 {
                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                    progressAction?.Invoke(percentComplete);
+                                    progressAction?.Invoke(GetHubDownloadProgressType.Download, percentComplete);
                                 }
                             }
                         }
                     }
 
-                    progressAction?.Invoke(100);
+                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
 
                     return imagePath;
                 }
@@ -2702,7 +2629,11 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image multi-part download information URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
         /// This checks to see if the target file already exists and will download
@@ -2711,10 +2642,16 @@ TCPKeepAlive yes
         /// left off.
         /// </para>
         /// </remarks>
-        public async static Task<string> DownloadMultiPartNodeImageAsync(string imageUri, string imagePath, GitHubDownloadProgressDelegate progressAction = null)
+        public static async Task<string> DownloadMultiPartNodeImageAsync(
+            string                          imageUri, 
+            string                          imagePath,
+            GitHubDownloadProgressDelegate  progressAction    = null,
+            CancellationToken               cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
+
+            await SyncContext.ClearAsync;
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 
@@ -2725,7 +2662,7 @@ TCPKeepAlive yes
             using (var client = new HttpClient())
             {
                 var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
-                var response    = await client.SendAsync(request);
+                var response    = await client.SendAsync(request, cancellationToken: cancellationToken);
                 var contentType = response.Content.Headers.ContentType.MediaType;
 
                 response.EnsureSuccessStatusCode();
@@ -2740,7 +2677,83 @@ TCPKeepAlive yes
 
                 // Download the multi-part file.
 
-                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction);
+                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
+            }
+        }
+
+        private static string harborImageSyncDisabled = "harbor-image-sync-disabled";
+
+        /// <summary>
+        /// Helper method to Get the Harbor image sync status.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<bool> GetDisableHarborImageSyncAsync()
+        {
+            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            var configs = await k8s.ListNamespacedConfigMapAsync(KubeNamespaces.NeonSystem, labelSelector: "neon-kv=true");
+
+            if (!configs.Items.Any(c => c.Metadata.Name == harborImageSyncDisabled))
+            {
+                await k8s.CreateNamespacedConfigMapAsync(new V1ConfigMap()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name              = harborImageSyncDisabled,
+                        NamespaceProperty = KubeNamespaces.NeonSystem,
+                        Labels            = new Dictionary<string, string>()
+                        {
+                            { "neon-kv", "true" }
+                        }
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "value", "false" }
+                    }
+                },
+                namespaceParameter: KubeNamespaces.NeonSystem);
+            }
+
+            var value = await k8s.ReadNamespacedConfigMapAsync(harborImageSyncDisabled, KubeNamespaces.NeonSystem);
+
+            return bool.Parse(value.Data["value"]);
+        }
+
+        /// <summary>
+        /// Helper method to set the Harbor image sync status.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task SetDisableHarborImageSyncAsync(bool value)
+        {
+            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            var configMap = new V1ConfigMap()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name              = harborImageSyncDisabled,
+                    NamespaceProperty = KubeNamespaces.NeonSystem,
+                    Labels            = new Dictionary<string, string>()
+                    {
+                        { "neon-kv", "true" }
+                    }
+                },
+                Data = new Dictionary<string, string>()
+                {
+                    { "value", value.ToString() }
+                }
+            };
+
+            var configs = await k8s.ListNamespacedConfigMapAsync(KubeNamespaces.NeonSystem, labelSelector: "neon-kv=true");
+
+            if (!configs.Items.Any(c => c.Metadata.Name == harborImageSyncDisabled))
+            {
+                await k8s.CreateNamespacedConfigMapAsync(configMap, KubeNamespaces.NeonSystem);
+            }
+            else
+            {
+                await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), KubeNamespaces.NeonSystem);
+
             }
         }
     }

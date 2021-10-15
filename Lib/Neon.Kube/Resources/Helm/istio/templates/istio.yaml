@@ -1,0 +1,80 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: neon-ingress-istio
+spec:
+  namespace: {{ .Release.Namespace }}
+  hub: {{ .Values.images.organization }}
+  tag: {{ .Values.images.istio.tag }}
+  meshConfig:
+    rootNamespace: {{ .Release.Namespace }}
+    enablePrometheusMerge: false
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
+            patches:
+              - path: kind
+                value: DaemonSet
+              - path: spec.strategy
+        hpaSpec: {}
+        service:
+          {{- with .Values.nodePorts }}
+            ports:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.ingress.requests.cpu }}"
+            memory: "{{ .Values.resources.ingress.requests.memory }}"
+          limits:
+            cpu: "{{ .Values.resources.ingress.limits.cpu }}"
+            memory: "{{ .Values.resources.ingress.limits.memory }}"
+    cni:
+      enabled: true
+      namespace: kube-system
+  values:
+    global:
+      istioNamespace: {{ .Release.Namespace }}
+      logging:
+        level: "default:info"
+      logAsJson: true
+      imagePullPolicy: IfNotPresent
+      jwtPolicy: third-party-jwt
+      proxy:
+        holdApplicationUntilProxyStarts: true
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.proxy.requests.cpu }}"
+            memory: "{{ .Values.resources.proxy.requests.memory }}"
+          limits:
+            cpu: "{{ .Values.resources.proxy.limits.cpu }}"
+            memory: "{{ .Values.resources.proxy.limits.memory }}"
+      defaultNodeSelector: 
+        neonkube.io/istio: true
+      tracer:
+        zipkin:
+          address: jaeger-collector.monitoring.svc.cluster.local:9411
+    pilot:
+      traceSampling: 100
+    meshConfig:
+      accessLogFile: ""
+      accessLogFormat: '{{"{{"}}   "authority": "%REQ(:AUTHORITY)%",   "mode": "%PROTOCOL%",   "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",   "upstream_local_address": "%UPSTREAM_LOCAL_ADDRESS%",   "duration": "%DURATION%",   "request_duration": "%REQUEST_DURATION%",   "response_duration": "%RESPONSE_DURATION%",   "response_tx_duration": "%RESPONSE_TX_DURATION%",   "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",   "upstream_transport_failure_reason": "%UPSTREAM_TRANSPORT_FAILURE_REASON%",   "route_name": "%ROUTE_NAME%",   "response_code": "%RESPONSE_CODE%",   "response_code_details": "%RESPONSE_CODE_DETAILS%",   "user_agent": "%REQ(USER-AGENT)%",   "response_flags": "%RESPONSE_FLAGS%",   "start_time": "%START_TIME(%s.%6f)%",   "method": "%REQ(:METHOD)%",   "host": "%REQ(:Host)%",   "referer": "%REQ(:Referer)%",   "request_id": "%REQ(X-REQUEST-ID)%",   "forwarded_host": "%REQ(X-FORWARDED-HOST)%",   "forwarded_proto": "%REQ(X-FORWARDED-PROTO)%",   "upstream_host": "%UPSTREAM_HOST%",   "downstream_local_uri_san": "%DOWNSTREAM_LOCAL_URI_SAN%",   "downstream_peer_uri_san": "%DOWNSTREAM_PEER_URI_SAN%",   "downstream_local_subject": "%DOWNSTREAM_LOCAL_SUBJECT%",   "downstream_peer_subject": "%DOWNSTREAM_PEER_SUBJECT%",   "downstream_peer_issuer": "%DOWNSTREAM_PEER_ISSUER%",   "downstream_tls_session_id": "%DOWNSTREAM_TLS_SESSION_ID%",   "downstream_tls_cipher": "%DOWNSTREAM_TLS_CIPHER%",   "downstream_tls_version": "%DOWNSTREAM_TLS_VERSION%",   "downstream_peer_serial": "%DOWNSTREAM_PEER_SERIAL%",   "downstream_peer_cert": "%DOWNSTREAM_PEER_CERT%",   "client_ip": "%REQ(X-FORWARDED-FOR)%",   "requested_server_name": "%REQUESTED_SERVER_NAME%",   "bytes_received": "%BYTES_RECEIVED%",   "bytes_sent": "%BYTES_SENT%",   "upstream_cluster": "%UPSTREAM_CLUSTER%",   "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS%",   "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%" {{"}}"}}'
+      accessLogEncoding: "JSON"
+    gateways:
+      istio-ingressgateway:
+        type: NodePort
+        externalTrafficPolicy: Local
+    cni:
+      excludeNamespaces:
+       - {{.Release.Namespace}}
+       - kube-system
+       - kube-node-lease
+       - kube-public
+      logLevel: info

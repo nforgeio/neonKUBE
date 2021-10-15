@@ -276,9 +276,14 @@ namespace Neon.SSH
         }
 
         /// <summary>
+        /// <para>
         /// Returns a clone of the SSH proxy.  This can be useful for situations where you
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
+        /// </para>
+        /// <note>
+        /// This does not clone any attached log writer.
+        /// </note>
         /// </summary>
         /// <returns>The cloned <see cref="LinuxSshProxy{TMetadata}"/>.</returns>
         public LinuxSshProxy Clone()
@@ -306,6 +311,8 @@ namespace Neon.SSH
             target.credentials    = this.credentials;
             target.OsName         = this.OsName;
             target.OsVersion      = this.OsVersion;
+            target.KernelVersion  = this.KernelVersion;
+            target.KernelRelease  = this.KernelRelease;
             target.ConnectTimeout = this.ConnectTimeout;
             target.FileTimeout    = this.FileTimeout;
             target.RetryCount     = this.RetryCount;
@@ -337,6 +344,51 @@ namespace Neon.SSH
         public Version OsVersion { get; private set; }
 
         /// <summary>
+        /// <para>
+        /// Returns the Linux kernel release version installed on the remote machine.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// This currently assumes that the kernel versions returned by <b>uname -r</b>
+        /// are formatted like:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>5.4.0</item>
+        ///     <item>5.4.0-66-generic</item>
+        ///     <item>5.4.72-microsoft-standard-WSL2</item>
+        /// </list>
+        /// <para>
+        /// This property extracts the version (up to the first dash) and
+        /// returns that and <see cref="KernelRelease"/> includes the full
+        /// release text.
+        /// </para>
+        /// </note>
+        /// </summary>
+        public Version KernelVersion { get; private set; }
+
+        /// <summary>
+        /// <para>
+        /// Describes the Linux kernel release installed on the remote machine.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// This currently assumes that the kernel versions returned by <b>uname -r</b>
+        /// are formatted like:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>5.4.0</item>
+        ///     <item>5.4.0-66-generic</item>
+        ///     <item>5.4.72-microsoft-standard-WSL2</item>
+        /// </list>
+        /// <para>
+        /// This property returns the full release string.  Use <see cref="KernelVersion"/>
+        /// if you just want the version.
+        /// </para>
+        /// </note>
+        /// </summary>
+        public string KernelRelease { get; private set; }
+
+        /// <summary>
         /// Performs an action on a new thread, killing the thread if it hasn't
         /// terminated within the specified timeout.
         /// </summary>
@@ -352,12 +404,9 @@ namespace Neon.SSH
             //      https://github.com/nforgeio/neonKUBE/issues/230
             //      https://github.com/sshnet/SSH.NET/issues/355
 
-            var threadStart = new ThreadStart(action);
-            var thread      = new Thread(threadStart);
-
             //LogLine($"*** DEADLOCK EXECUTE: {actionName}");
 
-            thread.Start();
+            var thread = NeonHelper.StartThread(action);
 
             if (!thread.Join(timeout))
             {
@@ -566,7 +615,7 @@ namespace Neon.SSH
         /// have an operation in progress on the remote machine.
         /// </para>
         /// <note>
-        /// This will return <b>*** FAULTED ***</b> if the <see cref="IsFaulted"/>=<c>true</c>.
+        /// This will return a variation of <b>*** FAULTED ***</b> if <see cref="IsFaulted"/>=<c>true</c>.
         /// </note>
         /// </remarks>
         public string Status
@@ -620,11 +669,24 @@ namespace Neon.SSH
         }
 
         /// <summary>
-        /// Indicates that the remote machine has completed or has failed the current set of operations.
+        /// Used to indicate that the remote machine will be involved in a configuration step.  
+        /// This property is a bit of a hack used when displaying the status of a neonKUBE cluster setup.
+        /// </summary>
+        public bool IsInvolved { get; set; }
+
+        /// <summary>
+        /// Used to indicate that the remote machine is actively being being configured.  This property is 
+        /// a bit of a hack used when displaying the status of a neonKUBE cluster setup.
+        /// </summary>
+        public bool IsConfiguring { get; set; }
+
+        /// <summary>
+        /// Indicates that the remote machine has completed or has failed the current set of operations.  
+        /// This property is a bit of a hack used when displaying the status of a neonKUBE cluster setup.
         /// </summary>
         /// <remarks>
         /// <note>
-        /// This will always return <c>false</c> if the remote machine has faulted (<see cref="IsFaulted"/>=<c>true</c>).
+        /// This will always return <c>false</c> if the remote machine when <see cref="IsFaulted"/>=<c>true</c>.
         /// </note>
         /// </remarks>
         public bool IsReady
@@ -635,7 +697,8 @@ namespace Neon.SSH
 
         /// <summary>
         /// Indicates that the remote machine is in a faulted state because one or more operations
-        /// have failed.
+        /// have failed.  This property is a bit of a hack used when displaying the status of a neonKUBE
+        /// cluster setup.
         /// </summary>
         public bool IsFaulted { get; set; }
 
@@ -914,7 +977,8 @@ rm {HostFolders.Home(Username)}/askpass
         public void LogException(Exception e)
         {
             LogLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            LogLine($"*** STACK:");
+            LogLine(e.StackTrace);
         }
 
         /// <summary>
@@ -925,7 +989,8 @@ rm {HostFolders.Home(Username)}/askpass
         public void LogException(string message, Exception e)
         {
             LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            LogLine($"*** STACK:");
+            LogLine(e.StackTrace);
         }
 
         /// <summary>
@@ -1067,6 +1132,8 @@ rm {HostFolders.Home(Username)}/askpass
                         {
                             // [/dev/shm/neonssh/rebooting] file is not present, so we're done.
 
+                            LogLine($"*** WAITFORBOOT: DONE");
+
                             break;
                         }
                         else
@@ -1115,6 +1182,8 @@ rm {HostFolders.Home(Username)}/askpass
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
+
+            LogLine($"*** WAITFORBOOT: Connected");
 
             Status = "connected";
 
@@ -1179,14 +1248,51 @@ rm {HostFolders.Home(Username)}/askpass
                         }
                     }
                 }
+
+                // $note(jefflill):
+                //
+                // Use [uname -r] to obtain the kernel version.  I'm not entirely sure 
+                // how this version is formatted.  I'm currently seeing versions like:
+                //
+                //      5.4.0-66-generic                    <-- Ubuntu 20.04
+                //      5.4.72-microsoft-standard-WSL2      <-- WSL2
+                //
+                // So I'm going to extract the part from the beginning of the version
+                // up to (but including) the first dash if present, and then parse 
+                // that as the version number.  We'll set v0.0.0 when we can't parse
+                // the version.
+
+                var kernelVersion = this.RunCommand("uname -r")
+                    .EnsureSuccess()
+                    .OutputText
+                    .Trim();
+
+                this.KernelRelease = kernelVersion;
+
+                var dashPos = kernelVersion.IndexOf('-');
+
+                if (dashPos != -1)
+                {
+                    kernelVersion = kernelVersion.Substring(0, dashPos);
+                }
+
+                if (Version.TryParse(kernelVersion, out var v))
+                {
+                    this.KernelVersion = v;
+                }
+                else
+                {
+                    this.KernelVersion = new Version();
+                }
             }
             catch
             {
                 // It is possible for this to fail when the host folders
                 // haven't been created yet.
 
-                OsName    = "unknown";
-                OsVersion = new Version();
+                this.OsName        = "unknown";
+                this.OsVersion     = new Version();
+                this.KernelVersion = new Version();
             }
         }
 
@@ -1496,8 +1602,8 @@ rm {HostFolders.Home(Username)}/askpass
                 // SUDO password prompting is not disabled yet.
                 //
                 // We need to obtain the SSH password used to establish the current connection.  This means
-                // that SSH public key based credentials won't work for the first connection to a host.  We're 
-                // going use reflection to get the password from SSH.NET.
+                // that SSH public key based credentials won't work for the first connection to a host.
+                // We're going use reflection to get the password from SSH.NET.
 
                 var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
 
@@ -3368,10 +3474,17 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
+        /// <para>
         /// Returns an indication of whether the <b>neon-init</b> service has been executed
         /// on the remote machine.  This service is deployed to neonKUBE cluster nodes to
-        /// act as a poor-man's <b>cloud-init</b> to configure the network and credentials 
+        /// act as a poor-man's <b>cloud-init</b> used to configure the network and credentials 
         /// by mounting a virual ISO drive with a configuration script for non-cloud environments.
+        /// </para>
+        /// <note>
+        /// The <b>neon-init</b> service disables itself after running for the first time.
+        /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
+        /// the reenable this service when required.
+        /// </note>
         /// </summary>
         /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
         public bool GetNeonInitStatus()
@@ -3380,13 +3493,36 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Manually sets the <b>neon-init</b> service execution status.
+        /// <para>
+        /// Manually sets the <b>neon-init</b> service execution status. 
+        /// </para>
+        /// <para>
+        /// The <b>neon-init</b> service is deployed to neonKUBE cluster nodes to act
+        /// as a poor-man's <b>cloud-init</b> to configure the network and credentials 
+        /// by mounting a virual ISO drive with a configuration script for non-cloud 
+        /// environments.
+        /// </para>
+        /// <para>
+        /// Calling this with <c>true</c> will prevent the <b>neon-init</b> service from
+        /// looking for a mounted ISO on next boot and executing the special script  there.
+        /// Calling this with <c>false</c> will reenable the <b>neon-init</b> service
+        /// when the machine is rebooted.
+        /// </para>
+        /// <note>
+        /// The <b>neon-init</b> service disables itself after running for the first time.
+        /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
+        /// the reenable this service when required.
+        /// </note>
         /// </summary>
         /// <param name="initialized">
         /// Pass <c>true</c> to indicate that the <b>neon-init</b> service has been executed, 
         /// <c>false</c> to clear the status.
         /// </param>
-        public void SetNeonInitStatus(bool initialized)
+        /// <param name="keepNetworkSettings">
+        /// Optionally retains the static network settings when <paramref name="initialized"/> is
+        /// passed as <c>false</c>, otherwise the original (probably DHCP) settings will be restored.
+        /// </param>
+        public void SetNeonInitStatus(bool initialized, bool keepNetworkSettings = false)
         {
             if (initialized)
             {
@@ -3398,6 +3534,17 @@ touch /etc/neon-init/ready
                 SudoCommand(CommandBundle.FromScript(setScript));
             }
             else
+            {
+                var resetScript =
+@"
+mkdir -p /etc/neon-init
+
+rm -rf /etc/neon-init/*
+";
+                SudoCommand(CommandBundle.FromScript(resetScript));
+            }
+            
+            if (!keepNetworkSettings)
             {
                 // We need to delete the [/etc/neon-init/ready] file and re-enable
                 // network DHCP by restoring the original network configuration

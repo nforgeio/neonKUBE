@@ -90,34 +90,55 @@ namespace Neon.Kube
         public const string ClusterAdvice = "setup-advice";
 
         /// <summary>
-        /// <para>
         /// Property name for accessing the fully qualified path to the local folder where automated 
         /// cluster deployment operation state will be persisted, such as the Kubernetes config file, 
-        /// neonKUBE cluster login and operation logs will be kept.  Automation folders are created by
-        /// <see cref="KubeHelper.CreateAutomationFolder()"/>.
-        /// </para>
+        /// neonKUBE cluster login and operation logs will be kept.  This overrides the default 
+        /// <b>$(USERPROGILE)/.neonkube</b>.
         /// </summary>
         /// <remarks>
         /// <note>
         /// <para>
         /// Automation folders are used by the <b>neon cluster prepare/setup</b> commands using the
         /// <b>--automate</b> option as well as clusters provisioned for unit testing via <b>KubernetesFixture</b>.
-        /// This will be set to <c>null</c> for cluster deployments performed by neonKUBE or <b>neon-cli</b>
+        /// This will be set to <c>null</c> for normal cluster deployments performed by neonKUBE or <b>neon-cli</b>
         /// without the <b>--automate</b> option.
         /// </para>
         /// <para>
-        /// These folders are used to workaround the neonDESKTOP restrictions that allow neonDESKTOP
-        /// or <b>neon-cli</b> to be logged into a single cluster at a time and also requires that 
-        /// neonDESKTOP be logged out of a cluster before preparing or setting up a new one.
+        /// These folders are used to workaround the restriction that allow only a single cluster to
+        /// be logged in at any time and also that there be no logged-in cluster before a new cluster
+        /// may be provisioned.  This allows cluster related CI/CD operations or unit tests to be able
+        /// to execute without impacting normal user clusters.
         /// </para>
         /// </note>
         /// </remarks>
         public const string AutomationFolder = "automation-folder";
 
         /// <summary>
-        /// Property for accessing the headend service base URI. This can be overridden
+        /// Property name for accessing the headend service base URI. This can be overridden
         /// for development purposes.
         /// </summary>
         public const string HeadendUri = "headend-uri";
+
+        /// <summary>
+        /// Property name for a boolean indicating that the node image has already been downloaded
+        /// (e.g. by neonDESKTOP) and does not need to be downloaded hosting managers during cluster
+        /// provisioning.  Image downloading should be considered to be enabled when this property
+        /// is not present.
+        /// </summary>
+        public const string DisableImageDownload = "image-download-disabled";
+
+        /// <summary>
+        /// Property name for the IP address of the cluster. This is used to create the <b>neoncluster.io</b> 
+        /// DNS subdomain pointing to the cluster.
+        /// </summary>
+        public const string ClusterIp = "cluster-ip";
+
+        /// <summary>
+        /// Property name for the <see cref="ReadyToGoMode"/> controlling whether cluster setup will 
+        /// configure a ready-to-go image that nearly completes cluster setup, completes setup for
+        /// a ready-to-go cluster node or just performs a normal setup.  This property is optional
+        /// and should default to <see cref="ReadyToGoMode.Normal"/>.
+        /// </summary>
+        public const string ReadyToGoMode = "readytogo-mode";
     }
 }

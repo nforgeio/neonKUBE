@@ -64,14 +64,50 @@ namespace Neon.Xunit
         }
 
         /// <summary>
+        /// Ensures that a collection contains a specific item.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="item">The item being checked.</param>
+        /// <param name="collection">The item collection.</param>
+        ///<exception cref="AssertException">Thrown on failure.</exception>
+        private static void EnsureContains<T>(T item, IEnumerable<T> collection)
+        {
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
+
+            if (!collection.Contains(item))
+            {
+                throw new KeyNotFoundException();
+            }
+        }
+
+        /// <summary>
+        /// Ensures that a collection contains a specific item using the specified
+        /// quelity comparer.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="item">The item being checked.</param>
+        /// <param name="collection">The item collection.</param>
+        /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
+        private static void EnsureContains<T>(T item, IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        {
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
+
+            if (!collection.Contains(item, comparer))
+            {
+                throw new AssertException($"Collection does not contain [{item}].");
+            }
+        }
+
+        /// <summary>
         /// Ensures that two enumerations contain the same items, possibly in different
-        /// orders.  This is similar to <see cref="Assert.Equal{T}(IEnumerable{T}, IEnumerable{T})"/>
-        /// but it doesn't enforce the item order.  This uses the default equality comparer.
+        /// orders.  This is similar to Xunit collection comparison assert method but
+        /// it doesn't enforce the item order.  This uses the default equality comparer.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -82,7 +118,7 @@ namespace Neon.Xunit
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.
 
-            var expectedCount = expected.Count();
+            var expectedCount   = expected.Count();
             var collectionCount = collection.Count();
 
             if (expectedCount != collectionCount)
@@ -92,24 +128,22 @@ namespace Neon.Xunit
 
             foreach (var item in expected)
             {
-                Assert.Contains(item, collection);
+                EnsureContains(item, collection);
             }
 
             foreach (var item in collection)
             {
-                Assert.Contains(item, expected);
+                EnsureContains(item, expected);
             }
         }
 
         /// <summary>
-        /// Ensures that two enumerations do not contain the same items, possibly in different
-        /// orders.  This is similar to <see cref="Assert.Equal{T}(IEnumerable{T}, IEnumerable{T})"/>
-        /// but it doesn't enforce the item order.  This uses the default equality comparer.
+        /// Ensures that two enumerations are not equivalent, using the default equality comparer.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -124,19 +158,19 @@ namespace Neon.Xunit
                 return;
             }
 
-            throw new ArgumentException("Collections are equivalent.");
+            throw new AssertException("Collections are equivalent.");
         }
 
         /// <summary>
         /// Ensures that two enumerations contain the same items, possibly in different
-        /// orders.  This is similar to <see cref="Assert.Equal{T}(IEnumerable{T}, IEnumerable{T})"/>
-        /// but it doesn't enforce the item order using an equality comparer.
+        /// orders.  This is similar to Xunit collection comparison assert method but
+        /// it doesn't enforce the item order.  This uses a custom equality comparer.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -148,7 +182,7 @@ namespace Neon.Xunit
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.
 
-            var expectedCount = expected.Count();
+            var expectedCount   = expected.Count();
             var collectionCount = collection.Count();
 
             if (expectedCount != collectionCount)
@@ -158,25 +192,23 @@ namespace Neon.Xunit
 
             foreach (var item in expected)
             {
-                Assert.Contains(item, collection, comparer);
+                EnsureContains(item, collection, comparer);
             }
 
             foreach (var item in collection)
             {
-                Assert.Contains(item, expected, comparer);
+                EnsureContains(item, expected, comparer);
             }
         }
 
         /// <summary>
-        /// Ensures that two enumerations do not contain the same items, possibly in different
-        /// orders.  This is similar to <see cref="Assert.Equal{T}(IEnumerable{T}, IEnumerable{T})"/>
-        /// but it doesn't enforce the item order using an equality comparer.
+        /// Ensures that two enumerations are not equivalent, using a custom equality comparer.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -202,13 +234,13 @@ namespace Neon.Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
             Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
 
-            var expectedCount = expected.Count();
+            var expectedCount   = expected.Count();
             var dictionaryCount = dictionary.Count();
 
             if (expectedCount != dictionaryCount)
@@ -223,11 +255,7 @@ namespace Neon.Xunit
                     throw new AssertException($"Item [key={item.Key}] is not in [dictionary].");
                 }
 
-                try
-                {
-                    Assert.Equal(item.Value, found);
-                }
-                catch
+                if (!found.Equals(item.Value))
                 {
                     throw new AssertException($"Item value for [expected[{item.Key}={item.Value}] != [dictionary[{item.Key}]={found}]");
                 }
@@ -241,7 +269,7 @@ namespace Neon.Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -256,7 +284,7 @@ namespace Neon.Xunit
                 return;
             }
 
-            throw new ArgumentException("Dictionaries are equivalent.");
+            throw new AssertException("Dictionaries are equivalent.");
         }
 
         /// <summary>Ensures that two dictionaries contain the same items using an equality comparer.
@@ -266,14 +294,14 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <param name="comparer">The equality comparer to be used.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
             Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
             Covenant.Requires<ArgumentNullException>(comparer != null, nameof(comparer));
 
-            var expectedCount = expected.Count();
+            var expectedCount   = expected.Count();
             var dictionaryCount = dictionary.Count();
 
             if (expectedCount != dictionaryCount)
@@ -288,14 +316,12 @@ namespace Neon.Xunit
                     throw new AssertException($"Item [key={item.Key}] is not in [dictionary].");
                 }
 
-                try
-                {
-                    Assert.Equal(item.Value, found, comparer);
-                }
-                catch
+#pragma warning disable CS1574, CS8632
+                if (!comparer.Equals((TValue?)item.Value, (TValue?)found))
                 {
                     throw new AssertException($"Item value for [expected[{item.Key}={item.Value}] != [dictionary[{item.Key}]={found}]");
                 }
+#nullable restore
             }
         }
 
@@ -306,7 +332,7 @@ namespace Neon.Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <param name="comparer">The equality comparer to be used.</param>
-        /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
@@ -322,7 +348,7 @@ namespace Neon.Xunit
                 return;
             }
 
-            throw new ArgumentException("Dictionaries are equivalent.");
+            throw new AssertException("Dictionaries are equivalent (and should not be).");
         }
 
         /// <summary>
@@ -332,6 +358,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="expected">The expected value.</param>
         /// <param name="actual">The actual valut.</param>
+        /// <exception cref="AssertException">Thrown on failure.</exception>
         public static void AssertEqualLines(string expected, string actual)
         {
             if (expected != null)
@@ -344,7 +371,10 @@ namespace Neon.Xunit
                 actual = actual.Replace("\r", string.Empty);
             }
 
-            Assert.Equal(expected, actual);
+            if (expected != actual)
+            {
+                throw new AssertException($"Expected: [{expected} != [{actual}].");
+            }
         }
 
         /// <summary>
@@ -353,6 +383,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <typeparam name="TException">The required exception type.</typeparam>
         /// <param name="action">The test action.</param>
+        /// <exception cref="AssertException">Thrown when no exception was thrown or the exception thrown had an unexpected type.</exception>
         public static void AssertThrows<TException>(Action action)
             where TException : Exception
         {
@@ -361,7 +392,7 @@ namespace Neon.Xunit
             try
             {
                 action();
-                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
+                throw new AssertException($"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
             }
             catch (Exception e)
             {
@@ -370,7 +401,7 @@ namespace Neon.Xunit
                     return;
                 }
 
-                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
+                throw new AssertException($"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
             }
         }
 
@@ -389,7 +420,7 @@ namespace Neon.Xunit
             try
             {
                 await action();
-                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   (no exception thrown)");
+                throw new AssertException($"Expected: {typeof(TException).FullName}\r\nActual:   (no exception thrown)");
             }
             catch (Exception e)
             {
@@ -398,7 +429,7 @@ namespace Neon.Xunit
                     return;
                 }
 
-                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   {e.GetType().Name}");
+                throw new AssertException($"Expected: {typeof(TException).FullName}\r\nActual:   {e.GetType().Name}");
             }
         }
 

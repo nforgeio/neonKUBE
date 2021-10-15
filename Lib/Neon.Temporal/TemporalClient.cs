@@ -436,7 +436,7 @@ namespace Neon.Temporal
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, TemporalSettings settings)
             {
-                var openPort         = NetHelper.GetUnusedIpPort(address);
+                var openPort         = NetHelper.GetUnusedTcpPort(address);
                 var listenerSettings = new WebListenerSettings();
 
                 ListenUri = new Uri($"http://{address}:{openPort}");
@@ -958,11 +958,8 @@ namespace Neon.Temporal
             // Crank up the background threads which will handle [temporal-proxy]
             // request timeouts.
 
-            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
-            client.heartbeatThread.Start();
-
-            client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
-            client.timeoutThread.Start();
+            client.heartbeatThread = NeonHelper.StartThread(client.HeartbeatThread);
+            client.timeoutThread   = NeonHelper.StartThread(client.TimeoutThread);
 
             // Initialize the cache size to a known value.
 
@@ -1353,7 +1350,7 @@ namespace Neon.Temporal
         /// <remarks>
         /// <para>
         /// Activity and workflow stubs are generated and compiled on demand by default.  
-        /// This takes  about 500ms for each stub.  This generally works fine but may cause 
+        /// This takes about 500ms for each stub.  This generally works fine but may cause 
         /// decision task timeouts for workflows that call a lot of different child
         /// workflows or activities.
         /// </para>
@@ -1583,7 +1580,7 @@ namespace Neon.Temporal
                     // Determine the port we'll have [temporal-proxy] listen on and then
                     // fire up the temporal-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedIpPort(Address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {

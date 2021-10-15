@@ -23,6 +23,11 @@ namespace Neon.Kube
     public enum SetupStepState
     {
         /// <summary>
+        /// Used to indicate that a node is not involved with a setup step.
+        /// </summary>
+        NotInvolved = 0,
+
+        /// <summary>
         /// The step is awaiting execution.
         /// </summary>
         Pending,

@@ -298,7 +298,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Restarts the service.
+        /// Restarts the service unless it never been started.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
         /// <param name="runningTimeout">
@@ -320,12 +320,17 @@ namespace Neon.Xunit
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
+            if (Service != null && Service.Status == NeonServiceStatus.NotStarted)
+            {
+                return;
+            }
+
             if (runningTimeout == default)
             {
                 runningTimeout = defaultRunningTimeout;
             }
 
-            StopService();
+            TerminateService();
             ClearCaches();
 
             Service = serviceCreator();
@@ -337,6 +342,7 @@ namespace Neon.Xunit
 
             try
             {
+
                 NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.Running || Service.Status == NeonServiceStatus.Terminated, runningTimeout);
             }
             catch (TimeoutException)
@@ -350,14 +356,15 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Stops the service if it's running.
+        /// Terminates the service if it's running.
         /// </summary>
-        private void StopService()
+        private void TerminateService()
         {
             if (Service != null)
             {
                 Service.Terminator.Signal();
                 serviceTask.Wait();
+                NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.NotStarted || Service.Status == NeonServiceStatus.Terminated, timeout: TimeSpan.FromSeconds(30));
                 Service.Dispose();
 
                 Service     = null;
@@ -368,7 +375,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            StopService();
+            TerminateService();
             ClearCaches(disposing: true);
         }
 

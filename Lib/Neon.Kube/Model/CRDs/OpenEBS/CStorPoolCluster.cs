@@ -24,7 +24,6 @@ using k8s;
 using k8s.Models;
 
 using Newtonsoft.Json;
-using Microsoft.Rest;
 
 namespace Neon.Kube
 {
@@ -83,8 +82,7 @@ namespace Neon.Kube
         /// Thrown if validation fails
         /// </exception>
         public virtual void Validate()
-        {
-            
+        {   
         }
     }
 }

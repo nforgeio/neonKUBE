@@ -113,7 +113,7 @@ namespace Neon.Kube
         /// For on-premise environments like Hyper-V and XenServer, we use the
         /// HAProxy based load balancer deployed to the first master node (as sorted
         /// by node name).  This forwards traffic to port 5000 to the Kubernetes
-        /// API servers running on the masters.  This is not reeally HA though,
+        /// API servers running on the masters.  This is not really HA though,
         /// because the loss of the first master will result in the loss of 
         /// API server connectivity.  This does help some though.  For example,
         /// stopping the API server on the first master won't take the cluster
@@ -203,6 +203,22 @@ namespace Neon.Kube
             if (!AllowPodsOnMasters.HasValue)
             {
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystem))
+            {
+                foreach (var m in clusterDefinition.Masters)
+                {
+                    m.Labels.NeonSystem = true;
+                }
+
+                if (clusterDefinition.Masters.Count() < 3)
+                {
+                    foreach (var w in clusterDefinition.Workers)
+                    {
+                        w.Labels.NeonSystem = true;
+                    }
+                }
             }
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemDb))

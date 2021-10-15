@@ -360,7 +360,7 @@ services:
             {
                 if (client == null)
                 {
-                    throw new Exception("Temporal client could not be connected to the Temporal cluster.");
+                    throw new Exception("Temporal client could connect to the Temporal cluster.");
                 }
 
                 return client;

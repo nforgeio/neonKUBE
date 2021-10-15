@@ -52,7 +52,7 @@ namespace Neon.Kube
         string LogFailedMarker { get; set; }
 
         /// <summary>
-        /// Returns the operation title.
+        /// Specifies the operation title.
         /// </summary>
         string OperationTitle { get; }
 
@@ -92,11 +92,6 @@ namespace Neon.Kube
         int CurrentStepNumber { get; }
 
         /// <summary>
-        /// Returns the time spent performing setup after setup has completed (or failed).
-        /// </summary>
-        TimeSpan Runtime { get; }
-
-        /// <summary>
         /// Optionally displays the elapsed time for each step as well as the overall
         /// operation when setup completes (or fails).
         /// </summary>
@@ -107,20 +102,34 @@ namespace Neon.Kube
         /// Raised periodically when the overall status changes during cluster setup.
         /// </para>
         /// <note>
-        /// This event will be raised on a background thread.
+        /// This event will be raised on a background thread and that you <b>MUST NOT</b>
+        /// modify any event parameters.
         /// </note>
         /// </summary>
         event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <summary>
+        /// Returns the console updater used internally to write the setup status to the
+        /// <see cref="Console"/> without flickering.
+        /// </summary>
+        SetupConsoleWriter ConsoleWriter { get; }
+
+        /// <summary>
         /// <para>
-        /// Raised when individual progress/error messages are received from setup steps.
-        /// This is used in situations where only limited status needs to be
+        /// Raised when individual progress/error messages are logged during
+        /// base image setup where where only limited status needs to be
         /// displayed or logged.
         /// </para>
         /// <note>
-        /// This event will be raised on the same thread that logged progress, typically
-        /// the thread running the step.
+        /// This event is not raised during normal cluster prepare or setup
+        /// because the node image will have already gone through the base
+        /// preparation.  This will be raised though when setting up using
+        /// <b>debug mode</b>.
+        /// </note>
+        /// <note>
+        /// This event will be raised on the same thread that logged the progress,
+        /// typically the thread executing the step and that you <b>MUST NOT</b>
+        /// modify any event parameters.
         /// </note>
         /// </summary>
         event SetupProgressDelegate ProgressEvent;
@@ -151,6 +160,23 @@ namespace Neon.Kube
         void LogProgress(LinuxSshProxy node, string message);
 
         /// <summary>
+        /// <para>
+        /// Logs an error message.
+        /// </para>
+        /// <note>
+        /// Setup will terminate after any step that reports an error
+        /// via this method.
+        /// </note>
+        /// </summary>
+        /// <param name="message">The message.</param>
+        void LogProgressError(string message);
+
+        /// <summary>
+        /// Returns the last error message logged by <see cref="LogProgressError(string)"/>.
+        /// </summary>
+        string LastProgressError { get; }
+
+        /// <summary>
         /// Logs a progress for a specific node with a verb and message.  
         /// This will be formatted like <b>VERB: MESSAGE</b>.
         /// </summary>
@@ -161,18 +187,6 @@ namespace Neon.Kube
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
         void LogProgress(LinuxSshProxy node, string verb, string message);
-
-        /// <summary>
-        /// <para>
-        /// Logs an error message.
-        /// </para>
-        /// <note>
-        /// Setup will terminate after any step that reports an error
-        /// via this method.
-        /// </note>
-        /// </summary>
-        /// <param name="message">The message.</param>
-        void LogError(string message);
 
         /// <summary>
         /// <para>
@@ -188,7 +202,42 @@ namespace Neon.Kube
         /// avoid dealing with the node generic parameter here.
         /// </param>
         /// <param name="message">The message.</param>
-        void LogError(LinuxSshProxy node, string message);
+        void LogProgressError(LinuxSshProxy node, string message);
+
+        /// <summary>
+        /// <para>
+        /// Writes a line to the global cluster log file.  This is used to log information
+        /// that pertains to a global operation rather than a specific node.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="message">Optionally specifies the message to be logged.</param>
+        void LogGlobal(string message = null);
+
+        /// <summary>
+        /// <para>
+        /// Writes an error line to the global cluster log file.  This is used to log errors
+        /// that pertain to a global operation rather than a specific node.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="message">Optionally specifies the message to be logged.</param>
+        void LogGlobalError(string message = null);
+
+        /// <summary>
+        /// <para>
+        /// Writes information about an exception to the global cluster log file.
+        /// </para>
+        /// <note>
+        /// This does not raise the <see cref="ProgressEvent"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        void LogGlobalException(Exception e);
 
         /// <summary>
         /// Indicates whether cluster setup is faulted due to a global problem or when
@@ -197,20 +246,15 @@ namespace Neon.Kube
         bool IsFaulted { get; }
 
         /// <summary>
-        /// Returns the last error message logged by <see cref="LogError(string)"/>.
-        /// </summary>
-        string LastError { get; }
-
-        /// <summary>
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
         /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
         /// <returns>The final disposition of the setup run.</returns>
-        SetupDisposition Run(bool leaveNodesConnected = false);
+        Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
-        /// can be properly disposed when <see cref="Run(bool)"/> exits.
+        /// can be properly disposed when <see cref="RunAsync(bool)"/> exits.
         /// </summary>
         /// <param name="disposable"></param>
         void AddDisposable(IDisposable disposable);
@@ -262,5 +306,18 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>The status information for any host nodes.</returns>
         IEnumerable<SetupNodeStatus> GetHostStatus();
+
+        /// <summary>
+        /// Sets the operation status text.
+        /// </summary>
+        /// <param name="status">The optional operation status text.</param>
+        void SetGlobalStepStatus(string status = null);
+
+        /// <summary>
+        /// Indicates that setup should be cancelled.  Setting this will request
+        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
+        /// <c>false</c> assignments will be ignored.
+        /// </summary>
+        bool CancelPending { get; set; }
     }
 }

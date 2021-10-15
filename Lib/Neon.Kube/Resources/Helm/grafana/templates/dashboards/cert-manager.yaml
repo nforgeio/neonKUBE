@@ -5,9 +5,19 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
-      "__inputs": [],
+      "__inputs": [{
+          "name": "DS_PROMETHEUS",
+          "label": "prometheus",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }],
       "__requires": [
         {
           "type": "grafana",
@@ -76,7 +86,7 @@ spec:
         },
         {
           "columns": [],
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fontSize": "100%",
           "gridPos": {
             "h": 8,
@@ -140,7 +150,7 @@ spec:
             {
               "expr": "sort_desc( sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace) )",
               "instant": true,
-              "legendFormat": " {{exported_namespace}} / {{name}}",
+              "legendFormat": " {{"{{"}}exported_namespace{{"}}"}} / {{"{{"}}name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -156,7 +166,7 @@ spec:
           "cacheTimeout": null,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -197,7 +207,7 @@ spec:
               "expr": "sum(certmanager_certificate_ready_status) BY (condition)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{condition}}",
+              "legendFormat": "{{"{{"}}condition{{"}}"}}",
               "refId": "A",
               "step": 1800
             }
@@ -248,7 +258,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -288,7 +298,7 @@ spec:
               "expr": "sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace)",
               "instant": false,
               "intervalFactor": 1,
-              "legendFormat": " {{exported_namespace}} / {{name}}",
+              "legendFormat": " {{"{{"}}exported_namespace{{"}}"}} / {{"{{"}}name{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -352,7 +362,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -388,7 +398,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -442,7 +452,7 @@ spec:
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -522,7 +532,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -558,7 +568,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/directory\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -608,7 +618,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -644,7 +654,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/cert\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -694,7 +704,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -730,7 +740,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-acct\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -780,7 +790,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -816,7 +826,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/order\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -866,7 +876,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -902,7 +912,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-order\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -952,7 +962,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -988,7 +998,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/authz-v3\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1038,7 +1048,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1074,7 +1084,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/chall-v3\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1124,7 +1134,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "$Datasource",
+          "datasource": "${DS_PROMETHEUS}",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1160,7 +1170,7 @@ spec:
           "targets": [
             {
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/finalize\"}[2m])) BY (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{"{{"}}status{{"}}"}}",
               "refId": "A"
             }
           ],
@@ -1234,7 +1244,7 @@ spec:
           {
             "allValue": ".*",
             "current": {},
-            "datasource": "$Datasource",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(exported_namespace)",
             "hide": 0,
             "includeAll": true,
@@ -1256,7 +1266,7 @@ spec:
           {
             "allValue": ".*",
             "current": {},
-            "datasource": "$Datasource",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
             "hide": 0,
             "includeAll": true,

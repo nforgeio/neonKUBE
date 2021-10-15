@@ -48,10 +48,26 @@ livenessProbe:
 ##
 # schedulerName: "default-scheduler"
 
+operator:
+  image:
+    organization: neon-registry.node.local
+    repository: integreatly-grafana-operator
+    tag: v3.10.2
+    sha: ""
+    pullPolicy: IfNotPresent
+
+pluginsInit:
+  image:
+    organization: neon-registry.node.local
+    repository: integreatly-grafana_plugins_init
+    tag: 0.0.3
+    sha: ""
+    pullPolicy: IfNotPresent
+
 image:
-  organization: ghcr.io/neonrelease-dev
+  organization: neon-registry.node.local
   repository: grafana-grafana
-  tag: 8.0.4
+  tag: 8.1.3
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -145,13 +161,11 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
-#  limits:
-#    cpu: 100m
-#    memory: 128Mi
-#  requests:
-#    cpu: 100m
-#    memory: 128Mi
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    memory: 256Mi
 
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/

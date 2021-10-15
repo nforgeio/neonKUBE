@@ -97,7 +97,7 @@ namespace TestNeonService
 
             if (string.IsNullOrEmpty(natsServerUri))
             {
-                Log.LogCritical("Invalid configuration: [NATS_URI] enviuronment variable is missing or invalid.");
+                Log.LogCritical("Invalid configuration: [NATS_URI] environment variable is missing or invalid.");
                 Exit(1);
             }
 
@@ -105,7 +105,7 @@ namespace TestNeonService
 
             if (string.IsNullOrEmpty(natsQueue))
             {
-                Log.LogCritical("Invalid configuration: [NATS_QUEUE] enviuronment variable is missing or invalid.");
+                Log.LogCritical("Invalid configuration: [NATS_QUEUE] environment variable is missing or invalid.");
                 Exit(1);
             }
 
@@ -143,9 +143,11 @@ namespace TestNeonService
 
             nats.Dispose();
 
-            // Wait for the service task to exit.
+            // Wait for the service task to exit and then indicate that the 
+            // service has exited cleanly.
 
             await sendTask;
+            Terminator.ReadyToExit();
 
             return 0;
         }

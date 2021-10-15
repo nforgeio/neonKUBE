@@ -29,7 +29,7 @@ using Microsoft.Rest;
 namespace Neon.Kube
 {
     /// <summary>
-    /// OpenEBS cStore pool specification.
+    /// OpenEBS cStor pool specification.
     /// </summary>
     public class V1CStorPoolSpec
     {
@@ -41,22 +41,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// 
+        /// Selector identifying the nodes holding the targeted cStor block devices.
         /// </summary>
         [JsonProperty(PropertyName = "nodeSelector", Required = Required.Always)]
         public Dictionary<string, string> NodeSelector { get; set; }
 
         /// <summary>
-        /// 
+        /// Identifies the associated block devices.
         /// </summary>
         [JsonProperty(PropertyName = "dataRaidGroups", Required = Required.Always)]
         public List<V1CStorDataRaidGroup> DataRaidGroups { get; set; }
 
         /// <summary>
-        /// 
+        /// Specifies the pool configuration.
         /// </summary>
         [JsonProperty(PropertyName = "poolConfig", Required = Required.Always)]
         public V1CStorPoolConfig PoolConfig { get; set; }
-
     }
 }

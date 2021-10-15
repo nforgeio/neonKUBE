@@ -42,5 +42,15 @@ namespace Neon.HyperV
         /// The current machine state.
         /// </summary>
         public VirtualMachineState State { get; set; }
+
+        /// <summary>
+        /// Identifies the virtual switch to which this virtual machine is attached. 
+        /// </summary>
+        public string SwitchName { get; set; }
+
+        /// <summary>
+        /// Identifies the network interface or switch to which the address is assigned.
+        /// </summary>
+        public string InterfaceName { get; set; }
     }
 }

@@ -531,6 +531,7 @@ namespace Neon.Postgres
             {
                 using (var preprocessReader = new PreprocessReader(reader, variables))
                 {
+                    preprocessReader.VariableExpansionRegex = PreprocessReader.CurlyVariableExpansionRegex;
                     return preprocessReader.ReadToEnd();
                 }
             }
@@ -548,6 +549,7 @@ namespace Neon.Postgres
             {
                 using (var preprocessReader = new PreprocessReader(reader, variables))
                 {
+                    preprocessReader.VariableExpansionRegex = PreprocessReader.CurlyVariableExpansionRegex;
                     return preprocessReader.ReadToEnd();
                 }
             }

@@ -88,11 +88,15 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class
     {
-        private static readonly Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private const string            imageTypePath    = "/etc/neonkube/image-type";
+        private const string            imageVersionPath = "/etc/neonkube/image-version";
 
         private ClusterProxy    cluster;
+        private KubeImageType?  cachedImageType;
         private StringBuilder   internalLogBuilder;
         private TextWriter      internalLogWriter;
+        private bool            rootCertsUpdated = false;
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -155,6 +159,76 @@ namespace Neon.Kube
                 }
 
                 return nodeDefinition;
+            }
+        }
+
+        /// <summary>
+        /// Indicates the type of node image type.  This is stored in the <b>/etc/neonkube/image-type</b> file.
+        /// </summary>
+        public KubeImageType ImageType
+        {
+            get
+            {
+                if (cachedImageType.HasValue)
+                {
+                    return cachedImageType.Value;
+                }
+
+                if (FileExists(imageTypePath))
+                {
+                    cachedImageType = NeonHelper.ParseEnum<KubeImageType>(DownloadText(imageTypePath).Trim(), KubeImageType.Unknown);
+                }
+                else
+                {
+                    cachedImageType = KubeImageType.Unknown;
+                }
+
+                return cachedImageType.Value;
+            }
+
+            set
+            {
+                cachedImageType = value;
+
+                UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Indicates the neonKUBE node image version.  This is stored in the <b>/etc/neonkube/image-version</b> file.
+        /// This can be used to ensure that the node image is compatible with the code configuring the cluster.
+        /// </para>
+        /// <node>
+        /// This returns <c>null</c> when the <b>/etc/neonkube/image-version</b> file doesn't exist.
+        /// </node>
+        /// </summary>
+        /// <exception cref="FormatException">Thrown when the version file could not be parsed.</exception>
+        public SemanticVersion ImageVersion
+        {
+            get
+            {
+                if (!FileExists(imageVersionPath))
+                {
+                    return null;
+                }
+
+                return SemanticVersion.Parse(base.DownloadText(imageVersionPath));
+            }
+
+            set
+            {
+                if (value == null)
+                {
+                    if (FileExists(imageVersionPath))
+                    {
+                        RemoveFile(imageVersionPath);
+                    }
+                }
+                else
+                {
+                    UploadText(imageVersionPath, value.ToString());
+                }
             }
         }
 
@@ -252,14 +326,14 @@ namespace Neon.Kube
         private ConnectionInfo GetConnectionInfo()
         {
             var address = string.Empty;
-            var port = SshPort;
+            var port    = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
                 var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
-                port = ep.Port;
+                port    = ep.Port;
             }
             else
             {
@@ -286,14 +360,19 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
         /// Returns a clone of the SSH proxy.  This can be useful for situations where you
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
+        /// </para>
+        /// <note>
+        /// This does not clone any attached log writer.
+        /// </note>
         /// </summary>
         /// <returns>The cloned <see cref="NodeSshProxy{TMetadata}"/>.</returns>
         public new NodeSshProxy<TMetadata> Clone()
         {
-            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort, logWriter);
+            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort);
 
             CloneTo(clone);
 
@@ -366,7 +445,7 @@ namespace Neon.Kube
                 // the state folder path.
 
                 stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
-                actionId = actionId.Substring(slashPos + 1);
+                actionId    = actionId.Substring(slashPos + 1);
 
                 Covenant.Assert(actionId.Length > 0);
             }
@@ -452,8 +531,34 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Ensures that the provisioned node image is actually a ready-to-go node image.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns><c>true</c> if the operation system is supported.</returns>
+        public void VerifyImageIsReadyToGo(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            if (readyToGoMode != ReadyToGoMode.Setup)
+            {
+                return;
+            }
+
+            controller.LogProgress(this, verb: "check", message: "ready-to-go image");
+
+            var imageType = ImageType;
+
+            if (imageType != KubeImageType.ReadyToGo)
+            {
+                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadyToGo}].");
+            }
+        }
+
+        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
-        /// cluster.  This faults the node proxy on faliure.
+        /// cluster.  This faults the node proxy on failure.
         /// </summary>
         /// <param name="controller">Optional setup controller.</param>
         /// <returns><c>true</c> if the operation system is supported.</returns>
@@ -473,6 +578,30 @@ namespace Neon.Kube
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks for and installs any new root certificates.
+        /// </summary>
+        public void UpdateRootCertificates()
+        {
+            // We're going to use [rootCertsUpdated] instance variable to avoid the overhead
+            // of checking for and updating root certificates multiple times for cluster nodes.
+
+            if (rootCertsUpdated)
+            {
+                return;
+            }
+
+            // We need to ensure that the root certificate authority certs are up to date.
+            // We're not making this idempotent because we want to re-run this on every
+            // cluster install because the our node images will be archived for some time
+            // after we create them.
+
+            SudoCommand("safe-apt-get update");
+            SudoCommand("safe-apt-get install ca-certificates -yq");
+
+            rootCertsUpdated = true;
         }
 
         /// <summary>
@@ -510,9 +639,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, etc.
-        /// and then fills unreferenced file system blocks and nodes with zeros so the disk image will
-        /// compress better.
+        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, journald
+        /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
+        /// trims the file system (when possible) so the image will compress better.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void Clean(ISetupController controller)
@@ -546,10 +675,31 @@ namespace Neon.Kube
 
             var cleanScript =
 $@"#!/bin/bash
-cloud-init clean
+
+# Remove the journald log files by removing all subdirectories under: 
+#
+#       /var/log/journal
+#
+# journald will recreate these as required.
+
+orgDir=$(pwd)
+cd /var/log/journal
+
+for folder in */ ; do
+    rm -r $folder
+done
+
+cd $orgDir
+
+# Misc cleaning
+
+cloud - init clean
 safe-apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
+
+# Filesystem cleaning
+
 {cleanCommand}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);

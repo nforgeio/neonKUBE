@@ -41,11 +41,11 @@ using Newtonsoft.Json.Linq;
 
 namespace TestTemporal
 {
+    [Trait(TestTrait.Category, TestTrait.Buggy)]
     [Trait(TestTrait.Category, TestTrait.Incomplete)]
     [Trait(TestTrait.Category, TestArea.NeonTemporal)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]  // https://github.com/nforgeio/neonKUBE/issues/1200
     public class Test_JsonDataConverter
     {
         public class TestData

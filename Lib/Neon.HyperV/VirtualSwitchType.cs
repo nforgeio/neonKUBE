@@ -49,7 +49,8 @@ namespace Neon.HyperV
         /// The switch can communicate with the host operating system as well as
         /// any hosted virtual machines connected to an <see cref="External"/>
         /// or <see cref="Internal"/> switch.  The switch cannot communicate
-        /// with anything outside of the host.
+        /// with anything outside of the host until it's assigned an IP address
+        /// and NAT is enabled.
         /// </summary>
         Internal,
 

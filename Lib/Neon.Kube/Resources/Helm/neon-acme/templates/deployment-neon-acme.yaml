@@ -18,7 +18,7 @@ spec:
       serviceAccountName: neon-acme
       containers:
         - name: neon-acme
-          image: ghcr.io/neonrelease-dev/neon-acme:latest
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - --tls-cert-file=/tls/tls.crt

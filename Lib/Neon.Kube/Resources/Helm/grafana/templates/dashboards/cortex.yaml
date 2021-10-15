@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -1102,7 +1105,7 @@ spec:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{ app }}",
+                  "legendFormat": "{{"{{"}}app{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -1863,7 +1866,7 @@ spec:
                   "format": "time_series",
                   "interval": "2m",
                   "intervalFactor": 1,
-                  "legendFormat": "Tenant: {{ user }}",
+                  "legendFormat": "Tenant: {{"{{"}}user{{"}}"}}",
                   "refId": "A"
                 },
                 {
@@ -1974,7 +1977,7 @@ spec:
                   "expr": "avg_over_time(cortex_ingester_flush_queue_length{app=\"ingester\"}[2m])",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ instance }}",
+                  "legendFormat": "{{"{{"}}instance{{"}}"}}",
                   "refId": "B"
                 }
               ],
@@ -2372,7 +2375,7 @@ spec:
                   "format": "time_series",
                   "interval": "1m",
                   "intervalFactor": 2,
-                  "legendFormat": "p50 - {{ route }}",
+                  "legendFormat": "p50 - {{"{{"}}route{{"}}"}}",
                   "refId": "A"
                 },
                 {
@@ -2380,7 +2383,7 @@ spec:
                   "format": "time_series",
                   "interval": "1m",
                   "intervalFactor": 2,
-                  "legendFormat": "p99 - {{route}}",
+                  "legendFormat": "p99 - {{"{{"}}route{{"}}"}}",
                   "refId": "B"
                 }
               ],
@@ -3175,7 +3178,7 @@ spec:
                   "expr": "sum(irate(cortex_memcache_request_duration_seconds_count{method=\"Memcache.Put\",kubernetes_name=\"ingester\"}[5m])) by (kubernetes_name, status_code)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ status_code }}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -3268,7 +3271,7 @@ spec:
                   "expr": "sum(irate(cortex_memcache_request_duration_seconds_count{method=\"Memcache.Put\",kubernetes_name=\"querier\"}[5m])) by (kubernetes_name, status_code)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ status_code }}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -3352,7 +3355,7 @@ spec:
                   "expr": "(sum(cortex_cache_hits) by (name, app))/(sum(cortex_cache_fetched_keys) by (name, app))",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{app}} - {{ name }}",
+                  "legendFormat": "{{"{{"}}app{{"}}"}} - {{"{{"}}name{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -3781,7 +3784,7 @@ spec:
                   "expr": "sum(cortex_dynamo_table_capacity_units{op=\"write\"}) by (table)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ table }}",
+                  "legendFormat": "{{"{{"}}table{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -3866,7 +3869,7 @@ spec:
                   "expr": "sum(cortex_dynamo_table_capacity_units{op=\"read\"}) by (table)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ table }}",
+                  "legendFormat": "{{"{{"}}table{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -3957,7 +3960,7 @@ spec:
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{status_code}}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4048,7 +4051,7 @@ spec:
                   "format": "time_series",
                   "interval": "1m",
                   "intervalFactor": 1,
-                  "legendFormat": "{{status_code}}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4133,7 +4136,7 @@ spec:
                   "expr": "sum(rate(cortex_dynamo_failures_total{operation=~\".*Write.*\"}[2m])) by (table, error)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ table }} - {{ error }}",
+                  "legendFormat": "{{"{{"}}table{{"}}"}} - {{"{{"}}error{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4218,7 +4221,7 @@ spec:
                   "expr": "sum(irate(cortex_dynamo_failures_total{operation=~\".*Query.*\"}[5m])) by (table, error)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ table }} - {{ error }}",
+                  "legendFormat": "{{"{{"}}table{{"}}"}} - {{"{{"}}error{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4511,7 +4514,7 @@ spec:
                   "expr": "sum(rate(cortex_dynamo_query_retry_count_count{operation!~\".*Write.*\"}[1m])) by (operation)",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ operation }}",
+                  "legendFormat": "{{"{{"}}operation{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4620,7 +4623,7 @@ spec:
                   "expr": "sum by (status_code)(irate(cortex_cassandra_request_duration_seconds_count{operation=\"SELECT\"}[5m]))",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ status_code }}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -4813,7 +4816,7 @@ spec:
                   "expr": "sum by (status_code)(irate(cortex_cassandra_request_duration_seconds_count{operation=\"INSERT\"}[5m]))",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{ status_code }}",
+                  "legendFormat": "{{"{{"}}status_code{{"}}"}}",
                   "refId": "A"
                 }
               ],

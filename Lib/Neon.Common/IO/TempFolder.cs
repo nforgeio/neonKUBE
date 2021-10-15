@@ -57,6 +57,7 @@ namespace Neon.IO
             else
             {
                 Directory.CreateDirectory(folder);
+
                 Path = System.IO.Path.Combine(folder, Guid.NewGuid().ToString());
             }
 
@@ -78,6 +79,7 @@ namespace Neon.IO
                 try
                 {
                     Directory.Delete(Path, recursive: true);
+
                     Path = null;
                 }
                 catch (IOException)

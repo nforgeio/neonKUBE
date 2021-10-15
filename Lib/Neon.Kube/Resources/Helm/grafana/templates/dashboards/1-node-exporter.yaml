@@ -5,6 +5,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
   json: >
     {
       "__inputs": [
@@ -1634,7 +1637,7 @@ spec:
               "expr": "increase(node_network_receive_bytes_total{instance=~\"$node\",device=~\"$device\"}[60m])",
               "interval": "60m",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_receive",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_receive",
               "metric": "",
               "refId": "A",
               "step": 600,
@@ -1645,7 +1648,7 @@ spec:
               "hide": false,
               "interval": "60m",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_transmit",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_transmit",
               "refId": "B",
               "step": 600
             }
@@ -1921,7 +1924,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}",
               "refId": "A",
               "step": 20
             }
@@ -2448,7 +2451,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_receive",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_receive",
               "refId": "A",
               "step": 4
             },
@@ -2457,7 +2460,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_transmit",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_transmit",
               "refId": "B",
               "step": 4
             }
@@ -2732,7 +2735,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Read bytes",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Read bytes",
               "refId": "A",
               "step": 10
             },
@@ -2742,7 +2745,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Written bytes",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Written bytes",
               "refId": "B",
               "step": 10
             }
@@ -2861,14 +2864,14 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{mountpoint}}",
+              "legendFormat": "{{"{{"}}mountpoint{{"}}"}}",
               "refId": "A"
             },
             {
               "expr": "node_filesystem_files_free{instance=~'$node',fstype=~\"ext.?|xfs\"} / node_filesystem_files{instance=~'$node',fstype=~\"ext.?|xfs\"}",
               "hide": true,
               "interval": "",
-              "legendFormat": "Inodes：{{instance}}：{{mountpoint}}",
+              "legendFormat": "Inodes：{{"{{"}}instance{{"}}"}}：{{"{{"}}mountpoint{{"}}"}}",
               "refId": "B"
             }
           ],
@@ -2988,7 +2991,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Reads completed",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Reads completed",
               "refId": "A",
               "step": 10
             },
@@ -2998,7 +3001,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Writes completed",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Writes completed",
               "refId": "B",
               "step": 10
             },
@@ -3008,7 +3011,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}",
+              "legendFormat": "{{"{{"}}device{{"}}"}}",
               "refId": "C"
             }
           ],
@@ -3133,7 +3136,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_ IO time",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_ IO time",
               "refId": "C"
             }
           ],
@@ -3253,7 +3256,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Read time",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Read time",
               "refId": "B"
             },
             {
@@ -3263,7 +3266,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_Write time",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_Write time",
               "refId": "C"
             },
             {
@@ -3272,7 +3275,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}",
+              "legendFormat": "{{"{{"}}device{{"}}"}}",
               "refId": "A",
               "step": 10
             },
@@ -3282,7 +3285,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{device}}_加权",
+              "legendFormat": "{{"{{"}}device{{"}}"}}_加权",
               "refId": "D"
             }
           ],
@@ -3446,14 +3449,14 @@ spec:
               "expr": "rate(node_netstat_Tcp_PassiveOpens{instance=~'$node'}[$interval])",
               "hide": true,
               "interval": "",
-              "legendFormat": "{{instance}}_Tcp_PassiveOpens",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}_Tcp_PassiveOpens",
               "refId": "G"
             },
             {
               "expr": "rate(node_netstat_Tcp_ActiveOpens{instance=~'$node'}[$interval])",
               "hide": true,
               "interval": "",
-              "legendFormat": "{{instance}}_Tcp_ActiveOpens",
+              "legendFormat": "{{"{{"}}instance{{"}}"}}_Tcp_ActiveOpens",
               "refId": "F"
             },
             {
@@ -3625,7 +3628,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 5,
-              "legendFormat": "使用的文件描述符占比_{{instance}}",
+              "legendFormat": "使用的文件描述符占比_{{"{{"}}instance{{"}}"}}",
               "refId": "C"
             }
           ],

@@ -89,10 +89,16 @@ namespace Neon.Kube
         public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz";
 
         /// <summary>
-        /// The HTTPS URI to the public AWS S3 bucket where we persist cluster VM images 
-        /// and perhaps other things.
+        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
+        /// and other things.
         /// </summary>
-        public const string NeonPublicBucketUri = "https://neon-public.s3-us-west-2.amazonaws.com";
+        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
+        /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
+        /// neonKUBE cluster version.
+        /// </summary>
+        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifest/neonkube-" + KubeVersions.NeonKubeVersion + ".json";
 
         /// <summary>
         /// The GitHub repository path where public node images will be published.
@@ -109,18 +115,30 @@ namespace Neon.Kube
         /// for the current neonKUBE cluster version.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="readyToGo">Optionally indicates that we'll be provisioning a single node cluster using a ready-to-go image.</param>
         /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
         /// <param name="baseImageName">Specifies the base image name when <paramref name="setupDebugMode"/><c>==true</c></param>
         /// <param name="useSinglePartFile">Optionally download the old single-part image file rather than the new multi-part file hosted as a GitHub Release.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null, bool useSinglePartFile = false)
+        /// <remarks>
+        /// <note>
+        /// Only one of <paramref name="readyToGo"/> or <paramref name="setupDebugMode"/> may be passed as true.
+        /// </note>
+        /// </remarks>
+        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool readyToGo = false, bool setupDebugMode = false, string baseImageName = null, bool useSinglePartFile = false)
         {
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
             }
 
-            var imageType = setupDebugMode ? "base" : "node";
+            if (readyToGo && setupDebugMode)
+            {
+                throw new NotSupportedException($"Only one of [{nameof(readyToGo)}] or [{nameof(setupDebugMode)}] may be passed as TRUE.");
+            }
+
+            var imageType     = setupDebugMode ? "base" : "node";
+            var readyToGoPart = readyToGo ? "-readytogo" : string.Empty;
 
             switch (hostingEnvironment)
             {
@@ -137,7 +155,7 @@ namespace Neon.Kube
                         throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
                     }
 
-                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
+                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment yet.");
 
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.HyperVLocal:
@@ -150,11 +168,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
+                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
                         }
                     }
 
@@ -168,11 +186,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
+                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
                         }
                     }
 
@@ -186,11 +204,11 @@ namespace Neon.Kube
                     {
                         if (useSinglePartFile)
                         {
-                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
+                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
                         }
                         else
                         {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
+                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
                         }
                     }
 

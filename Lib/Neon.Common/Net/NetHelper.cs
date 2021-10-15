@@ -858,6 +858,35 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Converts an <see cref="IPAddress"/> into a host name suitable for using as
+        /// a <see cref="Uri"/> host name.  For IPv4 addresses, this just returns the
+        /// address as a string.  For IPv6 address, this returns the address surrounded
+        /// by "[...]" to make it compatible with URI standards.
+        /// </summary>
+        /// <param name="address">The IP address.</param>
+        /// <returns>The host name suitable for including in a URI.</returns>
+        /// <exception cref="NotSupportedException">Thrown for non IPv4 or IPv6 addresses.</exception>
+        public static string GetAddressUriHost(IPAddress address)
+        {
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+
+            switch (address.AddressFamily)
+            {
+                case AddressFamily.InterNetwork:
+
+                    return address.ToString();
+
+                case AddressFamily.InterNetworkV6:
+
+                    return $"[{address}]";
+
+                default:
+
+                    throw new NotSupportedException($"Address type [{address.AddressFamily}] is not supported.  Only IPv4 or IPv6 addresses are allowed.");
+            }
+        }
+
+        /// <summary>
         /// Computes the TCP maximum segment size for a given MTU, optionally taking a
         /// VXLAN wrapper headers into account.
         /// </summary>
@@ -932,12 +961,31 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Returns a free TCP/UDP port for a local IP address.
+        /// Returns a free TCP port for a local network interface.
         /// </summary>
-        /// <param name="address">The IP address.</param>
+        /// <param name="address">The target interface's IP address.</param>
         /// <returns>The free port number.</returns>
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
-        public static int GetUnusedIpPort(IPAddress address)
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// The behavior when <see cref="GetUnusedTcpPort(IPAddress)"/> is called multiple times
+        /// without actually listening on the ports is somewhat undefined.
+        /// </para>
+        /// <para>
+        /// We believe most operating systems won't return the same port again for
+        /// a while (perhaps a few minutes) so you're probably safe retrieving a few
+        /// unused ports before using them for testing and other non-production purposes.
+        /// </para>
+        /// <para>
+        /// Production code should begin listening on and unused ports immediately after
+        /// retrieving one.  This will ensure that the unused ports returned will be unique
+        /// and also help avoid having another application grab the port before you have
+        /// a chance to listen on it.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public static int GetUnusedTcpPort(IPAddress address)
         {
             Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 
@@ -1108,14 +1156,14 @@ namespace Neon.Net
                     // Ensure that the URI actually references an S3 bucket.  The host
                     // should look something like:
                     //
-                    //      neonkube.s3-us-west-2.amazonaws.com
+                    //      neonkube.s3.us-west-2.amazonaws.com
 
                     var domainLabels = uriValue.DnsSafeHost.Split('.');
 
-                    if (domainLabels.Length != 4 ||
-                        !domainLabels[1].StartsWith("s3-", StringComparison.InvariantCultureIgnoreCase) ||
-                        !domainLabels[2].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
-                        !domainLabels[3].Equals("com", StringComparison.InvariantCultureIgnoreCase))
+                    if (domainLabels.Length != 5 ||
+                        !domainLabels[1].Equals("s3", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[3].Equals("amazonaws", StringComparison.InvariantCultureIgnoreCase) ||
+                        !domainLabels[4].Equals("com", StringComparison.InvariantCultureIgnoreCase))
                     {
                         throw new ArgumentException($"URI doesn't reference an S3 bucket: {uri}", nameof(uri));
                     }

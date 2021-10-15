@@ -64,7 +64,7 @@ Configures a neonKUBE cluster as described in the cluster definition file.
 
 USAGE: 
 
-    neon cluster setup [OPTIONS] sysadmin@CLUSTER-NAME  
+    neon cluster setup [OPTIONS] root@CLUSTER-NAME  
 
 OPTIONS:
 
@@ -87,11 +87,12 @@ OPTIONS:
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
 
-    --automate          - Indicates that the command must not impact neonDESKTOP
-                          by changing the current login or Kubernetes config or
+    --automation-folder - Indicates that the command must not impact normal clusters
+                          by changing the current login, Kubernetes config or
                           other files like cluster deployment logs.  This is
-                          used for automated deployments that can proceed while
-                          neonDESKTOP is doing other things.
+                          used for automated CI/CD or unit test cluster deployments 
+                          while not disrupting the built-in neonDESKTOP or
+                          other normal clusters.
 ";
         private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -104,7 +105,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--automate" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--automation-folder" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -117,7 +118,7 @@ OPTIONS:
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [sysadmin@CLUSTER-NAME] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
 
@@ -127,12 +128,12 @@ OPTIONS:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            var contextName  = KubeContextName.Parse(commandLine.Arguments[0]);
-            var kubeCluster  = KubeHelper.Config.GetCluster(contextName.Cluster);
-            var unredacted   = commandLine.HasOption("--unredacted");
-            var debug        = commandLine.HasOption("--debug");
-            var uploadCharts = commandLine.HasOption("--upload-charts") || debug;
-            var automate     = commandLine.HasOption("--automate");
+            var contextName      = KubeContextName.Parse(commandLine.Arguments[0]);
+            var kubeCluster      = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var unredacted       = commandLine.HasOption("--unredacted");
+            var debug            = commandLine.HasOption("--debug");
+            var uploadCharts     = commandLine.HasOption("--upload-charts") || debug;
+            var automationFolder = commandLine.GetOption("--automation-folder");
 
             clusterLogin = KubeHelper.GetClusterLogin(contextName);
 
@@ -194,7 +195,7 @@ OPTIONS:
 #if ENTERPRISE
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.Wsl2)
             {
-                var distro = new Wsl2Proxy(KubeConst.NeonDesktopWsl2Distro, KubeConst.SysAdminUser);
+                var distro = new Wsl2Proxy(KubeConst.NeonDesktopWsl2BuiltInDistroName, KubeConst.SysAdminUser);
 
                 clusterDefinition.Masters.FirstOrDefault().Address = distro.Address;
             }
@@ -202,11 +203,11 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                maxParallel:    Program.MaxParallel,
-                unredacted:     unredacted,
-                debugMode:      debug,
-                uploadCharts:   uploadCharts,
-                automate:       automate);
+                maxParallel:        Program.MaxParallel,
+                unredacted:         unredacted,
+                debugMode:          debug,
+                uploadCharts:       uploadCharts,
+                automationFolder:   automationFolder);
 
             controller.StatusChangedEvent +=
                 status =>
@@ -214,9 +215,9 @@ OPTIONS:
                     status.WriteToConsole();
                 };
 
-            switch (controller.Run())
+            switch (await controller.RunAsync())
             {
-                case SetupDisposition.Success:
+                case SetupDisposition.Succeeded:
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
@@ -226,8 +227,8 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
+                    Console.WriteLine(" *** CANCELLED: Cluster setup was cancelled.");
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: One or more setup steps failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
@@ -235,7 +236,7 @@ OPTIONS:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Setup was cancelled.");
+                    Console.WriteLine(" *** ERROR: Cluster setup failed.");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
