@@ -143,6 +143,7 @@ namespace Neon.Kube
         /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
         /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
+        /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
         /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
@@ -163,6 +164,7 @@ namespace Neon.Kube
             bool                debugMode        = false, 
             bool                uploadCharts     = false,
             string              automationFolder = null,
+            string              headendUri       = "https://headend.neoncloud.io",
             ReadyToGoMode       readyToGoMode    = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -204,7 +206,8 @@ namespace Neon.Kube
                     }
 
                     var logWriter      = new StreamWriter(logStream);
-                    var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var context = KubeHelper.CurrentContext;
+                    var sshCredentials = context.Extension.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
@@ -244,8 +247,16 @@ namespace Neon.Kube
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
-                    clusterLogin.Save();
+                clusterLogin.Save();
+            }
+
+            if (cluster.Nodes.Count() == 1 && readyToGoMode != ReadyToGoMode.Prepare)
+            {
+                if (cluster.Nodes.First().ImageType == KubeImageType.ReadyToGo)
+                {
+                    readyToGoMode = ReadyToGoMode.Setup;
                 }
+            }
 
                 // Update the cluster node SSH credentials to use the secure password
                 // when we're not preparing a ready-to-go image.
@@ -271,6 +282,10 @@ namespace Neon.Kube
                 controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
                 controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
                 controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
+            controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
+            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
+            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+
 
                 // Configure the setup steps.
 

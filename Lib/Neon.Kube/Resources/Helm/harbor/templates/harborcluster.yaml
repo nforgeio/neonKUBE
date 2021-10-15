@@ -30,12 +30,12 @@ spec:
       ingress:
         host: registry.{{ .Values.clusterDomain }}
       tls:
-        certificateRef: {{ .Values.clusterDomain }}
+        certificateRef: registry-harbor-certificate
     notary:
       ingress:
         host: notary.{{ .Values.clusterDomain }}
       tls:
-        certificateRef: {{ .Values.clusterDomain }}
+        certificateRef: registry-harbor-certificate
   externalURL: https://registry.{{ .Values.clusterDomain }}
   harborAdminPasswordRef: registry
   imageChartStorage:

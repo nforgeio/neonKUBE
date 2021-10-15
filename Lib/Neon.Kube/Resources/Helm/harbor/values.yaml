@@ -165,10 +165,11 @@ volumeMounts: []
 
 # deploymentAnnotations -- Additional annotations to add to the controller Deployment
 deploymentAnnotations:
-  secret.reloader.stakater.com/reload: "webhook-server-cert"
+  reloader.stakater.com/auto: "true"
 
 # podAnnotations -- Additional annotations to add to the controller Pods
-podAnnotations: {}
+podAnnotations:
+  reloader.stakater.com/auto: "true"
 
 # podLabels -- Additional labels to add to the controller Pods
 podLabels: {}
