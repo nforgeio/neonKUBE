@@ -88,8 +88,10 @@ namespace Neon.Kube
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(
-                clusterDefinition:  clusterLogin.ClusterDefinition,
-                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
+                clusterDefinition:      clusterLogin.ClusterDefinition,
+                hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
+                operation:              ClusterProxy.Operation.LifeCycle,
+                nodeProxyCreator:       (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logStream = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
 
