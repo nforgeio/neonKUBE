@@ -1358,6 +1358,12 @@ subjects:
                 });
         }
 
+        /// <summary>
+        /// Generates a dashboard certificate.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The generated certificate.</returns>
         public static TlsCertificate GenerateDashboardCert(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
