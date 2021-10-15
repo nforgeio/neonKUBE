@@ -676,8 +676,10 @@ namespace Neon.Kube.Xunit
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(
-                clusterDefinition:  clusterDefinition,
-                nodeProxyCreator:   (nodeName, nodeAddress, appendToLog) =>
+                clusterDefinition:      clusterDefinition,
+                hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
+                operation:              ClusterProxy.Operation.LifeCycle,
+                nodeProxyCreator:       (nodeName, nodeAddress, appendToLog) =>
                 {
                     var logStream = new FileStream(Path.Combine(KubeHelper.LogFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
 
@@ -697,16 +699,10 @@ namespace Neon.Kube.Xunit
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            // Configure the hosting manager.
-
-            var hostingManager = cluster.GetHostingManager(new HostingManagerFactory(() => HostingLoader.Initialize()), ClusterProxy.Operation.Setup);
-
-            if (hostingManager == null)
+            using (cluster)
             {
-                throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+                cluster.RemoveClusterAsync(removeOrphansByPrefix: removeOrphansByPrefix).Wait();
             }
-
-            hostingManager.RemoveClusterAsync(clusterDefinition, removeOrphansByPrefix: removeOrphansByPrefix);
         }
     }
 }
