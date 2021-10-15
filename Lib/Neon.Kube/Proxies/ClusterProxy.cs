@@ -70,8 +70,8 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartClusterAsync(bool)"/>, <see cref="ShutdownClusterAsync(ShutdownMode, bool)"/>,
-            /// <see cref="RemoveClusterAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="ShutdownAsync(ShutdownMode, bool)"/>,
+            /// <see cref="RemoveAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -478,7 +478,7 @@ namespace Neon.Kube
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StartClusterAsync(bool noWait = false)
+        public async Task StartAsync(bool noWait = false)
         {
             Covenant.Assert(HostingManager != null);
 
@@ -497,7 +497,7 @@ namespace Neon.Kube
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public async Task ShutdownAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
         {
             Covenant.Assert(HostingManager != null);
 
@@ -534,7 +534,7 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
         {
             Covenant.Assert(HostingManager != null);
 
