@@ -220,6 +220,39 @@ function EscapeDoubleQuotes
 }
 
 #------------------------------------------------------------------------------
+# Executes a program throwing an exception for non-zero exit codes by default.
+#
+# ARGUMENTS:
+#
+#   command     - program to run with any arguments
+#   noCheck     - optionally disable non-zero exit code checks
+
+function Invoke-Program
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$command,
+        [Parameter(Mandatory=$false)]
+        [switch]$noCheck = $false
+    )
+
+    if ([System.String]::IsNullOrEmpty($command))
+    {
+        throw "Empty command."
+    }
+
+    & cmd /c "$command"
+
+    $exitCode = $LastExitCode
+
+    if (!$noCheck -and $exitCode -ne 0)
+    {
+        throw "FAILED: $command`r`n[exitcode=$exitCode]"
+    }
+}
+
+#------------------------------------------------------------------------------
 # Executes a command and captures the stdout and/or stderr outputs.
 #
 # IMPORTANT: REDIRECTION BY COMMANDS IS NOT SUPPORTED!
