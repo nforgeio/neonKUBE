@@ -284,6 +284,17 @@ namespace Neon.Deployment
             }
         }
 
+        /// <summary>
+        /// Proactively used to retrieve secrets commonly used for CI/CD operations so they'll
+        /// be available even after <b>neon-assistant</b> has signed out some time later.  
+        /// Currently, AWS and GitHub credentials are retrieved.
+        /// </summary>
+        public void GetCommonSecrets()
+        {
+            GetAwsCredentials();
+            GitHub.GetCredentials();
+        }
+
         /// <inheritdoc/>
         public void ClearCache()
         {

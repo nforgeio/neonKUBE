@@ -234,6 +234,18 @@ function Import-GitHubCredentials
 }
 
 #------------------------------------------------------------------------------
+# Retrieves common CI/CD related secrets from 1Password and sets the corresponding
+# environment variables.  This currently loads the AWS and GitHub related credentials.
+#
+# ARGUMENTS: NONE
+
+function Import-CommonCredentials
+{
+    Import-AwsCliCredentials
+    Import-GitHubCredentials
+}
+
+#------------------------------------------------------------------------------
 # Removes the GitHub credential environment variables if present:
 #
 #   GITHUB_PAT
