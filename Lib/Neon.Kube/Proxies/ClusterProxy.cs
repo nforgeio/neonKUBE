@@ -482,7 +482,7 @@ namespace Neon.Kube
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StartClusterAsync(Definition, noWait);
+            await HostingManager.StartClusterAsync(noWait);
         }
 
         /// <summary>
@@ -501,7 +501,7 @@ namespace Neon.Kube
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.ShutdownClusterAsync(Definition, shutdownMode, noWait);
+            await HostingManager.ShutdownClusterAsync(shutdownMode, noWait);
         }
 
         /// <summary>
@@ -538,7 +538,44 @@ namespace Neon.Kube
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.RemoveClusterAsync(Definition, removeOrphansByPrefix, noRemoveLogins);
+            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix, noRemoveLogins);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <param name="shutdownMode">Optionally specifies how the node is stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+            Covenant.Assert(HostingManager != null);
+
+            await HostingManager.ShutdownNodeAsync(nodeName, shutdownMode);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Starts a specific cluster node when it's not already running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task StartNodeAsync(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+            Covenant.Assert(HostingManager != null);
+
+            await HostingManager.StartNodeAsync(nodeName);
         }
 
         /// <summary>
@@ -560,9 +597,10 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
         public async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
-            return await HostingManager.GetNodeImageAsync(Definition, nodeName, folder); 
+            return await HostingManager.GetNodeImageAsync(nodeName, folder); 
         }
     }
 }

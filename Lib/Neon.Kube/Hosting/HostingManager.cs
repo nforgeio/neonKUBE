@@ -281,36 +281,47 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <inheritdoc/>
-        public virtual async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        public virtual async Task StartClusterAsync(bool noWait = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool removeLogins = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public virtual async Task StartNodeAsync(string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool removeLogins = false)
+        public virtual async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            await Task.CompletedTask;
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 

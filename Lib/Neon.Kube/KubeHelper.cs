@@ -508,11 +508,7 @@ namespace Neon.Kube
             }
 
             Covenant.Assert(automationFolder != null);
-
-            if (cachedNeonKubeUserFolder != null && Directory.Exists(cachedNeonKubeUserFolder))
-            {
-                NeonHelper.DeleteFolder(cachedNeonKubeUserFolder);
-            }
+            NeonHelper.DeleteFolder(automationFolder);
 
             Environment.SetEnvironmentVariable("KUBECONFIG", orgKUBECONFIG);
 
