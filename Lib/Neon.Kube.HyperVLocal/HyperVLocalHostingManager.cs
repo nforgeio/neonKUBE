@@ -674,7 +674,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
         {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
 
@@ -735,7 +735,7 @@ namespace Neon.Kube
             //
             // We're going to leave any virtual switches alone.
 
-            await ShutdownClusterAsync(shutdownMode: ShutdownMode.TurnOff);
+            await StopClusterAsync(stopMode: StopMode.TurnOff);
 
             using (var hyperv = new HyperVClient())
             {
@@ -784,7 +784,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful)
+        public override async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
@@ -826,13 +826,13 @@ namespace Neon.Kube
                         throw new InvalidOperationException($"Cannot stop node [{nodeName}] when it is in the [{vm.State}] state.");
                 }
 
-                if (shutdownMode == ShutdownMode.Sleep)
+                if (stopMode == StopMode.Sleep)
                 {
                     hyperv.SaveVm(vmName);
                 }
                 else
                 {
-                    hyperv.StopVm(vmName, shutdownMode == ShutdownMode.TurnOff);
+                    hyperv.StopVm(vmName, stopMode == StopMode.TurnOff);
                 }
 
                 await Task.CompletedTask;

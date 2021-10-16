@@ -288,7 +288,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
         {
             await Task.CompletedTask;
             throw new NotSupportedException();
@@ -302,7 +302,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful)
+        public virtual async Task StartNodeAsync(string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
@@ -311,7 +311,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task StartNodeAsync(string nodeName)
+        public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 

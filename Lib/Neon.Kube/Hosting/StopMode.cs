@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ShutdownMode.cs
+// FILE:	    StopMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -23,7 +23,7 @@ namespace Neon.Kube
     /// <summary>
     /// Used to control how cluster nodes are shutdown.
     /// </summary>
-    public enum ShutdownMode
+    public enum StopMode
     {
         /// <summary>
         /// Performs a graceful shutdown of the nodes such that all services

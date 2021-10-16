@@ -217,11 +217,11 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false);
+        Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false);
 
         /// <summary>
         /// <para>
@@ -257,19 +257,6 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <param name="shutdownMode">Optionally specifies how the node is stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful);
-
-        /// <summary>
-        /// <para>
         /// Starts a specific cluster node when it's not already running.
         /// </para>
         /// <note>
@@ -279,6 +266,19 @@ namespace Neon.Kube
         /// <param name="nodeName">Identifies the target node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         Task StartNodeAsync(string nodeName);
+
+        /// <summary>
+        /// <para>
+        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful);
 
         /// <summary>
         /// <para>

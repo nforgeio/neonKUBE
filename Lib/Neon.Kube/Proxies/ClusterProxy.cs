@@ -70,7 +70,7 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="ShutdownAsync(ShutdownMode, bool)"/>,
+            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
             /// <see cref="RemoveAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
@@ -487,21 +487,21 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Shuts down a cluster if it's running.
+        /// Stops a cluster if it's running.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task ShutdownAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public async Task StopAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.ShutdownClusterAsync(shutdownMode, noWait);
+            await HostingManager.StopClusterAsync(stopMode, noWait);
         }
 
         /// <summary>
@@ -543,25 +543,6 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <param name="shutdownMode">Optionally specifies how the node is stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ShutdownNodeAsync(string nodeName, ShutdownMode shutdownMode = ShutdownMode.Graceful)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Assert(HostingManager != null);
-
-            await HostingManager.ShutdownNodeAsync(nodeName, shutdownMode);
-        }
-
-        /// <summary>
-        /// <para>
         /// Starts a specific cluster node when it's not already running.
         /// </para>
         /// <note>
@@ -576,6 +557,25 @@ namespace Neon.Kube
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StartNodeAsync(nodeName);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Stops a specific cluster node down when it's not already stopped or sleeping.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+            Covenant.Assert(HostingManager != null);
+
+            await HostingManager.StopNodeAsync(nodeName, stopMode);
         }
 
         /// <summary>
