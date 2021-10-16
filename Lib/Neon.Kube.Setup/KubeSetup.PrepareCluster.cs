@@ -83,6 +83,7 @@ namespace Neon.Kube
         /// <param name="disableImageDownload">
         /// Optionally indicate that the node image is already present locally and does not need to be downloaded.
         /// </param>
+        /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
         /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
@@ -101,6 +102,7 @@ namespace Neon.Kube
             string                      automationFolder      = null,
             string                      headendUri            = "https://headend.neoncloud.io",
             bool                        disableImageDownload  = false,
+            bool                        removeExisting        = false,
             ReadyToGoMode               readyToGoMode         = ReadyToGoMode.Normal)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -146,6 +148,8 @@ namespace Neon.Kube
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
+            var hostingManager = cluster.HostingManager;
+
             // Ensure that the nodes have valid IP addresses.
 
             cluster.Definition.ValidatePrivateNodeAddresses();
@@ -173,24 +177,6 @@ namespace Neon.Kube
                 LogEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################",
                 LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################"
             };
-
-            // Configure the hosting manager.
-
-            HostingManager hostingManager;
-
-            if (!string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
-            {
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageUri(cluster, nodeImageUri);
-            }
-            else
-            {
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManagerWithNodeImageFile(cluster, nodeImagePath);
-            }
-
-            if (hostingManager == null)
-            {
-                throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
-            }
 
             // Load the cluster login information if it exists and when it indicates that
             // setup is still pending, we'll use that information (especially the generated
@@ -221,8 +207,8 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
-            controller.Add(KubeSetupProperty.HostingManager, hostingManager);
-            controller.Add(KubeSetupProperty.HostingEnvironment, hostingManager.HostingEnvironment);
+            controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
+            controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
@@ -251,6 +237,14 @@ namespace Neon.Kube
 
                     hostingManager.MaxParallel = maxParallel;
                     hostingManager.WaitSeconds = 60;
+                });
+
+            // Delete any existing cluster in the environment when requested.
+
+            controller.AddGlobalStep("remove existing cluster",
+                async controller =>
+                {
+                    await hostingManager.RemoveClusterAsync(removeOrphansByPrefix: true);
                 });
 
             // We don't want to set a secure SSH password when preparing a ready-to-go

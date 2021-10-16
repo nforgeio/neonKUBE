@@ -725,7 +725,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public override async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
         {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
 
@@ -750,7 +750,8 @@ namespace Neon.Kube
                         if (vm == null)
                         {
                             // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs.  We're just going to ignore this situation.
+                            // deployed cluster VMs or when the cluster doesn't mexist.  We're
+                            // just going to ignore this situation.
 
                             return;
                         }
@@ -773,13 +774,6 @@ namespace Neon.Kube
                             }
                         });
                 }
-            }
-
-            if (!noRemoveLogins)
-            {
-                var context = KubeContextName.Parse($"root@{cluster.Definition.Name}");
-
-                KubeHelper.Config.RemoveContext(context);
             }
         }
 

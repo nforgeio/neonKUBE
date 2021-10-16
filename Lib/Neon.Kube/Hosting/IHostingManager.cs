@@ -90,6 +90,18 @@ namespace Neon.Kube
         bool GenerateSecurePassword { get; }
 
         /// <summary>
+        /// The maximum number of nodes that will execute provisioning steps in parallel.  This
+        /// defaults to <b>5</b>.
+        /// </summary>
+        int MaxParallel { get; set; }
+
+        /// <summary>
+        /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).
+        /// This defaults to <b>0.0</b>.
+        /// </summary>
+        double WaitSeconds { get; set; }
+
+        /// <summary>
         /// Adds the steps required to the setup controller passed that creates and initializes the
         /// cluster resources such as the virtual machines, networks, load balancers, network security groups, 
         /// public IP addresses.
@@ -240,10 +252,6 @@ namespace Neon.Kube
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
         /// </param>
-        /// <param name="noRemoveLogins">
-        /// Optionally specifies that any cluster login file and KubeConfig records related to to the 
-        /// cluster definition <b>will not be removed</b>.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
@@ -253,7 +261,7 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false);
+        Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false);
 
         /// <summary>
         /// <para>
