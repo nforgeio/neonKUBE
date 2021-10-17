@@ -146,7 +146,8 @@ namespace Neon.Kube
         /// <param name="headendUri">Optionally override the headend service URI</param>
         /// <param name="readyToGoMode">
         /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
-        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
+        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>
+        /// which doesn't perform any special ready-to-go operations.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
@@ -158,10 +159,10 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         public static ISetupController CreateClusterSetupController(
-            ClusterDefinition   clusterDefinition, 
-            int                 maxParallel      = 500, 
-            bool                unredacted       = false, 
-            bool                debugMode        = false, 
+            ClusterDefinition   clusterDefinition,
+            int                 maxParallel      = 500,
+            bool                unredacted       = false,
+            bool                debugMode        = false,
             bool                uploadCharts     = false,
             string              automationFolder = null,
             string              headendUri       = "https://headend.neoncloud.io",
@@ -187,8 +188,8 @@ namespace Neon.Kube
 
             // Initialize the cluster proxy.
 
-            var contextName  = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var kubeContext  = new KubeConfigContext(contextName);
+            var contextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var kubeContext = new KubeConfigContext(contextName);
 
             KubeHelper.InitContext(kubeContext);
 
@@ -206,7 +207,7 @@ namespace Neon.Kube
                     }
 
                     var logWriter      = new StreamWriter(logStream);
-                    var context = KubeHelper.CurrentContext;
+                    var context        = KubeHelper.CurrentContext;
                     var sshCredentials = context.Extension.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
@@ -217,35 +218,33 @@ namespace Neon.Kube
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            using (cluster)
+            // Configure the setup controller.
+
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder)
             {
-                // Configure the setup controller.
+                MaxParallel     = maxParallel,
+                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################",
+                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################",
+                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################"
+            };
 
-                var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder)
+            // Load the cluster login information if it exists and when it indicates that
+            // setup is still pending, we'll use that information (especially the generated
+            // secure SSH password).
+            //
+            // Otherwise, we'll write (or overwrite) the context file with a fresh context.
+
+            var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+            var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
+
+            if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
+            {
+                clusterLogin = new ClusterLogin(clusterLoginPath)
                 {
-                    MaxParallel     = maxParallel,
-                    LogBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################",
-                    LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################",
-                    LogFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################"
+                    ClusterDefinition = clusterDefinition,
+                    SshUsername       = KubeConst.SysAdminUser,
+                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                 };
-
-                // Load the cluster login information if it exists and when it indicates that
-                // setup is still pending, we'll use that information (especially the generated
-                // secure SSH password).
-                //
-                // Otherwise, we'll write (or overwrite) the context file with a fresh context.
-
-                var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
-
-                if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
-                {
-                    clusterLogin = new ClusterLogin(clusterLoginPath)
-                    {
-                        ClusterDefinition = clusterDefinition,
-                        SshUsername       = KubeConst.SysAdminUser,
-                        SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                    };
 
                 clusterLogin.Save();
             }
@@ -258,46 +257,46 @@ namespace Neon.Kube
                 }
             }
 
-                // Update the cluster node SSH credentials to use the secure password
-                // when we're not preparing a ready-to-go image.
+            // Update the cluster node SSH credentials to use the secure password
+            // when we're not preparing a ready-to-go image.
 
-                if (readyToGoMode != ReadyToGoMode.Prepare)
+            if (readyToGoMode != ReadyToGoMode.Prepare)
+            {
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
+
+                foreach (var node in cluster.Nodes)
                 {
-                    var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        node.UpdateCredentials(sshCredentials);
-                    }
+                    node.UpdateCredentials(sshCredentials);
                 }
+            }
 
-                // Configure the setup controller state.
+            // Configure the setup controller state.
 
-                controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
-                controller.Add(KubeSetupProperty.DebugMode, debugMode);
-                controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
-                controller.Add(KubeSetupProperty.ClusterProxy, cluster);
-                controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
-                controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
-                controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-                controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
-                controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
-                controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
-                controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
+            controller.Add(KubeSetupProperty.DebugMode, debugMode);
+            controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
+            controller.Add(KubeSetupProperty.ClusterProxy, cluster);
+            controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
+            controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
+            controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
+            controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
+            controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
+            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
+            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
 
-                // Configure the setup steps.
+            // Configure the setup steps.
 
-                controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
-                controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
-                controller.AddWaitUntilOnlineStep("connect nodes");
-                controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
+            controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
+            controller.AddGlobalStep("download binaries", async controller => await KubeSetup.InstallWorkstationBinariesAsync(controller));
+            controller.AddWaitUntilOnlineStep("connect nodes");
+            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
-                controller.AddNodeStep("check image version",
-                    (state, node) =>
-                    {
-                        // Ensure that the node image version matches the current neonKUBE (build) version.
+            controller.AddNodeStep("check image version",
+                (state, node) =>
+                {
+                    // Ensure that the node image version matches the current neonKUBE (build) version.
 
-                        var imageVersion = node.ImageVersion;
+                    var imageVersion = node.ImageVersion;
 
                         if (imageVersion == null)
                         {
@@ -308,107 +307,109 @@ namespace Neon.Kube
                         {
                             throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
                         }
-                    });
+                });
 
-                if (readyToGoMode == ReadyToGoMode.Setup)
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                controller.AddNodeStep("verify ready-to-go image", (controller, node) => node.VerifyImageIsReadyToGo(controller));
+            }
+
+            controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
+            controller.AddNodeStep("root certificates", (controller, node) => node.UpdateRootCertificates());
+            controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
+
+            // Perform common configuration for the bootstrap node first.
+            // We need to do this so the the package cache will be running
+            // when the remaining nodes are configured.
+
+            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+
+            controller.AddNodeStep(configureFirstMasterStepLabel,
+                (controller, node) =>
                 {
-                    controller.AddNodeStep("verify ready-to-go image", (controller, node) => node.VerifyImageIsReadyToGo(controller));
-                }
+                    node.SetupNode(controller);
+                },
+                (controller, node) => node == cluster.FirstMaster);
 
-                controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
-                controller.AddNodeStep("root certificates", (controller, node) => node.UpdateRootCertificates());
-                controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
+            // Perform common configuration for the remaining nodes (if any).
 
-                // Perform common configuration for the bootstrap node first.
-                // We need to do this so the the package cache will be running
-                // when the remaining nodes are configured.
-
-                var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
-
-                controller.AddNodeStep(configureFirstMasterStepLabel,
+            if (cluster.Definition.Nodes.Count() > 1)
+            {
+                controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
                     {
                         node.SetupNode(controller);
-                        //exitnode.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
+                        node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
+                    },
+                    (controller, node) => node != cluster.FirstMaster);
+            }
+
+            if (debugMode)
+            {
+                controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
+            }
+
+            controller.AddNodeStep("install helm",
+                (controller, node) =>
+                {
+                    node.NodeInstallHelm(controller);
+                });
+
+            if (uploadCharts || debugMode)
+            {
+                controller.AddNodeStep("upload helm charts",
+                    (controller, node) =>
+                    {
+                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                        cluster.FirstMaster.NodeInstallHelmArchive(controller);
+
+                        var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+
+                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                        cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
                     },
                     (controller, node) => node == cluster.FirstMaster);
-            
-                // Perform common configuration for the remaining nodes (if any).
-
-                if (cluster.Definition.Nodes.Count() > 1)
-                {
-                    controller.AddNodeStep("setup other nodes",
-                        (controller, node) =>
-                        {
-                            node.SetupNode(controller);
-                            node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
-                        },
-                        (controller, node) => node != cluster.FirstMaster);
-                }
-
-                if (debugMode)
-                {
-                    controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
-                }
-
-                controller.AddNodeStep("install helm",
-                    (controller, node) =>
-                    {
-                        node.NodeInstallHelm(controller);
-                    });
-
-                if (uploadCharts || debugMode)
-                {
-                    controller.AddNodeStep("upload helm charts",
-                        (controller, node) =>
-                        {
-                            cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
-                            cluster.FirstMaster.NodeInstallHelmArchive(controller);
-
-                            var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
-
-                            cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
-                            cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
-                        },
-                        (controller, node) => node == cluster.FirstMaster);
-                }
-
-                //-----------------------------------------------------------------
-                // Cluster setup.
-
-                controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
-                controller.AddGlobalStep("persist state",
-                    controller =>
-                    {
-                        // Indicate that setup is complete.
-
-                        clusterLogin.ClusterDefinition.ClearSetupState();
-                        clusterLogin.SetupDetails.SetupPending = false;
-                        clusterLogin.Save();
-                    });
-
-                //-----------------------------------------------------------------
-                // Verify the cluster.
-
-                controller.AddNodeStep("check masters",
-                    (controller, node) =>
-                    {
-                        KubeDiagnostics.CheckMaster(node, cluster.Definition);
-                    },
-                    (controller, node) => node.Metadata.IsMaster);
-
-                if (cluster.Workers.Count() > 0)
-                {
-                    controller.AddNodeStep("check workers",
-                        (controller, node) =>
-                        {
-                            KubeDiagnostics.CheckWorker(node, cluster.Definition);
-                        },
-                        (controller, node) => node.Metadata.IsWorker);
-                }
-
-                return controller;
             }
+
+            //-----------------------------------------------------------------
+            // Cluster setup.
+
+            controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
+            controller.AddGlobalStep("persist state",
+                controller =>
+                {
+                    // Indicate that setup is complete.
+
+                    clusterLogin.ClusterDefinition.ClearSetupState();
+                    clusterLogin.SetupDetails.SetupPending = false;
+                    clusterLogin.Save();
+                });
+
+            //-----------------------------------------------------------------
+            // Verify the cluster.
+
+            controller.AddNodeStep("check masters",
+                (controller, node) =>
+                {
+                    KubeDiagnostics.CheckMaster(node, cluster.Definition);
+                },
+                (controller, node) => node.Metadata.IsMaster);
+
+            if (cluster.Workers.Count() > 0)
+            {
+                controller.AddNodeStep("check workers",
+                    (controller, node) =>
+                    {
+                        KubeDiagnostics.CheckWorker(node, cluster.Definition);
+                    },
+                    (controller, node) => node.Metadata.IsWorker);
+            }
+
+            // We need to dispose this after the setup controller runs.
+
+            controller.AddDisposable(cluster);
+
+            return controller;
         }
     }
 }

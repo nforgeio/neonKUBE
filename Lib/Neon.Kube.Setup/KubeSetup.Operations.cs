@@ -61,7 +61,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.LogProgress(node, verb: "configure", message: "etc high availability");
+            controller.LogProgress(node, verb: "configure", message: "etcd high availability");
 
             var sbHaProxyConfig = new StringBuilder();
 
@@ -451,6 +451,7 @@ runtimeRequestTimeout: 5m
 ");
 
                             var kubeProxyMode = "ipvs";
+
                             clusterConfig.AppendLine($@"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
@@ -728,63 +729,62 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-
                 master.InvokeIdempotent("ready-to-go/renew-certs",
-                () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
+                    () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
 
-                    master.SudoCommand("kubeadm", "certs", "renew", "all");
-                    master.SudoCommand("systemctl", "restart", "kubelet");
+                        master.SudoCommand("kubeadm", "certs", "renew", "all");
+                        master.SudoCommand("systemctl", "restart", "kubelet");
 
-                    // Edit the Kubernetes configuration file to rename the context:
-                    //
-                    //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
-                    //
-                    // rename the user:
-                    //
-                    //      CLUSTERNAME-admin --> CLUSTERNAME-root 
+                        // Edit the Kubernetes configuration file to rename the context:
+                        //
+                        //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                        //
+                        // rename the user:
+                        //
+                        //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                    var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                        var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
 
-                    adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                    adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+                        adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                        adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                    master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
-                });
+                        master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                    });
 
                 master.InvokeIdempotent("setup/ready-to-go-download-certs",
-                () =>
-                {
-                    controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
-
-                    // Download the boot master files that will need to be provisioned on
-                    // the remaining masters and may also be needed for other purposes
-                    // (if we haven't already downloaded these).
-
-                    if (clusterLogin.SetupDetails.MasterFiles != null)
+                    () =>
                     {
-                        clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
-                    }
+                        controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
 
-                    if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
-                    {
-                        // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but it's not worth
-                        // the bother at this point.
+                        // Download the boot master files that will need to be provisioned on
+                        // the remaining masters and may also be needed for other purposes
+                        // (if we haven't already downloaded these).
 
-                        var files = new RemoteFile[]
+                        if (clusterLogin.SetupDetails.MasterFiles != null)
                         {
-                    new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                    new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                        };
+                            clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
+                        }
+
+                        if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
+                        {
+                            // I'm hardcoding the permissions and owner here.  It would be nice to
+                            // scrape this from the source files in the future but it's not worth
+                            // the bother at this point.
+
+                            var files = new RemoteFile[]
+                            {
+                                new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                                new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+                              };
 
 
                         foreach (var file in files)
@@ -795,7 +795,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
 
                         clusterLogin.Save();
-
                     }
                 });
             }
@@ -911,7 +910,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values.Add($"neonDesktop", $"true");
                         values.Add($"kubernetes.service.host", $"neon-desktop");
                         values.Add($"kubernetes.service.port", KubeNodePorts.KubeApiServer);
-
                     }
 
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespaces.KubeSystem, values: values);
@@ -976,7 +974,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
                                         }
                                     }
-                                }, KubeNamespaces.NeonSystem);
+                                }, 
+                                KubeNamespaces.NeonSystem);
                         });
 
                     await NeonHelper.WaitForAsync(
@@ -996,7 +995,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 return await Task.FromResult(false);
                             }
                         },
-                        timeout: clusterOpTimeout,
+                        timeout:      clusterOpTimeout,
                         pollInterval: clusterOpRetryInterval);
                 });
         }
@@ -1033,7 +1032,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                nodes = await GetK8sClient(controller).ListNodeAsync(labelSelector: "node-role.kubernetes.io/master=");
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
-                           timeout: TimeSpan.FromMinutes(5),
+                           timeout:      TimeSpan.FromMinutes(5),
                            pollInterval: TimeSpan.FromSeconds(5));
 
                         foreach (var master in nodes.Items)
@@ -1095,7 +1094,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for metrics-server");
+                    controller.LogProgress(master, verb: "wait for", message: "metrics-server");
 
                     await WaitForDeploymentAsync(controller, "kube-system", "metrics-server");
                 });
@@ -1162,7 +1161,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/ingress-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for istio");
+                    controller.LogProgress(master, verb: "wait for", message: "istio");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -1221,7 +1220,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await master.InvokeIdempotentAsync("setup/cert-manager-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for cert-manager");
+                    controller.LogProgress(master, verb: "wait for", message: "cert-manager");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -1285,7 +1284,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var cert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
 
                         cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
-                        cert.Spec.DnsNames = new List<string>()
+                        cert.Spec.DnsNames   = new List<string>()
                         {
                             $"{clusterLogin.ClusterDefinition.Domain}",
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
@@ -1296,7 +1295,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var harborCert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "registry-harbor")).ToObject<Certificate>();
 
                         harborCert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
-                        harborCert.Spec.DnsNames = new List<string>()
+                        harborCert.Spec.DnsNames   = new List<string>()
                         {
                             $"{clusterLogin.ClusterDefinition.Domain}",
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
@@ -1309,7 +1308,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         harborCluster.spec.expose.core.ingress.host = clusterLogin.ClusterDefinition.Domain;
                         harborCluster.spec.expose.notary.ingress.host = clusterLogin.ClusterDefinition.Domain;
                         harborCluster.spec.externalURL = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-
                     });
             }
         }
@@ -1870,7 +1868,7 @@ spec:
             await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for kaili");
+                    controller.LogProgress(master, verb: "wait for", message: "kaili");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -1995,7 +1993,7 @@ spec:
                     await master.InvokeIdempotentAsync("setup/openebs-ready",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "wait", message: "for openebs");
+                            controller.LogProgress(master, verb: "wait for", message: "openebs");
 
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
@@ -2079,7 +2077,7 @@ spec:
                         await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
                             async () =>
                             {
-                                controller.LogProgress(master, verb: "wait", message: "for openebs cstor");
+                                controller.LogProgress(master, verb: "wait for", message: "openebs cstor");
 
                                 await NeonHelper.WaitAllAsync(
                                     new List<Task>()
@@ -2147,11 +2145,11 @@ spec:
         /// <param name="storagePool">Specifies the OpenEBS storage pool.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateJivaStorageClass(
-            ISetupController controller,
-            NodeSshProxy<NodeDefinition> master,
-            string name,
-            int replicaCount = 3,
-            string storagePool = "default")
+            ISetupController                controller,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name,
+            int                             replicaCount = 3,
+            string                          storagePool  = "default")
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
                 async () =>
@@ -2168,15 +2166,15 @@ spec:
                         {
                             Name = name,
                             Annotations = new Dictionary<string, string>()
-                    {
-                        {  "cas.openebs.io/config",
+                            {
+                                {  "cas.openebs.io/config",
 $@"- name: ReplicaCount
   value: ""{replicaCount}""
 - name: StoragePool
   value: {storagePool}
 " },
-                        {"openebs.io/cas-type", "jiva" }
-                    },
+                                {"openebs.io/cas-type", "jiva" }
+                            },
                         },
                         Provisioner = "openebs.io/provisioner-iscsi",
                         ReclaimPolicy = "Delete",
@@ -2195,9 +2193,9 @@ $@"- name: ReplicaCount
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
-            ISetupController controller,
-            NodeSshProxy<NodeDefinition> master,
-            string name)
+            ISetupController                controller,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
@@ -2208,15 +2206,15 @@ $@"- name: ReplicaCount
                         {
                             Name = name,
                             Annotations = new Dictionary<string, string>()
-                    {
-                        {  "cas.openebs.io/config",
+                            {
+                                {  "cas.openebs.io/config",
 $@"- name: StorageType
   value: ""hostpath""
 - name: BasePath
   value: /var/openebs/local
 " },
-                        {"openebs.io/cas-type", "local" }
-                    },
+                                {"openebs.io/cas-type", "local" }
+                            },
                         },
                         Provisioner = "openebs.io/local",
                         ReclaimPolicy = "Delete",
@@ -2237,11 +2235,11 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
-            ISetupController controller,
-            NodeSshProxy<NodeDefinition> master,
-            string name,
-            string cstorPoolCluster = "cspc-stripe",
-            int replicaCount = 3)
+            ISetupController                controller,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name,
+            string                          cstorPoolCluster = "cspc-stripe",
+            int                             replicaCount     = 3)
         {
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
@@ -2262,12 +2260,11 @@ $@"- name: StorageType
                             {  "cas-type", "cstor" },
                             {  "cstorPoolCluster", cstorPoolCluster },
                             {  "replicaCount", $"{replicaCount}" },
-
                         },
                         AllowVolumeExpansion = true,
-                        Provisioner = "cstor.csi.openebs.io",
-                        ReclaimPolicy = "Delete",
-                        VolumeBindingMode = "Immediate"
+                        Provisioner          = "cstor.csi.openebs.io",
+                        ReclaimPolicy        = "Delete",
+                        VolumeBindingMode    = "Immediate"
                     };
 
                     await GetK8sClient(controller).CreateStorageClassAsync(storageClass);
@@ -2283,21 +2280,25 @@ $@"- name: StorageType
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateStorageClass(
-            ISetupController controller,
-            NodeSshProxy<NodeDefinition> master,
-            string name,
-            int replicaCount = 3)
+            ISetupController                controller,
+            NodeSshProxy<NodeDefinition>    master,
+            string                          name,
+            int                             replicaCount = 3)
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             switch (cluster.Definition.OpenEbs.Engine)
             {
                 case OpenEbsEngine.cStor:
+
                     await CreateCstorStorageClass(controller, master, name);
                     break;
+
                 case OpenEbsEngine.Jiva:
+
                     await CreateJivaStorageClass(controller, master, name);
                     break;
+
                 default:
                     throw new Exception("OpenEBS engine not defined.");
             };
@@ -2317,10 +2318,10 @@ $@"- name: StorageType
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
 
-            await master.InvokeIdempotentAsync("setup/monitoring-etc",
+            await master.InvokeIdempotentAsync("setup/monitoring-etcd",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "etc");
+                    controller.LogProgress(master, verb: "setup", message: "etcd");
 
                     await CreateStorageClass(controller, master, "neon-internal-etcd");
 
@@ -2343,10 +2344,10 @@ $@"- name: StorageType
                     await master.InstallHelmChartAsync(controller, "etcd_cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
-            await master.InvokeIdempotentAsync("setup/setup/monitoring-etc-ready",
+            await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for etc (monitoring)");
+                    controller.LogProgress(master, verb: "wait for", message: "etc (monitoring)");
 
                     await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "neon-system-etcd");
                 });
@@ -2421,7 +2422,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-agent-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for grafana agent");
+                    controller.LogProgress(master, verb: "wait for", message: "grafana agent");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -2498,7 +2499,7 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex-ready",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "wait", message: "for cortex");
+                            controller.LogProgress(master, verb: "wait for", message: "cortex");
 
                             await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "cortex");
                         });
@@ -2553,7 +2554,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-loki-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for loki");
+                    controller.LogProgress(master, verb: "wait for", message: "loki");
 
                     await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "loki");
                 });
@@ -2602,7 +2603,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-tempo-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for tempo");
+                    controller.LogProgress(master, verb: "wait for", message: "tempo");
 
                     await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "tempo");
                 });
@@ -2635,7 +2636,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for kube-state-metrics");
+                    controller.LogProgress(master, verb: "wait for", message: "kube-state-metrics");
 
                     await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonMonitor, "kube-state-metrics");
                 });
@@ -2668,7 +2669,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/reloader-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for reloader");
+                    controller.LogProgress(master, verb: "wait for", message: "reloader");
 
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "reloader");
                 });
@@ -2741,7 +2742,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for grafana");
+                    controller.LogProgress(master, verb: "wait for", message: "grafana");
 
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-operator");
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-deployment");
@@ -2843,7 +2844,7 @@ $@"- name: StorageType
                     await master.InvokeIdempotentAsync("setup/minio-ready",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "wait", message: "for minio");
+                            controller.LogProgress(master, verb: "wait for", message: "minio");
 
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
@@ -2939,7 +2940,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-jaeger-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for jaeger");
+                    controller.LogProgress(master, verb: "wait for", message: "jaeger");
 
                     await NeonHelper.WaitForAsync(
                         async () =>
@@ -3014,7 +3015,7 @@ $@"- name: StorageType
                 {
                     await SyncContext.ClearAsync;
 
-                    controller.LogProgress(master, verb: "wait", message: "for harbor redis");
+                    controller.LogProgress(master, verb: "wait for", message: "harbor redis");
 
                     await WaitForStatefulSetAsync(controller, KubeNamespaces.NeonSystem, "registry-redis-server");
                 });
@@ -3076,7 +3077,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for harbor");
+                    controller.LogProgress(master, verb: "wait for", message: "harbor");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -3141,7 +3142,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-api-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-api");
+                    controller.LogProgress(master, verb: "wait for", message: "neon-cluster-api");
 
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "neon-cluster-api");
                 });
@@ -3175,7 +3176,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for neon-cluster-operator");
+                    controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "neon-cluster-operator");
                 });
@@ -3339,7 +3340,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait", message: "for system database");
+                    controller.LogProgress(master, verb: "wait for", message: "system database");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
@@ -3535,7 +3536,7 @@ $@"- name: StorageType
         /// Returns the string value for byte units.
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
+        /// <returns>The formatted string</returns>
         public static string ToSiString(double? value)
         {
             if (!value.HasValue)

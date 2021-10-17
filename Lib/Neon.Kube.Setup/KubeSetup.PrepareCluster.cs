@@ -356,9 +356,9 @@ namespace Neon.Kube
 
                                 clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
 
-                            // Persist the SSH key.
+                                // Persist the SSH key.
 
-                            clusterLogin.Save();
+                                clusterLogin.Save();
                             }
                             finally
                             {
@@ -454,7 +454,7 @@ namespace Neon.Kube
 
             // We need to dispose this after the setup controller runs.
 
-            controller.AddDisposable(hostingManager);
+            controller.AddDisposable(cluster);
 
             return controller;
         }

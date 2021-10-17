@@ -93,11 +93,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private RunOptions          defaultRunOptions;
-        private NodeProxyCreator    nodeProxyCreator;
-        private string              nodeImageUri;
-        private string              nodeImagePath;
-        private bool                appendLog;
+        private RunOptions              defaultRunOptions;
+        private NodeProxyCreator        nodeProxyCreator;
+        private string                  nodeImageUri;
+        private string                  nodeImagePath;
+        private bool                    appendLog;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
@@ -144,7 +144,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
 
-            if (!string.IsNullOrEmpty(this.nodeImageUri))
+            if (!string.IsNullOrEmpty(nodeImageUri))
             {
                 this.nodeImageUri = nodeImageUri;
             }
@@ -182,6 +182,10 @@ namespace Neon.Kube
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendToLog;
 
+            // Create the hosting manager.
+
+            this.HostingManager = GetHostingManager(hostingManagerFactory, operation);
+
             // Initialize the cluster nodes.
 
             var nodes = new List<NodeSshProxy<NodeDefinition>>();
@@ -193,15 +197,12 @@ namespace Neon.Kube
                 node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;
                 node.Metadata          = nodeDefinition;
+
                 nodes.Add(node);
             }
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
-
-            // Create the hosting manager.
-
-            this.HostingManager = GetHostingManager(hostingManagerFactory, operation);
         }
 
         /// <summary>
@@ -233,7 +234,7 @@ namespace Neon.Kube
         public string Name => Definition.Name;
 
         /// <summary>
-        /// The associated <see cref="IHostingManager"/> or <c>null</c>.
+        /// The associated <see cref="IHostingManager"/>.
         /// </summary>
         public IHostingManager HostingManager { get; set; }
 
