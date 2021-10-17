@@ -54,16 +54,35 @@ namespace Neon.Deployment
         internal static Neon.Common.Credentials Credentials { get; private set; }
 
         /// <summary>
-        /// Retrieves the necessary credentials from 1Password and caches them.
+        /// Retrieves the necessary credentials from 1Password when necessary and 
+        /// caches them locally as well as in environment variables.
         /// </summary>
         public static void GetCredentials()
         {
             if (AccessToken == null)
             {
-                var profile = new ProfileClient();
+                var gitHubPat      = Environment.GetEnvironmentVariable("GITHUB_PAT");
+                var gitHubUsername = Environment.GetEnvironmentVariable("GITHUB_USERNAME");
+                var gitHubPassword = Environment.GetEnvironmentVariable("GITHUB_PASSWORD");
 
-                AccessToken = profile.GetSecretPassword("GITHUB_PAT");
-                Credentials = Neon.Common.Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
+                if (!string.IsNullOrEmpty(gitHubPat) &&
+                    !string.IsNullOrEmpty(gitHubUsername) &&
+                    !string.IsNullOrEmpty(gitHubPassword))
+                {
+                    AccessToken = gitHubPat;
+                    Credentials = Neon.Common.Credentials.FromUserPassword(gitHubUsername, gitHubPassword);
+                }
+                else
+                {
+                    var profile = new ProfileClient();
+
+                    AccessToken = profile.GetSecretPassword("GITHUB_PAT");
+                    Credentials = Neon.Common.Credentials.FromUserPassword(profile.GetSecretPassword("GITHUB_LOGIN[username]"), profile.GetSecretPassword("GITHUB_LOGIN[password]"));
+
+                    Environment.SetEnvironmentVariable("GITHUB_PAT", AccessToken);
+                    Environment.SetEnvironmentVariable("GITHUB_USERNAME", Credentials.Username);
+                    Environment.SetEnvironmentVariable("GITHUB_PASSWORD", Credentials.Password);
+                }
             }
         }
 

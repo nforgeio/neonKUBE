@@ -59,12 +59,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// The private key algorithm of the corresponding private key for this certificate.
+        /// </summary>
         [JsonProperty(PropertyName = "algorithm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KeyAlgorithm.RSA)]
         public KeyAlgorithm Algorithm { get; set; }
 
         /// <summary>
         /// The private key algorithm of the corresponding private key for this certificate.
+        /// </summary>
         [JsonProperty(PropertyName = "size", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public int? Size { get; set; }

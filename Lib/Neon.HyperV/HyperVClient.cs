@@ -485,24 +485,7 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
-            try
-            {
-                var machines = new List<VirtualMachine>();
-                var table    = powershell.ExecuteJson($"{HyperVNamespace}Get-VM -Name '{machineName}'");
-
-                if (table.Count == 0)
-                {
-                    return null;
-                }
-
-                Covenant.Assert(table.Count == 1);
-
-                return ExtractVm(table.First());
-            }
-            catch (Exception e)
-            {
-                throw new HyperVException(e.Message, e);
-            }
+            return ListVms().SingleOrDefault(vm => vm.Name.Equals(machineName, StringComparison.InvariantCultureIgnoreCase));
         }
 
         /// <summary>

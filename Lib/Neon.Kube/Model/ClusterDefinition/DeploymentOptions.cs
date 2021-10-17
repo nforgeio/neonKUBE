@@ -75,7 +75,7 @@ namespace Neon.Kube
         [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
-            if (!string.IsNullOrEmpty(Prefix) && !ClusterDefinition.NameRegex.IsMatch(Prefix))
+            if (!string.IsNullOrEmpty(Prefix) && !ClusterDefinition.PrefixRegex.IsMatch(Prefix))
             {
                 throw new ClusterDefinitionException($"[{nameof(DeploymentOptions)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
             }

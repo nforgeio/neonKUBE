@@ -70,8 +70,8 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartClusterAsync(bool)"/>, <see cref="ShutdownClusterAsync(ShutdownMode, bool)"/>,
-            /// <see cref="RemoveClusterAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
+            /// <see cref="RemoveAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -93,11 +93,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private RunOptions          defaultRunOptions;
-        private NodeProxyCreator    nodeProxyCreator;
-        private string              nodeImageUri;
-        private string              nodeImagePath;
-        private bool                appendLog;
+        private RunOptions              defaultRunOptions;
+        private NodeProxyCreator        nodeProxyCreator;
+        private string                  nodeImageUri;
+        private string                  nodeImagePath;
+        private bool                    appendLog;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
@@ -144,7 +144,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
 
-            if (!string.IsNullOrEmpty(this.nodeImageUri))
+            if (!string.IsNullOrEmpty(nodeImageUri))
             {
                 this.nodeImageUri = nodeImageUri;
             }
@@ -182,6 +182,10 @@ namespace Neon.Kube
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendToLog;
 
+            // Create the hosting manager.
+
+            this.HostingManager = GetHostingManager(hostingManagerFactory, operation);
+
             // Initialize the cluster nodes.
 
             var nodes = new List<NodeSshProxy<NodeDefinition>>();
@@ -193,15 +197,12 @@ namespace Neon.Kube
                 node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;
                 node.Metadata          = nodeDefinition;
+
                 nodes.Add(node);
             }
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
-
-            // Create the hosting manager.
-
-            this.HostingManager = GetHostingManager(hostingManagerFactory, operation);
         }
 
         /// <summary>
@@ -233,7 +234,7 @@ namespace Neon.Kube
         public string Name => Definition.Name;
 
         /// <summary>
-        /// The associated <see cref="IHostingManager"/> or <c>null</c>.
+        /// The associated <see cref="IHostingManager"/>.
         /// </summary>
         public IHostingManager HostingManager { get; set; }
 
@@ -478,30 +479,30 @@ namespace Neon.Kube
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StartClusterAsync(bool noWait = false)
+        public async Task StartAsync(bool noWait = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StartClusterAsync(Definition, noWait);
+            await HostingManager.StartClusterAsync(noWait);
         }
 
         /// <summary>
         /// <para>
-        /// Shuts down a cluster if it's running.
+        /// Stops a cluster if it's running.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task ShutdownClusterAsync(ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public async Task StopAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.ShutdownClusterAsync(Definition, shutdownMode, noWait);
+            await HostingManager.StopClusterAsync(stopMode, noWait);
         }
 
         /// <summary>
@@ -534,11 +535,48 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.RemoveClusterAsync(Definition, removeOrphansByPrefix, noRemoveLogins);
+            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix, noRemoveLogins);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Starts a specific cluster node when it's not already running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task StartNodeAsync(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+            Covenant.Assert(HostingManager != null);
+
+            await HostingManager.StartNodeAsync(nodeName);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Stops a specific cluster node down when it's not already stopped or sleeping.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+            Covenant.Assert(HostingManager != null);
+
+            await HostingManager.StopNodeAsync(nodeName, stopMode);
         }
 
         /// <summary>
@@ -560,9 +598,10 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
         public async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
-            return await HostingManager.GetNodeImageAsync(Definition, nodeName, folder); 
+            return await HostingManager.GetNodeImageAsync(nodeName, folder); 
         }
     }
 }

@@ -626,17 +626,15 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <inheritdoc/>
-        public override async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        public override async Task StartClusterAsync(bool noWait = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
-            Validate(clusterDefinition);
 
             // We just need to start any cluster VMs that aren't already running.
 
             using (var hyperv = new HyperVClient())
             {
-                Parallel.ForEach(clusterDefinition.Nodes,
+                Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
                     {
                         var vmName = GetVmName(nodeDefinition);
@@ -676,17 +674,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
-            Validate(clusterDefinition);
 
             // We just need to stop any running cluster VMs.
 
             using (var hyperv = new HyperVClient())
             {
-                Parallel.ForEach(clusterDefinition.Nodes,
+                Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
                     {
                         var vmName = GetVmName(nodeDefinition);
@@ -729,11 +725,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public override async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
-            Validate(clusterDefinition);
 
             // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
             // Note that we're just turning nodes off to save time and because we're going
@@ -741,13 +735,13 @@ namespace Neon.Kube
             //
             // We're going to leave any virtual switches alone.
 
-            await ShutdownClusterAsync(clusterDefinition, shutdownMode: ShutdownMode.TurnOff);
+            await StopClusterAsync(stopMode: StopMode.TurnOff);
 
             using (var hyperv = new HyperVClient())
             {
                 // Remove all of the cluster VMs.
 
-                Parallel.ForEach(clusterDefinition.Nodes,
+                Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
                     {
                         var vmName = GetVmName(nodeDefinition);
@@ -756,7 +750,8 @@ namespace Neon.Kube
                         if (vm == null)
                         {
                             // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs.  We're just going to ignore this situation.
+                            // deployed cluster VMs or when the cluster doesn't mexist.  We're
+                            // just going to ignore this situation.
 
                             return;
                         }
@@ -766,9 +761,9 @@ namespace Neon.Kube
 
                 // Remove any potentially orphaned VMs when enabled and a prefix is specified.
 
-                if (removeOrphansByPrefix && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+                if (removeOrphansByPrefix && !string.IsNullOrEmpty(cluster.Definition.Deployment.Prefix))
                 {
-                    var prefix = clusterDefinition.Deployment.Prefix + "-";
+                    var prefix = cluster.Definition.Deployment.Prefix + "-";
 
                     Parallel.ForEach(hyperv.ListVms(),
                         vm =>
@@ -780,27 +775,108 @@ namespace Neon.Kube
                         });
                 }
             }
+        }
 
-            if (!noRemoveLogins)
+        /// <inheritdoc/>
+        public override async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
             {
-                var context = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
+            }
 
-                KubeHelper.Config.RemoveContext(context);
+            using (var hyperv = new HyperVClient())
+            {
+                var vmName = GetVmName(nodeDefinition);
+                var vm     = hyperv.GetVm(vmName);
+
+                if (vm == null)
+                {
+                    throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
+                }
+
+                switch (vm.State)
+                {
+                    case VirtualMachineState.Off:
+                    case VirtualMachineState.Paused:
+                    case VirtualMachineState.Saved:
+
+                        // We're treating all of these states as: OFF
+
+                        return;
+
+                    case VirtualMachineState.Running:
+
+                        // Drop out to actually stop the node below.
+
+                        break;
+
+                    default:
+                    case VirtualMachineState.Starting:
+                    case VirtualMachineState.Unknown:
+
+                        throw new InvalidOperationException($"Cannot stop node [{nodeName}] when it is in the [{vm.State}] state.");
+                }
+
+                if (stopMode == StopMode.Sleep)
+                {
+                    hyperv.SaveVm(vmName);
+                }
+                else
+                {
+                    hyperv.StopVm(vmName, stopMode == StopMode.TurnOff);
+                }
+
+                await Task.CompletedTask;
             }
         }
 
         /// <inheritdoc/>
-        public override async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
+        public override async Task StartNodeAsync(string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            {
+                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
+            }
+
+            using (var hyperv = new HyperVClient())
+            {
+                var vmName = GetVmName(nodeDefinition);
+                var vm     = hyperv.GetVm(vmName);
+
+                if (vm == null)
+                {
+                    throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
+                }
+
+                switch (vm.State)
+                {
+                    case VirtualMachineState.Off:
+                    case VirtualMachineState.Paused:
+                    case VirtualMachineState.Saved:
+
+                        hyperv.StartVm(vmName);
+                        break;
+                }
+
+                await Task.CompletedTask;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override async Task<string> GetNodeImageAsync(string nodeName, string folder)
+        {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-            Validate(clusterDefinition);
 
-            if (!clusterDefinition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
             {
-                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster definition.");
+                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
             using (var hyperv = new HyperVClient())

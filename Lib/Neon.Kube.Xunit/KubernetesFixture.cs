@@ -701,7 +701,7 @@ namespace Neon.Kube.Xunit
 
             using (cluster)
             {
-                cluster.RemoveClusterAsync(removeOrphansByPrefix: removeOrphansByPrefix).Wait();
+                cluster.RemoveAsync(removeOrphansByPrefix: removeOrphansByPrefix).Wait();
             }
         }
     }

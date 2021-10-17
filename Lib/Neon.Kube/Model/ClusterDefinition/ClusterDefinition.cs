@@ -59,6 +59,12 @@ namespace Neon.Kube
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
+        /// Regex for verifying cluster prefixes.  This is the similar to <see cref="NameRegex"/> but optionally
+        /// allows a "(" and ")" which we use for automation related deployments.
+        /// </summary>
+        public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
+
+        /// <summary>
         /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
         /// </summary>
         public const string ReservedLabelPrefix = "neonkube.io/";

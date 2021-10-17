@@ -316,8 +316,8 @@ namespace Neon.Deployment
 
         /// <summary>
         /// Optional callback used to determine whether the profile server implementation
-        /// is ready for requests.  The handler returns <c>null</c> when ready or the
-        /// a <see cref="ProfileHandlerResult"/> error to be returned to the caller.
+        /// is ready for requests.  The handler returns <c>null</c> when ready or a
+        /// <see cref="ProfileHandlerResult"/> error to be returned to the caller.
         /// </summary>
         public Func<ProfileHandlerResult> GetIsReady { get; set; }
 
@@ -436,7 +436,8 @@ namespace Neon.Deployment
 #pragma warning disable CA1416
                             pipe.WaitForPipeDrain();
 #pragma warning restore CA1416
-                            pipe.Close();
+                            pipe.Dispose();
+                            pipes[pipeIndex] = null;
                             continue;
                         }
                     }

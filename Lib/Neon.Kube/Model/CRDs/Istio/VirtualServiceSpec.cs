@@ -36,6 +36,7 @@ namespace Neon.Kube
         /// <summary>
         /// The destination hosts.
         /// </summary>
+        /// <remarks>
         /// <para>
         /// The destination hosts to which traffic is being sent. Could be a DNS name with wildcard prefix or an IP address. Depending on the 
         /// platform, short-names can also be used instead of a FQDN (i.e. has no dots in the name). In such a scenario, the FQDN of the host 
@@ -51,19 +52,20 @@ namespace Neon.Kube
         /// interpret the short name based on the namespace of the rule, not the service.A rule in the “default” namespace containing a host 
         /// “reviews” will be interpreted as “reviews.default.svc.cluster.local”, irrespective of the actual namespace associated with the reviews 
         /// service.To avoid potential misconfigurations, it is recommended to always use fully qualified domain names over short names.
+        /// </para>
         /// <para>
         /// The hosts field applies to both HTTP and TCP services.Service inside the mesh, i.e., those found in the service registry, must always 
         /// be referred to using their alphanumeric names.IP addresses are allowed only for services defined via the Gateway.
         /// </para>
-        /// <remarks>
-        /// It must be empty for a delegate VirtualService.
+        /// <note>
+        /// This must be empty for a delegate VirtualService.
+        /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> Hosts { get; set; }
 
         /// <summary>
-        /// <para>
         /// The names of gateways and sidecars that should apply these routes. Gateways in other namespaces may be referred to by 
         /// &lt;gateway namespace&gt;/&lt;gateway name&gt;; specifying a gateway with no namespace qualifier is the same as specifying the 
         /// VirtualService’s namespace. A single VirtualService is used for sidecars inside the mesh as well as for one or more gateways. The 
@@ -71,18 +73,15 @@ namespace Neon.Kube
         /// The reserved word mesh is used to imply all the sidecars in the mesh. When this field is omitted, the default gateway (mesh) will be used,
         /// which would apply the rule to all sidecars in the mesh. If a list of gateway names is provided, the rules will apply only to the gateways. 
         /// To apply the rules to both gateways and sidecars, specify mesh as one of the gateway names.
-        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "gateways", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> Gateways { get; set; }
 
         /// <summary>
-        /// <para>
         /// An ordered list of route rules for HTTP traffic. HTTP routes will be applied to platform service ports named ‘http-’/‘http2-’/‘grpc-*’, 
         /// gateway ports with protocol HTTP/HTTP2/GRPC/ TLS-terminated-HTTPS and service entry ports using HTTP/HTTP2/GRPC protocols. The first rule 
         /// matching an incoming request is used.
-        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "http", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -90,21 +89,22 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// An ordered list of route rule for non-terminated TLS & HTTPS traffic. Routing is typically performed using the SNI value presented by the 
-        /// ClientHello message. TLS routes will be applied to platform service ports named ‘https-’, ‘tls-’, unterminated gateway ports using HTTPS/TLS 
-        /// protocols (i.e. with “passthrough” TLS mode) and service entry ports using HTTPS/TLS protocols. The first rule matching an incoming request 
-        /// is used. NOTE: Traffic ‘https-’ or ‘tls-’ ports without associated virtual service will be treated as opaque TCP traffic.
+        /// An ordered list of route rule for non-terminated TLS and HTTPS traffic. Routing is typically performed using the SNI value presented by the 
+        /// ClientHello message. TLS routes will be applied to platform service ports named <b>https-*</b>, <b>tls-*</b>, unterminated gateway ports using HTTPS/TLS 
+        /// protocols (i.e. with passthrough TLS mode) and service entry ports using HTTPS/TLS protocols. The first rule matching an incoming request 
+        /// is used. 
         /// </para>
+        /// <note>
+        /// Traffic <b>https-*</b> or <b>tls-*</b> ports without associated virtual service will be treated as opaque TCP traffic.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "tls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<TLSRoute> TLS { get; set; }
 
         /// <summary>
-        /// <para>
         /// An ordered list of route rules for opaque TCP traffic. TCP routes will be applied to any port that is not a HTTP or TLS port. The first rule
         /// matching an incoming request is used.
-        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "tcp", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

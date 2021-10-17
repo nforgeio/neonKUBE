@@ -59,17 +59,15 @@ namespace Neon.Kube
         /// <summary>
         /// The requested 'duration' (i.e. lifetime) of the Certificate. This option may be ignored/overridden by some issuer types. If unset 
         /// this defaults to 90 days. Certificate will be renewed either 2/3 through its duration or `renewBefore` period before its expiry, 
-        /// whichever is later. Minimum accepted duration is 1 hour. Value must be in units accepted by 
-        /// Go time.ParseDuration https://golang.org/pkg/time/#ParseDuration
-
+        /// whichever is later. Minimum accepted duration is 1 hour. Value must be in units accepted by GOLANG <b>time.ParseDuration()</b>:
+        /// https://golang.org/pkg/time/#ParseDuration
         /// </summary>
         [JsonProperty(PropertyName = "duration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Duration { get; set; }
 
         /// <summary>
-        /// A list of email subjectAltNames to be set on the Certificate.
-
+        /// A list of email <b>subjectAltNames</b> to be set on the Certificate.
         /// </summary>
         [JsonProperty(PropertyName = "emailAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -77,15 +75,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// Controls whether key usages should be present in the CertificateRequest.
-
         /// </summary>
         [JsonProperty(PropertyName = "encodeUsagesInRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool EncodeUsagesInRequest { get; set; }
 
         /// <summary>
-        /// A list of IP address subjectAltNames to be set on the Certificate.
-
+        /// A list of IP address <b>subjectAltNames</b> to be set on the Certificate.
         /// </summary>
         [JsonProperty(PropertyName = "ipAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

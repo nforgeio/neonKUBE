@@ -88,10 +88,10 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates. Applicable only on 
-        /// Kubernetes. The secret (of type generic) should contain the following keys and values: key: <privateKey> and cert: <serverCert>. For 
-        /// mutual TLS, cacert: <CACertificate> can be provided in the same secret or a separate secret named <secret>-cacert. Secret of type tls 
-        /// for server certificates along with ca.crt key for CA certificates is also supported. Only one of server certificates and CA certificate 
-        /// or credentialName can be specified.
+        /// Kubernetes. The secret (of type generic) should contain the following keys and values: key: <b>privateKey</b> and cert: <b>serverCert</b>. 
+        /// For mutual TLS, cacert: <b>CACertificate</b> can be provided in the same secret or a separate secret named <b>secret-cacert</b>. 
+        /// Secret of type TLS for server certificates along with ca.crt key for CA certificates is also supported. Only one of server certificates
+        /// and CA certificate or credentialName can be specified.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "credentialName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

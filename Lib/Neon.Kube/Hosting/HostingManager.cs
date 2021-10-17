@@ -68,16 +68,10 @@ namespace Neon.Kube
         /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         public abstract void Dispose(bool disposing);
 
-        /// <summary>
-        /// The maximum number of nodes that will execute provisioning steps in parallel.  This
-        /// defaults to <b>5</b>.
-        /// </summary>
+        /// <inheritdoc/>
         public int MaxParallel { get; set; } = 5;
 
-        /// <summary>
-        /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).
-        /// This defaults to <b>0.0</b>.
-        /// </summary>
+        /// <inheritdoc/>
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
@@ -281,36 +275,47 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <inheritdoc/>
-        public virtual async Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false)
+        public virtual async Task StartClusterAsync(bool noWait = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task StartNodeAsync(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false)
+        public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool removeLogins = false)
+        public virtual async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            await Task.CompletedTask;
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 

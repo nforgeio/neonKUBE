@@ -90,6 +90,18 @@ namespace Neon.Kube
         bool GenerateSecurePassword { get; }
 
         /// <summary>
+        /// The maximum number of nodes that will execute provisioning steps in parallel.  This
+        /// defaults to <b>5</b>.
+        /// </summary>
+        int MaxParallel { get; set; }
+
+        /// <summary>
+        /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).
+        /// This defaults to <b>0.0</b>.
+        /// </summary>
+        double WaitSeconds { get; set; }
+
+        /// <summary>
         /// Adds the steps required to the setup controller passed that creates and initializes the
         /// cluster resources such as the virtual machines, networks, load balancers, network security groups, 
         /// public IP addresses.
@@ -204,11 +216,10 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task StartClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false);
+        Task StartClusterAsync(bool noWait = false);
 
         /// <summary>
         /// <para>
@@ -218,12 +229,11 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="shutdownMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="ShutdownMode.Graceful"/>.</param>
+        /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task ShutdownClusterAsync(ClusterDefinition clusterDefinition, ShutdownMode shutdownMode = ShutdownMode.Graceful, bool noWait = false);
+        Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false);
 
         /// <summary>
         /// <para>
@@ -237,15 +247,10 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
-        /// </param>
-        /// <param name="noRemoveLogins">
-        /// Optionally specifies that any cluster login file and KubeConfig records related to to the 
-        /// cluster definition <b>will not be removed</b>.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
@@ -256,7 +261,32 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(ClusterDefinition clusterDefinition, bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false);
+        Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false);
+
+        /// <summary>
+        /// <para>
+        /// Starts a specific cluster node when it's not already running.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task StartNodeAsync(string nodeName);
+
+        /// <summary>
+        /// <para>
+        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful);
 
         /// <summary>
         /// <para>
@@ -269,13 +299,16 @@ namespace Neon.Kube
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
+        /// <note>
+        /// This method is currently intended for internal use to support generating special ready-to-go node
+        /// images and does not support nodes that have more than just an OS drive, such as cStor drives.
+        /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeName">Identifies the node being captured.</param>
         /// <param name="folder">Path to the output folder.</param>
         /// <returns>The fully qualified path to the downloaded image file.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
-        Task<string> GetNodeImageAsync(ClusterDefinition clusterDefinition, string nodeName, string folder);
+        Task<string> GetNodeImageAsync(string nodeName, string folder);
     }
 }
