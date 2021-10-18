@@ -142,7 +142,7 @@ namespace Neon.Kube
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
-
+            
             if (unredacted)
             {
                 cluster.SecureRunOptions = RunOptions.None;
@@ -424,7 +424,7 @@ namespace Neon.Kube
 
                     if (readyToGoMode == ReadyToGoMode.Prepare)
                     {
-                        node.SetNeonInitStatus(false, keepNetworkSettings: true);
+                        node.SetNeonInitStatus(false, keepNetworkSettings: false);
                     }
                 });
 

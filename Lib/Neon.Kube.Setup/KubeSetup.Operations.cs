@@ -312,6 +312,122 @@ spec:
             await NeonHelper.WaitAllAsync(await SetupMonitoringAsync(controller));
         }
 
+        public static string GenerateKubernetesClusterConfig(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            var controlPlaneEndpoint = $"kubernetes-masters:6442";
+            var sbCertSANs = new StringBuilder();
+
+            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                // Tweak the API server endpoint for WSL2.
+
+                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
+            }
+
+            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
+            {
+                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
+
+                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
+
+                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
+                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+            }
+
+            foreach (var node in cluster.Masters)
+            {
+                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
+            }
+
+            if (cluster.Definition.IsDesktopCluster)
+            {
+                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
+                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
+            }
+
+            var kubeletFailSwapOnLine = string.Empty;
+            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
+
+            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                // SWAP will be enabled by the default Microsoft WSL2 kernel which
+                // will cause Kubernetes to complain because this isn't a supported
+                // configuration.  We need to disable these error checks.
+
+                kubeletFailSwapOnLine = "failSwapOn: false";
+                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
+            }
+
+            var clusterConfig = new StringBuilder();
+
+            clusterConfig.AppendLine(
+$@"
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+clusterName: {cluster.Name}
+kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
+imageRepository: ""{KubeConst.LocalClusterRegistry}""
+apiServer:
+  extraArgs:
+    bind-address: 0.0.0.0
+    advertise-address: 0.0.0.0
+    logging-format: json
+    default-not-ready-toleration-seconds: ""30"" # default 300
+    default-unreachable-toleration-seconds: ""30"" #default  300
+    allow-privileged: ""true""
+    api-audiences: api
+    service-account-issuer: kubernetes.default.svc
+    service-account-key-file: /etc/kubernetes/pki/sa.key
+    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
+  certSANs:
+{sbCertSANs}
+controlPlaneEndpoint: ""{controlPlaneEndpoint}""
+networking:
+  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
+  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
+controllerManager:
+  extraArgs:
+    logging-format: json
+    node-monitor-grace-period: 15s #default 40s
+    node-monitor-period: 5s #default 5s
+    pod-eviction-timeout: 30s #default 5m0s
+scheduler:
+  extraArgs:
+    logging-format: json");
+
+            clusterConfig.AppendLine($@"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+logging:
+  format: json
+nodeStatusReportFrequency: 4s
+volumePluginDir: /var/lib/kubelet/volume-plugins
+cgroupDriver: systemd
+runtimeRequestTimeout: 5m
+{kubeletFailSwapOnLine}
+");
+
+            var kubeProxyMode = "ipvs";
+
+            clusterConfig.AppendLine($@"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: {kubeProxyMode}");
+
+            return clusterConfig.ToString();
+        }
+
         /// <summary>
         /// Basic Kubernetes cluster initialization.
         /// </summary>
@@ -355,108 +471,7 @@ spec:
 
                             controller.LogProgress(master, verb: "initialize", message: "cluster");
 
-                            var controlPlaneEndpoint = $"kubernetes-masters:6442";
-                            var sbCertSANs           = new StringBuilder();
-
-                            if (hostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                // Tweak the API server endpoint for WSL2.
-
-                                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
-                            }
-
-                            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
-                            {
-                                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
-
-                                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
-
-                                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
-                                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
-                            }
-
-                            foreach (var node in cluster.Masters)
-                            {
-                                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
-                                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
-                            }
-
-                            if (cluster.Definition.IsDesktopCluster)
-                            {
-                                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
-                                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
-                            }
-
-                            var kubeletFailSwapOnLine           = string.Empty;
-                            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
-
-                            if (hostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                // SWAP will be enabled by the default Microsoft WSL2 kernel which
-                                // will cause Kubernetes to complain because this isn't a supported
-                                // configuration.  We need to disable these error checks.
-
-                                kubeletFailSwapOnLine = "failSwapOn: false";
-                                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
-                            }
-
-                            var clusterConfig = new StringBuilder();
-
-                            clusterConfig.AppendLine(
-$@"
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: ClusterConfiguration
-clusterName: {cluster.Name}
-kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
-imageRepository: ""{KubeConst.LocalClusterRegistry}""
-apiServer:
-  extraArgs:
-    bind-address: 0.0.0.0
-    advertise-address: 0.0.0.0
-    logging-format: json
-    default-not-ready-toleration-seconds: ""30"" # default 300
-    default-unreachable-toleration-seconds: ""30"" #default  300
-    allow-privileged: ""true""
-    api-audiences: api
-    service-account-issuer: kubernetes.default.svc
-    service-account-key-file: /etc/kubernetes/pki/sa.key
-    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-  certSANs:
-{sbCertSANs}
-controlPlaneEndpoint: ""{controlPlaneEndpoint}""
-networking:
-  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
-  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
-controllerManager:
-  extraArgs:
-    logging-format: json
-    node-monitor-grace-period: 15s #default 40s
-    node-monitor-period: 5s #default 5s
-    pod-eviction-timeout: 30s #default 5m0s
-scheduler:
-  extraArgs:
-    logging-format: json");
-
-                            clusterConfig.AppendLine($@"
----
-apiVersion: kubelet.config.k8s.io/v1beta1
-kind: KubeletConfiguration
-logging:
-  format: json
-nodeStatusReportFrequency: 4s
-volumePluginDir: /var/lib/kubelet/volume-plugins
-cgroupDriver: systemd
-runtimeRequestTimeout: 5m
-{kubeletFailSwapOnLine}
-");
-
-                            var kubeProxyMode = "ipvs";
-
-                            clusterConfig.AppendLine($@"
----
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: {kubeProxyMode}");
+                            var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
 
                             var kubeInitScript =
 $@"
@@ -734,8 +749,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
 
-                        master.SudoCommand("kubeadm", "certs", "renew", "all");
-                        master.SudoCommand("systemctl", "restart", "kubelet");
+                        var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
+
+                        var kubeInitScript =
+$@"
+rm -rf /etc/kubernetes/pki/*
+rm -f /etc/kubernetes/admin.conf
+rm -f /etc/kubernetes/kubelet.conf
+rm -f /etc/kubernetes/controller-manager.conf
+rm -f / etc /kubernetes/scheduler.conf
+kubeadm init --config cluster.yaml phase certs all
+kubeadm init --config cluster.yaml phase kubeconfig all
+systemctl restart crio
+systemctl restart kubelet
+";
+                        var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
                         // Edit the Kubernetes configuration file to rename the context:
                         //
@@ -1281,7 +1309,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
 
-                        var cert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
+                        var cert = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
 
                         cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
                         cert.Spec.DnsNames   = new List<string>()
@@ -1290,9 +1318,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(cert, "cert-manager.io", "v1", "certificates", "neon-cluster-certificate");
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(cert, "cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate");
 
-                        var harborCert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "registry-harbor")).ToObject<Certificate>();
+                        var harborCert = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("cert-manager.io", "v1", KubeNamespaces.NeonSystem, "certificates", "registry-harbor")).ToObject<Certificate>();
 
                         harborCert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
                         harborCert.Spec.DnsNames   = new List<string>()
@@ -1301,14 +1329,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(harborCert, "cert-manager.io", "v1", "certificates", "registry-harbor");
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(harborCert, "cert-manager.io", "v1", KubeNamespaces.NeonSystem, "certificates", "registry-harbor");
 
-                        dynamic harborCluster = ((ExpandoObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("goharbor.io", "v1alpha3", "harborclusters", "neon-cluster-certificate"));
+                        dynamic harborCluster = await GetK8sClient(controller).GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
 
-                        harborCluster.spec.expose.core.ingress.host = clusterLogin.ClusterDefinition.Domain;
-                        harborCluster.spec.expose.notary.ingress.host = clusterLogin.ClusterDefinition.Domain;
-                        harborCluster.spec.externalURL = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    });
+                        harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync((JObject)harborCluster, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
+            });
             }
         }
 
