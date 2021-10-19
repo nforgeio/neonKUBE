@@ -57,7 +57,7 @@ try
     $env:GOOS	= "windows"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go >> "$logPath" 2>&1
+    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go >> "$logPath" 2>&1
 
     $exitCode = $lastExitCode
 
@@ -75,7 +75,7 @@ try
     $env:GOOS   = "linux"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go >> "$logPath" 2>&1
+    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go >> "$logPath" 2>&1
 
     $exitCode = $lastExitCode
 
@@ -93,7 +93,7 @@ try
     $env:GOOS   = "darwin"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go >> "$logPath" 2>&1
+    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go >> "$logPath" 2>&1
 
     $exitCode = $lastExitCode
 

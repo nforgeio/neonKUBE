@@ -168,7 +168,7 @@ Follow the steps below to configure a development or test workstation:
 22. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
 
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
-    * Install **go1.13.4.windows-amd64.msi** from: [here](https://golang.org/dl/)
+    * Install **go1.17.2.windows-amd64.msi** from: [here](https://golang.org/doc/install)
 
 23. Confirm that the solution builds:
 
