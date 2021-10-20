@@ -25,6 +25,8 @@
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
+# Initialize
+
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
@@ -119,8 +121,13 @@ try
     $neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
 
     neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" >> "$logPath" 2>&1
+    ThrowOnExitCode
 }
 catch
 {

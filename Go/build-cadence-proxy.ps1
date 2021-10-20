@@ -25,6 +25,8 @@
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
+# Initialize
+
 $env:GOPATH  = "$env:NF_ROOT\Go"
 $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
@@ -119,8 +121,13 @@ try
     $neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
 
     neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" >> "$logPath" 2>&1
+    ThrowOnExitCode
 }
 catch
 {
