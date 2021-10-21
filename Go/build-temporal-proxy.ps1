@@ -31,7 +31,6 @@ $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
-$errors      = $false
 
 Push-Cwd "$projectpath\cmd\temporalproxy" | Out-Null
 
@@ -59,14 +58,8 @@ try
     $env:GOOS	= "windows"
     $env:GOARCH = "amd64"
 
-    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
@@ -77,14 +70,8 @@ try
     $env:GOOS   = "linux"
     $env:GOARCH = "amd64"
 
-    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
@@ -95,25 +82,14 @@ try
     $env:GOOS   = "darwin"
     $env:GOARCH = "amd64"
 
-    go build -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output "*                      COMPRESSING TEMPORAL-PROXY BINARIES                    *" >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
-
-    if ($errors)
-    {
-        throw "*** ERROR[exitcode=$exitCode]: One or more [temporal-proxy] builds failed.  Check build logs: $logPath"
-    }
 
     # Compress the binaries to the [Neon.Temporal] project where they'll
     # be embedded as binary resources.

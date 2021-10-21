@@ -18,20 +18,9 @@
 #
 # This script builds all GOLANG projects.
 #
-# USAGE: pwsh -file build-all.ps1 [CONFIGURATION]
+# USAGE: pwsh -file build-all.ps1
 #
-# ARGUMENTS:
-#
-#       -buildConfig Debug  - Optionally specifies the build configuration,
-#                             either "Debug" or "Release".  This defaults
-#                             to "Debug".
-
-# param 
-# (
-#     [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
-# )
-
-$buildConfig = "Debug"
+# ARGUMENTS: NONE
 
 $env:NF_GOROOT   = "$env:NF_ROOT\Go"
 $env:GO111MODULE = "on"
@@ -44,37 +33,11 @@ Push-Cwd $env:NF_GOROOT | Out-Null
 
 try
 {
-    # Perform the build
+    # Perform the builds
 
-    # $hack(jefflill):
-    #
-    # We'e seeing intermittent GO build failures where GO complains about a bad command line
-    # (or something) the first time a proxy binary is built for an OS/architecture but then
-    # the same exact build command works the next time it's run.  Perhaps this is due to
-    # vendoring weirdness but I don't really know.
-    #
-    # We're going to address this by running the build once again on failures.
-
-    & pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-    
-    if ($lastExitCode -ne 0)
-    {
-        & pwsh -file ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-        ThrowOnExitCode
-    }
-
-    & pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
-    
-    if ($lastExitCode -ne 0)
-    {
-        & pwsh -file ./build-temporal-proxy.ps1 -buildConfig $buildConfig
-        ThrowOnExitCode
-    }
-
-    # The tests don't seem to have the intermittent build issue.
-
-    & pwsh ./build-test.ps1
-    ThrowOnExitCode
+    $result = Invoke-CaptureStreams "pwsh -file ./build-cadence-proxy.ps1"
+    $result = Invoke-CaptureStreams "pwsh -file ./build-temporal-proxy.ps1"
+    $result = Invoke-CaptureStreams "pwsh ./build-test.ps1"
 }
 catch
 {

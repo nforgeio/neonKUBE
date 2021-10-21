@@ -29,99 +29,81 @@ $env:GO111MODULE = "on"
 $projectPath     = "$env:NF_ROOT\Go\test"
 $buildPath       = "$env:NF_BUILD\go-test"
 $logPath         = "$buildPath\build.log"
-$orgDirectory    = Get-Cwd
 
-Set-Cwd $projectPath | Out-Null
+Push-Location $projectPath | Out-Null
 
-# Ensure that the build output folder exist.
-
-if (!(test-path $buildPath))
+try 
 {
-    New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
+    # Ensure that the build output folder exists.
+
+    [System.IO.Directory]::CreateDirectory($buildPath) | Out-Null
+
+    #==============================================================================
+    # BUILD CADENCE TESTS
+
+    # Ensure that the build output folder exist.
+
+    $outputPath = [System.IO.Path]::Combine($buildPath, "cadence")
+
+    [System.IO.Directory]::CreateDirectory($outputPath) | Out-Null
+
+    # Common Cadence client configuration
+
+    Set-Cwd "$projectPath\cadence"
+    Copy-Item config.yaml "$outputPath\config.yaml"
+
+    #----------------------------------------------------------
+    # cwf-args
+
+    Set-Cwd "$projectPath\cadence\cwf-args" | Out-Null
+
+    Write-Output "Building cwf-args" > "$logPath"
+
+    $env:GOOS   = "windows"
+    $env:GOARCH = "amd64"
+
+    go build -o "$outputPath\cwf-args.exe" . >> "$logPath" 2>&1
+    ThrowOnExitCode
+
+    Write-Output "Build success" >> "$logPath" 2>&1
+
+    #==============================================================================
+    # BUILD TEMPORAL TESTS
+
+    # $todo(jefflill): Implement this!
+
+    # Ensure that the build output folder exist.
+
+    $outputPath = [System.IO.Path]::Combine($buildPath, "temporal")
+
+    [System.IO.Directory]::CreateDirectory($outputPath) | Out-Null
+
+    # Common Cadence client configuration
+
+    Set-Cwd "$projectPath\temporal" | Out-Null
+    Copy-Item config.yaml "$outputPath\config.yaml"
+
+    #----------------------------------------------------------
+    # cwf-args
+
+    Set-Cwd "$projectPath\temporal\twf-args" | Out-Null
+
+    Write-Output "Building twf-args" > "$logPath"
+
+    $env:GOOS   = "windows"
+    $env:GOARCH = "amd64"
+
+    go build -o "$outputPath\twf-args.exe" . >> "$logPath" 2>&1
+    ThrowOnExitCode
+
+    Write-Output "Build success" >> "$logPath" 2>&1
 }
-
-#==============================================================================
-# BUILD CADENCE TESTS
-
-# Ensure that the build output folder exist.
-
-$outputPath = Join-Path -Path $buildPath -ChildPath "cadence"
-
-if (!(test-path $outputPath))
+catch
 {
-    New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
-}
-
-# Common Cadence client configuration
-
-Set-Cwd "$projectPath\cadence"
-cp config.yaml "$outputPath\config.yaml"
-
-#----------------------------------------------------------
-# cwf-args
-
-Set-Cwd "$projectPath\cadence\cwf-args" | Out-Null
-
-echo "Building cwf-args" > "$logPath"
-
-$env:GOOS   = "windows"
-$env:GOARCH = "amd64"
-
-go build -o "$outputPath\cwf-args.exe" . >> "$logPath" 2>&1
-
-$exitCode = $lastExitCode
-
-if ($exitCode -ne 0)
-{
-    Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory | Out-Null
-    exit $exitCode
-}
-
-echo "Build success" >> "$logPath" 2>&1
-
-Set-Cwd $orgDirectory | Out-Null
-
-#==============================================================================
-# BUILD TEMPORAL TESTS
-
-# $todo(jefflill): Implement this!
-
-# Ensure that the build output folder exist.
-
-$outputPath = Join-Path -Path $buildPath -ChildPath "temporal"
-
-if (!(test-path $outputPath))
-{
-    New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
-}
-
-# Common Cadence client configuration
-
-Set-Cwd "$projectPath\temporal" | Out-Null
-cp config.yaml "$outputPath\config.yaml"
-
-#----------------------------------------------------------
-# cwf-args
-
-Set-Cwd "$projectPath\temporal\twf-args" | Out-Null
-
-echo "Building twf-args" > "$logPath"
-
-$env:GOOS   = "windows"
-$env:GOARCH = "amd64"
-
-go build -o "$outputPath\twf-args.exe" . >> "$logPath" 2>&1
-
-$exitCode = $lastExitCode
-
-if ($exitCode -ne 0)
-{
-    Write-Error "*** ERROR: [go-test] WINDOWS build failed.  Check build logs: $logPath"
-    Set-Cwd $orgDirectory | Out-Null
+    Write-Exception $_
     exit 1
 }
-
-echo "Build success" >> "$logPath" 2>&1
-
-Set-Cwd $orgDirectory | Out-Null
+finally
+{
+    Pop-Location | Out-Null
+}
