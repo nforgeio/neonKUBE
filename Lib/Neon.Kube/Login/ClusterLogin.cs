@@ -109,7 +109,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Holds additional information required during setup as well as for
-        /// provisoning additional clsuter nodes.
+        /// provisoning additional cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SetupDetails", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "setupDetails", ApplyNamingConventions = false)]
