@@ -79,9 +79,45 @@ namespace Neon.Kube
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
-            if (Engine == OpenEbsEngine.cStor && clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) == 0)
+            switch (Engine)
             {
-                throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.cStor)}].");
+                case OpenEbsEngine.Default:
+
+                    if (clusterDefinition.Nodes.Count() > 1)
+                    {
+                        Engine = OpenEbsEngine.HostPath;
+                    }
+                    else if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) > 0)
+                    {
+                        Engine = OpenEbsEngine.cStor;
+                    }
+                    else
+                    {
+                        throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] for multi-node clusters when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.Default)}].");
+                    }
+                    break;
+
+                case OpenEbsEngine.HostPath:
+
+                    if (clusterDefinition.Nodes.Count() > 1)
+                    {
+                        new ClusterDefinitionException($"The [{Engine}] storage engine is supported only for single-node clusters.");
+                    }
+                    break;
+
+                case OpenEbsEngine.cStor:
+
+                    if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) == 0)
+                    {
+                        throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.cStor)}].");
+                    }
+                    break;
+
+                default:
+                case OpenEbsEngine.Jiva:
+                case OpenEbsEngine.Mayastor:
+
+                    throw new ClusterDefinitionException($"Support for the [{Engine}] storage engine is not implemented yet.");
             }
         }
     }
