@@ -93,8 +93,8 @@ namespace Neon.Kube
         private Step                                currentStep;
         private bool                                isFaulted;
         private bool                                cancelPending;
-        private string                              globalLogPath;
-        private TextWriter                          globalLogWriter;
+        private string                              clusterLogPath;
+        private TextWriter                          clusterLogWriter;
 
         /// <summary>
         /// Constructor.
@@ -134,7 +134,7 @@ namespace Neon.Kube
             this.OperationTitle = title;
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps          = new List<Step>();
-            this.globalLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
+            this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
         }
 
         /// <inheritdoc/>
@@ -860,17 +860,6 @@ namespace Neon.Kube
                             }
                             catch (Exception e)
                             {
-                                // $todo(jefflill):
-                                //
-                                // We're going to report global step exceptions as if they
-                                // happened on the first master node because there's no
-                                // other place to log this in the current design.
-                                //
-                                // I suppose we could create a [global.log] file or something
-                                // and put this there and also indicate this somewhere in
-                                // the console output, but this is not worth messing with
-                                // right now.
-
                                 isFaulted       = true;
                                 stepDisposition = SetupStepState.Failed;
 
@@ -1183,8 +1172,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public void LogGlobal(string message = null)
         {
-            globalLogWriter?.WriteLine(message ?? string.Empty);
-            globalLogWriter?.Flush();
+            clusterLogWriter?.WriteLine(message ?? string.Empty);
+            clusterLogWriter?.Flush();
         }
 
         /// <inheritdoc/>
@@ -1300,9 +1289,9 @@ namespace Neon.Kube
 
             // Initialize the global logger.
 
-            Directory.CreateDirectory(Path.GetDirectoryName(globalLogPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(clusterLogPath));
 
-            globalLogWriter = new StreamWriter(new FileStream(globalLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
+            clusterLogWriter = new StreamWriter(new FileStream(clusterLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
 
             // Start the step execution thread.
 
@@ -1461,9 +1450,9 @@ namespace Neon.Kube
 
                         // Close the global log.
 
-                        globalLogWriter?.Flush();
-                        globalLogWriter?.Dispose();
-                        globalLogWriter = null;
+                        clusterLogWriter?.Flush();
+                        clusterLogWriter?.Dispose();
+                        clusterLogWriter = null;
                     }
                 });
 

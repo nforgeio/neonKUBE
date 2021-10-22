@@ -118,7 +118,7 @@ namespace Neon.Kube
 
             // We're going to maintain an internal log writer as well as the external writer
             // so that we'll always have easy access to the log even when the external writer
-            // is disabled.
+            // isn't open.
 
             internalLogBuilder = new StringBuilder();
             internalLogWriter  = new StringWriter(internalLogBuilder);
@@ -777,6 +777,7 @@ rm -rf /var/lib/dhcp/*
         {
             base.Log(text);
             internalLogWriter.Write(text);
+
         }
 
         /// <inheritdoc/>
@@ -790,6 +791,7 @@ rm -rf /var/lib/dhcp/*
         public override void LogFlush()
         {
             base.LogFlush();
+            internalLogWriter.Flush();
         }
     }
 }
