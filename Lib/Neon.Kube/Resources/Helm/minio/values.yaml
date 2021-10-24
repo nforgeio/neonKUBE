@@ -14,7 +14,7 @@ operator:
   #   - name: WATCHED_NAMESPACE
   #     value: ""
   image:
-    organization: ghcr.io/neonrelease-dev
+    organization: neon-registry.node.local
     repository: minio-operator
     tag: v4.2.5
     pullPolicy: IfNotPresent
@@ -38,7 +38,7 @@ operator:
 
 console:
   image:
-    organization: ghcr.io/neonrelease-dev
+    organization: neon-registry.node.local
     repository: minio-console
     tag: v0.9.8
     pullPolicy: IfNotPresent
@@ -64,10 +64,10 @@ console:
 ## MinIO Tenant Definition
 tenants:
   # Tenant name
-  - name: neon-system
+  - name: minio
     ## Registry location and Tag to download MinIO Server image
     image:
-      organization: ghcr.io/neonrelease-dev
+      organization: neon-registry.node.local
       repository: minio-minio
       tag: RELEASE.2021-09-03T03-56-13Z
       pullPolicy: IfNotPresent
@@ -152,7 +152,11 @@ tenants:
     podManagementPolicy: Parallel
     ## serviceMetadata allows passing additional labels and annotations to MinIO and Console specific
     ## services created by the operator.
-    serviceMetadata: {}
+    serviceMetadata:
+      minioServiceAnnotations:
+        reloader.stakater.com/search: "true"
+      consoleServiceAnnotations:
+        reloader.stakater.com/search: "true"
     ## Add environment variables to be set in MinIO container (https://github.com/minio/minio/tree/master/docs/config)
     env:
       - name: MINIO_PROMETHEUS_AUTH_TYPE
