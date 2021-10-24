@@ -284,7 +284,7 @@ spec:
 
             await InstallKialiAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
-            await InstallOpenEBSAsync(controller, master);
+            await InstallOpenEbsAsync(controller, master);
             await InstallReloaderAsync(controller, master);
             await InstallPrometheusAsync(controller, master);
             await InstallSystemDbAsync(controller, master);
@@ -1907,7 +1907,7 @@ spec:
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallOpenEBSAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallOpenEbsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1954,150 +1954,189 @@ spec:
                             await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
                         });
 
-                    if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+                    switch (cluster.Definition.OpenEbs.Engine)
                     {
-                        await master.InvokeIdempotentAsync("setup/openebs-cstor",
-                            async () =>
-                            {
-                                controller.LogProgress(master, verb: "setup", message: "openebs-cstor");
+                        case OpenEbsEngine.cStor:
 
-                                var values = new Dictionary<string, object>();
+                            await DeployOpenEbsWithcStor(controller, master);
+                            break;
 
-                                values.Add("cspcOperator.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cspcOperator.poolManager.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cspcOperator.cstorPool.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cspcOperator.cstorPoolExporter.image.organization", KubeConst.LocalClusterRegistry);
+                        case OpenEbsEngine.HostPath:
 
-                                values.Add("cvcOperator.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cvcOperator.target.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cvcOperator.volumeMgmt.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("cvcOperator.volumeExporter.image.organization", KubeConst.LocalClusterRegistry);
+                            throw new NotImplementedException("$todo(marcusbooyah)");
 
-                                values.Add("csiController.resizer.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("csiController.snapshotter.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("csiController.snapshotController.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("csiController.attacher.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("csiController.provisioner.image.organization", KubeConst.LocalClusterRegistry);
-                                values.Add("csiController.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+                        case OpenEbsEngine.Jiva:
 
-                                values.Add("cstorCSIPlugin.image.organization", KubeConst.LocalClusterRegistry);
+                            await WaitForOpenEbsReady(controller, master);
+                            throw new NotImplementedException("$todo(marcusbooyah)");
 
-                                values.Add("csiNode.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+                        default:
+                        case OpenEbsEngine.Default:
+                        case OpenEbsEngine.Mayastor:
 
-                                values.Add("admissionServer.image.organization", KubeConst.LocalClusterRegistry);
-
-                                await master.InstallHelmChartAsync(controller, "openebs_cstor_operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespaces.NeonStorage);
-                            });
+                            throw new NotImplementedException($"[{cluster.Definition.OpenEbs.Engine}]");
                     }
+                });
+        }
 
-                    await master.InvokeIdempotentAsync("setup/openebs-ready",
-                        async () =>
-                        {
-                            controller.LogProgress(master, verb: "wait for", message: "openebs");
+        /// <summary>
+        /// Deploys OpenEBS using the cStor engine.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task DeployOpenEbsWithcStor(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-                            await NeonHelper.WaitAllAsync(
-                                new List<Task>()
-                                {
-                                    WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-admission-server"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-apiserver"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-localpv-provisioner"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm-operator"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-provisioner"),
-                                    WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-snapshot-operator")
-                                });
-                        });
+            await master.InvokeIdempotentAsync("setup/openebs-cstor",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "openebs-cstor");
 
-                    if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("cspcOperator.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.poolManager.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.cstorPool.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.cstorPoolExporter.image.organization", KubeConst.LocalClusterRegistry);
+
+                    values.Add("cvcOperator.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.target.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.volumeMgmt.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.volumeExporter.image.organization", KubeConst.LocalClusterRegistry);
+
+                    values.Add("csiController.resizer.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.snapshotter.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.snapshotController.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.attacher.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.provisioner.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+
+                    values.Add("cstorCSIPlugin.image.organization", KubeConst.LocalClusterRegistry);
+
+                    values.Add("csiNode.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+
+                    values.Add("admissionServer.image.organization", KubeConst.LocalClusterRegistry);
+
+                    await master.InstallHelmChartAsync(controller, "openebs_cstor_operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespaces.NeonStorage);
+                });
+
+            await WaitForOpenEbsReady(controller, master);
+
+            controller.LogProgress(master, verb: "setup", message: "openebs-pool");
+
+            await master.InvokeIdempotentAsync("setup/openebs-pool",
+                async () =>
+                {
+                    var cStorPoolCluster = new V1CStorPoolCluster()
                     {
-                        controller.LogProgress(master, verb: "setup", message: "openebs-pool");
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name              = "cspc-stripe",
+                            NamespaceProperty = KubeNamespaces.NeonStorage
+                        },
+                        Spec = new V1CStorPoolClusterSpec()
+                        {
+                            Pools = new List<V1CStorPoolSpec>()
+                        }
+                    };
 
-                        await master.InvokeIdempotentAsync("setup/openebs-pool",
-                            async () =>
+                    var blockDevices = ((JObject)await GetK8sClient(controller).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
+
+                    foreach (var n in cluster.Definition.Nodes)
+                    {
+                        if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                        {
+                            var pool = new V1CStorPoolSpec()
                             {
-                                var cStorPoolCluster = new V1CStorPoolCluster()
+                                NodeSelector = new Dictionary<string, string>()
                                 {
-                                    Metadata = new V1ObjectMeta()
+                                    { "kubernetes.io/hostname", n.Name }
+                                },
+                                DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                                {
+                                    new V1CStorDataRaidGroup()
                                     {
-                                        Name              = "cspc-stripe",
-                                        NamespaceProperty = KubeNamespaces.NeonStorage
-                                    },
-                                    Spec = new V1CStorPoolClusterSpec()
-                                    {
-                                        Pools = new List<V1CStorPoolSpec>()
+                                        BlockDevices = new List<V1CStorBlockDeviceRef>()
                                     }
-                                };
-
-                                var blockDevices = ((JObject)await GetK8sClient(controller).ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
-
-                                foreach (var n in cluster.Definition.Nodes)
+                                },
+                                PoolConfig = new V1CStorPoolConfig()
                                 {
-                                    if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                                    DataRaidGroupType = DataRaidGroupType.Stripe,
+                                    Tolerations = new List<V1Toleration>()
                                     {
-                                        var pool = new V1CStorPoolSpec()
-                                        {
-                                            NodeSelector = new Dictionary<string, string>()
-                                            {
-                                                { "kubernetes.io/hostname", n.Name }
-                                            },
-                                            DataRaidGroups = new List<V1CStorDataRaidGroup>()
-                                            {
-                                                new V1CStorDataRaidGroup()
-                                                {
-                                                    BlockDevices = new List<V1CStorBlockDeviceRef>()
-                                                }
-                                            },
-                                            PoolConfig = new V1CStorPoolConfig()
-                                            {
-                                                DataRaidGroupType = DataRaidGroupType.Stripe,
-                                                Tolerations       = new List<V1Toleration>()
-                                                    {
-                                                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                                    }
-                                            }
-                                        };
-
-                                        foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
-                                        {
-                                            pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
-                                                new V1CStorBlockDeviceRef()
-                                                {
-                                                    BlockDeviceName = device.Metadata.Name
-                                                });
-                                        }
-
-                                        cStorPoolCluster.Spec.Pools.Add(pool);
+                                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
                                     }
                                 }
+                            };
 
-                                GetK8sClient(controller).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", KubeNamespaces.NeonStorage, "cstorpoolclusters");
-                            });
-
-                        await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
-                            async () =>
+                            foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
                             {
-                                controller.LogProgress(master, verb: "wait for", message: "openebs cstor");
-
-                                await NeonHelper.WaitAllAsync(
-                                    new List<Task>()
+                                pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
+                                    new V1CStorBlockDeviceRef()
                                     {
-                                        WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-csi-node"),
-                                        WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-admission-server"),
-                                        WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-cvc-operator"),
-                                        WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-cspc-operator")
+                                        BlockDeviceName = device.Metadata.Name
                                     });
-                            });
+                            }
 
-                        var replicas = 3;
-
-                        if (cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < 3)
-                        {
-                            replicas = cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
+                            cStorPoolCluster.Spec.Pools.Add(pool);
                         }
-
-                        await CreateCstorStorageClass(controller, master, "openebs-cstor", replicaCount: replicas);
                     }
+
+                    GetK8sClient(controller).CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", KubeNamespaces.NeonStorage, "cstorpoolclusters");
+                });
+
+            await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "openebs cstor");
+
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-csi-node"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-admission-server"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-cvc-operator"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-cstor-cspc-operator")
+                        });
+                });
+
+            var replicas = 3;
+
+            if (cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicas)
+            {
+                replicas = cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
+            }
+
+            await CreateCstorStorageClass(controller, master, "openebs-cstor", replicaCount: replicas);
+        }
+
+        /// <summary>
+        /// Waits for OpenEBS to become ready.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task WaitForOpenEbsReady(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await master.InvokeIdempotentAsync("setup/openebs-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "openebs");
+
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-admission-server"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-apiserver"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-localpv-provisioner"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm-operator"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-provisioner"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-snapshot-operator")
+                        });
                 });
         }
 
@@ -2216,8 +2255,8 @@ $@"- name: StorageType
                                 {"openebs.io/cas-type", "local" }
                             },
                         },
-                        Provisioner = "openebs.io/local",
-                        ReclaimPolicy = "Delete",
+                        Provisioner       = "openebs.io/local",
+                        ReclaimPolicy     = "Delete",
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
@@ -2272,7 +2311,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Creates an OpenEBS cStor Kubernetes Storage Class.
+        /// Creates the approperiate OpenEBS Kubernetes Storage Class for the cluster.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -2289,6 +2328,14 @@ $@"- name: StorageType
 
             switch (cluster.Definition.OpenEbs.Engine)
             {
+                case OpenEbsEngine.Default:
+
+                    throw new InvalidOperationException($"[{nameof(OpenEbsEngine.Default)}] is not valid here.  This must be set to one of the other storage engines in [{nameof(OpenEbsOptions)}.Validate()].");
+
+                case OpenEbsEngine.HostPath:
+
+                    throw new NotImplementedException("$todo(marcusbooyah)");
+
                 case OpenEbsEngine.cStor:
 
                     await CreateCstorStorageClass(controller, master, name);
@@ -2299,8 +2346,10 @@ $@"- name: StorageType
                     await CreateJivaStorageClass(controller, master, name);
                     break;
 
+                case OpenEbsEngine.Mayastor:
                 default:
-                    throw new Exception("OpenEBS engine not defined.");
+
+                    throw new NotImplementedException($"Support for the [{cluster.Definition.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
             };
         }
 
