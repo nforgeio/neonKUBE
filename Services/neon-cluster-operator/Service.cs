@@ -242,7 +242,7 @@ namespace NeonClusterOperator
         public async Task CheckNodeImagesAsync()
         {
             var lastChecked = await kubeKv.GetAsync<string>(KubeConst.ClusterImagesLastChecked, null);
-
+            
             if (lastChecked != null && DateTime.Parse(lastChecked) > DateTime.UtcNow.AddMinutes(-60))
             {
                 return;

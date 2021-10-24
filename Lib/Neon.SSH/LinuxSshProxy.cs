@@ -3554,12 +3554,9 @@ rm -rf /etc/neon-init/*
 @"
 mkdir -p /etc/neon-init
 
-if [ -d /etc/neon-init/netplan-backup ] ; then
-
-    rm -r /etc/netplan/*
-    cp -r /etc/neon-init/netplan-backup/* /etc/netplan
-    rm -r /etc/neon-init/netplan-backup
-fi
+rm -r /etc/netplan/*
+cp -r /etc/neon-init/netplan-backup/* /etc/netplan
+rm -r /etc/neon-init/netplan-backup
 
 rm -rf /etc/neon-init/*
 ";
