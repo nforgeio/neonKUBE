@@ -183,12 +183,25 @@ namespace Neon.Common
         /// Starts a new <see cref="Thread"/> to perform an action.
         /// </summary>
         /// <param name="action">The action to be performed.</param>
+        /// <param name="maxStackSize">
+        /// <para>
+        /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
+        /// 0 to use the default maximum stack size specified in the header for the executable.
+        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
+        /// the default stack size.  No exception is thrown.
+        /// </para>
+        /// <para>
+        /// This <b>defaults to 0</b> which generally means the stack size will be limited
+        /// to <b>1 MiB for 32-bit</b> applications or <b>4 MiB for 64-bit</b> applications.
+        /// </para>
+        /// </param>
         /// <returns>The <see cref="Thread"/>.</returns>
-        public static Thread StartThread(Action action)
+        public static Thread StartThread(Action action, int maxStackSize = 0)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+            Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
 
-            var thread = new Thread(new ThreadStart(action));
+            var thread = new Thread(new ThreadStart(action), maxStackSize: maxStackSize);
 
             thread.Start();
 
@@ -201,15 +214,28 @@ namespace Neon.Common
         /// </summary>
         /// <param name="action">The action to be performed.</param>
         /// <param name="parameter">The parameter to be passed to the thread action.</param>
+        /// <param name="maxStackSize">
+        /// <para>
+        /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
+        /// 0 to use the default maximum stack size specified in the header for the executable.
+        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
+        /// the default stack size.  No exception is thrown.
+        /// </para>
+        /// <para>
+        /// This <b>defaults to 0</b> which generally means the stack size will be limited
+        /// to <b>1 MiB for 32-bit</b> applications or <b>4 MiB for 64-bit</b> applications.
+        /// </para>
+        /// </param>
         /// <returns>The <see cref="Thread"/>.</returns>
-        public static Thread StartThread(Action<object> action, object parameter)
+        public static Thread StartThread(Action<object> action, object parameter, int maxStackSize = 0)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+            Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
 
             // Wrap the user's action with another action here so we can
             // cast the parameter to required type.
 
-            var thread = new Thread(new ParameterizedThreadStart(action));
+            var thread = new Thread(new ParameterizedThreadStart(action), maxStackSize: maxStackSize);
 
             thread.Start(parameter);
 
@@ -223,15 +249,28 @@ namespace Neon.Common
         /// <typeparam name="TParam">Identifies the type of the thread action parameter.</typeparam>
         /// <param name="action">The action to be performed.</param>
         /// <param name="parameter">The parameter to be passed to the thread action.</param>
+        /// <param name="maxStackSize">
+        /// <para>
+        /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
+        /// 0 to use the default maximum stack size specified in the header for the executable.
+        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
+        /// the default stack size.  No exception is thrown.
+        /// </para>
+        /// <para>
+        /// This <b>defaults to 0</b> which generally means the stack size will be limited
+        /// to <b>1 MiB for 32-bit</b> applications or <b>4 MiB for 64-bit</b> applications.
+        /// </para>
+        /// </param>
         /// <returns>The <see cref="Thread"/>.</returns>
-        public static Thread StartTypedThread<TParam>(Action<TParam> action, TParam parameter)
+        public static Thread StartTypedThread<TParam>(Action<TParam> action, TParam parameter, int maxStackSize = 0)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+            Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
 
             // Wrap the user's action with another action here so we can
             // cast the parameter to required type.
 
-            var thread = new Thread(new ParameterizedThreadStart(arg => action((TParam)arg)));
+            var thread = new Thread(new ParameterizedThreadStart(arg => action((TParam)arg)), maxStackSize: maxStackSize);
 
             thread.Start(parameter);
 
