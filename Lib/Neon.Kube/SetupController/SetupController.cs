@@ -175,7 +175,7 @@ namespace Neon.Kube
         {
             if (isRunning)
             {
-                throw new InvalidOperationException("Cannot modify setup controller steps after execution has started.");
+                throw new InvalidOperationException("Cannot add setup controller steps after execution has started.");
             }
         }
 
@@ -288,6 +288,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(subController != null, nameof(subController));
             Covenant.Requires<InvalidOperationException>(subController.parent == null, "The subcontroller is already a step of a parent controller.");
             Covenant.Requires<InvalidOperationException>(this.parent == null, "Cannot nest subcontroller steps more than one level deep.");
+            EnsureNotRunning();
 
             subController.parent = this;
 
@@ -351,6 +352,7 @@ namespace Neon.Kube
         public object AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
+            EnsureNotRunning();
 
             return AddGlobalStep(stepLabel,
                 controller =>
@@ -438,6 +440,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             if (timeout == null)
             {
@@ -491,6 +494,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             if (nodePredicate == null)
             {
