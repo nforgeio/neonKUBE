@@ -87,6 +87,7 @@ namespace Neon.Kube
         private List<IDisposable>                   disposables = new List<IDisposable>();
         private ISetupController                    parent      = null;
         private bool                                isRunning   = false;
+        private int                                 maxStackSize;
         private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
@@ -169,7 +170,7 @@ namespace Neon.Kube
         /// <summary>
         /// Ensures that controller execution has not started.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
         private void EnsureNotRunning()
         {
             if (isRunning)
@@ -537,7 +538,7 @@ namespace Neon.Kube
         /// in parallel for this step, overriding the controller default.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
         public object AddNodeStep(
             string stepLabel,
             Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
@@ -924,7 +925,8 @@ namespace Neon.Kube
                             LogGlobalError($"FAULTED NODES: {faultedNodes}");
                             LogGlobal();
                         }
-                    });
+                    },
+                    maxStackSize: maxStackSize);
 
                 // The setup step is executing above in a thread and we're going to loop here
                 // to raise [StatusChangedEvent] when we detect a status change giving any UI
@@ -1269,12 +1271,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false)
+        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false, int maxStackSize = 250 * (int)ByteUnits.KibiBytes)
         {
+            Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
+
             // Set this so we can ensure that the step list can no longer be modifie
             // after execution has started.
 
-            isRunning = true;
+            this.isRunning    = true;
+            this.maxStackSize = maxStackSize;
 
             // This method had been synchronous for a very long time (maybe 5 years)
             // but we need to make this async now so that it would integrate well
@@ -1454,7 +1459,8 @@ namespace Neon.Kube
                         clusterLogWriter?.Dispose();
                         clusterLogWriter = null;
                     }
-                });
+                },
+                maxStackSize: maxStackSize);
 
             return tcs.Task;
         }

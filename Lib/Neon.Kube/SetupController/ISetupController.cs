@@ -249,12 +249,24 @@ namespace Neon.Kube
         /// Performs the setup operation steps in the in the order they were added to the controller.
         /// </summary>
         /// <param name="leaveNodesConnected">Optionally leave the node proxies connected after setup completed.</param>
+        /// <param name="maxStackSize">
+        /// <para>
+        /// Optionally specifies the maximum stack size, in bytes, to be used by the threads
+        /// created by this method, or 0 to use the default maximum stack size specified in 
+        /// the header for the executable.  Important for partially trusted code, <paramref name="maxStackSize"/> 
+        /// is ignored if it is greater than the default stack size.  No exception is thrown 
+        /// in this case.
+        /// </para>
+        /// <para>
+        /// This <b>defaults to 250 KiB</b> to reduce the memory footprint when deploying large clusters.
+        /// </para>
+        /// </param>
         /// <returns>The final disposition of the setup run.</returns>
-        Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false);
+        Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false, int maxStackSize = 250 * (int)ByteUnits.KibiBytes);
 
         /// <summary>
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
-        /// can be properly disposed when <see cref="RunAsync(bool)"/> exits.
+        /// can be properly disposed when <see cref="RunAsync(bool, int)"/> exits.
         /// </summary>
         /// <param name="disposable"></param>
         void AddDisposable(IDisposable disposable);
