@@ -262,44 +262,5 @@ namespace Neon.Common
                 }
             }
         }
-
-        /// <summary>
-        /// <para>
-        /// The fully qualified path to the file where the simple <see cref="LogDebug(string)"/>
-        /// method will write debug lines.  This defaults to <b>debug-log.txt</b> within the
-        /// current user's home folder.
-        /// </para>
-        /// <para>
-        /// You may change this to a different location.
-        /// </para>
-        /// </summary>
-        public static string DebugLogPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "debug-log.txt");
-
-        /// <summary>
-        /// Clears the debug log file if it exists.
-        /// </summary>
-        public static void ClearDebugLog()
-        {
-            if (!string.IsNullOrEmpty(DebugLogPath) && File.Exists(DebugLogPath))
-            {
-                File.WriteAllText(DebugLogPath, string.Empty);
-            }
-        }
-
-        /// <summary>
-        /// Appends a line of text to the file at <see cref="DebugLogPath"/>.  This is intended for
-        /// low-level debugging when normal logging via <see cref="LogManager"/> isn't suitable.
-        /// </summary>
-        /// <param name="line">Optionally specifies the line of text.</param>
-        public static void LogDebug(string line = null)
-        {
-            var folder = Path.GetDirectoryName(DebugLogPath);
-
-            line  = line ?? string.Empty;
-            line += Environment.NewLine;
-
-            Directory.CreateDirectory(folder);
-            File.AppendAllText(DebugLogPath, line);
-        }
     }
 }

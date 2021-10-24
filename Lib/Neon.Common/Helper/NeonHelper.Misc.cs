@@ -1253,7 +1253,6 @@ namespace Neon.Common
                         break;
 
                     case '=':
-                        //Debug.Assert(false);
                         base64Chars[iter] = c;
                         break;
 
