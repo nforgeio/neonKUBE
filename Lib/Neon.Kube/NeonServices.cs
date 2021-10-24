@@ -46,12 +46,12 @@ namespace Neon.Kube
         /// <summary>
         /// Service that runs Grafana setup.
         /// </summary>
-        public const string SetupGrafana = "neon-setup-grafana";
+        public const string SetupGrafana = "setup-grafana";
 
         /// <summary>
         /// Service that runs Harbor setup.
         /// </summary>
-        public const string SetupHarbor = "neon-setup-harbor";
+        public const string SetupHarbor = "setup-harbor";
 
         /// <summary>
         /// Neon system database.
