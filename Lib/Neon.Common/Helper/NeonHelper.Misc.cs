@@ -187,8 +187,8 @@ namespace Neon.Common
         /// <para>
         /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
         /// 0 to use the default maximum stack size specified in the header for the executable.
-        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
-        /// the default stack size.  No exception is thrown.
+        /// Important for partially trusted code, <paramref name="maxStackSize"/> is ignored if 
+        /// it is greater than the default stack size.  No exception is thrown in theis case.
         /// </para>
         /// <para>
         /// This <b>defaults to 0</b> which generally means the stack size will be limited
@@ -218,8 +218,8 @@ namespace Neon.Common
         /// <para>
         /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
         /// 0 to use the default maximum stack size specified in the header for the executable.
-        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
-        /// the default stack size.  No exception is thrown.
+        /// Important for partially trusted code, <paramref name="maxStackSize"/> is ignored if 
+        /// it is greater than the default stack size.  No exception is thrown in theis case.
         /// </para>
         /// <para>
         /// This <b>defaults to 0</b> which generally means the stack size will be limited
@@ -253,8 +253,8 @@ namespace Neon.Common
         /// <para>
         /// Optionally specifies the maximum stack size, in bytes, to be used by the thread, or 
         /// 0 to use the default maximum stack size specified in the header for the executable.
-        /// Important for partially trusted code, maxStackSize is ignored if it is greater than
-        /// the default stack size.  No exception is thrown.
+        /// Important for partially trusted code, <paramref name="maxStackSize"/> is ignored if 
+        /// it is greater than the default stack size.  No exception is thrown in theis case.
         /// </para>
         /// <para>
         /// This <b>defaults to 0</b> which generally means the stack size will be limited
