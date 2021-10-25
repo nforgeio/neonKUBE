@@ -3081,7 +3081,6 @@ $@"- name: StorageType
                     var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
                     secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
                     secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-
                     await GetK8sClient(controller).ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
 
                     var monitoringSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
@@ -3089,6 +3088,30 @@ $@"- name: StorageType
                     monitoringSecret.Data["secretkey"] = secret.Data["secretkey"];
                     await GetK8sClient(controller).ReplaceNamespacedSecretAsync(monitoringSecret, monitoringSecret.Name(), KubeNamespaces.NeonMonitor);
 
+                    var registrySecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+                    registrySecret.Data["accesskey"] = secret.Data["accesskey"];
+                    registrySecret.Data["secretkey"] = secret.Data["secretkey"];
+                    await GetK8sClient(controller).ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
+
+                    // delete certs so that they will be regenerated
+                    await GetK8sClient(controller).DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
+                    await GetK8sClient(controller).DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
+
+                    // restart minio components
+                    var minioOperator = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
+                    await minioOperator.RestartAsync(GetK8sClient(controller));
+                    var minioStatefulSet = (await GetK8sClient(controller).ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
+                    await minioStatefulSet.RestartAsync(GetK8sClient(controller));
+                    
+                    // restart registry components
+                    var harborChartmuseum = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
+                    await harborChartmuseum.RestartAsync(GetK8sClient(controller));
+                    var harborCore = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
+                    await harborCore.RestartAsync(GetK8sClient(controller));
+                    var harborRegistry = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
+                    await harborRegistry.RestartAsync(GetK8sClient(controller));
+                    var harborRegistryctl = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-registryctl", KubeNamespaces.NeonSystem);
+                    await harborRegistryctl.RestartAsync(GetK8sClient(controller));
                 });
             }
         }

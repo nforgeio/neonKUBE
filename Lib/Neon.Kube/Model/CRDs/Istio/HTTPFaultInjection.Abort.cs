@@ -58,7 +58,7 @@ namespace Neon.Kube
         /// Percentage of requests to be aborted with the error code provided.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "percentage", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "percentage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public Percent Percentage { get; set; }
 

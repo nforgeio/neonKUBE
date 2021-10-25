@@ -96,5 +96,68 @@ namespace Neon.Kube
                 timeout: TimeSpan.FromSeconds(30),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
+
+        /// <summary>
+        /// Restarts a <see cref="V1StatefulSet"/>.
+        /// </summary>
+        /// <param name="deployment"></param>
+        /// <param name="kubernetes"></param>
+        /// <returns></returns>
+        public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes kubernetes)
+        {
+            // $todo(jefflill):
+            // fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
+
+            var generation = statefulset.Status.ObservedGeneration;
+
+            var patchStr = $@"
+{{
+    ""spec"": {{
+        ""template"": {{
+            ""metadata"": {{
+                ""annotations"": {{
+                    ""kubectl.kubernetes.io/restartedAt"": ""{DateTime.UtcNow.ToString("s")}""
+                }}
+            }}
+        }}
+    }}
+}}";
+
+            await kubernetes.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var newDeployment = await kubernetes.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+
+                        return newDeployment.Status.ObservedGeneration > generation;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout: TimeSpan.FromSeconds(90),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        statefulset = await kubernetes.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+
+                        return (statefulset.Status.Replicas == statefulset.Status.ReadyReplicas) && statefulset.Status.UpdatedReplicas == null;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout: TimeSpan.FromSeconds(90),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+        }
     }
 }
