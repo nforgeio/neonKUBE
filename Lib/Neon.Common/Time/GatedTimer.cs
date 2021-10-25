@@ -192,7 +192,7 @@ namespace Neon.Time
             {
                 inCallback = false;
 
-                // If the timer hasn't been disposed then reenable it.
+                // If the timer hasn't been disposed then re-enable it.
 
                 if (timer != null)
                 {
