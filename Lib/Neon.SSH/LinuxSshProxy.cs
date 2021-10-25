@@ -3483,7 +3483,7 @@ echo $? > {cmdFolder}/exit
         /// <note>
         /// The <b>neon-init</b> service disables itself after running for the first time.
         /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
-        /// the reenable this service when required.
+        /// the re-enable this service when required.
         /// </note>
         /// </summary>
         /// <returns><c>true</c> if <b>neon-init</b> has been executed.</returns>
@@ -3505,13 +3505,13 @@ echo $? > {cmdFolder}/exit
         /// <para>
         /// Calling this with <c>true</c> will prevent the <b>neon-init</b> service from
         /// looking for a mounted ISO on next boot and executing the special script  there.
-        /// Calling this with <c>false</c> will reenable the <b>neon-init</b> service
+        /// Calling this with <c>false</c> will re-enable the <b>neon-init</b> service
         /// when the machine is rebooted.
         /// </para>
         /// <note>
         /// The <b>neon-init</b> service disables itself after running for the first time.
         /// You'll need to call <see cref="SetNeonInitStatus(bool, bool)"/> passing <c>false</c>
-        /// the reenable this service when required.
+        /// the re-enable this service when required.
         /// </note>
         /// </summary>
         /// <param name="initialized">
