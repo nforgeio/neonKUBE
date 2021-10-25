@@ -375,6 +375,88 @@ namespace Neon.Kube
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("check node OS", (state, node) => node.VerifyNodeOS());
 
+            controller.AddNodeStep("vm image type",
+                (state, node) =>
+                {
+                    // Ensure that the source node image type is supported by the
+                    // current operation and when preparing a ready-to-go image that
+                    // we set the node image types to ready-to-go.
+
+                    switch (readyToGoMode)
+                    {
+                        case ReadyToGoMode.Normal:
+
+                            switch (node.ImageType)
+                            {
+                                case KubeImageType.Node:
+
+                                    // This is expected.
+
+                                    break;
+
+                                case KubeImageType.ReadyToGo:
+                                case KubeImageType.Base:
+                                default:
+
+                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
+                            }
+                            break;
+
+                        case ReadyToGoMode.Prepare:
+
+                            switch (node.ImageType)
+                            {
+                                case KubeImageType.Node:
+
+                                    // This is expected.
+
+                                    node.ImageType = KubeImageType.ReadyToGo;
+                                    break;
+
+                                case KubeImageType.ReadyToGo:
+                                case KubeImageType.Base:
+                                default:
+
+                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
+                            }
+                            break;
+
+                        case ReadyToGoMode.Setup:
+
+                            switch (node.ImageType)
+                            {
+                                case KubeImageType.ReadyToGo:
+
+                                    // This is expected.
+
+                                    break;
+
+                                case KubeImageType.Node:
+                                case KubeImageType.Base:
+                                default:
+
+                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
+                            }
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+
+                    var imageVersion = node.ImageVersion;
+
+                    if (imageVersion == null)
+                    {
+                        throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
+                    }
+
+                    if (imageVersion != SemanticVersion.Parse(KubeConst.NeonKubeVersion))
+                    {
+                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
+                    }
+                });
+
             controller.AddNodeStep("check image version",
                 (state, node) =>
                 {
@@ -413,7 +495,7 @@ namespace Neon.Kube
 
                     node.PrepareNode(controller);
 
-                    // When preparing a ready-to-go image, we need to reenable the [neon-init]
+                    // When preparing a ready-to-go image, we need to re-enable the [neon-init]
                     // service so we'll be able to mount an ISO with our special script to configure
                     // the SSH password and network when preparing user clusters using this prepared
                     // image.
