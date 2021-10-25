@@ -17,6 +17,8 @@ spec:
       labels:
         app: {{ template "citus-postgresql.name" . }}-manager
         release: {{ .Release.Name }}
+      annotations:
+        reloader.stakater.com/search: "true"
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

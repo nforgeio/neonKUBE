@@ -43,6 +43,8 @@ spec:
         nodePort: 30001
         targetPort: grafana-http
   deployment:
+    annotations:
+      reloader.stakater.com/search: "true"
     envFrom:
       - secretRef:
           name: grafana-db-password

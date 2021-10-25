@@ -23,6 +23,8 @@ spec:
         app: {{ template "citus-postgresql.name" . }}-worker
         release: {{ .Release.Name }}
         citusType: {{ .Values.worker.citusType }}
+      annotations:
+        reloader.stakater.com/search: "true"
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

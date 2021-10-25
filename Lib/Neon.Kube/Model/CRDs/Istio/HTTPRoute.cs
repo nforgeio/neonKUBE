@@ -55,7 +55,8 @@ namespace Neon.Kube
         /// while the list of match blocks have OR semantics. The rule is matched if any one of the match blocks succeed.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "match", Required = Required.Always)]
+        [JsonProperty(PropertyName = "match", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public List<HTTPMatchRequest> Match { get; set; }
 
         /// <summary>

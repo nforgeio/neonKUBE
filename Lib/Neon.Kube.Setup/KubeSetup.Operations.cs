@@ -265,7 +265,13 @@ spec:
 
             ConfigureKubernetes(controller, cluster.FirstMaster);
             ConfigureWorkstation(controller, master);
+
             ConnectCluster(controller);
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await RestartPodsAsync(controller, master);
+            }
 
             await ConfigureMasterTaintsAsync(controller, master);
             await TaintNodesAsync(controller);
@@ -313,10 +319,189 @@ spec:
         }
 
         /// <summary>
-        /// Basic Kubernetes cluster initialization.
+        /// Method to generate Kubernetes cluster configuration.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="master"></param>
+        /// <returns></returns>
+        public static string GenerateKubernetesClusterConfig(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            var controlPlaneEndpoint = $"kubernetes-masters:6442";
+            var sbCertSANs = new StringBuilder();
+
+            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                // Tweak the API server endpoint for WSL2.
+
+                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
+            }
+
+            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
+            {
+                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
+
+                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
+
+                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
+                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+            }
+
+            foreach (var node in cluster.Masters)
+            {
+                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
+            }
+
+            if (cluster.Definition.IsDesktopCluster)
+            {
+                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
+                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
+            }
+
+            var kubeletFailSwapOnLine = string.Empty;
+            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
+
+            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            {
+                // SWAP will be enabled by the default Microsoft WSL2 kernel which
+                // will cause Kubernetes to complain because this isn't a supported
+                // configuration.  We need to disable these error checks.
+
+                kubeletFailSwapOnLine = "failSwapOn: false";
+                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
+            }
+
+            var clusterConfig = new StringBuilder();
+
+            clusterConfig.AppendLine(
+$@"
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+clusterName: {cluster.Name}
+kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
+imageRepository: ""{KubeConst.LocalClusterRegistry}""
+apiServer:
+  extraArgs:
+    bind-address: 0.0.0.0
+    advertise-address: 0.0.0.0
+    logging-format: json
+    default-not-ready-toleration-seconds: ""30"" # default 300
+    default-unreachable-toleration-seconds: ""30"" #default  300
+    allow-privileged: ""true""
+    api-audiences: api
+    service-account-issuer: kubernetes.default.svc
+    service-account-key-file: /etc/kubernetes/pki/sa.key
+    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
+  certSANs:
+{sbCertSANs}
+controlPlaneEndpoint: ""{controlPlaneEndpoint}""
+networking:
+  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
+  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
+controllerManager:
+  extraArgs:
+    logging-format: json
+    node-monitor-grace-period: 15s #default 40s
+    node-monitor-period: 5s #default 5s
+    pod-eviction-timeout: 30s #default 5m0s
+scheduler:
+  extraArgs:
+    logging-format: json");
+
+            clusterConfig.AppendLine($@"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+logging:
+  format: json
+nodeStatusReportFrequency: 4s
+volumePluginDir: /var/lib/kubelet/volume-plugins
+cgroupDriver: systemd
+runtimeRequestTimeout: 5m
+{kubeletFailSwapOnLine}
+");
+
+            var kubeProxyMode = "ipvs";
+
+            clusterConfig.AppendLine($@"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: {kubeProxyMode}");
+
+            return clusterConfig.ToString();
+        }
+
+        /// <summary>
+        /// Restart all pods in a cluster. This is used when updating CA certs.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        public static async Task RestartPodsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            var numPods = 0;
+
+            await master.InvokeIdempotentAsync("ready-to-go/restart-pods",
+                async () =>
+                {
+                    var pods = await GetK8sClient(controller).ListPodForAllNamespacesAsync();
+
+                    numPods = pods.Items.Count();
+
+                    foreach (var p in pods.Items)
+                    {
+                        if (p.Name() == "kube-apiserver-neon-desktop")
+                        {
+                            continue;
+                        }
+
+                        await GetK8sClient(controller).DeleteNamespacedPodAsync(p.Name(), p.Namespace(), gracePeriodSeconds: 0);
+                    }
+                });
+
+            await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
+                async () =>
+                {
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    var pods = await GetK8sClient(controller).ListPodForAllNamespacesAsync();
+
+                                    return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
+                                }
+                                catch (Exception e)
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromMilliseconds(500));
+                });
+        }
+        
+        /// <summary>
+         /// Basic Kubernetes cluster initialization.
+         /// </summary>
+         /// <param name="controller">The setup controller.</param>
+         /// <param name="master">The master node where the operation will be performed.</param>
         public static void ConfigureKubernetes(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -355,108 +540,7 @@ spec:
 
                             controller.LogProgress(master, verb: "initialize", message: "cluster");
 
-                            var controlPlaneEndpoint = $"kubernetes-masters:6442";
-                            var sbCertSANs           = new StringBuilder();
-
-                            if (hostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                // Tweak the API server endpoint for WSL2.
-
-                                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
-                            }
-
-                            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
-                            {
-                                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
-
-                                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
-
-                                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
-                                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
-                            }
-
-                            foreach (var node in cluster.Masters)
-                            {
-                                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
-                                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
-                            }
-
-                            if (cluster.Definition.IsDesktopCluster)
-                            {
-                                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
-                                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
-                            }
-
-                            var kubeletFailSwapOnLine           = string.Empty;
-                            var kubeInitgnoreSwapOnPreflightArg = string.Empty;
-
-                            if (hostingEnvironment == HostingEnvironment.Wsl2)
-                            {
-                                // SWAP will be enabled by the default Microsoft WSL2 kernel which
-                                // will cause Kubernetes to complain because this isn't a supported
-                                // configuration.  We need to disable these error checks.
-
-                                kubeletFailSwapOnLine = "failSwapOn: false";
-                                kubeInitgnoreSwapOnPreflightArg = "--ignore-preflight-errors=Swap";
-                            }
-
-                            var clusterConfig = new StringBuilder();
-
-                            clusterConfig.AppendLine(
-$@"
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: ClusterConfiguration
-clusterName: {cluster.Name}
-kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
-imageRepository: ""{KubeConst.LocalClusterRegistry}""
-apiServer:
-  extraArgs:
-    bind-address: 0.0.0.0
-    advertise-address: 0.0.0.0
-    logging-format: json
-    default-not-ready-toleration-seconds: ""30"" # default 300
-    default-unreachable-toleration-seconds: ""30"" #default  300
-    allow-privileged: ""true""
-    api-audiences: api
-    service-account-issuer: kubernetes.default.svc
-    service-account-key-file: /etc/kubernetes/pki/sa.key
-    service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-  certSANs:
-{sbCertSANs}
-controlPlaneEndpoint: ""{controlPlaneEndpoint}""
-networking:
-  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
-  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
-controllerManager:
-  extraArgs:
-    logging-format: json
-    node-monitor-grace-period: 15s #default 40s
-    node-monitor-period: 5s #default 5s
-    pod-eviction-timeout: 30s #default 5m0s
-scheduler:
-  extraArgs:
-    logging-format: json");
-
-                            clusterConfig.AppendLine($@"
----
-apiVersion: kubelet.config.k8s.io/v1beta1
-kind: KubeletConfiguration
-logging:
-  format: json
-nodeStatusReportFrequency: 4s
-volumePluginDir: /var/lib/kubelet/volume-plugins
-cgroupDriver: systemd
-runtimeRequestTimeout: 5m
-{kubeletFailSwapOnLine}
-");
-
-                            var kubeProxyMode = "ipvs";
-
-                            clusterConfig.AppendLine($@"
----
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: {kubeProxyMode}");
+                            var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
 
                             var kubeInitScript =
 $@"
@@ -730,71 +814,104 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 master.InvokeIdempotent("ready-to-go/renew-certs",
-                    () =>
+                () =>
+                {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
+
+                    var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
+
+                    var kubeInitScript =
+$@"
+rm -rf /etc/kubernetes/pki/*
+rm -f /etc/kubernetes/admin.conf
+rm -f /etc/kubernetes/kubelet.conf
+rm -f /etc/kubernetes/controller-manager.conf
+rm -f /etc/kubernetes/scheduler.conf
+kubeadm init --config cluster.yaml phase certs all
+kubeadm init --config cluster.yaml phase kubeconfig all
+
+until kubectl get pods
+do
+  sleep 0.5
+done
+
+for namespace in $(kubectl get ns --no-headers | awk '{{print $1}}'); do
+    for token in $(kubectl get secrets --namespace ""$namespace"" --field-selector type=kubernetes.io/service-account-token -o name); do
+        kubectl delete $token --namespace ""$namespace""
+    done
+done
+";
+                    var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
+
+                    var pods = NeonHelper.JsonDeserialize<dynamic>(master.SudoCommand("crictl", "pods", "--namespace", "kube-system", "-o", "json").AllText);
+
+                    foreach (dynamic p in pods.items)
                     {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
+                        master.SudoCommand("crictl", "stopp", p.id);
+                        master.SudoCommand("crictl", "rmp", p.id);
+                    }
 
-                        master.SudoCommand("kubeadm", "certs", "renew", "all");
-                        master.SudoCommand("systemctl", "restart", "kubelet");
+                    master.SudoCommand("rm", "-f", "/var/lib/kubelet/pki/kubelet-client*");
+                    master.SudoCommand("systemctl", "restart", "kubelet");
 
-                        // Edit the Kubernetes configuration file to rename the context:
-                        //
-                        //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
-                        //
-                        // rename the user:
-                        //
-                        //      CLUSTERNAME-admin --> CLUSTERNAME-root 
+                    // Edit the Kubernetes configuration file to rename the context:
+                    //
+                    //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                    //
+                    // rename the user:
+                    //
+                    //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                        var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                    var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
 
-                        adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                        adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+                    adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                    adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                        master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
-                    });
+                    master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                });
 
-                master.InvokeIdempotent("setup/ready-to-go-download-certs",
-                    () =>
+                master.InvokeIdempotent("ready-to-go/download-certs",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
+
+                    // Download the boot master files that will need to be provisioned on
+                    // the remaining masters and may also be needed for other purposes
+                    // (if we haven't already downloaded these).
+
+                    if (clusterLogin.SetupDetails.MasterFiles != null)
                     {
-                        controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
+                        clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
+                    }
 
-                        // Download the boot master files that will need to be provisioned on
-                        // the remaining masters and may also be needed for other purposes
-                        // (if we haven't already downloaded these).
+                    if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
+                    {
+                        // I'm hardcoding the permissions and owner here.  It would be nice to
+                        // scrape this from the source files in the future but it's not worth
+                        // the bother at this point.
 
-                        if (clusterLogin.SetupDetails.MasterFiles != null)
+                        var files = new RemoteFile[]
                         {
-                            clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
-                        }
-
-                        if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
-                        {
-                            // I'm hardcoding the permissions and owner here.  It would be nice to
-                            // scrape this from the source files in the future but it's not worth
-                            // the bother at this point.
-
-                            var files = new RemoteFile[]
-                            {
-                                new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                                new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                              };
+                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+                            };
 
 
-                        foreach (var file in files)
-                        {
-                            var text = master.DownloadText(file.Path);
+                    foreach (var file in files)
+                    {
+                        var text = master.DownloadText(file.Path);
 
-                            clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                        }
+                        clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                    }
 
-                        clusterLogin.Save();
+                    clusterLogin.Save();
                     }
                 });
             }
@@ -878,6 +995,49 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         existingConfig.CurrentContext = newContext.Name;
 
                         KubeHelper.SetConfig(existingConfig);
+                    }
+
+                    if (readyToGoMode == ReadyToGoMode.Setup)
+                    {
+                        var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+
+                        var k8sClient = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+
+                        k8sClient.RetryPolicy =
+                            new ExponentialRetryPolicy(
+                                transientDetector:
+                                    exception =>
+                                    {
+                                        var exceptionType = exception.GetType();
+
+                                            // Exceptions like this happen when a API server connection can't be established
+                                            // because the server isn't running or ready.
+
+                                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
+                                        {
+                                            return true;
+                                        }
+
+                                        if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                        {
+                                            return true;
+                                        }
+
+                                            // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
+
+                                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
+                                        {
+                                            return true;
+                                        }
+
+                                        return false;
+                                    },
+                                            maxAttempts: int.MaxValue,
+                                            initialRetryInterval: TimeSpan.FromSeconds(1),
+                                            maxRetryInterval: TimeSpan.FromSeconds(5),
+                                            timeout: TimeSpan.FromMinutes(5));
+
+                        controller[KubeSetupProperty.K8sClient] = k8sClient;
                     }
                 }));
         }
@@ -1110,9 +1270,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var proxyAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
             await master.InvokeIdempotentAsync("setup/ingress-namespace",
                 async () =>
@@ -1139,7 +1301,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         values.Add($"nodePorts[{i}].name", $"{rule.Name}");
                         values.Add($"nodePorts[{i}].protocol", $"{rule.Protocol.ToString().ToUpper()}");
-                        values.Add($"nodePorts[{i}].port", rule.ExternalPort); 
+                        values.Add($"nodePorts[{i}].port", rule.ExternalPort);
                         values.Add($"nodePorts[{i}].targetPort", rule.TargetPort);
                         values.Add($"nodePorts[{i}].nodePort", rule.NodePort);
                         i++;
@@ -1172,6 +1334,30 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             WaitForDaemonsetAsync(controller, KubeNamespaces.KubeSystem, "istio-cni-node"),
                         });
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/neoncluster-gateway",
+                async () =>
+                {
+                    var gateway = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "gateways", "neoncluster-gateway")).ToObject<Gateway>();
+
+                    var regexPattern = "[a-z0-9]+.neoncluster.io";
+
+                    var servers = new List<Server>();
+                    foreach (var server in gateway.Spec.Servers)
+                    {
+                        var hosts = new List<string>();
+                        foreach (var host in server.Hosts)
+                        {
+                            hosts.Add(Regex.Replace(host, regexPattern, cluster.Definition.Domain));
+                        }
+                        server.Hosts = hosts;
+                    }
+
+                    await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(gateway, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "gateways", "neoncluster-gateway");
+                });
+            }
         }
 
         /// <summary>
@@ -1281,7 +1467,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
 
-                        var cert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
+                        var cert = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
 
                         cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
                         cert.Spec.DnsNames   = new List<string>()
@@ -1290,9 +1476,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(cert, "cert-manager.io", "v1", "certificates", "neon-cluster-certificate");
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(cert, "cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate");
 
-                        var harborCert = ((JObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("cert-manager.io", "v1", "certificates", "registry-harbor")).ToObject<Certificate>();
+                        var harborCert = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("cert-manager.io", "v1", KubeNamespaces.NeonSystem, "certificates", "registry-harbor")).ToObject<Certificate>();
 
                         harborCert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
                         harborCert.Spec.DnsNames   = new List<string>()
@@ -1301,14 +1487,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await GetK8sClient(controller).ReplaceClusterCustomObjectAsync(harborCert, "cert-manager.io", "v1", "certificates", "registry-harbor");
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(harborCert, "cert-manager.io", "v1", KubeNamespaces.NeonSystem, "certificates", "registry-harbor");
 
-                        dynamic harborCluster = ((ExpandoObject)await GetK8sClient(controller).GetClusterCustomObjectAsync("goharbor.io", "v1alpha3", "harborclusters", "neon-cluster-certificate"));
+                        dynamic harborCluster = await GetK8sClient(controller).GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
 
-                        harborCluster.spec.expose.core.ingress.host = clusterLogin.ClusterDefinition.Domain;
-                        harborCluster.spec.expose.notary.ingress.host = clusterLogin.ClusterDefinition.Domain;
-                        harborCluster.spec.externalURL = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    });
+                        harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+
+                        await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync((JObject)harborCluster, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
+            });
             }
         }
 
@@ -2757,7 +2945,11 @@ $@"- name: StorageType
                                 {
                                     Metadata = new V1ObjectMeta()
                                     {
-                                        Name = "grafana-db-password"
+                                        Name = KubeConst.GrafanaDatabaseSecret,
+                                        Annotations = new Dictionary<string, string>()
+                                        {
+                                            {  "reloader.stakater.com/match", "true" }
+                                        }
                                     },
                                     Type = "Opaque",
                                     Data = new Dictionary<string, byte[]>()
@@ -2796,6 +2988,25 @@ $@"- name: StorageType
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-operator");
                     await WaitForDeploymentAsync(controller, KubeNamespaces.NeonMonitor, "grafana-deployment");
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/grafana-secrets",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "renew grafana secrets");
+
+                    var dbSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                    var grafanaSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.GrafanaDatabaseSecret, KubeNamespaces.NeonMonitor);
+
+                    grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
+
+                    var grafanaAdminSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
+                    grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                    grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+
+                });
+            }
         }
 
         /// <summary>
@@ -2883,7 +3094,11 @@ $@"- name: StorageType
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name = secret.Name()
+                                    Name = secret.Name(),
+                                    Annotations = new Dictionary<string, string>()
+                                    {
+                                        {  "reloader.stakater.com/match", "true" }
+                                    }
                                 },
                                 Data = secret.Data,
                             };
@@ -2902,10 +3117,52 @@ $@"- name: StorageType
                                     WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-console"),
                                     WaitForDeploymentAsync(controller, KubeNamespaces.NeonSystem, "minio-operator"),
                                 });
-                        });
-
-                    await Task.CompletedTask;
+                        });                    
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/minio-secrets",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "renew minio secret");
+
+                    var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+                    secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                    secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                    await GetK8sClient(controller).ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
+
+                    var monitoringSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
+                    monitoringSecret.Data["accesskey"] = secret.Data["accesskey"];
+                    monitoringSecret.Data["secretkey"] = secret.Data["secretkey"];
+                    await GetK8sClient(controller).ReplaceNamespacedSecretAsync(monitoringSecret, monitoringSecret.Name(), KubeNamespaces.NeonMonitor);
+
+                    var registrySecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+                    registrySecret.Data["accesskey"] = secret.Data["accesskey"];
+                    registrySecret.Data["secretkey"] = secret.Data["secretkey"];
+                    await GetK8sClient(controller).ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
+
+                    // delete certs so that they will be regenerated
+                    await GetK8sClient(controller).DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
+                    await GetK8sClient(controller).DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
+
+                    // restart minio components
+                    var minioOperator = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
+                    await minioOperator.RestartAsync(GetK8sClient(controller));
+                    var minioStatefulSet = (await GetK8sClient(controller).ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
+                    await minioStatefulSet.RestartAsync(GetK8sClient(controller));
+                    
+                    // restart registry components
+                    var harborChartmuseum = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
+                    await harborChartmuseum.RestartAsync(GetK8sClient(controller));
+                    var harborCore = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
+                    await harborCore.RestartAsync(GetK8sClient(controller));
+                    var harborRegistry = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
+                    await harborRegistry.RestartAsync(GetK8sClient(controller));
+                    var harborRegistryctl = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-registryctl", KubeNamespaces.NeonSystem);
+                    await harborRegistryctl.RestartAsync(GetK8sClient(controller));
+                });
+            }
         }
 
         /// <summary>
@@ -3081,7 +3338,11 @@ $@"- name: StorageType
                                 Metadata = new V1ObjectMeta()
                                 {
                                     Name              = "registry-minio",
-                                    NamespaceProperty = KubeNamespaces.NeonSystem
+                                    NamespaceProperty = KubeNamespaces.NeonSystem,
+                                    Annotations = new Dictionary<string, string>()
+                                    {
+                                        {  "reloader.stakater.com/match", "true" }
+                                    }
                                 },
                                 Type = "Opaque",
                                 Data = new Dictionary<string, byte[]>()
@@ -3143,13 +3404,60 @@ $@"- name: StorageType
                         });
                 });
 
-            await master.InvokeIdempotentAsync("setup/harbor-login",
+            await master.InvokeIdempotentAsync($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/harbor-login",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "images", message: "push");
                     
-                    var secret   = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
-                    var password = Encoding.UTF8.GetString(secret.Data["secret"]);
+                    if (readyToGoMode == ReadyToGoMode.Setup)
+                    {
+                        var secret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry", KubeNamespaces.NeonSystem);
+
+                        secret.Data["secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20)); ;
+                        await GetK8sClient(controller).ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
+
+                        // delete secret so that the harbor operator creates a new one with the updated credential.
+                        await GetK8sClient(controller).DeleteNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+
+                        string stdOut = "";
+                        string stdErr = "";
+                        
+                        var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
+                        {
+                            stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
+                            stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
+                        });
+
+                        var command = new string[]
+                        {
+                            "psql",
+                            "--username", "neon_admin",
+                            "-d", "harbor_core",
+                            "-c", $@"UPDATE public.harbor_user SET ""password""='', salt = '' WHERE user_id = 1;"
+                        };
+
+                        var result = await GetK8sClient(controller).NamespacedPodExecAsync(
+                            name: "db-citus-postgresql-master-0",
+                            @namespace: KubeNamespaces.NeonSystem, 
+                            container: "citus", 
+                            command: command, 
+                            tty: true, 
+                            action: handler, 
+                            cancellationToken: CancellationToken.None);
+                        
+                        if (result != 0)
+                        {
+                            throw new Exception("Failed to reset harbor admin password.");
+                        }
+
+                        // restart harbor core so that it picks up the new secret.
+                        var harborCore = await GetK8sClient(controller).ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
+                        await harborCore.RestartAsync(GetK8sClient(controller));
+                    }
+
+                    var authSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+
+                    var password = Encoding.UTF8.GetString(authSecret.Data["secret"]);
                     var sbScript = new StringBuilder();
                     var sbArgs   = new StringBuilder();
 
@@ -3161,6 +3469,20 @@ $@"- name: StorageType
                         master.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError);
                     }
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                var virtualService = ((JObject)await GetK8sClient(controller).GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "harbor-virtual-service")).ToObject<VirtualService>();
+
+                virtualService.Spec.Hosts =
+                    new List<string>()
+                    {
+                        $"registry.{cluster.Definition.Domain}",
+                        $"notary.{cluster.Definition.Domain}",
+                        KubeConst.LocalClusterRegistry
+                    };
+                await GetK8sClient(controller).ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "harbor-virtual-service");               
+            }
         }
 
         /// <summary>
@@ -3318,7 +3640,11 @@ $@"- name: StorageType
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = KubeConst.NeonSystemDbAdminSecret
+                            Name = KubeConst.NeonSystemDbAdminSecret,
+                            Annotations = new Dictionary<string, string>()
+                            {
+                                {  "reloader.stakater.com/match", "true" }
+                            }
                         },
                         Type = "Opaque",
                         StringData = new Dictionary<string, string>()
@@ -3341,7 +3667,11 @@ $@"- name: StorageType
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = KubeConst.NeonSystemDbServiceSecret
+                            Name = KubeConst.NeonSystemDbServiceSecret,
+                            Annotations = new Dictionary<string, string>()
+                            {
+                                {  "reloader.stakater.com/match", "true" } 
+                            }
                         },
                         Type = "Opaque",
                         StringData = new Dictionary<string, string>()
@@ -3400,6 +3730,74 @@ $@"- name: StorageType
                         });
                 });
 
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("setup/system-db-ready",
+                   async () =>
+                   {
+                       var serviceSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                       serviceSecret.StringData["password"] = NeonHelper.GetCryptoRandomPassword(20);
+                       await GetK8sClient(controller).ReplaceNamespacedSecretAsync(serviceSecret, serviceSecret.Name(), serviceSecret.Namespace());
+
+                       var adminSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
+                       adminSecret.StringData["password"] = NeonHelper.GetCryptoRandomPassword(20);
+                       await GetK8sClient(controller).ReplaceNamespacedSecretAsync(adminSecret, adminSecret.Name(), adminSecret.Namespace());
+
+                       string stdOut = "";
+                       string stdErr = "";
+
+                       var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
+                       {
+                           stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
+                           stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
+                       });
+
+                       var command = new string[]
+                       {
+                            "psql",
+                            "--username", "neon_admin",
+                            "-d", "harbor_core",
+                            "-c", $@"""ALTER USER {KubeConst.NeonSystemDbServiceUser} WITH PASSWORD '{serviceSecret.StringData["password"]}'; """
+                       };
+
+                       var result = await GetK8sClient(controller).NamespacedPodExecAsync(
+                           name: "db-citus-postgresql-master-0",
+                           @namespace: KubeNamespaces.NeonSystem,
+                           container: "citus",
+                           command: command,
+                           tty: true,
+                           action: handler,
+                           cancellationToken: CancellationToken.None);
+
+                       if (result != 0)
+                       {
+                           throw new Exception("Failed to reset harbor admin password.");
+                       }
+
+                       command = new string[]
+                       {
+                            "psql",
+                            "--username", "neon_admin",
+                            "-d", "harbor_core",
+                            "-c", $@"""ALTER USER {KubeConst.NeonSystemDbAdminUser} WITH PASSWORD '{adminSecret.StringData["password"]}'; """
+                       };
+
+                       result = await GetK8sClient(controller).NamespacedPodExecAsync(
+                           name: "db-citus-postgresql-master-0",
+                           @namespace: KubeNamespaces.NeonSystem,
+                           container: "citus",
+                           command: command,
+                           tty: true,
+                           action: handler,
+                           cancellationToken: CancellationToken.None);
+
+                       if (result != 0)
+                       {
+                           throw new Exception("Failed to reset harbor admin password.");
+                       }
+
+                   });
+             }
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1263
             //
             // You'll also need to configure the KubeKV database here.

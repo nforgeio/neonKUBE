@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// <summary>
         /// Header manipulation rules to apply before returning a response to the caller
         /// </summary>
-        [JsonProperty(PropertyName = "request", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "response", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public HeaderOperations Response { get; set; }
 

@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TLSMode Mode { get; set; }
+        public TLSMode? Mode { get; set; }
 
         /// <summary>
         /// The path to the file holding the server-side TLS certificate to use.
@@ -127,14 +127,14 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "minProtocolVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TLSProtocol MinProtocolVersion { get; set; }
+        public TLSProtocol? MinProtocolVersion { get; set; }
 
         /// <summary>
         /// Minimum TLS protocol version.
         /// </summary>
         [JsonProperty(PropertyName = "maxProtocolVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TLSProtocol MaxProtocolVersion { get; set; }
+        public TLSProtocol? MaxProtocolVersion { get; set; }
 
         /// <summary>
         ///  If specified, only support the specified cipher list. Otherwise default to the default cipher list supported by Envoy.

@@ -50,7 +50,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "selector", Required = Required.Always)]
         [DefaultValue(null)]
-        public string Selector { get; set; }
+        public Dictionary<string, string> Selector { get; set; }
 
         /// <summary>
         /// Describes the properties of the proxy on a given load balancer port.

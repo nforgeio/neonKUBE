@@ -356,6 +356,16 @@ namespace Neon.Kube
         public const string NeonSystemDbGrafanaDatabase = "grafana";
 
         /// <summary>
+        /// Identifies the the secret containing database credentials used by Grafana.
+        /// </summary>
+        public const string GrafanaDatabaseSecret = "grafana-db-password";
+
+        /// <summary>
+        /// Identifies the the secret containing admin credentials for Grafana.
+        /// </summary>
+        public const string GrafanaAdminSecret = "grafana-admin-credentials";
+
+        /// <summary>
         /// Identifies the secret name where the harbor credentials are stored.
         /// </summary>
         public const string RegistrySecretKey = "registry";
@@ -363,12 +373,12 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Grafana.
         /// </summary>
-        public const string NeonJobSetupGrafana = "neon-setup-grafana";
+        public const string NeonJobSetupGrafana = "setup-grafana";
 
         /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Harbor.
         /// </summary>
-        public const string NeonJobSetupHarbor = "neon-setup-harbor";
+        public const string NeonJobSetupHarbor = "setup-harbor";
 
         /// <summary>
         /// Entry storing the last time cluster images were checked.

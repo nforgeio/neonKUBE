@@ -78,7 +78,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "encodeUsagesInRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public bool EncodeUsagesInRequest { get; set; }
+        public bool? EncodeUsagesInRequest { get; set; }
 
         /// <summary>
         /// A list of IP address <b>subjectAltNames</b> to be set on the Certificate.
@@ -92,7 +92,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "isCA", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool IsCA { get; set; }
+        public bool? IsCA { get; set; }
 
         /// <summary>
         /// Configures additional keystore output formats stored in the `secretName` Secret resource.
@@ -109,27 +109,13 @@ namespace Neon.Kube
         public IssuerRef IssuerRef { get; set; }
 
         /// <summary>
-        /// The private key algorithm of the corresponding private key for this certificate. 
-        /// </summary>
-        [JsonProperty(PropertyName = "keyAlgorithm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public KeyAlgorithm KeyAlgorithm { get; set; }
-
-        /// <summary>
-        /// The private key cryptography standards(PKCS) for this certificate's private key to be encoded in. 
-        /// </summary>
-        [JsonProperty(PropertyName = "keyEncoding", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(KeyEncoding.PKCS1)]
-        public KeyEncoding KeyEncoding { get; set; }
-
-        /// <summary>
         /// The key bit size of the corresponding private key for this certificate. If `keyAlgorithm` is set to `rsa`, valid values are `2048`, 
         /// `4096` or `8192`, and will default to `2048` if not specified. If `keyAlgorithm` is set to `ecdsa`, valid values are `256`, `384` 
         /// or `521`, and will default to `256` if not specified. No other values are allowed.
         /// </summary>
         [JsonProperty(PropertyName = "keySize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(256)]
-        public int KeySize { get; set; }
+        public int? KeySize { get; set; }
 
         /// <summary>
         /// A list of organizations to be used on the Certificate.

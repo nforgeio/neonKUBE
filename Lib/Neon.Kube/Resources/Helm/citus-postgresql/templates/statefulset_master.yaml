@@ -19,8 +19,9 @@ spec:
         app: {{ template "citus-postgresql.name" . }}-master
         release: {{ .Release.Name }}
         citusType: {{ .Values.master.citusType }}
-      {{- if .Values.metrics.enabled }}
       annotations:
+        reloader.stakater.com/search: "true"
+      {{- if .Values.metrics.enabled }}
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.metrics.port | quote }}
       {{- end }}

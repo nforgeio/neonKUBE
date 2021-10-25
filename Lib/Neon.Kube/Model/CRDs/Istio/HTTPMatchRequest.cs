@@ -203,7 +203,7 @@ namespace Neon.Kube
         /// <remarks>
         /// Note: The case will be ignored only in the case of exact and prefix URI matches.
         /// </remarks>
-        [JsonProperty(PropertyName = "scheme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ignoreUriCase", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool? IgnoreUriCase { get; set; }
 
@@ -231,7 +231,7 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "sourceNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string SourceNamespace { get; set; }
+        public string? SourceNamespace { get; set; }
 
         /// <summary>
         /// Validate the object.

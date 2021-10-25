@@ -64,7 +64,7 @@ console:
 ## MinIO Tenant Definition
 tenants:
   # Tenant name
-  - name: neon-system
+  - name: minio
     ## Registry location and Tag to download MinIO Server image
     image:
       organization: neon-registry.node.local
@@ -152,7 +152,11 @@ tenants:
     podManagementPolicy: Parallel
     ## serviceMetadata allows passing additional labels and annotations to MinIO and Console specific
     ## services created by the operator.
-    serviceMetadata: {}
+    serviceMetadata:
+      minioServiceAnnotations:
+        reloader.stakater.com/search: "true"
+      consoleServiceAnnotations:
+        reloader.stakater.com/search: "true"
     ## Add environment variables to be set in MinIO container (https://github.com/minio/minio/tree/master/docs/config)
     env:
       - name: MINIO_PROMETHEUS_AUTH_TYPE

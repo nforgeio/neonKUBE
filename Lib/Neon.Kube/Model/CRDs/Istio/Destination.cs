@@ -78,7 +78,7 @@ namespace Neon.Kube
         /// The name of a subset within the service. Applicable only to services within the mesh. The subset must be defined in a corresponding DestinationRule.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "subset", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "subset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Subset { get; set; }
 
