@@ -100,13 +100,14 @@ namespace Neon.Kube
         /// <summary>
         /// Restarts a <see cref="V1StatefulSet"/>.
         /// </summary>
-        /// <param name="deployment"></param>
-        /// <param name="kubernetes"></param>
+        /// <param name="statefulset">The deployment being restarted.</param>
+        /// <param name="kubernetes">The <see cref="IKubernetes"/> client to be used for the operation.</param>
         /// <returns></returns>
         public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes kubernetes)
         {
             // $todo(jefflill):
-            // fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
+            //
+            // Fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
 
             var generation = statefulset.Status.ObservedGeneration;
 
