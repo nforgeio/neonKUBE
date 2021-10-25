@@ -87,14 +87,15 @@ namespace Neon.Kube
         private List<IDisposable>                   disposables = new List<IDisposable>();
         private ISetupController                    parent      = null;
         private bool                                isRunning   = false;
+        private int                                 maxStackSize;
         private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
         private List<Step>                          steps;
         private Step                                currentStep;
         private bool                                isFaulted;
         private bool                                cancelPending;
-        private string                              globalLogPath;
-        private TextWriter                          globalLogWriter;
+        private string                              clusterLogPath;
+        private TextWriter                          clusterLogWriter;
 
         /// <summary>
         /// Constructor.
@@ -134,7 +135,7 @@ namespace Neon.Kube
             this.OperationTitle = title;
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps          = new List<Step>();
-            this.globalLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
+            this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
         }
 
         /// <inheritdoc/>
@@ -169,12 +170,12 @@ namespace Neon.Kube
         /// <summary>
         /// Ensures that controller execution has not started.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
         private void EnsureNotRunning()
         {
             if (isRunning)
             {
-                throw new InvalidOperationException("Cannot modify setup controller steps after execution has started.");
+                throw new InvalidOperationException("Cannot add setup controller steps after execution has started.");
             }
         }
 
@@ -287,6 +288,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(subController != null, nameof(subController));
             Covenant.Requires<InvalidOperationException>(subController.parent == null, "The subcontroller is already a step of a parent controller.");
             Covenant.Requires<InvalidOperationException>(this.parent == null, "Cannot nest subcontroller steps more than one level deep.");
+            EnsureNotRunning();
 
             subController.parent = this;
 
@@ -350,6 +352,7 @@ namespace Neon.Kube
         public object AddCheckForIpConflcits(string stepLabel = "scan for IP address conflicts")
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You no may longer add steps.");
+            EnsureNotRunning();
 
             return AddGlobalStep(stepLabel,
                 controller =>
@@ -437,6 +440,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             if (timeout == null)
             {
@@ -490,6 +494,7 @@ namespace Neon.Kube
             int                                                         position      = -1)
         {
             Covenant.Requires<InvalidOperationException>(parent == null, "This controller is already a subcontroller.  You may no longer add steps.");
+            EnsureNotRunning();
 
             if (nodePredicate == null)
             {
@@ -537,7 +542,7 @@ namespace Neon.Kube
         /// in parallel for this step, overriding the controller default.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
         public object AddNodeStep(
             string stepLabel,
             Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
@@ -860,17 +865,6 @@ namespace Neon.Kube
                             }
                             catch (Exception e)
                             {
-                                // $todo(jefflill):
-                                //
-                                // We're going to report global step exceptions as if they
-                                // happened on the first master node because there's no
-                                // other place to log this in the current design.
-                                //
-                                // I suppose we could create a [global.log] file or something
-                                // and put this there and also indicate this somewhere in
-                                // the console output, but this is not worth messing with
-                                // right now.
-
                                 isFaulted       = true;
                                 stepDisposition = SetupStepState.Failed;
 
@@ -935,7 +929,8 @@ namespace Neon.Kube
                             LogGlobalError($"FAULTED NODES: {faultedNodes}");
                             LogGlobal();
                         }
-                    });
+                    },
+                    maxStackSize: maxStackSize);
 
                 // The setup step is executing above in a thread and we're going to loop here
                 // to raise [StatusChangedEvent] when we detect a status change giving any UI
@@ -1183,8 +1178,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public void LogGlobal(string message = null)
         {
-            globalLogWriter?.WriteLine(message ?? string.Empty);
-            globalLogWriter?.Flush();
+            clusterLogWriter?.WriteLine(message ?? string.Empty);
+            clusterLogWriter?.Flush();
         }
 
         /// <inheritdoc/>
@@ -1280,12 +1275,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false)
+        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false, int maxStackSize = 250 * (int)ByteUnits.KibiBytes)
         {
+            Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
+
             // Set this so we can ensure that the step list can no longer be modifie
             // after execution has started.
 
-            isRunning = true;
+            this.isRunning    = true;
+            this.maxStackSize = maxStackSize;
 
             // This method had been synchronous for a very long time (maybe 5 years)
             // but we need to make this async now so that it would integrate well
@@ -1300,9 +1298,9 @@ namespace Neon.Kube
 
             // Initialize the global logger.
 
-            Directory.CreateDirectory(Path.GetDirectoryName(globalLogPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(clusterLogPath));
 
-            globalLogWriter = new StreamWriter(new FileStream(globalLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
+            clusterLogWriter = new StreamWriter(new FileStream(clusterLogPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
 
             // Start the step execution thread.
 
@@ -1461,11 +1459,12 @@ namespace Neon.Kube
 
                         // Close the global log.
 
-                        globalLogWriter?.Flush();
-                        globalLogWriter?.Dispose();
-                        globalLogWriter = null;
+                        clusterLogWriter?.Flush();
+                        clusterLogWriter?.Dispose();
+                        clusterLogWriter = null;
                     }
-                });
+                },
+                maxStackSize: maxStackSize);
 
             return tcs.Task;
         }

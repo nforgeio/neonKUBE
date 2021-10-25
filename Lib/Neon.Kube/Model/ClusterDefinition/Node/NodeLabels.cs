@@ -383,7 +383,7 @@ namespace Neon.Kube
         public const string LabelIstio = ClusterDefinition.ReservedLabelPrefix + "istio";
 
         /// <summary>
-        /// <b>io.neonkube.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+        /// <b>neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
         /// will be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
@@ -397,7 +397,7 @@ namespace Neon.Kube
         public const string LabelOpenEBS = ClusterDefinition.ReservedLabelPrefix + "openEbs";
 
         /// <summary>
-        /// <b>io.neonkube.openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
+        /// <b>neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
         /// will be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default)]
@@ -414,9 +414,8 @@ namespace Neon.Kube
         public const string LabelNeonSystem = ClusterDefinition.ReservedLabelPrefix + "neon-system";
 
         /// <summary>
-        /// <b>io.neonkube.neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
-        /// services will be deployed to this node.  
-        /// This defaults to <c>false</c>.
+        /// <b>neonkube.io/neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
+        /// services may be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "NeonSystem", Required = Required.Default)]
         [YamlMember(Alias = "neonSystem", ApplyNamingConventions = false)]
@@ -429,9 +428,8 @@ namespace Neon.Kube
         public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
 
         /// <summary>
-        /// <b>io.neonkube.neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
-        /// Citus/Postgresql database will be deployed to this node.  
-        /// This defaults to <c>false</c>.
+        /// <b>neonkube.io/neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
+        /// Citus/Postgresql database may be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "NeonSystemDb", Required = Required.Default)]
         [YamlMember(Alias = "neonSystemDb", ApplyNamingConventions = false)]
@@ -444,9 +442,8 @@ namespace Neon.Kube
         public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedLabelPrefix + "neon-system.registry";
 
         /// <summary>
-        /// <b>io.neonkube.neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
-        /// Harbor registry will be deployed to this node.  
-        /// This defaults to <c>false</c>.
+        /// <b>neonkube.io/neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
+        /// Harbor registry may be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "NeonSystemRegistry", Required = Required.Default)]
         [YamlMember(Alias = "neonSystemRegistry", ApplyNamingConventions = false)]
@@ -477,7 +474,7 @@ namespace Neon.Kube
         public const string LabelMetricsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics-internal";
 
         /// <summary>
-        /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates the user has 
+        /// <b>neonkube.io/monitor.logs</b> [<c>bool</c>]: Indicates the user has 
         /// specified that Loki logging should be deployed to the labeled node.  This 
         /// defaults to <c>false</c>.
         /// </summary>
@@ -487,7 +484,7 @@ namespace Neon.Kube
         public bool Logs { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.logs-internal</b> [<c>bool</c>]: Indicates that Liko
+        /// <b>neonkube.io/monitor.logs-internal</b> [<c>bool</c>]: Indicates that Liko
         /// logging will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "LogsInternal", Required = Required.Default)]
@@ -496,7 +493,7 @@ namespace Neon.Kube
         public bool LogsInternal { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
+        /// <b>neonkube.io/monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
         /// that Cortex metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
@@ -505,7 +502,7 @@ namespace Neon.Kube
         public bool Metrics { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
+        /// <b>neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
         /// metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]

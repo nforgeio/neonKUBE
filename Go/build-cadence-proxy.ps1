@@ -25,11 +25,12 @@
 
 . $env:NF_ROOT/Powershell/includes.ps1
 
+# Initialize
+
 $env:GOPATH  = "$env:NF_ROOT\Go"
 $buildPath   = "$env:NF_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath     = "$buildPath\build-cadence-proxy.log"
-$errors      = $false
 
 Push-Cwd "$projectpath\cmd\cadenceproxy" | Out-Null
 
@@ -57,14 +58,8 @@ try
     $env:GOOS	= "windows"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
@@ -75,14 +70,8 @@ try
     $env:GOOS   = "linux"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
@@ -93,14 +82,8 @@ try
     $env:GOOS   = "darwin"
     $env:GOARCH = "amd64"
 
-    go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go >> "$logPath" 2>&1
-
-    $exitCode = $lastExitCode
-
-    if ($exitCode -ne 0)
-    {
-        $errors = $true
-    }
+    $result = Invoke-CaptureStreams "go build -mod=vendor -ldflags=`"-w -s`" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go"
+    Write-Output $result.alltext
 
     Write-Output " "                                                                               >> $logPath 2>&1
     Write-Output "*******************************************************************************" >> $logPath 2>&1
@@ -108,19 +91,19 @@ try
     Write-Output "*******************************************************************************" >> $logPath 2>&1
     Write-Output " "                                                                               >> $logPath 2>&1
 
-    if ($errors)
-    {
-        throw "*** ERROR[exitcode=$exitCode]: One or more [cadence-proxy] builds failed.  Check build logs: $logPath"
-    }
-
     # Compress the binaries to the [Neon.Cadence] project where they'll
     # be embedded as binary resources.
 
     $neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
 
     neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     >> "$logPath" 2>&1
+    ThrowOnExitCode
+
     neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" >> "$logPath" 2>&1
+    ThrowOnExitCode
 }
 catch
 {

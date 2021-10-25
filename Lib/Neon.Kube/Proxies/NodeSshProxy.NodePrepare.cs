@@ -52,6 +52,21 @@ namespace Neon.Kube
         where TMetadata : class
     {
         /// <summary>
+        /// Removes the Linux swap file if present.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void RemoveSwapFile(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("setup/swap-remove",
+                () =>
+                {
+                    SudoCommand("rm -f /swap.img");
+                });
+        }
+
+        /// <summary>
         /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolders.Bin"/> folder.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -284,6 +299,7 @@ systemctl restart rsyslog.service
                 {
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
+                    RemoveSwapFile(controller);
                     NodeInstallTools(controller);
                     BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
                     BaseConfigureOpenSsh(controller);

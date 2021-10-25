@@ -371,11 +371,6 @@ namespace Neon.Kube
         public const string RegistrySecretKey = "registry";
 
         /// <summary>
-        /// Identifies the neon cluster operator config map.
-        /// </summary>
-        public const string NeonClusterOperatorConfigMap = "neon-cluster-operator";
-
-        /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Grafana.
         /// </summary>
         public const string NeonJobSetupGrafana = "setup-grafana";

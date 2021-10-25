@@ -82,7 +82,7 @@ function Get-GitHubUser
     #     x Git operations for github.com configured to use https protocol.
     #     x Token: *******************
 
-    $result    = $result = Invoke-CaptureStreams "gh auth status"
+    $result    = Invoke-CaptureStreams "gh auth status"
     $stderr    = $result.stderr
     $posStart  = $stderr.IndexOf("github.com as")
     $posStart += "github.com as".Length
@@ -171,7 +171,7 @@ function New-GitHubIssue
             # Query for any open issues authored by the authenticated user and
             # look for the first one that has the same title (if one exists).
 
-            $result      = $result = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
+            $result      = Invoke-CaptureStreams "gh --repo $repo issue list --author $user --state open --label $appendLabel --json title,number --limit 1000"
             $json        = $result.stdout
             $list        = $(ConvertFrom-Json $json -AsHashTable)
             $issueNumber = -1

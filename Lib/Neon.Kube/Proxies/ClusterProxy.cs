@@ -100,6 +100,47 @@ namespace Neon.Kube
         private bool                    appendLog;
 
         /// <summary>
+        /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/>.
+        /// </summary>
+        /// <param name="context">The Kubernetes confug context.</param>
+        /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
+        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
+        /// <param name="nodeProxyCreator">
+        /// The application supplied function that creates a management proxy
+        /// given the node name, public address or FQDN, private address, and
+        /// the node definition.
+        /// </param>
+        /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
+        /// <param name="defaultRunOptions">
+        /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+        /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// </param>
+        public ClusterProxy(
+            KubeConfigContext       context,
+            IHostingManagerFactory  hostingManagerFactory,
+            Operation               operation         = Operation.LifeCycle,
+            string                  nodeImageUri      = null,
+            string                  nodeImagePath     = null,
+            NodeProxyCreator        nodeProxyCreator  = null,
+            bool                    appendToLog       = false,
+            RunOptions              defaultRunOptions = RunOptions.None)
+            
+            : this(
+                  clusterDefinition:        context.Extension.ClusterDefinition,
+                  hostingManagerFactory:    hostingManagerFactory, 
+                  operation:                operation, 
+                  nodeImageUri:             nodeImageUri, 
+                  nodeImagePath:            nodeImagePath, 
+                  nodeProxyCreator:         nodeProxyCreator, 
+                  appendToLog:              appendToLog,
+                  defaultRunOptions:        defaultRunOptions)
+        {
+        }
+
+        /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

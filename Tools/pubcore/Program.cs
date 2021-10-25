@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 namespace pubcore
 {
     /// <summary>
-    /// Program clss.
+    /// Program class.
     /// </summary>
     public static class Program
     {

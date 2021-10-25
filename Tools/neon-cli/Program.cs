@@ -104,6 +104,9 @@ COMMAND SUMMARY:
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster remove     [LOGIN-PATH]
     neon cluster setup      [CLUSTER-DEF]
+    neon cluster start      USER@CLUSTER[/NAMESPACE]
+    neon cluster stop       USER@CLUSTER[/NAMESPACE] [--turnoff]
+    neon cluster remove     USER@CLUSTER[/NAMESPACE]
     neon cluster verify     [CLUSTER-DEF]
     neon generate iso       SOURCE-FOLDER ISO-PATH
     neon login              COMMAND
