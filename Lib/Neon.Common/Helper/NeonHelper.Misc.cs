@@ -167,7 +167,7 @@ namespace Neon.Common
 
                 if (!excludeInner && e.InnerException != null)
                 {
-                    message += $" [inner:{e.InnerException.GetType().Name}: {e.InnerException.Message}]";
+                    message += $" [inner:{e.InnerException.GetType().FullName}: {e.InnerException.Message}]";
                 }
 
                 if (stackTrace)
