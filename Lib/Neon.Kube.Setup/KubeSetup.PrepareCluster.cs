@@ -241,11 +241,14 @@ namespace Neon.Kube
 
             // Delete any existing cluster in the environment when requested.
 
-            controller.AddGlobalStep("remove existing cluster",
-                async controller =>
-                {
-                    await hostingManager.RemoveClusterAsync(removeOrphansByPrefix: true);
-                });
+            if (removeExisting)
+            {
+                controller.AddGlobalStep("remove existing cluster",
+                    async controller =>
+                    {
+                        await hostingManager.RemoveClusterAsync(removeOrphansByPrefix: true);
+                    });
+            }
 
             // We don't want to set a secure SSH password when preparing a ready-to-go
             // node image because the partial setup operation that follows as well as

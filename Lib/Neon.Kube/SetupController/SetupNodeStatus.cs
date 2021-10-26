@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 using Neon.SSH;
+using Neon.XenServer;
 
 namespace Neon.Kube
 {
@@ -102,7 +103,7 @@ namespace Neon.Kube
             {
                 this.Role = ((NodeDefinition)metadata).Role;
             }
-            else if (metadataType is IXenClient)
+            else if (metadataType.Implements<IXenClient>())
             {
                 this.Role = NodeRole.XenServer;
             }
