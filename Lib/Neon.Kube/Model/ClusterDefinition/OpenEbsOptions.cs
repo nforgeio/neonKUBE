@@ -53,8 +53,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
         [YamlMember(Alias = "engine", ApplyNamingConventions = false)]
-        [DefaultValue(OpenEbsEngine.Jiva)]
-        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Jiva;
+        [DefaultValue(OpenEbsEngine.Default)]
+        public OpenEbsEngine Engine { get; set; } = OpenEbsEngine.Default;
 
         /// <summary>
         /// The size of the NFS file system to be created for the cluster.  This defaults
