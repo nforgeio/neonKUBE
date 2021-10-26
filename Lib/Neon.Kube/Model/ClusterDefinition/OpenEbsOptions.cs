@@ -83,7 +83,7 @@ namespace Neon.Kube
             {
                 case OpenEbsEngine.Default:
 
-                    if (clusterDefinition.Nodes.Count() > 1)
+                    if (clusterDefinition.Nodes.Count() == 1)
                     {
                         Engine = OpenEbsEngine.HostPath;
                     }
