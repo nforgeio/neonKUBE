@@ -403,7 +403,7 @@ namespace Neon.Kube
                 {
                     xenSshProxy.Status = "download: vm template";
 
-                    string      driveTemplateName;
+                    string driveTemplateName;
 
                     if (!string.IsNullOrEmpty(nodeImageUri))
                     {
@@ -412,7 +412,7 @@ namespace Neon.Kube
                         //
                         // Note that we're going to name the file the same as the file name from the URI.
 
-                        var driveTemplateUri  = new Uri(nodeImageUri);
+                        var driveTemplateUri = new Uri(nodeImageUri);
                         
                         driveTemplateName = driveTemplateUri.Segments.Last();
                         driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
