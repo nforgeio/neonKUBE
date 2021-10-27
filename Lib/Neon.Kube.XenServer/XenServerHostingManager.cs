@@ -412,7 +412,7 @@ namespace Neon.Kube
 
                     if (!string.IsNullOrEmpty(nodeImageUri))
                     {
-                        // Download the GZIPed VHDX template if it's not already present and has a valid
+                        // Download the GZIPed XVA template if it's not already present and has a valid
                         // MD5 hash file.
                         //
                         // Note that we're going to name the file the same as the file name from the URI.
