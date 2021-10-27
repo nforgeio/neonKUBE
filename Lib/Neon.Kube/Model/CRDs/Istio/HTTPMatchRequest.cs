@@ -231,7 +231,7 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "sourceNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string? SourceNamespace { get; set; }
+        public string SourceNamespace { get; set; }
 
         /// <summary>
         /// Validate the object.

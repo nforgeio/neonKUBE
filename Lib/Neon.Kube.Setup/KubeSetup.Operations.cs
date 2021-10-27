@@ -487,7 +487,7 @@ mode: {kubeProxyMode}");
 
                                     return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
                                 }
-                                catch (Exception e)
+                                catch
                                 {
                                     return false;
                                 }

@@ -127,7 +127,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentException>(maxDisplayedSteps > 0, nameof(maxDisplayedSteps));
 
-            if (Steps.Count == 0)
+            if (Steps.Count == 0 || CurrentStep == null)
             {
                 return;
             }

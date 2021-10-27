@@ -187,7 +187,12 @@ namespace Neon.Kube
                 // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
 
                 var fields = ApiLoadBalancer.Split(':', 2);
-                var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].";
+                var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].  HOSTNAME:PORT or IPADDRESS:PORT expected.";
+
+                if (fields.Length != 2)
+                {
+                    throw new ClusterDefinitionException(error);
+                }
 
                 if (!NetHelper.IsValidHost(fields[0]) && (!NetHelper.TryParseIPv4Address(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork))
                 {

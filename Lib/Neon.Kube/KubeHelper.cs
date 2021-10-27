@@ -68,7 +68,7 @@ namespace Neon.Kube
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
         private static string               userHomeFolder;
-        private static string               neonkubeFolder;
+        private static string               neonkubeHomeFolder;
         private static string               automationFolder;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
@@ -117,7 +117,7 @@ namespace Neon.Kube
                 throw new NotSupportedException("Operating system not supported.");
             }
                 
-            neonkubeFolder = Path.Combine(userHomeFolder, ".neonkube");
+            neonkubeHomeFolder = Path.Combine(userHomeFolder, ".neonkube");
         }
 
         /// <summary>
@@ -234,8 +234,8 @@ namespace Neon.Kube
         {
             get
             {
-                Directory.CreateDirectory(neonkubeFolder);
-                return neonkubeFolder;
+                Directory.CreateDirectory(neonkubeHomeFolder);
+                return neonkubeHomeFolder;
             }
         }
 
@@ -438,7 +438,7 @@ namespace Neon.Kube
         /// directory.  This doesn't change when a non <see cref="KubeAutomationMode.Disabled"/>
         /// mode is set.
         /// </summary>
-        public static string StandardAutomationFolder => Path.Combine(neonkubeFolder, "automation");
+        public static string StandardAutomationFolder => Path.Combine(neonkubeHomeFolder, "automation");
 
         /// <summary>
         /// Sets cluster deployment automation mode by specifying the folder where 
@@ -472,7 +472,7 @@ namespace Neon.Kube
 
             if (!Path.IsPathFullyQualified(folder))
             {
-                folder = Path.Combine(NeonKubeUserFolder, "automation", folder);
+                folder = Path.Combine(neonkubeHomeFolder, "automation", folder);
             }
 
             AutomationMode   = mode;
@@ -549,7 +549,7 @@ namespace Neon.Kube
                 {
                     case KubeAutomationMode.Disabled:
 
-                        cachedNeonKubeUserFolder = neonkubeFolder;
+                        cachedNeonKubeUserFolder = neonkubeHomeFolder;
                         break;
 
                     case KubeAutomationMode.Enabled:
