@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies which OpenEBS engine will be deployed within the cluster.  This defaults
-        /// to <see cref="OpenEbsEngine.Jiva"/>.
+        /// to <see cref="OpenEbsEngine.Default"/>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Engine", Required = Required.Default)]
