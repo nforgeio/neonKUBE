@@ -278,6 +278,12 @@ namespace Neon.Kube
         IEnumerable<NodeLog> GetNodeLogs();
 
         /// <summary>
+        /// Returns setup related log information for any host proxies.
+        /// </summary>
+        /// <returns>An the <see cref="NodeLog"/> values.</returns>
+        IEnumerable<NodeLog> GetHostLogs();
+
+        /// <summary>
         /// Returns <c>true</c> if the controller has an nodes with setup steps.
         /// </summary>
         bool HasNodeSteps { get; }

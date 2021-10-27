@@ -77,7 +77,7 @@ OPTIONS:
                                   is useful for debugging node image changes.
 
     --ready-to-go               - Optionally indicates that the default ready-to-go image
-                                  should be used when [--node-image-uri] and [node-image-path]
+                                  should be used when [--node-image-uri] and [--node-image-path]
                                   aren't specified.  This is not compatible with [--debug].
 
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache

@@ -279,9 +279,26 @@ namespace Neon.Kube
         public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
-        /// Returns the read-only list of cluster node proxies.
+        /// Returns a read-only list of cluster node proxies.
         /// </summary>
         public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
+
+        /// <summary>
+        /// Returns the list of node host proxies for hosting managers that
+        /// need to manipulate host machines. 
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is initialized by hosting manages such as XenServer and probably Hyper-V
+        /// in the future so that status changes for host machines will be included in 
+        /// <see cref="SetupController{NodeMetadata}"/> UX status updates properly.
+        /// </para>
+        /// <para>
+        /// Hosting managers should add any hosts to this list when the manager is constructed
+        /// and then leave this list alone during provisioning.
+        /// </para>
+        /// </remarks>
+        public List<LinuxSshProxy> Hosts { get; private set; } = new List<LinuxSshProxy>();
 
         /// <summary>
         /// Returns the first cluster master node as sorted by name.

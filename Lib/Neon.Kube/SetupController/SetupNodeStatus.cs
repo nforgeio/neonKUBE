@@ -45,7 +45,7 @@ namespace Neon.Kube
         private object          metadata;
 
         /// <summary>
-        /// Default cluster used by <see cref="Clone"/> as well as for UX design mode.
+        /// Default constructor used by <see cref="Clone"/> as well as for UX design mode.
         /// </summary>
         public SetupNodeStatus()
         {
@@ -55,33 +55,33 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="node">The source node.</param>
-        /// <param name="metadata">The node metadata.</param>
-        public SetupNodeStatus(LinuxSshProxy node, object metadata)
+        /// <param name="nodeOrHost">The source node or vm host.</param>
+        /// <param name="metadata">The node metadata or <c>null</c>.</param>
+        public SetupNodeStatus(LinuxSshProxy nodeOrHost, object metadata)
         {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(nodeOrHost != null, nameof(nodeOrHost));
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
-            this.isClone   = false;
-            this.Name      = node.Name;
-            this.Metadata  = metadata;
-            this.Status    = node.Status;
+            this.isClone  = false;
+            this.Name     = nodeOrHost.Name;
+            this.Metadata = metadata;
+            this.Status   = nodeOrHost.Status;
 
-            if (!node.IsInvolved)
+            if (!nodeOrHost.IsInvolved)
             {
                 this.stepState = SetupStepState.NotInvolved;
             }
             else
             {
-                if (node.IsConfiguring)
+                if (nodeOrHost.IsConfiguring)
                 {
                     this.stepState = SetupStepState.Running;
                 }
-                else if (node.IsReady)
+                else if (nodeOrHost.IsReady)
                 {
                     this.stepState = SetupStepState.Done;
                 }
-                else if (node.IsFaulted)
+                else if (nodeOrHost.IsFaulted)
                 {
                     this.stepState = SetupStepState.Failed;
                 }
@@ -93,9 +93,14 @@ namespace Neon.Kube
 
             // $hack(jefflill):
             //
-            // This isn't super clean.  Currently node metadata will be a NodeDefinition or
-            // something else like a IXenClient (or eventually some kind of HyperV client).
-            // We're going to hardcode metadata type checks to identify the node role.
+            // This isn't super clean: we need to identify the role played
+            // by the node/host here.  If [metadata] isn't NULL, we'll obtain
+            // the role from that.  [metadata] will typically be NULL for
+            // virtual machine hosts so we'll use [NodeSshProxy.NodeRole]
+            // in those cases.
+            //
+            // A cleaner fix would be to ensure that [NodeSshProxy.NodeRole]
+            // is always set correctly.
 
             var metadataType = metadata.GetType();
 
@@ -109,7 +114,16 @@ namespace Neon.Kube
             }
             else
             {
-                throw new NotImplementedException();
+                var nodeSshProxy = nodeOrHost as INodeSshProxy;
+
+                if (nodeSshProxy != null)
+                {
+                    this.Role = nodeSshProxy.Role ?? string.Empty;
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 
