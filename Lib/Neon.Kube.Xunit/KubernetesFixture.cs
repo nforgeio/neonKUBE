@@ -679,15 +679,9 @@ namespace Neon.Kube.Xunit
                 clusterDefinition:      clusterDefinition,
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
                 operation:              ClusterProxy.Operation.LifeCycle,
-                nodeProxyCreator:       (nodeName, nodeAddress, appendToLog) =>
+                nodeProxyCreator:       (nodeName, nodeAddress) =>
                 {
-                    var logStream = new FileStream(Path.Combine(KubeHelper.LogFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-
-                    if (appendToLog)
-                    {
-                        logStream.Seek(0, SeekOrigin.End);
-                    }
-
+                    var logStream      = new FileStream(Path.Combine(KubeHelper.LogFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                     var logWriter      = new StreamWriter(logStream);
                     var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 

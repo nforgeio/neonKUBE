@@ -192,12 +192,13 @@ namespace Neon.Kube
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
             }
 
-            // Build a list of [LinuxSshProxy] instances that map to the specified XenServer
-            // hosts.  We'll use the [XenClient] instances as proxy metadata.  Note that we're
-            // doing this to take advantage of [SetupController] to manage parallel operations
-            // but we're not going to ever connect to XenServers via [LinuxSshProxy] and will
-            // use [XenClient] ability to execute remote commands either via a local [xe-cli]
-            // or via the XenServer API (in the future).
+            // Build a list of [NodeSshProxy<XenClient>] instances that map to the specified
+            // XenServer hosts.  We'll use the [XenClient] instances as proxy metadata.  Note
+            // that we're doing this to take advantage of [SetupController] to manage parallel
+            // operations as well as to take advantage of existing UX progress code, but we're
+            // not going to ever connect to XenServers via [LinuxSshProxy] and will use [XenClient]
+            // to execute remote commands either via a local [xe-cli] or via the XenServer API
+            // (in the future).
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
@@ -242,14 +243,14 @@ namespace Neon.Kube
                 });
 
             xenController.AddWaitUntilOnlineStep();
-            xenController.AddNodeStep("verify readiness", (controller, node) => VerifyReady(node));
+            xenController.AddNodeStep("verify readiness", (controller, hostProxy) => VerifyReady(hostProxy));
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                xenController.AddNodeStep("xenserver node image", (controller, node) => CheckVmTemplateAsync(node), parallelLimit: 1);
+                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
             }
 
-            xenController.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
+            xenController.AddNodeStep("create virtual machines", (controller, hostProxy) => ProvisionVM(hostProxy));
 
             controller.AddControllerStep(xenController);
         }
@@ -384,14 +385,18 @@ namespace Neon.Kube
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private async Task CheckVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
+        private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
 
-            xenSshProxy.Status = "check: template";
+            xenSshProxy.Status = $"check: node image {templateName}";
 
-            if (xenHost.Template.Find(templateName) == null)
+            if (xenHost.Template.Find(templateName) != null)
+            {
+                xenSshProxy.Status = string.Empty;
+            }
+            else
             {
                 if (nodeImagePath != null)
                 {
@@ -401,7 +406,7 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    xenSshProxy.Status = "download: vm template";
+                    xenSshProxy.Status = $"download: node image {templateName}";
 
                     string      driveTemplateName;
 
@@ -420,7 +425,7 @@ namespace Neon.Kube
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                             (progressType, progress) =>
                             {
-                                xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
+                                xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: XVA [{progress}%] [{driveTemplateName}]");
 
                                 return !xenController.CancelPending;
                             });
@@ -433,12 +438,11 @@ namespace Neon.Kube
                         driveTemplatePath = nodeImagePath;
                     }
 
-
                     xenController.SetGlobalStepStatus();
                 }
 
                 xenController.SetGlobalStepStatus();
-                xenSshProxy.Status = "install: virtual machine template (slow)";
+                xenSshProxy.Status = $"install: node image {templateName} (slow)";
                 xenHost.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
