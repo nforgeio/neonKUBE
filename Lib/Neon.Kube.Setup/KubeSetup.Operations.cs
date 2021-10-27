@@ -2522,7 +2522,8 @@ $@"- name: StorageType
 
                 case OpenEbsEngine.HostPath:
 
-                    throw new NotImplementedException("$todo(marcusbooyah)");
+                    await CreateHostPathStorageClass(controller, master, name);
+                    break;
 
                 case OpenEbsEngine.cStor:
 
