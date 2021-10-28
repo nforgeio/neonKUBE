@@ -31,17 +31,17 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static bool osChecked;
-        private static string osDescription;
-        private static NetFramework? netFramework = null;
-        private static string frameworkDescription;
-        private static bool isWindows;
-        private static WindowsEdition windowsEdition;
-        private static bool isLinux;
-        private static bool isOSX;
-        private static bool? is64BitBuild;
-        private static bool? isDevWorkstation;
-        private static bool? isKubernetes;
+        private static bool             osChecked;
+        private static string           osDescription;
+        private static NetFramework?    netFramework = null;
+        private static string           frameworkDescription;
+        private static bool             isWindows;
+        private static WindowsEdition   windowsEdition;
+        private static bool             isLinux;
+        private static bool             isOSX;
+        private static bool?            is64BitBuild;
+        private static bool?            isDevWorkstation;
+        private static bool?            isKubernetes;
 
         /// <summary>
         /// Detects the current operating system.
@@ -55,11 +55,11 @@ namespace Neon.Common
 
             try
             {
-                osDescription = RuntimeInformation.OSDescription;
+                osDescription        = RuntimeInformation.OSDescription;
                 frameworkDescription = RuntimeInformation.FrameworkDescription;
-                isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
                 if (isWindows)
                 {
