@@ -23,12 +23,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK
-using System.Web;
-#else
-using Microsoft.AspNetCore.Http;
-#endif
-
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;

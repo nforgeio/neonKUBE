@@ -71,7 +71,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Basic.Reference.Assemblies" Version="1.2.4" />
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
@@ -83,6 +83,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Go\GoBuilder\GoBuilder.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
   </ItemGroup>
 
 </Project>

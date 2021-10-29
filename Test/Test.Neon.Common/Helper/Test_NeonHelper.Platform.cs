@@ -59,5 +59,37 @@ namespace TestCommon
 
             Assert.Equal(features["Microsoft-Hyper-V-Hypervisor"], status);
         }
+
+        [Fact]
+        public void Framework()
+        {
+#if NETFRAMEWORK
+            Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
+            return;
+#if NET472_OR_GREATER
+            Assert.True(Version.Parse("4.7.2") <= NeonHelper.FrameworkVersion);
+            return;
+#endif
+#elif NET461_OR_GREATER
+            Assert.True(Version.Parse("4.6.1") <= NeonHelper.FrameworkVersion);
+            Assert.True(NeonHelper.FrameworkVersion < Version.Parse("4.7.2"));
+            return;
+#endif
+
+#if NET6_0_OR_GREATER
+            Assert.Equal(NetFramework.Net, NeonHelper.Framework);
+            Assert.Equal(6, NeonHelper.FrameworkVersion.Major);
+            return;
+#elif NET5_0_OR_GREATER
+            Assert.Equal(NetFramework.Net, NeonHelper.Framework);
+            Assert.Equal(5, NeonHelper.FrameworkVersion.Major);
+            return;
+#elif NETCOREAPP
+            Assert.Equal(NetFramework.Core, NeonHelper.Framework);
+            Assert.Equal(3, NeonHelper.FrameworkVersion.Major);
+            return;
+#endif
+            Assert.True(false, "Unexpected FRAMEWORK defined");
+        }
     }
 }

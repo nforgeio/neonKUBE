@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <RootNamespace>Neon.Cadence</RootNamespace>
+    <RootNamespace>Neon.CSharp</RootNamespace>
     <Version>2.14.0</Version>
     <Company>neonFORGE LLC</Company>
     <Authors>neonFORGE Team</Authors>
-    <Description>.NET client for Uber Cadence</Description>
+    <Description>C# dynamic compilation support utilities.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -16,16 +16,14 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Cadence/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.CSharp/README.md</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyName>Neon.Cadence</AssemblyName>
-    <PreserveCompilationContext>true</PreserveCompilationContext>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
-    <PackageTags>uber cadence workflow client</PackageTags>
+    <PackageTags>utility classes</PackageTags>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -33,41 +31,32 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn></NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DefineConstants></DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn></NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-
   <ItemGroup>
-    <None Remove="Resources\cadence-proxy.linux.gz" />
-    <None Remove="Resources\cadence-proxy.osx.gz" />
-    <None Remove="Resources\cadence-proxy.win.exe.gz" />
+    <PackageReference Include="Basic.Reference.Assemblies" Version="1.2.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,17 +64,4 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EmbedIO" Version="3.4.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Go\GoBuilder\GoBuilder.csproj" />
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
-  </ItemGroup>
-  
 </Project>

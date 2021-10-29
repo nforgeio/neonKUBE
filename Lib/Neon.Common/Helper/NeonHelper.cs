@@ -218,49 +218,5 @@ namespace Neon.Common
                 specialUtf8EncodingProvider = true;
             }
         }
-
-        /// <summary>
-        /// Identifies the .NET framework hosting the current process.
-        /// </summary>
-        public static NetFramework Framework
-        {
-            get
-            {
-                if (netFramework.HasValue)
-                {
-                    return netFramework.Value;
-                }
-
-                if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core"))
-                {
-                    return (netFramework = NetFramework.Core).Value;
-                }
-                else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework"))
-                {
-                    return (netFramework = NetFramework.NetFramework).Value;
-                }
-                else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native"))
-                {
-                    return (netFramework = NetFramework.Native).Value;
-                }
-
-                // .NET 5.0 and beyond will have framework descriptions like
-                // ".NET 5.0.0", ".NET 6.0.0",...
-                //
-                // We're going to treat all of these as the new .NET 5+ framework
-                // (the last framework you'll ever need :)
-
-                var netRegex = new Regex(@"^.NET \d");
-
-                if (netRegex.IsMatch(RuntimeInformation.FrameworkDescription))
-                {
-                    return NetFramework.Net;
-                }
-                else
-                {
-                    return (netFramework = NetFramework.Unknown).Value;
-                }
-            }
-        }
     }
 }
