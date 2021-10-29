@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
@@ -76,12 +76,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Basic.Reference.Assemblies" Version="1.2.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" Condition="'$(TargetFrameworkVersion)'!='v4.8'" />
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="5.0.1" Condition="'$(TargetFrameworkVersion)'=='v5.0'" />
-    <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" Condition="'$(TargetFrameworkVersion)'=='v4.8'" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
@@ -89,6 +85,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Go\GoBuilder\GoBuilder.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
   </ItemGroup>
   
 </Project>

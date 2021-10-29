@@ -36,45 +36,6 @@ namespace TestCommon
     public partial class Test_NeonHelper
     {
         [Fact]
-        public void Framework()
-        {
-            var framework = RuntimeInformation.FrameworkDescription;
-
-            if (framework.StartsWith(".NET Core"))
-            {
-                Assert.Equal(NetFramework.Core, NeonHelper.Framework);
-                return;
-            }
-            else if (framework.StartsWith(".NET Framework"))
-            {
-                Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
-                return;
-            }
-            else if (framework.StartsWith(".NET Native"))
-            {
-                Assert.Equal(NetFramework.Native, NeonHelper.Framework);
-                return;
-            }
-
-            // .NET 5.0 and beyond will have framework descriptions like
-            // ".NET 5.0.0", ".NET 6.0.0",...
-            //
-            // We're going to treat all of these as the new .NET 5+ framework
-            // (the last framework you'll ever need :)
-
-            var netRegex = new Regex(@"^.NET \d");
-
-            if (netRegex.IsMatch(framework))
-            {
-                Assert.Equal(NetFramework.Net, NeonHelper.Framework);
-            }
-            else
-            {
-                Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
-            }
-        }
-
-        [Fact]
         public void ParseCsv()
         {
             string[] fields;

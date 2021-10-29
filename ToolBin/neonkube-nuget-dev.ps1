@@ -310,6 +310,7 @@ SetVersion Neon.Cassandra           $libraryVersion
 SetVersion Neon.Common              $libraryVersion
 SetVersion Neon.Couchbase           $libraryVersion
 SetVersion Neon.Cryptography        $libraryVersion
+SetVersion Neon.CSharp              $libraryVersion
 SetVersion Neon.Deployment          $libraryVersion
 SetVersion Neon.Docker              $libraryVersion
 SetVersion Neon.HyperV              $libraryVersion
@@ -350,6 +351,7 @@ Publish Neon.Cassandra              $libraryVersion
 Publish Neon.Common                 $libraryVersion
 Publish Neon.Couchbase              $libraryVersion
 Publish Neon.Cryptography           $libraryVersion
+Publish Neon.CSharp                 $libraryVersion
 Publish Neon.Deployment             $libraryVersion
 Publish Neon.Docker                 $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
@@ -390,6 +392,7 @@ RestoreVersion Neon.Cassandra
 RestoreVersion Neon.Common
 RestoreVersion Neon.Couchbase
 RestoreVersion Neon.Cryptography
+RestoreVersion Neon.CSharp
 RestoreVersion Neon.Deployment
 RestoreVersion Neon.Docker
 RestoreVersion Neon.HyperV

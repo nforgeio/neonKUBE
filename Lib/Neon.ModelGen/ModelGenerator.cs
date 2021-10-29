@@ -33,11 +33,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-using Basic.Reference.Assemblies;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.CSharp;
 
 // $todo(jefflill):
 //
@@ -106,7 +105,7 @@ namespace Neon.ModelGen
 
             // Add assembly references.
 
-            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.AddRange(CSharpHelper.RuntimeReferenceAssemblies);
             references.Add(typeof(NeonHelper));
 
             // Allow the caller to add references.

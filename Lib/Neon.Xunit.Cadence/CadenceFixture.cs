@@ -374,7 +374,7 @@ services:
 
                 if (!noClient)
                 {
-                    // Establish the Cadence connection via the cadence proxy).
+                    // Establish the Cadence connection via the cadence proxy.
 
                     Client = CadenceClient.ConnectAsync(settings).Result;
 

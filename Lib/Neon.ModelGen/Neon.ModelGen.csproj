@@ -59,7 +59,6 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Basic.Reference.Assemblies" Version="1.2.4" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
@@ -69,6 +68,7 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

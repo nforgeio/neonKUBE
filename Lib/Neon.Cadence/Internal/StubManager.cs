@@ -29,14 +29,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Basic.Reference.Assemblies;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.CSharp;
 
 namespace Neon.Cadence.Internal
 {
@@ -1070,7 +1069,7 @@ namespace Neon.Cadence.Internal
 
             // Reference the required assemblies.
 
-            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.AddRange(CSharpHelper.RuntimeReferenceAssemblies);
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => !assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location)))
@@ -1590,7 +1589,7 @@ namespace Neon.Cadence.Internal
 
             // Reference the required assemblies.
 
-            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.AddRange(CSharpHelper.RuntimeReferenceAssemblies);
 
             // Reference all loaded assemblies.
 
