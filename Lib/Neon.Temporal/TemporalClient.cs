@@ -435,9 +435,9 @@ namespace Neon.Temporal
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, TemporalSettings settings)
             {
-                var openPort = NetHelper.GetUnusedTcpPort(address);
+                var clientPort = settings.DebugPrelaunched ? 5001 : NetHelper.GetUnusedTcpPort(address);
 
-                ListenUri = new Uri($"http://{address}:{openPort}");
+                ListenUri = new Uri($"http://{address}:{clientPort}");
 
                 EndPointManager.UseIpv6 = false;    // We don't want the EmbedIO listener to use IPv6
 

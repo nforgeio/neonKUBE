@@ -446,9 +446,9 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, CadenceSettings settings)
             {
-                var openPort = NetHelper.GetUnusedTcpPort(address);
+                var clientPort = settings.DebugPrelaunched ? 5001 : NetHelper.GetUnusedTcpPort(address);
 
-                ListenUri = new Uri($"http://{address}:{openPort}");
+                ListenUri = new Uri($"http://{address}:{clientPort}");
 
                 EndPointManager.UseIpv6 = false;    // We don't want the EmbedIO listener to use IPv6
 
@@ -479,7 +479,7 @@ namespace Neon.Cadence
                             }
                             catch
                             {
-                                // We're going to see exceptions like ObjectDisposedException when
+                                // We're going to see exceptions like [ObjectDisposedException] when
                                 // the listener is disposed.  We're just going to ignore these
                                 // and exit.
 
