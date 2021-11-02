@@ -16,4 +16,4 @@ spec:
       - neon-system
   selector:
     matchLabels:
-      v1.min.io/tenant: neon-system
+      v1.min.io/tenant: minio
