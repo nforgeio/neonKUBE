@@ -333,16 +333,12 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
+        [Trait(TestTrait.Category, TestTrait.Buggy)]    // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
 
             var utcNow = DateTime.UtcNow;
-
-            // Adjust the time backwards by 5 seconds because we're seeing some
-            // differences between the workstation clock and the WSL2 clock?
-
-            utcNow = utcNow - TimeSpan.FromSeconds(5);
 
             // Execute a workflow and then verify that we can describe it.
 

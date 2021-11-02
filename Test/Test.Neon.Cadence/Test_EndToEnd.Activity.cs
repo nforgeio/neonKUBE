@@ -961,8 +961,7 @@ namespace TestCadence
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);
-            Assert.Contains("ArgumentException", error);
-            Assert.Contains("forced-failure", error);
+            Assert.Contains("StartToCloseTimeoutException", error);
         }
 
         //---------------------------------------------------------------------
