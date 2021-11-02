@@ -70,12 +70,17 @@ spec:
         # present in the pgrep output.
         # So fullname can be used here with pgrep (cmd is < 15 chars).
         livenessProbe:
-          exec:
-            command:
-            - pgrep
-            - "ndo"
+          httpGet:
+            path: /healthz
+            port: 8585
           initialDelaySeconds: {{ .Values.ndmOperator.healthCheck.initialDelaySeconds }}
-          periodSeconds: {{ .Values.ndmOperator.healthCheck.periodSeconds }}
+          periodSeconds: {{ .Values.ndmOperator.healthCheck.periodSeconds }}        
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8585
+          initialDelaySeconds: {{ .Values.ndmOperator.readinessCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.ndmOperator.readinessCheck.periodSeconds }}
 {{- if .Values.ndmOperator.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.ndmOperator.nodeSelector | indent 8 }}
