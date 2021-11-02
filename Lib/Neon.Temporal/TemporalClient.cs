@@ -15,15 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// IMPLEMENTATION NOTE:
-// --------------------
-//
-// We're using the EmbedIO nuget package for a cross platform implemention of
-// [HttpListener] which is normally available on Windows.  This in turn, is
-// based on the old Mono implementation.  I've archived the EmbedIO repo here:
-//
-//      https://github.com/neonforge-archive/embedio
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,18 +33,23 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+#if NETFRAMEWORK
+using Microsoft.Net.Http.Server;
+#else
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+#endif
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Temporal.Internal;
-
-using EmbedIO;
-using EmbedIO.Net;
-using EmbedIO.WebApi;
-using HttpListener = EmbedIO.Net.HttpListener;
-using IHttpContext = EmbedIO.IHttpContext;
 
 namespace Neon.Temporal
 {
@@ -417,16 +413,21 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Implements a simple integrated HTTP server that works for both .NET Core
-        /// as well as .NET Framework, using a Mono based cross-platform HTTP server.
+        /// as well as .NET Framework, using Kestrel for .NET Core and [WebListener]
+        /// for .NET Framework.
         /// </summary>
         private class HttpServer : IDisposable
         {
-            private HttpListener listener;
-
             /// <summary>
             /// Returns the URI where the server is listening.
             /// </summary>
             public Uri ListenUri { get; private set; }
+
+#if NETFRAMEWORK
+            //-----------------------------------------------------------------
+            // Code for: .NET FRAMEWORK IMPLEMENTATION
+
+            private WebListener listener;   // Used for .NET Framework
 
             /// <summary>
             /// Constructor.
@@ -435,14 +436,14 @@ namespace Neon.Temporal
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, TemporalSettings settings)
             {
-                var clientPort = settings.DebugPrelaunched ? 5001 : NetHelper.GetUnusedTcpPort(address);
+                var proxyPort        = NetHelper.GetUnusedTcpPort(address);
+                var listenerSettings = new WebListenerSettings();
 
-                ListenUri = new Uri($"http://{address}:{clientPort}");
+                ListenUri = new Uri($"http://{address}:{proxyPort}");
 
-                EndPointManager.UseIpv6 = false;    // We don't want the EmbedIO listener to use IPv6
+                listenerSettings.UrlPrefixes.Add(ListenUri.ToString());
 
-                listener = new HttpListener();
-                listener.AddPrefix(ListenUri.AbsoluteUri);
+                listener = new WebListener(listenerSettings);
                 listener.Start();
 
                 // Process the inbound messages on a free running task.
@@ -454,23 +455,27 @@ namespace Neon.Temporal
                         {
                             try
                             {
-                                var context = await listener.GetContextAsync(new CancellationToken());
+                                var newContext = await listener.AcceptAsync();
 
                                 // Process each request in its own task.
 
                                 _ = Task.Factory.StartNew(
                                     async (object arg) =>
                                     {
-                                        await SyncContext.ClearAsync;                                            
-                                        await OnListenerRequestAsync((IHttpContext)arg);
+                                        await SyncContext.ClearAsync;
+
+                                        using (var context = (RequestContext)arg)
+                                        {
+                                            await OnListenerRequestAsync(context);
+                                        }
                                     },
-                                    context);
+                                    newContext);
                             }
                             catch
                             {
-                                // We're going to see exceptions like ObjectDisposedException when
-                                // the listener is disposed.  We're just going to ignore these
-                                // and exit.
+                                // We're going to see exceptions like [ObjectDisposedException]
+                                // when the listener is disposed.  We're just going to ignore
+                                // these and exit.
 
                                 break;
                             }
@@ -487,6 +492,72 @@ namespace Neon.Temporal
                     listener = null;
                 }
             }
+#else
+            //-----------------------------------------------------------------
+            // Code for: .NET Core 3.1, .NET Standard 2.0+, NET5.0+
+
+            /// <summary>
+            /// Configures the <b>cadence-client</b> connection's web server used to 
+            /// receive messages from the <b>cadence-proxy</b> when serving via
+            /// Kestrel on .NET Core.
+            /// </summary>
+            private class Startup
+            {
+                public void Configure(IApplicationBuilder app)
+                {
+                    app.Run(async context =>
+                    {
+                        await SyncContext.ClearAsync;
+                        await OnKestralRequestAsync(context);
+                    });
+                }
+            }
+
+            private IWebHost kestrel;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="address">The IP address where the service should listen.</param>
+            /// <param name="settings">The Cadence settings.</param>
+            public HttpServer(IPAddress address, TemporalSettings settings)
+            {
+                if (kestrel == null)
+                {
+                    // Start the web server that will listen for requests from the associated 
+                    // [cadence-proxy] process.
+
+                    kestrel = new WebHostBuilder()
+                        .UseKestrel(
+                            options =>
+                            {
+                                options.Limits.MaxRequestBodySize = null;     // Disables request size limits
+                                options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
+                            })
+                        .ConfigureServices(
+                            services =>
+                            {
+                                services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
+                            })
+                        .UseStartup<Startup>()
+                        .Build();
+
+                    kestrel.Start();
+
+                    ListenUri = new Uri(kestrel.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+                }
+            }
+
+            /// <inheritdoc/>
+            public void Dispose()
+            {
+                if (kestrel != null)
+                {
+                    kestrel.Dispose();
+                    kestrel = null;
+                }
+            }
+#endif
         }
 
         //---------------------------------------------------------------------
@@ -904,35 +975,37 @@ namespace Neon.Temporal
             return client;
         }
 
+#if NETFRAMEWORK
         /// <summary>
         /// Called when an HTTP request is received by the integrated WebListener
-        /// (presumably sent by the associated <b>temporal-proxy</b> process).
+        /// (presumably sent by the associated <b>cadence-proxy</b> process).
         /// </summary>
         /// <param name="context">The request context.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task OnListenerRequestAsync(IHttpContext context)
+        private static async Task OnListenerRequestAsync(RequestContext context)
         {
             var request  = context.Request;
             var response = context.Response;
-            var path     = request.Url.AbsolutePath;
 
-            if (request.HttpMethod != "PUT")
+            if (request.Method != "PUT")
             {
                 response.StatusCode = 405;  // MethodNotAllowed
-                await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes($"[{request.HttpMethod}] HTTP method is not supported.  All requests must be submitted via [PUT]."));
+
+                await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT]."));
                 return;
             }
 
             if (request.ContentType != ProxyMessage.ContentType)
             {
                 response.StatusCode = 405;  // MethodNotAllowed
-                await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}]."));
+
+                await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}]."));
                 return;
             }
 
             try
             {
-                switch (path)
+                switch (request.Path)
                 {
                     case "/":
 
@@ -945,14 +1018,14 @@ namespace Neon.Temporal
                         // of the Kestrel receive buffer.  This suggests that there's some kind
                         // of problem reading the next buffer from the request socket.
                         //
-                        // This isn't a huge issue since we're going to convert temporal-proxy into
+                        // This isn't a huge issue since we're going to convert cadence-proxy into
                         // a shared library where we'll be passing message buffers directly.
 
                         var bodyStream = MemoryStreamPool.Alloc();
 
                         try
                         {
-                            await request.InputStream.CopyToAsync(bodyStream);
+                            await request.Body.CopyToAsync(bodyStream);
 
                             bodyStream.Position = 0;
 
@@ -963,7 +1036,7 @@ namespace Neon.Temporal
 
                             if (!string.IsNullOrEmpty(httpReply.Message))
                             {
-                                await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(httpReply.Message));
+                                await response.Body.WriteAsync(Encoding.UTF8.GetBytes(httpReply.Message));
                             }
                         }
                         finally
@@ -974,8 +1047,8 @@ namespace Neon.Temporal
 
                     default:
 
-                        response.StatusCode = 404;  // 4NotFound
-                        await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes($"[{path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed."));
+                        response.StatusCode = 404;  // NotFound
+                        await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed."));
                         return;
                 }
             }
@@ -990,6 +1063,90 @@ namespace Neon.Temporal
                 response.StatusCode = 500;  // InternalServerError
             }
         }
+#else
+        /// <summary>
+        /// Called when an HTTP request is received by the integrated Kestrel web server 
+        /// (presumably sent by the associated <b>cadence-proxy</b> process).
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task OnKestralRequestAsync(HttpContext context)
+        {
+            var request  = context.Request;
+            var response = context.Response;
+
+            if (request.Method != "PUT")
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT].");
+                return;
+            }
+
+            if (request.ContentType != ProxyMessage.ContentType)
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}].");
+                return;
+            }
+
+            try
+            {
+                switch (request.Path)
+                {
+                    case "/":
+
+                        // $hack(jefflill):
+                        //
+                        // We need to receive the entire request body before deserializing the
+                        // the message because BinaryReader doesn't seem to play nice with reading
+                        // from the body stream.  We're seeing EndOfStream exceptions when we try
+                        // to read more than about 64KiB bytes of data which is the default size
+                        // of the Kestrel receive buffer.  This suggests that there's some kind
+                        // of problem reading the next buffer from the request socket.
+
+                        var bodyStream = MemoryStreamPool.Alloc();
+
+                        try
+                        {
+                            await request.Body.CopyToAsync(bodyStream);
+
+                            bodyStream.Position = 0;
+
+                            var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
+                            var httpReply    = await OnRootRequestAsync(proxyMessage);
+
+                            response.StatusCode = httpReply.StatusCode;
+
+                            if (!string.IsNullOrEmpty(httpReply.Message))
+                            {
+                                await response.WriteAsync(httpReply.Message);
+                            }
+                        }
+                        finally
+                        {
+                            MemoryStreamPool.Free(bodyStream);
+                        }
+                        break;
+
+                    default:
+
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                        await response.WriteAsync($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed.");
+                        return;
+                }
+            }
+            catch (FormatException e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+        }
+#endif
 
         /// <summary>
         /// Handles requests to the root <b>"/"</b> endpoint path.
@@ -1751,7 +1908,7 @@ namespace Neon.Temporal
                 return Settings.Namespace;
             }
 
-            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.Namespace)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(@namespace), $"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.Namespace)}]) must be non-empty.");
         }
 
         /// <summary>
