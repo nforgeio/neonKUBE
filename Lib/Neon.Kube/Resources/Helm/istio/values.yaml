@@ -1,14 +1,14 @@
-organization: docker.io/istio
-tag: 1.10.3-distroless
+organization: neon-registry.node.local
+tag: 1.11.4-distroless
 
 
 images:
-  organization: docker.io/istio
+  organization: neon-registry.node.local
   operator: 
     repository: operator
-    tag: 1.10.3-distroless
+    tag: 1.11.4-distroless
   istio:
-    tag: 1.10.3-distroless
+    tag: 1.11.4-distroless
   coredns:
     repository: coredns-coredns
     tag: 1.6.2
