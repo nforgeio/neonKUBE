@@ -1,0 +1,3108 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: openebs-lvmlocalpv-pool
+  labels:
+    app: grafana
+spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
+  json: >
+    {
+      "__inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "label": "Prometheus",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }
+      ],
+       "annotations": {
+          "list": [
+             {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+             }
+          ]
+       },
+       "editable": true,
+       "gnetId": null,
+       "graphTooltip": 0,
+       "id": 30,
+       "iteration": 1624996506300,
+       "links": [ ],
+       "panels": [
+          {
+             "collapsed": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+             },
+             "id": 22,
+             "panels": [ ],
+             "title": "Volume group Stats",
+             "type": "row"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "continuous-GrYlRd"
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   },
+                   "unit": "decbytes"
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Total size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-greens"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Free size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-RdYlGr"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Used size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "thresholds"
+                            }
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 1
+             },
+             "id": 2,
+             "options": {
+                "displayMode": "lcd",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                   "calcs": [
+                      "lastNotNull"
+                   ],
+                   "fields": "",
+                   "values": false
+                },
+                "showUnfilled": true,
+                "text": { }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_total_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Total size",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_free_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Free size",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_total_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}-lvm_vg_free_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Used size",
+                   "refId": "C"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Volume Group Capacity",
+             "type": "bargauge"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "continuous-GrYlRd"
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   },
+                   "unit": "decbytes"
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Metadata total size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-greens"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Metadata free size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-RdYlGr"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Metadata used size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "thresholds"
+                            }
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 1
+             },
+             "id": 4,
+             "options": {
+                "displayMode": "lcd",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                   "calcs": [
+                      "lastNotNull"
+                   ],
+                   "fields": "",
+                   "values": false
+                },
+                "showUnfilled": true,
+                "text": { }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_mda_total_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Metadata total size",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_mda_free_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Metadata free size",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_mda_total_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}-lvm_vg_mda_free_size_bytes{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Metadata used size",
+                   "refId": "C"
+                }
+             ],
+             "title": "Volume Group Metadata Capacity",
+             "type": "bargauge"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "opacity",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "undefined",
+                         "to": "",
+                         "type": 1,
+                         "value": "-1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "writable",
+                         "to": "",
+                         "type": 1,
+                         "value": "0"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "read-only",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      }
+                   ],
+                   "max": 1,
+                   "min": -1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 9
+             },
+             "id": 6,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_permission{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Permission",
+                   "refId": "A"
+                }
+             ],
+             "title": "Volume Group Permission",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "opacity",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "undefined",
+                         "to": "",
+                         "type": 1,
+                         "value": "-1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "normal",
+                         "to": "",
+                         "type": 1,
+                         "value": "0"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "contiguous",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      },
+                      {
+                         "from": "",
+                         "id": 4,
+                         "text": "cling",
+                         "to": "",
+                         "type": 1,
+                         "value": "2"
+                      },
+                      {
+                         "from": "",
+                         "id": 5,
+                         "text": "anywhere",
+                         "to": "",
+                         "type": 1,
+                         "value": "3"
+                      },
+                      {
+                         "from": "",
+                         "id": 6,
+                         "text": "inherited",
+                         "to": "",
+                         "type": 1,
+                         "value": "4"
+                      }
+                   ],
+                   "max": 4,
+                   "min": -1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 9
+             },
+             "id": 8,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_allocation_policy{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "allocation policy",
+                   "refId": "A"
+                }
+             ],
+             "title": "Volume Group Allocation Policy",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 10,
+                      "gradientMode": "none",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [ ],
+                   "min": 0,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "max lv count"
+                      },
+                      "properties": [
+                         {
+                            "id": "mappings",
+                            "value": [
+                               {
+                                  "from": "",
+                                  "id": 1,
+                                  "text": "unlimited",
+                                  "to": "",
+                                  "type": 1,
+                                  "value": "0"
+                               }
+                            ]
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 17
+             },
+             "id": 12,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_lv_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "current lv count",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_max_lv_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "max lv count",
+                   "refId": "B"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Volume Group volumes count",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 10,
+                      "gradientMode": "none",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [ ],
+                   "min": 0,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [
+                   {
+                      "__systemRef": "hideSeriesFrom",
+                      "matcher": {
+                         "id": "byNames",
+                         "options": {
+                            "mode": "exclude",
+                            "names": [
+                               "current pv count"
+                            ],
+                            "prefix": "All except:",
+                            "readOnly": true
+                         }
+                      },
+                      "properties": [
+                         {
+                            "id": "custom.hideFrom",
+                            "value": {
+                               "graph": true,
+                               "legend": false,
+                               "tooltip": false
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "max pv count"
+                      },
+                      "properties": [
+                         {
+                            "id": "mappings",
+                            "value": [
+                               {
+                                  "from": "",
+                                  "id": 1,
+                                  "text": "unlimited",
+                                  "to": "",
+                                  "type": 1,
+                                  "value": "0"
+                               }
+                            ]
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 17
+             },
+             "id": 16,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_pv_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "current pv count",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_missing_pv_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "missing pv count",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_max_pv_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "max pv count",
+                   "refId": "C"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Volume Group pv count",
+             "type": "timeseries"
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 25
+             },
+             "hiddenSeries": false,
+             "id": 18,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_mda_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "current metadata count",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_mda_used_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "used metadata count",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group metadata count",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1180",
+                   "decimals": 0,
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1181",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 25
+             },
+             "hiddenSeries": false,
+             "id": 20,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_vg_snap_count{name=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "snapshots count",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group snapshots count",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1431",
+                   "decimals": 0,
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1432",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "thresholds"
+                   },
+                   "custom": {
+                      "align": null,
+                      "filterable": false
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   }
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #A"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "used %"
+                         },
+                         {
+                            "id": "custom.displayMode",
+                            "value": "lcd-gauge"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "percent"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "active_status"
+                      },
+                      "properties": [
+                         {
+                            "id": "custom.displayMode",
+                            "value": "color-background"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #B"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Total size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "segtype"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Type"
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 33
+             },
+             "id": 34,
+             "options": {
+                "showHeader": true,
+                "sortBy": [
+                   {
+                      "desc": true,
+                      "displayName": ""
+                   }
+                ]
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_used_percent{vg=~\"$volume_group\",segtype!=\"$thinPool\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_total_size_bytes{vg=~\"$volume_group\",segtype!=\"$thinPool\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "B"
+                }
+             ],
+             "title": "Volume Group Volumes",
+             "transformations": [
+                {
+                   "id": "filterFieldsByName",
+                   "options": {
+                      "include": {
+                         "names": [
+                            "active_status",
+                            "device",
+                            "dm_path",
+                            "host",
+                            "name",
+                            "path",
+                            "segtype",
+                            "Value #A",
+                            "Value #B"
+                         ]
+                      }
+                   }
+                },
+                {
+                   "id": "merge",
+                   "options": { }
+                },
+                {
+                   "id": "organize",
+                   "options": {
+                      "excludeByName": { },
+                      "indexByName": {
+                         "Value #A": 8,
+                         "Value #B": 7,
+                         "active_status": 1,
+                         "device": 2,
+                         "dm_path": 3,
+                         "host": 5,
+                         "name": 0,
+                         "path": 4,
+                         "segtype": 6
+                      },
+                      "renameByName": { }
+                   }
+                }
+             ],
+             "type": "table"
+          },
+          {
+             "collapsed": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 39
+             },
+             "id": 52,
+             "panels": [ ],
+             "title": "Volume Group Performance Stats",
+             "type": "row"
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 40
+             },
+             "hiddenSeries": false,
+             "id": 56,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_reads_completed_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "reads/sec",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group IO Reads",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:310",
+                   "format": "iops",
+                   "label": "IO read",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:311",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 40
+             },
+             "hiddenSeries": false,
+             "id": 58,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 2,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_writes_completed_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "writes/sec",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group IO Writes",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:557",
+                   "format": "iops",
+                   "label": "IO write",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:558",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 2,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 48
+             },
+             "hiddenSeries": false,
+             "id": 54,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideZero": false,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_read_bytes_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\", instance=~\"$node.*\"} * 0))",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 4,
+                   "legendFormat": "Read bytes",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_written_bytes_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\", instance=~\"$node.*\"} * 0))",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 4,
+                   "legendFormat": "Written bytes",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group R/W Data",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:76",
+                   "format": "Bps",
+                   "label": "bytes read (-) / write (+)",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:77",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 48
+             },
+             "hiddenSeries": false,
+             "id": 60,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 2,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": false
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_io_time_seconds_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "utilization",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Volume Group I/O Utilization",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:804",
+                   "format": "percentunit",
+                   "label": "%util",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:805",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "collapsed": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 56
+             },
+             "id": 24,
+             "panels": [ ],
+             "title": "Thin Pool Stats",
+             "type": "row"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "opacity",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "decimals": 0,
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "undefined",
+                         "to": "",
+                         "type": 1,
+                         "value": "-1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "healthy",
+                         "to": "",
+                         "type": 1,
+                         "value": "0"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "partial",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      },
+                      {
+                         "from": "",
+                         "id": 4,
+                         "text": "refresh needed",
+                         "to": "",
+                         "type": 1,
+                         "value": "2"
+                      },
+                      {
+                         "from": "",
+                         "id": 5,
+                         "text": "mismatches exist",
+                         "to": "",
+                         "type": 1,
+                         "value": "3"
+                      }
+                   ],
+                   "max": 3,
+                   "min": -1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 57
+             },
+             "id": 26,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_health_status{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Health Status",
+                   "refId": "A"
+                }
+             ],
+             "title": "Health Status",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "opacity",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 2,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "undefined",
+                         "to": "",
+                         "type": 1,
+                         "value": "-1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "error",
+                         "to": "",
+                         "type": 1,
+                         "value": "0"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "queue",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      }
+                   ],
+                   "max": 1,
+                   "min": -1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 57
+             },
+             "id": 50,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_when_full{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "behaviour",
+                   "refId": "A"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Behaviour when full",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "thresholds"
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   },
+                   "unit": "decbytes"
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Used %"
+                      },
+                      "properties": [
+                         {
+                            "id": "unit",
+                            "value": "percent"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Total size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-greens"
+                            }
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 65
+             },
+             "id": 30,
+             "options": {
+                "displayMode": "lcd",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                   "calcs": [
+                      "lastNotNull"
+                   ],
+                   "fields": "",
+                   "values": false
+                },
+                "showUnfilled": true,
+                "text": { }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_total_size_bytes{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Total size",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_used_percent{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Used %",
+                   "refId": "B"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Pool Capacity",
+             "type": "bargauge"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "thresholds"
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   },
+                   "unit": "decbytes"
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Metadata size"
+                      },
+                      "properties": [
+                         {
+                            "id": "color",
+                            "value": {
+                               "mode": "continuous-greens"
+                            }
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Metadata used %"
+                      },
+                      "properties": [
+                         {
+                            "id": "unit",
+                            "value": "percent"
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 65
+             },
+             "id": 38,
+             "options": {
+                "displayMode": "lcd",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                   "calcs": [
+                      "lastNotNull"
+                   ],
+                   "fields": "",
+                   "values": false
+                },
+                "showUnfilled": true,
+                "text": { }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_mda_total_size_bytes{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "Metadata size",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_mda_used_percent{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "hide": false,
+                   "interval": "",
+                   "legendFormat": "Metadata used %",
+                   "refId": "B"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Pool Metadata Capacity",
+             "type": "bargauge"
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 74
+             },
+             "hiddenSeries": false,
+             "id": 40,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_snap_percent{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "snapshot full %",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Pool Snapshot Full %",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:4099",
+                   "decimals": 2,
+                   "format": "percent",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:4100",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "opacity",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineWidth": 1,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "undefined",
+                         "to": "",
+                         "type": 1,
+                         "value": "-1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "unknown",
+                         "to": "",
+                         "type": 1,
+                         "value": "0"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "writeable",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      },
+                      {
+                         "from": "",
+                         "id": 4,
+                         "text": "read-only",
+                         "to": "",
+                         "type": 1,
+                         "value": "2"
+                      },
+                      {
+                         "from": "",
+                         "id": 5,
+                         "text": "read-only-override",
+                         "to": "",
+                         "type": 1,
+                         "value": "3"
+                      }
+                   ],
+                   "max": 3,
+                   "min": -1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "short"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 74
+             },
+             "id": 48,
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_permission{name=~\"$thin_pool\", instance=~\"$node.*\"}",
+                   "interval": "",
+                   "legendFormat": "permission",
+                   "refId": "A"
+                }
+             ],
+             "title": "Pool Permission",
+             "type": "timeseries"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "thresholds"
+                   },
+                   "custom": {
+                      "align": null,
+                      "filterable": false
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   }
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #A"
+                      },
+                      "properties": [
+                         {
+                            "id": "unit",
+                            "value": "percent"
+                         },
+                         {
+                            "id": "displayName",
+                            "value": "Used %"
+                         },
+                         {
+                            "id": "custom.displayMode",
+                            "value": "lcd-gauge"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #B"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Total Size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "active_status"
+                      },
+                      "properties": [
+                         {
+                            "id": "custom.displayMode",
+                            "value": "color-background"
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 5,
+                "w": 24,
+                "x": 0,
+                "y": 82
+             },
+             "id": 42,
+             "options": {
+                "showHeader": true
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_used_percent{pool=~\"$thin_pool\",segtype=~\"$thinVolume\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_lv_total_size_bytes{pool=~\"$thin_pool\",segtype=~\"$thinVolume\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "",
+                   "refId": "B"
+                }
+             ],
+             "title": "Thin Volumes",
+             "transformations": [
+                {
+                   "id": "filterFieldsByName",
+                   "options": {
+                      "include": {
+                         "names": [
+                            "active_status",
+                            "device",
+                            "dm_path",
+                            "host",
+                            "Value #A",
+                            "Value #B",
+                            "path",
+                            "name"
+                         ]
+                      }
+                   }
+                },
+                {
+                   "id": "merge",
+                   "options": { }
+                },
+                {
+                   "id": "organize",
+                   "options": {
+                      "excludeByName": { },
+                      "indexByName": {
+                         "Value #A": 7,
+                         "Value #B": 6,
+                         "active_status": 1,
+                         "device": 2,
+                         "dm_path": 3,
+                         "host": 5,
+                         "name": 0,
+                         "path": 4
+                      },
+                      "renameByName": { }
+                   }
+                }
+             ],
+             "type": "table"
+          },
+          {
+             "collapsed": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 87
+             },
+             "id": 62,
+             "panels": [ ],
+             "title": "Thin Pool Performance Stats",
+             "type": "row"
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 88
+             },
+             "hiddenSeries": false,
+             "id": 64,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 2,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_reads_completed_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\",segtype=~\"$thinVolume\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "reads/sec",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Thin Pool IO Reads",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1004",
+                   "format": "iops",
+                   "label": "IO read",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1005",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 88
+             },
+             "hiddenSeries": false,
+             "id": 66,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 2,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_writes_completed_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\",segtype=~\"$thinVolume\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "writes/sec",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Thin Pool IO Writes",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1745",
+                   "format": "iops",
+                   "label": "IO write",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1746",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 2,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 96
+             },
+             "hiddenSeries": false,
+             "id": 68,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 1,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_read_bytes_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\",segtype=~\"$thinVolume\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 4,
+                   "legendFormat": "Read bytes",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_written_bytes_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\",segtype=~\"$thinVolume\", instance=~\"$node.*\"} * 0))",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 4,
+                   "legendFormat": "Written bytes",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Thin Pool R/W Data",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1834",
+                   "format": "Bps",
+                   "label": "bytes read (-) / write (+)",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1835",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 1,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 96
+             },
+             "hiddenSeries": false,
+             "id": 70,
+             "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+             },
+             "lines": true,
+             "linewidth": 2,
+             "nullPointMode": "connected",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 2,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "sum(rate(node_disk_io_time_seconds_total{instance=~\"$node.*\"}[5m]) + on(device) group_left(name) (lvm_lv_when_full{vg=~\"$volume_group\",segtype=~\"$thinVolume\", instance=~\"$node.*\"} * 0))",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "utililization",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Thin Pool Utilization",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1923",
+                   "format": "percentunit",
+                   "label": "%util",
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1924",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "collapsed": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 104
+             },
+             "id": 44,
+             "panels": [ ],
+             "title": "Volume Group PV Stats",
+             "type": "row"
+          },
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "thresholds"
+                   },
+                   "custom": {
+                      "align": null,
+                      "filterable": false
+                   },
+                   "mappings": [ ],
+                   "thresholds": {
+                      "mode": "percentage",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         },
+                         {
+                            "color": "red",
+                            "value": 80
+                         }
+                      ]
+                   }
+                },
+                "overrides": [
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #A"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Total Size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #B"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Used Size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         },
+                         {
+                            "id": "custom.displayMode",
+                            "value": "lcd-gauge"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #C"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Free Size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "Value #D"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "Device Size"
+                         },
+                         {
+                            "id": "unit",
+                            "value": "decbytes"
+                         }
+                      ]
+                   },
+                   {
+                      "matcher": {
+                         "id": "byName",
+                         "options": "in_use"
+                      },
+                      "properties": [
+                         {
+                            "id": "displayName",
+                            "value": "In Use"
+                         }
+                      ]
+                   }
+                ]
+             },
+             "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 105
+             },
+             "id": 46,
+             "options": {
+                "showHeader": true
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "lvm_pv_total_size_bytes{vg=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_pv_used_size_bytes{vg=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_pv_free_size_bytes{vg=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "C"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "lvm_pv_device_size_bytes{vg=~\"$volume_group\", instance=~\"$node.*\"}",
+                   "format": "table",
+                   "hide": false,
+                   "instant": true,
+                   "interval": "",
+                   "legendFormat": "",
+                   "refId": "D"
+                }
+             ],
+             "title": "Volume Group PV",
+             "transformations": [
+                {
+                   "id": "filterFieldsByName",
+                   "options": {
+                      "include": {
+                         "names": [
+                            "allocatable",
+                            "in_use",
+                            "name",
+                            "Value #B",
+                            "Value #A",
+                            "Value #C",
+                            "Value #D"
+                         ]
+                      }
+                   }
+                },
+                {
+                   "id": "merge",
+                   "options": { }
+                },
+                {
+                   "id": "organize",
+                   "options": {
+                      "excludeByName": { },
+                      "indexByName": {
+                         "Value #A": 4,
+                         "Value #B": 5,
+                         "Value #C": 6,
+                         "Value #D": 3,
+                         "allocatable": 1,
+                         "in_use": 2,
+                         "name": 0
+                      },
+                      "renameByName": { }
+                   }
+                }
+             ],
+             "type": "table"
+          }
+       ],
+       "refresh": "5m",
+       "schemaVersion": 27,
+       "style": "dark",
+       "tags": [
+          "OpenEBS",
+          "LVM"
+       ],
+       "templating": {
+          "list": [
+             {
+                "current": {
+                   "selected": false,
+                   "text": "Prometheus",
+                   "value": "Prometheus"
+                },
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": null,
+                "multi": false,
+                "name": "datasource",
+                "options": [ ],
+                "query": "prometheus",
+                "queryValue": "",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "label_values(node_uname_info, instance)",
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": "node",
+                "multi": false,
+                "name": "node",
+                "options": [ ],
+                "query": "label_values(node_uname_info, instance)",
+                "refresh": 1,
+                "regex": "(.*):.*",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "label_values(lvm_vg_total_size_bytes{instance=~\"$node.*\"}, name)",
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": "volume_group",
+                "multi": false,
+                "name": "volume_group",
+                "options": [ ],
+                "query": "label_values(lvm_vg_total_size_bytes{instance=~\"$node.*\"}, name)",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "label": "thinPool",
+                "name": "thinPool",
+                "query": "thin-pool",
+                "skipUrlSync": false,
+                "type": "constant"
+             },
+             {
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "label": "thinVolume",
+                "name": "thinVolume",
+                "query": "thin",
+                "skipUrlSync": false,
+                "type": "constant"
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "label_values(lvm_lv_total_size_bytes{vg=~\"$volume_group\", segtype=~\"$thinPool\", instance=~\"$node.*\"},  name) ",
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": "thin_pool",
+                "multi": false,
+                "name": "thin_pool",
+                "options": [ ],
+                "query": "label_values(lvm_lv_total_size_bytes{vg=~\"$volume_group\", segtype=~\"$thinPool\", instance=~\"$node.*\"},  name) ",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             }
+          ]
+       },
+       "time": {
+          "from": "now-6h",
+          "to": "now"
+       },
+       "timepicker": { },
+       "timezone": "",
+       "title": "LVM Pool",
+       "uid": "F0b6Kmknk",
+       "version": 8
+    }
