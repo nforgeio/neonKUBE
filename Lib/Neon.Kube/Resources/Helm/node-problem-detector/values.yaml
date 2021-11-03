@@ -74,9 +74,8 @@ logDir:
   pod: ""
 
 image:
-  repository: ghcr.io/neonkube-dev/node-problem-detector
-  tag: neonkube-0.1.0-alpha
-  #tag: v0.8.10
+  repository: neon-registry.node.local/node-problem-detector
+  tag: v0.8.10
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
