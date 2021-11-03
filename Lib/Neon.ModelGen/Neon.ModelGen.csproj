@@ -68,7 +68,6 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

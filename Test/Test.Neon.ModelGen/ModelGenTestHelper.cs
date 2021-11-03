@@ -27,8 +27,9 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 
-using Neon.ModelGen;
 using Neon.Common;
+using Neon.CSharp;
+using Neon.ModelGen;
 using Neon.Xunit;
 
 using Newtonsoft.Json;

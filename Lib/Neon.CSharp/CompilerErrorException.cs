@@ -25,7 +25,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Neon.ModelGen
+namespace Neon.CSharp
 {
     /// <summary>
     /// Thrown for a compiler error.

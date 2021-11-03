@@ -65,7 +65,6 @@ namespace TestCommon
         {
 #if NETFRAMEWORK
             Assert.Equal(NetFramework.NetFramework, NeonHelper.Framework);
-            return;
 #if NET472_OR_GREATER
             Assert.True(Version.Parse("4.7.2") <= NeonHelper.FrameworkVersion);
             return;
@@ -89,7 +88,6 @@ namespace TestCommon
             Assert.Equal(3, NeonHelper.FrameworkVersion.Major);
             return;
 #endif
-            Assert.True(false, "Unexpected FRAMEWORK defined");
         }
     }
 }

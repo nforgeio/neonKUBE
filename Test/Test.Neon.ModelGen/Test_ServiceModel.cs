@@ -27,8 +27,9 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.ModelGen;
 using Neon.Common;
+using Neon.CSharp;
+using Neon.ModelGen;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -371,7 +372,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             Assert.Contains("public partial class Empty", output.SourceCode);
         }
@@ -391,7 +392,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             Assert.Contains("public partial class EmptyOverride", output.SourceCode);
         }
@@ -413,7 +414,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -501,7 +502,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -636,7 +637,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -769,7 +770,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -968,7 +969,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1047,7 +1048,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1126,7 +1127,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1205,7 +1206,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1560,7 +1561,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1663,7 +1664,7 @@ namespace TestModelGen.ServiceModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // Spin up a mock service and a service client and then call the service
             // via the client.  The mock service will record the HTTP method, URI, and
@@ -1829,7 +1830,7 @@ namespace TestModelGen.ServiceModel
             output    = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
-            ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // [FromQuery]: should work
 
@@ -1840,7 +1841,7 @@ namespace TestModelGen.ServiceModel
             output = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
-            ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // [FromBody]: should work
 
@@ -1851,7 +1852,7 @@ namespace TestModelGen.ServiceModel
             output    = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
-            ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             // [FromRoute]: should fail
 
