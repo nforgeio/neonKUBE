@@ -65,12 +65,20 @@ Return the appropriate apiVersion for podSecurityPolicy.
   Concat npd.config.* to make node-problem-detector CLI args more readable
 */}}
 {{- define "npd.cli.args" -}}
-{{ include "npd.config.systemLogMonitor" . }} {{ include "npd.config.customPluginMonitor" . }} {{ include "npd.config.prometheus" . }} {{ include "npd.config.k8sExporter" . }}
+{{ include "npd.config.systemLogMonitor" . }} {{ include "npd.config.systemStatsMonitor" . }} {{ include "npd.config.customPluginMonitor" . }} {{ include "npd.config.prometheus" . }} {{ include "npd.config.k8sExporter" . }}
 {{- end -}}
 
 {{- define "npd.config.systemLogMonitor" -}}
 --config.system-log-monitor=
 {{- range $index, $monitor := .Values.settings.log_monitors -}}
+  {{- if ne $index 0 -}},{{- end -}}
+  {{- $monitor -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "npd.config.systemStatsMonitor" -}}
+--config.system-stats-monitor=
+{{- range $index, $monitor := .Values.settings.stats_monitors -}}
   {{- if ne $index 0 -}},{{- end -}}
   {{- $monitor -}}
 {{- end -}}
