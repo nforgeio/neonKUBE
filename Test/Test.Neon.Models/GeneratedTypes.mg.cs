@@ -6173,7 +6173,7 @@ namespace Test.Neon.Models
     public partial class TestAspNetFixtureClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.1:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -6916,7 +6916,7 @@ namespace Test.Neon.Models
     public partial class TestUxAspNetFixtureClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.1:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -7623,7 +7623,7 @@ namespace Test.Neon.Models
     public partial class VerifyController0Client : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.1:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -7740,7 +7740,7 @@ namespace Test.Neon.Models
     public partial class VerifyController1Client : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.1:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -7872,7 +7872,7 @@ namespace Test.Neon.Models
     public partial class ComposedClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.1:1";
 
         [GeneratedClient("/api/v1/user")]
         public partial class __User : IGeneratedServiceClient
@@ -7887,7 +7887,7 @@ namespace Test.Neon.Models
             }
 
             /// <inheritdoc/>
-            public string GeneratorVersion => "2.14.0:1";
+            public string GeneratorVersion => "2.18.1:1";
 
             [GeneratedMethod(DefinedAs = "Get", Returns = typeof(string), RouteTemplate = "{id}", HttpMethod = "GET")]
             public async Task<string> GetAsync([GeneratedParam(PassAs.Query, Name = "id")] int id, CancellationToken _cancellationToken = default, IRetryPolicy _retryPolicy = default, LogActivity _logActivity = default)
@@ -7929,7 +7929,7 @@ namespace Test.Neon.Models
             }
 
             /// <inheritdoc/>
-            public string GeneratorVersion => "2.14.0:1";
+            public string GeneratorVersion => "2.18.1:1";
 
             [GeneratedMethod(DefinedAs = "Get", Returns = typeof(string), RouteTemplate = "{id}", HttpMethod = "GET")]
             public async Task<string> GetAsync([GeneratedParam(PassAs.Query, Name = "id")] int id, CancellationToken _cancellationToken = default, IRetryPolicy _retryPolicy = default, LogActivity _logActivity = default)
