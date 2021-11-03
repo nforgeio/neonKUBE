@@ -86,7 +86,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Go\GoBuilder\GoBuilder.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.CSharp\Neon.CSharp.csproj" />
   </ItemGroup>
