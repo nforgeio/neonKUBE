@@ -57,7 +57,7 @@ namespace Neon
         /// release scripts to match.
         /// </note>
         /// </summary>
-        public const string NeonLibraryVersion = "2.18.1";
+        public const string NeonLibraryVersion = "2.18.2";
 
         /// <summary>
         /// <para>
