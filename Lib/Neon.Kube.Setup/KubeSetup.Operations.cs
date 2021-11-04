@@ -290,9 +290,10 @@ spec:
 
             await InstallKialiAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
+            await InstallPrometheusAsync(controller, master);
+            await InstallNodeProblemDetectorAsync(controller, master);
             await InstallOpenEbsAsync(controller, master);
             await InstallReloaderAsync(controller, master);
-            await InstallPrometheusAsync(controller, master);
             await InstallSystemDbAsync(controller, master);
             await InstallMinioAsync(controller, master);
 
@@ -2090,6 +2091,32 @@ spec:
         }
 
         /// <summary>
+        /// Installs the Node Problem Detector.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNodeProblemDetectorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            await master.InvokeIdempotentAsync("setup/node-problem-detector",
+                async () =>
+                {
+                    await master.InstallHelmChartAsync(controller, "node_problem_detector", releaseName: "node-problem-detector", @namespace: KubeNamespaces.NeonSystem);
+                });
+
+            await master.InvokeIdempotentAsync("setup/node-problem-detector-ready",
+                async () =>
+                {
+                    await WaitForDaemonsetAsync(controller, KubeNamespaces.NeonSystem, "node-problem-detector");
+                });
+        }
+
+        /// <summary>
         /// Installs OpenEBS.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2150,13 +2177,10 @@ spec:
                             break;
 
                         case OpenEbsEngine.HostPath:
-
-                            throw new NotImplementedException("$todo(marcusbooyah)");
-
                         case OpenEbsEngine.Jiva:
-
+                            
                             await WaitForOpenEbsReady(controller, master);
-                            throw new NotImplementedException("$todo(marcusbooyah)");
+                            break;
 
                         default:
                         case OpenEbsEngine.Default:
@@ -2318,10 +2342,12 @@ spec:
                         new List<Task>()
                         {
                             WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm"),
+                            WaitForDaemonsetAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm-node-exporter"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-admission-server"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-apiserver"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-localpv-provisioner"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm-operator"),
+                            WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-ndm-cluster-exporter"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-provisioner"),
                             WaitForDeploymentAsync(controller, KubeNamespaces.NeonStorage, "openebs-snapshot-operator")
                         });
