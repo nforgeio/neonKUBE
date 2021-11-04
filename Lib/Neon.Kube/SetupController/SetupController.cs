@@ -90,6 +90,7 @@ namespace Neon.Kube
         private int                                 maxStackSize;
         private string                              globalStatus;
         private List<NodeSshProxy<NodeMetadata>>    nodes;
+        private List<INodeSshProxy>                 hosts;
         private List<Step>                          steps;
         private Step                                currentStep;
         private bool                                isFaulted;
@@ -134,6 +135,7 @@ namespace Neon.Kube
 
             this.OperationTitle = title;
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
             this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
         }
@@ -146,12 +148,40 @@ namespace Neon.Kube
             disposables.Add(disposable);
         }
 
+        /// <summary>
+        /// <para>
+        /// Optionally called by hosting managers to associate any virtual machine host proxies that
+        /// are participating in the setup operation with the controller.  These are used to write
+        /// fault details to the global cluster log after the operation completes.
+        /// </para>
+        /// <note>
+        /// This must be called before the controller starts.
+        /// </note>
+        /// </summary>
+        /// <param name="hosts">The hosts being assoicated.</param>
+        public void SetHosts(IEnumerable<INodeSshProxy> hosts)
+        {
+            Covenant.Requires<ArgumentNullException>(hosts != null, nameof(hosts));
+            Covenant.Assert(!isRunning, $"[{nameof(SetHosts)}()] cannot be called after the controller has started running.");
+            Covenant.Assert(this.hosts.Count() == 0, $"[{nameof(SetHosts)}()] cannot be called more than once for a controller.");
+
+            this.hosts.AddRange(hosts);
+        }
+
         /// <inheritdoc/>
         public IEnumerable<NodeLog> GetNodeLogs()
         {
             return nodes
                 .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
-                .Select(node => node.GetNodeLog());
+                .Select(node => node.GetLog());
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<NodeLog> GetHostLogs()
+        {
+            return hosts
+                .OrderBy(host => host.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(host => host.GetLog());
         }
 
         /// <summary>
@@ -731,19 +761,34 @@ namespace Neon.Kube
                     return false;
                 }
 
-                ProgressEvent?.Invoke(
-                    new SetupProgressMessage()
-                    {
-                        IsError       = false,
-                        CancelPending = false,
-                        Node          = null,
-                        Verb          = $"step {step.Number}",
-                        Text          = step.Label
-                    });
+                // NOTE: We're not going to notify the UX for quiet/hidden steps but
+                //       we will report this in the logs.
+
+                if (!step.IsQuiet)
+                {
+                    ProgressEvent?.Invoke(
+                        new SetupProgressMessage()
+                        {
+                            IsError       = false,
+                            CancelPending = false,
+                            Node          = null,
+                            Verb          = $"step {step.Number}",
+                            Text          = step.Label
+                        });
+                }
 
                 LogGlobal($"");
                 LogGlobal($"===============================================================================");
-                LogGlobal($"STEP {step.Number}: {step.Label}");
+                
+                if (step.IsQuiet)
+                {
+                    LogGlobal($"STEP (HIDDEN): {step.Label}");
+                }
+                else
+                {
+                    LogGlobal($"STEP {step.Number}: {step.Label}");
+                }
+
                 LogGlobal($"");
 
                 step.State       = SetupStepState.Running;
@@ -757,20 +802,20 @@ namespace Neon.Kube
                 foreach (var node in stepNodes)
                 {
                     stepNodeNamesSet.Add(node.Name);
-
-                    node.IsReady = false;
                 }
+
+                // Clear the node ready/status in preparation for executing the next step.
 
                 foreach (var node in nodes)
                 {
-                    if (stepNodeNamesSet.Contains(node.Name))
-                    {
-                        node.Status = string.Empty;
-                    }
-                    else
-                    {
-                        node.Status = string.Empty;
-                    }
+                    node.IsReady = false;
+                    node.Status  = string.Empty;
+                }
+
+                foreach (var host in hosts)
+                {
+                    host.IsReady = false;
+                    host.Status  = string.Empty;
                 }
 
                 var parallelOptions = new ParallelOptions()
@@ -1353,6 +1398,28 @@ namespace Neon.Kube
 
                             if (IsFaulted)
                             {
+                                // Log the status of any faulted hosts.
+
+                                if (hosts.Any(host => host.IsFaulted))
+                                {
+                                    LogGlobal();
+                                    LogGlobal("FAULTED HOSTS:");
+                                    LogGlobal();
+
+                                    var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                    var nameColumnWidth = maxNodeName + 4;
+
+                                    foreach (var host in hosts
+                                        .Where(host => host.IsFaulted)
+                                        .OrderBy(host => host.Name.ToLowerInvariant()))
+                                    {
+                                        var nameColumn = host.Name + ":";
+                                        var nameFiller = new string(' ', nameColumnWidth - nameColumn.Length);
+
+                                        LogGlobal($"{nameColumn}{nameFiller}{host.Status}");
+                                    }
+                                }
+
                                 // Log the status of any faulted nodes.
 
                                 if (nodes.Any(node => node.IsFaulted))

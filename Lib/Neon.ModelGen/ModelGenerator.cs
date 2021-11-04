@@ -33,11 +33,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-using Basic.Reference.Assemblies;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Data;
 
 // $todo(jefflill):
 //
@@ -54,90 +52,8 @@ namespace Neon.ModelGen
     /// </summary>
     public class ModelGenerator
     {
-        //---------------------------------------------------------------------
-        // Static members
-
         private static Regex    routeConstraintRegex = new Regex(@"\{[^:\}]*:[^:\}]*\}");   // Matches route template parameters with constraints (like: "{param:int}").
         private static Regex    routeParameterRegex  = new Regex(@"\{([^\}]*)\}");          // Matches route template parameters (like: "{param}") capturing just the parameter name.
-
-        /// <summary>
-        /// Compiles C# source code into an assembly.
-        /// </summary>
-        /// <param name="source">The C# source code.</param>
-        /// <param name="assemblyName">The generated assembly name.</param>
-        /// <param name="referenceHandler">Called to manage metadata/assembly references (see remarks).</param>
-        /// <param name="compilerOptions">Optional compilation options.  This defaults to building a release assembly.</param>
-        /// <returns>The compiled assembly as a <see cref="MemoryStream"/>.</returns>
-        /// <exception cref="CompilerErrorException">Thrown for compiler errors.</exception>
-        /// <remarks>
-        /// <para>
-        /// By default, this method will compile the assembly with references to 
-        /// .NET Standard 2.0.
-        /// </para>
-        /// <para>
-        /// You may customize these by passing a <paramref name="referenceHandler"/>
-        /// action.  This is passed the list of <see cref="MetadataReference"/> instances.
-        /// You can add or remove references as required.  The easiest way to add
-        /// a reference is to use type reference like:
-        /// </para>
-        /// <code>
-        /// using Microsoft.CodeAnalysis;
-        /// 
-        /// ...
-        /// 
-        /// var source   = "public class Foo {}";
-        /// var assembly = ModelGenerator.Compile(source, "my-assembly",
-        ///     references =>
-        ///     {
-        ///         references.Add(typeof(MyClass));    // Adds the assembly containing MyClass.
-        ///     });
-        /// </code>
-        /// </remarks>
-        public static MemoryStream Compile(
-            string                          source, 
-            string                          assemblyName, 
-            Action<MetadataReferences>      referenceHandler = null,
-            CSharpCompilationOptions        compilerOptions  = null)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
-
-            var syntaxTree = CSharpSyntaxTree.ParseText(source);
-            var references = new MetadataReferences();
-
-            // Add assembly references.
-
-            references.AddRange(ReferenceAssemblies.NetStandard20);
-            references.Add(typeof(NeonHelper));
-
-            // Allow the caller to add references.
-
-            referenceHandler?.Invoke(references);
-
-            if (compilerOptions == null)
-            {
-                compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
-            }
-
-            var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
-            var dllStream   = new MemoryStream();
-
-            using (var pdbStream = new MemoryStream())
-            {
-                var emitted = compilation.Emit(dllStream, pdbStream);
-
-                if (!emitted.Success)
-                {
-                    throw new CompilerErrorException(emitted.Diagnostics);
-                }
-            }
-
-            dllStream.Position = 0;
-
-            return dllStream;
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
 
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();

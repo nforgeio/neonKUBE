@@ -43,11 +43,6 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-// $todo(jefflill):
-//
-// The download methods don't seem to be working for paths like [/proc/meminfo].
-// They just return an empty stream.
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -85,18 +80,18 @@ namespace Neon.Kube
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
+    public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>, INodeSshProxy
         where TMetadata : class
     {
         private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
         private const string            imageTypePath    = "/etc/neonkube/image-type";
         private const string            imageVersionPath = "/etc/neonkube/image-version";
 
-        private ClusterProxy    cluster;
-        private KubeImageType?  cachedImageType;
-        private StringBuilder   internalLogBuilder;
-        private TextWriter      internalLogWriter;
-        private bool            rootCertsUpdated = false;
+        private ClusterProxy        cluster;
+        private KubeImageType?      cachedImageType;
+        private StringBuilder       internalLogBuilder;
+        private TextWriter          internalLogWriter;
+        private bool                rootCertsUpdated = false;
 
         /// <summary>
         /// Constructs a <see cref="LinuxSshProxy{TMetadata}"/>.
@@ -104,14 +99,17 @@ namespace Neon.Kube
         /// <param name="name">The display name for the server.</param>
         /// <param name="address">The private cluster IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
+        /// <param name="role">Optionally specifies one of the <see cref="NodeRole"/> values identifying what the node does.</param>
         /// <param name="port">Optionally overrides the standard SSH port (22).</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public NodeSshProxy(string name, IPAddress address, SshCredentials credentials, int port = NetworkPorts.SSH, TextWriter logWriter = null)
+        public NodeSshProxy(string name, IPAddress address, SshCredentials credentials, string role = null, int port = NetworkPorts.SSH, TextWriter logWriter = null)
             : base(name, address, credentials, port, logWriter)
         {
+            this.Role = role;
+
             // Append the neonKUBE cluster binary folder to the remote path.
 
             RemotePath += $":{KubeNodeFolders.Bin}";
@@ -166,6 +164,9 @@ namespace Neon.Kube
                 return nodeDefinition;
             }
         }
+
+        /// <inheritdoc/>
+        public string Role { get; set; }
 
         /// <summary>
         /// Indicates the type of node image type.  This is stored in the <b>/etc/neonkube/image-type</b> file.
@@ -377,7 +378,7 @@ namespace Neon.Kube
         /// <returns>The cloned <see cref="NodeSshProxy{TMetadata}"/>.</returns>
         public new NodeSshProxy<TMetadata> Clone()
         {
-            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, SshPort);
+            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, this.Role, SshPort);
 
             CloneTo(clone);
 
@@ -767,7 +768,7 @@ rm -rf /var/lib/dhcp/*
         /// Returns the current log for the node.
         /// </summary>
         /// <returns>A <see cref="NodeLog"/>.</returns>
-        public NodeLog GetNodeLog()
+        public NodeLog GetLog()
         {
             return new NodeLog(Name, internalLogBuilder.ToString());
         }

@@ -69,7 +69,6 @@ namespace Neon.Cryptography
     /// authority after the certificate and before the private key.
     /// </note>
     /// </remarks>
-    [Obsolete("Try using [X509Certificate2] instead.")]
     public class TlsCertificate
     {
         //---------------------------------------------------------------------

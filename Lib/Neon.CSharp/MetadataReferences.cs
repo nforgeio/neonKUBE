@@ -29,10 +29,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace Neon.ModelGen
+namespace Neon.CSharp
 {
     /// <summary>
     /// Specifies the metadata references to be used when compiling

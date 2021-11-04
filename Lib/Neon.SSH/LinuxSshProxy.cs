@@ -174,8 +174,9 @@ namespace Neon.SSH
         private bool                isDisposed = false;
         private SshClient           sshClient;
         private ScpClient           scpClient;
-        private bool                isReady;
         private string              status;
+        private bool                isReady;
+        private bool                isFaulted;
         private string              faultMessage;
 
 #pragma warning disable 1591
@@ -209,6 +210,8 @@ namespace Neon.SSH
             this.SshPort        = port;
             this.Status         = string.Empty;
             this.IsReady        = false;
+            this.IsFaulted      = false;
+            this.faultMessage   = null;
             this.ConnectTimeout = TimeSpan.FromSeconds(5);
             this.FileTimeout    = TimeSpan.FromSeconds(30);
             this.RetryCount     = 10;
@@ -700,7 +703,11 @@ namespace Neon.SSH
         /// have failed.  This property is a bit of a hack used when displaying the status of a neonKUBE
         /// cluster setup.
         /// </summary>
-        public bool IsFaulted { get; set; }
+        public bool IsFaulted
+        {
+            get => this.isFaulted;
+            set => this.isFaulted = value;
+        }
 
         /// <summary>
         /// <para>

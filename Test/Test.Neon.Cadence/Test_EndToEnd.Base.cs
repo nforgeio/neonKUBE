@@ -79,6 +79,7 @@ namespace TestCadence
             var totalTps   = 0.0;
             var threads    = new Thread[4];
             var iterations = 5000;
+            var exception  = (Exception)null;
 
             for (int i = 0; i < threads.Length; i++)
             {
@@ -91,7 +92,27 @@ namespace TestCadence
 
                         for (int j = 0; j < iterations; j++)
                         {
-                            client.PingAsync().Wait();
+                            if (exception != null)
+                            {
+                                return;
+                            }
+
+                            try
+                            {
+                                client.PingAsync().Wait();
+                            }
+                            catch (Exception e)
+                            {
+                                lock (syncLock)
+                                {
+                                    if (exception != null)
+                                    {
+                                        exception = e;
+                                    }
+                                }
+
+                                return;
+                            }
                         }
 
                         stopwatch.Stop();
@@ -108,6 +129,11 @@ namespace TestCadence
             foreach (var thread in threads)
             {
                 thread.Join();
+            }
+
+            if (exception != null)
+            {
+                throw exception;
             }
 
             testWriter.WriteLine($"Transactions/sec: {totalTps}");
@@ -307,16 +333,12 @@ namespace TestCadence
         }
 
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
+        [Trait(TestTrait.Category, TestTrait.Buggy)]    // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
 
             var utcNow = DateTime.UtcNow;
-
-            // Adjust the time backwards by 5 seconds because we're seeing some
-            // differences between the workstation clock and the WSL2 clock?
-
-            utcNow = utcNow - TimeSpan.FromSeconds(5);
 
             // Execute a workflow and then verify that we can describe it.
 

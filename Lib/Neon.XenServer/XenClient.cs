@@ -235,6 +235,11 @@ namespace Neon.XenServer
         public MachineOperations Machine { get; private set; }
 
         /// <summary>
+        /// Returns the client's log writer or <c>null</c>.
+        /// </summary>
+        public TextWriter LogWriter => this.logWriter;
+
+        /// <summary>
         /// Verifies that that the instance hasn't been disposed.
         /// </summary>
         private void EnsureNotDisposed()

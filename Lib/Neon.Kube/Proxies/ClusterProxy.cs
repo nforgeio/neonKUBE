@@ -46,12 +46,8 @@ namespace Neon.Kube
     /// </summary>
     /// <param name="name">The node name.</param>
     /// <param name="address">The node's private IP address.</param>
-    /// <param name="appendToLog">
-    /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
-    /// or <c>false</c> to replace any existing log file with a new one.
-    /// </param>
     /// <returns>The <see cref="NodeSshProxy{TMetadata}"/>.</returns>
-    public delegate NodeSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address, bool appendToLog);
+    public delegate NodeSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address);
 
     /// <summary>
     /// Used to remotely manage a cluster via SSH/SCP.
@@ -97,7 +93,6 @@ namespace Neon.Kube
         private NodeProxyCreator        nodeProxyCreator;
         private string                  nodeImageUri;
         private string                  nodeImagePath;
-        private bool                    appendLog;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/>.
@@ -112,7 +107,6 @@ namespace Neon.Kube
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
-        /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
@@ -125,7 +119,6 @@ namespace Neon.Kube
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
-            bool                    appendToLog       = false,
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
@@ -135,7 +128,6 @@ namespace Neon.Kube
                   nodeImageUri:             nodeImageUri, 
                   nodeImagePath:            nodeImagePath, 
                   nodeProxyCreator:         nodeProxyCreator, 
-                  appendToLog:              appendToLog,
                   defaultRunOptions:        defaultRunOptions)
         {
         }
@@ -153,7 +145,6 @@ namespace Neon.Kube
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
-        /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
@@ -162,7 +153,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory, Operation)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, Operation, string)"/> to work.
         /// </para>
         /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -179,7 +170,6 @@ namespace Neon.Kube
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
-            bool                    appendToLog       = false,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -197,7 +187,7 @@ namespace Neon.Kube
             if (nodeProxyCreator == null)
             {
                 nodeProxyCreator =
-                    (name, address, append) =>
+                    (name, address) =>
                     {
                         var context = KubeHelper.CurrentContext;
 
@@ -221,11 +211,10 @@ namespace Neon.Kube
             this.KubeContext       = KubeHelper.CurrentContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
-            this.appendLog         = appendToLog;
 
             // Create the hosting manager.
 
-            this.HostingManager = GetHostingManager(hostingManagerFactory, operation);
+            this.HostingManager = GetHostingManager(hostingManagerFactory, operation, KubeHelper.LogFolder);
 
             // Initialize the cluster nodes.
 
@@ -233,7 +222,7 @@ namespace Neon.Kube
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
-                var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
+                var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"));
 
                 node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;
@@ -290,9 +279,26 @@ namespace Neon.Kube
         public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
-        /// Returns the read-only list of cluster node proxies.
+        /// Returns a read-only list of cluster node proxies.
         /// </summary>
         public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
+
+        /// <summary>
+        /// Returns the list of node host proxies for hosting managers that
+        /// need to manipulate host machines. 
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is initialized by hosting manages such as XenServer and probably Hyper-V
+        /// in the future so that status changes for host machines will be included in 
+        /// <see cref="SetupController{NodeMetadata}"/> UX status updates properly.
+        /// </para>
+        /// <para>
+        /// Hosting managers should add any hosts to this list when the manager is constructed
+        /// and then leave this list alone during provisioning.
+        /// </para>
+        /// </remarks>
+        public List<LinuxSshProxy> Hosts { get; private set; } = new List<LinuxSshProxy>();
 
         /// <summary>
         /// Returns the first cluster master node as sorted by name.
@@ -333,6 +339,10 @@ namespace Neon.Kube
         /// This is used to ensure that this instance already has the information required to complete the
         /// operation.  This defaults to <see cref="Operation.LifeCycle"/>.
         /// </param>
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
         /// <returns>The <see cref="IHostingManager"/>.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if no valid node image URI or path were passed to the constructor when required for
@@ -344,7 +354,7 @@ namespace Neon.Kube
         /// this to work.
         /// </note>
         /// </remarks>
-        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, Operation operation = Operation.LifeCycle)
+        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, Operation operation = Operation.LifeCycle, string logFolder = null)
         {
             hostingManagerFactory ??= new HostingManagerFactory();
 
@@ -352,11 +362,11 @@ namespace Neon.Kube
 
             if (!string.IsNullOrEmpty(nodeImageUri))
             {
-                hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri);
+                hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri, logFolder: logFolder);
             }
             else if (!string.IsNullOrEmpty(nodeImagePath))
             {
-                hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath);
+                hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath, logFolder: logFolder);
             }
             else
             {

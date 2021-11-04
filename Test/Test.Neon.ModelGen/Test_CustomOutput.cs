@@ -27,8 +27,9 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.ModelGen;
 using Neon.Common;
+using Neon.CSharp;
+using Neon.ModelGen;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -104,7 +105,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("class Class1", sourceCode);
@@ -131,7 +132,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("class Class1", sourceCode);
@@ -158,7 +159,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.DoesNotContain("class Class1", sourceCode);
@@ -185,7 +186,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("class Class1", sourceCode);
@@ -213,7 +214,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("class Class1", sourceCode);
@@ -240,7 +241,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("namespace Foo.Bar", sourceCode);
@@ -262,7 +263,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.DoesNotContain("class Class1", sourceCode);
@@ -289,7 +290,7 @@ namespace TestModelGen.CustomOutput
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("class Class1", sourceCode);

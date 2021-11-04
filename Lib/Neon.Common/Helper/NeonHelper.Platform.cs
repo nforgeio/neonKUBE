@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,17 +32,18 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static bool osChecked;
-        private static string osDescription;
-        private static NetFramework? netFramework = null;
-        private static string frameworkDescription;
-        private static bool isWindows;
-        private static WindowsEdition windowsEdition;
-        private static bool isLinux;
-        private static bool isOSX;
-        private static bool? is64BitBuild;
-        private static bool? isDevWorkstation;
-        private static bool? isKubernetes;
+        private static bool             osChecked;
+        private static string           osDescription;
+        private static NetFramework?    netFramework = null;
+        private static string           frameworkDescription;
+        private static Version          frameworkVersion;
+        private static bool             isWindows;
+        private static WindowsEdition   windowsEdition;
+        private static bool             isLinux;
+        private static bool             isOSX;
+        private static bool?            is64BitBuild;
+        private static bool?            isDevWorkstation;
+        private static bool?            isKubernetes;
 
         /// <summary>
         /// Detects the current operating system.
@@ -55,17 +57,17 @@ namespace Neon.Common
 
             try
             {
-                osDescription = RuntimeInformation.OSDescription;
+                osDescription        = RuntimeInformation.OSDescription;
                 frameworkDescription = RuntimeInformation.FrameworkDescription;
-                isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
                 if (isWindows)
                 {
                     // Examine registry to detect the Windows Edition.
 
-                    var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
+                    var key       = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, Is64BitOS ? RegistryView.Registry64 : RegistryView.Registry32);
                     var editionID = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion").GetValue("EditionID").ToString();
 
                     // $todo(jefflill): We're guessing at the server edition IDs here.
@@ -139,6 +141,7 @@ namespace Neon.Common
         /// </summary>
         public static bool Is64BitOS => Environment.Is64BitOperatingSystem;
 
+
         /// <summary>
         /// Returns the .NET runtime description.
         /// </summary>
@@ -153,6 +156,91 @@ namespace Neon.Common
 
                 DetectOS();
                 return frameworkDescription;
+            }
+        }
+
+        /// <summary>
+        /// Identifies the .NET runtime hosting the current process.
+        /// </summary>
+        public static NetFramework Framework
+        {
+            get
+            {
+                if (netFramework.HasValue)
+                {
+                    return netFramework.Value;
+                }
+
+                if (FrameworkDescription.StartsWith(".NET Core"))
+                {
+                    return (netFramework = NetFramework.Core).Value;
+                }
+                else if (FrameworkDescription.StartsWith(".NET Framework"))
+                {
+                    return (netFramework = NetFramework.NetFramework).Value;
+                }
+                else if (FrameworkDescription.StartsWith(".NET Native"))
+                {
+                    return (netFramework = NetFramework.Native).Value;
+                }
+
+                // .NET 5.0 and beyond will have framework descriptions like
+                // ".NET 5.0.0", ".NET 6.0.0",...
+                //
+                // We're going to treat all of these as the new .NET 5+ framework
+                // (the last framework you'll ever need :)
+
+                var netRegex = new Regex(@"^.NET \d");
+
+                if (netRegex.IsMatch(FrameworkDescription))
+                {
+                    return NetFramework.Net;
+                }
+                else
+                {
+                    return (netFramework = NetFramework.Unknown).Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the current .NET runtime version hosting the current process.
+        /// </summary>
+        public static Version FrameworkVersion
+        {
+            get
+            {
+                if (frameworkVersion != null)
+                {
+                    return frameworkVersion;
+                }
+
+                string version;
+
+                switch (Framework)
+                {
+                    case NetFramework.Core:
+
+                        version = FrameworkDescription.Substring(".NET Core".Length).Trim();
+                        break;
+
+                    case NetFramework.NetFramework:
+
+                        version = FrameworkDescription.Substring(".NET Framework".Length).Trim();
+                        break;
+
+                    case NetFramework.Net:
+
+                        version = FrameworkDescription.Substring(".NET".Length).Trim();
+                        break;
+
+                    default:
+                    case NetFramework.Native:
+
+                        throw new NotImplementedException($"Framework runtime [{Framework}] not currently supported.");
+                }
+
+                return frameworkVersion = Version.Parse(version);
             }
         }
 

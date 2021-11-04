@@ -67,13 +67,20 @@ namespace Neon.Kube
             this.GlobalStatus = controller.GlobalStatus;
             this.globalStatus = this.GlobalStatus;
 
-            // Initialize the cluster nodes.
+            // Initialize the cluster node/host status instances.
 
             this.Nodes = new List<SetupNodeStatus>();
 
             foreach (var node in cluster.Nodes)
             {
                 Nodes.Add(new SetupNodeStatus(node, node.NodeDefinition));
+            }
+
+            this.Hosts = new List<SetupNodeStatus>();
+
+            foreach (var host in cluster.Hosts)
+            {
+                Hosts.Add(new SetupNodeStatus(host, new object()));
             }
 
             // Initialize the setup steps.
@@ -119,9 +126,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the current node setup state.
+        /// Returns the current status for the cluster nodes.
         /// </summary>
         public List<SetupNodeStatus> Nodes { get; private set; }
+
+        /// <summary>
+        /// Returns the current status for any cluster hosts.
+        /// </summary>
+        public List<SetupNodeStatus> Hosts { get; private set; }
 
         /// <summary>
         /// Returns information about the setup steps in order of execution. 
@@ -185,6 +197,13 @@ namespace Neon.Kube
             foreach (var node in this.Nodes)
             {
                 clone.Nodes.Add(node.Clone());
+            }
+
+            clone.Hosts = new List<SetupNodeStatus>();
+
+            foreach (var host in this.Hosts)
+            {
+                clone.Hosts.Add(host.Clone());
             }
 
             // Initialize the setup steps.

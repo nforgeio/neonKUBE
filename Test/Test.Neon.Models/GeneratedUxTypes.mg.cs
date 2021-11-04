@@ -6886,7 +6886,7 @@ namespace Test.Neon.UxModels
     public partial class TestAspNetFixtureClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.2:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -7689,7 +7689,7 @@ namespace Test.Neon.UxModels
     public partial class TestUxAspNetFixtureClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.2:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -8452,7 +8452,7 @@ namespace Test.Neon.UxModels
     public partial class VerifyController0Client : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.2:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -8573,7 +8573,7 @@ namespace Test.Neon.UxModels
     public partial class VerifyController1Client : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.2:1";
 
         private JsonClient       client;
         private bool             isDisposed = false;
@@ -8711,7 +8711,7 @@ namespace Test.Neon.UxModels
     public partial class ComposedClient : IDisposable, IGeneratedServiceClient
     {
         /// <inheritdoc/>
-        public string GeneratorVersion => "2.14.0:1";
+        public string GeneratorVersion => "2.18.2:1";
 
         [GeneratedClient("/api/v1/user")]
         public partial class __User : IGeneratedServiceClient
@@ -8726,7 +8726,7 @@ namespace Test.Neon.UxModels
             }
 
             /// <inheritdoc/>
-            public string GeneratorVersion => "2.14.0:1";
+            public string GeneratorVersion => "2.18.2:1";
 
             [DebuggerStepThrough]
             [GeneratedMethod(DefinedAs = "Get", Returns = typeof(string), RouteTemplate = "{id}", HttpMethod = "GET")]
@@ -8772,7 +8772,7 @@ namespace Test.Neon.UxModels
             }
 
             /// <inheritdoc/>
-            public string GeneratorVersion => "2.14.0:1";
+            public string GeneratorVersion => "2.18.2:1";
 
             [DebuggerStepThrough]
             [GeneratedMethod(DefinedAs = "Get", Returns = typeof(string), RouteTemplate = "{id}", HttpMethod = "GET")]

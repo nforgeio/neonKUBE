@@ -424,7 +424,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Implements a simple integrated HTTP server that works for both .NET Core
-        /// as well as .NET Framework, using Kestrel for .NET Core and WebListener
+        /// as well as .NET Framework, using Kestrel for .NET Core and[ WebListener]
         /// for .NET Framework.
         /// </summary>
         private class HttpServer : IDisposable
@@ -447,10 +447,10 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, CadenceSettings settings)
             {
-                var openPort         = NetHelper.GetUnusedTcpPort(address);
+                var proxyPort        = NetHelper.GetUnusedTcpPort(address);
                 var listenerSettings = new WebListenerSettings();
 
-                ListenUri = new Uri($"http://{address}:{openPort}");
+                ListenUri = new Uri($"http://{address}:{proxyPort}");
 
                 listenerSettings.UrlPrefixes.Add(ListenUri.ToString());
 
@@ -484,9 +484,9 @@ namespace Neon.Cadence
                             }
                             catch
                             {
-                                // We're going to see exceptions like ObjectDisposedException when
-                                // the listener is disposed.  We're just going to ignore these
-                                // and exit.
+                                // We're going to see exceptions like [ObjectDisposedException]
+                                // when the listener is disposed.  We're just going to ignore
+                                // these and exit.
 
                                 break;
                             }
@@ -1019,7 +1019,7 @@ namespace Neon.Cadence
                         // $hack(jefflill):
                         //
                         // We need to receive the entire request body before deserializing the
-                        // the message because BinaryReader doesn't seem to play nice with reading
+                        // the message because BinaryReader doesn't seem to play nice reading
                         // from the body stream.  We're seeing EndOfStream exceptions when we try
                         // to read more than about 64KiB bytes of data which is the default size
                         // of the Kestrel receive buffer.  This suggests that there's some kind
@@ -1589,11 +1589,11 @@ namespace Neon.Cadence
             // Initialize a reasonable default synchronous signal query retry policy. 
 
             syncSignalRetry = new ExponentialRetryPolicy(
-                e => true, 
-                maxAttempts:          int.MaxValue, 
-                initialRetryInterval: TimeSpan.FromSeconds(0.25), 
-                maxRetryInterval:     TimeSpan.FromSeconds(1), 
-                timeout:              TimeSpan.FromSeconds(60), 
+                e => true,
+                maxAttempts:          int.MaxValue,
+                initialRetryInterval: TimeSpan.FromSeconds(0.25),
+                maxRetryInterval:     TimeSpan.FromSeconds(1),
+                timeout:              TimeSpan.FromSeconds(60),
                 sourceModule:         nameof(CadenceClient));
 
             lock (syncLock)
@@ -1682,7 +1682,14 @@ namespace Neon.Cadence
 
                     // Signal the proxy to disconnect and then terminate.
 
-                    CallProxyAsync(new DisconnectRequest()).Wait();
+                    try
+                    {
+                        CallProxyAsync(new DisconnectRequest()).Wait();
+                    }
+                    catch (CancelledException)
+                    {
+                        // This is expected.
+                    }
 
                     // Terminate the associated proxy.
 
@@ -1935,7 +1942,7 @@ namespace Neon.Cadence
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException(nameof(domain),$"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(domain), $"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>

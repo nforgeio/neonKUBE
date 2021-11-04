@@ -29,12 +29,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Basic.Reference.Assemblies;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 using Neon.Common;
+using Neon.CSharp;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -1142,7 +1141,7 @@ namespace Neon.Temporal.Internal
 
             // Reference the required assemblies.
 
-            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.AddRange(CSharpHelper.RuntimeReferenceAssemblies);
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => !assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location)))
@@ -1672,7 +1671,7 @@ namespace Neon.Temporal.Internal
 
             // Reference the required assemblies.
 
-            references.AddRange(ReferenceAssemblies.NetStandard20);
+            references.AddRange(CSharpHelper.RuntimeReferenceAssemblies);
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))

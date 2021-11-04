@@ -27,9 +27,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.ModelGen;
 using Neon.Common;
+using Neon.CSharp;
 using Neon.Data;
+using Neon.ModelGen;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -225,7 +226,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -271,7 +272,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -304,7 +305,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -334,7 +335,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -423,7 +424,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -493,7 +494,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -585,7 +586,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -629,7 +630,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -664,7 +665,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -695,7 +696,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -768,7 +769,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -810,7 +811,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -852,7 +853,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -929,7 +930,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
@@ -960,7 +961,7 @@ namespace TestModelGen.DataModel
 
             Assert.False(output.HasErrors);
 
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CSharpHelper.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {

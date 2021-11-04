@@ -35,6 +35,21 @@ param
     [switch]$all     = $false,
     [switch]$debug   = $false   # Optionally specify DEBUG build config
 )
+#------------------------------------------------------------------------------
+# $todo(jefflill):
+
+if ($codedoc)
+{
+    Write-Error " "
+    Write-Error "ERROR: Code documentation builds are temporarily prohibited until we"
+    Write-Error "       port to DocFX.  SHFB doesn't work for multi-targeted projects."
+    Write-Error " "
+    Write-Error "       https://github.com/nforgeio/neonKUBE/issues/1206"
+    Write-Error " "
+    exit 1
+}
+
+#------------------------------------------------------------------------------
 
 # Import the global solution include file.
 
@@ -56,17 +71,6 @@ else
 {
     $config = "Release"
 }
-
-#------------------------------------------------------------------------------
-# $todo(jefflill):
-#
-# Code documentation builds are temporarily disabled until we 
-# port to DocFX.  SHFB doesn't work for multi-targeted projects.
-#
-#   https://github.com/nforgeio/neonKUBE/issues/1206
-
-$codedoc = $false
-#------------------------------------------------------------------------------
 
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = $env:NF_ROOT
