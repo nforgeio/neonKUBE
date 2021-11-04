@@ -138,16 +138,6 @@ csiController:
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v2.1.0
-  driverRegistrar:
-    name: "csi-cluster-driver-registrar"
-    image:
-      # Make sure that registry name end with a '/'.
-      # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: neon-registry.node.local
-      repository: k8scsi-csi-cluster-driver-registrar
-      pullPolicy: IfNotPresent
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: v1.0.1
   annotations: {}
   podAnnotations: {}
   podLabels: {}
@@ -246,3 +236,9 @@ analytics:
   enabled: false
   # Specify in hours the duration after which a ping event needs to be sent.
   pingInterval: "24h"
+
+cleanup:
+  image:
+    registry: neon-registry.node.local
+    repository: bitnami-kubectl
+    tag: 1.21.4
