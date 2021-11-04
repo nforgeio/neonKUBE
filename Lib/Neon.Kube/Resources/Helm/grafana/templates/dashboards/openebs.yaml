@@ -2485,8 +2485,8 @@ spec:
             "allValue": null,
             "current": {
               "selected": false,
-              "text": "openebs",
-              "value": "openebs"
+              "text": "neon-storage",
+              "value": "neon-storage"
             },
             "hide": 0,
             "includeAll": false,
@@ -2496,11 +2496,11 @@ spec:
             "options": [
               {
                 "selected": true,
-                "text": "openebs",
-                "value": "openebs"
+                "text": "neon-storage",
+                "value": "neon-storage"
               }
             ],
-            "query": "openebs",
+            "query": "neon-storage",
             "queryValue": "",
             "skipUrlSync": false,
             "type": "custom"

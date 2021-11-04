@@ -174,7 +174,7 @@ spec:
         "tableColumn": "",
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", stream=~\"$stream\", pod_name=~\"$pod_name\"})[$__interval]))",
+          "expr": "sum(count_over_time(({container=\"$container\", stream=~\"$stream\", pod=~\"$pod\"})[$__interval]))",
           "hide": false,
           "refId": "A"
         }
@@ -270,7 +270,7 @@ spec:
         "tableColumn": "",
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", stream=~\"$stream\", pod_name=~\"$pod_name\"} |~ \"(?i)$searchable_pattern\")[$__interval]))",
+          "expr": "sum(count_over_time(({container=\"$container\", stream=~\"$stream\", pod=~\"$pod\"} |~ \"(?i)$searchable_pattern\")[$__interval]))",
           "hide": false,
           "refId": "A"
         }
@@ -315,7 +315,7 @@ spec:
         },
         "targets": [
         {
-          "expr": "{container_name=\"$container_name\", pod_name=~\"$pod_name\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\" ",
+          "expr": "{container=\"$container\", pod=~\"$pod\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\" ",
           "hide": false,
           "refId": "A"
         }
@@ -428,7 +428,7 @@ spec:
         "strokeWidth": "1.5",
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", pod_name=~\"$pod_name\"})[$__interval])) by (stream)",
+          "expr": "sum(count_over_time(({container=\"$container\", pod=~\"$pod\"})[$__interval])) by (stream)",
           "hide": false,
           "refId": "A"
         }
@@ -482,7 +482,7 @@ spec:
         "strokeWidth": "0.4",
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", pod_name=~\"$pod_name\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\")[$__interval])) by (pod_name)",
+          "expr": "sum(count_over_time(({container=\"$container\", pod=~\"$pod\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\")[$__interval])) by (pod)",
           "refId": "A"
         }
         ],
@@ -557,7 +557,7 @@ spec:
         "pluginVersion": "7.0.4",
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", stream=~\"$stream\", pod_name=~\"$pod_name\"} |~ \"(?i)$searchable_pattern\")[$__interval])) * 100 / sum(count_over_time(({container_name=\"$container_name\", stream=~\"$stream\", pod_name=~\"$pod_name\"})[$__interval]))",
+          "expr": "sum(count_over_time(({container=\"$container\", stream=~\"$stream\", pod=~\"$pod\"} |~ \"(?i)$searchable_pattern\")[$__interval])) * 100 / sum(count_over_time(({container=\"$container\", stream=~\"$stream\", pod=~\"$pod\"})[$__interval]))",
           "hide": false,
           "refId": "A"
         }
@@ -626,7 +626,7 @@ spec:
         "steppedLine": false,
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", pod_name=~\"$pod_name\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\")[$__interval])) by (pod_name)",
+          "expr": "sum(count_over_time(({container=\"$container\", pod=~\"$pod\", stream=~\"$stream\"} |~ \"(?i)$searchable_pattern\")[$__interval])) by (pod)",
           "refId": "A"
         }
         ],
@@ -728,7 +728,7 @@ spec:
         "steppedLine": false,
         "targets": [
         {
-          "expr": "sum(rate(({container_name=\"$container_name\", stream=~\"$stream\", pod_name=~\"$pod_name\"} |~ \"(?i)$searchable_pattern\")[30s])) by (pod_name)",
+          "expr": "sum(rate(({container=\"$container\", stream=~\"$stream\", pod=~\"$pod\"} |~ \"(?i)$searchable_pattern\")[30s])) by (pod)",
           "hide": false,
           "refId": "A"
         }
@@ -873,7 +873,7 @@ spec:
         "steppedLine": false,
         "targets": [
         {
-          "expr": "sum(count_over_time(({container_name=\"$container_name\", pod_name=~\"$pod_name\"})[$__interval])) by (stream)",
+          "expr": "sum(count_over_time(({container=\"$container\", pod=~\"$pod\"})[$__interval])) by (stream)",
           "hide": false,
           "refId": "A"
         }
@@ -935,14 +935,14 @@ spec:
         "allValue": null,
         "current": {},
         "datasource": "${DS_LOKI}",
-        "definition": "label_values({container_name=~\".+\"}, container_name)",
+        "definition": "label_values({container=~\".+\"}, container)",
         "hide": 0,
         "includeAll": false,
         "label": "Service",
         "multi": false,
-        "name": "container_name",
+        "name": "container",
         "options": [],
-        "query": "label_values({container_name=~\".+\"}, container_name)",
+        "query": "label_values({container=~\".+\"}, container)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -957,16 +957,16 @@ spec:
         "allValue": null,
         "current": {},
         "datasource": "${DS_LOKI}",
-        "definition": "label_values({container_name=\"$container_name\"}, pod_name)",
+        "definition": "label_values({container=\"$container\"}, pod)",
         "hide": 0,
         "includeAll": true,
         "label": "Pod",
         "multi": false,
-        "name": "pod_name",
+        "name": "pod",
         "options": [],
-        "query": "label_values({container_name=\"$container_name\"}, pod_name)",
+        "query": "label_values({container=\"$container\"}, pod)",
         "refresh": 2,
-        "regex": "$container_name.*",
+        "regex": "$container.*",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
@@ -979,14 +979,14 @@ spec:
         "allValue": null,
         "current": {},
         "datasource": "${DS_LOKI}",
-        "definition": "label_values({container_name=\"$container_name\"}, stream)",
+        "definition": "label_values({container=\"$container\"}, stream)",
         "hide": 0,
         "includeAll": true,
         "label": "Stream",
         "multi": false,
         "name": "stream",
         "options": [],
-        "query": "label_values({container_name=\"$container_name\"}, stream)",
+        "query": "label_values({container=\"$container\"}, stream)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,

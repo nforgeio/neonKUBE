@@ -227,6 +227,26 @@
 
     <None Remove="Resources\Helm\grafana\templates\dashboards\nodes.yaml" />
 
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-cstor-pool.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-cstor-volume-replica.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-cstor-volume.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-cstor.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-jiva.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-localpv-workload.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-lvmlocalpv-pool.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-ndm.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-npd.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\dashboards\openebs-zfs-local-pv.yaml" />
+
     <None Remove="Resources\Helm\grafana\templates\dashboards\openebs.yaml" />
 
     <None Remove="Resources\Helm\grafana\templates\dashboards\persistentvolumesusage.yaml" />
@@ -562,6 +582,22 @@
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\.helmignore" />
+    <None Remove="Resources\Helm\node-problem-detector\Chart.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\README.md" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\clusterrole.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\custom-config-configmap.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\daemonset.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\psp-clusterrole.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\psp-clusterrolebinding.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\psp.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\service.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\node-problem-detector\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\node-problem-detector\values.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\.helmignore" />
     <None Remove="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
@@ -581,6 +617,7 @@
     <None Remove="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotcontent.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\README.md" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\admission-server.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\cleanup-webhook.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-controller-rbac.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-controller.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\csi-driver.yaml" />
@@ -593,12 +630,18 @@
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\NOTES.txt" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\priority-class.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\rbac.yaml" />
+    <None Remove="Resources\Helm\openebs-cstor-operator\templates\snapshot-class.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\openebs-cstor-operator\values.yaml" />
     <None Remove="Resources\Helm\openebs\Chart.yaml" />
     <None Remove="Resources\Helm\openebs\crds\crds.yaml" />
     <None Remove="Resources\Helm\openebs\OWNERS._" />
     <None Remove="Resources\Helm\openebs\README.md" />
+    <None Remove="Resources\Helm\openebs\rules\cStor\cstor-rules.json" />
+    <None Remove="Resources\Helm\openebs\rules\jiva\jiva-rules.json" />
+    <None Remove="Resources\Helm\openebs\rules\lvmLocalPV\lvmlocalpv-rules.json" />
+    <None Remove="Resources\Helm\openebs\rules\npd\npd-rules.json" />
+    <None Remove="Resources\Helm\openebs\rules\volume\volume-rules.json" />
     <None Remove="Resources\Helm\openebs\templates\clusterrole.yaml" />
     <None Remove="Resources\Helm\openebs\templates\clusterrolebinding.yaml" />
     <None Remove="Resources\Helm\openebs\templates\cm-node-disk-manager.yaml" />
@@ -609,12 +652,17 @@
     <None Remove="Resources\Helm\openebs\templates\deployment-maya-provisioner.yaml" />
     <None Remove="Resources\Helm\openebs\templates\deployment-maya-snapshot-operator.yaml" />
     <None Remove="Resources\Helm\openebs\templates\deployment-ndm-operator.yaml" />
+    <None Remove="Resources\Helm\openebs\templates\ndm-cluster-exporter-service.yaml" />
+    <None Remove="Resources\Helm\openebs\templates\ndm-cluster-exporter.yaml" />
+    <None Remove="Resources\Helm\openebs\templates\ndm-node-exporter-service.yaml" />
+    <None Remove="Resources\Helm\openebs\templates\ndm-node-exporter.yaml" />
     <None Remove="Resources\Helm\openebs\templates\NOTES.txt" />
     <None Remove="Resources\Helm\openebs\templates\psp-clusterrole.yaml" />
     <None Remove="Resources\Helm\openebs\templates\psp-clusterrolebinding.yaml" />
     <None Remove="Resources\Helm\openebs\templates\psp.yaml" />
     <None Remove="Resources\Helm\openebs\templates\service-maya-apiserver.yaml" />
     <None Remove="Resources\Helm\openebs\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\openebs\templates\servicemonitors.yaml" />
     <None Remove="Resources\Helm\openebs\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\openebs\values.yaml" />
     <None Remove="Resources\Helm\prometheus-operator\.helmignore" />
@@ -1003,6 +1051,16 @@
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\node-cluster-rsrc-use.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\node-rsrc-use.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\nodes.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-npd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-zfs-local-pv.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-lvmlocalpv-pool.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-ndm.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-localpv-workload.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-jiva.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-cstor-volume.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-cstor-volume-replica.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-cstor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs-cstor-pool.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\openebs.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\persistentvolumesusage.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\pod-total.yaml" />
@@ -1165,6 +1223,22 @@
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\neon-cluster-operator\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\README.md" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\custom-config-configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\daemonset.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\psp-clusterrole.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\psp-clusterrolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\node-problem-detector\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
@@ -1183,6 +1257,7 @@
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotclass.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\volumesnapshotcontent.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\README.md" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cleanup-webhook.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\admission-server.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-controller-rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\csi-controller.yaml" />
@@ -1194,10 +1269,21 @@
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cvc-operator-service.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\cvc-operator.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\snapshot-class.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\priority-class.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs\rules\cStor\cstor-rules.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs\rules\jiva\jiva-rules.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs\rules\lvmLocalPV\lvmlocalpv-rules.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs\rules\npd\npd-rules.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs\rules\volume\volume-rules.json" />
+    <EmbeddedResource Include="Resources\Helm\openebs\templates\ndm-cluster-exporter.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs\templates\ndm-cluster-exporter-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs\templates\ndm-node-exporter-service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs\templates\ndm-node-exporter.yaml" />
+    <EmbeddedResource Include="Resources\Helm\openebs\templates\servicemonitors.yaml" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\charts\kube-state-metrics\README.md" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\charts\kube-state-metrics\templates\clusterrole.yaml" />
     <EmbeddedResource Include="Resources\Helm\prometheus-operator\charts\kube-state-metrics\templates\clusterrolebinding.yaml" />

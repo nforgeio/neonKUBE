@@ -1,0 +1,183 @@
+settings:
+  # Custom monitor definitions to add to Node Problem Detector - to be
+  # mounted at /custom-config. These are in addition to pre-packaged monitor
+  # definitions provided within the default docker image available at /config:
+  # https://github.com/kubernetes/node-problem-detector/tree/master/config
+  # settings.custom_monitor_definitions -- Custom plugin monitor config files
+  custom_monitor_definitions:
+    crio-monitor.json: |
+      {
+        "plugin": "custom",
+        "pluginConfig": {
+          "invoke_interval": "10s",
+          "timeout": "3m",
+          "max_output_length": 80,
+          "concurrency": 1
+        },
+        "source": "health-checker",
+        "metricsReporting": true,
+        "conditions": [
+          {
+            "type": "ContainerRuntimeUnhealthy",
+            "reason": "ContainerRuntimeIsHealthy",
+            "message": "Container runtime on the node is functioning properly"
+          }
+        ],
+        "rules": [
+          {
+            "type": "permanent",
+            "condition": "ContainerRuntimeUnhealthy",
+            "reason": "ContainerdUnhealthy",
+            "path": "/home/kubernetes/bin/health-checker",
+            "args": [
+              "--component=cri",
+              "--crictl-path=/host/usr/bin/crictl",
+              "--cri-socket-path=/var/run/crio/crio.sock",
+              "--enable-repair=true",
+              "--cooldown-time=2m",
+              "--health-check-timeout=60s"
+            ],
+            "timeout": "3m"
+          }
+        ]
+      }
+  # settings.log_monitors -- User-specified custom monitor definitions
+  log_monitors:
+    - /config/kernel-monitor.json
+    - /config/systemd-monitor.json
+    - /config/abrt-adaptor.json
+    # An example of activating a custom log monitor definition in
+    # Node Problem Detector
+    # - /custom-config/docker-monitor-filelog.json
+  # settings.stats_monitors -- User-specified custom monitor definitions
+  stats_monitors:
+    - /config/net-cgroup-system-stats-monitor.json
+    - /config/system-stats-monitor.json
+  custom_plugin_monitors: 
+    - /config/health-checker-kubelet.json
+    - /config/network-problem-monitor.json
+    - /custom-config/crio-monitor.json
+
+  # settings.prometheus_address -- Prometheus exporter address
+  prometheus_address: 0.0.0.0
+  # settings.prometheus_port -- Prometheus exporter port
+  prometheus_port: 20257
+
+  # The period at which k8s-exporter does forcibly sync with apiserver
+  # settings.heartBeatPeriod -- Syncing interval with API server
+  heartBeatPeriod: 5m0s
+
+logDir:
+  # logDir.host -- log directory on k8s host
+  host: /var/log/
+  # logDir.pod -- log directory in pod (volume mount), use logDir.host if empty
+  pod: ""
+
+image:
+  repository: neon-registry.node.local/node-problem-detector
+  tag: v0.8.10
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+rbac:
+  create: true
+  pspEnabled: false
+
+# hostNetwork -- Run pod on host network
+# Flag to run Node Problem Detector on the host's network. This is typically
+# not recommended, but may be useful for certain use cases.
+hostNetwork: true
+hostPID: false
+
+priorityClassName: ""
+
+securityContext:
+  privileged: true
+
+resources: {}
+
+annotations: {}
+
+labels: {}
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+affinity: {}
+
+nodeSelector: {}
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    additionalLabels: {}
+
+env:
+#  - name: FOO
+#    value: BAR
+#  - name: POD_NAME
+#    valueFrom:
+#      fieldRef:
+#        fieldPath: metadata.name
+
+extraVolumes:
+  - name: kmsg
+    hostPath:
+      path: /dev/kmsg
+  - name: machine-id
+    hostPath:
+      path: /etc/machine-id
+      type: File
+  - name: systemd
+    hostPath:
+      path: /run/systemd/system/
+      type: Directory
+  - name: dbus
+    hostPath:
+      path: /var/run/dbus/
+      type: Directory
+  - name: crio-sock
+    hostPath:
+      path: /var/run/crio/crio.sock
+      type: Socket
+  - name: noderoot
+    hostPath:
+      path: /
+      type: Directory
+
+extraVolumeMounts:
+  - name: kmsg
+    mountPath: /dev/kmsg
+    readOnly: true
+  - mountPath: /etc/machine-id
+    name: machine-id
+    readOnly: true
+  - mountPath: /run/systemd/system
+    name: systemd
+  - mountPath: /var/run/dbus/
+    name: dbus
+    mountPropagation: Bidirectional
+  - mountPath: /var/run/crio/crio.sock
+    name: crio-sock
+  - mountPath: /host
+    name: noderoot
+
+extraContainers: []
+
+# updateStrategy -- Manage the daemonset update strategy
+updateStrategy: RollingUpdate
+# maxUnavailable -- The max pods unavailable during an update
+maxUnavailable: 1

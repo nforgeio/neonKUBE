@@ -66,7 +66,7 @@ prometheus:
     enabled: true
     additionalLabels: {}
     namespace: ""
-    honorLabels: false
+    honorLabels: true
 
 ## Specify if a Pod Security Policy for kube-state-metrics must be created
 ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/

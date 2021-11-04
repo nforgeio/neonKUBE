@@ -1,0 +1,1249 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: openebs-cstor-volume
+  labels:
+    app: grafana
+spec:
+  datasources:
+    - inputName: "DS_PROMETHEUS"
+      datasourceName: "Cortex"
+  json: >
+    {
+      "__inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "label": "Prometheus",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }
+      ],
+       "annotations": {
+          "list": [
+             {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+             }
+          ]
+       },
+       "editable": true,
+       "gnetId": null,
+       "graphTooltip": 0,
+       "id": 47,
+       "iteration": 1622028911383,
+       "links": [ ],
+       "panels": [
+          {
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 0
+             },
+             "id": 55,
+             "links": [ ],
+             "options": {
+                "content": "<html>\n<head>\n\n<script>\nwindow.onload = load('$openebs_pvc','$openebs_Volume', '$pool', '$replica_count', '$uptime');\n\nfunction getCell(name, value) {\n  return \"<div class=\\\"col-lg\\\"><center><p>\"+name+\"</p><p>\"+value+\"</p></center></div>\";\n}\n\nfunction load(volClaimStr, volNameStr,poolsStr, replicaCount, uptime) {\nvar volClaim = volClaimStr.replace( /[{}]/g, '' );\nvar volName = volNameStr.replace( /[{}]/g, '' );\nvar pools = poolsStr.replace( /[{}]/g, '' );\nvar rc = replicaCount.replace( /[{}]/g, '' );\nif(!rc) {\n  rc = \"none\";\n}\nvar uptimes = uptime.replace( /[{}]/g, '' );\nif(uptimes) {\nvar seconds = parseInt(uptimes, 10);\n\nvar days = Math.floor(seconds / (3600*24));\nseconds  -= days*3600*24;\nvar hrs   = Math.floor(seconds / 3600);\nseconds  -= hrs*3600;\nvar mnts = Math.floor(seconds / 60);\nseconds  -= mnts*60;\nuptimes = days+\" days, \"+hrs+\" Hrs, \"+mnts+\" Mins\";\n}\nelse {\n  uptimes = \"No Data\";\n}\n\n\n\nz=\"\";\nz+=getCell(\"PVC\", volClaim);\nz+=getCell(\"PV\", volName);\nz+=getCell(\"Pool Name\", pools);\nz+=getCell(\"No. of Replicas\", rc);\nz+=getCell(\"Uptime\", uptimes);\n//z+=getCell(\"\",\"\")\n\ndocument.getElementById(\"volume-info\").innerHTML = z;\n}\n</script>\n</head>\n\n<body>\n\n<div class=\"container\"><div id=\"volume-info\" class=\"row\"></div></div>\n\n</body>\n\n</html>",
+                "mode": "html"
+             },
+             "pluginVersion": "7.5.5",
+             "title": "Volume information",
+             "type": "text"
+          },
+          {
+             "datasource": "Prometheus",
+             "fieldConfig": {
+                "defaults": {
+                   "color": {
+                      "mode": "palette-classic"
+                   },
+                   "custom": {
+                      "axisLabel": "",
+                      "axisPlacement": "auto",
+                      "barAlignment": 0,
+                      "drawStyle": "line",
+                      "fillOpacity": 0,
+                      "gradientMode": "none",
+                      "hideFrom": {
+                         "graph": false,
+                         "legend": false,
+                         "tooltip": false
+                      },
+                      "lineInterpolation": "linear",
+                      "lineStyle": {
+                         "fill": "solid"
+                      },
+                      "lineWidth": 2,
+                      "pointSize": 5,
+                      "scaleDistribution": {
+                         "type": "linear"
+                      },
+                      "showPoints": "never",
+                      "spanNulls": true
+                   },
+                   "mappings": [
+                      {
+                         "from": "",
+                         "id": 1,
+                         "text": "Offline",
+                         "to": "",
+                         "type": 1,
+                         "value": "1"
+                      },
+                      {
+                         "from": "",
+                         "id": 2,
+                         "text": "Degraded",
+                         "to": "",
+                         "type": 1,
+                         "value": "2"
+                      },
+                      {
+                         "from": "",
+                         "id": 3,
+                         "text": "Healthy",
+                         "to": "",
+                         "type": 1,
+                         "value": "3"
+                      },
+                      {
+                         "from": "",
+                         "id": 4,
+                         "text": "Unknown",
+                         "to": "",
+                         "type": 1,
+                         "value": "4"
+                      }
+                   ],
+                   "max": 4,
+                   "min": 1,
+                   "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                         {
+                            "color": "green",
+                            "value": null
+                         }
+                      ]
+                   },
+                   "unit": "none"
+                },
+                "overrides": [ ]
+             },
+             "gridPos": {
+                "h": 7,
+                "w": 8,
+                "x": 0,
+                "y": 3
+             },
+             "id": 35,
+             "links": [ ],
+             "options": {
+                "graph": { },
+                "legend": {
+                   "calcs": [ ],
+                   "displayMode": "list",
+                   "placement": "bottom"
+                },
+                "tooltipOptions": {
+                   "mode": "single"
+                }
+             },
+             "pluginVersion": "7.5.5",
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "openebs_volume_status{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "volume status",
+                   "refId": "A"
+                }
+             ],
+             "timeFrom": null,
+             "timeShift": null,
+             "title": "Volume status",
+             "type": "timeseries"
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 7,
+                "w": 8,
+                "x": 8,
+                "y": 3
+             },
+             "hiddenSeries": false,
+             "id": 39,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "openebs_total_replica_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "total",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "openebs_healthy_replica_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "healthy",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "openebs_degraded_replica_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "degraded",
+                   "refId": "C"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Replica count",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:416",
+                   "decimals": 0,
+                   "format": "none",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:417",
+                   "format": "short",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 7,
+                "w": 8,
+                "x": 16,
+                "y": 3
+             },
+             "hiddenSeries": false,
+             "id": 53,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "openebs_parse_error_total{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "total parse error",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "openebs_connection_retry_total{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "total connection retry",
+                   "refId": "B"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "openebs_connection_error_total{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "total connection error",
+                   "refId": "C"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Errors",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:532",
+                   "format": "short",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:533",
+                   "format": "short",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 10
+             },
+             "hiddenSeries": false,
+             "id": 22,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "irate(openebs_reads{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])",
+                   "format": "time_series",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Reads",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "irate(openebs_writes{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Writes",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "IOPS",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:864",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:865",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 10
+             },
+             "hiddenSeries": false,
+             "id": 23,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null as zero",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "((irate(openebs_read_time{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m]))/(irate(openebs_reads{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])))/1000000",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Read latency",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "((irate(openebs_write_time{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m]))/(irate(openebs_writes{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])))/1000000",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Write  latency",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Latency",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:783",
+                   "format": "ms",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:784",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 10
+             },
+             "hiddenSeries": false,
+             "id": 57,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 1,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "openebs_size_of_volume{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 1,
+                   "legendFormat": "Total size",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Total capacity",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:593",
+                   "format": "decgbytes",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": null,
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:594",
+                   "format": "short",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "mappedLabelOnly": false,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 18
+             },
+             "hiddenSeries": false,
+             "id": 28,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "openebs_actual_used{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "used",
+                   "refId": "A"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Storage usage",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:702",
+                   "format": "decgbytes",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:703",
+                   "format": "short",
+                   "label": null,
+                   "labelMappings": [ ],
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 18
+             },
+             "hiddenSeries": false,
+             "id": 31,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "irate(openebs_read_block_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])/(2048)",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Read Throughput",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "irate(openebs_write_block_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])/(2048)",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Write Throughput",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Throughput",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:1026",
+                   "format": "MBs",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:1027",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          },
+          {
+             "aliasColors": { },
+             "bars": false,
+             "dashLength": 10,
+             "dashes": false,
+             "datasource": "${DS_PROMETHEUS}",
+             "fieldConfig": {
+                "defaults": { },
+                "overrides": [ ]
+             },
+             "fill": 3,
+             "fillGradient": 0,
+             "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 18
+             },
+             "hiddenSeries": false,
+             "id": 26,
+             "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+             },
+             "lines": true,
+             "linewidth": 2,
+             "links": [ ],
+             "nullPointMode": "null as zero",
+             "options": {
+                "alertThreshold": true
+             },
+             "percentage": false,
+             "pluginVersion": "7.5.5",
+             "pointradius": 5,
+             "points": false,
+             "renderer": "flot",
+             "seriesOverrides": [ ],
+             "spaceLength": 10,
+             "stack": false,
+             "steppedLine": false,
+             "targets": [
+                {
+                   "exemplar": true,
+                   "expr": "(irate(openebs_read_block_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])/(1024))*512/(irate(openebs_reads{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m]))",
+                   "format": "time_series",
+                   "hide": false,
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Read block size",
+                   "refId": "A"
+                },
+                {
+                   "exemplar": true,
+                   "expr": "(irate(openebs_write_block_count{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m])/(1024))*512/(irate(openebs_writes{openebs_cas_type=~\"cstor\",openebs_pvc=~\"$openebs_pvc\",openebs_pv=~\"$openebs_Volume\"}[2m]))",
+                   "format": "time_series",
+                   "interval": "",
+                   "intervalFactor": 2,
+                   "legendFormat": "Write block size",
+                   "refId": "B"
+                }
+             ],
+             "thresholds": [ ],
+             "timeFrom": null,
+             "timeRegions": [ ],
+             "timeShift": null,
+             "title": "Block size",
+             "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+             },
+             "type": "graph",
+             "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": [ ]
+             },
+             "yaxes": [
+                {
+                   "$$hashKey": "object:945",
+                   "format": "deckbytes",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": "0",
+                   "show": true
+                },
+                {
+                   "$$hashKey": "object:946",
+                   "format": "short",
+                   "label": null,
+                   "logBase": 1,
+                   "max": null,
+                   "min": null,
+                   "show": false
+                }
+             ],
+             "yaxis": {
+                "align": false,
+                "alignLevel": null
+             }
+          }
+       ],
+       "refresh": "1m",
+       "schemaVersion": 27,
+       "style": "light",
+       "tags": [
+          "OpenEBS",
+          "cStor"
+       ],
+       "templating": {
+          "list": [
+             {
+                "current": {
+                   "selected": false,
+                   "text": "Prometheus",
+                   "value": "Prometheus"
+                },
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": null,
+                "multi": false,
+                "name": "datasource",
+                "options": [ ],
+                "query": "prometheus",
+                "queryValue": "",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "label_values(openebs_size_of_volume{openebs_cas_type=~\"cstor\"}, openebs_pv)",
+                "description": null,
+                "error": null,
+                "hide": 0,
+                "includeAll": false,
+                "label": "Volume",
+                "multi": false,
+                "name": "openebs_Volume",
+                "options": [ ],
+                "query": "label_values(openebs_size_of_volume{openebs_cas_type=~\"cstor\"}, openebs_pv)",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "",
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "includeAll": false,
+                "label": "Openebs pvc",
+                "multi": false,
+                "name": "openebs_pvc",
+                "options": [ ],
+                "query": "label_values(openebs_size_of_volume{openebs_cas_type=\"cstor\",openebs_pv=~\"$openebs_Volume\"},openebs_pvc)",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "",
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "includeAll": false,
+                "label": "pool",
+                "multi": false,
+                "name": "pool",
+                "options": [ ],
+                "query": "label_values(openebs_replica_status{vol=~\"$openebs_Volume\"},cstor_pool)",
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "",
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "includeAll": false,
+                "label": "replica_count",
+                "multi": false,
+                "name": "replica_count",
+                "options": [ ],
+                "query": "query_result(openebs_total_replica_count{openebs_pv=~\"$openebs_Volume\"})",
+                "refresh": 2,
+                "regex": "/.*}(.*) .*/",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             },
+             {
+                "allValue": null,
+                "current": { },
+                "datasource": "${DS_PROMETHEUS}",
+                "definition": "",
+                "description": null,
+                "error": null,
+                "hide": 2,
+                "includeAll": false,
+                "label": "uptime",
+                "multi": false,
+                "name": "uptime",
+                "options": [ ],
+                "query": "query_result(openebs_volume_uptime{openebs_pv=~\"$openebs_Volume\"})",
+                "refresh": 2,
+                "regex": "/.*}(.*) .*/",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [ ],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+             }
+          ]
+       },
+       "time": {
+          "from": "now-1h",
+          "to": "now"
+       },
+       "timepicker": {
+          "refresh_intervals": [
+             "5s",
+             "10s",
+             "30s",
+             "1m",
+             "5m",
+             "15m",
+             "30m",
+             "1h",
+             "2h",
+             "1d"
+          ],
+          "time_options": [
+             "5m",
+             "15m",
+             "1h",
+             "6h",
+             "12h",
+             "24h",
+             "2d",
+             "7d",
+             "30d"
+          ]
+       },
+       "timezone": "",
+       "title": "OpenEBS / cStor/ Volume",
+       "uid": "f46a2d03-c2af-4954-b2b3-307c4d77bcaf",
+       "version": 1
+    }
