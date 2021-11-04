@@ -17,7 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using k8s;
+using System.Linq;
+using System.Text;
+
+using Neon.Common;
 
 namespace Neon.Kube
 {
@@ -33,7 +36,7 @@ namespace Neon.Kube
     /// </note>
     /// <para>
     /// neonKUBE priority property names are prefixed by <b>"Neon"</b> and built-in Kubernetes priority property 
-    /// names are prefixed by <b>"Kube"</b> and will have <see cref="PriorityClass.PriorityDef.IsKubernetes"/> set 
+    /// names are prefixed by <b>"System"</b> and will have <see cref="PriorityClass.PriorityDef.IsSystem"/> set 
     /// to <c>true</c>.
     /// </para>
     /// <para>
@@ -44,13 +47,13 @@ namespace Neon.Kube
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><see cref="NodeCritical"/> (2000001000)</term>
+    ///     <term><see cref="SystemNodeCritical"/> (2000001000)</term>
     ///     <description>
     ///     Built-in Kubernetes priority used for the most important pods running on a node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="ClusterCritical"/> (2000000000)</term>
+    ///     <term><see cref="SystemClusterCritical"/> (2000000000)</term>
     ///     <description>
     ///     Built-in Kubernetes priority used for the important pods running on a cluster.
     ///     </description>
@@ -135,12 +138,12 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="name">The priority name.</param>
             /// <param name="value">The priority value.</param>
-            /// <param name="isKubernetes">Optionally indicates that this is a built-in Kubernetes priority.</param>
-            public PriorityDef(string name, int value, bool isKubernetes = false)
+            /// <param name="isSystem">Optionally indicates that this is a built-in Kubernetes priority.</param>
+            public PriorityDef(string name, int value, bool isSystem = false)
             {
-                this.Name         = name;
-                this.Value        = value;
-                this.IsKubernetes = isKubernetes;
+                this.Name     = name;
+                this.Value    = value;
+                this.IsSystem = isSystem;
             }
 
             /// <summary>
@@ -156,7 +159,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns <b>true</b> for built-in Kubernetes priorities.
             /// </summary>
-            public bool IsKubernetes { get; private set; }
+            public bool IsSystem { get; private set; }
         }
 
         //---------------------------------------------------------------------
@@ -169,16 +172,16 @@ namespace Neon.Kube
         {
             var list = new List<PriorityDef>();
 
-            list.Add(NodeCritical    = new PriorityDef("node-critical ",   2000001000, isKubernetes: true));
-            list.Add(ClusterCritical = new PriorityDef("cluster-critical", 2000000000, isKubernetes: true));
-            list.Add(NeonStorage     = new PriorityDef("neon-storage",     1000006000));
-            list.Add(NeonDataTier    = new PriorityDef("neon-data-tier",   1000005000));
-            list.Add(NeonApiTier     = new PriorityDef("neon-api-tier",    1000004000));
-            list.Add(NeonAppTier     = new PriorityDef("neon-app-tier",    1000003000));
-            list.Add(UserDataTier    = new PriorityDef("user-data-tier",   1000002000));
-            list.Add(UserApiTier     = new PriorityDef("user-api-tier",    1000001000));
-            list.Add(UserAppTier     = new PriorityDef("user-app-tier",    1000000000));
-
+            list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
+            list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000006000));
+            list.Add(NeonDataTier          = new PriorityDef("neon-data-tier",          1000005000));
+            list.Add(NeonApiTier           = new PriorityDef("neon-api-tier",           1000004000));
+            list.Add(NeonAppTier           = new PriorityDef("neon-app-tier",           1000003000));
+            list.Add(UserDataTier          = new PriorityDef("user-data-tier",          1000002000));
+            list.Add(UserApiTier           = new PriorityDef("user-api-tier",           1000001000));
+            list.Add(UserAppTier           = new PriorityDef("user-app-tier",           1000000000));
+            
             Values = list;
         }
 
@@ -186,18 +189,18 @@ namespace Neon.Kube
         /// Built-in Kubernetes priority used for the most important pods 
         /// running on a node. (2000001000)
         /// </summary>
-        public static PriorityDef NodeCritical { get; private set; }
+        public static PriorityDef SystemNodeCritical { get; private set; }
 
         /// <summary>
         /// Built-in Kubernetes priority used for the important pods 
         /// running on a cluster.  This is one step down from 
-        /// <see cref="NodeCritical"/>. (2000000000)
+        /// <see cref="SystemNodeCritical"/>. (2000000000)
         /// </summary>
-        public static PriorityDef ClusterCritical { get; private set; }
+        public static PriorityDef SystemClusterCritical { get; private set; }
 
         /// <summary>
         /// Used for OpenEBS related storage deployments.  This is one step
-        /// down from <see cref="ClusterCritical"/>. (1000006000)
+        /// down from <see cref="SystemClusterCritical"/>. (1000006000)
         /// 
         /// </summary>
         public static PriorityDef NeonStorage { get; private set; }
@@ -250,7 +253,23 @@ namespace Neon.Kube
         /// <returns>The manifest text.</returns>
         public static string ToManifest()
         {
-            throw new NotImplementedException("$todo(jefflill)");
+            var sb = new StringBuilder();
+
+            foreach (var priorityClass in Values
+                .Where(priorityClass => !priorityClass.IsSystem)
+                .OrderByDescending(priorityClass => priorityClass.Value))
+            {
+                sb.AppendWithSeparator(
+$@"apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {priorityClass.Name}
+value: {priorityClass.Value}
+",
+"---\n");
+            }
+
+            return sb.ToString();
         }
     }
 }
