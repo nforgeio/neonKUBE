@@ -277,7 +277,8 @@ Server Requirements:
                 debugMode:              debug,
                 baseImageName:          baseImageName,
                 automationFolder:       automationFolder,
-                headendUri:             headendUri);
+                headendUri:             headendUri,
+                readyToGoMode:          readyToGo ? ReadyToGoMode.Setup : ReadyToGoMode.Normal);
 
             controller.StatusChangedEvent +=
                 status =>
