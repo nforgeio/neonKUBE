@@ -47,13 +47,6 @@ namespace pubcore
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
-#if _DEBUG
-            Console.WriteLine($"*** ARGUMETS: {args.Length}");
-            for (int i = 0; i < args.Length; i++)
-            {
-                Console.WriteLine($"*** ARG[{i}]: {args[i]}");
-            }
-#endif
             try
             {
                 if (args.Length != 6)
