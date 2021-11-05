@@ -137,7 +137,7 @@ namespace Neon.Kube
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
-            this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterLogName);
+            this.clusterLogPath = Path.Combine(logFolder, KubeConst.ClusterLogName);
         }
 
         /// <inheritdoc/>
@@ -200,7 +200,7 @@ namespace Neon.Kube
         /// <summary>
         /// Ensures that controller execution has not started.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(int)"/> has been called to start execution.</exception>
         private void EnsureNotRunning()
         {
             if (isRunning)
@@ -572,7 +572,7 @@ namespace Neon.Kube
         /// in parallel for this step, overriding the controller default.
         /// </param>
         /// <returns><b>INTERNAL USE ONLY:</b> The new internal step as an <see cref="object"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(bool, int)"/> has been called to start execution.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <see cref="RunAsync(int)"/> has been called to start execution.</exception>
         public object AddNodeStep(
             string stepLabel,
             Action<ISetupController, NodeSshProxy<NodeMetadata>>        nodeAction,
@@ -1320,7 +1320,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public Task<SetupDisposition> RunAsync(bool leaveNodesConnected = false, int maxStackSize = 250 * (int)ByteUnits.KibiBytes)
+        public Task<SetupDisposition> RunAsync(int maxStackSize = 250 * (int)ByteUnits.KibiBytes)
         {
             Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
 
@@ -1375,122 +1375,110 @@ namespace Neon.Kube
 
                         // NOTE: We don't display node status if there aren't any node specific steps.
 
-                        try
+                        foreach (var step in steps)
                         {
-                            foreach (var step in steps)
+                            if (cancelPending)
                             {
-                                if (cancelPending)
-                                {
-                                    LogGlobal();
-                                    LogGlobal(LogFailedMarker);
-                                    cluster?.LogLine(LogFailedMarker);
-                                    ConsoleWriter.Stop();
-
-                                    tcs.SetResult(SetupDisposition.Cancelled);
-                                    return;
-                                }
-
-                                if (!ExecuteStep(step))
-                                {
-                                    break;
-                                }
-                            }
-
-                            if (IsFaulted)
-                            {
-                                // Log the status of any faulted hosts.
-
-                                if (hosts.Any(host => host.IsFaulted))
-                                {
-                                    LogGlobal();
-                                    LogGlobal("FAULTED HOSTS:");
-                                    LogGlobal();
-
-                                    var maxNodeName     = nodes.Max(node => node.Name.Length);
-                                    var nameColumnWidth = maxNodeName + 4;
-
-                                    foreach (var host in hosts
-                                        .Where(host => host.IsFaulted)
-                                        .OrderBy(host => host.Name.ToLowerInvariant()))
-                                    {
-                                        var nameColumn = host.Name + ":";
-                                        var nameFiller = new string(' ', nameColumnWidth - nameColumn.Length);
-
-                                        LogGlobal($"{nameColumn}{nameFiller}{host.Status}");
-                                    }
-                                }
-
-                                // Log the status of any faulted nodes.
-
-                                if (nodes.Any(node => node.IsFaulted))
-                                {
-                                    LogGlobal();
-                                    LogGlobal("FAULTED NODES:");
-                                    LogGlobal();
-
-                                    var maxNodeName     = nodes.Max(node => node.Name.Length);
-                                    var nameColumnWidth = maxNodeName + 4;
-
-                                    foreach (var node in nodes
-                                        .Where(node => node.IsFaulted)
-                                        .OrderBy(node => node.Name.ToLowerInvariant()))
-                                    {
-                                        var nameColumn = node.Name + ":";
-                                        var nameFiller = new string(' ', nameColumnWidth - nameColumn.Length);
-
-                                        LogGlobal($"{nameColumn}{nameFiller}{node.Status}");
-                                    }
-                                }
-
-                                // Close out the global log.
-
                                 LogGlobal();
                                 LogGlobal(LogFailedMarker);
                                 cluster?.LogLine(LogFailedMarker);
                                 ConsoleWriter.Stop();
 
-                                tcs.SetResult(SetupDisposition.Failed);
+                                Cleanup();
+                                tcs.SetResult(SetupDisposition.Cancelled);
                                 return;
                             }
 
-                            foreach (var node in nodes)
+                            if (!ExecuteStep(step))
                             {
-                                node.Status = "[x] READY";
+                                break;
+                            }
+                        }
+
+                        if (IsFaulted)
+                        {
+                            // Log the status of any faulted hosts.
+
+                            if (hosts.Any(host => host.IsFaulted))
+                            {
+                                LogGlobal();
+                                LogGlobal("FAULTED HOSTS:");
+                                LogGlobal();
+
+                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var nameColumnWidth = maxNodeName + 4;
+
+                                foreach (var host in hosts
+                                    .Where(host => host.IsFaulted)
+                                    .OrderBy(host => host.Name.ToLowerInvariant()))
+                                {
+                                    var nameColumn = host.Name + ":";
+                                    var nameFiller = new string(' ', nameColumnWidth - nameColumn.Length);
+
+                                    LogGlobal($"{nameColumn}{nameFiller}{host.Status}");
+                                }
                             }
 
-                            // Raise one more status changed and then stop the console writer
-                            // so the console will be configured to write normally.
+                            // Log the status of any faulted nodes.
 
-                            if (StatusChangedEvent != null)
+                            if (nodes.Any(node => node.IsFaulted))
                             {
-                                lock (syncLock)
+                                LogGlobal();
+                                LogGlobal("FAULTED NODES:");
+                                LogGlobal();
+
+                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var nameColumnWidth = maxNodeName + 4;
+
+                                foreach (var node in nodes
+                                    .Where(node => node.IsFaulted)
+                                    .OrderBy(node => node.Name.ToLowerInvariant()))
                                 {
-                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                    var nameColumn = node.Name + ":";
+                                    var nameFiller = new string(' ', nameColumnWidth - nameColumn.Length);
+
+                                    LogGlobal($"{nameColumn}{nameFiller}{node.Status}");
                                 }
                             }
 
                             // Close out the global log.
 
                             LogGlobal();
-                            LogGlobal(LogEndMarker);
-                            cluster?.LogLine(LogEndMarker);
+                            LogGlobal(LogFailedMarker);
+                            cluster?.LogLine(LogFailedMarker);
                             ConsoleWriter.Stop();
 
-                            tcs.SetResult(SetupDisposition.Succeeded);
+                            Cleanup();
+                            tcs.SetResult(SetupDisposition.Failed);
                             return;
                         }
-                        finally
-                        {
-                            if (!leaveNodesConnected)
-                            {
-                                // Disconnect all of the nodes.
 
-                                foreach (var node in nodes)
-                                {
-                                    node.Disconnect();
-                                }
+                        foreach (var node in nodes)
+                        {
+                            node.Status = "[x] READY";
+                        }
+
+                        // Raise one more status changed and then stop the console writer
+                        // so the console will be configured to write normally.
+
+                        if (StatusChangedEvent != null)
+                        {
+                            lock (syncLock)
+                            {
+                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
                             }
                         }
+
+                        // Close out the global log.
+
+                        LogGlobal();
+                        LogGlobal(LogEndMarker);
+                        cluster?.LogLine(LogEndMarker);
+                        ConsoleWriter.Stop();
+
+                        Cleanup();
+                        tcs.SetResult(SetupDisposition.Succeeded);
+                        return;
                     }
                     catch (Exception e)
                     {
@@ -1506,34 +1494,41 @@ namespace Neon.Kube
                         }
 
                         ConsoleWriter.Stop();
+                        Cleanup();
                         tcs.SetException(e);
                     }
                     finally
                     {
-                        // Dispose all node proxies.
-
-                        foreach (var node in cluster.Nodes)
-                        {
-                            node.Dispose();
-                        }
-
-                        // Dispose any disposables.
-
-                        foreach (var disposable in disposables)
-                        {
-                            disposable.Dispose();
-                        }
-
-                        // Close the global log.
-
-                        clusterLogWriter?.Flush();
-                        clusterLogWriter?.Dispose();
-                        clusterLogWriter = null;
+                        Cleanup();
                     }
                 },
                 maxStackSize: maxStackSize);
 
             return tcs.Task;
+        }
+
+        /// <summary>
+        /// Handles disposing the cluster proxy, any disposables, along with 
+        /// the cluster log writer.
+        /// </summary>
+        private void Cleanup()
+        {
+            var cluster = this.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            cluster?.Dispose();
+
+            // Dispose any disposables.
+
+            foreach (var disposable in disposables)
+            {
+                disposable.Dispose();
+            }
+
+            // Close the global log.
+
+            clusterLogWriter?.Flush();
+            clusterLogWriter?.Dispose();
+            clusterLogWriter = null;
         }
 
         /// <inheritdoc/>
