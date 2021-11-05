@@ -5,6 +5,10 @@
       "InternalRef": "neon-registry.node.local/bakdata-citus-membership-manager:v0.3"
     },
     {
+      "SourceRef": "ghcr.io/neonkube-dev/bitnami-kubectl:neonkube-0.1.0-alpha",
+      "InternalRef": "neon-registry.node.local/bitnami-kubectl:1.21.4"
+    },
+    {
       "SourceRef": "ghcr.io/neonkube-dev/busybox:neonkube-0.1.0-alpha",
       "InternalRef": "neon-registry.node.local/busybox:1.32.0"
     },
@@ -118,7 +122,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/install-cni:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/install-cni:1.7.6-distroless"
+      "InternalRef": "neon-registry.node.local/install-cni:1.11.4-distroless"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana-operator:neonkube-0.1.0-alpha",
@@ -146,31 +150,27 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-attacher:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-attacher:v2.2.1"
-    },
-    {
-      "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-cluster-driver-registrar:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-cluster-driver-registrar:v1.0.1"
+      "InternalRef": "neon-registry.node.local/k8scsi-csi-attacher:v3.1.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-node-driver-registrar:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-node-driver-registrar:v1.0.1"
+      "InternalRef": "neon-registry.node.local/k8scsi-csi-node-driver-registrar:v2.1.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-provisioner:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-provisioner:v1.6.0"
+      "InternalRef": "neon-registry.node.local/k8scsi-csi-provisioner:v2.1.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-resizer:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-resizer:v0.4.0"
+      "InternalRef": "neon-registry.node.local/k8scsi-csi-resizer:v1.1.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-csi-snapshotter:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-csi-snapshotter:v2.0.1"
+      "InternalRef": "neon-registry.node.local/k8scsi-csi-snapshotter:v3.0.3"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/k8scsi-snapshot-controller:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/k8scsi-snapshot-controller:v2.0.1"
+      "InternalRef": "neon-registry.node.local/k8scsi-snapshot-controller:v3.0.3"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/kiali-kiali:neonkube-0.1.0-alpha",
@@ -249,92 +249,100 @@
       "InternalRef": "neon-registry.node.local/neon-setup-harbor:neonkube-0.1.0-alpha"
     },
     {
+      "SourceRef": "ghcr.io/neonkube-dev/node-problem-detector:neonkube-0.1.0-alpha",
+      "InternalRef": "neon-registry.node.local/node-problem-detector:v0.8.10"
+    },
+    {
       "SourceRef": "ghcr.io/neonkube-dev/oliver006-redis_exporter:neonkube-0.1.0-alpha",
       "InternalRef": "neon-registry.node.local/oliver006-redis_exporter:v1.13.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-admission-server:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-admission-server:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-admission-server:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cspc-operator:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cspc-operator:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cspc-operator:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-csi-driver:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-csi-driver:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-csi-driver:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-istgt:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-istgt:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-istgt:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-pool:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-pool:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-pool:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-pool-manager:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-pool-manager:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-pool-manager:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-volume-manager:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-volume-manager:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-volume-manager:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-volume-mgmt:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-volume-mgmt:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-volume-mgmt:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cstor-webhook:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cstor-webhook:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cstor-webhook:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-cvc-operator:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-cvc-operator:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-cvc-operator:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-jiva:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-jiva:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-jiva:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-k8s-provisioner:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-k8s-provisioner:2.4.1"
+      "InternalRef": "neon-registry.node.local/openebs-k8s-provisioner:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-linux-utils:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-linux-utils:2.4.1"
+      "InternalRef": "neon-registry.node.local/openebs-linux-utils:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-m-apiserver:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-m-apiserver:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-m-apiserver:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-m-exporter:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-m-exporter:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-m-exporter:3.0.0"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/openebs-node-disk-exporter:neonkube-0.1.0-alpha",
+      "InternalRef": "neon-registry.node.local/openebs-node-disk-exporter:1.7.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-node-disk-manager:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-node-disk-manager:1.0.1"
+      "InternalRef": "neon-registry.node.local/openebs-node-disk-manager:1.7.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-node-disk-operator:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-node-disk-operator:1.0.1"
+      "InternalRef": "neon-registry.node.local/openebs-node-disk-operator:1.7.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-provisioner-localpv:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-provisioner-localpv:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-provisioner-localpv:3.0.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-snapshot-controller:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-snapshot-controller:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-snapshot-controller:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/openebs-snapshot-provisioner:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/openebs-snapshot-provisioner:2.4.0"
+      "InternalRef": "neon-registry.node.local/openebs-snapshot-provisioner:2.12.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/operator:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/operator:1.7.6-distroless"
+      "InternalRef": "neon-registry.node.local/operator:1.11.4-distroless"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/pause:neonkube-0.1.0-alpha",
@@ -342,7 +350,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/pilot:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/pilot:1.7.6-distroless"
+      "InternalRef": "neon-registry.node.local/pilot:1.11.4-distroless"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/prometheus-operator-prometheus-config-reloader:neonkube-0.1.0-alpha",
@@ -354,7 +362,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/proxyv2:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/proxyv2:1.7.6-distroless"
+      "InternalRef": "neon-registry.node.local/proxyv2:1.11.4-distroless"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/redis:neonkube-0.1.0-alpha",
