@@ -728,7 +728,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
-                                    controller.LogProgress(master, verb: "configure", message: "kubernetes api server");
+                                    controller.LogProgress(master, verb: "configure", message: "api server");
 
                                     master.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
@@ -1516,7 +1516,7 @@ done
             await master.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "create", message: "kubernetes root user");
+                    controller.LogProgress(master, verb: "create", message: "root user");
 
                     var userYaml =
 $@"
