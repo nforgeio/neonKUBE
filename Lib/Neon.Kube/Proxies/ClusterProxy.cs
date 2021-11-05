@@ -249,6 +249,11 @@ namespace Neon.Kube
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
+            foreach (var node in Nodes)
+            {
+                node.Dispose();
+            }
+
             HostingManager?.Dispose();
             HostingManager = null;
 

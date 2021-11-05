@@ -137,7 +137,7 @@ namespace Neon.Kube
             this.nodes          = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
-            this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterSetupLogName);
+            this.clusterLogPath  = Path.Combine(logFolder, KubeConst.ClusterLogName);
         }
 
         /// <inheritdoc/>

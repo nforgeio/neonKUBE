@@ -405,7 +405,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.
         /// </summary>
-        public const string ClusterSetupLogName = "cluster.log";
+        public const string ClusterLogName = "cluster.log";
 
         /// <summary>
         /// The maximum size in bytes of a node image part published as a GitHub release.
