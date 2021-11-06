@@ -125,12 +125,12 @@
       "InternalRef": "neon-registry.node.local/install-cni:1.11.4-distroless"
     },
     {
-      "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana-operator:neonkube-0.1.0-alpha",
-      "InternalRef": "neon-registry.node.local/integreatly-grafana-operator:v3.10.2"
-    },
-    {
       "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana_plugins_init:neonkube-0.1.0-alpha",
       "InternalRef": "neon-registry.node.local/integreatly-grafana_plugins_init:0.0.3"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana-operator:neonkube-0.1.0-alpha",
+      "InternalRef": "neon-registry.node.local/integreatly-grafana-operator:v3.10.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/jetstack-cert-manager-cainjector:neonkube-0.1.0-alpha",
