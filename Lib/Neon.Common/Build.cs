@@ -68,7 +68,7 @@ namespace Neon
         /// release scripts to match.
         /// </note>
         /// </summary>
-        public const string NeonKubeVersion = "0.1.0-alpha";
+        public const string NeonKubeVersion = "0.2.0-alpha";
 
         /// <summary>
         /// The product license.
