@@ -272,8 +272,8 @@ namespace TestDeployment
                 // 1000 byte parts and one 900 byte part being uploaded
                 // (the last part).
 
-                var tempPath = Path.Combine(tempFolder.Path, "multi-part.test");
-                var tempName = Path.GetFileName(tempPath);
+                var tempPath    = Path.Combine(tempFolder.Path, "multi-part.test");
+                var tempName    = Path.GetFileName(tempPath);
                 var uploadBytes = NeonHelper.GetCryptoRandomBytes(9900);
 
                 File.WriteAllBytes(tempPath, uploadBytes);
