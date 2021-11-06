@@ -24,7 +24,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
@@ -300,6 +303,54 @@ namespace Neon.Deployment
         }
 
         /// <summary>
+        /// Uploads the contents of a stream to an S3 bucket.
+        /// </summary>
+        /// <param name="input">The input stream.</param>
+        /// <param name="targetUri">
+        /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// bucket and key.
+        /// </param>
+        /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
+        /// <param name="metadata">
+        /// <para>
+        /// Optionally specifies HTTP metadata headers to be returned when the object
+        /// is downloaded from S3.  This formatted as as comma separated a list of 
+        /// key/value pairs like:
+        /// </para>
+        /// <example>
+        /// Content-Type=text,app-version=1.0.0
+        /// </example>
+        /// <note>
+        /// <para>
+        /// AWS supports <b>system</b> as well as <b>custom</b> headers.  System headers
+        /// include standard HTTP headers such as <b>Content-Type</b> and <b>Content-Encoding</b>.
+        /// Custom headers are required to include the <b>x-amz-meta-</b> prefix.
+        /// </para>
+        /// <para>
+        /// You don't need to specify the <b>x-amz-meta-</b> prefix for setting custom 
+        /// headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+        /// This method will strip the prefix if present before calling the AWS-CLI to ensure 
+        /// the prefix doesn't end up being duplicated.
+        /// </para>
+        /// </note>
+        /// </param>
+        public static void S3Upload(Stream input, string targetUri, bool gzip = false, string metadata = null)
+        {
+            Covenant.Assert(input != null, nameof(input));
+
+            using (var tempFile = new TempFile())
+            {
+                using (var output = new FileStream(tempFile.Path, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    input.CopyTo(output);
+                }
+
+                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+            }
+        }
+
+        /// <summary>
         /// Uploads text to an S3 bucket.
         /// </summary>
         /// <param name="text">The text being uploaded.</param>
@@ -444,6 +495,158 @@ namespace Neon.Deployment
 
                 return File.ReadAllBytes(tempFile.Path);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Uploads a file in multiple parts from the local workstation to S3, returning the
+        /// <see cref="Download"/> details. required by <see cref="DeploymentHelper.Download(Download, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/>
+        /// and <see cref="DeploymentHelper.DownloadAsync(Download, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
+        /// to actually download the entire file.  The URI to the uploaded <see cref="Download"/> details is also returned.
+        /// </para>
+        /// <para>
+        /// See the remarks for details about how this works.
+        /// </para>
+        /// </summary>
+        /// <param name="sourcePath">Path to the file being uploaded.</param>
+        /// <param name="targetUri">
+        /// <para>
+        /// The target S3 URI structured like <b>https://s3.REGION.amazonaws.com/BUCKET/...</b> 
+        /// URI referncing an S3 bucket and the optional folder where the file's download information 
+        /// and parts will be uploaded.
+        /// </para>
+        /// <note>
+        /// The <b>s3://</b> URI scheme is not supported.
+        /// </note>
+        /// </param>
+        /// <param name="version">The download version.</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Filename"/>.</param>
+        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
+        /// <returns>The <see cref="Download"/> information.</returns>
+        /// <returns>The <see cref="Download"/> information as well as the URI to the uploaded download details.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method works by splitting the <paramref name="sourcePath"/> file into parts no larger than 
+        /// <paramref name="maxPartSize"/> bytes each and the uploading these parts to the specified bucket
+        /// and path along with a file holding <see cref="Download"/> information describing the download
+        /// and its constituent parts.  This information includes details about the download including the
+        /// overall MD5 and size as well records describing each part including their URIs, sizes and MD5.
+        /// </para>
+        /// <para>
+        /// The <see cref="Download"/> details returned include all of the information required by
+        /// <see cref="DeploymentHelper.Download(Download, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/> and
+        /// <see cref="DeploymentHelper.DownloadAsync(Download, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
+        /// to actually download the entire file and the URI returned references these msame details as
+        /// uploaded to S3.
+        /// </para>
+        /// <para>
+        /// You'll need to pass <paramref name="sourcePath"/> as the path to the file being uploaded 
+        /// and <paramref name="targetUri"/> as the S3 location where the download information and the
+        /// file parts will be uploaded.  <paramref name="targetUri"/> may use with the <b>https://</b>
+        /// or <b>s3://</b> URI scheme.
+        /// </para>
+        /// <para>
+        /// By default the uploaded file and parts names will be based on the filename part of <paramref name="sourcePath"/>,
+        /// but this can be overridden via <paramref name="filename"/>.  The <see cref="Download"/> information for the
+        /// file will be uploaded as <b>FILENAME.download</b> and the parts will be written to a subfolder named
+        /// <b>FILENAME.parts</b>.  For example, uploading a large file named <b>myfile.json</b> to <b>https://s3.uswest.amazonaws.com/mybucket</b> 
+        /// will result S3 file layout like:
+        /// </para>
+        /// <code>
+        /// https://s3.uswest.amazonaws.com/mybucket
+        ///     myfile.json.download
+        ///     myfile.json.parts/
+        ///         part-0000
+        ///         part-0001
+        ///         part-0002
+        ///         ...
+        /// </code>
+        /// <para>
+        /// The URI returned in this case will be <b>https://s3.uswest.amazonaws.com/mybucket/myfile.json.download</b>.
+        /// </para>
+        /// </remarks>
+        public static (Download download, string uri) S3UploadMultiPart(string sourcePath, string targetUri, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetUri), nameof(targetUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
+
+            if (!Uri.TryCreate(targetUri, UriKind.Absolute, out var uriCheck))
+            {
+                Covenant.Assert(false, $"Invalid [{nameof(targetUri)}={targetUri}].");
+            }
+
+            Covenant.Assert(uriCheck.Scheme == "https", $"Invalid scheme in [{nameof(targetUri)}={targetUri}].  Only [https://] is supported.");
+
+            name     = name ?? Path.GetFileName(sourcePath);
+            filename = filename ?? Path.GetFileName(sourcePath);
+
+            // Determine the base URI for the download details and parts on S3.
+
+            var baseUri = targetUri;
+
+            if (!baseUri.EndsWith('/'))
+            {
+                baseUri += '/';
+            }
+
+            baseUri += filename;
+
+            // We're going to upload the parts first, while initializing the download details as we go.
+
+            var download = new Download() { Name = name, Version = version, Filename = filename };
+
+            using (var input = File.OpenRead(sourcePath))
+            {
+                var partCount   = NeonHelper.PartitionCount(input.Length, maxPartSize);
+                var partNumber  = 0;
+                var partStart   = 0L;
+                var cbRemaining = input.Length;
+
+                download.Md5   = CryptoHelper.ComputeMD5String(input);
+                input.Position = 0;
+
+                while (cbRemaining > 0)
+                {
+                    var partSize = Math.Min(cbRemaining, maxPartSize);
+                    var part     = new DownloadPart()
+                    {
+                        Uri    = $"{baseUri}.parts/part-{partNumber:000#}",
+                        Number = partNumber,
+                        Size   = partSize,
+                    };
+
+                    // We're going to use a substream to compute the MD5 hash for the part
+                    // as well as to actually upload the part to S3.
+
+                    using (var partStream = new SubStream(input, partStart, partSize))
+                    {
+                        part.Md5            = CryptoHelper.ComputeMD5String(partStream);
+                        partStream.Position = 0;
+
+                        S3Upload(partStream, part.Uri);
+                    }
+
+                    download.Parts.Add(part);
+
+                    // Loop to handle the next part (if any).
+
+                    partNumber++;
+                    partStart   += partSize;
+                    cbRemaining -= partSize;
+                }
+
+                download.Size = download.Parts.Sum(part => part.Size);
+            }
+
+            // Upload the download information.
+
+            var downloadUri = $"{baseUri}.download";
+
+            S3UploadText(NeonHelper.JsonSerialize(download, Formatting.Indented), downloadUri, metadata: $"Content-Type={DeploymentHelper.DownloadContentType}");
+
+            return (download: download, uri: downloadUri);
         }
     }
 }

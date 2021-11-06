@@ -367,11 +367,11 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="repo">Identifies the target repository.</param>
         /// <param name="release">The target release.</param>
-        /// <param name="path">Path to the file being uploaded.</param>
+        /// <param name="sourcePath">Path to the file being uploaded.</param>
         /// <param name="version">The download version.</param>
-        /// <param name="name">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Name"/>.</param>
-        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="path"/> to initialize <see cref="Download.Filename"/>.</param>
-        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Filename"/>.</param>
+        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
         /// <returns>The <see cref="Download"/> information.</returns>
         /// <remarks>
         /// <para>
@@ -382,21 +382,21 @@ namespace Neon.Deployment
         /// part names, which will be formatted like: <b>part-##</b>
         /// </note>
         /// </remarks>
-        public Download UploadMultipartAsset(string repo, Release release, string path, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public Download UploadMultipartAsset(string repo, Release release, string sourcePath, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
 
-            name     = name ?? Path.GetFileName(path);
-            filename = filename ?? Path.GetFileName(path);
+            name     = name ?? Path.GetFileName(sourcePath);
+            filename = filename ?? Path.GetFileName(sourcePath);
 
-            using (var input = File.OpenRead(path))
+            using (var input = File.OpenRead(sourcePath))
             {
                 if (input.Length == 0)
                 {
-                    throw new IOException($"Asset at [{path}] cannot be empty.");
+                    throw new IOException($"Asset at [{sourcePath}] cannot be empty.");
                 }
 
                 var assetPartMap = new List<Tuple<ReleaseAsset, DownloadPart>>();
@@ -423,7 +423,7 @@ namespace Neon.Deployment
 
                     using (var partStream = new SubStream(input, partStart, partSize))
                     {
-                        part.Md5 = CryptoHelper.ComputeMD5String(partStream);
+                        part.Md5            = CryptoHelper.ComputeMD5String(partStream);
                         partStream.Position = 0;
 
                         var asset = GitHub.Release.UploadAsset(repo, release, partStream, $"part-{partNumber:0#}");

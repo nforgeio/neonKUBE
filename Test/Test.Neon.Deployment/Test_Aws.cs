@@ -20,6 +20,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +31,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Xunit;
@@ -49,6 +52,12 @@ namespace TestDeployment
 
         public Test_Aws(EnvironmentFixture fixture)
         {
+            // $todo(jefflill):
+            //
+            // We should be clearing the S3 bucket here so it'll be in a known
+            // state before running the tests.  We should probably do this via
+            // the AWS REST SDK.
+
             this.fixture = fixture;
 
             if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
@@ -247,6 +256,103 @@ namespace TestDeployment
             // Ensure that downloaded file matches the upload
 
             Assert.Equal(bytes, download);
+        }
+
+        [Fact]
+        public async Task S3_MultiPart()
+        {
+            CheckCredentials();
+
+            // Verify that uploading a multi-part file to S3 works.
+
+            using (var tempFolder = new TempFolder())
+            {
+                // We're going to upload a 9900 byte file with maximum
+                // part size of 1000 bytes.  This should result in nine
+                // 1000 byte parts and one 900 byte part being uploaded
+                // (the last part).
+
+                var tempPath = Path.Combine(tempFolder.Path, "multi-part.test");
+                var tempName = Path.GetFileName(tempPath);
+                var uploadBytes = NeonHelper.GetCryptoRandomBytes(9900);
+
+                File.WriteAllBytes(tempPath, uploadBytes);
+
+                var upload = AwsCli.S3UploadMultiPart(tempPath, TestBucketHttpsRef, "1.0", maxPartSize: 1000);
+
+                // Validate the Download information.
+
+                var download = upload.download;
+
+                Assert.Equal(tempName, download.Name);
+                Assert.Equal("1.0", download.Version);
+                Assert.Equal(tempName, download.Filename);
+                Assert.Equal(9900, download.Size);
+                Assert.Equal(10, download.Parts.Count);
+                Assert.Equal(CryptoHelper.ComputeMD5String(uploadBytes), download.Md5);
+
+                // Verify that the download information matches our expections.
+
+                using (var uploadStream = new MemoryStream(uploadBytes))
+                {
+                    var partOffset = 0L;
+
+                    for (int partNumber = 0; partNumber < download.Parts.Count; partNumber++)
+                    {
+                        var part = download.Parts[partNumber];
+
+                        Assert.Equal(partNumber, part.Number);
+                        Assert.Equal($"{TestBucketHttpsRef}/{tempName}.parts/part-{partNumber:000#}", part.Uri);
+
+                        if (partNumber < 9)
+                        {
+                            Assert.Equal(1000, part.Size);
+                        }
+                        else
+                        {
+                            Assert.Equal(900, part.Size);
+                        }
+
+                        using (var substream = new SubStream(uploadStream, partOffset, part.Size))
+                        {
+                            Assert.Equal(part.Md5, CryptoHelper.ComputeMD5String(substream));
+                        }
+
+                        partOffset += part.Size;
+                    }
+                }
+
+                using (var uploadStream = new MemoryStream(uploadBytes))
+                {
+                    using (var httpClient = new HttpClient())
+                    {
+                        // Verify that the actual download file on S3 matches the download information returned.
+
+                        var response = await httpClient.GetSafeAsync(upload.uri);
+
+                        Assert.Equal(DeploymentHelper.DownloadContentType, response.Content.Headers.ContentType.MediaType);
+
+                        var remoteDownload = NeonHelper.JsonDeserialize<Download>(await response.Content.ReadAsStringAsync());
+
+                        Assert.Equal(NeonHelper.JsonSerialize(upload.download, Formatting.Indented), NeonHelper.JsonSerialize(remoteDownload, Formatting.Indented));
+
+                        // Verify that the uploaded parts match what we sent.
+
+                        var partOffset = 0L;
+
+                        for (int partNumber = 0; partNumber < download.Parts.Count; partNumber++)
+                        {
+                            var part = download.Parts[partNumber];
+
+                            response = await httpClient.GetSafeAsync(part.Uri);
+
+                            Assert.Equal(part.Md5, CryptoHelper.ComputeMD5String(await response.Content.ReadAsByteArrayAsync()));
+
+                            partOffset += part.Size;
+                        }
+                    }
+                }
+            }
         }
     }
 }
