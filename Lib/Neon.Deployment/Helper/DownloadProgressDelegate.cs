@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GetHubDownloadProgressType.cs
+// FILE:	    DownloadProgressDelegate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,26 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Runtime.Serialization;
-
 namespace Neon.Deployment
 {
     /// <summary>
-    /// Enumerates the types of progress indications raised when downloading 
-    /// a multi-part file from a GitHub release.
+    /// Describes the callback used to monitor and possibly cancel the download of file composed of
+    /// one or more parts specified by a <see cref="Neon.Deployment.Download"/>.
     /// </summary>
-    public enum GetHubDownloadProgressType
-    {
-        /// <summary>
-        /// An existing local file is being verified.
-        /// </summary>
-        [EnumMember(Value = "check")]
-        Check,
-
-        /// <summary>
-        /// The file is being downloaded.
-        /// </summary>
-        [EnumMember(Value = "download")]
-        Download
-    }
+    /// <param name="progressType">Passed indicating the current operation being performed.</param>
+    /// <param name="percentComplete">Passed as the approximate percentage of the file downloaded (between 0..100).</param>
+    /// <returns><c>true</c> if the download is to continue or <c>false</c> to cancel it.</returns>
+    public delegate bool DownloadProgressDelegate(DownloadProgressType progressType, int percentComplete);
 }

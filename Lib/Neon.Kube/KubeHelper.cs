@@ -51,7 +51,6 @@ using Neon.Data;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -2519,10 +2518,10 @@ TCPKeepAlive yes
         /// </para>
         /// </remarks>
         public static async Task<string> DownloadNodeImageAsync(
-            string                          imageUri, 
-            string                          imagePath,
-            GitHubDownloadProgressDelegate  progressAction    = null, 
-            CancellationToken               cancellationToken = default)
+            string                      imageUri, 
+            string                      imagePath,
+            DownloadProgressDelegate    progressAction    = null, 
+            CancellationToken           cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
@@ -2570,7 +2569,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 0);
+                    progressAction?.Invoke(DownloadProgressType.Download, 0);
 
                     using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2594,13 +2593,13 @@ TCPKeepAlive yes
                                 {
                                     var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                    progressAction?.Invoke(GetHubDownloadProgressType.Download, percentComplete);
+                                    progressAction?.Invoke(DownloadProgressType.Download, percentComplete);
                                 }
                             }
                         }
                     }
 
-                    progressAction?.Invoke(GetHubDownloadProgressType.Download, 100);
+                    progressAction?.Invoke(DownloadProgressType.Download, 100);
 
                     return imagePath;
                 }
@@ -2639,10 +2638,10 @@ TCPKeepAlive yes
         /// </para>
         /// </remarks>
         public static async Task<string> DownloadMultiPartNodeImageAsync(
-            string                          imageUri, 
-            string                          imagePath,
-            GitHubDownloadProgressDelegate  progressAction    = null,
-            CancellationToken               cancellationToken = default)
+            string                      imageUri, 
+            string                      imagePath,
+            DownloadProgressDelegate    progressAction    = null,
+            CancellationToken           cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
@@ -2673,7 +2672,7 @@ TCPKeepAlive yes
 
                 // Download the multi-part file.
 
-                return await GitHub.Release.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
+                return await DeploymentHelper.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
 

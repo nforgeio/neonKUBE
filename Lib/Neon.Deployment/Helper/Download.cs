@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DownloadPart.cs
+// FILE:	    Download.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,52 +18,59 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Models.Headend
+namespace Neon.Deployment
 {
     /// <summary>
-    /// Downloads may be split into one or more parts.  This class includes the
-    /// zero-based part <see cref="Number"/> which specifies the order in which
-    /// this part will be assembled back into the reconsitituted download.  The
-    /// class also includes the <see cref="Uri"/> used to retrieve the part,
-    /// the part <see cref="Size"/>, as well as the optional <see cref="Md5"/>
-    /// has for the part.
+    /// Describes a download including its parts
     /// </summary>
-    public class DownloadPart
+    public class Download
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DownloadPart()
+        public Download()
         {
         }
 
         /// <summary>
-        /// The zero-based index specifying where this part will be assembled
-        /// back into the reconsitituted download.
+        /// Identifies the download.
         /// </summary>
-        [JsonProperty(PropertyName = "Number", Required = Required.Always)]
-        public int Number { get; set; }
+        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
+        public string Name { get; set; }
 
         /// <summary>
-        /// The URI to the part data.
+        /// The download version (this may be <c>null</c>).
         /// </summary>
-        [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
-        public string Uri { get; set; }
+        [JsonProperty(PropertyName = "Version", Required = Required.Always)]
+        public string Version { get; set; }
 
         /// <summary>
-        /// Actual size of the part in bytes after being downloaded. 
+        /// The download file name.
+        /// </summary>
+        [JsonProperty(PropertyName = "Filename", Required = Required.AllowNull)]
+        public string Filename { get; set; }
+
+        /// <summary>
+        /// The overall size of the download.
         /// </summary>
         [JsonProperty(PropertyName = "Size", Required = Required.Always)]
         public long Size { get; set; }
 
         /// <summary>
-        /// Optionally set to the MD5 hash of the part data (without any compression).
+        /// The MD5 hash for the entire download.
         /// </summary>
         [JsonProperty(PropertyName = "Md5", Required = Required.Always)]
         public string Md5 { get; set; }
+
+        /// <summary>
+        /// The download parts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Parts", Required = Required.Always)]
+        public List<DownloadPart> Parts { get; set; } = new List<DownloadPart>();
     }
 }

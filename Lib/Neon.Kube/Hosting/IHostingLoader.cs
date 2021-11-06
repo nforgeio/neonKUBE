@@ -33,8 +33,8 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Deployment;
 using Neon.IO;
-using Neon.Kube.Models.Headend;
 using Neon.Net;
 using Neon.Time;
 

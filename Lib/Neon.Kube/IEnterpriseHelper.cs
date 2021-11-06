@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Kube.Models.Headend;
+using Neon.Deployment;
 
 using Renci.SshNet;
 

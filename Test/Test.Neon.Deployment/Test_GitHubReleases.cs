@@ -32,7 +32,6 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
-using Neon.Kube.Models.Headend;
 using Neon.Xunit;
 
 using Octokit;
@@ -416,7 +415,7 @@ namespace TestDeployment
                 using (var tempFolder = new TempFolder())
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
-                    var path       = await GitHub.Release.DownloadAsync(download, targetPath);
+                    var path       = await DeploymentHelper.DownloadAsync(download, targetPath);
 
                     Assert.Equal(targetPath, path);
 
@@ -444,10 +443,10 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await GitHub.Release.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Download)
+                            if (type == DownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -498,7 +497,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Name);
 
-                    await GitHub.Release.DownloadAsync(download, targetPath);
+                    await DeploymentHelper.DownloadAsync(download, targetPath);
 
                     using (var stream = File.OpenRead(targetPath))
                     {
@@ -517,10 +516,10 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Download)
+                            if (type == DownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -545,10 +544,10 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Download)
+                            if (type == DownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -572,10 +571,10 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await GitHub.Release.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadAsync(download, targetPath,
                         (type, progress) =>
                         {
-                            if (type == GetHubDownloadProgressType.Download)
+                            if (type == DownloadProgressType.Download)
                             {
                                 progressValues.Add(progress);
                             }
@@ -625,7 +624,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
                 }
             }
             finally
@@ -663,7 +662,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
                 }
             }
             finally
@@ -701,7 +700,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await GitHub.Release.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
                 }
             }
             finally
