@@ -30,9 +30,11 @@ namespace NeonBuild
     /// </summary>
     public static partial class Program
     {
-        private const string usage =
-@"
-Internal neonKUBE project build related utilities: v1.1
+        private const string version = "1.2";
+
+        private static readonly string usage =
+$@"
+Internal neonKUBE project build related utilities: v{version}
 
 -----------------------
 neon-build clean [-all] REPO-PATH
@@ -49,7 +51,12 @@ OPTIONS:
 
     --all           - Clears the [Build-cache] folder too.
 
------------------------
+---------------------------------------------------------------------
+neon-build version
+
+Outputs the tool's version number.
+
+---------------------------------------------------------------------
 neon-build clean-attr REPO-PATH
 
 Deletes any [**/obj/**/*.AssemblyAttributes.cs] and [**/obj/**/*.AssemblyInfo.cs]
@@ -228,6 +235,11 @@ ARGUMENTS:
 
                 switch (command)
                 {
+                    case "version":
+
+                        Console.WriteLine(version);
+                        break;
+
                     case "clean":
 
                         repoRoot = commandLine.Arguments.ElementAtOrDefault(1);

@@ -18,7 +18,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 
@@ -112,6 +114,32 @@ namespace NeonBuild
                 Console.WriteLine();
                 Console.WriteLine("Manifest downloaded successfully.");
                 Console.WriteLine("-------------------------------------------------------------------------------");
+            }
+            catch (AggregateException e)
+            {
+                var innerException     = e.InnerExceptions.First();
+                var innerExceptionType = innerException.GetType();
+
+                if (innerExceptionType == typeof(SocketException) ||
+                    innerExceptionType == typeof(HttpRequestException))
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"*** WARNING: Unable to download [{targetPath}]: {NeonHelper.ExceptionError(innerException)}");
+                    Console.Error.WriteLine();
+                }
+                else
+                {
+                    Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(innerException)}");
+                    Program.Exit(1);
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.Error.WriteLine($"*** WARNING: Unable to download [{targetPath}]: {NeonHelper.ExceptionError(e)}");
+            }
+            catch (HttpRequestException e)
+            {
+                Console.Error.WriteLine($"*** WARNING: Unable to download [{targetPath}]: {NeonHelper.ExceptionError(e)}");
             }
             catch (IOException e)
             {
