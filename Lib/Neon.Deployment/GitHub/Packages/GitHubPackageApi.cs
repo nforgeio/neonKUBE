@@ -121,7 +121,7 @@ namespace Neon.Deployment
 
                 // $todo(jefflill):
                 //
-                // We should be using [Async.ParallelForEach()) to speed this up. 
+                // We should be using [Async.ParallelForEachAsync()) to speed this up. 
 
                 if (listVersions)
                 {
