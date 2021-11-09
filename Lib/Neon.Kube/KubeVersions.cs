@@ -75,10 +75,13 @@ namespace Neon.Kube
         public const string KubeletPackageVersion = "1.21.4-00";
 
         /// <summary>
+        /// <para>
         /// The version of CRI-O container runtime to be installed.
-        /// 
+        /// </para>
+        /// <para>
         /// Versions can be seen here: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/
         /// Make sure the package has actually been uploaded.
+        /// </para>
         /// </summary>
         public const string CrioVersion = "1.21.0";
 
