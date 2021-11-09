@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 
@@ -49,5 +50,10 @@ namespace Neon.Deployment
         /// The package visibility.
         /// </summary>
         public GitHubPackageVisibility Visibility { get; set; }
+
+        /// <summary>
+        /// The known versions for the package.
+        /// </summary>
+        public List<GitHubPackageVersion> Versions { get; set; } = new List<GitHubPackageVersion>();
     }
 }

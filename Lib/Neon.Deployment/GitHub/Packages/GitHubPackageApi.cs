@@ -29,6 +29,12 @@ using System.Web;
 using Neon.Common;
 using Neon.Net;
 
+// $todo(jefflill):
+//
+// OctoKit.net doesn't include a packages API at this time so we need to use low-level
+// HTTP calls and parse the results ourselves, including handling pagination.  Let's
+// revisit this periodically to check for OctoKit updates and upgrade this code as well.
+
 namespace Neon.Deployment
 {
     /// <summary>
@@ -69,12 +75,14 @@ namespace Neon.Deployment
         /// <param name="nameOrPattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
+        /// <param name="listVersions">Optionally queries for the package versions as well.  This defaults to <c>false</c>.</param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
         public async Task<List<GitHubPackage>> ListAsync(
             string                  organization,
             string                  nameOrPattern = null,
             GitHubPackageType       packageType   = GitHubPackageType.Container,
-            GitHubPackageVisibility visibility    = GitHubPackageVisibility.All)
+            GitHubPackageVisibility visibility    = GitHubPackageVisibility.All,
+            bool                    listVersions  = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
@@ -82,11 +90,14 @@ namespace Neon.Deployment
             {
                 nameOrPattern = nameOrPattern ?? "*";
 
-                var regex    = NeonHelper.FileWildcardRegex(nameOrPattern);
-                var packages = new List<GitHubPackage>();
-                var response = (await client.GetAsync($"/orgs/{organization}/packages?package_type={NeonHelper.EnumToString(packageType)}")).AsDynamic();
+                // List the packages that match the name and visibility parameters.
 
-                foreach (var rawPackage in response)
+                var regex       = NeonHelper.FileWildcardRegex(nameOrPattern);
+                var packages    = new List<GitHubPackage>();
+                var type        = NeonHelper.EnumToString(packageType);
+                var rawPackages = await client.GetPaginatedAsync($"/orgs/{organization}/packages?package_type={type}");
+
+                foreach (var rawPackage in rawPackages)
                 {
                     string packageName = rawPackage.name;
 
@@ -102,6 +113,48 @@ namespace Neon.Deployment
                         if (visibility == GitHubPackageVisibility.All || package.Visibility == visibility)
                         {
                             packages.Add(package);
+                        }
+                    }
+                }
+
+                // Fetch the package versions when requested.
+
+                // $todo(jefflill):
+                //
+                // We should be using [Async.ParallelForEach()) to speed this up. 
+
+                if (listVersions)
+                {
+                    foreach (var package in packages)
+                    {
+                        var rawPackageVersions = await client.GetPaginatedAsync($"/orgs/{organization}/packages/{type}/{package.Name}/versions");
+
+                        foreach (var rawVersion in rawPackageVersions)
+                        {
+                            // $hack(jefflill):
+                            //
+                            // We're special-casing container images by parsing the image
+                            // tags from the package metadata.  We're also going to ignore
+                            // versions without any tags for now.
+
+                            var packageVersion = new GitHubPackageVersion()
+                            {
+                                Id   = (string)rawVersion.id,
+                                Name = (string)rawVersion.name
+                            };
+
+                            if (packageType == GitHubPackageType.Container)
+                            {
+                                foreach (var rawTag in rawVersion.metadata.container.tags)
+                                {
+                                    packageVersion.Tags.Add((string)rawTag);
+                                }
+                            }
+
+                            if (packageVersion.Tags.Count > 0)
+                            {
+                                package.Versions.Add(packageVersion);
+                            }
                         }
                     }
                 }
