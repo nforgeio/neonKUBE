@@ -75,14 +75,14 @@ namespace Neon.Deployment
         /// <param name="nameOrPattern">The matching pattern (see <see cref="NeonHelper.FileWildcardRegex(string)"/>).</param>
         /// <param name="packageType">Optionally specifies the package type.  This defaults to <see cref="GitHubPackageType.Container"/>.</param>
         /// <param name="visibility">Optionally specifies the visibility of the package.  This defaults to <see cref="GitHubPackageVisibility.All"/></param>
-        /// <param name="listVersions">Optionally queries for the package versions as well.  This defaults to <c>false</c>.</param>
+        /// <param name="includeVersions">Optionally queries for the package versions as well.  This defaults to <c>false</c>.</param>
         /// <returns>The list of package information as a list of <see cref="GitHubPackage"/> instance.</returns>
         public async Task<List<GitHubPackage>> ListAsync(
             string                  organization,
-            string                  nameOrPattern = null,
-            GitHubPackageType       packageType   = GitHubPackageType.Container,
-            GitHubPackageVisibility visibility    = GitHubPackageVisibility.All,
-            bool                    listVersions  = false)
+            string                  nameOrPattern   = null,
+            GitHubPackageType       packageType     = GitHubPackageType.Container,
+            GitHubPackageVisibility visibility      = GitHubPackageVisibility.All,
+            bool                    includeVersions = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
@@ -123,7 +123,7 @@ namespace Neon.Deployment
                 //
                 // We should be using [Async.ParallelForEachAsync()) to speed this up. 
 
-                if (listVersions)
+                if (includeVersions)
                 {
                     foreach (var package in packages)
                     {

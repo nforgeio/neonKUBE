@@ -44,7 +44,7 @@ namespace TestDeployment
         {
             // Verify that we can list container packages.
 
-            var packages = await GitHub.Packages.ListAsync("neonkube-dev", packageType: GitHubPackageType.Container, listVersions: true);
+            var packages = await GitHub.Packages.ListAsync("neonkube-dev", packageType: GitHubPackageType.Container, includeVersions: true);
 
             Assert.NotEmpty(packages);
         }
