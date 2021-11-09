@@ -33,10 +33,7 @@ using Neon.Xunit;
 
 namespace TestDeployment
 {
-    // IMPORTANT NOTE!: These unit tests require that [neon-assistant] be running.
-
     [Trait(TestTrait.Category, TestArea.NeonDeployment)]
-    [Trait(TestTrait.Category, TestTrait.Investigate)]      // https://github.com/nforgeio/neonCLOUD/issues/149
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_GitHubPackages
@@ -46,56 +43,9 @@ namespace TestDeployment
         {
             // Verify that we can get the list of packages.
 
-            var client   = new GitHubPackageApi();
-            var packages = await client.ListAsync("neon-test");
+            var packages = await GitHub.Packages.ListAsync("neonkube-dev");
 
             Assert.NotEmpty(packages);
-
-            packages = await client.ListAsync("neon-test", "test");
-
-            Assert.NotEmpty(packages);
-
-            packages = await client.ListAsync("neon-test", "test*");
-
-            Assert.NotEmpty(packages);
-        }
-
-        [Fact(Skip = "Must be run manually")]
-        public async Task MakePublic()
-        {
-            // Verify that we can make a package public.
-
-            var client = new GitHubPackageApi();
-
-            await client.SetVisibilityAsync("neon-test", "test", visibility: GitHubPackageVisibility.Public);
-
-            var packages = await client.ListAsync("neon-test", "test", visibility: GitHubPackageVisibility.Public);
-
-            Assert.Contains(packages, p => p.Name == "test");
-        }
-
-        [Fact(Skip = "Must be run manually")]
-        public async Task MakePrivate()
-        {
-            // Verify that we can make a package private.
-
-            var client = new GitHubPackageApi();
-
-            await client.SetVisibilityAsync("neon-test", "test", visibility: GitHubPackageVisibility.Private);
-
-            var packages = await client.ListAsync("neon-test", "test", visibility: GitHubPackageVisibility.Private);
-
-            Assert.Contains(packages, p => p.Name == "test");
-        }
-
-        [Fact(Skip = "$todo(marcusbooyah")]
-        [Trait(TestTrait.Category, TestTrait.Incomplete)]
-        public async Task Delete()
-        {
-            var client = new GitHubPackageApi();
-
-            //await client.DeleteAsync("neonrelease-dev", "test");
-            await Task.CompletedTask;
         }
     }
 }

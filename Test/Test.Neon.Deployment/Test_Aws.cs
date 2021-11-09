@@ -282,14 +282,14 @@ namespace TestDeployment
 
                 // Validate the Download information.
 
-                var download = upload.download;
+                var manifest = upload.manifest;
 
-                Assert.Equal(tempName, download.Name);
-                Assert.Equal("1.0", download.Version);
-                Assert.Equal(tempName, download.Filename);
-                Assert.Equal(9900, download.Size);
-                Assert.Equal(10, download.Parts.Count);
-                Assert.Equal(CryptoHelper.ComputeMD5String(uploadBytes), download.Md5);
+                Assert.Equal(tempName, manifest.Name);
+                Assert.Equal("1.0", manifest.Version);
+                Assert.Equal(tempName, manifest.Filename);
+                Assert.Equal(9900, manifest.Size);
+                Assert.Equal(10, manifest.Parts.Count);
+                Assert.Equal(CryptoHelper.ComputeMD5String(uploadBytes), manifest.Md5);
 
                 // Verify that the download information matches our expections.
 
@@ -297,9 +297,9 @@ namespace TestDeployment
                 {
                     var partOffset = 0L;
 
-                    for (int partNumber = 0; partNumber < download.Parts.Count; partNumber++)
+                    for (int partNumber = 0; partNumber < manifest.Parts.Count; partNumber++)
                     {
-                        var part = download.Parts[partNumber];
+                        var part = manifest.Parts[partNumber];
 
                         Assert.Equal(partNumber, part.Number);
                         Assert.Equal($"{TestBucketHttpsRef}/{tempName}.parts/part-{partNumber:000#}", part.Uri);
@@ -328,21 +328,21 @@ namespace TestDeployment
                     {
                         // Verify that the actual download file on S3 matches the download information returned.
 
-                        var response = await httpClient.GetSafeAsync(upload.uri);
+                        var response = await httpClient.GetSafeAsync(upload.manifestUri);
 
-                        Assert.Equal(DeploymentHelper.DownloadContentType, response.Content.Headers.ContentType.MediaType);
+                        Assert.Equal(DeploymentHelper.DownloadManifestContentType, response.Content.Headers.ContentType.MediaType);
 
-                        var remoteDownload = NeonHelper.JsonDeserialize<Download>(await response.Content.ReadAsStringAsync());
+                        var remoteDownload = NeonHelper.JsonDeserialize<DownloadManifest>(await response.Content.ReadAsStringAsync());
 
-                        Assert.Equal(NeonHelper.JsonSerialize(upload.download, Formatting.Indented), NeonHelper.JsonSerialize(remoteDownload, Formatting.Indented));
+                        Assert.Equal(NeonHelper.JsonSerialize(upload.manifest, Formatting.Indented), NeonHelper.JsonSerialize(remoteDownload, Formatting.Indented));
 
                         // Verify that the uploaded parts match what we sent.
 
                         var partOffset = 0L;
 
-                        for (int partNumber = 0; partNumber < download.Parts.Count; partNumber++)
+                        for (int partNumber = 0; partNumber < manifest.Parts.Count; partNumber++)
                         {
-                            var part = download.Parts[partNumber];
+                            var part = manifest.Parts[partNumber];
 
                             response = await httpClient.GetSafeAsync(part.Uri);
 
@@ -351,6 +351,22 @@ namespace TestDeployment
                             partOffset += part.Size;
                         }
                     }
+                }
+
+                using (var tempFile = new TempFile())
+                {
+                    // Verify that [DownloadMultiPartAsync()] checks the [Content-Type] header.
+
+                    await Assert.ThrowsAsync<FormatException>(async () => await DeploymentHelper.DownloadMultiPartAsync("https://www.google.com", Path.Combine(tempFolder.Path, "test1.dat")));
+
+                    // Verify that [DownloadMultiPartAsync()] actually works.
+
+                    var targetPath = Path.Combine(tempFolder.Path, "test2.dat");
+
+                    await DeploymentHelper.DownloadMultiPartAsync($"{TestBucketHttpsRef}/{tempName}.manifest", targetPath);
+
+                    Assert.True(File.Exists(targetPath));
+                    Assert.Equal(9900L, new FileInfo(targetPath).Length);
                 }
             }
         }

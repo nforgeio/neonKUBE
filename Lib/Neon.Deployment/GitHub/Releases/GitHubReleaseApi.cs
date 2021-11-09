@@ -369,10 +369,10 @@ namespace Neon.Deployment
         /// <param name="release">The target release.</param>
         /// <param name="sourcePath">Path to the file being uploaded.</param>
         /// <param name="version">The download version.</param>
-        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Name"/>.</param>
-        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Filename"/>.</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Filename"/>.</param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
-        /// <returns>The <see cref="Download"/> information.</returns>
+        /// <returns>The <see cref="DownloadManifest"/>.</returns>
         /// <remarks>
         /// <para>
         /// The release passed must be unpublished and you may upload other assets before calling this.
@@ -382,7 +382,7 @@ namespace Neon.Deployment
         /// part names, which will be formatted like: <b>part-##</b>
         /// </note>
         /// </remarks>
-        public Download UploadMultipartAsset(string repo, Release release, string sourcePath, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public DownloadManifest UploadMultipartAsset(string repo, Release release, string sourcePath, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
@@ -400,7 +400,7 @@ namespace Neon.Deployment
                 }
 
                 var assetPartMap = new List<Tuple<ReleaseAsset, DownloadPart>>();
-                var download     = new Download() { Name = name, Version = version, Filename = filename };
+                var download     = new DownloadManifest() { Name = name, Version = version, Filename = filename };
                 var partCount    = NeonHelper.PartitionCount(input.Length, maxPartSize);
                 var partNumber   = 0;
                 var partStart    = 0L;

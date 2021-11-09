@@ -60,17 +60,6 @@ namespace Neon
         public const string NeonLibraryVersion = "2.18.2";
 
         /// <summary>
-        /// <para>
-        /// The released neonKUBE cluster version.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Do not rename this constant without updating the relevant 
-        /// release scripts to match.
-        /// </note>
-        /// </summary>
-        public const string NeonKubeVersion = "0.2.0-alpha";
-
-        /// <summary>
         /// The product license.
         /// </summary>
         public const string ProductLicense = "Apache License, Version 2.0";

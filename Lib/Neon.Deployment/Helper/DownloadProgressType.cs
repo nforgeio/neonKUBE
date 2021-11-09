@@ -21,7 +21,7 @@ namespace Neon.Deployment
 {
     /// <summary>
     /// Enumerates the types of progress indications raised when downloading a multi-part
-    /// file specified by a <see cref="Neon.Deployment.Download"/>.
+    /// file specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
     /// </summary>
     public enum DownloadProgressType
     {

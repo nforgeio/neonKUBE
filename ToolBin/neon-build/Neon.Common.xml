@@ -40,17 +40,6 @@
             </note>
             </summary>
         </member>
-        <member name="F:Neon.Build.NeonKubeVersion">
-            <summary>
-            <para>
-            The released neonKUBE cluster version.
-            </para>
-            <note>
-            <b>WARNING:</b> Do not rename this constant without updating the relevant 
-            release scripts to match.
-            </note>
-            </summary>
-        </member>
         <member name="F:Neon.Build.ProductLicense">
             <summary>
             The product license.
@@ -16489,19 +16478,19 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: e970e782a</summary>
+            <summary>Commit: d5f23c9ed</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: e970e782a8c9f12aca83af8ef839aec0cd1dbeba</summary>
+            <summary>Sha: d5f23c9ede7fce919235bc24a38b98a692648015</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-11-06T11:44:09-07:00</summary>
+            <summary>Commit date: 2021-11-07T10:07:46-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 5</summary>
+            <summary>Commits on top of base version: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonKUBE-v0.1.0-alpha-5-ge970e782a</summary>
+            <summary>Tag: neonKUBE-v0.1.0-alpha-6-gd5f23c9ed</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonKUBE-v0.1.0-alpha</summary>
@@ -16528,7 +16517,7 @@
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 5</summary>
+            <summary>Patch: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

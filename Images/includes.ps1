@@ -40,7 +40,7 @@ $nfTools    = "$NF_ROOT\Tools"
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Common\Build.cs" NeonKubeVersion)
+$neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Kube\KubeVersions.cs" NeonKubeVersion)
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version

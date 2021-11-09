@@ -55,7 +55,7 @@ namespace NeonCli
 #if ENTERPRISE
             Neon.Cloud.Build.NeonDesktopVersion;
 #else
-            Neon.Build.NeonKubeVersion;
+            Neon.Kube.KubeVersions.KubernetesVersion;
 #endif
 
         /// <summary>

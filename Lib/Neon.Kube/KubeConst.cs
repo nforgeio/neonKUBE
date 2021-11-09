@@ -245,25 +245,10 @@ namespace Neon.Kube
         public const string DefaultServiceSubnet = "10.253.0.0/16";
 
         /// <summary>
-        /// The current neonKUBE cluster version supported.
-        /// </summary>
-        public const string NeonKubeVersion = "0.1.0-alpha";
-
-        /// <summary>
         /// The container image tag used to reference cluster container images tagged 
         /// our prefix and the cluster version number.
         /// </summary>
-        public const string NeonKubeImageTag = "neonkube-" + NeonKubeVersion;
-
-        /// <summary>
-        /// Lists the supported neonKUBE cluster versions.
-        /// </summary>
-        public static IReadOnlyList<string> SupportedClusterVersions =
-            new List<string>()
-            {
-                "0.1.0-alpha"
-            }
-            .AsReadOnly();
+        public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKubeVersion;
 
         /// <summary>
         /// <para>

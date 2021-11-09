@@ -37,12 +37,17 @@ namespace Neon.Kube
         /// <summary>
         /// The current neonKUBE version.
         /// </summary>
-        public const string NeonKubeVersion = "0.1.0-alpha";
+        public const string NeonKubeVersion = "0.2.0-alpha";
 
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
         public const string KubernetesVersion = "1.21.4";
+
+        /// <summary>
+        /// The version of the Kubernetes client tools to be installed with neonDESKTOP.
+        /// </summary>
+        public const string KubernetesToolsVersion = "1.21.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.

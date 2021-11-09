@@ -297,9 +297,9 @@ namespace Neon.Kube
                             throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
                         }
 
-                        if (imageVersion != SemanticVersion.Parse(KubeConst.NeonKubeVersion))
+                        if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKubeVersion))
                         {
-                            throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeConst.NeonKubeVersion}] implemented by the current build.");
+                            throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKubeVersion}] implemented by the current build.");
                         }
                 });
 

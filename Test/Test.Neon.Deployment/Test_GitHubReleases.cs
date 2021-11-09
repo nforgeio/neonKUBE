@@ -415,7 +415,7 @@ namespace TestDeployment
                 using (var tempFolder = new TempFolder())
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
-                    var path       = await DeploymentHelper.DownloadAsync(download, targetPath);
+                    var path       = await DeploymentHelper.DownloadMultiPartAsync(download, targetPath);
 
                     Assert.Equal(targetPath, path);
 
@@ -443,7 +443,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await DeploymentHelper.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadMultiPartAsync(download, targetPath,
                         (type, progress) =>
                         {
                             if (type == DownloadProgressType.Download)
@@ -497,7 +497,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Name);
 
-                    await DeploymentHelper.DownloadAsync(download, targetPath);
+                    await DeploymentHelper.DownloadMultiPartAsync(download, targetPath);
 
                     using (var stream = File.OpenRead(targetPath))
                     {
@@ -516,7 +516,7 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await DeploymentHelper.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadMultiPartAsync(download, targetPath,
                         (type, progress) =>
                         {
                             if (type == DownloadProgressType.Download)
@@ -544,7 +544,7 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await DeploymentHelper.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadMultiPartAsync(download, targetPath,
                         (type, progress) =>
                         {
                             if (type == DownloadProgressType.Download)
@@ -571,7 +571,7 @@ namespace TestDeployment
 
                     progressValues.Clear();
 
-                    await DeploymentHelper.DownloadAsync(download, targetPath,
+                    await DeploymentHelper.DownloadMultiPartAsync(download, targetPath,
                         (type, progress) =>
                         {
                             if (type == DownloadProgressType.Download)
@@ -624,7 +624,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadMultiPartAsync(download, targetPath));
                 }
             }
             finally
@@ -662,7 +662,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadMultiPartAsync(download, targetPath));
                 }
             }
             finally
@@ -700,7 +700,7 @@ namespace TestDeployment
                 {
                     var targetPath = Path.Combine(tempFolder.Path, download.Filename);
 
-                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadAsync(download, targetPath));
+                    await Assert.ThrowsAsync<IOException>(async () => await DeploymentHelper.DownloadMultiPartAsync(download, targetPath));
                 }
             }
             finally
@@ -724,7 +724,7 @@ namespace TestDeployment
         /// with the part number and the following bytes will increment the previous byte
         /// value.
         /// </remarks>
-        private Download PublishMultipartAsset(Release release, string name, string version, int partCount, long partSize)
+        private DownloadManifest PublishMultipartAsset(Release release, string name, string version, int partCount, long partSize)
         {
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));

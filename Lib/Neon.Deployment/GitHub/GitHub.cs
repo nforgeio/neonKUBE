@@ -18,8 +18,11 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Security;
+
 using Neon.Common;
+using Neon.Net;
 
 using Octokit;
 
@@ -111,7 +114,7 @@ namespace Neon.Deployment
         public static GitHubReleaseApi Release { get; private set; } = new GitHubReleaseApi();
 
         /// <summary>
-        /// Creates a REST client that can be used manage GitHub.
+        /// Creates a REST client that can be used to manage GitHub.
         /// </summary>
         /// <param name="repo">Identifies the target repo.</param>
         /// <returns>The <see cref="GitHubClient"/> instance.</returns>
@@ -120,9 +123,29 @@ namespace Neon.Deployment
             GitHub.GetCredentials();
 
             var repoPath = GitHubRepoPath.Parse(repo);
-            var client   = new GitHubClient(new ProductHeaderValue("neonkube.com"));    // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1214
+            var client = new GitHubClient(new Octokit.ProductHeaderValue("neonkube.com"));    // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1214
 
             client.Credentials = new Octokit.Credentials(AccessToken);
+
+            return client;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="JsonClient"/> that can be used to manage GitHub.
+        /// </summary>
+        /// <returns>The <see cref="JsonClient"/> instance.</returns>
+        internal static JsonClient CreateJsonClient()
+        {
+            GitHub.GetCredentials();
+
+            var client = new JsonClient()
+            {
+                BaseAddress = new Uri("https://api.github.com/"),
+            };
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", AccessToken);
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("neonforge.com", "0"));       // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1214
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
 
             return client;
         }

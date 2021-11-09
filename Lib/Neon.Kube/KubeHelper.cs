@@ -2512,8 +2512,8 @@ TCPKeepAlive yes
         /// <remarks>
         /// <para>
         /// This supports source URIs referencing a single node image file as well
-        /// as URIs referencing a multi-part <see cref="Download"/> serialized as 
-        /// JSON and with the <see cref="DeploymentHelper.DownloadContentType"/>
+        /// as URIs referencing a multi-part <see cref="DownloadManifest"/> serialized as 
+        /// JSON and with the <see cref="DeploymentHelper.DownloadManifestContentType"/>
         /// Content-Type.
         /// </para>
         /// </remarks>
@@ -2547,7 +2547,7 @@ TCPKeepAlive yes
 
                 response.EnsureSuccessStatusCode();
 
-                if (string.Equals(response.Content.Headers.ContentType.MediaType, DeploymentHelper.DownloadContentType, StringComparison.InvariantCultureIgnoreCase))
+                if (string.Equals(response.Content.Headers.ContentType.MediaType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {
                     // Multi-part download.
 
@@ -2662,17 +2662,17 @@ TCPKeepAlive yes
 
                 response.EnsureSuccessStatusCode();
 
-                if (!string.Equals(contentType, DeploymentHelper.DownloadContentType, StringComparison.InvariantCultureIgnoreCase))
+                if (!string.Equals(contentType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new KubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadContentType}] is expected.");
+                    throw new KubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadManifestContentType}] is expected.");
                 }
 
                 var jsonText = await response.Content.ReadAsStringAsync();
-                var download = NeonHelper.JsonDeserialize<Download>(jsonText);
+                var download = NeonHelper.JsonDeserialize<DownloadManifest>(jsonText);
 
                 // Download the multi-part file.
 
-                return await DeploymentHelper.DownloadAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
+                return await DeploymentHelper.DownloadMultiPartAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
 

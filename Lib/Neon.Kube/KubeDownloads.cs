@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
         /// </summary>
-        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifest/neonkube-" + KubeVersions.NeonKubeVersion + ".json";
+        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKubeVersion + ".json";
 
         /// <summary>
         /// The GitHub repository path where public node images will be published.

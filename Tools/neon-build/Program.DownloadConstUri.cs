@@ -124,7 +124,7 @@ namespace NeonBuild
                     innerExceptionType == typeof(HttpRequestException))
                 {
                     Console.Error.WriteLine();
-                    Console.Error.WriteLine($"*** WARNING: Unable to download [{targetPath}]: {NeonHelper.ExceptionError(innerException)}");
+                    Console.Error.WriteLine($"*** WARNING: Unable to download [{sourceUri}]: {NeonHelper.ExceptionError(innerException)}");
                     Console.Error.WriteLine();
                 }
                 else

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Download.cs
+// FILE:	    DownloadManifest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,12 +28,12 @@ namespace Neon.Deployment
     /// <summary>
     /// Describes a download including its parts
     /// </summary>
-    public class Download
+    public class DownloadManifest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public Download()
+        public DownloadManifest()
         {
         }
 

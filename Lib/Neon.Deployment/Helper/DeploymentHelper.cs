@@ -50,9 +50,9 @@ namespace Neon.Deployment
         public const string NeonProfileServicePipe = "neon-profile-service";
 
         /// <summary>
-        /// The HTTP Content-Type used for <see cref="Download"/> metadata.
+        /// The HTTP Content-Type used for multi-part download manifest.
         /// </summary>
-        public const string DownloadContentType = "application/vnd+neonforge.download+json";
+        public const string DownloadManifestContentType = "application/vnd+neonforge.download+manifest+json";
 
         /// <summary>
         /// Clears the Powershell command history.  It's possible that scripts and
@@ -61,9 +61,7 @@ namespace Neon.Deployment
         /// </summary>
         public static void ClearPowershellHistory()
         {
-            // Inspired by:
-            //
-            //      https://www.shellhacks.com/clear-history-powershell/
+            // Inspired by: https://www.shellhacks.com/clear-history-powershell/
 
             using (var tempFile = new TempFile(suffix: ".ps1"))
             {
@@ -79,27 +77,54 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Synchronously downloads and assembles a multi-part file as specified by a <see cref="Neon.Deployment.Download"/>.
+        /// Synchronously downloads and assembles a multi-part file as specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
         /// </summary>
-        /// <param name="download">The download information.</param>
+        /// <param name="download">The download details.</param>
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
-        public static void Download(
-            Download                    download, 
+        /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
+        public static void DownloadMultiPart(
+            DownloadManifest                    download, 
             string                      targetPath, 
             DownloadProgressDelegate    progressAction = null, 
             IRetryPolicy                retry          = null,
             TimeSpan                    partTimeout    = default)
         {
-            DownloadAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
+            DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
         }
 
         /// <summary>
-        /// Asynchronously downloads and assembles a multi-part file  as specified by a <see cref="Neon.Deployment.Download"/>.
+        /// Asynchronously downloads and assembles a multi-part file as specified by a source URI.
         /// </summary>
-        /// <param name="download">The download information.</param>
+        /// <param name="uri">The URI for the source URI holding the <see cref="DownloadManifest"/> details as JSON.</param>
+        /// <param name="targetPath">The target file path.</param>
+        /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
+        /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
+        /// <exception cref="FormatException">Thrown when the object retrieved from <paramref name="uri"/> doesn't have the <see cref="DeploymentHelper.DownloadManifestContentType"/> content type.</exception>
+        public static void DownloadMultiPart(
+            string                      uri,
+            string                      targetPath,
+            DownloadProgressDelegate    progressAction = null,
+            IRetryPolicy                retry          = null,
+            TimeSpan                    partTimeout    = default)
+        {
+            DownloadMultiPartAsync(uri, targetPath, progressAction, partTimeout, retry).Wait();
+        }
+
+        /// <summary>
+        /// Asynchronously downloads and assembles a multi-part file  as specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
+        /// </summary>
+        /// <param name="download">The download details.</param>
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
@@ -115,7 +140,7 @@ namespace Neon.Deployment
         /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 
         /// the folder first when required.  The file will be downloaded in parts, where each part will be validated
         /// by comparing the part's MD5 hash (when present) with the computed value.  The output file will be named 
-        /// <see cref="Download.Name"/> and the overall MD5 hash will also be saved using the same file name but
+        /// <see cref="DownloadManifest.Name"/> and the overall MD5 hash will also be saved using the same file name but
         /// <b>adding</b> the <b>.md5</b> extension.
         /// </para>
         /// <para>
@@ -127,8 +152,8 @@ namespace Neon.Deployment
         /// The target files (output and MD5) will be deleted when download appears to be corrupt.
         /// </note>
         /// </remarks>
-        public static async Task<string> DownloadAsync(
-            Download                    download, 
+        public static async Task<string> DownloadMultiPartAsync(
+            DownloadManifest                    download, 
             string                      targetPath, 
             DownloadProgressDelegate    progressAction    = null, 
             TimeSpan                    partTimeout       = default, 
@@ -339,6 +364,63 @@ namespace Neon.Deployment
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Asynchronously downloads and assembles a multi-part file  as specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
+        /// </summary>
+        /// <param name="uri">The URI for the source URI holding the <see cref="DownloadManifest"/> details as JSON.</param>
+        /// <param name="targetPath">The target file path.</param>
+        /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
+        /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
+        /// <param name="retry">Optionally specifies the retry policy.  This defaults to a reasonable policy.</param>
+        /// <param name="cancellationToken">Optionally specifies the operation cancellation token.</param>
+        /// <returns>The path to the downloaded file.</returns>
+        /// <exception cref="IOException">Thrown when the download is corrupt.</exception>
+        /// <exception cref="SocketException">Thrown for network errors.</exception>
+        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
+        /// <exception cref="FormatException">Thrown when the object retrieved from <paramref name="uri"/> doesn't have the <see cref="DeploymentHelper.DownloadManifestContentType"/> content type.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method downloads the file specified by <paramref name="uri"/> to the folder specified, creating 
+        /// the folder first when required.  The file will be downloaded in parts, where each part will be validated
+        /// by comparing the part's MD5 hash (when present) with the computed value.  The output file will be named 
+        /// <see cref="DownloadManifest.Name"/> and the overall MD5 hash will also be saved using the same file name but
+        /// <b>adding</b> the <b>.md5</b> extension.
+        /// </para>
+        /// <para>
+        /// This method will continue downloading a partially downloaded file.  This works by validating the already
+        /// downloaded parts against their MD5 hashes and then continuing part downloads after the last valid part.
+        /// Nothing will be downloaded when the existing file is fully formed.
+        /// </para>
+        /// <note>
+        /// The target files (output and MD5) will be deleted when download appears to be corrupt.
+        /// </note>
+        /// </remarks>
+        public static async Task<string> DownloadMultiPartAsync(
+            string                      uri, 
+            string                      targetPath, 
+            DownloadProgressDelegate    progressAction    = null, 
+            TimeSpan                    partTimeout       = default, 
+            IRetryPolicy                retry             = null,
+            CancellationToken           cancellationToken = default)
+        {
+            DownloadManifest download;
+
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetSafeAsync(uri);
+
+                if (!response.Content.Headers.ContentType.MediaType.Equals(DeploymentHelper.DownloadManifestContentType))
+                {
+                    throw new FormatException($"The content type for [{uri}] is [{response.Content.Headers.ContentType.MediaType}].  [{DeploymentHelper.DownloadManifestContentType}] was expected.");
+                }
+
+                download = NeonHelper.JsonDeserialize<DownloadManifest>(await response.Content.ReadAsStringAsync());
+            }
+
+            return await DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry, cancellationToken);
         }
     }
 }

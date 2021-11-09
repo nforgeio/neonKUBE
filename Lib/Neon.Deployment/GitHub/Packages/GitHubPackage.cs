@@ -36,13 +36,18 @@ namespace Neon.Deployment
         }
 
         /// <summary>
-        /// Returns the package name.
+        /// The package name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Returns the package type (one of the <see cref="GitHubPackageType"/> values.
+        /// The package type (one of the <see cref="GitHubPackageType"/> values.
         /// </summary>
         public GitHubPackageType Type { get; set; }
+
+        /// <summary>
+        /// The package visibility.
+        /// </summary>
+        public GitHubPackageVisibility Visibility { get; set; }
     }
 }

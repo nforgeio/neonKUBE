@@ -296,7 +296,7 @@ namespace Neon.Kube.Xunit
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
-        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// release as specified by <see cref="KubeVersions.NeonKubeVersion"/>.
         /// </param>
         /// <param name="readyToGo">
         /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
@@ -516,7 +516,7 @@ namespace Neon.Kube.Xunit
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
-        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// release as specified by <see cref="KubeVersions.NeonKubeVersion"/>.
         /// </param>
         /// <param name="readyToGo">
         /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
@@ -589,7 +589,7 @@ namespace Neon.Kube.Xunit
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
-        /// release as specified by <see cref="KubeConst.NeonKubeVersion"/>.
+        /// release as specified by <see cref="KubeVersions.NeonKubeVersion"/>.
         /// </param>
         /// <param name="readyToGo">
         /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>

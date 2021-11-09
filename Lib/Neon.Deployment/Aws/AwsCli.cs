@@ -500,16 +500,16 @@ namespace Neon.Deployment
         /// <summary>
         /// <para>
         /// Uploads a file in multiple parts from the local workstation to S3, returning the
-        /// <see cref="Download"/> details. required by <see cref="DeploymentHelper.Download(Download, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/>
-        /// and <see cref="DeploymentHelper.DownloadAsync(Download, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
-        /// to actually download the entire file.  The URI to the uploaded <see cref="Download"/> details is also returned.
+        /// <see cref="DownloadManifest"/> details. required by <see cref="DeploymentHelper.DownloadMultiPart(DownloadManifest, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/>
+        /// and <see cref="DeploymentHelper.DownloadMultiPartAsync(DownloadManifest, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
+        /// to actually download the entire file.  The URI to the uploaded <see cref="DownloadManifest"/> details is also returned.
         /// </para>
         /// <para>
         /// See the remarks for details about how this works.
         /// </para>
         /// </summary>
         /// <param name="sourcePath">Path to the file being uploaded.</param>
-        /// <param name="targetUri">
+        /// <param name="targetFolderUri">
         /// <para>
         /// The target S3 URI structured like <b>https://s3.REGION.amazonaws.com/BUCKET/...</b> 
         /// URI referncing an S3 bucket and the optional folder where the file's download information 
@@ -520,42 +520,42 @@ namespace Neon.Deployment
         /// </note>
         /// </param>
         /// <param name="version">The download version.</param>
-        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Name"/>.</param>
-        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="Download.Filename"/>.</param>
+        /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Name"/>.</param>
+        /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Filename"/>.</param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
-        /// <returns>The <see cref="Download"/> information.</returns>
-        /// <returns>The <see cref="Download"/> information as well as the URI to the uploaded download details.</returns>
+        /// <returns>The <see cref="DownloadManifest"/> information.</returns>
+        /// <returns>The <see cref="DownloadManifest"/> information as well as the URI to the uploaded manifest.</returns>
         /// <remarks>
         /// <para>
         /// This method works by splitting the <paramref name="sourcePath"/> file into parts no larger than 
         /// <paramref name="maxPartSize"/> bytes each and the uploading these parts to the specified bucket
-        /// and path along with a file holding <see cref="Download"/> information describing the download
+        /// and path along with a file holding <see cref="DownloadManifest"/> information describing the download
         /// and its constituent parts.  This information includes details about the download including the
         /// overall MD5 and size as well records describing each part including their URIs, sizes and MD5.
         /// </para>
         /// <para>
-        /// The <see cref="Download"/> details returned include all of the information required by
-        /// <see cref="DeploymentHelper.Download(Download, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/> and
-        /// <see cref="DeploymentHelper.DownloadAsync(Download, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
+        /// The <see cref="DownloadManifest"/> details returned include all of the information required by
+        /// <see cref="DeploymentHelper.DownloadMultiPart(DownloadManifest, string, DownloadProgressDelegate, IRetryPolicy, TimeSpan)"/> and
+        /// <see cref="DeploymentHelper.DownloadMultiPartAsync(DownloadManifest, string, DownloadProgressDelegate, TimeSpan, IRetryPolicy, System.Threading.CancellationToken)"/>
         /// to actually download the entire file and the URI returned references these msame details as
         /// uploaded to S3.
         /// </para>
         /// <para>
         /// You'll need to pass <paramref name="sourcePath"/> as the path to the file being uploaded 
-        /// and <paramref name="targetUri"/> as the S3 location where the download information and the
-        /// file parts will be uploaded.  <paramref name="targetUri"/> may use with the <b>https://</b>
+        /// and <paramref name="targetFolderUri"/> as the S3 location where the download information and the
+        /// file parts will be uploaded.  <paramref name="targetFolderUri"/> may use with the <b>https://</b>
         /// or <b>s3://</b> URI scheme.
         /// </para>
         /// <para>
         /// By default the uploaded file and parts names will be based on the filename part of <paramref name="sourcePath"/>,
-        /// but this can be overridden via <paramref name="filename"/>.  The <see cref="Download"/> information for the
-        /// file will be uploaded as <b>FILENAME.download</b> and the parts will be written to a subfolder named
-        /// <b>FILENAME.parts</b>.  For example, uploading a large file named <b>myfile.json</b> to <b>https://s3.uswest.amazonaws.com/mybucket</b> 
+        /// but this can be overridden via <paramref name="filename"/>.  The <see cref="DownloadManifest"/> information for the
+        /// file will be uploaded as <b>FILENAME.manifest</b> and the parts will be written to a subfolder named
+        /// <b>FILENAME.parts</b>.  For example, uploading a large file named <b>myfile.json</b> to <b>https://s3.uswest.amazonaws.com/mybucket</b>
         /// will result S3 file layout like:
         /// </para>
         /// <code>
         /// https://s3.uswest.amazonaws.com/mybucket
-        ///     myfile.json.download
+        ///     myfile.json.manifest
         ///     myfile.json.parts/
         ///         part-0000
         ///         part-0001
@@ -563,28 +563,28 @@ namespace Neon.Deployment
         ///         ...
         /// </code>
         /// <para>
-        /// The URI returned in this case will be <b>https://s3.uswest.amazonaws.com/mybucket/myfile.json.download</b>.
+        /// The URI returned in this case will be <b>https://s3.uswest.amazonaws.com/mybucket/myfile.json.manifest</b>.
         /// </para>
         /// </remarks>
-        public static (Download download, string uri) S3UploadMultiPart(string sourcePath, string targetUri, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public static (DownloadManifest manifest, string manifestUri) S3UploadMultiPart(string sourcePath, string targetFolderUri, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetUri), nameof(targetUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolderUri), nameof(targetFolderUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
 
-            if (!Uri.TryCreate(targetUri, UriKind.Absolute, out var uriCheck))
+            if (!Uri.TryCreate(targetFolderUri, UriKind.Absolute, out var uriCheck))
             {
-                Covenant.Assert(false, $"Invalid [{nameof(targetUri)}={targetUri}].");
+                Covenant.Assert(false, $"Invalid [{nameof(targetFolderUri)}={targetFolderUri}].");
             }
 
-            Covenant.Assert(uriCheck.Scheme == "https", $"Invalid scheme in [{nameof(targetUri)}={targetUri}].  Only [https://] is supported.");
+            Covenant.Assert(uriCheck.Scheme == "https", $"Invalid scheme in [{nameof(targetFolderUri)}={targetFolderUri}].  Only [https://] is supported.");
 
             name     = name ?? Path.GetFileName(sourcePath);
             filename = filename ?? Path.GetFileName(sourcePath);
 
-            // Determine the base URI for the download details and parts on S3.
+            // Determine the base URI for the download manifest and parts on S3.
 
-            var baseUri = targetUri;
+            var baseUri = targetFolderUri;
 
             if (!baseUri.EndsWith('/'))
             {
@@ -593,9 +593,9 @@ namespace Neon.Deployment
 
             baseUri += filename;
 
-            // We're going to upload the parts first, while initializing the download details as we go.
+            // We're going to upload the parts first, while initializing the download manifest as we go.
 
-            var download = new Download() { Name = name, Version = version, Filename = filename };
+            var manifest = new DownloadManifest() { Name = name, Version = version, Filename = filename };
 
             using (var input = File.OpenRead(sourcePath))
             {
@@ -604,7 +604,7 @@ namespace Neon.Deployment
                 var partStart   = 0L;
                 var cbRemaining = input.Length;
 
-                download.Md5   = CryptoHelper.ComputeMD5String(input);
+                manifest.Md5   = CryptoHelper.ComputeMD5String(input);
                 input.Position = 0;
 
                 while (cbRemaining > 0)
@@ -628,7 +628,7 @@ namespace Neon.Deployment
                         S3Upload(partStream, part.Uri);
                     }
 
-                    download.Parts.Add(part);
+                    manifest.Parts.Add(part);
 
                     // Loop to handle the next part (if any).
 
@@ -637,16 +637,16 @@ namespace Neon.Deployment
                     cbRemaining -= partSize;
                 }
 
-                download.Size = download.Parts.Sum(part => part.Size);
+                manifest.Size = manifest.Parts.Sum(part => part.Size);
             }
 
-            // Upload the download information.
+            // Upload the manifest.
 
-            var downloadUri = $"{baseUri}.download";
+            var manifestUri = $"{baseUri}.manifest";
 
-            S3UploadText(NeonHelper.JsonSerialize(download, Formatting.Indented), downloadUri, metadata: $"Content-Type={DeploymentHelper.DownloadContentType}");
+            S3UploadText(NeonHelper.JsonSerialize(manifest, Formatting.Indented), manifestUri, metadata: $"Content-Type={DeploymentHelper.DownloadManifestContentType}");
 
-            return (download: download, uri: downloadUri);
+            return (manifest: manifest, manifestUri: manifestUri);
         }
     }
 }

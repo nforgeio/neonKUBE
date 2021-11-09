@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for provisioning a cluster by
         /// downloading a node image from a URI that references a single image 
-        /// file or a multi-part <see cref="Download"/> image.
+        /// file or a multi-part <see cref="DownloadManifest"/> image.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="nodeImageUri">

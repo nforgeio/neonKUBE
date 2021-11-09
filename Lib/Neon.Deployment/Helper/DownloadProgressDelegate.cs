@@ -19,7 +19,7 @@ namespace Neon.Deployment
 {
     /// <summary>
     /// Describes the callback used to monitor and possibly cancel the download of file composed of
-    /// one or more parts specified by a <see cref="Neon.Deployment.Download"/>.
+    /// one or more parts specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
     /// </summary>
     /// <param name="progressType">Passed indicating the current operation being performed.</param>
     /// <param name="percentComplete">Passed as the approximate percentage of the file downloaded (between 0..100).</param>
