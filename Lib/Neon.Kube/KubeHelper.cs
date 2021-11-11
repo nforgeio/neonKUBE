@@ -2567,54 +2567,39 @@ TCPKeepAlive yes
 
                 var contentLength = response.Content.Headers.ContentLength;
 
-                try
+                progressAction?.Invoke(DownloadProgressType.Download, 0);
+
+                using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
                 {
-                    progressAction?.Invoke(DownloadProgressType.Download, 0);
-
-                    using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
+                    using (var downloadStream = await response.Content.ReadAsStreamAsync())
                     {
-                        using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                        var buffer = new byte[64 * 1024];
+                        int cb;
+
+                        while (true)
                         {
-                            var buffer = new byte[64 * 1024];
-                            int cb;
+                            cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
 
-                            while (true)
+                            if (cb == 0)
                             {
-                                cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
+                                break;
+                            }
 
-                                if (cb == 0)
-                                {
-                                    break;
-                                }
+                            await fileStream.WriteAsync(buffer, 0, cb);
 
-                                await fileStream.WriteAsync(buffer, 0, cb);
+                            if (contentLength.HasValue)
+                            {
+                                var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                if (contentLength.HasValue)
-                                {
-                                    var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                    progressAction?.Invoke(DownloadProgressType.Download, percentComplete);
-                                }
+                                progressAction?.Invoke(DownloadProgressType.Download, percentComplete);
                             }
                         }
                     }
-
-                    progressAction?.Invoke(DownloadProgressType.Download, 100);
-
-                    return imagePath;
                 }
-                catch
-                {
-                    // Ensure that the template file is are deleted if there were any
-                    // errors to help avoid using a corrupted template.
 
-                    if (File.Exists(imagePath))
-                    {
-                        File.Delete(imagePath);
-                    }
+                progressAction?.Invoke(DownloadProgressType.Download, 100);
 
-                    throw;
-                }
+                return imagePath;
             }
         }
 
