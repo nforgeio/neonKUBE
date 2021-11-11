@@ -1429,6 +1429,7 @@ done
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeVersion);
                     values.Add("clusterDomain", clusterLogin.ClusterDefinition.Domain);
 
                     int i = 0;
@@ -3533,6 +3534,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeVersion);
 
                     await master.InstallHelmChartAsync(controller, "neon_cluster_api", releaseName: "neon-cluster-api", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
@@ -3567,6 +3569,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeVersion);
 
                     await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });

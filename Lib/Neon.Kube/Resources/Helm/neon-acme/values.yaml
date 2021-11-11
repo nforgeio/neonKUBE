@@ -6,10 +6,9 @@ replicaCount: 1
 
 image:
   organization: neon-registry.node.local
+  tag: {{ .Values.image.tag }}
   repository: neon-acme
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "neonkube-0.1.0-alpha"
 
 imagePullSecrets: []
 nameOverride: ""

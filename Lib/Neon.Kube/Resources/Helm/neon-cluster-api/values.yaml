@@ -6,8 +6,8 @@ replicaCount: 1
 
 image:
   organization: ghcr.io/neonkube-dev
+  tag: {{ .Values.image.tag }}
   repository: neon-cluster-api
-  tag: neonkube-0.1.0-alpha
   pullPolicy: IfNotPresent
 
 logging:
