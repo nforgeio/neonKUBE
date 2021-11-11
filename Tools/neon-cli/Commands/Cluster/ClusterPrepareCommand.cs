@@ -235,7 +235,7 @@ Server Requirements:
 
             if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo, useSinglePartFile: true);
+                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
             }
 
             // Ensure that the cluster only has a single node for ready-to-go mode.

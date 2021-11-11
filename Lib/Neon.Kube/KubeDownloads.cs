@@ -117,15 +117,17 @@ namespace Neon.Kube
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="readyToGo">Optionally indicates that we'll be provisioning a single node cluster using a ready-to-go image.</param>
         /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
-        /// <param name="baseImageName">Specifies the base image name when <paramref name="setupDebugMode"/><c>==true</c></param>
-        /// <param name="useSinglePartFile">Optionally download the old single-part image file rather than the new multi-part file hosted as a GitHub Release.</param>
+        /// <param name="baseImageName">
+        /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
+        /// For example: <b>ubuntu-20.04.1.hyperv.amd64.vhdx.gz.manifest</b>
+        /// </param>
         /// <returns>The download URI or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
         /// Only one of <paramref name="readyToGo"/> or <paramref name="setupDebugMode"/> may be passed as true.
         /// </note>
         /// </remarks>
-        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool readyToGo = false, bool setupDebugMode = false, string baseImageName = null, bool useSinglePartFile = false)
+        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool readyToGo = false, bool setupDebugMode = false, string baseImageName = null)
         {
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
@@ -166,14 +168,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        if (useSinglePartFile)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz";
-                        }
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz.manifest";
                     }
 
                 case HostingEnvironment.XenServer:
@@ -184,14 +179,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        if (useSinglePartFile)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz";
-                        }
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz.manifest";
                     }
 
                 case HostingEnvironment.Wsl2:
@@ -202,14 +190,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        if (useSinglePartFile)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/downloads/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz";
-                        }
+                       return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz.manifest";
                     }
 
                 default:

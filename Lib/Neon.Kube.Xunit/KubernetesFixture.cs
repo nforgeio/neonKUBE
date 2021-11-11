@@ -407,7 +407,7 @@ namespace Neon.Kube.Xunit
 
                 if (string.IsNullOrEmpty(imageUriOrPath))
                 {
-                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo, useSinglePartFile: false);
+                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
                 }
 
                 if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))

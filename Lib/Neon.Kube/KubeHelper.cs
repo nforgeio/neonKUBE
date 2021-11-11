@@ -2499,111 +2499,6 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Downloads a single part node image from a URI or a multi-part download to a local folder.
-        /// </summary>
-        /// <param name="imageUri">The node image URI.</param>
-        /// <param name="imagePath">The local path where the image will be written.</param>
-        /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
-        /// <param name="cancellationToken">Optional cancellation token.</param>
-        /// <returns>The path to the downloaded file.</returns>
-        /// <exception cref="SocketException">Thrown for network errors.</exception>
-        /// <exception cref="HttpException">Thrown for HTTP network errors.</exception>
-        /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
-        /// <remarks>
-        /// <para>
-        /// This supports source URIs referencing a single node image file as well
-        /// as URIs referencing a multi-part <see cref="DownloadManifest"/> serialized as 
-        /// JSON and with the <see cref="DeploymentHelper.DownloadManifestContentType"/>
-        /// Content-Type.
-        /// </para>
-        /// </remarks>
-        public static async Task<string> DownloadNodeImageAsync(
-            string                      imageUri, 
-            string                      imagePath,
-            DownloadProgressDelegate    progressAction    = null, 
-            CancellationToken           cancellationToken = default)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imageUri), nameof(imageUri));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
-
-            await SyncContext.ClearAsync;
-
-            // $note(jefflill):
-            //
-            // We're not going to use a retry policy here because restarting a multi-GB download potentially several
-            // times is not likely to be what the user wants and the mult-part download is restartable and does retry.
-
-            var imageFolder = Path.GetDirectoryName(imagePath);
-
-            Directory.CreateDirectory(imageFolder);
-
-            using (var client = new HttpClient())
-            {
-                // Execute a HEAD request on the source URI to obtain the content type.  We'll
-                // use this to decide whether to download a single or multi-part file.
-
-                var request  = new HttpRequestMessage(HttpMethod.Head, imageUri);
-                var response = await client.SendAsync(request);
-
-                response.EnsureSuccessStatusCode();
-
-                if (string.Equals(response.Content.Headers.ContentType.MediaType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    // Multi-part download.
-
-                    return await DownloadMultiPartNodeImageAsync(imageUri, imagePath, progressAction);
-                }
-
-                // Download the single part file.
-
-                if (File.Exists(imagePath))
-                {
-                    return imagePath;
-                }
-
-                response = await client.GetAsync(imageUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
-
-                response.EnsureSuccessStatusCode();
-
-                var contentLength = response.Content.Headers.ContentLength;
-
-                progressAction?.Invoke(DownloadProgressType.Download, 0);
-
-                using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.ReadWrite))
-                {
-                    using (var downloadStream = await response.Content.ReadAsStreamAsync())
-                    {
-                        var buffer = new byte[64 * 1024];
-                        int cb;
-
-                        while (true)
-                        {
-                            cb = await downloadStream.ReadAsync(buffer, 0, buffer.Length);
-
-                            if (cb == 0)
-                            {
-                                break;
-                            }
-
-                            await fileStream.WriteAsync(buffer, 0, cb);
-
-                            if (contentLength.HasValue)
-                            {
-                                var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
-
-                                progressAction?.Invoke(DownloadProgressType.Download, percentComplete);
-                            }
-                        }
-                    }
-                }
-
-                progressAction?.Invoke(DownloadProgressType.Download, 100);
-
-                return imagePath;
-            }
-        }
-
-        /// <summary>
         /// Downloads a multi-part node image to a local folder.
         /// </summary>
         /// <param name="imageUri">The node image multi-part download information URI.</param>
@@ -2622,7 +2517,7 @@ TCPKeepAlive yes
         /// left off.
         /// </para>
         /// </remarks>
-        public static async Task<string> DownloadMultiPartNodeImageAsync(
+        public static async Task<string> DownloadNodeImageAsync(
             string                      imageUri, 
             string                      imagePath,
             DownloadProgressDelegate    progressAction    = null,
@@ -2637,7 +2532,7 @@ TCPKeepAlive yes
 
             Directory.CreateDirectory(imageFolder);
 
-            // Download the URI and parse a [Download] instance from it.
+            // Download the URI and parse a [DownloadManifest] instance from it.
 
             using (var client = new HttpClient())
             {
