@@ -163,7 +163,7 @@ namespace Neon.Common
             }
             else
             {
-                message = $"[{e.GetType().Name}]: {e.Message}";
+                message = $"[{e.GetType().FullName}]: {e.Message}";
 
                 if (!excludeInner && e.InnerException != null)
                 {
