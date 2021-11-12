@@ -7,7 +7,6 @@ replicaCount: 1
 image:
   organization: neon-registry.node.local
   repository: neon-cluster-operator
-  tag: {{ .Values.neonKubeVersion }}
   pullPolicy: IfNotPresent
 
 logging:

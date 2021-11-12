@@ -269,7 +269,7 @@ namespace Neon.Kube
             }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
-            controller.AddNodeStep("create virtual machines", (controller, node) => ProvisionVM(node));
+            controller.AddNodeStep("provision VMs", (controller, node) => ProvisionVM(node));
         }
 
         /// <inheritdoc/>

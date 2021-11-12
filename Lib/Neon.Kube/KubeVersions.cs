@@ -40,6 +40,12 @@ namespace Neon.Kube
         public const string NeonKubeVersion = "0.2.0-alpha";
 
         /// <summary>
+        /// Returns the container image tag for the current neonKUBE release.  This adds the
+        /// <b>neonkube-</b> prefix to <see cref="NeonKubeVersion"/>.
+        /// </summary>
+        public const string NeonKubeContainerImageTag = "neonkube-" + NeonKubeVersion;
+
+        /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
         public const string KubernetesVersion = "1.21.4";
