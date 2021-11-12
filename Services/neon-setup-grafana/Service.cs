@@ -52,7 +52,7 @@ namespace NeonSetupGrafana
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public Service(string name, ServiceMap serviceMap = null)
-            : base(name, serviceMap: serviceMap)
+            : base(name, version: KubeVersions.NeonKubeVersion, serviceMap: serviceMap)
         {
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
             kubeKV = new KubeKV(serviceMap);
