@@ -33,6 +33,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using k8s;
 using k8s.Models;
 using Microsoft.Rest;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Collections;
@@ -180,6 +181,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The first master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -446,6 +448,7 @@ mode: {kubeProxyMode}");
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartPodsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1048,6 +1051,7 @@ done
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -1162,10 +1166,28 @@ done
         }
 
         /// <summary>
+        /// Uploads cluster related metadata to cluster nodes to <b>/etc/neonkube/metadata</b>
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="node">The target cluster node.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ConfigureMetadataAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotent("cluster-metadata",
+                () =>
+                {
+                    node.UploadText(LinuxPath.Combine(KubeNodeFolders.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest, Formatting.Indented));
+                });
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Configures pods to be schedule on masters when enabled.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureMasterTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -1221,6 +1243,7 @@ done
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -1266,6 +1289,7 @@ done
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1366,6 +1390,7 @@ done
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -1507,6 +1532,7 @@ done
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -1589,6 +1615,7 @@ subjects:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
@@ -1962,6 +1989,7 @@ spec:
         /// Adds the node taints.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task TaintNodesAsync(ISetupController controller)
         {
             await SyncContext.ClearAsync;
@@ -2026,6 +2054,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;

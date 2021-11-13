@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -32,6 +33,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using k8s;
 using k8s.Models;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 
 using Neon.Collections;
 using Neon.Common;
@@ -40,7 +42,6 @@ using Neon.IO;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
@@ -95,9 +96,45 @@ namespace Neon.Kube
         private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
         private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
+        private static IStaticDirectory     cachedResources;
+        private static ClusterManifest      cachedClusterManifest;
 
         //---------------------------------------------------------------------
         // Implementation
+
+        /// <summary>
+        /// Returns the <see cref="IStaticDirectory"/> for the assembly's resources.
+        /// </summary>
+        public static IStaticDirectory Resources
+        {
+            get
+            {
+                if (cachedResources != null)
+                {
+                    return cachedResources;
+                }
+
+                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Resources");
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="ClusterManifest"/> for the current neonKUBE build.  This is generated
+        /// by the internal <b>neon-image prepare node ...</b> tool command which prepares node images.
+        /// This manifest describes the container images that will be provisioned into clusters.
+        /// </summary>
+        public static ClusterManifest ClusterManifest
+        {
+            get
+            {
+                if (cachedClusterManifest != null)
+                {
+                    return cachedClusterManifest;
+                }
+
+                return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(Resources.GetFile("/cluster-manifest.json").ReadAllText());
+            }
+        }
 
         /// <summary>
         /// Returns the <see cref="Kubernetes"/> client persisted in the dictionary passed.
