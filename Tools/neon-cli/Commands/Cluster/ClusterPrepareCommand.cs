@@ -61,12 +61,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --node-image-uri            - Overrides the default node image URI.  This can
-                                  reference a single-part gzip encoded image or
-                                  multi-part download metadata.
-
-                                  NOTE: This defaults to the multi-part image
-                                        hosted as a GitHub release.
+    --node-image-uri            - Overrides the default node image URI.
 
                                   NOTE: This is ignored for [--debug] mode.
 
