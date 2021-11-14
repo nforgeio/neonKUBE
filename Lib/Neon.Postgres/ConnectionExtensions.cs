@@ -106,7 +106,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return command.ExecuteNonQuery();
+            using (command)
+            {
+                return command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -143,7 +146,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return await command.ExecuteNonQueryAsync(cancellationToken);
+            using (command)
+            {
+                return await command.ExecuteNonQueryAsync(cancellationToken);
+            }
         }
 
         /// <summary>
@@ -179,7 +185,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return command.ExecuteScalar();
+            using (command)
+            {
+                return command.ExecuteScalar();
+            }
         }
 
         /// <summary>
@@ -217,7 +226,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return await command.ExecuteScalarAsync(cancellationToken);
+            using (command)
+            {
+                return await command.ExecuteScalarAsync(cancellationToken);
+            }
         }
 
 
@@ -255,7 +267,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return command.ExecuteReader(behavior);
+            using (command)
+            {
+                return command.ExecuteReader(behavior);
+            }
         }
 
         /// <summary>
@@ -295,7 +310,10 @@ namespace Neon.Postgres
                 command = new NpgsqlCommand(cmdText, connection, transaction);
             }
 
-            return await command.ExecuteReaderAsync(behavior, cancellationToken);
+            using (command)
+            {
+                return await command.ExecuteReaderAsync(behavior, cancellationToken);
+            }
         }
 
         /// <summary>
