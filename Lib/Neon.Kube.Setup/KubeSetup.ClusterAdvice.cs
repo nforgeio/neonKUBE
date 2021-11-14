@@ -117,7 +117,6 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Tempo, CalculateTempoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.RedisHA, CalculateRedisHAAdvice(cluster));
 
-
             //==================================================
             // $todo(marcusbooyah): INSERT YOUR MAGIC CODE HERE!
             //==================================================
