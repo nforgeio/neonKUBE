@@ -583,8 +583,9 @@ namespace Neon.Postgres
 
         /// <summary>
         /// Creates the database using the <b>schema-0.script</b> file from the script folder.  This also
-        /// creates the <see cref="DbInfoTableName"/> table adds a row setting the Version to 0.
+        /// creates the <see cref="DbInfoTableName"/> table adding a row setting the Version to 0 by default.
         /// </summary>
+        /// <param name="noInfoTable">Optionally disables creation of the <see cref="DbInfoTableName"/> table,</param>
         /// <returns><c>true</c> if the database was created or <c>false</c> if it already exists.</returns>
         /// <exception cref="FileNotFoundException">Thrown if the <b>schema-0.script</b> file does not exist in the script folder.</exception>
         /// <exception cref="SchemaManagerException">
@@ -592,7 +593,7 @@ namespace Neon.Postgres
         /// table or if that table doesn't have exactly one row or the version there is
         /// not positive.
         /// </exception>
-        public async Task<bool> CreateDatabaseAsync()
+        public async Task<bool> CreateDatabaseAsync(bool noInfoTable = false)
         {
             // Check to see if the database already exists and if it exists, verify
             // that the DBINFO table exists and has a reasonable Version.
@@ -623,9 +624,11 @@ namespace Neon.Postgres
 
             await masterConnection.ExecuteBatchAsync(script);
 
-            // Add the DBINFO table and set Version 0.
+            if (!noInfoTable)
+            {
+                // Add the DBINFO table and set Version 0.
 
-            await TargetConnection.ExecuteNonQueryAsync($@"
+                await TargetConnection.ExecuteNonQueryAsync($@"
 CREATE TABLE IF NOT EXISTS {DbInfoTableName} (
     version             integer NOT NULL,
     updater             text NULL,
@@ -634,7 +637,8 @@ CREATE TABLE IF NOT EXISTS {DbInfoTableName} (
     error               text NULL
 );
 ");
-            await TargetConnection.ExecuteNonQueryAsync($"INSERT INTO {DbInfoTableName}(version, updater, update_start_utc, update_finish_utc, error) VALUES(0, NULL, (now() at time zone 'utc'), (now() at time zone 'utc'), NULL);");
+                await TargetConnection.ExecuteNonQueryAsync($"INSERT INTO {DbInfoTableName}(version, updater, update_start_utc, update_finish_utc, error) VALUES(0, NULL, (now() at time zone 'utc'), (now() at time zone 'utc'), NULL);");
+            }
 
             return true;
         }
