@@ -431,7 +431,7 @@ namespace Neon.Postgres
 
         /// <summary>
         /// Asynchronously a batch of SQL commands saeparated by lines including <b>go</b>
-        /// separators.  This works like Microsoft SQL server related tools.a
+        /// separators.  This works like Microsoft SQL server related tools.
         /// </summary>
         /// <param name="connection">The database connection.</param>
         /// <param name="batchText">The SQL commands possibly separated by <b>go</b> lines.</param>

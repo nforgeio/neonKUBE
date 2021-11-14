@@ -130,12 +130,12 @@ namespace {targetNamespace}
     /// Static methods don't honor the retry policy.
     /// </note>
     /// </remarks>
-    public sealed class {wrapperClassName} : IKubernetes
+    public sealed partial class {wrapperClassName} : IKubernetes
     {{");
                 //-----------------------------------------------------------------
                 // Generate the local fields
 
-                writer.WriteLine($"        private Kubernetes      kubernetes;");
+                writer.WriteLine($"        private Kubernetes      k8s;");
 
                 //-----------------------------------------------------------------
                 // Generate the public constructors.
@@ -147,7 +147,7 @@ namespace {targetNamespace}
                     writer.WriteLine();
                     writer.WriteLine($"        public {wrapperClassName}({GetParameterDefinition(parameters)})");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            kubernetes = new Kubernetes({GetParameterNames(parameters)});");
+                    writer.WriteLine($"            k8s = new Kubernetes({GetParameterNames(parameters)});");
                     writer.WriteLine($"        }}");
                 }
 
@@ -178,7 +178,7 @@ namespace {targetNamespace}
                 writer.WriteLine($"        /// <inheritdoc/>");
                 writer.WriteLine($"        public void Dispose()");
                 writer.WriteLine($"        {{");
-                writer.WriteLine($"             kubernetes.Dispose();");
+                writer.WriteLine($"             k8s.Dispose();");
                 writer.WriteLine($"        }}");
 
                 //-----------------------------------------------------------------
@@ -325,7 +325,7 @@ namespace {targetNamespace}
                                 writer.WriteLine($"            await NormalizedRetryPolicy.InvokeAsync(");
                                 writer.WriteLine($"                async () =>");
                                 writer.WriteLine($"                {{");
-                                writer.WriteLine($"                    await kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                writer.WriteLine($"                    await k8s.{method.Name}({GetParameterNames(parameters)});");
                                 writer.WriteLine($"                }});");
                             }
                             else
@@ -333,7 +333,7 @@ namespace {targetNamespace}
                                 writer.WriteLine($"            return await NormalizedRetryPolicy.InvokeAsync(");
                                 writer.WriteLine($"                async () =>");
                                 writer.WriteLine($"                {{");
-                                writer.WriteLine($"                    return await kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                writer.WriteLine($"                    return await k8s.{method.Name}({GetParameterNames(parameters)});");
                                 writer.WriteLine($"                }});");
                             }
                         }
@@ -348,14 +348,14 @@ namespace {targetNamespace}
                             {
                                 if (isOverride)
                                 {
-                                    writer.WriteLine($"            kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                    writer.WriteLine($"            k8s.{method.Name}({GetParameterNames(parameters)});");
                                 }
                                 else
                                 {
                                     writer.WriteLine($"            NormalizedRetryPolicy.Invoke(");
                                     writer.WriteLine($"                () =>");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                    writer.WriteLine($"                    k8s.{method.Name}({GetParameterNames(parameters)});");
                                     writer.WriteLine($"                }});");
                                 }
                             }
@@ -363,14 +363,14 @@ namespace {targetNamespace}
                             {
                                 if (isOverride)
                                 {
-                                    writer.WriteLine($"            return kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                    writer.WriteLine($"            return k8s.{method.Name}({GetParameterNames(parameters)});");
                                 }
                                 else
                                 {
                                     writer.WriteLine($"            return NormalizedRetryPolicy.Invoke(");
                                     writer.WriteLine($"                () =>");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    return kubernetes.{method.Name}({GetParameterNames(parameters)});");
+                                    writer.WriteLine($"                    return k8s.{method.Name}({GetParameterNames(parameters)});");
                                     writer.WriteLine($"                }});");
                                 }
                             }

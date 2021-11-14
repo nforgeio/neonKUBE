@@ -208,6 +208,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
+            controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the cluster preparation steps.
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonServices.cs
+// FILE:	    KubeService.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,7 +20,7 @@ namespace Neon.Kube
     /// <summary>
     /// Defines the Neon service names.  
     /// </summary>
-    public static class NeonServices
+    public static class KubeService
     {
         /// <summary>
         /// Cluster operator.
@@ -31,17 +31,6 @@ namespace Neon.Kube
         /// Key value service.
         /// </summary>
         public const string NeonClusterApiService = "neon-cluster-api";
-
-        /// <summary>
-        /// Neon identity service, AKA a Secure Token Service (STS).
-        /// </summary>
-        public const string IdentityService = "neon-identity-service";
-
-        /// <summary>
-        /// Operator that manages the <see cref="IdentityService"/> instances as well as
-        /// the related database.
-        /// </summary>
-        public const string IdentityOperator = "neon-identity-operator";
 
         /// <summary>
         /// Service that runs Grafana setup.
@@ -57,15 +46,5 @@ namespace Neon.Kube
         /// Neon system database.
         /// </summary>
         public const string NeonSystemDb = "db-citus-postgresql";
-
-        /// <summary>
-        /// Non-production service used to test Cadence running in a Linux container.
-        /// </summary>
-        public const string TestCadence = "test-cadence";
-
-        /// <summary>
-        /// Non-production service used to test Temporal running in a Linux container.
-        /// </summary>
-        public const string TestTemporal = "test-temporal";
     }
 }

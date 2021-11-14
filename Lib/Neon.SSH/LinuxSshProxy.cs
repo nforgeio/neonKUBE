@@ -75,7 +75,11 @@ namespace Neon.SSH
         /// </summary>
         public const string SshProxyInitPath = "/etc/neon-sshproxy-init";
 
-        private static Dictionary<string, object>   connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+        /// <summary>
+        /// Used to ensure that only one SSH.NET connection attempt will be inflight
+        /// at the same time to the same target computer.
+        /// </summary>
+        private static Dictionary<string, object> connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Returns the object to be used to when establishing connections to

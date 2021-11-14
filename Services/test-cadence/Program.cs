@@ -57,7 +57,7 @@ namespace CadenceService
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            await new Service(NeonServices.TestCadence, serviceMap: NeonServiceMap.Production).RunAsync();
+            await new Service("test-cadence").RunAsync();
         }
     }
 }

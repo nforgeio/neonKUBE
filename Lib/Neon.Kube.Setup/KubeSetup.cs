@@ -95,7 +95,7 @@ namespace Neon.Kube
         private const int                   maxJoinAttempts         = 5;
         private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
-        private static readonly TimeSpan    clusterOpRetryInterval  = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan    clusterOpPollInterval   = TimeSpan.FromSeconds(1);
         private static IStaticDirectory     cachedResources;
         private static ClusterManifest      cachedClusterManifest;
 
@@ -137,12 +137,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <see cref="Kubernetes"/> client persisted in the dictionary passed.
+        /// Returns the <see cref="IKubernetes"/> client persisted in the controller passed.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The <see cref="Kubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when there is no persisted client, indicating that <see cref="ConnectCluster(ISetupController)"/>
+        /// Thrown when there is no persisted Kubernetes client, indicating that <see cref="ConnectCluster(ISetupController)"/>
         /// has not been called yet.
         /// </exception>
         public static IKubernetes GetK8sClient(ISetupController controller)

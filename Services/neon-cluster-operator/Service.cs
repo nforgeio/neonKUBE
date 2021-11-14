@@ -47,8 +47,6 @@ namespace NeonClusterOperator
         
         private static KubernetesWithRetry k8s;
 
-        private static KubeKV kubeKv;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -61,12 +59,10 @@ namespace NeonClusterOperator
 
             k8s.RetryPolicy = new ExponentialRetryPolicy(
                 e => true,
-                maxAttempts: int.MaxValue,
+                maxAttempts:          int.MaxValue,
                 initialRetryInterval: TimeSpan.FromSeconds(0.25),
-                maxRetryInterval: TimeSpan.FromSeconds(10),
-                timeout: TimeSpan.FromMinutes(5));
-
-            kubeKv = new KubeKV(serviceMap);
+                maxRetryInterval:     TimeSpan.FromSeconds(10),
+                timeout:              TimeSpan.FromMinutes(5));
         }
 
         /// <inheritdoc/>
@@ -82,11 +78,6 @@ namespace NeonClusterOperator
 
             await SetRunningAsync();
 
-            // Initialize Grafana and Harbor.
-
-            await SetupGrafanaAsync();
-            await SetupHarborAsync();
-
             // Launch the sub-tasks.  These will run until the service is terminated.
 
             while (true)
@@ -97,157 +88,12 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Deploys a Kubernetes job that runs Grafana setup.
-        /// </summary>
-        /// <returns></returns>
-        public async Task SetupGrafanaAsync()
-        {
-            var grafanaState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobGrafanaSetup, null);
-
-            if (grafanaState != "complete")
-            {
-                Log.LogInfo($"Grafana setup incomplete [{grafanaState}].");
-
-                var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
-
-                if (!jobs.Items.Any(j => j.Metadata.Name == KubeConst.NeonJobSetupGrafana))
-                {
-                    Log.LogInfo($"Creating Grafana setup job.");
-
-                    await k8s.CreateNamespacedJobAsync(
-                        new V1Job()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = KubeConst.NeonJobSetupGrafana,
-                                NamespaceProperty = KubeNamespaces.NeonSystem
-                            },
-                            Spec = new V1JobSpec()
-                            {
-                                TtlSecondsAfterFinished = 100,
-                                Template = new V1PodTemplateSpec()
-                                {
-                                    Spec = new V1PodSpec()
-                                    {
-                                        Containers = new List<V1Container>()
-                                        {
-                                                    new V1Container()
-                                                    {
-                                                        Name  = KubeConst.NeonJobSetupGrafana,
-                                                        Image = $"{KubeConst.NeonKubeDevRegistry}/neon-setup-grafana:{KubeVersions.NeonKubeContainerImageTag}",
-                                                        ImagePullPolicy = "Always"
-                                                    },
-                                        },
-                                        RestartPolicy = "OnFailure",
-                                        ServiceAccount = NeonServices.ClusterOperator,
-                                        ServiceAccountName = NeonServices.ClusterOperator
-                                    },
-                                },
-                                BackoffLimit = 5,
-                            },
-                        },
-                        KubeNamespaces.NeonSystem);
-
-                    Log.LogInfo($"Created Grafana setup job.");
-                }
-                else
-                {
-                    Log.LogInfo($"Grafana setup job is running.");
-                }
-
-                var job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupGrafana, KubeNamespaces.NeonSystem);
-
-                while (job.Status.Succeeded < 1)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupGrafana, KubeNamespaces.NeonSystem);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Deploys a Kubernetes job that runs Harbor setup.
-        /// </summary>
-        /// <returns></returns>
-        public async Task SetupHarborAsync()
-        {
-            var harborState = await kubeKv.GetAsync<string>(KubeKVKeys.NeonClusterOperatorJobHarborSetup, null);
-
-            if (harborState != "complete")
-            {
-                Log.LogInfo($"Harbor setup incomplete [{harborState}].");
-
-                var jobs = await k8s.ListNamespacedJobAsync(KubeNamespaces.NeonSystem);
-
-                if (!jobs.Items.Any(j => j.Metadata.Name == KubeConst.NeonJobSetupHarbor))
-                {
-                    Log.LogInfo($"Creating Harbor setup job.");
-
-                    await k8s.CreateNamespacedJobAsync(
-                        new V1Job()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name              = KubeConst.NeonJobSetupHarbor,
-                                NamespaceProperty = KubeNamespaces.NeonSystem
-                            },
-                            Spec = new V1JobSpec()
-                            {
-                                TtlSecondsAfterFinished = 100,
-                                Template = new V1PodTemplateSpec()
-                                {
-                                    Spec = new V1PodSpec()
-                                    {
-                                        Containers = new List<V1Container>()
-                                        {
-                                            new V1Container()
-                                            {
-                                                Name            = KubeConst.NeonJobSetupHarbor,
-                                                Image           = $"{KubeConst.NeonKubeDevRegistry}/neon-setup-harbor:{KubeVersions.NeonKubeContainerImageTag}",
-                                                ImagePullPolicy = "Always"
-                                            },
-                                        },
-                                        RestartPolicy      = "OnFailure",
-                                        ServiceAccount     = NeonServices.ClusterOperator,
-                                        ServiceAccountName = NeonServices.ClusterOperator
-                                    },
-                                },
-                                BackoffLimit = 5,
-                            },
-                        },
-                        KubeNamespaces.NeonSystem);
-
-                    Log.LogInfo($"Created Harbor setup job.");
-                }
-                else
-                {
-                    Log.LogInfo($"Harbor setup job is running.");
-                }
-
-                var job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupHarbor, KubeNamespaces.NeonSystem);
-
-                while (job.Status.Succeeded < 1)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    job = await k8s.ReadNamespacedJobAsync(KubeConst.NeonJobSetupHarbor, KubeNamespaces.NeonSystem);
-                }
-            }
-        }
-
-        /// <summary>
         /// Responsible for making sure cluster container images are present in the local
         /// cluster registry.
         /// </summary>
         /// <returns></returns>
         public async Task CheckNodeImagesAsync()
         {
-            var lastChecked = await kubeKv.GetAsync<string>(KubeConst.ClusterImagesLastChecked, null);
-            
-            if (lastChecked != null && DateTime.Parse(lastChecked) > DateTime.UtcNow.AddMinutes(-60))
-            {
-                return;
-            }
-            
             // check busybox doesn't already exist
 
             var pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
@@ -323,8 +169,8 @@ namespace NeonClusterOperator
                             }
                         },
                         RestartPolicy      = "Always",
-                        ServiceAccount     = NeonServices.ClusterOperator,
-                        ServiceAccountName = NeonServices.ClusterOperator
+                        ServiceAccount     = KubeService.ClusterOperator,
+                        ServiceAccountName = KubeService.ClusterOperator
                     }
                 }, KubeNamespaces.NeonSystem);
 
@@ -364,8 +210,6 @@ namespace NeonClusterOperator
                     Log.LogInfo($"[check-node-images] Pushing [{image.InternalRef}] to cluster registry.");
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
                 }
-
-                await kubeKv.SetAsync(KubeKVKeys.NeonClusterOperatorLastHarborImageSync, DateTime.UtcNow.ToString());
             }
 
             Log.LogInfo($"[check-node-images] Removing busybox.");

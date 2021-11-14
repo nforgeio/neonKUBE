@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,6 +27,7 @@ using Neon.Common;
 
 using k8s;
 using k8s.Models;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube
 {
@@ -34,6 +36,9 @@ namespace Neon.Kube
     /// </summary>
     public static class KubernetesExtensions
     {
+        //---------------------------------------------------------------------
+        // Deployment extensions
+
         /// <summary>
         /// Restarts a <see cref="V1Deployment"/>.
         /// </summary>
@@ -43,7 +48,8 @@ namespace Neon.Kube
         public static async Task RestartAsync(this V1Deployment deployment, IKubernetes kubernetes)
         {
             // $todo(jefflill):
-            // fish out the k8s client from the deployment so we don't have to pass it in as a parameter.
+            //
+            // Fish out the k8s client from the deployment so we don't have to pass it in as a parameter.
 
             var generation = deployment.Status.ObservedGeneration;
 
@@ -76,7 +82,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(30),
+                timeout:      TimeSpan.FromSeconds(30),
                 pollInterval: TimeSpan.FromMilliseconds(500));
 
             await NeonHelper.WaitForAsync(
@@ -93,7 +99,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(30),
+                timeout:      TimeSpan.FromSeconds(30),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
@@ -157,8 +163,254 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(90),
+                timeout:      TimeSpan.FromSeconds(90),
                 pollInterval: TimeSpan.FromMilliseconds(500));
+        }
+
+        //---------------------------------------------------------------------
+        // Kubernetes client extensions.
+
+        // $note(jefflill):
+        //
+        // These methods are not currently added automatically to the generated [KubernetesWithRetry]
+        // class.  We need to add these manually in the [KubernetesWithRetry.manual.cs] file.
+
+        /// <summary>
+        /// Adds a new Kubernetes secret or updates an existing secret.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="secret">The secret.</param>
+        /// <param name="namespace">Optionally overrides the default namespace.</param>
+        /// <returns>The updated secret.</returns>
+        public static async Task<V1Secret> UpsertSecretAsync(this IKubernetes k8s, V1Secret secret, string @namespace = null)
+        {
+            Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
+
+            if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            {
+                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), @namespace);
+            }
+            else
+            {
+                return await k8s.CreateNamespacedSecretAsync(secret, @namespace);
+            }
+        }
+
+        /// <summary>
+        /// Waits for a service deployment to complete.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>x
+        /// <remarks>
+        /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
+        /// must be specified.
+        /// </remarks>
+        public static async Task WaitForDeploymentAsync(
+            this IKubernetes    k8s, 
+            string              @namespace, 
+            string              name          = null, 
+            string              labelSelector = null,
+            string              fieldSelector = null,
+            TimeSpan            pollInterval  = default,
+            TimeSpan            timeout       = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var deployments = await k8s.ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
+                        if (deployments == null || deployments.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                            
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+        }
+
+        /// <summary>
+        /// Waits for a stateful set deployment to complete.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
+        /// must be specified.
+        /// </remarks>
+        public static async Task WaitForStatefulSetAsync(
+            this IKubernetes    k8s,
+            string              @namespace,
+            string              name          = null,
+            string              labelSelector = null,
+            string              fieldSelector = null,
+            TimeSpan            pollInterval  = default,
+            TimeSpan            timeout       = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var statefulsets = await k8s.ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
+                        if (statefulsets == null || statefulsets.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return statefulsets.Items.All(@set => @set.Status.ReadyReplicas == @set.Spec.Replicas);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+        }
+
+        /// <summary>
+        /// Waits for a daemon set deployment to complete.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespace">The namespace.</param>
+        /// <param name="name">The deployment name.</param>
+        /// <param name="labelSelector">The optional label selector.</param>
+        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
+        /// must be specified.
+        /// </remarks>
+        public static async Task WaitForDaemonsetAsync(
+
+            this IKubernetes    k8s,
+            string              @namespace,
+            string              name          = null,
+            string              labelSelector = null,
+            string              fieldSelector = null,
+            TimeSpan            pollInterval  = default,
+            TimeSpan            timeout       = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                if (!string.IsNullOrEmpty(fieldSelector))
+                {
+                    fieldSelector += $",metadata.name={name}";
+                }
+                else
+                {
+                    fieldSelector = $"metadata.name={name}";
+                }
+            }
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var daemonsets = await k8s.ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+
+                        if (daemonsets == null || daemonsets.Items.Count == 0)
+                        {
+                            return false;
+                        }
+
+                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
     }
 }

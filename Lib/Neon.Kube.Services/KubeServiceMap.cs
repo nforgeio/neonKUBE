@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonServiceMap.cs
+// FILE:	    KubeServiceMap.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -31,17 +31,17 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds more detailed information describing the Neon cluster services.  This a
-    /// <see cref="ServiceMap"/> keyed by the service names defined in <see cref="NeonServices"/>
+    /// Holds more detailed information describing the neonKUBE cluster services.  This a
+    /// <see cref="ServiceMap"/> keyed by the service names defined in <see cref="KubeService"/>
     /// and the class also has properties named for each service you can use as a shortcut.
     /// </summary>
     /// <remarks>
     /// <note>
-    /// The default constructor builds a <see cref="NeonServiceMap"/> for all environments, and clones
+    /// The default constructor builds a <see cref="KubeServiceMap"/> for all environments, and clones
     /// them for each Dev's workstation in the Neon Office, setting the correct static IP.
     /// </note>
     /// </remarks>
-    public class NeonServiceMap : ServiceMap
+    public class KubeServiceMap : ServiceMap
     {
         //---------------------------------------------------------------------
         // Static members
@@ -54,17 +54,17 @@ namespace Neon.Kube
         /// <summary>
         /// Returns a dictionary holding all service maps.
         /// </summary>
-        public static Dictionary<string, NeonServiceMap> serviceMaps;
+        public static Dictionary<string, KubeServiceMap> serviceMaps;
 
         /// <summary>
         /// Returns the Production internal service map.
         /// </summary>
-        public static NeonServiceMap Production => serviceMaps["production"];
+        public static KubeServiceMap Production => serviceMaps["production"];
 
         /// <summary>
         /// Returns the $NAME service map.
         /// </summary>
-        public static NeonServiceMap GetMapName(string name)
+        public static KubeServiceMap GetMapName(string name)
         {
             return serviceMaps[name];
         }
@@ -75,9 +75,9 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        static NeonServiceMap()
+        static KubeServiceMap()
         {
-            serviceMaps = new Dictionary<string, NeonServiceMap>();
+            serviceMaps = new Dictionary<string, KubeServiceMap>();
 
             BuildProduction();
         }
@@ -87,7 +87,7 @@ namespace Neon.Kube
         /// for all service endpoints.
         /// </summary>
         /// <param name="map">The service map.</param>
-        private static void VerifyInit(NeonServiceMap map)
+        private static void VerifyInit(KubeServiceMap map)
         {
             foreach (var serviceDescription in map.Values)
             {
@@ -102,29 +102,27 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Builds the <see cref="NeonServiceMap"/> for internal production services.
+        /// Builds the <see cref="KubeServiceMap"/> for internal production services.
         /// </summary>
         private static void BuildProduction()
         {
-            serviceMaps["production"] = new NeonServiceMap();
-            serviceMaps["production"].AddServiceDescription(NeonServices.ClusterOperator, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(NeonServices.NeonClusterApiService, new ServiceEndpoint(), @namespace: KubeNamespaces.NeonSystem) ;
-            serviceMaps["production"].AddServiceDescription(NeonServices.NeonSystemDb, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 5432 }, @namespace: KubeNamespaces.NeonSystem);
-            serviceMaps["production"].AddServiceDescription(NeonServices.SetupGrafana, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(NeonServices.SetupHarbor, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(NeonServices.TestCadence, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(NeonServices.TestTemporal, new ServiceEndpoint());
+            serviceMaps["production"] = new KubeServiceMap();
+            serviceMaps["production"].AddServiceDescription(KubeService.ClusterOperator, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonClusterApiService, new ServiceEndpoint(), @namespace: KubeNamespaces.NeonSystem) ;
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonSystemDb, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 5432 }, @namespace: KubeNamespaces.NeonSystem);
+            serviceMaps["production"].AddServiceDescription(KubeService.SetupGrafana, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(KubeService.SetupHarbor, new ServiceEndpoint());
 
             VerifyInit(Production);
         }
 
 
         /// <summary>
-        /// Clones a <see cref="NeonServiceMap"/> and changes the <see cref="ServiceDescription.Address"/> for each of the services.
+        /// Clones a <see cref="KubeServiceMap"/> and changes the <see cref="ServiceDescription.Address"/> for each of the services.
         /// </summary>
-        public static NeonServiceMap CloneWithNewAdress(NeonServiceMap map, string ip)
+        public static KubeServiceMap CloneWithNewAdress(KubeServiceMap map, string ip)
         {
-            var newMap = NeonHelper.JsonClone<NeonServiceMap>(map);
+            var newMap = NeonHelper.JsonClone<KubeServiceMap>(map);
             int port = 8300;
             foreach (var k in newMap.Keys)
             {

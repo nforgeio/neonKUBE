@@ -277,6 +277,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the setup steps.
 
