@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <Version>2.10.0-internal</Version>
+    <Version>10000.0.1362-dev-master</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>

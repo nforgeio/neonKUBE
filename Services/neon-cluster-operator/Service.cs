@@ -169,8 +169,8 @@ namespace NeonClusterOperator
                             }
                         },
                         RestartPolicy      = "Always",
-                        ServiceAccount     = KubeService.ClusterOperator,
-                        ServiceAccountName = KubeService.ClusterOperator
+                        ServiceAccount     = KubeService.NeonClusterOperator,
+                        ServiceAccountName = KubeService.NeonClusterOperator
                     }
                 }, KubeNamespaces.NeonSystem);
 

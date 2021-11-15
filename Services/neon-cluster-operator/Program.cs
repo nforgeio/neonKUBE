@@ -37,7 +37,7 @@ namespace NeonClusterOperator
         {
             Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Resources");
 
-            await new Service(KubeService.ClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();
+            await new Service(KubeService.NeonClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();
         }
     }
 }

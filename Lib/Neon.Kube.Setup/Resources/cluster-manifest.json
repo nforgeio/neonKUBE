@@ -233,20 +233,8 @@
       "InternalRef": "neon-registry.node.local/neon-acme:neonkube-0.2.0-alpha"
     },
     {
-      "SourceRef": "ghcr.io/neonkube-dev/neon-cluster-api:neonkube-0.2.0-alpha",
-      "InternalRef": "neon-registry.node.local/neon-cluster-api:neonkube-0.2.0-alpha"
-    },
-    {
       "SourceRef": "ghcr.io/neonkube-dev/neon-cluster-operator:neonkube-0.2.0-alpha",
       "InternalRef": "neon-registry.node.local/neon-cluster-operator:neonkube-0.2.0-alpha"
-    },
-    {
-      "SourceRef": "ghcr.io/neonkube-dev/neon-setup-grafana:neonkube-0.2.0-alpha",
-      "InternalRef": "neon-registry.node.local/neon-setup-grafana:neonkube-0.2.0-alpha"
-    },
-    {
-      "SourceRef": "ghcr.io/neonkube-dev/neon-setup-harbor:neonkube-0.2.0-alpha",
-      "InternalRef": "neon-registry.node.local/neon-setup-harbor:neonkube-0.2.0-alpha"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/node-problem-detector:neonkube-0.2.0-alpha",

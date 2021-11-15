@@ -3647,43 +3647,6 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs the Neon Cluster API.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallClusterApiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.ClearAsync;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var k8s = GetK8sClient(controller);
-
-            await master.InvokeIdempotentAsync("setup/cluster-api-service",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "setup", message: "neon-cluster-api");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-
-                    await master.InstallHelmChartAsync(controller, "neon_cluster_api", releaseName: "neon-cluster-api", @namespace: KubeNamespaces.NeonSystem, values: values);
-                });
-
-            await master.InvokeIdempotentAsync("setup/cluster-api-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "neon-cluster-api");
-
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-cluster-api", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                });
-        }
-
-        /// <summary>
         /// Installs the Neon Cluster Operator.
         /// </summary>
         /// <param name="controller">The setup controller.</param>

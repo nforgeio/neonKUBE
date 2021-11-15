@@ -4,7 +4,7 @@
     <TargetFrameworks>net48; netcoreapp3.1; net5.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Temporal</RootNamespace>
-    <Version>2.18.2-alpha</Version>
+    <Version>10000.0.1362-dev-master</Version>
     <Company>neonFORGE LLC</Company>
     <Authors>neonFORGE Team</Authors>
     <Description>.NET client for Temporal</Description>

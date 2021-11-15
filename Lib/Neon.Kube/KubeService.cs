@@ -25,22 +25,7 @@ namespace Neon.Kube
         /// <summary>
         /// Cluster operator.
         /// </summary>
-        public const string ClusterOperator = "neon-cluster-operator";
-
-        /// <summary>
-        /// Key value service.
-        /// </summary>
-        public const string NeonClusterApiService = "neon-cluster-api";
-
-        /// <summary>
-        /// Service that runs Grafana setup.
-        /// </summary>
-        public const string SetupGrafana = "setup-grafana";
-
-        /// <summary>
-        /// Service that runs Harbor setup.
-        /// </summary>
-        public const string SetupHarbor = "setup-harbor";
+        public const string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
         /// Neon system database.

@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
-    <Version>2.10.0-internal</Version>
+    <Version>10000.0.1362-dev-master</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: neonKUBE hosting manager for AWS</Description>

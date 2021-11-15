@@ -107,11 +107,8 @@ namespace Neon.Kube
         private static void BuildProduction()
         {
             serviceMaps["production"] = new KubeServiceMap();
-            serviceMaps["production"].AddServiceDescription(KubeService.ClusterOperator, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(KubeService.NeonClusterApiService, new ServiceEndpoint(), @namespace: KubeNamespaces.NeonSystem) ;
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonClusterOperator, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(KubeService.NeonSystemDb, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 5432 }, @namespace: KubeNamespaces.NeonSystem);
-            serviceMaps["production"].AddServiceDescription(KubeService.SetupGrafana, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(KubeService.SetupHarbor, new ServiceEndpoint());
 
             VerifyInit(Production);
         }

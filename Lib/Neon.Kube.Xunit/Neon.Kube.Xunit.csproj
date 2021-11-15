@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube.Xunit</RootNamespace>
     <PackageId>Neon.Kube.Xunit</PackageId>
-    <Version>2.11.1-internal</Version>
+    <Version>10000.0.1362-dev-master</Version>
     <Authors>neonFORGE Team</Authors>
     <Product>neonLIBRARY</Product>
     <Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>

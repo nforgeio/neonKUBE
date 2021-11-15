@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <Version>2.18.2-preview</Version>
+    <Version>10000.0.1362-dev-master</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonLIBRARY</Product>
