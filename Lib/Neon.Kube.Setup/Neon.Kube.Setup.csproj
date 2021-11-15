@@ -58,7 +58,9 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Services\Neon.Kube.Services.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -70,6 +72,12 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Helm" Version="0.1.35" />
+    <PackageReference Include="Minio" Version="3.1.13" />
+    <PackageReference Include="Npgsql" Version="6.0.0" />
   </ItemGroup>
 
   <!--

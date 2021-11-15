@@ -1,6 +1,0 @@
---
-CREATE TABLE ${state_table} (
-    KEY						    TEXT PRIMARY KEY NOT NULL,
-    VALUE     				TEXT
-);
-GO

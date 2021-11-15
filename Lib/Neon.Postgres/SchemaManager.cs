@@ -583,7 +583,7 @@ namespace Neon.Postgres
 
         /// <summary>
         /// Creates the database using the <b>schema-0.script</b> file from the script folder.  This also
-        /// creates the <see cref="DbInfoTableName"/> table adds a row setting the Version to 0.
+        /// creates the <see cref="DbInfoTableName"/> table adding a row setting the Version to 0 by default.
         /// </summary>
         /// <returns><c>true</c> if the database was created or <c>false</c> if it already exists.</returns>
         /// <exception cref="FileNotFoundException">Thrown if the <b>schema-0.script</b> file does not exist in the script folder.</exception>
@@ -623,7 +623,7 @@ namespace Neon.Postgres
 
             await masterConnection.ExecuteBatchAsync(script);
 
-            // Add the DBINFO table and set Version 0.
+                // Add the DBINFO table and set Version 0.
 
             await TargetConnection.ExecuteNonQueryAsync($@"
 CREATE TABLE IF NOT EXISTS {DbInfoTableName} (

@@ -140,5 +140,12 @@ namespace Neon.Kube
         /// and should default to <see cref="ReadyToGoMode.Normal"/>.
         /// </summary>
         public const string ReadyToGoMode = "readytogo-mode";
+
+        /// <summary>
+        /// Property name for a boolean indicating whether secrets should be redacted when logging
+        /// during cluster setup.  This should be generally set to <c>true</c> for production
+        /// deployments.
+        /// </summary>
+        public const string Redact = "redact";
     }
 }
