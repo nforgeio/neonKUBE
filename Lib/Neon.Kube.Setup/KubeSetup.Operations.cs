@@ -4039,7 +4039,7 @@ $@"- name: StorageType
             // Perform the Grafana Minio configuration.
 
             var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
-            var minio = new MinioClient("minio.neon-system", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]), Encoding.UTF8.GetString(minioSecret.Data["secretkey"]));
+            var minio       = new MinioClient("minio.neon-system", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]), Encoding.UTF8.GetString(minioSecret.Data["secretkey"]));
 
             await master.InvokeIdempotentAsync("setup/minio-loki",
                 async () =>
