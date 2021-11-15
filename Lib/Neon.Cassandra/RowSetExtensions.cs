@@ -52,15 +52,12 @@ namespace Neon.Cassandra
         /// <param name="rowSet">The row set.</param>
         public static bool HasRows(this RowSet rowSet)
         {
-            var row = (Row)null;
-
-            foreach (var r in rowSet)
+            foreach (var _ in rowSet)
             {
-                row = r;
-                break;
+                return true;
             }
 
-            return row != null;
+            return false;
         }
     }
 }

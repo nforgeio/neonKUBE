@@ -120,17 +120,18 @@ namespace Neon.Kube
         public static KubeServiceMap CloneWithNewAdress(KubeServiceMap map, string ip)
         {
             var newMap = NeonHelper.JsonClone<KubeServiceMap>(map);
-            int port = 8300;
-            foreach (var k in newMap.Keys)
-            {
-                newMap[k].Address = ip;
+            int port   = 8300;
 
-                if (!newMap[k].Endpoints.IsEmpty())
+            foreach (var key in newMap.Keys)
+            {
+                newMap[key].Address = ip;
+
+                if (!newMap[key].Endpoints.IsEmpty())
                 {
-                    newMap[k].Endpoints.Default.ServiceDescription = newMap[k];
-                    if (newMap[k].Endpoints.Default.Port == 0)
+                    newMap[key].Endpoints.Default.ServiceDescription = newMap[key];
+                    if (newMap[key].Endpoints.Default.Port == 0)
                     {
-                        newMap[k].Endpoints.Default.Port = port;
+                        newMap[key].Endpoints.Default.Port = port;
                         port++;
                     }
                 }

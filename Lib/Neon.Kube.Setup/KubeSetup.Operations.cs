@@ -1593,9 +1593,9 @@ subjects:
 
             var masterAddresses = new List<string>();
 
-            foreach (var m in cluster.Masters)
+            foreach (var masterNode in cluster.Masters)
             {
-                masterAddresses.Add(m.Address.ToString());
+                masterAddresses.Add(masterNode.Address.ToString());
             }
 
             var utcNow     = DateTime.UtcNow;
@@ -2291,15 +2291,15 @@ spec:
 
                     var blockDevices = ((JObject)await k8s.ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
 
-                    foreach (var n in cluster.Definition.Nodes)
+                    foreach (var node in cluster.Definition.Nodes)
                     {
-                        if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                        if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
                         {
                             var pool = new V1CStorPoolSpec()
                             {
                                 NodeSelector = new Dictionary<string, string>()
                                 {
-                                    { "kubernetes.io/hostname", n.Name }
+                                    { "kubernetes.io/hostname", node.Name }
                                 },
                                 DataRaidGroups = new List<V1CStorDataRaidGroup>()
                                 {
@@ -2319,7 +2319,7 @@ spec:
                                 }
                             };
 
-                            foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == n.Name))
+                            foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
                             {
                                 pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
                                     new V1CStorBlockDeviceRef()
