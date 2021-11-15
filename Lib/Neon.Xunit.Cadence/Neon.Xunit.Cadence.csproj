@@ -4,7 +4,7 @@
     <TargetFrameworks>net48; netcoreapp3.1; net5.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Xunit.Cadence</RootNamespace>
-    <Version>10000.0.1362-dev-master</Version>
+    <Version>2.18.2</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Description>Xunit test fixture for Uber Cadence</Description>

@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube.Models</RootNamespace>
     <Authors>neonFORGE Team</Authors>
-    <Version>10000.0.1362-dev-master</Version>
+    <Version>2.10.0-preview</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: neonKUBE related data models.</Description>

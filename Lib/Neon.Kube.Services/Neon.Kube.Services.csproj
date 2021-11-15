@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>10000.0.1362-dev-master</Version>
+    <Version>10000.0.298-dev-marcus</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>

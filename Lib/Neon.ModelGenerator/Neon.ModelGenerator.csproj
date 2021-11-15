@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>10000.0.1362-dev-master</Version>
+    <Version>2.18.2</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonLIBRARY</Product>
