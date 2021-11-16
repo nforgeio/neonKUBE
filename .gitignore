@@ -43,7 +43,7 @@
 *.opensdf
 *.sdf
 *.jmconfig
-*.suo
+*.s
 **/launchSettings.json
 **/.vs/**
 **/.vscode/**
