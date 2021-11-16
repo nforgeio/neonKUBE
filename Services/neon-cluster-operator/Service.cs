@@ -83,7 +83,7 @@ namespace NeonClusterOperator
             while (true)
             {
                 await Task.Delay(TimeSpan.FromSeconds(60));
-                await CheckNodeImagesAsync();
+                //await CheckNodeImagesAsync();
             }
         }
 
