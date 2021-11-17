@@ -3845,11 +3845,7 @@ $@"- name: StorageType
                     }
 
                     await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
-                });
 
-            await master.InvokeIdempotentAsync("setup/system-db-ready",
-                async () =>
-                {
                     controller.LogProgress(master, verb: "wait for", message: "system database");
 
                     await NeonHelper.WaitAllAsync(
@@ -3863,9 +3859,14 @@ $@"- name: StorageType
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                await master.InvokeIdempotentAsync("setup/system-db-ready",
+                await master.InvokeIdempotentAsync("setup/system-db-ready-to-go",
                    async () =>
                    {
+                       // We need to generate new passwords for the system database users when finalizing
+                       // a ready-to-go cluster so passwords will be unique across cluster deployments,
+                       // otherwise the clusters would mall have the same password created when the 
+                       // ready-to-go node image was created.
+
                        var serviceSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
                        serviceSecret.StringData["password"] = NeonHelper.GetCryptoRandomPassword(20);
