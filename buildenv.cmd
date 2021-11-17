@@ -112,6 +112,10 @@ REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
 
+REM Install the KubeOps project templates: https://buehler.github.io/dotnet-operator-sdk/docs/templates.html
+
+dotnet new --install KubeOps.Templates::*
+
 REM Perform additional implementation in via Powershell.
 
 pwsh -File "%NF_ROOT%\buildenv.ps1"
