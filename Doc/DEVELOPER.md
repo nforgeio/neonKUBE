@@ -160,7 +160,7 @@ Follow the steps below to configure a development or test workstation:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
-    * *Optional*: The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
+    * *Optional:* The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
     * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left and check **Show hidden files**:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
@@ -176,11 +176,11 @@ Follow the steps below to configure a development or test workstation:
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-24. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+24. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-25. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+25. *Optional:* Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-26. *Optional*: Install **Cmdr/Mini** command shell:
+26. *Optional:* Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -189,9 +189,9 @@ Follow the steps below to configure a development or test workstation:
   * Consider removing the alias definitions in `$\vendor\user_aliases.cmd.default` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
   * Run Cmdr to complete the installation.
 
-27. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+27. *Optional:* Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-28. *Optional*: Maintainers who will be publishing releases will need to:
+28. *Optional:* Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
 
@@ -212,10 +212,12 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-29. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+29. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
 
-30. *Optional*: Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+30. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-31: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+31. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
 
-32: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+32: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+
+33: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
