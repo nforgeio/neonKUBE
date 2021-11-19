@@ -136,5 +136,22 @@ namespace Neon.Kube
         {
             await k8s.WaitForDaemonsetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
+
+        /// <summary>
+        /// Execs a command in a pod.
+        /// </summary>
+        /// <param name="namespace"></param>
+        /// <param name="name"></param>
+        /// <param name="container"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public async Task<string> NamespacedPodExecAsync(
+            string @namespace,
+            string name = null,
+            string container = null,
+            string[] command = null)
+        {
+            return await k8s.NamespacedPodExecAsync(@namespace, name, container, command);
+        }
     }
 }

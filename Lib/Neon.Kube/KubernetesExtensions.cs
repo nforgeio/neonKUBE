@@ -17,9 +17,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 using Microsoft.AspNetCore.JsonPatch;
 
@@ -411,6 +413,52 @@ namespace Neon.Kube
                 },
                 timeout:      timeout,
                 pollInterval: pollInterval);
+        }
+
+        /// <summary>
+        /// Helper method to run a comand in a Pod.
+        /// </summary>
+        /// <param name="k8s"></param>
+        /// <param name="namespace"></param>
+        /// <param name="name"></param>
+        /// <param name="container"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public static async Task<string> NamespacedPodExecAsync(
+            this IKubernetes k8s,
+            string @namespace,
+            string name = null,
+            string container = null,
+            string[] command = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
+            Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
+
+            string stdOut = "";
+            string stdErr = "";
+
+            var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
+            {
+                stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
+                stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
+            });
+
+            var result = await k8s.NamespacedPodExecAsync(
+                name: name,
+                @namespace: @namespace,
+                container: container,
+                command: command,
+                tty: true,
+                action: handler,
+                cancellationToken: CancellationToken.None);
+
+            if (result != 0)
+            {
+                throw new Exception(stdErr);
+            }
+
+            return stdOut;
         }
     }
 }
