@@ -9,11 +9,13 @@ spec:
     absoluteUrl: false
     image: {{ .Values.image.organization }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
     nodeSelector:
-      neonkube.io/neon-system.registry: 'true'
+    {{- toYaml .Values.nodeSelector | nindent 8 }}
     resources: {}
   core:
     image: {{ .Values.image.organization }}/harbor-core:v{{ .Values.harbor.version }}
     resources: {}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 8 }}
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
@@ -61,6 +63,10 @@ spec:
     image: {{ .Values.image.organization }}/harbor-jobservice:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     resources: {}
     workerCount: 10
   logLevel: debug
@@ -70,10 +76,18 @@ spec:
       image: {{ .Values.image.organization }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     signer:
       image: {{ .Values.image.organization }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   portal:
     resources: {}
   redis:
@@ -84,6 +98,10 @@ spec:
     image: {{ .Values.image.organization }}/harbor-registry-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     relativeURLs: true
     resources: {}
     metrics:
@@ -92,6 +110,10 @@ spec:
     image: {{ .Values.image.organization }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     resources: {}
     skipUpdate: false
     storage:
