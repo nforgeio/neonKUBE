@@ -516,14 +516,21 @@ namespace Neon.Kube
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                     var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
-                    if (IPAddress.TryParse(clusterIp, out var ip))
+                    
+                    using (var jsonClient = new JsonClient())
                     {
-                        using (var jsonClient = new JsonClient())
+                        jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+
+                        if (IPAddress.TryParse(clusterIp, out var ip))
                         {
-                            jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
-                            clusterLogin.Save();
                         }
+                        else
+                        {
+                            var hostAddress = await Dns.GetHostAddressesAsync(clusterIp.Split(':')[0]);
+                            clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={hostAddress.First()}");
+                        }
+                        clusterLogin.Save();
                     }
                 });
 
