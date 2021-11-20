@@ -371,6 +371,10 @@ namespace Neon.Deployment
         /// <param name="version">The download version.</param>
         /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Name"/>.</param>
         /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Filename"/>.</param>
+        /// <param name="noMd5File">
+        /// This method creates a file named [<paramref name="sourcePath"/>.md5] with the MD5 hash for the entire
+        /// uploaded file by default.  You may override this behavior by passing <paramref name="noMd5File"/>=<c>true</c>.
+        /// </param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
         /// <returns>The <see cref="DownloadManifest"/>.</returns>
         /// <remarks>
@@ -382,7 +386,15 @@ namespace Neon.Deployment
         /// part names, which will be formatted like: <b>part-##</b>
         /// </note>
         /// </remarks>
-        public DownloadManifest UploadMultipartAsset(string repo, Release release, string sourcePath, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public DownloadManifest UploadMultipartAsset(
+            string      repo,
+            Release     release, 
+            string      sourcePath, 
+            string      version, 
+            string      name        = null,
+            string      filename    = null,
+            bool        noMd5File   = false,
+            long        maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repo), nameof(repo));
             Covenant.Requires<ArgumentNullException>(release != null, nameof(release));
@@ -400,13 +412,13 @@ namespace Neon.Deployment
                 }
 
                 var assetPartMap = new List<Tuple<ReleaseAsset, DownloadPart>>();
-                var download     = new DownloadManifest() { Name = name, Version = version, Filename = filename };
+                var manifest     = new DownloadManifest() { Name = name, Version = version, Filename = filename };
                 var partCount    = NeonHelper.PartitionCount(input.Length, maxPartSize);
                 var partNumber   = 0;
                 var partStart    = 0L;
                 var cbRemaining  = input.Length;
 
-                download.Md5   = CryptoHelper.ComputeMD5String(input);
+                manifest.Md5   = CryptoHelper.ComputeMD5String(input);
                 input.Position = 0;
 
                 while (cbRemaining > 0)
@@ -431,7 +443,7 @@ namespace Neon.Deployment
                         assetPartMap.Add(new Tuple<ReleaseAsset, DownloadPart>(asset, part));
                     }
 
-                    download.Parts.Add(part);
+                    manifest.Parts.Add(part);
 
                     // Loop to handle the next part (if any).
 
@@ -440,7 +452,7 @@ namespace Neon.Deployment
                     cbRemaining -= partSize;
                 }
 
-                download.Size = download.Parts.Sum(part => part.Size);
+                manifest.Size = manifest.Parts.Sum(part => part.Size);
 
                 // Publish the release.
 
@@ -458,7 +470,14 @@ namespace Neon.Deployment
                     item.Item2.Uri = GitHub.Release.GetAssetUri(release, item.Item1);
                 }
 
-                return download;
+                // Write the MD5 file unless disabled.
+
+                if (!noMd5File)
+                {
+                    File.WriteAllText($"{sourcePath}.md5", manifest.Md5);
+                }
+
+                return manifest;
             }
         }
     }

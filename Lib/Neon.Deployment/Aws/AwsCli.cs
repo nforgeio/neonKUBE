@@ -522,6 +522,10 @@ namespace Neon.Deployment
         /// <param name="version">The download version.</param>
         /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Name"/>.</param>
         /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Filename"/>.</param>
+        /// <param name="noMd5File">
+        /// This method creates a file named [<paramref name="sourcePath"/>.md5] with the MD5 hash for the entire
+        /// uploaded file by default.  You may override this behavior by passing <paramref name="noMd5File"/>=<c>true</c>.
+        /// </param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
         /// <returns>The <see cref="DownloadManifest"/> information.</returns>
         /// <returns>The <see cref="DownloadManifest"/> information as well as the URI to the uploaded manifest.</returns>
@@ -566,7 +570,14 @@ namespace Neon.Deployment
         /// The URI returned in this case will be <b>https://s3.uswest.amazonaws.com/mybucket/myfile.json.manifest</b>.
         /// </para>
         /// </remarks>
-        public static (DownloadManifest manifest, string manifestUri) S3UploadMultiPart(string sourcePath, string targetFolderUri, string version, string name = null, string filename = null, long maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+        public static (DownloadManifest manifest, string manifestUri) S3UploadMultiPart(
+            string      sourcePath, 
+            string      targetFolderUri, 
+            string      version, 
+            string      name        = null, 
+            string      filename    = null, 
+            bool        noMd5File   = false,
+            long        maxPartSize = (long)(100 * ByteUnits.MebiBytes))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolderUri), nameof(targetFolderUri));
@@ -645,6 +656,13 @@ namespace Neon.Deployment
             var manifestUri = $"{baseUri}.manifest";
 
             S3UploadText(NeonHelper.JsonSerialize(manifest, Formatting.Indented), manifestUri, metadata: $"Content-Type={DeploymentHelper.DownloadManifestContentType}");
+
+            // Write the MD5 file unless disabled.
+
+            if (!noMd5File)
+            {
+                File.WriteAllText($"{sourcePath}.md5", manifest.Md5);
+            }
 
             return (manifest: manifest, manifestUri: manifestUri);
         }

@@ -124,7 +124,7 @@ namespace Neon.Deployment
         /// <summary>
         /// Asynchronously downloads and assembles a multi-part file  as specified by a <see cref="Neon.Deployment.DownloadManifest"/>.
         /// </summary>
-        /// <param name="download">The download details.</param>
+        /// <param name="manifest">The download details.</param>
         /// <param name="targetPath">The target file path.</param>
         /// <param name="progressAction">Optionally specifies an action to be called with the the percentage downloaded.</param>
         /// <param name="partTimeout">Optionally specifies the HTTP download timeout for each part (defaults to 10 minutes).</param>
@@ -137,7 +137,7 @@ namespace Neon.Deployment
         /// <exception cref="OperationCanceledException">Thrown when the operation was cancelled.</exception>
         /// <remarks>
         /// <para>
-        /// This method downloads the file specified by <paramref name="download"/> to the folder specified, creating 
+        /// This method downloads the file specified by <paramref name="manifest"/> to the folder specified, creating 
         /// the folder first when required.  The file will be downloaded in parts, where each part will be validated
         /// by comparing the part's MD5 hash (when present) with the computed value.  The output file will be named 
         /// <see cref="DownloadManifest.Name"/> and the overall MD5 hash will also be saved using the same file name but
@@ -153,14 +153,14 @@ namespace Neon.Deployment
         /// </note>
         /// </remarks>
         public static async Task<string> DownloadMultiPartAsync(
-            DownloadManifest                    download, 
+            DownloadManifest                    manifest, 
             string                      targetPath, 
             DownloadProgressDelegate    progressAction    = null, 
             TimeSpan                    partTimeout       = default, 
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(download != null, nameof(download));
+            Covenant.Requires<ArgumentNullException>(manifest != null, nameof(manifest));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
             retry = retry ?? new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, maxAttempts: 5);
@@ -178,50 +178,11 @@ namespace Neon.Deployment
             var nextPartNumber = 0;
 
             // If the target file already exists along with its MD5 hash file, then compare the
-            // existing MD5 against the download's MD5 as well as the computed MD5 for the current
-            // file and skip the download when these match.
-            //
-            // We're going to use the new .NET 5.0 [IncrementalHash] class so we can report progress 
-            // for .NET 5.0+ builds.
+            // existing MD5 against the manifest MD5 and skip the download when these match.
 
-            if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == download.Md5)
+            if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == manifest.Md5)
             {
-                using (var input = File.OpenRead(targetPath))
-                {
-#if NET5_0_OR_GREATER
-                    using (var hasher = IncrementalHash.CreateHash(HashAlgorithmName.MD5))
-                    {
-                        var buffer = new byte[8192];
-
-                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 0);
-
-                        while (true)
-                        {
-                            var cb = input.Read(buffer, 0, buffer.Length);
-
-                            if (cb == 0)
-                            {
-                                break;
-                            }
-
-                            hasher.AppendData(buffer, 0, cb);
-                            progressAction?.Invoke(GetHubDownloadProgressType.Check, (int)((double)input.Position/(double)input.Length * 100.0));
-                        }
-
-                        progressAction?.Invoke(GetHubDownloadProgressType.Check, 100);
-
-                        if (NeonHelper.ToHex(hasher.GetCurrentHash()) == download.Md5)
-                        {
-                            return targetPath;
-                        }
-                    }
-#else
-                    if (CryptoHelper.ComputeMD5String(input) == download.Md5)
-                    {
-                        return targetPath;
-                    }
-#endif
-                }
+                return targetPath;
             }
 
             NeonHelper.DeleteFile(targetMd5Path);   // We'll recompute this below
@@ -235,9 +196,9 @@ namespace Neon.Deployment
                 {
                     var pos = 0L;
 
-                    foreach (var part in download.Parts.OrderBy(part => part.Number))
+                    foreach (var part in manifest.Parts.OrderBy(part => part.Number))
                     {
-                        progressAction?.Invoke(DownloadProgressType.Check, (int)((double)pos / (double)download.Size * 100.0));
+                        progressAction?.Invoke(DownloadProgressType.Check, (int)((double)pos / (double)manifest.Size * 100.0));
 
                         // Handle a partially downloaded part.  We're going to truncate the file to
                         // remove the partial part and then break to start re-downloading the part.
@@ -277,7 +238,7 @@ namespace Neon.Deployment
                 return targetPath;
             }
 
-            if (nextPartNumber > download.Parts.Count)
+            if (nextPartNumber == manifest.Parts.Count)
             {
                 progressAction?.Invoke(DownloadProgressType.Download, 100);
                 return targetPath;
@@ -291,15 +252,15 @@ namespace Neon.Deployment
 
                     using (var output = new FileStream(targetPath, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite))
                     {
-                        // Determine the starting position of the next part.
+                        // Determine the starting position of the next part to be downloaded.
 
-                        var pos = download.Parts
+                        var pos = manifest.Parts
                             .Where(part => part.Number < nextPartNumber)
                             .Sum(part => part.Size);
 
                         // Download the remaining parts.
 
-                        foreach (var part in download.Parts
+                        foreach (var part in manifest.Parts
                             .Where(part => part.Number >= nextPartNumber)
                             .OrderBy(part => part.Number))
                         {
@@ -322,7 +283,7 @@ namespace Neon.Deployment
 
                             if (output.Position - pos != part.Size)
                             {
-                                throw new IOException($"[{download.Name}]: Part [{part.Number}] actual size [{output.Position - pos}] does not match the expected size [{part.Size}].");
+                                throw new IOException($"[{manifest.Name}]: Part [{part.Number}] actual size [{output.Position - pos}] does not match the expected size [{part.Size}].");
                             }
 
                             // Ensure that the downloaded part MD5 matches the specification.
@@ -333,26 +294,26 @@ namespace Neon.Deployment
 
                                 if (actualMd5 != part.Md5)
                                 {
-                                    throw new IOException($"[{download.Name}]: Part [{part.Number}] actual MD5 [{actualMd5}] does not match the expected MD5 [{part.Md5}].");
+                                    throw new IOException($"[{manifest.Name}]: Part [{part.Number}] actual MD5 [{actualMd5}] does not match the expected MD5 [{part.Md5}].");
                                 }
                             }
 
                             pos += part.Size;
 
-                            if (progressAction != null && !progressAction.Invoke(DownloadProgressType.Download, (int)(100.0 * ((double)part.Number / (double)download.Parts.Count))))
+                            if (progressAction != null && !progressAction.Invoke(DownloadProgressType.Download, (int)(100.0 * ((double)part.Number / (double)manifest.Parts.Count))))
                             {
                                 return targetPath;
                             }
                         }
 
-                        if (output.Length != download.Size)
+                        if (output.Length != manifest.Size)
                         {
-                            throw new IOException($"[{download.Name}]: Expected size [{download.Size}] got [{output.Length}].");
+                            throw new IOException($"[{manifest.Name}]: Expected size [{manifest.Size}] got [{output.Length}].");
                         }
                     }
 
                     progressAction?.Invoke(DownloadProgressType.Download, 100);
-                    File.WriteAllText(targetMd5Path, download.Md5, Encoding.ASCII);
+                    File.WriteAllText(targetMd5Path, manifest.Md5, Encoding.ASCII);
 
                     return targetPath;
                 }
@@ -406,7 +367,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
-            DownloadManifest download;
+            DownloadManifest manifest;
 
             using (var httpClient = new HttpClient())
             {
@@ -417,10 +378,10 @@ namespace Neon.Deployment
                     throw new FormatException($"The content type for [{uri}] is [{response.Content.Headers.ContentType.MediaType}].  [{DeploymentHelper.DownloadManifestContentType}] was expected.");
                 }
 
-                download = NeonHelper.JsonDeserialize<DownloadManifest>(await response.Content.ReadAsStringAsync());
+                manifest = NeonHelper.JsonDeserialize<DownloadManifest>(await response.Content.ReadAsStringAsync());
             }
 
-            return await DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry, cancellationToken);
+            return await DownloadMultiPartAsync(manifest, targetPath, progressAction, partTimeout, retry, cancellationToken);
         }
     }
 }
