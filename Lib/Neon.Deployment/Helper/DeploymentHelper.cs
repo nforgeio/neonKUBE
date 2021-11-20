@@ -153,7 +153,7 @@ namespace Neon.Deployment
         /// </note>
         /// </remarks>
         public static async Task<string> DownloadMultiPartAsync(
-            DownloadManifest                    manifest, 
+            DownloadManifest            manifest, 
             string                      targetPath, 
             DownloadProgressDelegate    progressAction    = null, 
             TimeSpan                    partTimeout       = default, 

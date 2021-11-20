@@ -258,8 +258,10 @@ namespace TestDeployment
             Assert.Equal(bytes, download);
         }
 
-        [Fact]
-        public async Task S3_MultiPart()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task S3_MultiPart(bool publicReadAccess)
         {
             CheckCredentials();
 
@@ -278,7 +280,7 @@ namespace TestDeployment
 
                 File.WriteAllBytes(tempPath, uploadBytes);
 
-                var upload = AwsCli.S3UploadMultiPart(tempPath, TestBucketHttpsRef, "1.0", maxPartSize: 1000);
+                var upload = AwsCli.S3UploadMultiPart(tempPath, TestBucketHttpsRef, "1.0", maxPartSize: 1000, publicReadAccess: publicReadAccess);
 
                 // Validate the Download information.
 

@@ -201,7 +201,8 @@ namespace Neon.Deployment
         /// </para>
         /// </note>
         /// </param>
-        public static void S3Upload(string sourcePath, string targetUri, bool gzip = false, string metadata = null)
+        /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
+        public static void S3Upload(string sourcePath, string targetUri, bool gzip = false, string metadata = null, bool publicReadAccess = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetUri), nameof(targetUri));
@@ -300,6 +301,15 @@ namespace Neon.Deployment
             AddDebugOption(args);
 
             s3Retry.Invoke(() => ExecuteSafe(args.ToArray()));
+
+            if (publicReadAccess)
+            {
+                var uri    = new Uri(s3Uri, UriKind.Absolute);
+                var bucket = uri.Host;
+                var key    = uri.AbsolutePath.Substring(1);
+
+                s3Retry.Invoke(() => ExecuteSafe("s3api", "put-object-acl", "--bucket", bucket, "--key", key, "--acl", "public-read"));
+            }
         }
 
         /// <summary>
@@ -335,7 +345,8 @@ namespace Neon.Deployment
         /// </para>
         /// </note>
         /// </param>
-        public static void S3Upload(Stream input, string targetUri, bool gzip = false, string metadata = null)
+        /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
+        public static void S3Upload(Stream input, string targetUri, bool gzip = false, string metadata = null, bool publicReadAccess = false)
         {
             Covenant.Assert(input != null, nameof(input));
 
@@ -346,7 +357,7 @@ namespace Neon.Deployment
                     input.CopyTo(output);
                 }
 
-                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+                S3Upload(tempFile.Path, targetUri, gzip: gzip, metadata: metadata, publicReadAccess: publicReadAccess);
             }
         }
 
@@ -383,8 +394,9 @@ namespace Neon.Deployment
         /// </para>
         /// </note>
         /// </param>
+        /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
         /// <param name="encoding">Optionally specifies the text encoding.  This defaults to <see cref="Encoding.UTF8"/>.</param>
-        public static void S3UploadText(string text, string targetUri, bool gzip = false, string metadata = null, Encoding encoding = null)
+        public static void S3UploadText(string text, string targetUri, bool gzip = false, string metadata = null, bool publicReadAccess = false, Encoding encoding = null)
         {
             text     ??= string.Empty;
             encoding ??= Encoding.UTF8;
@@ -393,7 +405,7 @@ namespace Neon.Deployment
             {
                 File.WriteAllText(tempFile.Path, text, encoding);
 
-                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+                S3Upload(tempFile.Path, targetUri, gzip: gzip, metadata: metadata, publicReadAccess: publicReadAccess);
             }
         }
 
@@ -430,14 +442,15 @@ namespace Neon.Deployment
         /// </para>
         /// </note>
         /// </param>
-        public static void S3UploadBytes(byte[] bytes, string targetUri, bool gzip = false, string metadata = null)
+        /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
+        public static void S3UploadBytes(byte[] bytes, string targetUri, bool gzip = false, string metadata = null, bool publicReadAccess = false)
         {
             bytes ??= Array.Empty<byte>();
 
             using (var tempFile = new TempFile())
             {
                 File.WriteAllBytes(tempFile.Path, bytes);
-                S3Upload(tempFile.Path, targetUri, gzip, metadata);
+                S3Upload(tempFile.Path, targetUri, gzip: gzip, metadata: metadata, publicReadAccess: publicReadAccess);
             }
         }
 
@@ -526,7 +539,8 @@ namespace Neon.Deployment
         /// This method creates a file named [<paramref name="sourcePath"/>.md5] with the MD5 hash for the entire
         /// uploaded file by default.  You may override this behavior by passing <paramref name="noMd5File"/>=<c>true</c>.
         /// </param>
-        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>d
+        /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
+        /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
         /// <returns>The <see cref="DownloadManifest"/> information.</returns>
         /// <returns>The <see cref="DownloadManifest"/> information as well as the URI to the uploaded manifest.</returns>
         /// <remarks>
@@ -574,10 +588,11 @@ namespace Neon.Deployment
             string      sourcePath, 
             string      targetFolderUri, 
             string      version, 
-            string      name        = null, 
-            string      filename    = null, 
-            bool        noMd5File   = false,
-            long        maxPartSize = (long)(100 * ByteUnits.MebiBytes))
+            string      name             = null, 
+            string      filename         = null, 
+            bool        noMd5File        = false,
+            long        maxPartSize      = (long)(100 * ByteUnits.MebiBytes),
+            bool        publicReadAccess = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolderUri), nameof(targetFolderUri));
@@ -636,7 +651,7 @@ namespace Neon.Deployment
                         part.Md5            = CryptoHelper.ComputeMD5String(partStream);
                         partStream.Position = 0;
 
-                        S3Upload(partStream, part.Uri);
+                        S3Upload(partStream, part.Uri, publicReadAccess: publicReadAccess);
                     }
 
                     manifest.Parts.Add(part);
@@ -655,7 +670,7 @@ namespace Neon.Deployment
 
             var manifestUri = $"{baseUri}.manifest";
 
-            S3UploadText(NeonHelper.JsonSerialize(manifest, Formatting.Indented), manifestUri, metadata: $"Content-Type={DeploymentHelper.DownloadManifestContentType}");
+            S3UploadText(NeonHelper.JsonSerialize(manifest, Formatting.Indented), manifestUri, metadata: $"Content-Type={DeploymentHelper.DownloadManifestContentType}", publicReadAccess: publicReadAccess);
 
             // Write the MD5 file unless disabled.
 
