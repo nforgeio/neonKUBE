@@ -24,6 +24,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -55,6 +56,33 @@ namespace Neon.Kube
                 async () =>
                 {
                     return await k8s.UpsertSecretAsync(secret, @namespace);
+                });
+        }
+
+
+        /// <summary>
+        /// Executes a program within a pod container.
+        /// </summary>
+        /// <param name="namespace">Specifies the namespace hosting the pod.</param>
+        /// <param name="name">Specifies the target pod name.</param>
+        /// <param name="container">Identifies the target container within the pod.</param>
+        /// <param name="command">Specifies the program and arguments to be executed.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
+        public async Task<ExecuteResponse> NamespacedPodExecAsync(
+            string              @namespace,
+            string              name,
+            string              container,
+            string[]            command,
+            CancellationToken   cancellationToken = default,
+            bool                noSuccessCheck    = false)
+        {
+            return await NormalizedRetryPolicy.InvokeAsync(
+                async () =>
+                {
+                    return await k8s.NamespacedPodExecAsync(@namespace, name, container, command, cancellationToken, noSuccessCheck);
                 });
         }
 
@@ -135,23 +163,6 @@ namespace Neon.Kube
             TimeSpan            timeout       = default)
         {
             await k8s.WaitForDaemonsetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
-        }
-
-        /// <summary>
-        /// Execs a command in a pod.
-        /// </summary>
-        /// <param name="namespace"></param>
-        /// <param name="name"></param>
-        /// <param name="container"></param>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public async Task<string> NamespacedPodExecAsync(
-            string @namespace,
-            string name = null,
-            string container = null,
-            string[] command = null)
-        {
-            return await k8s.NamespacedPodExecAsync(@namespace, name, container, command);
         }
     }
 }

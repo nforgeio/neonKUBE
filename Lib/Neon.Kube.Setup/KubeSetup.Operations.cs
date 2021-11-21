@@ -3225,11 +3225,12 @@ $@"- name: StorageType
                     registrySecret.Data["secretkey"] = secret.Data["secretkey"];
                     await k8s.ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
 
-                    // delete certs so that they will be regenerated
+                    // Delete certs so that they will be regenerated.
+
                     await k8s.DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
                     await k8s.DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
 
-                    // restart minio components
+                    // Restart minio components.
 
                     var minioOperator = await k8s.ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
 
@@ -3238,7 +3239,8 @@ $@"- name: StorageType
                     var minioStatefulSet = (await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
                     await minioStatefulSet.RestartAsync(GetK8sClient(controller));
                     
-                    // restart registry components
+                    // Restart registry components.
+
                     var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
 
                     await harborChartmuseum.RestartAsync(GetK8sClient(controller));
@@ -3463,10 +3465,10 @@ $@"- name: StorageType
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = KubeConst.RegistrySecretKey,
+                            Name              = KubeConst.RegistrySecretKey,
                             NamespaceProperty = KubeNamespaces.NeonSystem
                         },
-                        Data = new Dictionary<string, byte[]>(),
+                        Data       = new Dictionary<string, byte[]>(),
                         StringData = new Dictionary<string, string>()
                     };
 
@@ -3512,7 +3514,6 @@ $@"- name: StorageType
                         // Create the Harbor Minio bucket.
 
                         var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
-                        var endpoint    = "minio.neon-system";
                         var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                         var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
 
@@ -3584,10 +3585,12 @@ $@"- name: StorageType
                         };
 
                         var result = await k8s.NamespacedPodExecAsync(
-                            name:              "db-citus-postgresql-master-0",
-                            @namespace:        KubeNamespaces.NeonSystem, 
-                            container:         "citus", 
-                            command:           command);
+                            name:       "db-citus-postgresql-master-0",
+                            @namespace: KubeNamespaces.NeonSystem, 
+                            container:  "citus", 
+                            command:    command);
+
+                        result.EnsureSuccess();
 
                         // Restart harbor core so that it picks up the new secret.
 
@@ -3968,8 +3971,9 @@ $@"- name: StorageType
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var workers = await GetK8sClient(controller).ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-worker");
-            var masters = await GetK8sClient(controller).ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-master");
+            var k8s     = GetK8sClient(controller);
+            var workers = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-worker");
+            var masters = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-master");
 
             var selectDatabaseCommand = new string[]
                 {
@@ -4005,60 +4009,60 @@ $@"- name: StorageType
                     "-c", $@"CREATE EXTENSION citus;"
                 };
 
-            string result;
+            ExecuteResponse result;
 
             foreach (var worker in workers.Items)
             {
-                result = await GetK8sClient(controller).NamespacedPodExecAsync(
-                       name: worker.Name(),
-                       @namespace: worker.Namespace(),
-                       container: "citus",
-                       command: selectDatabaseCommand);
+                result = await k8s.NamespacedPodExecAsync(
+                    name:       worker.Name(),
+                    @namespace: worker.Namespace(),
+                    container:  "citus",
+                    command:    selectDatabaseCommand);
 
-                if (result.Trim() != "1")
+                if (result.OutputText.Trim() != "1")
                 {
-                    await GetK8sClient(controller).NamespacedPodExecAsync(
-                        name: worker.Name(),
+                    await k8s.NamespacedPodExecAsync(
+                        name:       worker.Name(),
                         @namespace: worker.Namespace(),
-                        container: "citus",
-                        command: createDatabaseCommand);
+                        container:  "citus",
+                        command:    createDatabaseCommand);
 
-                    await GetK8sClient(controller).NamespacedPodExecAsync(
-                        name: worker.Name(),
+                    await k8s.NamespacedPodExecAsync(
+                        name:       worker.Name(),
                         @namespace: worker.Namespace(),
-                        container: "citus",
-                        command: createExtensionCommand);
+                        container:  "citus",
+                        command:     createExtensionCommand);
                 }
             }
 
-            result = await GetK8sClient(controller).NamespacedPodExecAsync(
-                name: masters.Items.First().Name(),
+            result = await k8s.NamespacedPodExecAsync(
+                name:       masters.Items.First().Name(),
                 @namespace: masters.Items.First().Namespace(),
-                container: "citus",
-                command: selectDatabaseCommand);
+                container:  "citus",
+                command:    selectDatabaseCommand);
 
-            if (result.Trim() != "1")
+            if (result.OutputText.Trim() != "1")
             {
-                await GetK8sClient(controller).NamespacedPodExecAsync(
-                    name: masters.Items.First().Name(),
+                await k8s.NamespacedPodExecAsync(
+                    name:       masters.Items.First().Name(),
                     @namespace: masters.Items.First().Namespace(),
-                    container: "citus",
-                    command: createDatabaseCommand);
+                    container:  "citus",
+                    command:    createDatabaseCommand);
 
-                await GetK8sClient(controller).NamespacedPodExecAsync(
-                       name: masters.Items.First().Name(),
+                await k8s.NamespacedPodExecAsync(
+                       name:       masters.Items.First().Name(),
                        @namespace: masters.Items.First().Namespace(),
-                       container: "citus",
-                       command: createExtensionCommand);
+                       container:  "citus",
+                       command:    createExtensionCommand);
             }
 
             foreach (var worker in workers.Items)
             {
-                await GetK8sClient(controller).NamespacedPodExecAsync(
-                    name: masters.Items.First().Name(),
+                await k8s.NamespacedPodExecAsync(
+                    name:       masters.Items.First().Name(),
                     @namespace: masters.Items.First().Namespace(),
-                    container: "citus",
-                    command: new string[]
+                    container:  "citus",
+                    command:    new string[]
                     {
                         "psql",
                         "--username", "neon_admin",
@@ -4067,19 +4071,19 @@ $@"- name: StorageType
                     });
             }
 
-            result = await GetK8sClient(controller).NamespacedPodExecAsync(
-                name: masters.Items.First().Name(),
+            result = await k8s.NamespacedPodExecAsync(
+                name:       masters.Items.First().Name(),
                 @namespace: masters.Items.First().Namespace(),
-                container: "citus",
-                command: selectRoleCommand);
+                container:  "citus",
+                command:    selectRoleCommand);
 
-            if (result.Trim() != "1")
+            if (result.OutputText.Trim() != "1")
             {
-                await GetK8sClient(controller).NamespacedPodExecAsync(
-                    name: masters.Items.First().Name(),
+                await k8s.NamespacedPodExecAsync(
+                    name:       masters.Items.First().Name(),
                     @namespace: masters.Items.First().Namespace(),
-                    container: "citus",
-                    command: new string[]
+                    container:  "citus",
+                    command:    new string[]
                     {
                         "psql",
                         "--username", "neon_admin",
@@ -4088,11 +4092,11 @@ $@"- name: StorageType
                     });
             }
 
-            await GetK8sClient(controller).NamespacedPodExecAsync(
-                name: masters.Items.First().Name(),
+            await k8s.NamespacedPodExecAsync(
+                name:       masters.Items.First().Name(),
                 @namespace: masters.Items.First().Namespace(),
-                container: "citus",
-                command: new string[]
+                container:  "citus",
+                command:    new string[]
                 {
                     "psql",
                     "--username", "neon_admin",
@@ -4100,11 +4104,11 @@ $@"- name: StorageType
                     "-c", $@"GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"
                 });
 
-            await GetK8sClient(controller).NamespacedPodExecAsync(
-                name: masters.Items.First().Name(),
+            await k8s.NamespacedPodExecAsync(
+                name:       masters.Items.First().Name(),
                 @namespace: masters.Items.First().Namespace(),
-                container: "citus",
-                command: new string[]
+                container:  "citus",
+                command:    new string[]
                 {
                     "psql",
                     "--username", "neon_admin",
@@ -4125,11 +4129,11 @@ $do$;
 $cmd$);"
                 });
 
-            await GetK8sClient(controller).NamespacedPodExecAsync(
-                name: masters.Items.First().Name(),
+            await k8s.NamespacedPodExecAsync(
+                name:       masters.Items.First().Name(),
                 @namespace: masters.Items.First().Namespace(),
-                container: "citus",
-                command: new string[]
+                container:  "citus",
+                command:    new string[]
                 {
                     "psql",
                     "--username", "neon_admin",

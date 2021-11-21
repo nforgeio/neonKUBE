@@ -416,27 +416,35 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Helper method to run a comand in a Pod.
+        /// Executes a program within a pod container.
         /// </summary>
-        /// <param name="k8s"></param>
-        /// <param name="namespace"></param>
-        /// <param name="name"></param>
-        /// <param name="container"></param>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public static async Task<string> NamespacedPodExecAsync(
-            this IKubernetes k8s,
-            string @namespace,
-            string name = null,
-            string container = null,
-            string[] command = null)
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespace">Specifies the namespace hosting the pod.</param>
+        /// <param name="name">Specifies the target pod name.</param>
+        /// <param name="container">Identifies the target container within the pod.</param>
+        /// <param name="command">Specifies the program and arguments to be executed.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
+        public static async Task<ExecuteResponse> NamespacedPodExecAsync(
+            this IKubernetes    k8s,
+            string              @namespace,
+            string              name,
+            string              container,
+            string[]            command,
+            CancellationToken   cancellationToken = default,
+            bool                noSuccessCheck    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
+            Covenant.Requires<ArgumentException>(command.Length > 0, nameof(command));
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(command[0]), nameof(command));
             Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
+            Covenant.Requires<ArgumentNullException>(container != null, nameof(container));
 
-            string stdOut = "";
-            string stdErr = "";
+            var stdOut = "";
+            var stdErr = "";
 
             var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
             {
@@ -444,21 +452,23 @@ namespace Neon.Kube
                 stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
             });
 
-            var result = await k8s.NamespacedPodExecAsync(
-                name: name,
-                @namespace: @namespace,
-                container: container,
-                command: command,
-                tty: true,
-                action: handler,
+            var exitCode = await k8s.NamespacedPodExecAsync(
+                name:              name,
+                @namespace:        @namespace,
+                container:         container,
+                command:           command,
+                tty:               false,
+                action:            handler,
                 cancellationToken: CancellationToken.None);
 
-            if (result != 0)
+            var response = new ExecuteResponse(exitCode, stdOut, stdErr);
+
+            if (!noSuccessCheck)
             {
-                throw new Exception(stdErr);
+                response.EnsureSuccess();
             }
 
-            return stdOut;
+            return response;
         }
     }
 }
