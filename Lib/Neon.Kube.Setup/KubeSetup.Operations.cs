@@ -4198,9 +4198,9 @@ $cmd$);"
         /// <summary>
         /// Creates a minio bucket by using the mc client on one of the minio server pods.
         /// </summary>
-        /// <param name="controller"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
+        /// /// <param name="controller">The setup controller.</param>
+        /// <param name="name">The new bucket name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateMinioBucketAsync(ISetupController controller, string name)
         {
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
