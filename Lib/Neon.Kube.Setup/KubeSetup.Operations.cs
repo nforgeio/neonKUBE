@@ -4208,6 +4208,13 @@ $cmd$);"
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
             var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
+
+            //-------------------------------
+            // $debug(jefflill): DELETE THIS!
+            var pods     = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var podNames = pods.Items.Select(pod => pod.Name());
+            var podName  = minioPod.Name();
+            //-------------------------------
             
             await k8s.NamespacedPodExecAsync(
                 KubeNamespaces.NeonSystem, 
