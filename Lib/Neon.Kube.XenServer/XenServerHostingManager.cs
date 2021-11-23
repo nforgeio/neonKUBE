@@ -447,7 +447,7 @@ namespace Neon.Kube
 
                         var driveTemplateUri = new Uri(nodeImageUri);
                         
-                        driveTemplateName = driveTemplateUri.Segments.Last();
+                        driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
                         driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
 
                         await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
