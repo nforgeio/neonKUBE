@@ -1627,28 +1627,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Executes a command in a k8s pod.
-        /// </summary>
-        /// <param name="client">The <see cref="Kubernetes"/> client to use.</param>
-        /// <param name="pod">The pod where the command should run.</param>
-        /// <param name="namespace">The namespace where the pod is running.</param>
-        /// <param name="command">The command to run.</param>
-        /// <returns>The command result.</returns>
-        public static async Task<string> ExecuteInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
-        {
-            var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
-            var demux = new StreamDemuxer(webSocket);
-
-            demux.Start();
-
-            var buff   = new byte[4096];
-            var stream = demux.GetStream(1, 1);
-            var read   = stream.Read(buff, 0, 4096);
-
-            return Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
-        }
-
-        /// <summary>
         /// Looks up a password given its name.
         /// </summary>
         /// <param name="passwordName">The password name.</param>
@@ -2557,11 +2535,11 @@ TCPKeepAlive yes
                 }
 
                 var jsonText = await response.Content.ReadAsStringAsync();
-                var download = NeonHelper.JsonDeserialize<DownloadManifest>(jsonText);
+                var manifest = NeonHelper.JsonDeserialize<DownloadManifest>(jsonText);
 
                 // Download the multi-part file.
 
-                return await DeploymentHelper.DownloadMultiPartAsync(download, imagePath, progressAction, cancellationToken: cancellationToken);
+                return await DeploymentHelper.DownloadMultiPartAsync(manifest, imagePath, progressAction, cancellationToken: cancellationToken);
             }
         }
 
