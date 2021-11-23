@@ -683,7 +683,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeConst.NeonKubeImageTag}"
+                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
