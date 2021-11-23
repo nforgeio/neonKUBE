@@ -3977,36 +3977,30 @@ $@"- name: StorageType
 
             var selectDatabaseCommand = new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-t",
-                    "-c", $@"SELECT 1 FROM pg_database WHERE datname = '{name}';"
+                    "/bin/bash",
+                    "-c",
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c SELECT 1 FROM pg_database WHERE datname = '{name}';"
                 };
 
             var selectRoleCommand = new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-t",
-                    "-c", $@"SELECT 1 FROM pg_roles WHERE rolname='{username}'"
+                    "/bin/bash",
+                    "-c",
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c SELECT 1 FROM pg_roles WHERE rolname='{username}'"
                 };
 
             var createDatabaseCommand = new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-c", $@"CREATE DATABASE {name};"
+                    "/bin/bash", 
+                    "-c", 
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -c CREATE DATABASE {name};"
                 };
 
             var createExtensionCommand = new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", name,
-                    "-c", $@"CREATE EXTENSION citus;"
+                    "/bin/bash", 
+                    "-c", 
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d {name} -c CREATE EXTENSION citus;"
                 };
 
             ExecuteResponse result;
@@ -4064,10 +4058,9 @@ $@"- name: StorageType
                     container:  "citus",
                     command:    new string[]
                     {
-                        "psql",
-                        "--username", "neon_admin",
-                        "-d", name,
-                        "-c", $@"SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"
+                        "/bin/bash",
+                        "-c",
+                        $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d {name} -c ""SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"""
                     });
             }
 
@@ -4085,10 +4078,9 @@ $@"- name: StorageType
                     container:  "citus",
                     command:    new string[]
                     {
-                        "psql",
-                        "--username", "neon_admin",
-                        "-d", "postgres",
-                        "-c", $@"CREATE USER {username} WITH PASSWORD '{password}';"
+                        "/bin/bash",
+                        "-c",
+                        $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d {name} -c ""CREATE USER {username} WITH PASSWORD '{password}';"""
                     });
             }
 
@@ -4098,10 +4090,9 @@ $@"- name: StorageType
                 container:  "citus",
                 command:    new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-c", $@"GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"
+                    "/bin/bash",
+                    "-c",
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -c ""GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"""
                 });
 
             await k8s.NamespacedPodExecAsync(
@@ -4110,10 +4101,10 @@ $@"- name: StorageType
                 container:  "citus",
                 command:    new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-c", $@"SELECT run_command_on_workers($cmd$
+                    "/bin/bash",
+                    "-c",
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres << SQL
+SELECT run_command_on_workers($cmd$
   /* the command to run */
   DO
 $do$
@@ -4126,7 +4117,8 @@ BEGIN
    END IF;
 END
 $do$;
-$cmd$);"
+$cmd$);
+SQL"
                 });
 
             await k8s.NamespacedPodExecAsync(
@@ -4135,13 +4127,14 @@ $cmd$);"
                 container:  "citus",
                 command:    new string[]
                 {
-                    "psql",
-                    "--username", "neon_admin",
-                    "-d", "postgres",
-                    "-c", $@"SELECT run_command_on_workers($cmd$
+                    "/bin/bash",
+                    "-c",
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres << SQL
+SELECT run_command_on_workers($cmd$
   /* the command to run */
   GRANT ALL PRIVILEGES ON DATABASE {name} TO {username}
-$cmd$);"
+$cmd$);
+SQL"
                 });
         }
 
@@ -4208,19 +4201,15 @@ $cmd$);"
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
             var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/instance=minio-operator")).Items.First();
-            
+
             await k8s.NamespacedPodExecAsync(
                 KubeNamespaces.NeonSystem, 
-                minioPod.Name(), 
+                minioPod.Name(),
                 "minio-operator",
                 new string[] {
-                    "/mc",
-                    "alias",
-                    "set",
-                    "minio",
-                    "http://minio.neon-system",
-                    accessKey,
-                    secretKey
+                    "/bin/bash", 
+                    "-c", 
+                    $"/mc alias set minio http://minio.neon-system {accessKey} {secretKey}"
                 });
 
             await k8s.NamespacedPodExecAsync(
@@ -4228,9 +4217,9 @@ $cmd$);"
                 minioPod.Name(),
                 "minio-operator",
                 new string[] {
-                    "/mc",
-                    "mb",
-                    $"minio/{name}"
+                    "/bin/bash", 
+                    "-c", 
+                    $"/mc mb minio/{name}"
                 });
         }
 

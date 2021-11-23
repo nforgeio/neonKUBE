@@ -61,6 +61,7 @@ Selector labels Operator
 {{- define "minio-operator.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "minio-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: operator
 {{- end -}}
 
 {{/*
@@ -76,9 +77,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{/*
-Selector labels Operator
+Selector labels Console
 */}}
 {{- define "minio-operator.console-selectorLabels" -}}
 app.kubernetes.io/name: {{ include "minio-operator.name" . }}
 app.kubernetes.io/instance: {{ printf "%s-%s" .Release.Name "console" }}
+app.kubernetes.io/component: console
 {{- end -}}

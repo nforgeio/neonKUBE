@@ -1069,6 +1069,8 @@ curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:k
 NEON_REGISTRY={KubeConst.LocalClusterRegistry}
 
 cat <<EOF > /etc/containers/registries.conf
+unqualified-search-registries = [""docker.io""]
+
 [[registry]]
 prefix = ""${{NEON_REGISTRY}}""
 insecure = true
