@@ -603,6 +603,15 @@ systemctl mask apt-daily.service
 while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
     sleep 1
 done
+
+#------------------------------------------------------------------------------
+# Update the APT config to disable updates there as well.
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<EOF
+APT::Periodic::Update-Package-Lists ""0"";
+APT::Periodic::Download-Upgradeable-Packages ""0"";
+APT::Periodic::AutocleanInterval ""0"";
+APT::Periodic::Unattended-Upgrade ""1"";
+EOF
 ";
                     SudoCommand(CommandBundle.FromScript(disableAptServices), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
