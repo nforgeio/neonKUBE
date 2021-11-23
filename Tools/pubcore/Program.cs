@@ -147,6 +147,10 @@ or:
                     Environment.Exit(1);
                 }
 
+                // Ensure that the output folder exists.
+
+                Directory.CreateDirectory(publishDir);
+
                 // It appears that [dotnet publish] is sometimes unable to write
                 // output files due to locks being held by somebody else (I'm guessing
                 // some part of the Visual Studio build process).  This appears to
