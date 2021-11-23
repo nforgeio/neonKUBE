@@ -3979,28 +3979,28 @@ $@"- name: StorageType
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c SELECT 1 FROM pg_database WHERE datname = '{name}';"
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c ""SELECT 1 FROM pg_database WHERE datname = '{name}';"""
                 };
 
             var selectRoleCommand = new string[]
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c SELECT 1 FROM pg_roles WHERE rolname='{username}'"
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -t -c ""SELECT 1 FROM pg_roles WHERE rolname='{username}'"""
                 };
 
             var createDatabaseCommand = new string[]
                 {
                     "/bin/bash", 
                     "-c", 
-                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -c CREATE DATABASE {name};"
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d postgres -c ""CREATE DATABASE {name};"""
                 };
 
             var createExtensionCommand = new string[]
                 {
                     "/bin/bash", 
                     "-c", 
-                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d {name} -c CREATE EXTENSION citus;"
+                    $@"psql --username {KubeConst.NeonSystemDbAdminUser} -d {name} -c ""CREATE EXTENSION citus;"""
                 };
 
             ExecuteResponse result;
@@ -4200,7 +4200,7 @@ SQL"
             var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
-            var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/instance=minio-operator")).Items.First();
+            var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
 
             await k8s.NamespacedPodExecAsync(
                 KubeNamespaces.NeonSystem, 
