@@ -174,7 +174,7 @@ namespace Neon.Deployment
         /// <param name="sourcePath">The source file path.</param>
         /// <param name="targetUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
@@ -233,7 +233,7 @@ namespace Neon.Deployment
 
             var sbMetadata = new StringBuilder();
 
-            if (metadata != null && metadata.Contains('='))
+            if (!string.IsNullOrEmpty(metadata) && metadata.Contains('='))
             {
                 foreach (var item in metadata.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
@@ -318,7 +318,7 @@ namespace Neon.Deployment
         /// <param name="input">The input stream.</param>
         /// <param name="targetUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
@@ -367,7 +367,7 @@ namespace Neon.Deployment
         /// <param name="text">The text being uploaded.</param>
         /// <param name="targetUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
@@ -415,7 +415,7 @@ namespace Neon.Deployment
         /// <param name="bytes">The byte array being uploaded.</param>
         /// <param name="targetUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="gzip">Optionally indicates that the target content encoding should be set to <b>gzip</b>.</param>
@@ -459,7 +459,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="sourceUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="targetPath">The target file path.</param>
@@ -476,7 +476,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="sourceUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         /// <param name="encoding">Optionally specifies the character encoding.  This defaults to <see cref="Encoding.UTF8"/>.</param>
@@ -497,7 +497,7 @@ namespace Neon.Deployment
         /// </summary>
         /// <param name="sourceUri">
         /// The target S3 URI.  This may be either an <b>s3://BUCKET/KEY</b> or a
-        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referncing an S3 
+        /// <b>https://s3.REGION.amazonaws.com/BUCKET/KEY</b> URI referencing an S3 
         /// bucket and key.
         /// </param>
         public static byte[] S3DownloadBytes(string sourceUri)
@@ -525,7 +525,7 @@ namespace Neon.Deployment
         /// <param name="targetFolderUri">
         /// <para>
         /// The target S3 URI structured like <b>https://s3.REGION.amazonaws.com/BUCKET/...</b> 
-        /// URI referncing an S3 bucket and the optional folder where the file's download information 
+        /// URI referencing an S3 bucket and the optional folder where the file's download information 
         /// and parts will be uploaded.
         /// </para>
         /// <note>
@@ -619,6 +619,14 @@ namespace Neon.Deployment
 
             baseUri += filename;
 
+            // Remove any existing manifest object as well as any parts.
+
+            var manifestUri = $"{baseUri}.manifest";
+            var partsFolder = $"{baseUri}.parts/";
+
+            S3Remove(manifestUri);
+            S3Remove(partsFolder, recursive: true, include: $"{partsFolder}*");
+
             // We're going to upload the parts first, while initializing the download manifest as we go.
 
             var manifest = new DownloadManifest() { Name = name, Version = version, Filename = filename };
@@ -638,7 +646,7 @@ namespace Neon.Deployment
                     var partSize = Math.Min(cbRemaining, maxPartSize);
                     var part     = new DownloadPart()
                     {
-                        Uri    = $"{baseUri}.parts/part-{partNumber:000#}",
+                        Uri    = $"{partsFolder}part-{partNumber:000#}",
                         Number = partNumber,
                         Size   = partSize,
                     };
@@ -668,8 +676,6 @@ namespace Neon.Deployment
 
             // Upload the manifest.
 
-            var manifestUri = $"{baseUri}.manifest";
-
             S3UploadText(NeonHelper.JsonSerialize(manifest, Formatting.Indented), manifestUri, metadata: $"Content-Type={DeploymentHelper.DownloadManifestContentType}", publicReadAccess: publicReadAccess);
 
             // Write the MD5 file unless disabled.
@@ -680,6 +686,49 @@ namespace Neon.Deployment
             }
 
             return (manifest: manifest, manifestUri: manifestUri);
+        }
+
+        /// <summary>
+        /// Removes one S3 objects.
+        /// </summary>
+        /// <param name="targetUri">
+        /// The target S3 URI or prefix for the object(s) to be removed.  This may be either an
+        /// <b>s3://BUCKET[/KEY]</b> or a <b>https://s3.REGION.amazonaws.com/BUCKET[/KEY]</b> URI 
+        /// referencing an S3 bucket and key.  Note that the key is optional which means that all
+        /// objects in the bucket are eligible for removal.
+        /// </param>
+        /// <param name="recursive">
+        /// Optionally indicates <paramref name="targetUri"/> specifies a folder prefix and that
+        /// all objects within the folder are eligble for removal.
+        /// </param>
+        /// <param name="include">Optionally specifies a pattern specifying the objects to be removed.</param>
+        /// <param name="exclude">Optionally specifies a pattern specifying objects to be excluded from removal.</param>
+        public static void S3Remove(string targetUri, bool recursive = false, string include = null, string exclude = null)
+        {
+            var s3Uri = NetHelper.ToAwsS3Uri(targetUri);
+            var args  = new List<string>()
+            {
+                "s3", "rm", s3Uri
+            };
+
+            if (recursive)
+            {
+                args.Add("--recursive");
+            }
+
+            if (!string.IsNullOrEmpty(include))
+            {
+                args.Add("--include");
+                args.Add(include);
+            }
+
+            if (!string.IsNullOrEmpty(exclude))
+            {
+                args.Add("--exclude");
+                args.Add(exclude);
+            }
+
+            s3Retry.Invoke(() => ExecuteSafe(args.ToArray()));
         }
     }
 }
