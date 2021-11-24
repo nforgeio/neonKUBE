@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.6";
+        public const string Version = "1.7";
 
         /// <summary>
         /// Program entrypoint.
@@ -60,7 +60,7 @@ usage: pubcore PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
     CONFIG          - Build configuration (like: Debug or Release)
-    TARGET-PATH     - Build target path
+    OUTDIR-PATH     - Project relatiove path to the output directory
     PUBLISH-DIR     - Path to the publication folder
     RUNTIME         - Target dotnet runtime, like: win10-x64
 
@@ -70,7 +70,7 @@ This utility is designed to be called from within a .NET Core project's
 POST-BUILD event using Visual Studio post-build event macros.  Here's
 an example that publishes a standalone [win10-x64] app to OUTPUT-PATH.
 
-    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""$(TargetDir)"" ""PUBLISH-DIR"" win10-x64
+    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""$(OutDir).TrimEnd('\')"" ""PUBLISH-DIR"" win10-x64
 
 Note that you MUST ADD the following to the <PropertyGroup>...</PropertyGroup>
 section on your project CSPROJ file for this to work:
@@ -117,7 +117,7 @@ or:
 
                 var targetName = args[1];
                 var config     = args[2];
-                var targetDir  = Path.GetDirectoryName(args[3]);
+                var targetDir  = Path.Combine(Path.GetDirectoryName(projectPath), args[3]);
                 var publishDir = args[4];
                 var runtime    = args.ElementAtOrDefault(5);
                 var binFolder  = Path.Combine(publishDir, targetName);
@@ -307,7 +307,7 @@ $@"@echo off
         /// </summary>
         /// <param name="targetDir">The project's target directory path.</param>
         /// <param name="runtime">The runtime identifier.</param>
-        /// <returns>The publish path.</returns>
+        /// <returns>The projects publish directory path.</returns>
         private static string GetPublishDir(string targetDir, string runtime)
         {
             // Projects specifying a single runtime identifier like:
@@ -316,7 +316,7 @@ $@"@echo off
             //
             // will publish their output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\publish
             //
             // Projects that use <RuntimeIdentifiers/> (plural) with one
             // or more runtime identifiers like:
@@ -325,7 +325,7 @@ $@"@echo off
             //
             // will publish output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\win10-x64\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\win10-x64\publish
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.
@@ -343,8 +343,8 @@ $@"@echo off
                 if (!Directory.Exists(probeDir2))
                 {
                     Console.Error.WriteLine($"*** ERROR: Cannot locate publication directory:");
-                    Console.Error.WriteLine($"***        ...at: [{probeDir1}]");
-                    Console.Error.WriteLine($"***        ...or: [{probeDir2}]");
+                    Console.Error.WriteLine($"***        ...at: {probeDir1}");
+                    Console.Error.WriteLine($"***        ...or: {probeDir2}");
                     Environment.Exit(1);
                 }
 
