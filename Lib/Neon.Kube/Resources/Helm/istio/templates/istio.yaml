@@ -67,6 +67,14 @@ spec:
       accessLogFile: ""
       accessLogFormat: '{{"{{"}}   "authority": "%REQ(:AUTHORITY)%",   "mode": "%PROTOCOL%",   "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",   "upstream_local_address": "%UPSTREAM_LOCAL_ADDRESS%",   "duration": "%DURATION%",   "request_duration": "%REQUEST_DURATION%",   "response_duration": "%RESPONSE_DURATION%",   "response_tx_duration": "%RESPONSE_TX_DURATION%",   "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",   "upstream_transport_failure_reason": "%UPSTREAM_TRANSPORT_FAILURE_REASON%",   "route_name": "%ROUTE_NAME%",   "response_code": "%RESPONSE_CODE%",   "response_code_details": "%RESPONSE_CODE_DETAILS%",   "user_agent": "%REQ(USER-AGENT)%",   "response_flags": "%RESPONSE_FLAGS%",   "start_time": "%START_TIME(%s.%6f)%",   "method": "%REQ(:METHOD)%",   "host": "%REQ(:Host)%",   "referer": "%REQ(:Referer)%",   "request_id": "%REQ(X-REQUEST-ID)%",   "forwarded_host": "%REQ(X-FORWARDED-HOST)%",   "forwarded_proto": "%REQ(X-FORWARDED-PROTO)%",   "upstream_host": "%UPSTREAM_HOST%",   "downstream_local_uri_san": "%DOWNSTREAM_LOCAL_URI_SAN%",   "downstream_peer_uri_san": "%DOWNSTREAM_PEER_URI_SAN%",   "downstream_local_subject": "%DOWNSTREAM_LOCAL_SUBJECT%",   "downstream_peer_subject": "%DOWNSTREAM_PEER_SUBJECT%",   "downstream_peer_issuer": "%DOWNSTREAM_PEER_ISSUER%",   "downstream_tls_session_id": "%DOWNSTREAM_TLS_SESSION_ID%",   "downstream_tls_cipher": "%DOWNSTREAM_TLS_CIPHER%",   "downstream_tls_version": "%DOWNSTREAM_TLS_VERSION%",   "downstream_peer_serial": "%DOWNSTREAM_PEER_SERIAL%",   "downstream_peer_cert": "%DOWNSTREAM_PEER_CERT%",   "client_ip": "%REQ(X-FORWARDED-FOR)%",   "requested_server_name": "%REQUESTED_SERVER_NAME%",   "bytes_received": "%BYTES_RECEIVED%",   "bytes_sent": "%BYTES_SENT%",   "upstream_cluster": "%UPSTREAM_CLUSTER%",   "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS%",   "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%" {{"}}"}}'
       accessLogEncoding: "JSON"
+      extensionProviders:
+      - name: "oauth2-proxy-neon-sso.neon-ingress"
+        envoyExtAuthzHttp:
+          service: "oauth2-proxy-neon-sso.neon-ingress"
+          port: "4180"
+          includeHeadersInCheck: ["authorization", "cookie"]
+          headersToUpstreamOnAllow: ["authorization", "path", "x-auth-request-user", "x-auth-request-email", "x-auth-request-access-token"]
+          headersToDownstreamOnDeny: ["content-type", "set-cookie"]
     gateways:
       istio-ingressgateway:
         type: NodePort
