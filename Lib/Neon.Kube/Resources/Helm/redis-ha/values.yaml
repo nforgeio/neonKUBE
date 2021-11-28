@@ -169,7 +169,7 @@ rbac:
 sysctlImage:
   enabled: false
   command: []
-  registry: docker.io
+  registry: neon-registry.node.local
   repository: busybox
   tag: 1.31.1
   pullPolicy: IfNotPresent
