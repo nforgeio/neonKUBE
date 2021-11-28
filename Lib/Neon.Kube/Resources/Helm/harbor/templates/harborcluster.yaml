@@ -10,12 +10,20 @@ spec:
     image: {{ .Values.image.organization }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 8 }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     resources: {}
   core:
     image: {{ .Values.image.organization }}/harbor-core:v{{ .Values.harbor.version }}
     resources: {}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 8 }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     tokenIssuer:
       kind: Issuer
       name: neon-system-selfsigned-issuer
@@ -91,7 +99,7 @@ spec:
   portal:
     resources: {}
   redis:
-    host: registry-redis
+    host: neon-redis
     port: 26379
     sentinelMasterSet: master
   registry:
