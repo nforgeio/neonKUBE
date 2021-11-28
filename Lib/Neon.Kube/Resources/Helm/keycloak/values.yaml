@@ -2,3 +2,32 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+keycloak:
+  image: 
+    organization: neon-registry.node.local
+    repository: keycloak-keycloak
+    tag: 15.0.2
+
+operator:
+  image: 
+    organization: neon-registry.node.local
+    repository: keycloak-keycloak-operator
+    tag: 15.0.2
+
+initContainer:
+  image: 
+    organization: neon-registry.node.local
+    repository: keycloak-keycloak-init-container
+    tag: 15.0.2
+
+config:
+  cluster:
+    domain: keycloak.cluster.neoncluster.io
+    name: neonkube
+
+database:
+  dbName: keycloak
+  service: db-citus-postgresql.neon-system
+  port: 5432
+  username: neon_service
+  password: password

@@ -1,0 +1,19 @@
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: harbor-virtual-service
+  namespace: neon-ingress
+spec:
+  gateways:
+    - neoncluster-gateway
+  hosts:
+    - sso.{{ .Values.clusterDomain }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: keycloak.neon-system.svc.cluster.local
+            port:
+              number: 80

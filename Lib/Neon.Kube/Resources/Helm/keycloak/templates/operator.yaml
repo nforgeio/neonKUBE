@@ -16,7 +16,7 @@ spec:
       containers:
         - name: keycloak-operator
           # Replace this with the built image name
-          image: quay.io/keycloak/keycloak-operator:main
+          image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           command:
           - keycloak-operator
           imagePullPolicy: Always
@@ -31,3 +31,7 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "keycloak-operator"
+            - name: RELATED_IMAGE_KEYCLOAK
+              value: {{ .Values.keycloak.image.organization }}/{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}
+            - name: RELATED_IMAGE_KEYCLOAK_INIT_CONTAINER
+              value: {{ .Values.initContainer.image.organization }}/{{ .Values.initContainer.image.repository }}:{{ .Values.initContainer.image.tag }}

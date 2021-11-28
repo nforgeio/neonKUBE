@@ -1,0 +1,12 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: neon-sso
+  labels:
+    app: neon-sso
+spec:
+  realmSelector:
+     matchLabels:
+      app: neon-sso
+  client:
+    clientId: oauth2-proxy

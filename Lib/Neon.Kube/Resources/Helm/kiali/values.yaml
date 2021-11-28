@@ -55,7 +55,10 @@ cr:
     version: default
     istio_namespace: neon-ingress
     auth:
-      strategy: anonymous
+      strategy: openid
+      openid:
+        client_id: "kubernetes"
+        issuer_uri: "http://keycloak.neon-system"
     deployment:
       image_name: neon-registry.node.local/kiali-kiali
       image_version: v1.28.0

@@ -3,15 +3,20 @@ kind: Keycloak
 metadata:
   name: example-keycloak
   labels:
-    app: sso
+    app: neon-sso
 spec:
   instances: 1
   extensions:
     - https://github.com/aerogear/keycloak-metrics-spi/releases/download/1.0.4/keycloak-metrics-spi-1.0.4.jar
   externalAccess:
-    enabled: True
+    enabled: False
   podDisruptionBudget:
     enabled: True
   # User needs to provision the external database
   externalDatabase:
     enabled: True
+  keycloakDeploymentSpec:
+    experimental:
+      env:
+        - name: KEYCLOAK_FRONTEND_URL
+          value: "https://{{ .Values.cluster.domain }}/sso"

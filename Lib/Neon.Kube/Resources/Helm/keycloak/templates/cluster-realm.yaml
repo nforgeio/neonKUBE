@@ -1,0 +1,15 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakRealm
+metadata:
+  name: cluster-realm
+  labels:
+    app: neon-sso
+spec:
+  realm:
+    id: neon-sso
+    realm: neon-sso
+    enabled: True
+    displayName: "Neon SSO"
+  instanceSelector:
+    matchLabels:
+      app: neon-sso

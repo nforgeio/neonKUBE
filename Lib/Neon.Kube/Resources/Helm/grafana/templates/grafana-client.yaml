@@ -1,0 +1,12 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: grafana
+  labels:
+    app: cluster-sso
+spec:
+  realmSelector:
+     matchLabels:
+      app: cluster-sso
+  client:
+    clientId: grafana
