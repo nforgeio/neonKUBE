@@ -275,7 +275,11 @@
 
     <None Remove="Resources\Helm\grafana\templates\datasources.yaml" />
 
+    <None Remove="Resources\Helm\grafana\templates\grafana-client.yaml" />
+
     <None Remove="Resources\Helm\grafana\templates\grafana.yaml" />
+
+    <None Remove="Resources\Helm\grafana\templates\ingress.yaml" />
 
     <None Remove="Resources\Helm\grafana\templates\operator.yaml" />
 
@@ -319,6 +323,8 @@
 
     <None Remove="Resources\Helm\harbor\templates\deployment.yaml" />
 
+    <None Remove="Resources\Helm\harbor\templates\harbor-client.yaml" />
+
     <None Remove="Resources\Helm\harbor\templates\harborcluster.yaml" />
 
     <None Remove="Resources\Helm\harbor\templates\ingress.yaml" />
@@ -354,6 +360,42 @@
     <None Remove="Resources\Helm\istio\templates\service_account.yaml" />
 
     <None Remove="Resources\Helm\istio\values.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\.helmignore" />
+
+    <None Remove="Resources\Helm\keycloak\Chart.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakbackups_crd.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakclients_crd.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakrealms_crd.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloaks_crd.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakusers_crd.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\cluster-realm.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\external-db-secret.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\keycloak.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\kubernetes-client.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\neon-sso-client.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\operator.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\role.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\role_binding.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\service_account.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\templates\virtualservice.yaml" />
+
+    <None Remove="Resources\Helm\keycloak\values.yaml" />
 
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
 
@@ -398,6 +440,52 @@
     <None Remove="Resources\Helm\kube-state-metrics\templates\_helpers.tpl" />
 
     <None Remove="Resources\Helm\kube-state-metrics\values.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\.helmignore" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\Chart.lock" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\Chart.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\README.md" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\authorizationpolicy.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\clusterrole-metrics.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\clusterrole-readonly.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\clusterrolebinding-metrics.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\clusterrolebinding-readonly.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\configmap.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\deployment.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\ingress.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\networkpolicy.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\NOTES.txt" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\pdb.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\psp.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\role.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\rolebinding.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\secret.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\service.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\serviceaccount.yaml" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\templates\_helpers.tpl" />
+
+    <None Remove="Resources\Helm\kubernetes-dashboard\values.yaml" />
     <None Remove="Resources\Helm\metrics-server\Chart.yaml" />
     <None Remove="Resources\Helm\metrics-server\README.md" />
     <None Remove="Resources\Helm\metrics-server\templates\apiService.yaml" />
@@ -542,7 +630,7 @@
     <None Remove="Resources\Helm\minio\templates\console-service.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-ui.yaml" />
     <None Remove="Resources\Helm\minio\templates\deployment.yaml" />
-    <None Remove="Resources\Helm\minio\templates\ingress.yaml" />
+    <None Remove="Resources\Helm\minio\templates\minio-client.yaml" />
     <None Remove="Resources\Helm\minio\templates\networkpolicy.yaml" />
     <None Remove="Resources\Helm\minio\templates\NOTES.txt" />
     <None Remove="Resources\Helm\minio\templates\operator-deployment.yaml" />
@@ -590,6 +678,29 @@
     <None Remove="Resources\Helm\node-problem-detector\templates\servicemonitor.yaml" />
     <None Remove="Resources\Helm\node-problem-detector\templates\_helpers.tpl" />
     <None Remove="Resources\Helm\node-problem-detector\values.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\.helmignore" />
+    <None Remove="Resources\Helm\oauth2-proxy\Chart.lock" />
+    <None Remove="Resources\Helm\oauth2-proxy\Chart.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\README.md" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\configmap-authenticated-emails-file.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\configmap-htpasswd-file.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\configmap.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\deprecation.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\google-secret.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\ingress.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\NOTES.txt" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\poddisruptionbudget.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\redis-secret.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\secret-authenticated-emails-file.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\secret.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\service.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\servicemonitor.yaml" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\_capabilities.tpl" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\_helpers.tpl" />
+    <None Remove="Resources\Helm\oauth2-proxy\templates\_ingress.tpl" />
+    <None Remove="Resources\Helm\oauth2-proxy\values.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\.helmignore" />
     <None Remove="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
     <None Remove="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
@@ -1067,7 +1178,9 @@
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\statefulset.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\dashboards\workload-total.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\datasources.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\grafana-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\grafana.yaml" />
+    <EmbeddedResource Include="Resources\Helm\grafana\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\operator.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\role.yaml" />
     <EmbeddedResource Include="Resources\Helm\grafana\templates\role_binding.yaml" />
@@ -1087,6 +1200,7 @@
     <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
+    <EmbeddedResource Include="Resources\Helm\harbor\templates\harbor-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\rbac.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap.yaml" />
@@ -1107,6 +1221,24 @@
     <EmbeddedResource Include="Resources\Helm\istio\templates\service.yaml" />
     <EmbeddedResource Include="Resources\Helm\istio\templates\service_account.yaml" />
     <EmbeddedResource Include="Resources\Helm\istio\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakbackups_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakclients_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakrealms_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloaks_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakusers_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\cluster-realm.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\external-db-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\keycloak.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\kubernetes-client.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\neon-sso-client.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\operator.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\role_binding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\service_account.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\virtualservice.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\OWNERS" />
@@ -1128,6 +1260,29 @@
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\stsdiscovery-rolebinding.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\Chart.lock" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\README.md" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\authorizationpolicy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\clusterrole-metrics.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\clusterrole-readonly.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\clusterrolebinding-metrics.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\clusterrolebinding-readonly.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\ingress.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\networkpolicy.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\pdb.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\psp.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\role.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\rolebinding.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\kubernetes-dashboard\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\crds\minio.min.io_tenants.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\cluster-role-binding.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\cluster-role.yaml" />
@@ -1135,6 +1290,7 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ui.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\minio-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\servicemonitor.yaml" />
@@ -1223,6 +1379,29 @@
     <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\node-problem-detector\templates\_helpers.tpl" />
     <EmbeddedResource Include="Resources\Helm\node-problem-detector\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\.helmignore" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\Chart.lock" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\Chart.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\README.md" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\configmap-authenticated-emails-file.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\configmap-htpasswd-file.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\configmap.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\deployment.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\deprecation.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\google-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\ingress.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\NOTES.txt" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\poddisruptionbudget.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\redis-secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\secret-authenticated-emails-file.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\secret.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\service.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\serviceaccount.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\servicemonitor.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\_capabilities.tpl" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\_helpers.tpl" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\_ingress.tpl" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\values.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\openebs-cstor-operator\crds\cstorbackup.yaml" />
