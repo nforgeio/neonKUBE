@@ -1040,7 +1040,7 @@ sysctl --system
 ";                      SudoCommand(CommandBundle.FromScript(moduleScript));
                     }
 
-                    var crioVersion = Version.Parse(KubeVersions.CrioVersion);
+                    var crioVersion = Version.Parse(KubeVersions.Crio);
 
                     var setupScript =
 $@"
@@ -1052,8 +1052,8 @@ cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
 EOF
 
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.CrioVersion}.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.CrioVersion}/xUbuntu_20.04/ /
+cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.Crio}.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.Crio}/xUbuntu_20.04/ /
 EOF
 
 curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
@@ -1416,7 +1416,7 @@ global_auth_file = """"
 
 # The image used to instantiate infra containers.
 # This option supports live configuration reload.
-pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersions.PauseVersion}""
+pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersions.Pause}""
 
 # The path to a file containing credentials specific for pulling the pause_image from
 # above. The file is similar to that of /var/lib/kubelet/config.json
@@ -1637,7 +1637,7 @@ rm -rf linux-amd64
                         {
                             Covenant.Assert(File.Exists(importPath));
 
-                            targetTag = $"neonkube-{KubeVersions.NeonKubeVersion}";
+                            targetTag = $"neonkube-{KubeVersions.NeonKube}";
                         }
 
                         var sourceImage = $"{registry}/{imageName}:{targetTag}";
@@ -1767,9 +1767,9 @@ curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 {KubeNodeFolders.Bin}/safe-apt-get update
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeletPackageVersion}
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackageVersion}
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackageVersion}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeletPackage}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackage}
 
 # Prevent the package manager these components from starting automatically.
 

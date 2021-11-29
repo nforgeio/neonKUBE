@@ -416,7 +416,7 @@ namespace Neon.Kube
         private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             var xenClient    = xenSshProxy.Metadata;
-            var templateName = $"neonkube-{KubeVersions.NeonKubeVersion}";
+            var templateName = $"neonkube-{KubeVersions.NeonKube}";
 
             xenSshProxy.Status = $"check: node image {templateName}";
 
@@ -519,7 +519,7 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeVersion}",
+                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKube}",
                     cores:                      cores,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,

@@ -36,48 +36,48 @@ namespace Neon.Kube
         /// <summary>
         /// The current neonKUBE version.
         /// </summary>
-        public const string NeonKubeVersion = "0.3.0-alpha";
+        public const string NeonKube = "0.3.0-alpha";
 
         /// <summary>
         /// Returns the container image tag for the current neonKUBE release.  This adds the
-        /// <b>neonkube-</b> prefix to <see cref="NeonKubeVersion"/>.
+        /// <b>neonkube-</b> prefix to <see cref="NeonKube"/>.
         /// </summary>
-        public const string NeonKubeContainerImageTag = "neonkube-" + NeonKubeVersion;
+        public const string NeonKubeContainerImageTag = "neonkube-" + NeonKube;
 
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.21.4";
+        public const string Kubernetes = "1.21.4";
 
         /// <summary>
         /// The version of the Kubernetes client tools to be installed with neonDESKTOP.
         /// </summary>
-        public const string KubernetesToolsVersion = "1.21.0";
+        public const string KubernetesTools = "1.21.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboardVersion = "2.3.1";
+        public const string KubernetesDashboard = "2.3.1";
 
         /// <summary>
         /// The version of the Kubernetes dashboard metrics scraper to be installed.
         /// </summary>
-        public const string KubernetesDashboardMetricsVersion = "v1.0.6";
+        public const string KubernetesDashboardMetrics = "v1.0.6";
 
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.21.4-00";
+        public const string KubeAdminPackage = "1.21.4-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.21.4-00";
+        public const string KubeCtlPackage = "1.21.4-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.21.4-00";
+        public const string KubeletPackage = "1.21.4-00";
 
         /// <summary>
         /// <para>
@@ -88,61 +88,66 @@ namespace Neon.Kube
         /// Make sure the package has actually been uploaded.
         /// </para>
         /// </summary>
-        public const string CrioVersion = "1.21.0";
+        public const string Crio = "1.21.0";
 
         /// <summary>
         /// The version of Calico to install.
         /// </summary>
-        public const string CalicoVersion = "3.16";
+        public const string Calico = "3.16";
 
         /// <summary>
         /// The version of dnsutils to install.
         /// </summary>
-        public const string DnsUtilsVersion = "1.3";
+        public const string DnsUtils = "1.3";
 
         /// <summary>
         /// The version of HaProxy to install.
         /// </summary>
-        public const string HaproxyVersion = "1.9.2-alpine";
+        public const string Haproxy = "1.9.2-alpine";
 
         /// <summary>
         /// The version of Istio to install.
         /// </summary>
-        public const string IstioVersion = "1.11.4";
+        public const string Istio = "1.11.4";
 
         /// <summary>
         /// The version of Helm to be installed.
         /// </summary>
-        public const string HelmVersion = "3.6.3";
+        public const string Helm = "3.7.1";
+
+        /// <summary>
+        /// The version of Kustomize to be installed.
+        /// </summary>
+        public const string Kustomize = "4.4.1";
 
         /// <summary>
         /// The version of CoreDNS to be installed.
         /// </summary>
-        public const string CoreDNSVersion = "1.6.2";
+        public const string CoreDNS = "1.6.2";
 
         /// <summary>
         /// The version of CoreDNS plugin to be installed.
         /// </summary>
-        public const string CoreDNSPluginVersion = "0.2-istio-1.1";
+        public const string CoreDNSPlugin = "0.2-istio-1.1";
 
         /// <summary>
         /// The version of Prometheus to be installed.
         /// </summary>
-        public const string PrometheusVersion = "v2.22.1";
+        public const string Prometheus = "v2.22.1";
 
         /// <summary>
         /// The version of AlertManager to be installed.
         /// </summary>
-        public const string AlertManagerVersion = "v0.21.0";
+        public const string AlertManager = "v0.21.0";
 
         /// <summary>
-        /// The version of pause image to beused.
+        /// The version of pause image to be installed.
         /// </summary>
-        public const string PauseVersion = "3.4.1";
+        public const string Pause = "3.4.1";
 
         /// <summary>
-        /// The version of busybox image to beused.
+        /// The version of busybox image to be installed.
         /// </summary>
-        public const string BusyboxVersion = "1.32.0";
+        public const string Busybox = "1.32.0";
     }
 }

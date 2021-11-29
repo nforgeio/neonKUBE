@@ -215,8 +215,8 @@ namespace Neon.Kube
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master            = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
-            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
-            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.Kubernetes);
+            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.Helm);
 
             string kubeCtlUri;
             string helmUri;
@@ -341,7 +341,7 @@ namespace Neon.Kube
 
             // We're going to assume that the workstation tools are backwards 
             // compatible with older versions of Kubernetes and other infrastructure
-            // components and simply compare the installed tool (if present) version
+            // components and simply compare the existing tool (if present) version
             // with the requested tool version and overwrite the installed tool if
             // the new one is more current.
 

@@ -36,57 +36,57 @@ namespace Neon.Kube
         /// <summary>
         /// The <b>kubectl</b> binary download URI for Linux.
         /// </summary>
-        public static readonly string KubeCtlLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubectl";
+        public static readonly string KubeCtlLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubectl";
 
         /// <summary>
         /// The <b>kubectl</b> binary download URI for OS/X.
         /// </summary>
-        public static readonly string KubeCtlOsxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/darwin/amd64/kubectl";
+        public static readonly string KubeCtlOsxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/bin/darwin/amd64/kubectl";
 
         /// <summary>
         /// The <b>kubectl</b> binary download URI for Windows.
         /// </summary>
-        public static readonly string KubeCtlWindowsUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/windows/amd64/kubectl.exe";
+        public static readonly string KubeCtlWindowsUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/bin/windows/amd64/kubectl.exe";
 
         /// <summary>
         /// The <b>kubeadm</b> binary download URI for Linux.
         /// </summary>
-        public static readonly string KubeAdmLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubeadm";
+        public static readonly string KubeAdmLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubeadm";
 
         /// <summary>
         /// The <b>kubelet</b> binary download URI for Linux.
         /// </summary>
-        public static readonly string KubeletLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubelet";
+        public static readonly string KubeletLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubelet";
 
         /// <summary>
         /// The Helm binary URL for Linux.
         /// </summary>
-        public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz";
+        public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-amd64.tar.gz";
 
         /// <summary>
         /// The Helm binary URL for OS/X.
         /// </summary>
-        public static readonly string HelmOsxUri = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz";
+        public static readonly string HelmOsxUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-darwin-amd64.tar.gz";
 
         /// <summary>
         /// The Helm binary URL for Windows.
         /// </summary>
-        public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-windows-amd64.zip";
+        public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
         /// The Calico RBAC rules download (YAML for kubectl).
         /// </summary>
-        public static readonly string CalicoRbacYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml";
+        public static readonly string CalicoRbacYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.Calico}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml";
 
         /// <summary>
         /// The Calico setup download (YAML for kubectl).
         /// </summary>
-        public static readonly string CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/manifests/calico.yaml";
+        public static readonly string CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.Calico}/manifests/calico.yaml";
 
         /// <summary>
         /// The Istio binary URL for Linux.
         /// </summary>
-        public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz";
+        public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.Istio}/istioctl-{KubeVersions.Istio}-linux-amd64.tar.gz";
 
         /// <summary>
         /// The URI for the public AWS S3 bucket where we persist cluster VM images 
@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
         /// </summary>
-        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKubeVersion + ".json";
+        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
 
         /// <summary>
         /// The GitHub repository path where public node images will be published.
@@ -168,7 +168,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.hyperv.amd64.vhdx.gz.manifest";
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
                     }
 
                 case HostingEnvironment.XenServer:
@@ -179,7 +179,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.xenserver.amd64.xva.gz.manifest";
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
                     }
 
                 case HostingEnvironment.Wsl2:
@@ -190,7 +190,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                       return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKubeVersion}.wsl2.amd64.tar.gz.manifest";
+                       return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
                     }
 
                 default:

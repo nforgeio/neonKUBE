@@ -880,7 +880,7 @@ namespace Neon.Kube
                 node.Validate(this);
             }
 
-            ClusterVersion = KubeVersions.NeonKubeVersion;
+            ClusterVersion = KubeVersions.NeonKube;
 
             if (Name == null)
             {
