@@ -110,7 +110,7 @@ $nfLib           = "$nfRoot\Lib"
 $nfTools         = "$nfRoot\Tools"
 $nfToolBin       = "$nfRoot\ToolBin"
 $libraryVersion  = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonLibraryVersion)
-$neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonKubeVersion)
+$neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
 # We need to do a release solution build to ensure that any tools or other
 # dependencies are built before we build and publish the individual packages.
