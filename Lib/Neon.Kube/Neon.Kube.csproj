@@ -375,6 +375,8 @@
 
     <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakusers_crd.yaml" />
 
+    <None Remove="Resources\Helm\keycloak\templates\admin-user.yaml" />
+
     <None Remove="Resources\Helm\keycloak\templates\cluster-realm.yaml" />
 
     <None Remove="Resources\Helm\keycloak\templates\external-db-secret.yaml" />
@@ -396,6 +398,8 @@
     <None Remove="Resources\Helm\keycloak\templates\virtualservice.yaml" />
 
     <None Remove="Resources\Helm\keycloak\values.yaml" />
+
+    <None Remove="Resources\Helm\kiali\templates\ingress.yaml" />
 
     <None Remove="Resources\Helm\kiali\templates\service-nodeport.yaml" />
 
@@ -630,6 +634,7 @@
     <None Remove="Resources\Helm\minio\templates\console-service.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-ui.yaml" />
     <None Remove="Resources\Helm\minio\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\minio\templates\ingress.yaml" />
     <None Remove="Resources\Helm\minio\templates\minio-client.yaml" />
     <None Remove="Resources\Helm\minio\templates\networkpolicy.yaml" />
     <None Remove="Resources\Helm\minio\templates\NOTES.txt" />
@@ -1228,17 +1233,19 @@
     <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakrealms_crd.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloaks_crd.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\crds\keycloak.org_keycloakusers_crd.yaml" />
+    <EmbeddedResource Include="Resources\Helm\keycloak\templates\admin-user.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\cluster-realm.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\external-db-secret.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\keycloak.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\kubernetes-client.yaml" />
-    <EmbeddedResource Include="Resources\Helm\keycloak\templates\neon-sso-client.yaml" />
+    <EmbeddedResource Include="Resources\Helm\oauth2-proxy\templates\neon-sso-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\operator.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\role.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\role_binding.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\service_account.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\virtualservice.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\values.yaml" />
+    <EmbeddedResource Include="Resources\Helm\kiali\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\.helmignore" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\Chart.yaml" />
     <EmbeddedResource Include="Resources\Helm\kube-state-metrics\OWNERS" />
@@ -1290,6 +1297,7 @@
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-service.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\console-ui.yaml" />
+    <EmbeddedResource Include="Resources\Helm\minio\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\minio-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-deployment.yaml" />
     <EmbeddedResource Include="Resources\Helm\minio\templates\operator-service.yaml" />
