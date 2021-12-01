@@ -53,7 +53,7 @@ namespace NeonClusterOperator
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public Service(string name, ServiceMap serviceMap = null)
-            : base(name, version: KubeVersions.NeonKubeVersion, serviceMap: serviceMap)
+            : base(name, version: KubeVersions.NeonKube, serviceMap: serviceMap)
         {
             k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
@@ -151,7 +151,7 @@ namespace NeonClusterOperator
                             new V1Container()
                             {
                                 Name            = "check-node-images-busybox",
-                                Image           = $"{KubeConst.LocalClusterRegistry}/busybox:{KubeVersions.BusyboxVersion}",
+                                Image           = $"{KubeConst.LocalClusterRegistry}/busybox:{KubeVersions.Busybox}",
                                 Command         = new List<string>() {"sleep", "infinity" },
                                 ImagePullPolicy = "IfNotPresent",
                                 SecurityContext = new V1SecurityContext()

@@ -1,7 +1,7 @@
 ﻿#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Jeff Lill
+# CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neon-kubefixture image and pushes them to Docker Hub.
+# Builds the test-cadence images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -24,7 +24,7 @@
 
 param 
 (
-	[switch]$all = $false,
+	[switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetLibraryRegistry "neon-allow-testing"
+	$registry    = GetLibraryRegistry "test-api"
 	$tag         = $version
 	$tagAsLatest = TagAsLatest
 
@@ -50,18 +50,21 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -tag $tag
     Push-DockerImage "${registry}:${tag}"
 
-	if ($latest)
+	if ($latest -and $tagAsLatest)
 	{
-		$result = Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest"
+		$result = Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave
 		Push-DockerImage ${registry}:latest
 	}
 }
 
 $noImagePush = $nopush
 
-# There's only going to be one version of this thing.
+if ($allVersions)
+{
+}
 
-Build 0 -latest
+Build "1"
+Build "2" -latest

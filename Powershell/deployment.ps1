@@ -381,3 +381,110 @@ function Clear-PowershellHistory
 {
     [Neon.Deployment.DeploymentHelper]::ClearPowershellHistory()
 }
+
+#------------------------------------------------------------------------------
+# Uploads a file from the local workstation to S3.
+#
+# ARGUMENTS:
+#
+#   sourcePath          - path to the file being uploaded
+#
+#   targetUri           - the target S3 URI This may be either an [s3://BUCKET/KEY] or a
+#                         https://s3.REGION.amazonaws.com/BUCKET/KEY URI referencing an S3 
+#                         bucket and key.
+#
+#   gzip                - Optionally indicates that the target content encoding should be set to [gzip]
+#
+#   metadata            - Optionally specifies HTTP metadata headers to be returned when the object
+#                         is downloaded from S3.  This formatted as as comma separated a list of 
+#                         key/value pairs like:
+#        
+#                               Content-Type=text,app-version=1.0.0
+#
+#                         AWS supports [system] as well as [custom] headers.  System headers
+#                         include standard HTTP headers such as [Content-Type] and [Content-Encoding].
+#                         Custom headers are required to include the <b>x-amz-meta-</b> prefix.
+#
+#                         You don't need to specify the [x-amz-meta-] prefix for setting custom 
+#                         headers; the AWS-CLI detects custom header names and adds the prefix automatically. 
+#                         This method will strip the prefix if present before calling the AWS-CLI to ensure 
+#                         the prefix doesn't end up being duplicated.
+#
+#   publicReadAccess    - Optionally indicates that the upload file will allow read-only access to the world.
+
+function Save-ToS3
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$sourcePath,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$targetUri,
+        [Parameter(Mandatory=$false)]
+        [bool]$gzip = $false,
+        [Parameter(Mandatory=$false)]
+        [string]$metadata = "",
+        [Parameter(Mandatory=$false)]
+        [bool]$publicReadAccess = $false
+    )
+
+    [Neon.Deployment.AwsCli]::S3Upload($sourcePath, $targetUri, $gzip, $metedata, $publicReadAccess)
+}
+
+#------------------------------------------------------------------------------
+# Downloads a file from S3.
+#
+# ARGMENTS:
+#
+#   sourceUri           - Identifies the S3 object to download.  This may be an <b>s3://BUCKET/KEY</b>
+#                         or a https://s3.REGION.amazonaws.com/BUCKET/KEY URI referencing an S3 
+#                         bucket and key.
+#
+#   targetPath          - Specifies where the downloaded file will be written
+
+function Get-FromS3
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$sourceUri,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$targetPath
+    )
+
+    [Neon.Deployment.AwsCli]::S3Download($sourceUri, $targetPath)
+}
+
+#------------------------------------------------------------------------------
+# Removes one or more S3 objects.
+#
+# ARGUMENTS:
+#
+#   targetUri           - Identifies target S3 URI or prefix for the object(s) to be removed.  This may be either an
+#                         [s3://BUCKET[/KEY]] or a [https://s3.REGION.amazonaws.com/BUCKET[/KEY]] URI 
+#                         referencing an S3 bucket and key.  Note that the key is optional which means that all
+#                         objects in the bucket are eligible for removal.
+#
+#   recursive           - Optionally indicates that [targetUri] specifies a folder prefix and that
+#                         all objects within the folder are eligble for removal. 
+#
+#   include             - Optionally specifies a pattern specifying the objects to be removed.
+#
+#   exclude             - Optionally specifies a pattern specifying objects to be excluded from removal.
+
+function Remove-FromS3
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$targetUri,
+        [Parameter(Mandatory=$false)]
+        [bool]$recursive = $false,
+        [Parameter(Mandatory=$false)]
+        [string]$include = "",
+        [Parameter(Mandatory=$false)]
+        [string]$exclude = ""
+    )
+
+    [Neon.Deployment.AwsCli]::S3Remove($targetUri, $recursive, $include, $exclude)
+}

@@ -165,7 +165,7 @@ spec:
   hostNetwork: true
   containers:
     - name: web
-      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}
+      image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}
       volumeMounts:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
@@ -378,7 +378,7 @@ $@"
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
-kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
+kubernetesVersion: ""v{KubeVersions.Kubernetes}""
 imageRepository: ""{KubeConst.LocalClusterRegistry}""
 apiServer:
   extraArgs:
@@ -682,7 +682,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                    "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                                    "--network=host",
                                                    "--log-driver=k8s-file",
-                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}"
+                                                   $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}"
                                                );
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -775,7 +775,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             "-v=/etc/neonkube/neon-etcd-proxy.cfg:/etc/haproxy/haproxy.cfg",
                                             "--network=host",
                                             "--log-driver=k8s-file",
-                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.HaproxyVersion}",
+                                            $"{KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}",
                                             RunOptions.FaultOnError);
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
@@ -1122,7 +1122,7 @@ done
                                             new V1Container()
                                             {
                                                 Name            = "dnsutils",
-                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersions.DnsUtilsVersion}",
+                                                Image           = $"{KubeConst.LocalClusterRegistry}/kubernetes-e2e-test-images-dnsutils:{KubeVersions.DnsUtils}",
                                                 Command         = new List<string>() {"sleep", "3600" },
                                                 ImagePullPolicy = "IfNotPresent"
                                             }

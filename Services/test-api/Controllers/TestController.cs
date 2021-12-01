@@ -39,7 +39,7 @@ namespace TestApiService
         /// </summary>
         /// <returns>The echo string.</returns>
         [HttpGet("echo")]
-        public async Task GetEchoAsync()
+        public async Task EchoAsync()
         {
             // Return the query string if there is one.
 
@@ -81,6 +81,25 @@ namespace TestApiService
             // Otherwise, return this:
 
             await Response.Body.WriteAsync(Encoding.UTF8.GetBytes("HELLO WORLD!"));
+        }
+
+        /// <summary>
+        /// Signals the service to terminate.
+        /// </summary>
+        [HttpPost("exit")]
+        public async Task ExitAsync()
+        {
+            // We're going to start a parallel task that will wait a bit so the
+            // HTTP reply can be transmitted before terminating the service.
+
+            _ = Task.Run(
+                    async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        Environment.Exit(0);
+                    });
+
+            await Task.CompletedTask;
         }
     }
 }

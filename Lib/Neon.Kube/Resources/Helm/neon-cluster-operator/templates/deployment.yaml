@@ -38,6 +38,11 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          livenessProbe:
+            exec:
+              command: [ "/health-check" ]
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
