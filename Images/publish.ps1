@@ -126,7 +126,6 @@ try
 
     if ($other)
     {
-        Publish "$image_root\neon-clocksync"
         Publish "$image_root\nats"
         Publish "$image_root\nats-streaming"
         Publish "$image_root\couchbase-dev"
@@ -143,7 +142,6 @@ try
     if ($services)
     {
         Publish "$image_root\neon-acme"
-        Publish "$image_root\neon-allow-testing"
         Publish "$image_root\neon-cluster-operator"
         Publish "$image_root\test-api"
     }
