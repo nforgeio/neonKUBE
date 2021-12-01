@@ -145,6 +145,7 @@ try
         Publish "$image_root\neon-acme"
         Publish "$image_root\neon-allow-testing"
         Publish "$image_root\neon-cluster-operator"
+        Publish "$image_root\test-api"
     }
 
     # Purge any local Docker images as well as the image build cache.
