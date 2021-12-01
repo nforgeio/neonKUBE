@@ -495,6 +495,7 @@ namespace Neon.Service
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
         private IDisposable                     metricCollector;
+        private string                          terminationMessagePath;
 
         /// <summary>
         /// Constructor.
@@ -514,15 +515,30 @@ namespace Neon.Service
         /// or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
         /// or containers.  This is a somewhat advanced topic that needs documentation.
         /// </param>
+        /// <param name="terminationMessagePath">
+        /// <para>
+        /// Optionally specifies the path where Kubernetes may write a termination message
+        /// before terminating the pod hosting the message.  The <see cref="NeonService"/>
+        /// class will check for this file when it receives a termination signal when 
+        /// running on Linux and write the file contents to the log before terminating.
+        /// </para>
+        /// <para>
+        /// This defaults to: <b>/dev/termination-log</b>
+        /// </para>
+        /// <note>
+        /// This is ignored for all platforms besides Linux.
+        /// </note>
+        /// </param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
         /// within the <see cref="ServiceMap"/>.
         /// </exception>
         public NeonService(
             string      name, 
-            string      version        = null,
-            string      statusFilePath = null,
-            ServiceMap  serviceMap     = null)
+            string      version                = null,
+            string      statusFilePath         = null,
+            ServiceMap  serviceMap             = null,
+            string      terminationMessagePath = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -550,14 +566,15 @@ namespace Neon.Service
                 statusFilePath = null;
             }
 
-            this.Name                 = name;
-            this.InProduction         = !NeonHelper.IsDevWorkstation;
-            this.Terminator           = new ProcessTerminator();
-            this.version              = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
-            this.environmentVariables = new Dictionary<string, string>();
-            this.configFiles          = new Dictionary<string, FileInfo>();
-            this.statusFilePath       = statusFilePath;
-            this.ServiceMap           = serviceMap;
+            this.Name                   = name;
+            this.InProduction           = !NeonHelper.IsDevWorkstation;
+            this.Terminator             = new ProcessTerminator();
+            this.version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
+            this.environmentVariables   = new Dictionary<string, string>();
+            this.configFiles            = new Dictionary<string, FileInfo>();
+            this.statusFilePath         = statusFilePath;
+            this.ServiceMap             = serviceMap;
+            this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
 
             // Update the Prometheus metrics port from the service description if present.
 
@@ -1093,7 +1110,7 @@ namespace Neon.Service
 
                         return true;
                     },
-                    timeout: Dependencies.TestTimeout ?? Dependencies.Timeout,
+                    timeout:      Dependencies.TestTimeout ?? Dependencies.Timeout,
                     pollInterval: TimeSpan.FromSeconds(1));
             }
             catch (TimeoutException)
@@ -1137,8 +1154,26 @@ namespace Neon.Service
             }
             catch (TaskCanceledException)
             {
-                // Ignore these as a normal consequence of a service
+                // These are thrown as a normal consequence of a service
                 // being signalled to terminate.
+
+                if (NeonHelper.IsLinux && !string.IsNullOrEmpty(terminationMessagePath))
+                {
+                    // Kubernetes may write a termination message to the file system.
+                    // We'll log this when present.
+
+                    try
+                    {
+                        if (File.Exists(terminationMessagePath))
+                        {
+                            Log.LogInfo($"Kubernetes termination: {File.ReadAllText(terminationMessagePath)}");
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore any file read errors.
+                    }
+                }
 
                 ExitCode = 0;
             }
