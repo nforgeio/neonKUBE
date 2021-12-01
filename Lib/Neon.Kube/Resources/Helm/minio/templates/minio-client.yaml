@@ -2,6 +2,7 @@ apiVersion: keycloak.org/v1alpha1
 kind: KeycloakClient
 metadata:
   name: minio
+  namespace: neon-system
   labels:
     app: neon-sso
 spec:
@@ -9,4 +10,36 @@ spec:
      matchLabels:
       app: neon-sso
   client:
-    clientId: minio
+    name: kubernetes
+    clientId: kubernetes
+    enabled: true
+    protocol: openid-connect
+    defaultClientScopes:
+      - openid
+    standardFlowEnabled: true
+    implicitFlowEnabled: true
+    serviceAccountsEnabled: true
+    directAccessGrantsEnabled: true
+    authorizationServicesEnabled: true
+    consentRequired: false
+    publicClient: false
+    redirectUris: 
+      - "*"
+    defaultRoles:
+      - consoleAdmin
+      - readonly
+      - readwrite
+      - diagnostics
+      - writeonly
+    protocolMappers:
+      - name: groups
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          aggregate.attrs: "true"
+          userinfo.token.claim: "true"
+          multivalued: "true"
+          user.attribute: "groups"
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: "groups"
