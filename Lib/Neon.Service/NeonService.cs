@@ -230,14 +230,30 @@ namespace Neon.Service
     /// </para>
     /// <para>
     /// The <see cref="Neon.Service.NeonService"/> class supports this by optionally
-    /// writing a text file with various strings indicating the health status.  This file
-    /// will consist of a single line of text <b>without line ending characters</b>.  You'll
-    /// need to specify the fully qualified path to this file as an optional parameter to the 
-    /// <see cref="NeonService"/> constructor.
+    /// writing a text file with various strings indicating the health status as well as
+    /// generating a health check script.  The status file will consists of a single line
+    /// of text <b>without line ending characters</b> holding one of the <see cref="NeonServiceStatus"/>
+    /// values.  The status file path defaults to <b>/health-status</b>.
     /// </para>
+    /// <para>
+    /// The health check script file will be created at <b>/health-check</b> by default
+    /// and it returns a non-zero exit code when the service is not ready.  A service is
+    /// considered ready only when the status is <see cref="NeonServiceStatus.Running"/>.
+    /// </para>
+    /// <para>
+    /// You may pass a custom health folder path to the constructor so that the <b>status</b> 
+    /// and <b>check</b> files so these can be located elsewhere to avoid conflicts such as 
+    /// when multiple services will be running on a machine or container or when the root
+    /// file system is read-only.  You can disable this feature entirely by passing <b>"DISABLED"</b>
+    /// as the health folder path.
+    /// </para>
+    /// <note>
+    /// Health status is supported only for services running on Linux.  This feature is disabled
+    /// entirely for Windows and OS/X.
+    /// </note>
     /// <para><b>SERVICE DEPENDENCIES</b></para>
     /// <para>
-    /// Services often depend on other services to function, such as a database, rest API, etc.
+    /// Services often depend on other services to function, such as a database, REST APIs, etc.
     /// <see cref="NeonService"/> provides an easy to use integrated way to wait for other
     /// services to initialize themselves and become ready before your service will be allowed
     /// to start.  This is a great way to avoid a blizzard of service failures and restarts
@@ -491,7 +507,10 @@ namespace Neon.Service
         private string                          version;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
-        private string                          statusFilePath;
+        private string                          healthFolder;
+        private string                          healthStatusPath;
+        private string                          healthScriptPath;
+        private IRetryPolicy                    healthRetryPolicy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
         private IDisposable                     metricCollector;
@@ -505,9 +524,19 @@ namespace Neon.Service
         /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
         /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
         /// </param>
-        /// <param name="statusFilePath">
-        /// Optionally specifies the path where the service will update its status (for external health probes).
-        /// See the class documentation for more information <see cref="Neon.Service"/>.
+        /// <param name="healthFolder">
+        /// <para>
+        /// Optionally specifies the folder path where the service will maintain the <b>status</b>
+        /// file and generate the <b>check</b> script.  See the class documentation for more information 
+        /// <see cref="Neon.Service"/>.
+        /// </para>
+        /// <para>
+        /// This defaults to: <b>/</b> to make it easy to configure the Kubernetes liveliness probe.
+        /// You can disable this feature by passing <b>"DISABLED"</b> instead.
+        /// </para>
+        /// <note>
+        /// Health status generation only works on Linux.  This feature is dsabled on Windows and OS/X.
+        /// </note>
         /// </param>
         /// <param name="serviceMap">
         /// Optionally specifies a service map describing this service and potentially other services.
@@ -536,7 +565,7 @@ namespace Neon.Service
         public NeonService(
             string      name, 
             string      version                = null,
-            string      statusFilePath         = null,
+            string      healthFolder           = null,
             ServiceMap  serviceMap             = null,
             string      terminationMessagePath = null)
         {
@@ -561,18 +590,13 @@ namespace Neon.Service
                 }
             }
 
-            if (string.IsNullOrEmpty(statusFilePath))
-            {
-                statusFilePath = null;
-            }
-
             this.Name                   = name;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator();
             this.version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
-            this.statusFilePath         = statusFilePath;
+            this.healthFolder           = healthFolder;
             this.ServiceMap             = serviceMap;
             this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
 
@@ -816,31 +840,24 @@ namespace Neon.Service
 
                 this.Status = status;
 
+                var statusString = NeonHelper.EnumToString(status);
+
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] status changed to: {status}");
+                    Log.LogWarn($"[{Name}] service status changed to: {statusString}");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] status changed to: {status}");
+                    Log.LogInfo($"[{Name}] service status changed to: {statusString}");
                 }
 
-                if (statusFilePath != null)
+                if (healthStatusPath != null)
                 {
                     // We're going to use a retry policy to handle the rare situations
                     // where the health poll and this method try to access this file 
                     // at the exact same moment.
 
-                    var policy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
-
-                    await policy.InvokeAsync(
-                        async () =>
-                        {
-                            using (var output = new FileStream(statusFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                            {
-                                await output.WriteAsync(Encoding.UTF8.GetBytes(NeonHelper.EnumToString(status)));
-                            }
-                        });
+                    healthRetryPolicy.Invoke(() => File.WriteAllText(healthStatusPath, statusString));
                 }
             }
         }
@@ -886,7 +903,7 @@ namespace Neon.Service
 
         /// <summary>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
-        /// which is your code that actually implements the service.  Note that any service dependencies
+        /// which is where you'll actually implement the service.  Note that any service dependencies
         /// specified by <see cref="Dependencies"/> will be verified as ready before <see cref="OnRunAsync"/>
         /// will be called.
         /// </summary>
@@ -1144,6 +1161,104 @@ namespace Neon.Service
 
             await Task.Delay(Dependencies.Wait);
 
+            // Initialize the health status paths when enabled on Linux and
+            // generate the health check script.  We'll log any errors and
+            // disable status generation if we have trouble accessing the
+            // folder.
+
+            if (string.IsNullOrWhiteSpace(healthFolder))
+            {
+                healthFolder = string.Empty;
+            }
+
+Log.LogInfo($"isLinux:      [{NeonHelper.IsLinux}]");
+Log.LogInfo($"healthFolder: [{healthFolder}]");
+
+            if (NeonHelper.IsLinux && !healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
+            {
+Log.LogInfo($"Configuring Health: 0");
+                if (string.IsNullOrEmpty(healthFolder))
+                {
+                    healthFolder = $"/";
+                }
+Log.LogInfo($"healthFolder:     [{healthFolder}]");
+                healthStatusPath   = Path.Combine(healthFolder, "health-status");
+Log.LogInfo($"healthStatusPath: [{healthStatusPath}]");
+                healthScriptPath = Path.Combine(healthFolder, "health-check");
+Log.LogInfo($"healthScriptPath: [{healthScriptPath}]");
+Log.LogInfo($"Configuring Health: 1");
+
+                try
+                {
+                    // Create the health status file and set its permissions.
+
+                    Directory.CreateDirectory(healthFolder);
+Log.LogInfo($"Configuring Health: 2");
+
+                    File.WriteAllText(healthStatusPath, NeonHelper.EnumToString(NeonServiceStatus.Starting));
+                    NeonHelper.Execute("/bin/chmod",
+                        new object[]
+                        {
+                            "664",
+                            healthStatusPath
+                        });
+
+                    // Create the health check script and set its permissions.
+
+                    var healthScript =
+$@"
+#!/bin/sh
+
+# Service is unhealthy when the status file doesn't exist.
+
+if [ ! -f '{healthStatusPath}' ] ; then
+    exit 1
+fi
+
+# Service is healthy only when the status file is set to: running
+
+status=$(head -n 1 '{healthStatusPath}')
+
+if [ ""$status"" = ""running"" ]
+then
+    exit 0
+else
+    exit 1
+fi
+";
+                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+
+                    NeonHelper.Execute("/bin/chmod",
+                        new object[]
+                        {
+                            "775",
+                            healthScriptPath
+                        });
+
+Log.LogInfo($"Configuring Health: 3");
+                }
+                catch (IOException e)
+                {
+                    // This may happen if the health folder path is invalid, the process
+                    // doesn't have permissions for the folder or perhaps when the file
+                    // system is read-only.  We're going to log this and disable the health
+                    // status feature when this happens. 
+
+Log.LogInfo($"Configuring Health: 4");
+                    Log.LogError("Cannot initialize the health folder.  The status feature will be disabled.", e);
+
+                    healthFolder    = null;
+                    healthStatusPath  = null;
+                    healthScriptPath = null;
+                }
+            }
+            else
+            {
+Log.LogInfo($"Configuring Health: 5");
+                healthFolder = null;
+            }
+Log.LogInfo($"Configuring Health: 6");
+
             // Start and run the service.
 
             try
@@ -1154,14 +1269,12 @@ namespace Neon.Service
             }
             catch (TaskCanceledException)
             {
-                // These are thrown as a normal consequence of a service
-                // being signalled to terminate.
+                // These are thrown as a normal consequence of a service being signalled
+                // to terminate.  Kubernetes may write a termination message to the file
+                // system.  We'll log this when present when running on Linux.
 
                 if (NeonHelper.IsLinux && !string.IsNullOrEmpty(terminationMessagePath))
                 {
-                    // Kubernetes may write a termination message to the file system.
-                    // We'll log this when present.
-
                     try
                     {
                         if (File.Exists(terminationMessagePath))
@@ -1169,7 +1282,7 @@ namespace Neon.Service
                             Log.LogInfo($"Kubernetes termination: {File.ReadAllText(terminationMessagePath)}");
                         }
                     }
-                    catch
+                    catch (IOException)
                     {
                         // Ignore any file read errors.
                     }
@@ -1382,7 +1495,7 @@ namespace Neon.Service
         /// <remarks>
         /// <para>
         /// The default password provider assumes that you have neonDESKTOP installed and may be
-        /// specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+        /// specifying passwords in the <b>~/.neonkube/passwords</b> folder (relative to the current
         /// user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
         /// it just probably won't find any passwords.
         /// </para>
@@ -1520,7 +1633,7 @@ namespace Neon.Service
         /// <remarks>
         /// <para>
         /// The default password provider assumes that you have neonDESKTOP installed and may be
-        /// specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+        /// specifying passwords in the <b>~/.neonkube/passwords</b> folder (relative to the current
         /// user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
         /// it just probably won't find any passwords.
         /// </para>
