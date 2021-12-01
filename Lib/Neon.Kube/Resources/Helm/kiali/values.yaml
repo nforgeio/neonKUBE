@@ -57,8 +57,8 @@ cr:
     auth:
       strategy: openid
       openid:
-        client_id: "kubernetes"
-        issuer_uri: "http://keycloak.neon-system"
+        client_id: "oauth2-proxy"
+        issuer_uri: "https://sso.cluster.neoncluster.io/auth/realms/neon-sso"
     deployment:
       image_name: neon-registry.node.local/kiali-kiali
       image_version: v1.28.0

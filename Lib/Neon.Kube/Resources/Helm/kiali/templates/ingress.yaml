@@ -1,0 +1,31 @@
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: kiali-dashboard-virtual-service
+  namespace: neon-ingress
+spec:
+  gateways:
+    - neoncluster-gateway
+  hosts:
+    - kiali.{{ .Values.clusterDomain }}
+  http:
+    - match:
+        - uri:
+            prefix: /api/auth/openid_redirect
+      route:
+        - destination:
+            host: neon-sso-oauth2-proxy.neon-ingress.svc.cluster.local
+            port:
+              number: 4180
+    - headers:
+        request:
+          set:
+            X-Forwarded-Port: '443'
+      match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: kiali.neon-ingress.svc.cluster.local
+            port:
+              number: 20001
