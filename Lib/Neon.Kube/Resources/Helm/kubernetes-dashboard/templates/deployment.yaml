@@ -57,10 +57,11 @@ spec:
       serviceAccountName: {{ template "kubernetes-dashboard.serviceAccountName" . }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
           - --namespace={{ .Release.Namespace }}
+          - --enable-insecure-login
 {{- if not .Values.protocolHttp }}
           - --auto-generate-certificates
 {{- end }}
@@ -118,7 +119,7 @@ spec:
 {{- end }}
 {{- if .Values.metricsScraper.enabled }}
       - name: dashboard-metrics-scraper
-        image: "{{ .Values.metricsScraper.image.repository }}:{{ .Values.metricsScraper.image.tag }}"
+        image: "{{ .Values.metricsScraper.image.organization }}/{{ .Values.metricsScraper.image.repository }}:{{ .Values.metricsScraper.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- with .Values.metricsScraper.args }}
         args:

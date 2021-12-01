@@ -8,4 +8,6 @@ spec:
       app.kubernetes.io/component: kubernetes-dashboard
   action: CUSTOM
   provider:
-    name: oauth2-proxy-neon-sso.neon-ingress
+    name: neon-sso-service
+  rules:
+   - {}

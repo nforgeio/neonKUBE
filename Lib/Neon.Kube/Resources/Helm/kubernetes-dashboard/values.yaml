@@ -17,6 +17,8 @@
 # Declare name/value pairs to be passed into your templates.
 # name: value
 
+fullnameOverride: kubernetes-dashboard
+
 image:
   ## Repository for container
   organization: neon-registry.node.local
@@ -104,7 +106,7 @@ resources:
 ## Serve application over HTTP without TLS
 ##
 ## Note: If set to true, you may want to add --enable-insecure-login to extraArgs
-protocolHttp: false
+protocolHttp: true
 
 service:
   type: ClusterIP
@@ -219,7 +221,7 @@ pinnedCRDs:
 ## refs: https://github.com/kubernetes-sigs/dashboard-metrics-scraper
 metricsScraper:
   ## Wether to enable dashboard-metrics-scraper
-  enabled: false
+  enabled: true
   image:
     organization: neon-registry.node.local
     repository: kubernetesui-metrics-scraper
@@ -234,19 +236,6 @@ metricsScraper:
 #  args:
 #    - --log-level=info
 #    - --logtostderr=true
-
-## Optional Metrics Server sub-chart
-## Enable this if you don't already have metrics-server enabled on your cluster and
-## want to use it with dashboard metrics-scraper
-## refs:
-##  - https://hub.helm.sh/charts/stable/metrics-server
-##  - https://github.com/kubernetes-sigs/metrics-server
-metrics-server:
-  enabled: false
-  ## Example for additional args
-  # args:
-  #  - --kubelet-preferred-address-types=InternalIP
-  #  - --kubelet-insecure-tls
 
 rbac:
   # Specifies whether namespaced RBAC resources (Role, Rolebinding) should be created
