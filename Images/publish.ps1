@@ -106,8 +106,8 @@ try
     }
 
     # Purge any local Docker images as well as the image build cache.
-    # This also purges everything else Docker as a side effect.  We
-    # need to do this to ensure that we get a clean build.
+    # This also purges all other Docker assets as a side effect.  We
+    # need to do this to ensure to ensure a clean build.
 
     if (!$noprune)
     {
@@ -126,7 +126,6 @@ try
 
     if ($other)
     {
-        Publish "$image_root\neon-clocksync"
         Publish "$image_root\nats"
         Publish "$image_root\nats-streaming"
         Publish "$image_root\couchbase-dev"
@@ -143,12 +142,12 @@ try
     if ($services)
     {
         Publish "$image_root\neon-acme"
-        Publish "$image_root\neon-allow-testing"
         Publish "$image_root\neon-cluster-operator"
+        Publish "$image_root\test-api"
     }
 
     # Purge any local Docker images as well as the image build cache.
-    # This also purges everything else Docker as a side effect.
+    # This also purges all other Docker assets as a side effect.
     #
     # We're doing this to ensure that Docker is reset to its default
     # state after building images.  This is especially important for

@@ -104,11 +104,10 @@ The value of the constant read is written to STDOUT.
 
 NOTE: The constant must appear exactly like:
 
-    public const string NeonKubeVersion = ""0.1.0-alpha"";
+    public const string NAME = ""VERSION"";
 
-within the C# source file to be parsed correctly where [NeonKubeVersion]
-is the constant name in this case and [0.1.0-alpha] will be returned as
-the value.
+within the C# source file to be parsed correctly where [NAME] is the constant
+name and [VERSION] will be returned as value.
 
 ----------------------------------------------------
 neon-build pack-version VERSION-CONSTANT CSPROJ-FILE
