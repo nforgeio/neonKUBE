@@ -7,11 +7,11 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - {{ .Values.clusterDomain }}
+    - grafana.{{ .Values.clusterDomain }}
   http:
     - match:
         - uri:
-            prefix: /dashboards/grafana
+            prefix: /
       route:
         - destination:
             host: grafana.neon-monitor.svc.cluster.local

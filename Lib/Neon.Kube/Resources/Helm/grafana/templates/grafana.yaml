@@ -11,19 +11,21 @@ spec:
     log:
       mode: "console"
       level: "debug"
-    auth.proxy:
+    auth.generic_oauth:
+      api_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+      auth_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
+      client_id: $__env{CLIENT_ID}
+      client_secret: $__env{CLIENT_SECRET}
+      empty_scopes: false
       enabled: true
-      # HTTP Header name that will contain the username or email
-      header_name: X-WEBAUTH-USER
-      # HTTP Header property, defaults to `username` but can also be `email`
-      header_property: username
-      # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
-      auto_sign_up: true
-      # Define cache time to live in minutes
-      # If combined with Grafana LDAP integration it is also the sync interval
-      sync_ttl: 60
-      # Check out docs on this for more details on the below setting
-      enable_login_token: false
+      scopes: openid
+      token_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
+      role_attribute_path: >-
+        contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor')
+        && 'Editor' || 'Viewer'
     database:
       type: postgres
       host: db-citus-postgresql.neon-system.svc.cluster.local
@@ -48,6 +50,9 @@ spec:
     envFrom:
       - secretRef:
           name: grafana-db-password
+      - secretRef:
+          name: keycloak-client-secret-grafana
+   
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
   dashboardLabelSelector:
