@@ -1,7 +1,7 @@
 apiVersion: keycloak.org/v1alpha1
 kind: Keycloak
 metadata:
-  name: example-keycloak
+  name: neon-sso
   labels:
     app: neon-sso
 spec:
@@ -17,6 +17,9 @@ spec:
     enabled: True
   keycloakDeploymentSpec:
     experimental:
+      imagePullPolicy: IfNotPresent
       env:
-        - name: KEYCLOAK_FRONTEND_URL
-          value: "https://{{ .Values.cluster.domain }}/sso"
+        - name: DB_ADDR
+          value: db-citus-postgresql.neon-system
+
+

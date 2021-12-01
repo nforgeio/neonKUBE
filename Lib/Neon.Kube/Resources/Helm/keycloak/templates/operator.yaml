@@ -19,12 +19,10 @@ spec:
           image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           command:
           - keycloak-operator
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+              value: "{{ .Release.Namespace}},neon-ingress,neon-monitor"
             - name: POD_NAME
               valueFrom:
                 fieldRef:

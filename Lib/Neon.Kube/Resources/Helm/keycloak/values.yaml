@@ -16,8 +16,8 @@ operator:
 
 initContainer:
   image: 
-    organization: neon-registry.node.local
-    repository: keycloak-keycloak-init-container
+    organization: quay.io/keycloak
+    repository: keycloak-init-container
     tag: 15.0.2
 
 config:
@@ -30,4 +30,7 @@ database:
   service: db-citus-postgresql.neon-system
   port: 5432
   username: neon_service
+  password: password
+
+rootUser:
   password: password

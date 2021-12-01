@@ -10,6 +10,12 @@ spec:
     realm: neon-sso
     enabled: True
     displayName: "Neon SSO"
+    clientScopes:
+      - name: openid
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "true"
   instanceSelector:
     matchLabels:
       app: neon-sso

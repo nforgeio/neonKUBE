@@ -1,0 +1,27 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: root-user
+  labels:
+    app: neon-sso
+spec:
+  user:
+    username: "root"
+    enabled: True
+    emailVerified: true
+    emailAddress: root@cluster.local
+    credentials:
+      - type: "password"
+        value: {{ .Values.rootUser.password }}
+    attributes:
+      groups:
+       - root-user
+       - admin
+    clientRoles:
+      grafana:
+        - admin
+      minio:
+        - consoleAdmin
+  realmSelector:
+    matchLabels:
+      app: neon-sso
