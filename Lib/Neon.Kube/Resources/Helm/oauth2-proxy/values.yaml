@@ -10,10 +10,6 @@ config:
     name: neonkube
   # Add config annotations
   annotations: {}
-  # OAuth client ID
-  clientID: "neon-sso"
-  # OAuth client secret
-  clientSecret: "clientSecret"
   # Create a new secret with the following command
   # openssl rand -base64 32 | head -c 32 | base64
   # Use an existing secret for OAuth2 credentials (see secret.yaml for required fields)
@@ -31,16 +27,24 @@ config:
     # existingSecret: google-secret
   # Default configuration, to be overridden
   configFile: |-
-    provider= "keycloak"
-    session_store = "redis"
-    redis_sentinel_connection_urls = [ "redis://neon-redis.neon-system:26379" ]
-    redis_sentinel_master_name = "master"
+    http_address="0.0.0.0:4180"
+    metrics_address="0.0.0.0:44180"
+    cookie_name="neon-sso"
+    provider="oidc"  
+    session_store_type = "redis"
+    redis_sentinel_connection_urls=[ "redis://neon-redis.neon-system:26379" ]
+    redis_sentinel_master_name = "master" 
     redis_use_sentinel = true
-    email_domains = [ "*" ]
-    upstreams = [ "file:///dev/null" ]
-    skip_provider_button = true
-    standard_logging = true
+    email_domains = [ "*" ] 
+    upstreams = [ "static://200" ] 
+    scope = "openid"
+    skip_provider_button = true 
+    standard_logging = true 
     request_logging = true
+    pass_authorization_header = true 
+    pass_access_token = true
+    set_authorization_header = true
+    set_xauthrequest = true
 
   # Custom configuration file: oauth2_proxy.cfg
   # configFile: |-
@@ -100,7 +104,7 @@ service:
   # when service.type is LoadBalancer ...
   # loadBalancerIP: 198.51.100.40
   # loadBalancerSourceRanges: 203.0.113.0/24
-  portNumber: 80
+  portNumber: 4180
   annotations: {}
   # foo.io/bar: "true"
 

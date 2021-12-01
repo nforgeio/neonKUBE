@@ -5,6 +5,8 @@ metadata:
     app: {{ template "oauth2-proxy.name" . }}
 {{- include "oauth2-proxy.labels" . | indent 4 }}
   name: {{ template "oauth2-proxy.fullname" . }}
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -44,20 +46,6 @@ spec:
         image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
-          - --http-address=0.0.0.0:4180
-        {{- if .Values.metrics.enabled }}
-          - --metrics-address=0.0.0.0:44180
-        {{- end }}
-        {{- if .Values.config.cookieName }}
-          - --cookie-name={{ .Values.config.cookieName }}
-        {{- end }}
-        {{- range $key, $value := .Values.extraArgs }}
-          {{- if $value }}
-          - --{{ $key }}={{ $value }}
-          {{- else }}
-          - --{{ $key }}
-          {{- end }}
-        {{- end }}
         {{- if or .Values.config.existingConfig .Values.config.configFile }}
           - --config=/etc/oauth2_proxy/oauth2_proxy.cfg
         {{- end }}
@@ -77,23 +65,23 @@ spec:
         {{- if .Values.htpasswdFile.enabled }}
           - --htpasswd-file=/etc/oauth2_proxy/htpasswd/users.txt
         {{- end }}
-        - --oidc-issuer-url=https://{{ .Values.config.cluster.domain }}/auth/realms/{{ .Values.config.cluster.name }}
-        - --login-url=https://{{ .Values.config.cluster.domain }}/auth/realms/{{ .Values.config.cluster.name }}/protocol/openid-connect/auth
-        - --redeem-url=https://{{ .Values.config.cluster.domain }}/auth/realms/{{ .Values.config.cluster.name }}/protocol/openid-connect/token
-        - --validate-url=https://{{ .Values.config.cluster.domain }}/auth/realms/{{ .Values.config.cluster.name }}/protocol/openid-connect/userinfo
-        - --profile-url=https://{{ .Values.config.cluster.domain }}/auth/realms/{{ .Values.config.cluster.name }}/protocol/openid-connect/userinfo
+          - --login-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
+          - --redeem-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
+          - --validate-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+          - --profile-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+          - --oidc-issuer-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso
         env:
         {{- if .Values.proxyVarsAsSecrets }}
         - name: OAUTH2_PROXY_CLIENT_ID
           valueFrom:
             secretKeyRef:
-              name:  {{ template "oauth2-proxy.secretName" . }}
-              key: client-id
+              name:  keycloak-client-secret-oauth2-proxy
+              key: CLIENT_ID
         - name: OAUTH2_PROXY_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name:  {{ template "oauth2-proxy.secretName" . }}
-              key: client-secret
+              name:  keycloak-client-secret-oauth2-proxy
+              key: CLIENT_SECRET
         - name: OAUTH2_PROXY_COOKIE_SECRET
           valueFrom:
             secretKeyRef:
