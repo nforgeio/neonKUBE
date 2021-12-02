@@ -10,6 +10,10 @@ spec:
     realm: neon-sso
     enabled: True
     displayName: "Neon SSO"
+    accessTokenLifespan: 86400
+    accessTokenLifespanForImplicitFlow: 86400
+    ssoSessionIdleTimeout: 604800
+    ssoSessionMaxLifespan: 864000
     clientScopes:
       - name: openid
         protocol: openid-connect

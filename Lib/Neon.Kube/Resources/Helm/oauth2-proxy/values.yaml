@@ -30,6 +30,8 @@ config:
     http_address="0.0.0.0:4180"
     metrics_address="0.0.0.0:44180"
     cookie_name="neon-sso"
+    cookie_refresh=1h
+    cookie_expire=168h
     provider="oidc"  
     session_store_type = "redis"
     redis_sentinel_connection_urls=[ "redis://neon-redis.neon-system:26379" ]
