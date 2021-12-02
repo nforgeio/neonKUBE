@@ -840,15 +840,15 @@ namespace Neon.Service
 
                 this.Status = status;
 
-                var statusString = NeonHelper.EnumToString(status);
+                var statusString = NeonHelper.EnumToString(status).ToUpperInvariant();
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] service status changed to: {statusString}");
+                    Log.LogWarn($"[{Name}] health status changed to: [{statusString}]");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] service status changed to: {statusString}");
+                    Log.LogInfo($"[{Name}] health status changed to: [{statusString}]");
                 }
 
                 if (healthStatusPath != null)
