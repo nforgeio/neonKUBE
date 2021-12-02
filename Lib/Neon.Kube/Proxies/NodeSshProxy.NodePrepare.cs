@@ -1769,7 +1769,7 @@ echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/source
 
 {KubeNodeFolders.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeletPackage}
 {KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubeCtlPackage}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubectlPackage}
 
 # Prevent the package manager these components from starting automatically.
 

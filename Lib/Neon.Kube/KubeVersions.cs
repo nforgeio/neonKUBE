@@ -50,11 +50,6 @@ namespace Neon.Kube
         public const string Kubernetes = "1.21.4";
 
         /// <summary>
-        /// The version of the Kubernetes client tools to be installed with neonDESKTOP.
-        /// </summary>
-        public const string KubernetesTools = "1.21.0";
-
-        /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
         public const string KubernetesDashboard = "2.3.1";
@@ -67,17 +62,22 @@ namespace Neon.Kube
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackage = "1.21.4-00";
+        public const string KubeAdminPackage = Kubernetes + "-00";
+
+        /// <summary>
+        /// The version of the Kubernetes client tools to be installed with neonDESKTOP.
+        /// </summary>
+        public const string Kubectl = Kubernetes;
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackage = "1.21.4-00";
+        public const string KubectlPackage = Kubectl + "-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackage = "1.21.4-00";
+        public const string KubeletPackage = Kubernetes + "-00";
 
         /// <summary>
         /// <para>
@@ -88,7 +88,7 @@ namespace Neon.Kube
         /// Make sure the package has actually been uploaded.
         /// </para>
         /// </summary>
-        public const string Crio = "1.21.0";
+        public const string Crio = Kubernetes;
 
         /// <summary>
         /// The version of Calico to install.

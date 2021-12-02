@@ -86,6 +86,7 @@ namespace Neon.Kube
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
         private static string               cachedProgramDataFolder;
+        private static string               cachedToolsFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
@@ -141,6 +142,7 @@ namespace Neon.Kube
             cachedClusterCertificate  = null;
             cachedProgramFolder       = null;
             cachedProgramDataFolder   = null;
+            cachedToolsFolder         = null;
             cachedPwshPath            = null;
             cachedResources           = null;
             cachedNodeImageFolder     = null;
@@ -706,6 +708,28 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedLoginsFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path the folder containing kubernetes related tools, creating the folder 
+        /// if it doesn't already exist.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string ToolsFolder
+        {
+            get
+            {
+                if (cachedToolsFolder != null)
+                {
+                    return cachedToolsFolder;
+                }
+
+                var path = Path.Combine(NeonKubeUserFolder, "tools");
+
+                Directory.CreateDirectory(path);
+
+                return cachedToolsFolder = path;
             }
         }
 
