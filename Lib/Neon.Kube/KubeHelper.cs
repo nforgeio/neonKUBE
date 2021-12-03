@@ -34,11 +34,13 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Win32;
 using Microsoft.Rest;
+using Microsoft.Win32;
+using SharpCompress.Readers;
 
 using Newtonsoft.Json;
 
@@ -2608,7 +2610,7 @@ TCPKeepAlive yes
         /// <summary>
         /// Helper method to set the Harbor image sync status.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task SetDisableHarborImageSyncAsync(bool value)
         {
             var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
@@ -2641,6 +2643,342 @@ TCPKeepAlive yes
                 await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), KubeNamespaces.NeonSystem);
 
             }
+        }
+
+        /// <summary>
+        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// </summary>
+        /// <param name="installFolder">Path to the tool installation folder.</param>
+        /// <param name="toolName">The requested tool name, one of: <b>helm</b> or <b>kubectl</b></param>
+        /// <param name="toolChecker">Callback taking the the tool path as a parameter and returning <c>true</c> when the tool version matches what's required.</param>
+        /// <param name="userToolsFolder">
+        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
+        /// the method will download the file to <see cref="ToolsFolder"/>.
+        /// </param>
+        /// <param name="toolUriRetriever">Callback that returns the URI to be used to download the tool.</param>
+        /// <returns>The fully qualified tool path.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
+        /// <remarks>
+        /// <para>
+        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
+        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
+        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
+        /// </para>
+        /// <para>
+        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
+        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
+        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
+        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
+        /// </para>
+        /// </remarks>
+        public static string GetToolPath(string installFolder, string toolName, Func<string, bool> toolChecker, Func<string> toolUriRetriever, bool userToolsFolder = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(toolName), nameof(toolName));
+            Covenant.Requires<ArgumentNullException>(toolChecker != null, nameof(toolChecker));
+            Covenant.Requires<ArgumentNullException>(toolUriRetriever != null, nameof(toolUriRetriever));
+
+            // Determine the full tool file name.
+
+            string extension;
+
+            if (NeonHelper.IsWindows)
+            {
+                extension = ".exe";
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                extension = string.Empty;
+            }
+            else
+            {
+                throw new NotSupportedException(NeonHelper.OSDescription);
+            }
+
+            var toolFile = $"{toolName}{extension}";
+
+            // If the tool exists in the standard install location, then simply return its
+            // path.  We're going to assume that the tool version is correct in this case
+            // when [userToolsFolder=true].
+            //
+            // If the tool exists and [userToolsFolder==false], we're going to verify its version
+            // and return the tool path when that's correct.
+            // 
+            // Otherwise if the tool doesn't exist or its version is incorrect, we're
+            // going to drop thru to download the binaries to [installFolder] when
+            // [userToolsFolder=false] or to [KubeHelper.ToolsFolder] when
+            // [userToolsFolder=false].
+
+            var toolPath = Path.Combine(installFolder, toolFile);
+
+            if (File.Exists(toolPath) && (!userToolsFolder || toolChecker(toolPath)))
+            {
+                return toolPath;
+            }
+
+            // The tool doesn't exist in the standard install location or isn't the correct
+            // version, so we'll check for it in the user's tool cache when enabled.
+
+            if (userToolsFolder)
+            {
+                toolPath = Path.Combine(KubeHelper.ToolsFolder, toolFile);
+
+                if (File.Exists(toolPath))
+                {
+                    // If the cached tool version is correct (by calling the tool checker callback),
+                    // then return it's path.
+
+                    if (toolChecker(toolPath))
+                    {
+                        return toolPath;
+                    }
+                }
+            }
+
+            // We'll land here if there's no cached binary or if its version is not correct.  Any
+            // existing binary will be deleted and then we'll attempt to download a new copy.
+            //
+            // NOTE: We're going to require that the URI being downloaded is a TAR.GZ or a .ZIP file.
+
+            var toolUri      = new Uri(toolUriRetriever());
+            var downloadPath = Path.Combine(KubeHelper.TempFolder, $"download-{Guid.NewGuid().ToString("d")}.tar.gz");
+
+            Covenant.Assert(toolUri.AbsolutePath.EndsWith(".tar.gz", StringComparison.InvariantCultureIgnoreCase) ||
+                            toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase), 
+                            "Expecting a TAR.GZ or .ZIP file.");
+
+            Console.Error.WriteLine($"*** Download: [{toolUri}] --> [{downloadPath}]");
+            NeonHelper.DeleteFile(toolPath);
+
+            using (var httpClient = new HttpClient())
+            {
+                var response = httpClient.GetSafeAsync(toolUri).Result;
+
+                using (var download = response.Content.ReadAsStreamAsync().Result)
+                {
+                    using (var output = new FileStream(downloadPath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        download.CopyTo(output);
+                    }
+                }
+            }
+
+            // We need to extract files to the tool file folder.  Note that when the
+            // download includes multiple files, we'll extract all of them (ignoring
+            // any we don't care about).
+
+            if (userToolsFolder)
+            {
+                installFolder = ToolsFolder;
+            }
+
+            try
+            {
+                using (var download = File.OpenRead(downloadPath))
+                {
+                    using (var reader = ReaderFactory.Open(download))
+                    {
+                        while (reader.MoveToNextEntry())
+                        {
+                            var entry = reader.Entry;
+
+                            if (entry.IsDirectory)
+                            {
+                                continue;
+                            }
+
+                            using (var entryStream = reader.OpenEntryStream())
+                            {
+                                var lastSlashPos = entry.Key.LastIndexOfAny(new char[] { '/', '\\' });
+
+                                Covenant.Assert(lastSlashPos >= 0);
+
+                                var filename = entry.Key.Substring(lastSlashPos + 1);
+
+                                // Ignore unnecessary files.
+
+                                switch (filename)
+                                {
+                                    case "LICENSE":
+                                    case "README.md":
+
+                                        continue;
+                                }
+
+                                using (var output = File.OpenWrite(Path.Combine(installFolder, filename)))
+                                {
+                                    entryStream.CopyTo(output);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                NeonHelper.DeleteFile(downloadPath);
+            }
+
+            // We need to set execute permissions on Linux and OS/X.
+
+            if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                NeonHelper.ExecuteCapture("chmod",
+                    args: new object[]
+                    {
+                        "770",
+                        toolPath
+                    })
+                    .EnsureSuccess();
+            }
+
+            return toolPath;
+        }
+
+        /// <summary>
+        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// </summary>
+        /// <param name="installFolder">Path to the tool installation folder.</param>
+        /// <param name="userToolsFolder">
+        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
+        /// the method will download the file to <see cref="ToolsFolder"/>.
+        /// </param>
+        /// <returns>The fully qualified tool path.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
+        /// <remarks>
+        /// <para>
+        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
+        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
+        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
+        /// </para>
+        /// <para>
+        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
+        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
+        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
+        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
+        /// </para>
+        /// </remarks>
+        public static string GetKubectlPath(string installFolder, bool userToolsFolder = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
+
+            Func<string, bool> toolChecker =
+                toolPath =>
+                {
+                    // [kubectl version --client] output will look like:
+                    //
+                    //      Client Version: version.Info{Major:"1", Minor:"21", GitVersion:"v1.21.5", GitCommit:"aea7bbadd2fc0cd689de94a54e5b7b758869d691", GitTreeState:"clean", BuildDate:"2021-09-15T21:10:45Z", GoVersion:"go1.16.8", Compiler:"gc", Platform:"windows/amd64"}
+
+                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version", "--client" }).EnsureSuccess();
+                    var versionOutput = response.OutputText;
+                    var versionRegex  = new Regex(@"\sGitVersion:""v(?'version'[\d.]+)""", RegexOptions.None);
+                    var match         = versionRegex.Match(versionOutput);
+
+                    if (match.Success)
+                    {
+                        return match.Groups["version"].Value == KubeVersions.Kubectl;
+                    }
+                    else
+                    {
+                        throw new Exception($"Unable to extract [kubectl] version from: {versionOutput}");
+                    }
+                };
+
+            Func<string> toolUriRetriever =
+                () =>
+                {
+                    if (NeonHelper.IsWindows)
+                    {
+                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-windows-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsLinux)
+                    {
+                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-linux-amd64.tar.gz";
+                    }
+                    else if (NeonHelper.IsOSX)
+                    {
+                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-darwin-amd64.tar.gz";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(NeonHelper.OSDescription);
+                    }
+                };
+
+            return GetToolPath(installFolder, "kubectl", toolChecker, toolUriRetriever, userToolsFolder);
+        }
+
+        /// <summary>
+        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// </summary>
+        /// <param name="installFolder">Path to the tool installation folder.</param>
+        /// <param name="userToolsFolder">
+        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
+        /// the method will download the file to <see cref="ToolsFolder"/>.
+        /// </param>
+        /// <returns>The fully qualified tool path.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
+        /// <remarks>
+        /// <para>
+        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
+        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
+        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
+        /// </para>
+        /// <para>
+        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
+        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
+        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
+        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
+        /// </para>
+        /// </remarks>
+        public static string GetHelmPath(string installFolder, bool userToolsFolder = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
+
+            Func<string, bool> toolChecker =
+                toolPath =>
+                {
+                    // [helm version] output will look like:
+                    //
+                    //      version.BuildInfo{Version:"v3.3.1", GitCommit:"249e5215cde0c3fa72e27eb7a30e8d55c9696144", GitTreeState:"clean", GoVersion:"go1.14.7"}
+
+                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
+                    var versionOutput = response.OutputText;
+                    var versionRegex  = new Regex(@"Version:""v(?'version'[\d.]+)""", RegexOptions.None);
+                    var match         = versionRegex.Match(versionOutput);
+
+                    if (match.Success)
+                    {
+                        return match.Groups["version"].Value == KubeVersions.Helm;
+                    }
+                    else
+                    {
+                        throw new Exception($"Unable to extract [helm] version from: {versionOutput}");
+                    }
+                };
+
+            Func<string> toolUriRetriever =
+                () =>
+                {
+                    if (NeonHelper.IsWindows)
+                    {
+                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
+                    }
+                    else if (NeonHelper.IsLinux)
+                    {
+                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-arm64.tar.gz";
+                    }
+                    else if (NeonHelper.IsOSX)
+                    {
+                        return $"https://get.helm.sh/helm-v{KubeVersions.Helm}-darwin-arm64.tar.gz";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(NeonHelper.OSDescription);
+                    }
+                };
+
+            return GetToolPath(installFolder, "helm", toolChecker, toolUriRetriever, userToolsFolder);
         }
     }
 }
