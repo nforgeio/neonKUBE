@@ -45,8 +45,8 @@ Removes a specific named password or all passwords.
 
 USAGE:
 
-    neon password remove|rm [--force] NAME  - Removes the named password
-    neon password remove|rm [--force] *     - Removes all named passwords
+    neon tool password remove|rm [--force] NAME - Removes the named password
+    neon tool password remove|rm [--force] *    - Removes all named passwords
 
 ARGUMENTS:
 
@@ -64,10 +64,10 @@ This command removes a named password or all passwords.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "remove" }; 
+        public override string[] Words => new string[] { "tool", "password", "remove" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords => new string[] { "password", "rm" }; 
+        public override string[] AltWords => new string[] { "tool", "password", "rm" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" }; 

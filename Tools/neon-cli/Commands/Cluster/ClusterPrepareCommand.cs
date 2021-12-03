@@ -85,6 +85,9 @@ OPTIONS:
                                   cluster setup issues.  Do not use for production
                                   clusters.
 
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
+
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 
                                   cluster.  You can use this to ensure that 
@@ -134,7 +137,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--ready-to-go",  "--package-caches", "--unredacted", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--ready-to-go",  "--package-caches", "--unredacted", "--max-parallel", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -172,13 +175,20 @@ Server Requirements:
                 }
             }
            
-            var nodeImageUri     = commandLine.GetOption("--node-image-uri");
-            var nodeImagePath    = commandLine.GetOption("--node-image-path");
-            var readyToGo        = commandLine.HasOption("--ready-to-go");
-            var debug            = commandLine.HasOption("--debug");
-            var baseImageName    = commandLine.GetOption("--base-image-name");
-            var automationFolder = commandLine.GetOption("--automation-folder");
-            var headendUri       = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
+            var nodeImagePath     = commandLine.GetOption("--node-image-path");
+            var readyToGo         = commandLine.HasOption("--ready-to-go");
+            var debug             = commandLine.HasOption("--debug");
+            var baseImageName     = commandLine.GetOption("--base-image-name");
+            var automationFolder  = commandLine.GetOption("--automation-folder");
+            var headendUri        = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+
+            if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
+                Program.Exit(1);
+            }
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
@@ -266,7 +276,7 @@ Server Requirements:
                 clusterDefinition, 
                 nodeImageUri:           nodeImageUri,
                 nodeImagePath:          nodeImagePath,
-                maxParallel:            Program.MaxParallel,
+                maxParallel:            maxParallel,
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,

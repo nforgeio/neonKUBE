@@ -45,7 +45,7 @@ Decrypts a file to another location.
 
 USAGE:
 
-    neon vault decrypt SOURCE TARGET
+    neon tool vault decrypt SOURCE TARGET
 
 ARGUMENTS:
 
@@ -63,7 +63,7 @@ NOTE: We explicitly don't support decrypting a file in-place to discourage
       easy to do.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "vault", "decrypt" }; 
+        public override string[] Words => new string[] { "tool", "vault", "decrypt" }; 
 
         /// <inheritdoc/>
         public override void Help()

@@ -46,7 +46,7 @@ Returns the name of the password used to encrypt a file.
 
 USAGE:
 
-    neon vault password-name [-n] PATH
+    neon tool vault password-name [-n] PATH
 
 ARGUMENTS:
 
@@ -64,7 +64,7 @@ returns 0 exit code and writes the password name to the output.
 The command returns a non-zero exit code for unencrypted files.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "vault", "password-name" }; 
+        public override string[] Words => new string[] { "tool", "vault", "password-name" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "-n" }; 

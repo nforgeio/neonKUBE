@@ -43,13 +43,13 @@ Manages encrypted files.
 
 USAGE:
 
-    neon vault
-    neon vault create PATH [PASSWORD-NAME]
-    neon vault decrypt SOURCE TARGET
-    neon vault edit PATH
-    neon vault encrypt PATH [--password=PASSWORD-NAME]
-    neon vault encrypt SOURCE TARGET [PASSWORD-NAME]
-    neon vault password-name PATH
+    neon tool vault
+    neon tool vault create PATH [PASSWORD-NAME]
+    neon tool vault decrypt SOURCE TARGET
+    neon tool vault edit PATH
+    neon tool vault encrypt PATH [--password=PASSWORD-NAME]
+    neon tool vault encrypt SOURCE TARGET [PASSWORD-NAME]
+    neon tool vault password-name PATH
 
 REMARKS:
 
@@ -73,16 +73,16 @@ is used as the name to identify each password.  The file commands use
 password names to explicitly or implictly identify the password to be
 used to manage specific files.  For example:
 
-    neon vault create foo.txt default
+    neon tool vault create foo.txt default
 
 creates an encrypted file named [foo.txt] using the password named [default].
 The [default] password must already exist in the current user's passwords
 folder.  Passwords can be managed via:
 
-    neon password export [PASSWORD-NAMES...] ZIPFILE
-    neon password import ZIPFILE
-    neon password rm PASSWORD-NAME
-    neon set PASSWORD-NAME [PASSWORD]
+    neon tool password export [PASSWORD-NAMES...] ZIPFILE
+    neon tool password import ZIPFILE
+    neon tool password rm PASSWORD-NAME
+    neon tool set PASSWORD-NAME [PASSWORD]
 
 where the [set/rm] commands provide for creating and deleting passwords and
 the [export/import] commands provide a way to share passwords using encrypted
@@ -106,7 +106,7 @@ customize the editor by setting the EDITOR environment variable to the path
 to the editor executable file.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "vault" }; 
+        public override string[] Words => new string[] { "tool", "vault" }; 
 
         /// <inheritdoc/>
         public override void Help()

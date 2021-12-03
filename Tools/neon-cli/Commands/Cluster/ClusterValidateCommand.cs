@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordGenerateCommand.cs
+// FILE:	    ClusterValidateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,29 +34,25 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>password generate</b> command.
+    /// Implements the <b>cluster validate</b> command.
     /// </summary>
     [Command]
-    public class PasswordGenerateCommand : CommandBase
+    public class ClusterValidateCommand : CommandBase
     {
         private const string usage = @"
-Generates a cryptographically secure password.
+Verifies a cluster definition file.
 
 USAGE:
 
-    neon password generate|gen [LENGTH]
+    neon cluster validate CLUSTER-DEF
 
 ARGUMENTS:
 
-    LENGTH      - Length of the desired password (default=20)
-
-REMARKS:
-
-The generated password will be written to standard output.
+    CLUSTER-DEF     - Path to the cluster definition file.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "generate" }; 
+        public override string[] Words => new string[] { "cluster", "validate" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -67,26 +63,19 @@ The generated password will be written to standard output.
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            if (commandLine.HasHelpOption)
+            if (commandLine.Arguments.Length < 1)
             {
-                Console.WriteLine(usage);
-                Program.Exit(0);
+                Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
+                Program.Exit(1);
             }
 
-            var lengthArg = commandLine.Arguments.ElementAtOrDefault(0);
-            var length    = 20;
+            // Parse and validate the cluster definition.
 
-            if (lengthArg != null)
-            {
-                if (!int.TryParse(lengthArg, out length) || length < 8 || length > 100)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [LENGTH={lengthArg}] is invalid.  Expected an integere between [8..100].");
-                    Program.Exit(1);
-                }
-            }
+            ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
-            Console.Write(NeonHelper.GetCryptoRandomPassword(length));
-            Program.Exit(0);
+            Console.WriteLine();
+            Console.WriteLine("*** The cluster definition is OK.");
+
             await Task.CompletedTask;
         }
     }

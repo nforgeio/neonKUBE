@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterVerifyCommand.cs
+// FILE:	    PasswordCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,25 +34,37 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster verify</b> command.
+    /// Implements the <b>password</b> command.
     /// </summary>
     [Command]
-    public class ClusterVerifyCommand : CommandBase
+    public class PasswordCommand : CommandBase
     {
         private const string usage = @"
-Verifies a cluster definition file.
+Manages neonKUBE passwords.
 
 USAGE:
 
-    neon cluster verify CLUSTER-DEF
+    neon tool password
+    neon tool password export PATH NAME...
+    neon tool password export PATH *
+    neon tool password generate [LENGTH]
+    neon tool password import PATH
+    neon tool password list|ls
+    neon tool password remove|rm NAME
+    neon tool password remove|rm *
+    neon tool password set NAME [PATH|-]
 
 ARGUMENTS:
 
-    CLUSTER-DEF     - Path to the cluster definition file.
+    LENGTH      - Length of the desired password (default=20)
+    NAME        - Password name
+    PATH        - Input or output file path
+    -           - Read from standard input
+    *           - Process all passwords
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "verify" };
+        public override string[] Words => new string[] { "tool", "password" }; 
 
         /// <inheritdoc/>
         public override void Help()
@@ -63,18 +75,17 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            if (commandLine.Arguments.Length < 1)
+            if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
-                Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
-                Program.Exit(1);
+                Console.WriteLine(usage);
+                Program.Exit(0);
             }
 
-            // Parse and validate the cluster definition.
-
-            ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
-
-            Console.WriteLine();
-            Console.WriteLine("*** The cluster definition is OK.");
+            if (commandLine.Arguments.Length > 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: Unexpected [{commandLine.Arguments[0]}] command.");
+                Program.Exit(1);
+            }
 
             await Task.CompletedTask;
         }

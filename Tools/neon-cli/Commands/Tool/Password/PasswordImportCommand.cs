@@ -46,7 +46,7 @@ Imports passwords from an encrypted ZIP file.
 
 USAGE:
 
-    neon password import [--stdin] PATH
+    neon password tool import [--stdin] PATH
 
 ARGUMENTS:
 
@@ -64,7 +64,7 @@ ZIP archive.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "import" }; 
+        public override string[] Words => new string[] { "tool", "password", "import" }; 
 
         /// <inheritdoc/>
         public override void Help()

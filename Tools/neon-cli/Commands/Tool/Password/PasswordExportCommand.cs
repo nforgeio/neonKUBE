@@ -46,8 +46,8 @@ Exports selected passwords to an encrypted ZIP file.
 
 USAGE:
 
-    neon password export [--stdin] PATH NAME...
-    neon password export [--stdin] PATH *
+    neon tool password export [--stdin] PATH NAME...
+    neon tool password export [--stdin] PATH *
 
 ARGUMENTS:
 
@@ -70,7 +70,7 @@ instead.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "export" }; 
+        public override string[] Words => new string[] { "tool", "password", "export" }; 
 
         /// <inheritdoc/>
         public override void Help()

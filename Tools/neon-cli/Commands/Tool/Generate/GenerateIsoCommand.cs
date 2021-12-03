@@ -47,7 +47,7 @@ Generates an ISO file from files in a folder.
 
 USAGE:
 
-    neon generate iso SOURCE-FOLDER SOURCE-FOLDER
+    neon tool generate iso SOURCE-FOLDER SOURCE-FOLDER
 
 ARGUMENTS:
 
@@ -63,7 +63,7 @@ OPTIONS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "generate", "iso" }; 
+        public override string[] Words => new string[] { "tool", "generate", "iso" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--linux" };

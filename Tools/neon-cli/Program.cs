@@ -96,6 +96,21 @@ namespace NeonCli
         private static readonly string InstalledToolFolder = Path.Combine(BinaryFolder, "tools");
 
         /// <summary>
+        /// Returns the orignal program <see cref="CommandLine"/>.
+        /// </summary>
+        public static CommandLine CommandLine { get; private set; }
+
+        /// <summary>
+        /// Returns the fully qualified path to the <b>kubectl</b> binary.
+        /// </summary>
+        public static string KubectlPath { get; private set; }
+
+        /// <summary>
+        /// Returns the fully qualified path to the <b>helm</b> binary.
+        /// </summary>
+        public static string HelmPath { get; private set; }
+
+        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -110,55 +125,45 @@ USAGE:
 
     neon [OPTIONS] COMMAND [ARG...]
 
-COMMAND SUMMARY:
+NEON KUBECTL COMMANDS:
 
-    neon help               COMMAND
+    [neon-cli] supports all standard kubectl commands like (more help below):
+
+    neon apply -f my-manifest.yaml
+
+NEON CLUSTER MANAGEMENT COMMANDS:
+
     neon cluster prepare    [CLUSTER-DEF]
-    neon cluster remove     [LOGIN-PATH]
+    neon cluster remove
     neon cluster setup      [CLUSTER-DEF]
     neon cluster start      USER@CLUSTER[/NAMESPACE]
     neon cluster stop       USER@CLUSTER[/NAMESPACE] [--turnoff]
-    neon cluster remove     USER@CLUSTER[/NAMESPACE]
     neon cluster verify     [CLUSTER-DEF]
-    neon generate iso       SOURCE-FOLDER ISO-PATH
     neon login              COMMAND
     neon logout
-    neon password           COMMAND
-    neon run                -- COMMAND
-    neon vault              COMMAND
-    neon version            [-n] [--git] [--minimum=VERSION]
 
-ARGUMENTS:
+NEON HELM COMMANDS:
+
+    The neon-cli supports all standard Helm commands by prefixing
+    them with [helm], like:
+
+    neon helm install -f my-values.yaml my-redis ./redis
+
+NEON UTILITY COMMANDS:
+
+    neon tool generate iso  SOURCE-FOLDER ISO-PATH
+    neon tool password      COMMAND
+    neon tool vault         COMMAND
+    neon tool version       [-n] [--git] [--minimum=VERSION]
+
+CLUSTER MANAGEMENT ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in
-    COMMAND             - Subcommand and arguments.
-    NODE                - A node name.
 
-OPTIONS:
+    COMMAND             - Subcommand and arguments
 
-    --help                              - Display help
-
-    --insecure                          - Use insecure temporary folder 
-                                          (see remarks)
- 
-    --log-folder=LOG-FOLDER             - Optional log folder path
-
-    -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
-                                          configured in parallel [default=6]
-
-    -q, --quiet                         - Disables operation progress
-
-REMARKS:
-
-By default, any temporary files generated will be written to your 
-[$HOME/.neonkube/temp] folder which is encrypted at rest for
-Windows 10 PRO and Windows Server workstations.  This encryption
-may cause some problems (e.g. a [neon run ...] command that 
-needs to mount a decrypted file to a local Docker container.
-
-You can disable the use of this encrypted folder by specifying
-[--insecure] for any command.
+===============================================================================
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -186,57 +191,28 @@ You can disable the use of this encrypted folder by specifying
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
+            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that this
+            // will download them when necessary.
+
+            KubectlPath = GetKubectlPath();
+            HelmPath    = GetHelmPath();
+
             // Process the command line.
 
             try
             {
                 ICommand command;
 
-                CommandLine     = new CommandLine(args);
-                LeftCommandLine = CommandLine.Split("--").Left;
+                CommandLine = new CommandLine(args);
 
-                foreach (var cmdLine in new CommandLine[] { CommandLine, LeftCommandLine })
+                if (CommandLine.Items.Length == 0)
                 {
-                    cmdLine.DefineOption("-os").Default = "Ubuntu-20.04";
-                    cmdLine.DefineOption("-q", "--quiet");
-                    cmdLine.DefineOption("--machine-password");
-                    cmdLine.DefineOption("-m", "--max-parallel").Default = "6";
-                    cmdLine.DefineOption("-w", "--wait").Default = "60";
-                    cmdLine.DefineOption("--log-folder").Default = string.Empty;
-                }
+                    // Output our standard usage help and then launch [kubectl] to display
+                    // its help as well.
 
-                var validOptions = new HashSet<string>();
-
-                validOptions.Add("--debug");
-                validOptions.Add("--help");
-                validOptions.Add("--insecure");
-                validOptions.Add("--log-folder");
-                validOptions.Add("--machine-password");
-                validOptions.Add("-m");
-                validOptions.Add("--max-parallel");
-                validOptions.Add("-q");
-                validOptions.Add("--quiet");
-                validOptions.Add("-w");
-                validOptions.Add("--wait");
-                validOptions.Add("-b");
-                validOptions.Add("--branch");
-
-                if (CommandLine.Arguments.Length == 0)
-                {
                     Console.WriteLine(usage);
+                    NeonHelper.Execute(KubectlPath, Array.Empty<object>());
                     Program.Exit(0);
-                }
-
-                if (!CommandLine.HasOption("--insecure"))
-                {
-                    // Ensure that temporary files are written to the user's temporary folder because
-                    // there's a decent chance that this folder will be encrypted at rest.
-
-                    if (KubeTestManager.Current == null)
-                    {
-                        TempFile.Root   = KubeHelper.TempFolder;
-                        TempFolder.Root = KubeHelper.TempFolder;
-                    }
                 }
 
                 // Scan for enabled commands in the current assembly.
@@ -264,22 +240,22 @@ You can disable the use of this encrypted folder by specifying
 
                 if (CommandLine.Arguments[0] == "help")
                 {
-                    if (CommandLine.Arguments.Length == 1)
-                    {
-                        Console.WriteLine(usage);
-                        Program.Exit(0);
-                    }
-
                     CommandLine = CommandLine.Shift(1);
                     command     = GetCommand(CommandLine, commands);
 
-                    if (command == null)
+                    if (command != null)
                     {
-                        Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
-                        Program.Exit(1);
+                        command.Help();
+                    }
+                    else
+                    {
+                        // Output our standard usage help and then launch [kubectl] to
+                        // display its help as well.
+
+                        Console.WriteLine(usage);
+                        NeonHelper.Execute(KubectlPath, Array.Empty<object>());
                     }
 
-                    command.Help();
                     Program.Exit(0);
                 }
 
@@ -289,50 +265,15 @@ You can disable the use of this encrypted folder by specifying
 
                 if (command == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
-                    Program.Exit(1);
+                    // This must be a [kubectl] command, so spawn [kubectl] to handle it.
+
+                    Program.Exit(NeonHelper.Execute(KubectlPath, CommandLine.Items));
                 }
 
-                // Handle the logging options.
+                // This is one of our commands, so ensure that there are no unexpected
+                // command line options.
 
-                LogPath = LeftCommandLine.GetOption("--log-folder");
-                Quiet   = LeftCommandLine.GetFlag("--quiet");
-
-                if (!string.IsNullOrEmpty(LogPath))
-                {
-                    LogPath = Path.GetFullPath(LogPath);
-
-                    Directory.CreateDirectory(LogPath);
-                }
-                else
-                {
-                    LogPath = KubeHelper.LogFolder;
-
-                    // We can clear this folder because we know that there shouldn't be
-                    // any other files in here.
-
-                    NeonHelper.DeleteFolderContents(LogPath);
-                }
-
-                //-------------------------------------------------------------
-                // Process the standard command line options.
-
-                // Handle the other options.
-
-                var maxParallelOption = LeftCommandLine.GetOption("--max-parallel");
-                int maxParallel;
-
-                if (!int.TryParse(maxParallelOption, out maxParallel) || maxParallel < 1)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] option is not valid.");
-                    Program.Exit(1);
-                }
-
-                Program.MaxParallel = maxParallel;
-
-                Debug = LeftCommandLine.HasOption("--debug");
-
-                // Ensure that there are no unexpected command line options.
+                var validOptions = new HashSet<string>();
 
                 if (command.CheckOptions)
                 {
@@ -341,7 +282,7 @@ You can disable the use of this encrypted folder by specifying
                         validOptions.Add(optionName);
                     }
 
-                    foreach (var option in LeftCommandLine.Options)
+                    foreach (var option in CommandLine.Options)
                     {
                         if (!validOptions.Contains(option.Key))
                         {
@@ -365,17 +306,7 @@ You can disable the use of this encrypted folder by specifying
 
                 // Run the command.
 
-                if (command.SplitItem != null)
-                {
-                    // We don't shift the command line for pass-thru commands 
-                    // because we don't want to change the order of any options.
-
-                    await command.RunAsync(CommandLine);
-                }
-                else
-                {
-                    await command.RunAsync(CommandLine.Shift(command.Words.Length));
-                }
+                await command.RunAsync(CommandLine.Shift(command.Words.Length));
             }
             catch (ProgramExitException e)
             {
@@ -390,46 +321,6 @@ You can disable the use of this encrypted folder by specifying
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// Message written then a user is not logged into a cluster.
-        /// </summary>
-        public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
-
-        /// <summary>
-        /// Returns the Git source code branch.
-        /// </summary>
-#pragma warning disable 0436
-        public static string GitBranch => ThisAssembly.Git.Branch;
-#pragma warning restore 0436
-
-        /// <summary>
-        /// Path to the WinSCP program executable.
-        /// </summary>
-        public static string WinScpPath
-        {
-            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"WinSCP\WinSCP.exe"); }
-        }
-
-        /// <summary>
-        /// Path to the PuTTY program executable.
-        /// </summary>
-        public static string PuttyPath
-        {
-            get
-            {
-                // Look for a x64 or x86 version of PuTTY at their default install locations.
-
-                var path = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), @"PuTTY\putty.exe");
-
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-
-                return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe");
-            }
         }
 
         /// <summary>
@@ -522,46 +413,6 @@ You can disable the use of this encrypted folder by specifying
         {
             throw new ProgramExitException(exitCode);
         }
-
-        /// <summary>
-        /// Returns the orignal program <see cref="CommandLine"/>.
-        /// </summary>
-        public static CommandLine CommandLine { get; private set; }
-
-        /// <summary>
-        /// Returns the part of the command line to the left of the [--] splitter
-        /// or the entire command line if there is no splitter.
-        /// </summary>
-        public static CommandLine LeftCommandLine { get; private set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
-        /// source code branch.
-        /// </summary>
-#pragma warning disable 0436
-        public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
-#pragma warning restore 0436
-
-        /// <summary>
-        /// Returns the log folder path or a <c>null</c> or empty string 
-        /// to disable logging.
-        /// </summary>
-        public static string LogPath { get; set; }
-
-        /// <summary>
-        /// The maximum number of nodes to be configured in parallel.
-        /// </summary>
-        public static int MaxParallel { get; set; }
-
-        /// <summary>
-        /// Indicates whether operation progress output is to be suppressed.
-        /// </summary>
-        public static bool Quiet { get; set; }
-
-        /// <summary>
-        /// Runs the command in DEBUG mode.
-        /// </summary>
-        public static bool Debug { get; set; }
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.

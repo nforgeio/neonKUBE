@@ -73,6 +73,9 @@ OPTIONS:
                           for debugging cluster setup  issues.  Do not
                           use for production clusters.
 
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
+
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
 
@@ -105,7 +108,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--force", "--upload-charts", "--debug", "--automation-folder" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--max-parallel", "--force", "--upload-charts", "--debug", "--automation-folder" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -128,12 +131,19 @@ OPTIONS:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            var contextName      = KubeContextName.Parse(commandLine.Arguments[0]);
-            var kubeCluster      = KubeHelper.Config.GetCluster(contextName.Cluster);
-            var unredacted       = commandLine.HasOption("--unredacted");
-            var debug            = commandLine.HasOption("--debug");
-            var uploadCharts     = commandLine.HasOption("--upload-charts") || debug;
-            var automationFolder = commandLine.GetOption("--automation-folder");
+            var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
+            var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var unredacted        = commandLine.HasOption("--unredacted");
+            var debug             = commandLine.HasOption("--debug");
+            var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
+            var automationFolder  = commandLine.GetOption("--automation-folder");
+            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+
+            if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
+                Program.Exit(1);
+            }
 
             clusterLogin = KubeHelper.GetClusterLogin(contextName);
 
@@ -203,7 +213,7 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                maxParallel:        Program.MaxParallel,
+                maxParallel:        maxParallel,
                 unredacted:         unredacted,
                 debugMode:          debug,
                 uploadCharts:       uploadCharts,

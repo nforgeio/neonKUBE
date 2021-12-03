@@ -45,9 +45,9 @@ Creates or modifies a named password.
 
 USAGE:
 
-    neon password set NAME          - Generates and sets a password
-    neon password set NAME PATH     - Sets a password from a file
-    neon password set NAME -        - Sets a password from STDIN
+    neon tool password set NAME         - Generates and sets a password
+    neon tool password set NAME PATH    - Sets a password from a file
+    neon tool password set NAME -       - Sets a password from STDIN
 
 ARGUMENTS:
 
@@ -61,7 +61,7 @@ This command creates or updates a named password.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "set" }; 
+        public override string[] Words => new string[] { "tool", "password", "set" }; 
 
         /// <inheritdoc/>
         public override void Help()

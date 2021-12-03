@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordGetCommand.cs
+// FILE:	    GenerateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,31 +29,27 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Cryptography;
 using Neon.Kube;
 
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>password get</b> command.
+    /// Implements the <b>generate</b> command.
     /// </summary>
     [Command]
-    public class PasswordGetCommand : CommandBase
+    public class GenerateCommand : CommandBase
     {
         private const string usage = @"
-Returns the current value of an named password.
+Code generation commands.
 
 USAGE:
 
-    neon password get NAME
-
-ARGUMENTS:
-
-    NAME        - The password name
+    neon tool generate iso      SOURCE-FOLDER ISO-PATH
+    neon tool generate models   [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password", "get" }; 
+        public override string[] Words => new string[] { "tool", "generate" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -64,31 +60,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            if (commandLine.HasHelpOption)
-            {
-                Console.WriteLine(usage);
-                Program.Exit(0);
-            }
-
-            var nameArg = commandLine.Arguments.ElementAtOrDefault(0);
-
-            if (nameArg == null)
-            {
-                Console.Error.WriteLine($"*** ERROR: NAME argument is required.");
-                Program.Exit(1);
-            }
-
-            var passwordName = NeonVault.ValidatePasswordName(nameArg);
-            var path         = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
-
-            if (!File.Exists(path))
-            {
-                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] not found.");
-                Program.Exit(1);
-            }
-
-            Console.Write(File.ReadAllText(path));
-            Program.Exit(0);
+            Help();
             await Task.CompletedTask;
         }
     }

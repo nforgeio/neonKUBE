@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordCommand.cs
+// FILE:	    ToolCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,37 +34,25 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>password</b> command.
+    /// Implements the <b>tool</b> command.
     /// </summary>
     [Command]
-    public class PasswordCommand : CommandBase
+    public class ToolCommand : CommandBase
     {
         private const string usage = @"
-Manages neonKUBE passwords.
+Extended [neon-cli] related commands.
 
 USAGE:
 
-    neon password
-    neon password export PATH NAME...
-    neon password export PATH *
-    neon password generate [LENGTH]
-    neon password import PATH
-    neon password list|ls
-    neon password remove|rm NAME
-    neon password remove|rm *
-    neon password set NAME [PATH|-]
-
-ARGUMENTS:
-
-    LENGTH      - Length of the desired password (default=20)
-    NAME        - Password name
-    PATH        - Input or output file path
-    -           - Read from standard input
-    *           - Process all passwords
+    neon tool generate      - generate an ISO file from a folder
+    neon tool password      - manage passwords
+    neon tool run           - runs a subcommand, optionally injecting values/secets
+    neon tool vault         - manage encrypted secrets
+    neon tool version       - print the neon-cli version
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "password" }; 
+        public override string[] Words => new string[] { "tool" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -75,18 +63,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
-            {
-                Console.WriteLine(usage);
-                Program.Exit(0);
-            }
-
-            if (commandLine.Arguments.Length > 0)
-            {
-                Console.Error.WriteLine($"*** ERROR: Unexpected [{commandLine.Arguments[0]}] command.");
-                Program.Exit(1);
-            }
-
+            Help();
             await Task.CompletedTask;
         }
     }

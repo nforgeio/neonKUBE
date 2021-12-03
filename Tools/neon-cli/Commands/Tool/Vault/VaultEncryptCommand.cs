@@ -45,8 +45,8 @@ Encrypts a file using a named password.
 
 USAGE:
 
-    neon vault encrypt PATH [--password-name=PASSWORD-NAME]
-    neon vault encrypt SOURCE TARGET [PASSWORD-NAME]
+    neon tool vault encrypt PATH [--password-name=PASSWORD-NAME]
+    neon tool vault encrypt SOURCE TARGET [PASSWORD-NAME]
 
 ARGUMENTS:
 
@@ -71,7 +71,7 @@ NOTE: The search for the [.password-name] file will start from the
       directory where the encrypted file will be written.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "vault", "encrypt" }; 
+        public override string[] Words => new string[] { "tool", "vault", "encrypt" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--password-name", "-p" }; 

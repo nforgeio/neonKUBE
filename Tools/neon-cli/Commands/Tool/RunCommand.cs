@@ -46,9 +46,9 @@ decrypting input files.
 
 USAGE:
 
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _.VAR
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _..VAR-FILE
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _...PATH
+    neon tool run [OPTIONS] [VARIABLES...] -- COMMAND ARG _.VAR
+    neon tool run [OPTIONS] [VARIABLES...] -- COMMAND ARG _..VAR-FILE
+    neon tool run [OPTIONS] [VARIABLES...] -- COMMAND ARG _...PATH
 
 ARGUMENTS:
 
@@ -130,7 +130,7 @@ Pass a potentially encrypted file:
         NeonVault vault = new NeonVault(Program.LookupPassword);
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "run" }; 
+        public override string[] Words => new string[] { "tool", "run" }; 
 
         /// <inheritdoc/>
         public override bool CheckOptions => false;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VaultEditCommand.cs
+// FILE:	    VaultCreateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,42 +35,39 @@ using Neon.IO;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>vault edit</b> command.
+    /// Implements the <b>vault create</b> command.
     /// </summary>
     [Command]
-    public class VaultEditCommand : CommandBase
+    public class VaultCreateCommand : CommandBase
     {
         private const string usage = @"
-Edits an encypted file.
+Creates an encrypted file and opens it in a text editor.
 
 USAGE:
 
-    neon vault edit PATH
+    neon tool vault create PATH [PASSWORD-NAME]
 
 ARGUMENTS:
 
-    PATH    - path to the file being created
+    PATH            - path to the file being created
+    PASSWORD-NAME   - optional password name
 
 REMARKS:
 
-This command edits an existing encrypted file at PATH.
+This command creates a new file at PATH using an explicitly named password
+or have the command search the current and ancestor directories for a
+[.password-name] file with the default password name.
 
 The command decrypts the file to a temporary folder and launches a text
 editor enabling you to edit the file.  Once the editor exits, the temporary
-file will be encrypted back to PATH and then be deleted.
+file will be encrypted to back PATH and then be deleted.
 
 The default platform editor will be launched (NotePad.exe for Windows or 
 Vim for OS/x and Linux).  You can customize the editor by setting the EDITOR 
-environment with the command line required to launch your favorite editor.
-If $FILE exists in the environment variable, then that will be replaced
-by the tareget file path or else the file path will be appended to the
-command line if $FILE isn't present.
-
-NOTE: You don't need to specify a password name for this command 
-      because the password name is saved within encrypted files.
+environment variable to the path to the editor executable file.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "vault", "edit" }; 
+        public override string[] Words => new string[] { "tool", "vault", "create" }; 
 
         /// <inheritdoc/>
         public override void Help()
@@ -87,7 +84,8 @@ NOTE: You don't need to specify a password name for this command
                 Program.Exit(0);
             }
 
-            var path = commandLine.Arguments.ElementAtOrDefault(0);
+            var path         = commandLine.Arguments.ElementAtOrDefault(0);
+            var passwordName = commandLine.Arguments.ElementAtOrDefault(1);
 
             if (string.IsNullOrEmpty(path))
             {
@@ -95,9 +93,14 @@ NOTE: You don't need to specify a password name for this command
                 Program.Exit(1);
             }
 
-            if (!NeonVault.IsEncrypted(path, out var passwordName))
+            if (string.IsNullOrEmpty(passwordName))
             {
-                Console.Error.WriteLine($"*** ERROR: The [{path}] file is not encrypted.");
+                passwordName = Program.GetDefaultPasswordName(path);
+            }
+
+            if (string.IsNullOrEmpty(passwordName))
+            {
+                Console.Error.WriteLine("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.");
                 Program.Exit(1);
             }
 
@@ -108,11 +111,15 @@ NOTE: You don't need to specify a password name for this command
             {
                 var tempPath = Path.Combine(tempFolder.Path, fileName);
 
-                // Decrypt the file to a secure temporary folder, launch the
-                // editor and re-encrypt the file after the editor returns.
+                // Create an empty temporary file, encrypt it to the target
+                // file, and then launch the editor on the temporary file.
 
-                vault.Decrypt(path, tempPath);
+                File.WriteAllBytes(tempPath, Array.Empty<byte>());
+                vault.Encrypt(tempPath, path, passwordName);
                 NeonHelper.OpenEditor(tempPath);
+
+                // Re-encrypt the just edited temporary file to the target.
+
                 vault.Encrypt(tempPath, path, passwordName);
             }
 

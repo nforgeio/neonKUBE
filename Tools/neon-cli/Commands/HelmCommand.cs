@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GenerateCommand.cs
+// FILE:	    HelmCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,33 +34,47 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>generate</b> command.
+    /// Implements the <b>helm</b> command.
     /// </summary>
     [Command]
-    public class GenerateCommand : CommandBase
+    public class HelmCommand : CommandBase
     {
         private const string usage = @"
-Code generation commands.
+Extended [neon-cli] related commands.
 
 USAGE:
 
-    neon generate iso      SOURCE-FOLDER ISO-PATH
-    neon generate models   [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
+    neon helm COMMAND [ARGS...]
+
+REMARKS:
+
+    This command executes the standard [helm] utility, passing thru any
+    commands and arguments.
+
+HELM COMMANDS (note that you'll need to prefix these with ""neon""):
+
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "generate" };
+        public override string[] Words => new string[] { "helm" };
 
         /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
+            NeonHelper.Execute(Program.HelmPath, Array.Empty<object>());
         }
 
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            Help();
+            if (commandLine.Items.Length == 0)
+            {
+                Help();
+                return;
+            }
+
+            Program.Exit(NeonHelper.Execute(Program.HelmPath, commandLine.Items));
             await Task.CompletedTask;
         }
     }
