@@ -2678,6 +2678,10 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(toolChecker != null, nameof(toolChecker));
             Covenant.Requires<ArgumentNullException>(toolUriRetriever != null, nameof(toolUriRetriever));
 
+            // Ensure that the install folder actually exists.
+
+            Directory.CreateDirectory(installFolder);
+
             // Determine the full tool file name.
 
             string extension;
