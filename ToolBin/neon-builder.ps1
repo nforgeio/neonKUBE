@@ -287,7 +287,7 @@ try
         }
 
         # Copy the CHM file to a more convenient place for adding to the GitHub release
-        # and generate the SHA512 for it.
+        # and generate the SHA256 for it.
 
         $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
 
@@ -295,10 +295,10 @@ try
         ThrowOnExitCode
 
         ""
-        "Generating neon.chm SHA512..."
+        "Generating neon.chm SHA256..."
 	    ""
 
-        & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha512.txt"
+        & cat "$nfBuild\neon.chm" | openssl dgst -sha256 -binary | neon-build hexdump > "$nfBuild\neon.chm.sha256.txt"
         ThrowOnExitCode
 
         # Move the documentation build output.
