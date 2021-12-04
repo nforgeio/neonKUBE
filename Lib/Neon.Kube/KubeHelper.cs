@@ -2751,7 +2751,7 @@ TCPKeepAlive yes
                             toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase), 
                             "Expecting a TAR.GZ or .ZIP file.");
 
-            Console.Error.WriteLine($"*** Download: [{toolUri}] --> [{downloadPath}]");
+            Console.Error.WriteLine($"*** Download: {toolUri}");
             NeonHelper.DeleteFile(toolPath);
 
             using (var httpClient = new HttpClient())
