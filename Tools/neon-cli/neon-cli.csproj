@@ -6,7 +6,7 @@
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifiers>win10-x64;osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
