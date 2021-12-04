@@ -18,6 +18,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <NoWarn>1701;1702; CS8892</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
