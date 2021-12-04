@@ -699,7 +699,7 @@ cd $orgDir
 
 # Misc cleaning
 
-cloud - init clean
+cloud-init clean
 safe-apt-get clean
 rm -rf /var/lib/apt/lists
 rm -rf /var/lib/dhcp/*
