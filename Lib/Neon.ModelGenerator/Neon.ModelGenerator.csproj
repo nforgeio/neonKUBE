@@ -98,9 +98,9 @@
 
     <!-- Build the [modelgen] tool for the supported platforms -->
     
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --runtime linux-x64" />
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --runtime osx-x64" />
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework netcoreapp3.1 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --runtime win-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --runtime linux-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --runtime osx-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --runtime win-x64" />
   </Target>
 
 </Project>
