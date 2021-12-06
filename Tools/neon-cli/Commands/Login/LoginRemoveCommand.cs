@@ -108,6 +108,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                     }
                     else
                     {
+                        KubeHelper.Config.RemoveContext(contextName);
                         Program.Exit(0);
                     }
                 }

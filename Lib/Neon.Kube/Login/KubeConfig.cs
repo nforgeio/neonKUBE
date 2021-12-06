@@ -315,6 +315,10 @@ namespace Neon.Kube
             {
                 RemoveContext(context);
             }
+            else
+            {
+                NeonHelper.DeleteFile(KubeHelper.GetClusterLoginPath(name));
+            }
         }
 
         /// <summary>

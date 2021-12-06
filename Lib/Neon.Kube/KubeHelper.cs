@@ -1441,7 +1441,7 @@ namespace Neon.Kube
                         // The [KUBECONFIG] environment variable doesn't exist so we'll set it.
 
 #pragma warning disable CA1416
-                        Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", KubeConfigPath, RegistryValueKind.ExpandString);
+                        Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", KubeConfigPath, RegistryValueKind.ExpandString);
 #pragma warning restore CA1416
                         Environment.SetEnvironmentVariable("KUBECONFIG", KubeConfigPath);
                     }
@@ -1483,7 +1483,7 @@ namespace Neon.Kube
                         if (newKubeConfigVar != kubeConfigVar)
                         {
 #pragma warning disable CA1416
-                            Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", newKubeConfigVar, RegistryValueKind.ExpandString);
+                            Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", newKubeConfigVar, RegistryValueKind.ExpandString);
 #pragma warning restore CA1416
                             Environment.SetEnvironmentVariable("KUBECONFIG", newKubeConfigVar);
                         }
