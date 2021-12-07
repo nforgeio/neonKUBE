@@ -532,7 +532,7 @@ namespace Neon.Deployment
         /// The <b>s3://</b> URI scheme is not supported.
         /// </note>
         /// </param>
-        /// <param name="version">The download version.</param>
+        /// <param name="version">Optionally specifies the download file version.</param>
         /// <param name="name">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Name"/>.</param>
         /// <param name="filename">Optionally overrides the download file name specified by <paramref name="sourcePath"/> to initialize <see cref="DownloadManifest.Filename"/>.</param>
         /// <param name="noMd5File">
@@ -587,7 +587,7 @@ namespace Neon.Deployment
         public static (DownloadManifest manifest, string manifestUri) S3UploadMultiPart(
             string      sourcePath, 
             string      targetFolderUri, 
-            string      version, 
+            string      version          = null, 
             string      name             = null, 
             string      filename         = null, 
             bool        noMd5File        = false,
@@ -596,7 +596,6 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolderUri), nameof(targetFolderUri));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
 
             if (!Uri.TryCreate(targetFolderUri, UriKind.Absolute, out var uriCheck))
             {
