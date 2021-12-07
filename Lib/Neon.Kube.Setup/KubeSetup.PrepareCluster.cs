@@ -195,6 +195,7 @@ namespace Neon.Kube
 
             // Configure the setup controller state.
 
+            controller.Add(KubeSetupProperty.Preparing, true);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
             controller.Add(KubeSetupProperty.DebugMode, debugMode);
             controller.Add(KubeSetupProperty.BaseImageName, baseImageName);

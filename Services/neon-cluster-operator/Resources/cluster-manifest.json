@@ -42,7 +42,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/cortexproject-cortex:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/cortexproject-cortex:v1.9.0"
+      "InternalRef": "neon-registry.node.local/cortexproject-cortex:v1.11.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/etcd:neonkube-0.3.0-alpha",
@@ -50,31 +50,39 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/goharbor-harbor-operator:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/goharbor-harbor-operator:v1.0.1"
+      "InternalRef": "neon-registry.node.local/goharbor-harbor-operator:v1.1.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-agent:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-agent:v0.18.3"
+      "InternalRef": "neon-registry.node.local/grafana-agent:v0.21.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-agent-operator:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-agent-operator:v0.18.3"
+      "InternalRef": "neon-registry.node.local/grafana-agent-operator:v0.21.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-grafana:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-grafana:8.1.3"
+      "InternalRef": "neon-registry.node.local/grafana-grafana:8.2.6"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-loki:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-loki:2.3.0"
+      "InternalRef": "neon-registry.node.local/grafana-loki:2.4.1"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/grafana-operator-grafana_plugins_init:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/grafana-operator-grafana_plugins_init:0.0.5"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/grafana-operator-grafana-operator:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/grafana-operator-grafana-operator:v4.1.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-tempo:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-tempo:99217c5e"
+      "InternalRef": "neon-registry.node.local/grafana-tempo:1.2.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-tempo-query:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-tempo-query:1.0.1"
+      "InternalRef": "neon-registry.node.local/grafana-tempo-query:1.2.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/haproxy:neonkube-0.3.0-alpha",
@@ -82,55 +90,47 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-chartmuseum-photon:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-chartmuseum-photon:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-chartmuseum-photon:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-core:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-core:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-core:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-exporter:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-exporter:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-exporter:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-jobservice:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-jobservice:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-jobservice:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-notary-server-photon:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-notary-server-photon:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-notary-server-photon:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-notary-signer-photon:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-notary-signer-photon:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-notary-signer-photon:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-portal:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-portal:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-portal:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-registry-photon:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-registry-photon:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-registry-photon:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-registryctl:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-registryctl:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-registryctl:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/harbor-trivy-adapter-photon:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/harbor-trivy-adapter-photon:v2.2.2"
+      "InternalRef": "neon-registry.node.local/harbor-trivy-adapter-photon:v2.3.4"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/install-cni:neonkube-0.3.0-alpha",
       "InternalRef": "neon-registry.node.local/install-cni:1.11.4-distroless"
-    },
-    {
-      "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana_plugins_init:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/integreatly-grafana_plugins_init:0.0.3"
-    },
-    {
-      "SourceRef": "ghcr.io/neonkube-dev/integreatly-grafana-operator:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/integreatly-grafana-operator:v3.10.2"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/jetstack-cert-manager-cainjector:neonkube-0.3.0-alpha",
@@ -173,12 +173,24 @@
       "InternalRef": "neon-registry.node.local/k8scsi-snapshot-controller:v3.0.3"
     },
     {
+      "SourceRef": "ghcr.io/neonkube-dev/keycloak-keycloak:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/keycloak-keycloak:15.0.2"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/keycloak-keycloak-init-container:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/keycloak-keycloak-init-container:15.0.2"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/keycloak-keycloak-operator:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/keycloak-keycloak-operator:15.0.2"
+    },
+    {
       "SourceRef": "ghcr.io/neonkube-dev/kiali-kiali:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/kiali-kiali:v1.28.0"
+      "InternalRef": "neon-registry.node.local/kiali-kiali:v1.44.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/kiali-kiali-operator:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/kiali-kiali-operator:v1.27.0"
+      "InternalRef": "neon-registry.node.local/kiali-kiali-operator:v1.44.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/kube-apiserver:neonkube-0.3.0-alpha",
@@ -206,11 +218,11 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/kubernetesui-dashboard:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/kubernetesui-dashboard:v2.3.1"
+      "InternalRef": "neon-registry.node.local/kubernetesui-dashboard:v2.4.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/kubernetesui-metrics-scraper:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/kubernetesui-metrics-scraper:v1.0.6"
+      "InternalRef": "neon-registry.node.local/kubernetesui-metrics-scraper:v1.0.7"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/metrics-server:neonkube-0.3.0-alpha",
@@ -218,15 +230,15 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/minio-console:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/minio-console:v0.9.8"
+      "InternalRef": "neon-registry.node.local/minio-console:v0.12.6"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/minio-minio:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/minio-minio:RELEASE.2021-09-03T03-56-13Z"
+      "InternalRef": "neon-registry.node.local/minio-minio:RELEASE.2021-11-24T23-19-33Z"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/minio-operator:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/minio-operator:v4.2.5"
+      "InternalRef": "neon-registry.node.local/minio-operator:v4.3.6"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/neon-acme:neonkube-0.3.0-alpha",
@@ -239,6 +251,10 @@
     {
       "SourceRef": "ghcr.io/neonkube-dev/node-problem-detector:neonkube-0.3.0-alpha",
       "InternalRef": "neon-registry.node.local/node-problem-detector:v0.8.10"
+    },
+    {
+      "SourceRef": "ghcr.io/neonkube-dev/oauth2-proxy-oauth2-proxy:neonkube-0.3.0-alpha",
+      "InternalRef": "neon-registry.node.local/oauth2-proxy-oauth2-proxy:v7.2.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/oliver006-redis_exporter:neonkube-0.3.0-alpha",

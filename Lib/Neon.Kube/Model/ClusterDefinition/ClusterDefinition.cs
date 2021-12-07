@@ -54,7 +54,8 @@ namespace Neon.Kube
         private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
         /// <summary>
-        /// Regex for verifying cluster names for hosts, routes, groups, etc.
+        /// Regex for verifying cluster names for hosts, routes, groups, etc.  This also can
+        /// be used to (lightly) validate DNS host names.
         /// </summary>
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
 
@@ -232,7 +233,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private object      syncLock = new object();
+        private object syncLock = new object();
 
         /// <summary>
         /// Default constructor.
@@ -464,6 +465,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "network", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NetworkOptions Network { get; set; } = new NetworkOptions();
+
+        /// <summary>
+        /// Customizes the cluster's container registry configuration.
+        /// </summary>
+        [JsonProperty(PropertyName = "Registry", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "registry", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public RegistryOptions Registry { get; set; } = null;
 
         /// <summary>
         /// Specifies host node options.
@@ -840,6 +849,7 @@ namespace Neon.Kube
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
+            Registry    = Registry ?? new RegistryOptions();
 
             if (IsDesktopCluster && Nodes.Count() > 1)
             {
@@ -862,6 +872,7 @@ namespace Neon.Kube
             Hosting.Validate(this);
             NodeOptions.Validate(this);
             Network.Validate(this);
+            Registry.Validate(this);
 
             new HostingManagerFactory().Validate(this);
 

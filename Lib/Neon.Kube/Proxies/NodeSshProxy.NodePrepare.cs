@@ -997,7 +997,6 @@ $@"
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
-                
         }
 
         /// <summary>
@@ -1009,18 +1008,23 @@ $@"
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true);
 
-            InvokeIdempotent("setup/cri-o",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "cri-o");
+            controller.LogProgress(this, verb: "setup", message: "cri-o");
 
-                    if (hostEnvironment != HostingEnvironment.Wsl2)
-                    {
-                        // This doesn't work with WSL2 because the Microsoft Linux kernel doesn't
-                        // include these modules.  We'll set them up for the other environments.
+            // $note(jefflill):
+            //
+            // We used to perform the configuration operation below as an
+            // idempotent operation but we need to relax that so that we
+            // can apply configuration changes on new nodes created from
+            // the node or ready-to-go images.
 
-                        var moduleScript =
+            if (hostEnvironment != HostingEnvironment.Wsl2 && !reconfigureOnly)
+            {
+                // This doesn't work with WSL2 because the Microsoft Linux kernel doesn't
+                // include these modules.  We'll set them up for the other environments.
+
+                var moduleScript =
 @"
 # Create the .conf file to load required modules during boot.
 
@@ -1037,67 +1041,107 @@ modprobe overlay
 modprobe br_netfilter
 
 sysctl --system
-";                      SudoCommand(CommandBundle.FromScript(moduleScript));
-                    }
+";          
+                SudoCommand(CommandBundle.FromScript(moduleScript));
+            }
 
-                    var crioVersion = Version.Parse(KubeVersions.Crio);
+            //-----------------------------------------------------------------
+            // Generate the container registry config file:
+            //
+            //      /etc/containers/registries.conf
 
-                    var setupScript =
+            // $hack(jefflill):
+            //
+            // [cluster] will be NULL when preparing a node image so we'll set the
+            // default here and this will be reconfigured during cluster setup.
+
+            var sbRegistryConfig   = new StringBuilder();
+            var searchRegistries   = cluster?.Definition?.Registry.SearchRegistries ?? new RegistryOptions().SearchRegistries;
+            var registries         = cluster?.Definition?.Registry.Registries ?? new List<Registry>();
+            var sbSearchRegistries = new StringBuilder();
+
+            // Specify any unqualified search registries.
+
+            foreach (var registry in searchRegistries)
+            {
+                if (string.IsNullOrEmpty(registry))
+                {
+                    continue;
+                }
+
+                sbSearchRegistries.AppendWithSeparator($"\"{registry}\"", ", ");
+            }
+
+            sbRegistryConfig.Append(
+$@"unqualified-search-registries = [{sbSearchRegistries}]
+");
+
+            // Specify the built-in cluster registry.
+
+            sbRegistryConfig.Append(
+$@"
+[[registry]]
+prefix   = ""{KubeConst.LocalClusterRegistry}""
+insecure = true
+blocked  = false
+location = ""{KubeConst.LocalClusterRegistry}""
+");
+
+            // Specify any custom upstream registry configurations.
+
+            foreach (var registry in registries)
+            {
+                if (registry == null)
+                {
+                    continue;
+                }
+
+                sbRegistryConfig.Append(
+$@"
+[[registry]]
+prefix   = ""{registry.Prefix}""
+insecure = {NeonHelper.ToBoolString(registry.Insecure)}
+blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
+");
+
+                if (!string.IsNullOrEmpty(registry.Location))
+                {
+                    sbRegistryConfig.AppendLine($"location = \"{registry.Location}\"");
+                }
+            }
+
+            UploadText("/etc/containers/registries.conf", sbRegistryConfig.ToString(), permissions: "664", owner: "root");
+
+            //-----------------------------------------------------------------
+            // Install and configure CRI-O.
+
+            var crioVersion = Version.Parse(KubeVersions.Crio);
+            var install     = reconfigureOnly ? "false" : "true";
+
+            var setupScript =
 $@"
 set -euo pipefail
 
-# Configure the CRI-O package respository.
+if [ ""{install}"" = ""true"" ]; then
 
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    # Install the CRI-O packages.
+
+    cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
 EOF
 
-cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.Crio}.list
+    cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.Crio}.list
 deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.Crio}/xUbuntu_20.04/ /
 EOF
 
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
-# Install the CRI-O packages.
+    {KubeNodeFolders.Bin}/safe-apt-get update -y
+    {KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
+fi
 
-{KubeNodeFolders.Bin}/safe-apt-get update -y
-{KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
-
-# Generate the CRI-O configurations.
-
-NEON_REGISTRY={KubeConst.LocalClusterRegistry}
-
-cat <<EOF > /etc/containers/registries.conf
-unqualified-search-registries = [""docker.io""]
-
-[[registry]]
-prefix = ""${{NEON_REGISTRY}}""
-insecure = true
-blocked = false
-location = ""${{NEON_REGISTRY}}""
-
-[[registry.mirror]]
-location = ""{KubeConst.LocalClusterRegistry}""
-
-[[registry]]
-prefix = ""docker.io""
-insecure = false
-blocked = false
-location = ""docker.io""
-
-[[registry.mirror]]
-location = ""{KubeConst.LocalClusterRegistry}""
-
-[[registry]]
-prefix = ""quay.io""
-insecure = false
-blocked = false
-location = ""quay.io""
-
-[[registry.mirror]]
-location = ""{KubeConst.LocalClusterRegistry}""
-EOF
+# Generate the CRI-O configuration.
 
 cat <<EOF > /etc/crio/crio.conf
 # The CRI-O configuration file specifies all of the available configuration
@@ -1378,12 +1422,10 @@ pinns_path = """"
 # - runtime_root (optional, string): root directory for storage of containers
 #   state.
 
-
 [crio.runtime.runtimes.runc]
 runtime_path = """"
 runtime_type = ""oci""
 runtime_root = ""/run/runc""
-
 
 # Kata Containers is an OCI runtime, where containers are run inside lightweight
 # VMs. Kata provides additional isolation towards the host, minimizing the host attack
@@ -1450,9 +1492,7 @@ image_volumes = ""mkdir""
 # compatibility reasons. Depending on your workload and usecase you may add more
 # registries (e.g., ""quay.io"", ""registry.fedoraproject.org"",
 # ""registry.opensuse.org"", etc.).
-#registries = [
-# ]
-
+#registries = []
 
 # The crio.network table containers settings pertaining to the management of
 # CNI plugins.
@@ -1466,9 +1506,7 @@ image_volumes = ""mkdir""
 network_dir = ""/etc/cni/net.d/""
 
 # Paths to directories where CNI plugin binaries are located.
-plugin_dirs = [
-        ""/opt/cni/bin/"",
-]
+plugin_dirs = [""/opt/cni/bin/""]
 
 # A necessary configuration for Prometheus based metrics retrieval
 [crio.metrics]
@@ -1478,10 +1516,7 @@ enable_metrics = true
 
 # The port on which the metrics server will listen.
 metrics_port = 9090
-
 EOF
-
-
 
 cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
 {{
@@ -1518,9 +1553,7 @@ systemctl restart crio
 set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
-                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
-
-                });
+            SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
         /// <summary>

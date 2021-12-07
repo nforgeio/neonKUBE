@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies cluster deployment options used by <b>KubernetesFixture</b> as wells
+    /// Specifies cluster deployment options used by <b>KubernetesFixture</b> as well
     /// as potentially by custom tools.
     /// </summary>
     public class DeploymentOptions

@@ -28,6 +28,14 @@ namespace Neon.Kube
     {
         /// <summary>
         /// <para>
+        /// Property name for accessing a <c>bool</c> that indicates that we're preparing a cluster vs.
+        /// setting one up.
+        /// </para>
+        /// </summary>
+        public const string Preparing = "preparing";
+
+        /// <summary>
+        /// <para>
         /// Property name for accessing a <c>bool</c> that indicates that we're running cluster prepare/setup in <b>debug mode</b>.
         /// In debug mode, setup works like it did in the past, where we deployed the base node image first and then 
         /// configured the node from that, rather than starting with the node image with assets already prepositioned.

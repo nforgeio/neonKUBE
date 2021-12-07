@@ -266,6 +266,7 @@ namespace Neon.Kube
 
             // Configure the setup controller state.
 
+            controller.Add(KubeSetupProperty.Preparing, false);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
             controller.Add(KubeSetupProperty.DebugMode, debugMode);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
