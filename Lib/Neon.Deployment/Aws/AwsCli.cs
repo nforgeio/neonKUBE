@@ -541,6 +541,7 @@ namespace Neon.Deployment
         /// </param>
         /// <param name="maxPartSize">Optionally overrides the maximum part size (defailts to 100 MiB).</param>
         /// <param name="publicReadAccess">Optionally grant the upload public read access.</param>
+        /// <param name="progressAction">Optional action called as the file is uploaded, passing the <c>long</c> percent complete.</param>
         /// <returns>The <see cref="DownloadManifest"/> information.</returns>
         /// <returns>The <see cref="DownloadManifest"/> information as well as the URI to the uploaded manifest.</returns>
         /// <remarks>
@@ -585,14 +586,15 @@ namespace Neon.Deployment
         /// </para>
         /// </remarks>
         public static (DownloadManifest manifest, string manifestUri) S3UploadMultiPart(
-            string      sourcePath, 
-            string      targetFolderUri, 
-            string      version          = null, 
-            string      name             = null, 
-            string      filename         = null, 
-            bool        noMd5File        = false,
-            long        maxPartSize      = (long)(100 * ByteUnits.MebiBytes),
-            bool        publicReadAccess = false)
+            string          sourcePath, 
+            string          targetFolderUri, 
+            string          version          = null, 
+            string          name             = null, 
+            string          filename         = null, 
+            bool            noMd5File        = false,
+            long            maxPartSize      = (long)(100 * ByteUnits.MebiBytes),
+            bool            publicReadAccess = false,
+            Action<long>    progressAction   = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath), nameof(sourcePath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolderUri), nameof(targetFolderUri));
@@ -622,6 +624,11 @@ namespace Neon.Deployment
 
             var manifestUri = $"{baseUri}.manifest";
             var partsFolder = $"{baseUri}.parts/";
+
+            if (progressAction != null)
+            {
+                progressAction(0L);
+            }
 
             S3Remove(manifestUri);
             S3Remove(partsFolder, recursive: true, include: $"{partsFolder}*");
@@ -668,6 +675,11 @@ namespace Neon.Deployment
                     partNumber++;
                     partStart   += partSize;
                     cbRemaining -= partSize;
+
+                    if (progressAction != null)
+                    {
+                        progressAction(Math.Min(99L, (long)(100.0 * (double)partNumber / (double)partCount)));
+                    }
                 }
 
                 manifest.Size = manifest.Parts.Sum(part => part.Size);
@@ -682,6 +694,11 @@ namespace Neon.Deployment
             if (!noMd5File)
             {
                 File.WriteAllText($"{sourcePath}.md5", manifest.Md5);
+            }
+
+            if (progressAction != null)
+            {
+                progressAction(100L);
             }
 
             return (manifest: manifest, manifestUri: manifestUri);
