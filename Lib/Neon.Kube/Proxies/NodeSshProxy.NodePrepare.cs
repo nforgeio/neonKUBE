@@ -1046,9 +1046,11 @@ sysctl --system
             }
 
             //-----------------------------------------------------------------
-            // Generate the container registry config file:
+            // Generate the container registry config file contents for:
             //
             //      /etc/containers/registries.conf
+            //
+            // We'll add this to the installtion script below.
 
             // $hack(jefflill):
             //
@@ -1110,8 +1112,6 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
                 }
             }
 
-            UploadText("/etc/containers/registries.conf", sbRegistryConfig.ToString(), permissions: "664", owner: "root");
-
             //-----------------------------------------------------------------
             // Install and configure CRI-O.
 
@@ -1142,6 +1142,10 @@ EOF
 fi
 
 # Generate the CRI-O configuration.
+
+cat <<EOF > /etc/containers/registries.conf
+{sbRegistryConfig}
+EOF
 
 cat <<EOF > /etc/crio/crio.conf
 # The CRI-O configuration file specifies all of the available configuration
