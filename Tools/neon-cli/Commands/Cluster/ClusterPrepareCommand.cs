@@ -312,7 +312,9 @@ Server Requirements:
                 case SetupDisposition.Failed:
 
                     Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: Cluster prepare has failed.");
+                    Console.WriteLine(" *** ERROR: Cluster prepare has failed.  Examine the logs here:");
+                    Console.WriteLine();
+                    Console.WriteLine($" {KubeHelper.LogFolder}");
                     Console.WriteLine();
                     Program.Exit(1);
                     break;
