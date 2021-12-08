@@ -126,9 +126,10 @@ try
 
     if ($other)
     {
+        Publish "$image_root\couchbase-dev"
         Publish "$image_root\nats"
         Publish "$image_root\nats-streaming"
-        Publish "$image_root\couchbase-dev"
+        Publish "$image_root\playground"
         Publish "$image_root\yugabyte"
     }
 
