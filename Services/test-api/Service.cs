@@ -67,7 +67,7 @@ namespace TestApiService
     /// </remarks>
     public class Service : NeonService
     {
-        private IWebHost    webHost;
+        private IWebHost webHost;
 
         /// <summary>
         /// Constructor.
@@ -116,6 +116,11 @@ namespace TestApiService
 
             webHost.Start();
 
+            // Start a do-nothing thread that we can use to set breakpoints
+            // to verify that Bridge to Kubernetes works.
+
+            var nothingThread = NeonHelper.StartThread(NothingThread);
+
             // Indicate that the service is ready for business.
 
             await SetRunningAsync();
@@ -123,11 +128,28 @@ namespace TestApiService
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();
+            nothingThread.Join();
             Terminator.ReadyToExit();
 
             // Return the exit code specified by the configuration.
 
             return await Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// Implements the do-nothing thread.
+        /// </summary>
+        private void NothingThread()
+        {
+            while (true)
+            {
+                if (Terminator.CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
         }
     }
 }
