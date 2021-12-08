@@ -115,7 +115,7 @@ reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\c
 
 REM Install the KubeOps project templates: https://buehler.github.io/dotnet-operator-sdk/docs/templates.html
 
-dotnet new --install KubeOps.Templates::*
+dotnet new --install KubeOps.Templates::* > /nul
 
 REM Perform additional implementation in via Powershell.
 
