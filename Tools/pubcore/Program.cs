@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.7";
+        public const string Version = "1.8";
 
         /// <summary>
         /// Program entrypoint.
@@ -49,18 +49,18 @@ namespace pubcore
         {
             try
             {
-                if (args.Length != 6)
+                if (args.Length != 6 && args.Length != 7)
                 {
                     Console.WriteLine(
 $@"
 .NET Core Publishing Utility: PUBCORE v{Version}
 
-usage: pubcore PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
+usage: pubcore [--no-cmd] PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
 
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
     CONFIG          - Build configuration (like: Debug or Release)
-    OUTDIR-PATH     - Project relatiove path to the output directory
+    OUTDIR-PATH     - Project relative path to the output directory
     PUBLISH-DIR     - Path to the publication folder
     RUNTIME         - Target dotnet runtime, like: win10-x64
 
@@ -81,6 +81,11 @@ or:
 
     <RuntimeIdentifiers>win10-x64;...</RuntimeIdentifiers>
 
+This command publishes the executable files to a new PUBLISH-DIR/TARGET-NAME directory
+then creates a CMD.EXE batch file named PUBLISH-DIR/TARGET-NAME.cmd that launches the
+application, forwarding any command line arguments.
+
+The [--no-cmd] option prevents the CMD.EXE batch file from being created.
 ");
                     Environment.Exit(1);
                 }
@@ -104,6 +109,16 @@ or:
                 Console.WriteLine($"===========================================================");
                 Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
                 Console.WriteLine($"===========================================================");
+
+                // Look for the [--no-cmd] option and then remove it from the
+                // arguments when present.
+
+                var noCmd = args.Any(arg => arg == "--no-cmd");
+
+                if (noCmd)
+                {
+                    args = args.Where(arg => arg != "--no-cmd").ToArray();
+                }
 
                 // Parse the arguments.
 
@@ -239,10 +254,26 @@ or:
                             Console.WriteLine($"===========================================================");
                         }
 
-                        File.WriteAllText(Path.Combine(publishDir, $"{targetName}.cmd"),
+                        // Create the CMD.EXE script when not disabled.
+
+                        var cmdPath = Path.Combine(publishDir, $"{targetName}.cmd");
+
+                        if (!noCmd)
+                        {
+                            File.WriteAllText(cmdPath,
 $@"@echo off
 ""%~dp0\{targetName}\{targetName}.exe"" %*
 ");
+                        }
+                        else
+                        {
+                            // Delete any existing CMD.EXE script.
+
+                            if (File.Exists(cmdPath))
+                            {
+                                File.Delete(cmdPath);
+                            }
+                        }
 
                         // Remove the output folder and then recreate it to ensure
                         // that all old files will be removed.
