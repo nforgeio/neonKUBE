@@ -85,6 +85,7 @@ REM attempt to add both locations to the path and [pathtool] is
 REM smart enough to only add directories that actually exist.
 
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%\neon"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\External\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
