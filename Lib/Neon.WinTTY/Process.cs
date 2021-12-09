@@ -59,7 +59,7 @@ namespace Neon.WinTTY
             Covenant.Requires<ArgumentNullException>(hPC != IntPtr.Zero, nameof(hPC));
             Covenant.Requires<ArgumentNullException>(attributes != IntPtr.Zero, nameof(attributes));
 
-            // This method implements the behavior described at:
+            // This method implements the behavior described here:
             //
             // https://docs.microsoft.com/en-us/windows/console/creating-a-pseudoconsole-session#preparing-for-creation-of-the-child-process
 
@@ -71,7 +71,7 @@ namespace Neon.WinTTY
                 lpSize:           ref lpSize
             );
 
-            if (success || lpSize == IntPtr.Zero) // we're not expecting `success` here, we just want to get the calculated lpSize
+            if (success || lpSize == IntPtr.Zero) // We're not expecting success here, we just want to get the calculated [lpSize].
             {
                 throw new InvalidOperationException("Could not calculate the number of bytes for the attribute list. " + Marshal.GetLastWin32Error());
             }

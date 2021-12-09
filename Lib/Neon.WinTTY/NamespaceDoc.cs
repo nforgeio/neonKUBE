@@ -26,7 +26,7 @@ namespace Neon.WinTTY
     /// <summary>
     /// <para>
     /// This namespace includes classes that wrap the low-level <a href="https://devblogs.microsoft.com/commandline/windows-command-line-introducing-the-windows-pseudo-console-conpty/">Windows Pseudo Console (ConPTY)</a>
-    /// TTY implementation for .NET applications.
+    /// TTY implementation for .NET Console applications.  See <see cref="ConsoleTTY"/> for  morem infoormation.
     /// </para>
     /// <note>
     /// This requires Windows 10 1809 (build 10.0.17763) and Windows Server 2019.

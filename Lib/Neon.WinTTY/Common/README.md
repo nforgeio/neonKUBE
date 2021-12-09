@@ -1,0 +1,1 @@
+﻿These files are copied from [Neon.Common] so we don't need a dependency on that.

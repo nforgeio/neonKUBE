@@ -89,6 +89,24 @@ namespace Neon.WinTTY
         /// </summary>
         public IntPtr Handle { get; private set; }
 
+        /// <summary>
+        /// Resizes the psuedo TTY.
+        /// </summary>
+        /// <param name="width">The new screen width in character columns.</param>
+        /// <param name="height">The new screen height in character columns.</param>
+        public void Resize(short width, short height)
+        {
+            Covenant.Requires<ArgumentException>(width > 1, nameof(width));
+            Covenant.Requires<ArgumentException>(height > 1, nameof(height));
+
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(PseudoConsole));
+            }
+
+            PseudoConsoleApi.ResizePseudoConsole(Handle, new COORD() { X = width, Y = height });
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {
