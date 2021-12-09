@@ -21,14 +21,19 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 
-using Neon.Common;
-
-namespace Neon.Cryptography
+namespace Neon.WinTTY
 {
     /// <summary>
-    /// This namespace includes some cryptographic helper methods and extensuions making operations like
-    /// MD5 or SHA-* hashing easier as well as the <b>NeonVault</b> class which can be used to persist 
-    /// encrypted data (inspired by Ansible Vault).
+    /// <para>
+    /// This namespace includes classes that wrap the low-level <a href="https://devblogs.microsoft.com/commandline/windows-command-line-introducing-the-windows-pseudo-console-conpty/">Windows Pseudo Console (ConPTY)</a>
+    /// TTY implementation for .NET applications.
+    /// </para>
+    /// <note>
+    /// This requires Windows 10 1809 (build 10.0.17763) and Windows Server 2019.
+    /// </note>
+    /// <note>
+    /// This code was adapted from: <a href="https://github.com/microsoft/terminal/tree/main/samples/ConPTY/MiniTerm/MiniTerm">MiniTerm</a>
+    /// </note>
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

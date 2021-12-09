@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    AssertException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,21 +17,34 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Reflection;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-using Neon.Common;
-
-namespace Neon.Cryptography
+namespace Neon.Diagnostics
 {
     /// <summary>
-    /// This namespace includes some cryptographic helper methods and extensuions making operations like
-    /// MD5 or SHA-* hashing easier as well as the <b>NeonVault</b> class which can be used to persist 
-    /// encrypted data (inspired by Ansible Vault).
+    /// Thrown by <see cref="Covenant.Assert(bool, string)"/> to signal logic failures.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    class NamespaceDoc
+    public class AssertException : Exception
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public AssertException()
+            : base("Assertion Failed")
+        {
+        }
+
+        /// <summary>
+        /// Constructs an assertion with a specific message and optional inner exception.
+        /// </summary>
+        /// <param name="message">The custom message.</param>
+        /// <param name="innerException">Optional inner exception.</param>
+        public AssertException(string message, Exception innerException = null)
+            : base("Assertion Failed: " + message, innerException)
+        {
+        }
     }
 }
