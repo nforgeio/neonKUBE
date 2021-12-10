@@ -34,7 +34,7 @@ namespace System.Diagnostics.Contracts
     /// requirements in code, but these methods don't currently generate any code. 
     /// </para>
     /// </remarks>
-    public static class Covenant
+    internal static class Covenant
     {
         private static Type[]   oneStringArg  = new Type[] { typeof(string) };
         private static Type[]   twoStringArgs = new Type[] { typeof(string), typeof(string) };

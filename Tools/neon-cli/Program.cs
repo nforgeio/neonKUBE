@@ -42,6 +42,7 @@ using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
+using Neon.WinTTY;
 
 namespace NeonCli
 {
@@ -266,8 +267,40 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 if (command == null)
                 {
                     // This must be a [kubectl] command, so spawn [kubectl] to handle it.
+                    // Note that we'll create a TTY for commands with a [-t] or [--tty]
+                    // option so that editors and other interactive commands will work.
 
-                    Program.Exit(NeonHelper.Execute(KubectlPath, CommandLine.Items));
+                    // $todo(jefflill):
+                    //
+                    // I believe this treats this as if the user specified the [-i] or
+                    // [--stdin] option as well.  Most users probably specify [-it]
+                    // together, but we may need to revisit this at some point.
+
+                    var tty = CommandLine.HasOption("--tty");
+
+                    if (!tty)
+                    {
+                        // Look for a [-t] option.
+
+                        foreach (var item in CommandLine.Items.Where(item => item.StartsWith("-") && item.Length > 1 && item[1] != '-'))
+                        {
+                            if (item.Contains('t'))
+                            {
+                                tty = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (tty)
+                    {
+                        new ConsoleTTY().Run($"\"{KubectlPath}\" {CommandLine}");
+                        Program.Exit(0);
+                    }
+                    else
+                    {
+                        Program.Exit(NeonHelper.Execute(KubectlPath, CommandLine.Items));
+                    }
                 }
 
                 // This is one of our commands, so ensure that there are no unexpected
@@ -275,7 +308,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 var validOptions = new HashSet<string>();
 
-                if (command.CheckOptions)
                 {
                     foreach (var optionName in command.ExtendedOptions)
                     {

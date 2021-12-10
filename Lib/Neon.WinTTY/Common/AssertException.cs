@@ -27,7 +27,7 @@ namespace Neon.Diagnostics
     /// <summary>
     /// Thrown by <see cref="Covenant.Assert(bool, string)"/> to signal logic failures.
     /// </summary>
-    public class AssertException : Exception
+    internal class AssertException : Exception
     {
         /// <summary>
         /// Default constructor.
