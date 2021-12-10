@@ -132,3 +132,9 @@ Go/**/__debug_bin
 /Lib/Neon.ModelGenerator/osx-x64/**
 /Lib/Neon.ModelGenerator/win-x64/**
 /Lib/**/*.bak
+
+#############################
+### Other generated files ###
+#############################
+
+cluster-manifest.json
