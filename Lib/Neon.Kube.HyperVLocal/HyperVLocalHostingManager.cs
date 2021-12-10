@@ -609,8 +609,8 @@ namespace Neon.Kube
                     if (osDiskBytes > KubeConst.MinNodeDiskSizeGiB)
                     {
                         node.Status = $"resize: OS disk";
-                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
-                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.None);
+                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.FaultOnError);
+                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
                     }
                 }
                 finally
