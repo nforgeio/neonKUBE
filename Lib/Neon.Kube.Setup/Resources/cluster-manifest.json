@@ -62,7 +62,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-grafana:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/grafana-grafana:8.2.6"
+      "InternalRef": "neon-registry.node.local/grafana-grafana:8.3.1"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/grafana-loki:neonkube-0.3.0-alpha",
@@ -178,7 +178,7 @@
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/keycloak-keycloak-init-container:neonkube-0.3.0-alpha",
-      "InternalRef": "neon-registry.node.local/keycloak-keycloak-init-container:15.0.2"
+      "InternalRef": "neon-registry.node.local/keycloak-keycloak-init-container:1.32.0"
     },
     {
       "SourceRef": "ghcr.io/neonkube-dev/keycloak-keycloak-operator:neonkube-0.3.0-alpha",

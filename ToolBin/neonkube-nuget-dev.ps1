@@ -308,6 +308,7 @@ else
 SetVersion Neon.Cadence             $libraryVersion
 SetVersion Neon.Cassandra           $libraryVersion
 SetVersion Neon.Common              $libraryVersion
+SetVersion Neon.WinTTY              $libraryVersion
 SetVersion Neon.Couchbase           $libraryVersion
 SetVersion Neon.Cryptography        $libraryVersion
 SetVersion Neon.CSharp              $libraryVersion
@@ -350,6 +351,7 @@ SetVersion Neon.Kube.Xunit          $kubeVersion
 Publish Neon.Cadence                $libraryVersion
 Publish Neon.Cassandra              $libraryVersion
 Publish Neon.Common                 $libraryVersion
+Publish Neon.WinTTY                 $libraryVersion
 Publish Neon.Couchbase              $libraryVersion
 Publish Neon.Cryptography           $libraryVersion
 Publish Neon.CSharp                 $libraryVersion
@@ -392,6 +394,7 @@ Publish Neon.Kube.Xunit             $kubeVersion
 RestoreVersion Neon.Cadence
 RestoreVersion Neon.Cassandra
 RestoreVersion Neon.Common
+RestoreVersion Neon.WinTTY
 RestoreVersion Neon.Couchbase
 RestoreVersion Neon.Cryptography
 RestoreVersion Neon.CSharp
