@@ -18,6 +18,8 @@
 // This code was adapted from: https://github.com/microsoft/terminal/tree/main/samples/ConPTY/MiniTerm/MiniTerm/Native
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -56,9 +58,106 @@ namespace Neon.WinTTY
     ///     }
     /// }
     /// </code>
+    /// <para>
+    /// <see cref="Run(string, IDictionary{ConsoleKeyInfo, string})"/> receives user keystrokes and then forwards them to the remote
+    /// process, optionally translating the keystroke into an <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-48/">ECMA-48</a>
+    /// control sequence.  By default, this methods uses the <see cref="DefaultKeyMap"/> dictionary to translate keystrokes but users
+    /// may override this by passing a custom dictionary.
+    /// </para>
+    /// <para>
+    /// The <see cref="ConsoleKeyInfo"/> values received as the user types include flag bits indicating the current state of the
+    /// <b>ALT</b>, <b>CONTROL</b>, and <b>SHIFT</b> keys, the <see cref="ConsoleKey"/> code identifying the specific key, and
+    /// the key character.  The key character is either the Unicode value for the keystroke or 0 when the keystroke doesn't map
+    /// to a character (e.g. for an ARROW key).
+    /// </para>
+    /// <para>
+    /// Here's how keypress handling work:
+    /// </para>
+    /// <list type="number">
+    /// <item>
+    /// A new <see cref="ConsoleKeyInfo"/> is received by <see cref="Run(string, IDictionary{ConsoleKeyInfo, string})"/>.
+    /// </item>
+    /// <item>
+    /// The key map is searched for a control sequence string for the <see cref="ConsoleKeyInfo"/>.
+    /// </item>
+    /// <item>
+    /// If a control sequence is found then it will be sent to the remote process.   Note that the control
+    /// sequence string is <c>null</c> then nothing will be sent and the keypress will essentially be ignored.
+    /// </item>
+    /// <item>
+    /// If there's no matching control sequence in the key map and the key character is not zero, then the 
+    /// key character will be sent to the remote process.  Zero key characters are never transmitted.
+    /// </item>
+    /// </list>
     /// </remarks>
     public sealed class ConsoleTTY
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Returns the default mapping used to translate a keyboard keypress into the
+        /// <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-48/">ECMA-48</a>
+        /// (or other) control sequence to be sent to the remote process.
+        /// </summary>
+        public static IDictionary<ConsoleKeyInfo, string> DefaultKeyMap { get; private set; }
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ConsoleTTY()
+        {
+            var keyMap = new Dictionary<ConsoleKeyInfo, string>()
+            {
+                { new ConsoleKeyInfo((char)0, ConsoleKey.PageUp,        alt: false, control: false, shift: false),  "\x001b[5~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.PageDown,      alt: false, control: false, shift: false),  "\x001b[6~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.End,           alt: false, control: false, shift: false),  "\x001b[4~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Home,          alt: false, control: false, shift: false),  "\x001b[1~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.LeftArrow,     alt: false, control: false, shift: false),  "\x001b[D" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.UpArrow,       alt: false, control: false, shift: false),  "\x001b[A" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.RightArrow,    alt: false, control: false, shift: false),  "\x001b[C" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.DownArrow,     alt: false, control: false, shift: false),  "\x001b[B" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Insert,        alt: false, control: false, shift: false),  "\x001b[2~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Delete,        alt: false, control: false, shift: false),  "\x001b[3~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad0,       alt: false, control: false, shift: false),  "0" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad1,       alt: false, control: false, shift: false),  "1" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad2,       alt: false, control: false, shift: false),  "2" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad3,       alt: false, control: false, shift: false),  "3" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad4,       alt: false, control: false, shift: false),  "4" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad5,       alt: false, control: false, shift: false),  "5" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad6,       alt: false, control: false, shift: false),  "6" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad7,       alt: false, control: false, shift: false),  "7" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad8,       alt: false, control: false, shift: false),  "8" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.NumPad9,       alt: false, control: false, shift: false),  "9" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Multiply,      alt: false, control: false, shift: false),  "*" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Add,           alt: false, control: false, shift: false),  "+" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Subtract,      alt: false, control: false, shift: false),  "-" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Decimal,       alt: false, control: false, shift: false),  "." },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.Divide,        alt: false, control: false, shift: false),  "/" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F1,            alt: false, control: false, shift: false),  "\x001b[11~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F2,            alt: false, control: false, shift: false),  "\x001b[12~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F3,            alt: false, control: false, shift: false),  "\x001b[13~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F4,            alt: false, control: false, shift: false),  "\x001b[14~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F5,            alt: false, control: false, shift: false),  "\x001b[15~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F6,            alt: false, control: false, shift: false),  "\x001b[17~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F7,            alt: false, control: false, shift: false),  "\x001b[18~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F8,            alt: false, control: false, shift: false),  "\x001b[19~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F9,            alt: false, control: false, shift: false),  "\x001b[20~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F10,           alt: false, control: false, shift: false),  "\x001b[21~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F11,           alt: false, control: false, shift: false),  "\x001b[23~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F12,           alt: false, control: false, shift: false),  "\x001b[24~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F13,           alt: false, control: false, shift: false),  "\x001b[25~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F14,           alt: false, control: false, shift: false),  "\x001b[26~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F15,           alt: false, control: false, shift: false),  "\x001b[28~" },
+                { new ConsoleKeyInfo((char)0, ConsoleKey.F16,           alt: false, control: false, shift: false),  "\x001b[29~" }
+            };
+
+            DefaultKeyMap = new ReadOnlyDictionary<ConsoleKeyInfo, string>(keyMap);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -270,6 +369,12 @@ namespace Neon.WinTTY
         /// include spaces.
         /// </note>
         /// </param>
+        /// <param name="keyMap">
+        /// Optionally specifies the map to be used for translating keystrokes into 
+        /// <a href="https://www.ecma-international.org/publications-and-standards/standards/ecma-48/">ECMA-48</a>
+        /// (or other) control sequences.  This defaults to <see cref="DefaultKeyMap"/> but you
+        /// may pass a custom map when required.
+        /// </param>
         /// <remarks>
         /// <para>
         /// If the command path specifies an absolute or relative directory then the command
@@ -281,7 +386,7 @@ namespace Neon.WinTTY
         /// <b>.cmd</b>, and <b>.bat</b> extensions in that order.
         /// </para>
         /// </remarks>
-        public void Run(string command)
+        public void Run(string command, IDictionary<ConsoleKeyInfo, string> keyMap = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
@@ -296,9 +401,9 @@ namespace Neon.WinTTY
 
                 Task.Run(() => CopyPipeToOutput(outputPipe.ReadSide));
 
-                // Copy all STDIN from the console to the remote process.
+                // Process user key presses as required and forward them to the remote process.
 
-                Task.Run(() => CopyInputToPipe(inputPipe.WriteSide));
+                Task.Run(() => CopyInputToPipe(inputPipe.WriteSide, keyMap ?? DefaultKeyMap));
 
                 // Free resources in case the console is ungracefully closed (e.g. by the 'X' in the window titlebar).
 
@@ -331,9 +436,11 @@ namespace Neon.WinTTY
         /// Reads terminal input and copies it to the PseudoConsole
         /// </summary>
         /// <param name="inputWriteSide">the write side of the pseudo console input pipe.</param>
-        private static void CopyInputToPipe(SafeFileHandle inputWriteSide)
+        /// <param name="keyMap">The key map used for translating keystroks into ECMA-48 control sequences.</param>
+        private static void CopyInputToPipe(SafeFileHandle inputWriteSide, IDictionary<ConsoleKeyInfo, string> keyMap)
         {
             Covenant.Requires<ArgumentNullException>(inputWriteSide != null, nameof(inputWriteSide));
+            Covenant.Requires<ArgumentNullException>(keyMap != null, nameof(keyMap));
 
             using (var writer = new StreamWriter(new FileStream(inputWriteSide, FileAccess.Write)) { AutoFlush = true })
             {
@@ -341,9 +448,23 @@ namespace Neon.WinTTY
 
                 while (true)
                 {
-                    // Send user input one character at a time to the remote process.
+                    var keyInfo = Console.ReadKey(intercept: true);
 
-                    writer.Write(Console.ReadKey(intercept: true).KeyChar);
+                    if (keyMap.TryGetValue(keyInfo, out var sequence))
+                    {
+                        if (!string.IsNullOrEmpty(sequence))
+                        {
+                            foreach (var ch in sequence)
+                            {
+                                writer.Write(ch);
+                            }
+                        }
+                    }
+
+                    if (keyInfo.KeyChar != (char)0)
+                    {
+                        writer.Write(keyInfo.KeyChar);
+                    }
                 }
             }
         }
