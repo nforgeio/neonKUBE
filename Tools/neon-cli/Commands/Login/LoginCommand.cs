@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
 using Newtonsoft;
 using Newtonsoft.Json;
 
@@ -105,10 +106,34 @@ ARGUMENTS:
                 KubeHelper.SetCurrentContext((string)null);
             }
 
-            // ...and log into the new context.
+            // Log into the new context and then send a simple command to ensure
+            // that cluster is ready.
+
+            var orgContext = KubeHelper.CurrentContext;
 
             KubeHelper.SetCurrentContext(newContextName);
-            Console.WriteLine($"*** Logged into [{newContextName}].");
+            Console.WriteLine($"Logging into [{newContextName}]...");
+            Console.WriteLine();
+
+            try
+            {
+                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile()))
+                {
+                    await k8s.ListNamespaceAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                KubeHelper.SetCurrentContext(orgContext?.Name);
+
+                Console.WriteLine("*** ERROR: Cluster is not responding.");
+                Console.WriteLine();
+                Console.WriteLine(NeonHelper.ExceptionError(e));
+                Console.WriteLine();
+                Program.Exit(1);
+            }
+
+            Console.WriteLine($"Logged into [{newContextName}].");
             Console.WriteLine();
 
             await Task.CompletedTask;
