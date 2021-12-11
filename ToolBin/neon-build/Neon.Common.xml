@@ -16475,31 +16475,31 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: d5f23c9ed</summary>
+            <summary>Commit: ba8ae161d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: d5f23c9ede7fce919235bc24a38b98a692648015</summary>
+            <summary>Sha: ba8ae161d6fad41e0ab60de28c1fc15036d85999</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-11-07T10:07:46-08:00</summary>
+            <summary>Commit date: 2021-12-10T21:15:10-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 6</summary>
+            <summary>Commits on top of base version: 56</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonKUBE-v0.1.0-alpha-6-gd5f23c9ed</summary>
+            <summary>Tag: release-neonKUBE-v0.2.0-alpha-56-gba8ae161d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: neonKUBE-v0.1.0-alpha</summary>
+            <summary>Base tag: release-neonKUBE-v0.2.0-alpha</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Major">
-            <summary>Major: 1</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
             <summary>Minor: 0</summary>
@@ -16511,13 +16511,13 @@
             <summary>Provides access to SemVer information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Major">
-            <summary>Major: 1</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 6</summary>
+            <summary>Patch: 56</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

@@ -96,6 +96,8 @@ namespace NeonBuild
                 {
                     var downloadBytes = httpClient.GetByteArrayAsync(sourceUri).Result;
 
+                    Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+
                     if (File.Exists(targetPath))
                     {
                         var existingBytes = File.ReadAllBytes(targetPath);
