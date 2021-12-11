@@ -176,7 +176,8 @@ namespace Neon.Kube
             // setup is still pending, we'll use that information (especially the generated
             // secure SSH password).
             //
-            // Otherwise, we'll write (or overwrite) the context file with a fresh context.
+            // Otherwise, we'll fail the cluster prepare to avoid the possiblity of overwriting
+            // the login for an active cluster.
 
             var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
             var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
@@ -191,6 +192,10 @@ namespace Neon.Kube
                 };
 
                 clusterLogin.Save();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot overwrite existing cluster login [{KubeConst.RootUser}@{clusterDefinition.Name}].  Remove the login first when you're VERY SURE IT'S NOT IMPORTANT!");
             }
 
             // Configure the setup controller state.
