@@ -1,6 +1,6 @@
 apiVersion: v2
 name: grafana-agent
-description: A Helm chart for Kubernetes
+description: Collects observability data and forwards it to Grafana.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

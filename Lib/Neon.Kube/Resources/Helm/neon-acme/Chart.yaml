@@ -1,6 +1,6 @@
 apiVersion: v2
 name: neon-acme
-description: A Helm chart for Kubernetes
+description: Handles authentication for LetsEncrypt SSL certificate generation
 
 # A chart can be either an 'application' or a 'library' chart.
 #
