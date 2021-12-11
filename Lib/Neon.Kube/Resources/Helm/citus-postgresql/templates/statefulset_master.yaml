@@ -83,12 +83,13 @@ spec:
         image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
         imagePullPolicy: "{{ .Values.imagePullPolicy }}"
         ports:
-        - containerPort: {{ .Values.metrics.port }}
+        - name: http-metrics
+          containerPort: {{ .Values.metrics.port }}
         resources:
         {{ toYaml .Values.metrics.resources | nindent 10 }}
         env:
         - name: DATA_SOURCE_URI
-          value: localhost?sslmode=disable
+          value: localhost/postgres?sslmode=disable
         - name: DATA_SOURCE_USER
           valueFrom:
             secretKeyRef:

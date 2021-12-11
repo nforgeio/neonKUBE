@@ -261,19 +261,11 @@ auth:
     realm: {{ .Spec.Authentication.Silly.Realm | quote }}
     service: {{ .Spec.Authentication.Silly.Service | quote }}
   {{- end }}
-  {{- if .Spec.Authentication.Token }}
   token:
-    realm: {{ .Spec.Authentication.Token.Realm | quote }}
-    service: {{ .Spec.Authentication.Token.Service | quote }}
-    issuer: registry-token-issuer
-    rootcertbundle: /root/certs/bundle
-    autoredirect: {{ .Spec.Authentication.Token.AutoRedirect }}
-  {{- end }}
-  {{- if .Spec.Authentication.HTPasswd }}
-  htpasswd:
-    realm: {{ .Spec.Authentication.HTPasswd.Realm | quote }}
-    # path: setted through environment variable
-  {{- end }}
+	  realm: https://sso.de73f343a4c241689d13146dc5bd0ff7.neoncluster.io/auth/realms/neon-sso/protocol/docker-v2/auth
+	  service: docker
+	  issuer: https://sso.de73f343a4c241689d13146dc5bd0ff7.neoncluster.io/auth/realms/neon-sso
+	  rootcertbundle: /harbor_cust_cert/harbor-oidc-cert.crt
 {{- end }}
 notifications:
   {{- if .Spec.Notifications.Endpoints }}

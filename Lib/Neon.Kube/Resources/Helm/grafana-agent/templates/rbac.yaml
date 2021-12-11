@@ -3,41 +3,66 @@ kind: ServiceAccount
 metadata:
   name: grafana-agent-operator
   namespace: neon-monitor
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: grafana-agent-operator
 rules:
-- apiGroups: [monitoring.grafana.com]
+- apiGroups: ["monitoring.grafana.com"]
   resources:
-  - grafana-agents
-  - prometheus-instances
-  verbs: [get, list, watch]
-- apiGroups: [monitoring.coreos.com]
+  - grafanaagents
+  - metricsinstances
+  - logsinstances
+  - podlogs
+  verbs: 
+  - get
+  - list
+  - watch
+- apiGroups: ["monitoring.coreos.com"]
   resources:
   - podmonitors
   - probes
   - servicemonitors
-  verbs: [get, list, watch]
+  verbs: 
+  - get
+  - list
+  - watch
 - apiGroups: [""]
   resources:
   - namespaces
-  verbs: [get, list, watch]
+  - nodes
+  verbs: 
+  - get
+  - list
+  - watch
 - apiGroups: [""]
   resources:
   - secrets
   - services
-  verbs: [get, list, watch, create, update, patch, delete]
+  - configmaps
+  - endpoints
+  verbs: 
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups: ["apps"]
   resources:
   - statefulsets
-  verbs: [get, list, watch, create, update, patch, delete]
-
+  - daemonsets
+  verbs: 
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -50,17 +75,13 @@ subjects:
 - kind: ServiceAccount
   name: grafana-agent-operator
   namespace: neon-monitor
-
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: grafana-agent
   namespace: neon-monitor
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -71,6 +92,7 @@ rules:
   resources:
   - nodes
   - nodes/proxy
+  - nodes/metrics
   - services
   - endpoints
   - pods
@@ -78,13 +100,20 @@ rules:
   - get
   - list
   - watch
-- nonResourceURLs:
-  - /metrics
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
   verbs:
   - get
-
+  - list
+  - watch
+- nonResourceURLs:
+  - /metrics
+  - /metrics/cadvisor
+  verbs:
+  - get
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -97,17 +126,13 @@ subjects:
 - kind: ServiceAccount
   name: grafana-agent
   namespace: neon-monitor
-
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: grafana-agent-node
   namespace: neon-monitor
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -118,6 +143,7 @@ rules:
   resources:
   - nodes
   - nodes/proxy
+  - nodes/metrics
   - services
   - endpoints
   - pods
@@ -125,8 +151,17 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
 - nonResourceURLs:
   - /metrics
+  - /metrics/cadvisor
   verbs:
   - get
 ---

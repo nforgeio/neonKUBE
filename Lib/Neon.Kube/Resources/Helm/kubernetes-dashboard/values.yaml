@@ -133,28 +133,7 @@ service:
     key: "kubernetes.io/cluster-service"
 
 ingress:
-  ## If true, Kubernetes Dashboard Ingress will be created.
-  ##
-  enabled: false
-
-  ## Kubernetes Dashboard Ingress labels
-  # labels:
-  #   key: value
-
-  ## Kubernetes Dashboard Ingress annotations
-  # annotations:
-  #   kubernetes.io/ingress.class: nginx
-  #   kubernetes.io/tls-acme: 'true'
-
-  ## If you plan to use TLS backend with enableInsecureLogin set to false
-  ## (default), you need to uncomment the below.
-  ## If you use ingress-nginx < 0.21.0
-  #   nginx.ingress.kubernetes.io/secure-backends: "true"
-  ## if you use ingress-nginx >= 0.21.0
-  #   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-
-  ## Kubernetes Dashboard Ingress Class
-  # className: "example-lb"
+  subdomain: k8s
 
   ## Kubernetes Dashboard Ingress paths
   ## Both `/` and `/*` are required to work on gce ingress.
@@ -199,7 +178,7 @@ settings:
   ## Max number of items that can be displayed on each list page
   itemsPerPage: 10
   ## Number of seconds between every auto-refresh of logs
-  logsAutoRefreshTimeInterval: 5
+  logsAutoRefreshTimeInterval: 1
   ## Number of seconds between every auto-refresh of every resource. Set 0 to disable
   resourceAutoRefreshTimeInterval: 5
   ## Hide all access denied warnings in the notification panel
@@ -207,14 +186,30 @@ settings:
 
 ## Pinned CRDs that will be displayed in dashboard's menu
 pinnedCRDs:
-  []
-  # - kind: customresourcedefinition
-  ##  Fully qualified name of a CRD
-  #   name: prometheuses.monitoring.coreos.com
-  ##  Display name
-  #   displayName: Prometheus
-  ##  Is this CRD namespaced?
-  #   namespaced: true
+  - kind: customresourcedefinition
+    name: certificates.cert-manager.io
+    displayName: Certificate
+    namespaced: true
+  - kind: customresourcedefinition
+    name: gateways.networking.istio.io
+    displayName: Gateway
+    namespaced: true
+  - kind: customresourcedefinition
+    name: keycloakusers.keycloak.org
+    displayName: Keycloak User
+    namespaced: true
+  - kind: customresourcedefinition
+    name: podmonitors.monitoring.coreos.com
+    displayName: Pod Monitor
+    namespaced: true
+  - kind: customresourcedefinition
+    name: servicemonitors.monitoring.coreos.com
+    displayName: Service Monitor
+    namespaced: true
+  - kind: customresourcedefinition
+    name: virtualservices.networking.istio.io
+    displayName: Virtual Service
+    namespaced: true
 
 ## Metrics Scraper
 ## Container to scrape, store, and retrieve a window of time from the Metrics Server.
@@ -222,6 +217,7 @@ pinnedCRDs:
 metricsScraper:
   ## Wether to enable dashboard-metrics-scraper
   enabled: true
+  interval: 60s
   image:
     organization: neon-registry.node.local
     repository: kubernetesui-metrics-scraper

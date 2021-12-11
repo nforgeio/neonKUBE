@@ -4,7 +4,7 @@ metadata:
   annotations:
     goharbor.io/deploy-mode: harbor
     goharbor.io/operator-version: v1.0.0
-  name: webhook-service
+  name: registry-webhook-service
   namespace: neon-system
 spec:
   ports:

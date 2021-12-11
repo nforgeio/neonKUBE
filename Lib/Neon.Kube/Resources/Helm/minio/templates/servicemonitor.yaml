@@ -9,8 +9,10 @@ spec:
   endpoints:
     - path: /minio/v2/metrics/cluster
       port: http-minio
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
     - path: /minio/v2/metrics/node
       port: http-minio
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
   namespaceSelector:
     matchNames:
       - neon-system

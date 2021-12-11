@@ -65,11 +65,11 @@ spec:
         {{- if .Values.htpasswdFile.enabled }}
           - --htpasswd-file=/etc/oauth2_proxy/htpasswd/users.txt
         {{- end }}
-          - --login-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
-          - --redeem-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
-          - --validate-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
-          - --profile-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
-          - --oidc-issuer-url=https://sso.{{ .Values.config.cluster.domain }}/auth/realms/neon-sso
+          - --login-url=https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
+          - --redeem-url=https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
+          - --validate-url=https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+          - --profile-url=https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+          - --oidc-issuer-url=https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso
         env:
         {{- if .Values.proxyVarsAsSecrets }}
         - name: OAUTH2_PROXY_CLIENT_ID

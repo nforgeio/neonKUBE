@@ -1,0 +1,20 @@
+apiVersion: goharbor.io/v1beta1
+kind: HarborConfiguration
+metadata:
+  name: oidc-config
+  namespace: neon-system
+spec:
+  # your harbor configuration
+  configuration:
+    authMode: oidc_auth
+    oidcClientSecret: harbor-oidc
+    oidcName: "keycloak"
+    oidcEndpoint: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso"
+    oidcClientId: "harbor"
+    oidcGroupsClaim: "groups"
+    oidcAdminGroup: "root-user"
+    oidcScope: "openid"
+    oidcVerifyCert: false
+    oidcAutoOnboard: true
+    oidcUserClaim: email
+  harborClusterRef: registry

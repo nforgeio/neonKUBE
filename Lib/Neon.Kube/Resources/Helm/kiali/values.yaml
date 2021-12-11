@@ -2,11 +2,19 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  organization: neon-registry.node.local
-  repository: kiali-kiali-operator
-  tag: v1.27.0
-  pullPolicy: IfNotPresent
-  pullSecrets: []
+  operator:
+    organization: neon-registry.node.local
+    repository: kiali-kiali-operator
+    tag: v1.44.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  kiali:
+    organization: neon-registry.node.local
+    repository: kiali-kiali
+    tag: v1.44.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
 
 # Deployment options for the operator pod.
 nodeSelector: 
@@ -18,6 +26,8 @@ resources: {}
 affinity: {}
 replicaCount: 1
 priorityClassName: ""
+
+secretReader: ['cacerts', 'istio-ca-secret']
 
 # metrics.enabled: set to true if you want Prometheus to collect metrics from the operator
 metrics:
@@ -52,27 +62,6 @@ cr:
   namespace: ""
 
   spec:
-    version: default
-    istio_namespace: neon-ingress
-    auth:
-      strategy: openid
-      openid:
-        client_id: "oauth2-proxy"
-        issuer_uri: "https://sso.cluster.neoncluster.io/auth/realms/neon-sso"
-    deployment:
-      image_name: neon-registry.node.local/kiali-kiali
-      image_version: v1.28.0
-      accessible_namespaces:
-      - '**'
-      service_type: "ClusterIP"
-    external_services:
-      grafana:
-        enabled: true
-      istio:
-        enabled: true
-      prometheus:
-        enabled: true
-        url: cortex.neon-monitor:9009
-      tracing:
-        enabled: true
-        url: tempo.neon-monitor:3100
+
+ingress:
+  subdomain: kiali

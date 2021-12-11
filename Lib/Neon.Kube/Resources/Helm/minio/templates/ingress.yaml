@@ -7,14 +7,14 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - minio-operator.{{ .Values.clusterDomain }}
+    - {{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:
             prefix: /
       route:
         - destination:
-            host: console.neon-monitor.svc.cluster.local
+            host: console.neon-system.svc.cluster.local
             port:
               number: 9090 
 ---
@@ -27,7 +27,7 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - minio-console.{{ .Values.clusterDomain }}
+    - {{ .Values.ingress.console.subdomain }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

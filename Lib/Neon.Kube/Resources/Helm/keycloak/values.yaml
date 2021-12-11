@@ -8,17 +8,26 @@ keycloak:
     repository: keycloak-keycloak
     tag: 15.0.2
 
+#operator:
+#  image: 
+#    organization: neon-registry.node.local
+#    repository: keycloak-keycloak-operator
+#    tag: 15.0.2
+
 operator:
   image: 
     organization: neon-registry.node.local
     repository: keycloak-keycloak-operator
     tag: 15.0.2
+    imagePullPolicy: IfNotPresent
 
 initContainer:
+  # this is just a busybox containner that exits right away
+  # We modified the keycloak container to download the plugins on startup.
   image: 
-    organization: quay.io/keycloak
-    repository: keycloak-init-container
-    tag: 15.0.2
+    organization: neon-registry.node.local
+    repository: keycloak-keycloak-init-container
+    tag: 1.32.0 
 
 config:
   cluster:
@@ -34,3 +43,13 @@ database:
 
 rootUser:
   password: password
+
+cluster:
+  domain: keycloak.cluster.neoncluster.io
+  name: neonkube
+
+ingress:
+  subdomain: sso
+
+extensions:
+  - https://github.com/aerogear/keycloak-metrics-spi/releases/download/1.0.4/keycloak-metrics-spi-1.0.4.jar

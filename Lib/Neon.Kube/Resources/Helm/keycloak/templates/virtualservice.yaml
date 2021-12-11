@@ -32,7 +32,7 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - sso.{{ .Values.clusterDomain }}
+    - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

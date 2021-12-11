@@ -38,12 +38,6 @@ spec:
       },
       {
         "type": "panel",
-        "id": "grafana-piechart-panel",
-        "name": "Pie Chart",
-        "version": "1.5.0"
-      },
-      {
-        "type": "panel",
         "id": "graph",
         "name": "Graph",
         "version": ""
@@ -436,7 +430,7 @@ spec:
         "timeFrom": null,
         "timeShift": null,
         "title": "Total count of stderr / stdout pie",
-        "type": "grafana-piechart-panel",
+        "type": "piechart",
         "valueName": "total"
       },
       {
@@ -489,7 +483,7 @@ spec:
         "timeFrom": null,
         "timeShift": null,
         "title": "Matched word: \"$searchable_pattern\" donut",
-        "type": "grafana-piechart-panel",
+        "type": "piechart",
         "valueName": "total"
       },
       {
@@ -946,7 +940,7 @@ spec:
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",
@@ -968,7 +962,7 @@ spec:
         "refresh": 2,
         "regex": "$container.*",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",
@@ -990,7 +984,7 @@ spec:
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",

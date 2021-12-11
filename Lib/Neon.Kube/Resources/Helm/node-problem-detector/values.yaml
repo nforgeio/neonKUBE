@@ -123,6 +123,7 @@ metrics:
   enabled: true
   serviceMonitor:
     enabled: true
+    interval: 60s
     additionalLabels: {}
 
 env:

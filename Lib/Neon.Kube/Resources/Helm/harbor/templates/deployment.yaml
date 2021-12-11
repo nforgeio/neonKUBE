@@ -35,7 +35,7 @@ spec:
               fieldPath: metadata.namespace
         - name: CONFIGURATION_FROM
           value: env,file:/etc/harbor-operator/config.yaml
-        image: neon-registry.node.local/goharbor-harbor-operator:v1.0.1
+        image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         livenessProbe:
           httpGet:
             path: /healthz

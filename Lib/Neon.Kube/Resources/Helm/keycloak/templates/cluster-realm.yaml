@@ -15,11 +15,21 @@ spec:
     ssoSessionIdleTimeout: 604800
     ssoSessionMaxLifespan: 864000
     clientScopes:
-      - name: openid
+      - attributes:
+          display.on.consent.screen: 'true'
+          include.in.token.scope: 'true'
+        name: openid
         protocol: openid-connect
-        attributes:
-          include.in.token.scope: "true"
-          display.on.consent.screen: "true"
+      - attributes:
+          display.on.consent.screen: 'true'
+          include.in.token.scope: 'true'
+        name: profile
+        protocol: openid-connect
+      - attributes:
+          display.on.consent.screen: 'true'
+          include.in.token.scope: 'true'
+        name: email
+        protocol: openid-connect
   instanceSelector:
     matchLabels:
       app: neon-sso

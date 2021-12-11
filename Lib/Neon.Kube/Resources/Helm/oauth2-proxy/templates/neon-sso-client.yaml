@@ -1,7 +1,7 @@
 apiVersion: keycloak.org/v1alpha1
 kind: KeycloakClient
 metadata:
-  name: neon-sso
+  name: oauth2-proxy
   namespace: neon-ingress
   labels:
     app: neon-sso
@@ -16,6 +16,8 @@ spec:
     protocol: openid-connect
     defaultClientScopes:
       - openid
+      - profile
+      - email
     standardFlowEnabled: true
     implicitFlowEnabled: true
     serviceAccountsEnabled: true
@@ -37,3 +39,21 @@ spec:
           id.token.claim: "true"
           access.token.claim: "true"
           claim.name: "groups"
+      - name: email
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          user.attribute: "email"
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: "email"
+          userinfo.token.claim: "true"
+      - name: roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-client-role-mapper
+        config:
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: "roles"
+          multivalued: "true"
+          userinfo.token.claim: "true"

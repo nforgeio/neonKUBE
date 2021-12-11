@@ -5,7 +5,7 @@
 image:
   organization: neon-registry.node.local
   repository: cortexproject-cortex
-  tag: v1.9.0
+  tag: v1.11.0
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -20,33 +20,50 @@ rbac:
 replicas: 1
 
 cortexConfig:
-  # Disable the requirement that every request to Cortex has a
-  # X-Scope-OrgID header. `fake` will be substituted in instead.
-  auth_enabled: false
-
+  target: all,alertmanager
+  auth_enabled: true
+  http_prefix: /api/prom
+  api:
+    response_compression_enabled: true
+    alertmanager_http_prefix: /alertmanager
+    prometheus_http_prefix: /prometheus
   server:
     http_listen_port: 9009
-
+    grpc_listen_port: 9095
     # Configure the server to allow messages up to 100MB.
-    grpc_server_max_recv_msg_size: 104857600
-    grpc_server_max_send_msg_size: 104857600
+    grpc_server_max_recv_msg_size: 10485760
+    grpc_server_max_send_msg_size: 10485760
     grpc_server_max_concurrent_streams: 1000
     grpc_server_min_time_between_pings: 10s
     grpc_server_ping_without_stream_allowed: true
-
   distributor:
-    shard_by_all_labels: true
+    shard_by_all_labels: false
     pool:
       health_check_ingesters: true
-
+    ha_tracker:
+      enable_ha_tracker: false
+      kvstore:
+        store: inmemory
+        etcd:
+          endpoints:
+            - etcd.neon-system:2379
+    ring:
+      store: inmemory
+      kvstore:
+        etcd:
+          endpoints:
+          - etcd.neon-system:2379
   ingester_client:
     grpc_client_config:
       # Configure the client to allow messages up to 100MB.
-      max_recv_msg_size: 104857600
-      max_send_msg_size: 104857600
+      max_recv_msg_size: 10485760
+      max_send_msg_size: 10485760
       grpc_compression: gzip
-
+  storage:
+    engine: blocks
   limits:
+    ingestion_rate: 100000
+    ingestion_burst_size: 250000
     max_series_per_metric: 0
     max_series_per_user: 0
     max_metadata_per_user: 0
@@ -76,39 +93,70 @@ cortexConfig:
 
       # Use an in memory ring store, so we don't need to launch a Consul.
       ring:
+        replication_factor: 1
         kvstore:
           store: inmemory
           etcd:
             endpoints:
               - etcd.neon-system:2379
-        replication_factor: 1
-
-  storage:
-    engine: blocks
   frontend_worker:
     match_max_concurrent: true
     frontend_address: 0.0.0.0:9095
+  alertmanager:
+    fallback_config_file: /etc/cortex/alertmanager.yaml
+    cluster:
+      listen_address: 0.0.0.0:9094
+    enable_api: true
+    external_url: /api/prom/alertmanager
+    sharding_enabled: false
+    sharding_ring:
+      replication_factor: 1
+      kvstore:
+        store: inmemory
+        etcd:
+          endpoints:
+            - etcd.neon-system:2379
+  alertmanager_storage:
+    backend: s3
+    s3:
+      access_key_id: ${ACCESS_KEY_ID}
+      bucket_name: alertmanager
+      endpoint: minio.neon-system
+      insecure: true
+      secret_access_key: ${SECRET_ACCESS_KEY}
   ruler:
+    alertmanager_url: /api/prom/alertmanager
+    external_url: /api/prom/ruler
+    enable_alertmanager_v2: true
     enable_api: true
     enable_sharding: false
     ring:
       kvstore:
         store: inmemory
-    storage:
-      type: local
-      local:
-        directory: /tmp/cortex/rules
+        etcd:
+          endpoints:
+            - etcd.neon-system:2379
+    rule_path: /tmp/cortex/rules
+  ruler_storage:
+    backend: s3
+    s3:
+      access_key_id: ${ACCESS_KEY_ID}
+      bucket_name: cortex-ruler
+      endpoint: minio.neon-system
+      insecure: true
+      secret_access_key: ${SECRET_ACCESS_KEY}
   compactor:
     data_dir: /tmp/cortex/compactor
+    sharding_enabled: false
     sharding_ring:
       kvstore:
         store: inmemory
-
+        etcd:
+          endpoints:
+            - etcd.neon-system:2379
   table_manager:
     retention_deletes_enabled: true
     retention_period: 48h
-
-
 
 strategy:
   type: RollingUpdate
@@ -159,6 +207,16 @@ env:
       secretKeyRef:
         name: minio
         key: secretkey
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        name: citus
+        key: username
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: citus
+        key: password
 
 securityContext: {}
 
@@ -184,3 +242,6 @@ readinessProbe:
   initialDelaySeconds: 60
   failureThreshold: 10
   periodSeconds: 10
+
+metrics:
+  interval: 60s

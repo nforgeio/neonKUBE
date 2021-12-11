@@ -9,9 +9,15 @@ spec:
   realmSelector:
      matchLabels:
       app: neon-sso
+  roles:
+    - name: consoleAdmin
+    - name: readonly 
+    - name: readwrite
+    - name: diagnostics
+    - name: writeonly
   client:
-    name: kubernetes
-    clientId: kubernetes
+    name: minio
+    clientId: minio
     enabled: true
     protocol: openid-connect
     defaultClientScopes:
@@ -43,3 +49,21 @@ spec:
           id.token.claim: "true"
           access.token.claim: "true"
           claim.name: "groups"
+      - name: email
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          user.attribute: "email"
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: "email"
+          userinfo.token.claim: "true"
+      - name: roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-client-role-mapper
+        config:
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: "roles"
+          multivalued: "true"
+          userinfo.token.claim: "true"

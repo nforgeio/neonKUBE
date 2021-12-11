@@ -7,7 +7,7 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - grafana.{{ .Values.clusterDomain }}
+    - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:
@@ -16,4 +16,4 @@ spec:
         - destination:
             host: grafana.neon-monitor.svc.cluster.local
             port:
-              number: 3001
+              number: 3000

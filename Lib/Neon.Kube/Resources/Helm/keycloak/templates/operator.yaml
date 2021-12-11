@@ -19,7 +19,7 @@ spec:
           image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           command:
           - keycloak-operator
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.operator.image.imagePullPolicy }}
           env:
             - name: WATCH_NAMESPACE
               value: "{{ .Release.Namespace}},neon-ingress,neon-monitor"

@@ -87,6 +87,11 @@ spec:
           containerPort: 8443
           protocol: TCP
 {{- end }}
+{{- if .Values.metricsScraper.enabled }}
+        - name: http-metrics
+          containerPort: 8000
+          protocol: TCP
+{{- end }}
         volumeMounts:
         - name: kubernetes-dashboard-certs
           mountPath: /certs

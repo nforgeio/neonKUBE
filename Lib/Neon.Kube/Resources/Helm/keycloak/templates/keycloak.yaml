@@ -6,8 +6,10 @@ metadata:
     app: neon-sso
 spec:
   instances: 1
-  #extensions:
-  #  - https://github.com/aerogear/keycloak-metrics-spi/releases/download/1.0.4/keycloak-metrics-spi-1.0.4.jar
+{{- if .Values.extensions }}
+  extensions:
+{{ toYaml .Values.extensions | trim | indent 4 }}
+{{- end }}
   externalAccess:
     enabled: False
   podDisruptionBudget:
@@ -16,10 +18,18 @@ spec:
   externalDatabase:
     enabled: True
   keycloakDeploymentSpec:
+    resources:
+      requests:
+        memory: {{ .Values.resources.requests.memory | default "128Mi" }}
+      limits:
+        memory: {{ .Values.resources.limits.memory | default "1Gi" }}
     experimental:
-      imagePullPolicy: IfNotPresent
+      args:
+        - "-Dkeycloak.profile.feature.docker=enabled"
       env:
         - name: DB_ADDR
           value: db-citus-postgresql.neon-system
+        - name: KEYCLOAK_EXTENSIONS
+          value: {{ join "," .Values.extensions }}
 
 

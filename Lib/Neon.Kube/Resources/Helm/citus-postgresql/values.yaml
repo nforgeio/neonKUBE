@@ -114,6 +114,7 @@ metrics:
     repository: prometheuscommunity-postgres-exporter
     tag: v0.10.0
   port: 9187
+  interval: 60s
   resources: {}
   disableDefaultMetrics: false
   logLevel: "info"

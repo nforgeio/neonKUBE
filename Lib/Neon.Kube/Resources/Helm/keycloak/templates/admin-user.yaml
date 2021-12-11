@@ -9,7 +9,7 @@ spec:
     username: "root"
     enabled: True
     emailVerified: true
-    emailAddress: root@cluster.local
+    email: root@cluster.local
     credentials:
       - type: "password"
         value: {{ .Values.rootUser.password }}

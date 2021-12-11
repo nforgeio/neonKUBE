@@ -7,7 +7,7 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - kiali.{{ .Values.clusterDomain }}
+    - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

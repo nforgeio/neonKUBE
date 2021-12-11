@@ -8,8 +8,8 @@ spec:
     istio: ingressgateway
   servers:
     - hosts:
-        - {{ .Values.clusterDomain }}
-        - "*.{{ .Values.clusterDomain }}"
+        - {{ .Values.cluster.domain }}
+        - "*.{{ .Values.cluster.domain }}"
       port:
         name: http-neoncluster
         number: 8080
@@ -17,8 +17,8 @@ spec:
       tls:
         httpsRedirect: true
     - hosts:
-        - {{ .Values.clusterDomain }}
-        - "*.{{ .Values.clusterDomain }}"
+        - {{ .Values.cluster.domain }}
+        - "*.{{ .Values.cluster.domain }}"
       port:
         name: https-neoncluster
         number: 8443
