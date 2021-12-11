@@ -154,7 +154,6 @@ if (-not $?)
 SetVersion Neon.Cadence             $libraryVersion
 SetVersion Neon.Cassandra           $libraryVersion
 SetVersion Neon.Common              $libraryVersion
-SetVersion Neon.WinTTY              $libraryVersion
 SetVersion Neon.Couchbase           $libraryVersion
 SetVersion Neon.Cryptography        $libraryVersion
 SetVersion Neon.CSharp              $libraryVersion
@@ -196,7 +195,6 @@ SetVersion Neon.YugaByte            $libraryVersion
 Publish Neon.Cadence                $libraryVersion
 Publish Neon.Cassandra              $libraryVersion
 Publish Neon.Common                 $libraryVersion
-Publish Neon.WinTTY                 $libraryVersion
 Publish Neon.Couchbase              $libraryVersion
 Publish Neon.Cryptography           $libraryVersion
 Publish Neon.CSharp                 $libraryVersion
