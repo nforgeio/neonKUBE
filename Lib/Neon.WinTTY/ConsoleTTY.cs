@@ -41,7 +41,7 @@ namespace Neon.WinTTY
     /// <remarks>
     /// <para>
     /// This is very easy to use.  Just instantiate an instance in your console application and
-    /// then call <see cref="Run(string)"/>, passing the command line to be executed with a TTY.
+    /// then call <see cref="Run(string, IDictionary{ConsoleKeyInfo, string})"/>, passing the command line to be executed with a TTY.
     /// </para>
     /// <code lang="C#">
     /// using System;
