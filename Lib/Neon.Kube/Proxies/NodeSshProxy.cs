@@ -682,20 +682,9 @@ namespace Neon.Kube
             var cleanScript =
 $@"#!/bin/bash
 
-# Remove the journald log files by removing all subdirectories under: 
-#
-#       /var/log/journal
-#
-# journald will recreate these as required.
+# Remove all log files
 
-orgDir=$(pwd)
-cd /var/log/journal
-
-for folder in */ ; do
-    rm -r $folder
-done
-
-cd $orgDir
+rm -r /var/log/*
 
 # Misc cleaning
 
