@@ -138,3 +138,4 @@ Go/**/__debug_bin
 #############################
 
 cluster-manifest.json
+KubernetesWithRetry.cs
