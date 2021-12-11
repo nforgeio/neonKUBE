@@ -161,6 +161,7 @@ namespace Neon.Postgres
         /// <param name="reader">The data reader.</param>
         /// <param name="ordinal">The zero-based column position.</param>
         /// <returns>The nullable column value.</returns>
+        [Obsolete("NpgsqlDate is obsolete")]
         public static NpgsqlDate? GetNullableDate(this NpgsqlDataReader reader, int ordinal)
         {
             if (reader[ordinal] == DBNull.Value)
@@ -323,6 +324,7 @@ namespace Neon.Postgres
         /// <param name="reader">The data reader.</param>
         /// <param name="ordinal">The zero-based column position.</param>
         /// <returns>The nullable column value.</returns>
+        [Obsolete("NpgsqlTimeSpan is obsolete")]
         public static NpgsqlTimeSpan? GetNullableInterval(this NpgsqlDataReader reader, int ordinal)
         {
             if (reader[ordinal] == DBNull.Value)
@@ -359,6 +361,7 @@ namespace Neon.Postgres
         /// <param name="reader">The data reader.</param>
         /// <param name="ordinal">The zero-based column position.</param>
         /// <returns>The nullable column value.</returns>
+        [Obsolete("NpgsqlDateTime is obsolete")]
         public static NpgsqlDateTime? GetNullableTimeStamp(this NpgsqlDataReader reader, int ordinal)
         {
             if (reader[ordinal] == DBNull.Value)
