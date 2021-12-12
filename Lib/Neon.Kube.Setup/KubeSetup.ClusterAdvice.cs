@@ -68,6 +68,8 @@ namespace Neon.Kube
 
             var clusterAdvice = new KubeClusterAdvice();
 
+            clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "3m";
+
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CertManager, CalculateCertManagerAdvice(cluster));
