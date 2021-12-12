@@ -25,3 +25,26 @@ spec:
   realmSelector:
     matchLabels:
       app: neon-sso
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: crio
+  labels:
+    app: neon-sso
+spec:
+  user:
+    username: crio
+    enabled: True
+    emailVerified: true
+    email: crio@cluster.local
+    credentials:
+      - type: "password"
+        value: {{ .Values.crioUser.password }}
+    attributes:
+      groups:
+       - root-user
+       - admin
+  realmSelector:
+    matchLabels:
+      app: neon-sso

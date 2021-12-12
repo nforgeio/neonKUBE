@@ -24,8 +24,6 @@ spec:
       limits:
         memory: {{ .Values.resources.limits.memory | default "1Gi" }}
     experimental:
-      args:
-        - "-Dkeycloak.profile.feature.docker=enabled"
       env:
         - name: DB_ADDR
           value: db-citus-postgresql.neon-system

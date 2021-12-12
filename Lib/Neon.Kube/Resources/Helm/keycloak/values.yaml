@@ -40,8 +40,10 @@ database:
   port: 5432
   username: neon_service
   password: password
-
+  
 rootUser:
+  password: password
+crioUser:
   password: password
 
 cluster:
