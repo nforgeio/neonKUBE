@@ -48,8 +48,8 @@ cortexConfig:
           endpoints:
             - etcd.neon-system:2379
     ring:
-      store: inmemory
       kvstore:
+        store: inmemory
         etcd:
           endpoints:
           - etcd.neon-system:2379
