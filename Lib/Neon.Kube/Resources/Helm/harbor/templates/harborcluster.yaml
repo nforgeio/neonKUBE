@@ -138,6 +138,8 @@ spec:
     {{- end }}
     {{- end }}
     relativeURLs: true
+    certificateRefs:
+      - registry-token-cert
     resources: {}
     metrics:
       enabled: true
