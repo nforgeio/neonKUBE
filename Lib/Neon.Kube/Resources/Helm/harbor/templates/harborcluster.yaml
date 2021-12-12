@@ -56,12 +56,12 @@ spec:
       ingress:
         host: registry.{{ .Values.cluster.domain }}
       tls:
-        certificateRef: registry-harbor-certificate
+        certificateRef: neon-cluster-certificate
     notary:
       ingress:
         host: notary.{{ .Values.cluster.domain }}
       tls:
-        certificateRef: registry-harbor-certificate
+        certificateRef: neon-cluster-certificate
   externalURL: https://registry.{{ .Values.cluster.domain }}
   harborAdminPasswordRef: registry
   storage:

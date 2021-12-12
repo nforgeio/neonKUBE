@@ -2828,17 +2828,24 @@ $@"- name: StorageType
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
-                            var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
-
-                            if (configmap.Data == null || configmap.Data.Keys.Count < 3)
+                            try
                             {
-                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
+
+                                if (configmap.Data == null || configmap.Data.Keys.Count < 3)
+                                {
+                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                    return false;
+                                }
+                            } 
+                            catch (Exception e)
+                            {
+                                
                                 return false;
                             }
-
                             return true;
                         }, TimeSpan.FromMinutes(5),
-                        TimeSpan.FromSeconds(15));
+                        TimeSpan.FromSeconds(60));
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);

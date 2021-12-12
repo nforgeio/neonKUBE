@@ -333,8 +333,6 @@
 
     <None Remove="Resources\Helm\harbor\README.md.gotmpl" />
 
-    <None Remove="Resources\Helm\harbor\templates\certificate.yaml" />
-
     <None Remove="Resources\Helm\harbor\templates\configmap-template.yaml" />
 
     <None Remove="Resources\Helm\harbor\templates\configmap.yaml" />
@@ -977,7 +975,6 @@
     <EmbeddedResource Include="Resources\Helm\harbor\README.md.gotmpl" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\harborconfiguration.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\oidc-secret.yaml" />
-    <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\servicemonitor.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\harbor-client.yaml" />

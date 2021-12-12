@@ -28,3 +28,51 @@ spec:
   usages:
     - server auth
     - client auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: neon-cluster-certificate
+  namespace: neon-system
+spec:
+  commonName: {{ .Values.cluster.domain }}
+  dnsNames:
+    - {{ .Values.cluster.domain }}
+    - "*.{{ .Values.cluster.domain }}"
+  duration: 2160h0m0s
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: neon-acme
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  subject:
+    organizations:
+      - neoncluster.io
+  privateKey:
+    rotationPolicy: Always
+  renewBefore: 360h0m0s
+  secretName: neon-cluster-certificate
+  usages:
+    - server auth
+    - client auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    goharbor.io/deploy-mode: harbor
+    goharbor.io/operator-version: v1.0.1
+  name: serving-cert
+  namespace: neon-system
+spec:
+  dnsNames:
+  - registry-webhook-service.neon-system.svc
+  - registry-webhook-service.neon-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: neon-system-selfsigned-issuer
+  secretName: webhook-server-cert
