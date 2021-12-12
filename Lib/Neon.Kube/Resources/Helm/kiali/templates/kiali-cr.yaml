@@ -14,6 +14,38 @@ metadata:
 annotations:
   ansible.operator-sdk/verbosity: {{ .Values.debug.verbosity | quote }}
 spec:
-  {{- toYaml .Values.cr.spec | nindent 2 }}
-...
+  version: default
+  istio_namespace: neon-ingress
+  auth:
+    strategy: openid
+    openid:
+      client_id: "oauth2-proxy"
+      issuer_uri: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso"
+  deployment:
+    image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
+    image_version: {{ .Values.image.kiali.tag }}
+    image_pull_policy: {{ .Values.image.kiali.pullPolicy }}
+    pullPolicy: {{ .Values.image.kiali.pullSecrets }}
+    accessible_namespaces:
+    - '**'
+    service_type: "ClusterIP"
+  external_services:
+    grafana:
+      auth:
+        type: basic
+        password: "secret:kiali:grafanaPassword"
+        username: kiali
+      enabled: true
+      in_cluster_url: http://grafana.neon-monitor:3000
+      url: https://grafana.{{ .Values.cluster.domain }}
+    istio:
+      enabled: true
+    prometheus:
+      enabled: true
+      health_check_url: http://cortex.neon-monitor:9009/prometheus
+      url: http://cortex.neon-monitor:9009/prometheus
+    tracing:
+      enabled: true
+      in_cluster_url: http://tempo.neon-monitor:16686
+      url: http://localhost:16686
 {{ end }}

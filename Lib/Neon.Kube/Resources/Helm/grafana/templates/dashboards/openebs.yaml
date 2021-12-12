@@ -8,6 +8,9 @@ spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "Cortex"
+  plugins:
+    - name: "btplc-status-dot-panel"
+      version: "0.2.4"
   json: >
     {
       "__inputs": [

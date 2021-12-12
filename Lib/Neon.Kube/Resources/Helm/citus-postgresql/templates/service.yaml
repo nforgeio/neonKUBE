@@ -20,7 +20,7 @@ spec:
     name: psql
   - name: http-metrics
     port: {{ .Values.metrics.port }}
-    targetPort: http-metrics
+    targetPort: {{ .Values.metrics.port }}
   selector:
     app: {{ template "citus-postgresql.name" . }}-master
     release: {{ .Release.Name }}

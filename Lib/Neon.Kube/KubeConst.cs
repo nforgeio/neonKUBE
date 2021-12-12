@@ -356,6 +356,16 @@ namespace Neon.Kube
         public const string RegistrySecretKey = "registry";
 
         /// <summary>
+        /// Identifies the secret name where the harbor token cert is stored.
+        /// </summary>
+        public const string RegistryTokenCertSecretKey = "registry-token-cert";
+
+        /// <summary>
+        /// Identifies the secret name where the citus credentials are stored.
+        /// </summary>
+        public const string CitusSecretKey = "citus";
+
+        /// <summary>
         /// Identifies the Kubernetes Job that is deployed to setup Grafana.
         /// </summary>
         public const string NeonJobSetupGrafana = "setup-grafana";
@@ -396,5 +406,55 @@ namespace Neon.Kube
         /// The maximum size in bytes of a node image part published as a GitHub release.
         /// </summary>
         public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string AlertManagerSubdomain = "alertmanager";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string GrafanaSubdomain = "grafana";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string HarborNotarySubdomain = "notary";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string HarborRegistrySubdomain = "registry";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string KeycloakSubdomain = "sso";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string KialiSubdomain = "kiali";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string KubernetesDashboardSubdomain = "k8s";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string MinioOperatorSubdomain = "minio-operator";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string MinioConsoleSubdomain = "minio-console";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string CortexRulerSubdomain = "cortex-ruler";
     }
 }

@@ -1,7 +1,7 @@
 image:
   organization: neon-registry.node.local
   repository: grafana-loki
-  tag: 2.3.0
+  tag: 2.4.1
   pullPolicy: IfNotPresent
 
   ## Optionally specify an array of imagePullSecrets.
@@ -40,42 +40,45 @@ affinity: {}
 ## StatefulSet annotations
 annotations: {}
 
-# enable tracing for debug, need install jaeger and specify right jaeger_agent_host
-tracing:
-  jaegerAgentHost:
-
 config:
-  auth_enabled: false
+  auth_enabled: true
+  common:
+    storage:
+      s3:
+        access_key_id: ${ACCESS_KEY_ID}
+        bucketnames: loki
+        endpoint: minio.neon-system
+        insecure: true
+        region: neon
+        s3forcepathstyle: true
+        secret_access_key: ${SECRET_ACCESS_KEY}
+    replication_factor: 1
+    ring:
+      kvstore:
+        store: inmemory
+        etcd:
+          endpoints:
+            - etcd.neon-system:2379
   ingester:
     chunk_encoding: snappy
     chunk_idle_period: 3m
     chunk_block_size: 262144
     chunk_retain_period: 1m
     max_transfer_retries: 0
-    lifecycler:
-      ring:
-        kvstore:
-          store: inmemory
-          etcd:
-            endpoints:
-              - neon-etcd.neon-system:2379
-        replication_factor: 1
-
-      ## Different ring configs can be used. E.g. Consul
-      # ring:
-      #   store: consul
-      #   replication_factor: 1
-      #   consul:
-      #     host: "consul:8500"
-      #     prefix: ""
-      #     http_client_timeout: "20s"
-      #     consistent_reads: true
+    wal:
+      dir: /loki/wal
   limits_config:
     enforce_metric_name: false
     reject_old_samples: true
     reject_old_samples_max_age: 168h
   server:
     http_listen_port: 3100
+  ruler:
+    enable_sharding: false
+    alertmanager_url: "cortex:9009/api/prom/alertmanager"
+    enable_alertmanager_v2: true
+    storage:
+      type: s3
   schema_config:
     configs:
     - from: 2020-10-24
@@ -87,8 +90,8 @@ config:
         period: 24h
   storage_config:
     boltdb_shipper:
-      active_index_directory: /data/loki/boltdb-shipper-active
-      cache_location: /data/loki/boltdb-shipper-cache
+      active_index_directory: /loki/boltdb-shipper-active
+      cache_location: /loki/boltdb-shipper-cache
       cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
       shared_store: s3
     aws:
@@ -100,21 +103,11 @@ config:
       s3forcepathstyle: true
       region: neon
   compactor:
-    working_directory: /data/loki/boltdb-shipper-compactor
-    shared_store: filesystem
-# Needed for Alerting: https://grafana.com/docs/loki/latest/alerting/
-# This is just a simple example, for more details: https://grafana.com/docs/loki/latest/configuration/#ruler_config
-#  ruler:
-#    storage:
-#      type: local
-#      local:
-#        directory: /rules
-#    rule_path: /tmp/scratch
-#    alertmanager_url: http://alertmanager.svc.namespace:9093
-#    ring:
-#      kvstore:
-#        store: inmemory
-#    enable_api: true
+    working_directory: /loki/boltdb-shipper-compactor
+    shared_store: s3
+
+tracing:
+  jaegerAgentHost: grafana-agent-node
 
 ## Additional Loki container arguments, e.g. log level (debug, info, warn, error)
 extraArgs: {}

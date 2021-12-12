@@ -22,7 +22,7 @@ spec:
   endpoints:
   - port: exporter
     path: /metrics
-    interval: 60s
+    interval: {{ .Values.metrics.serviceMonitor.interval }}
     relabelings:
     - action: replace
       targetLabel: node

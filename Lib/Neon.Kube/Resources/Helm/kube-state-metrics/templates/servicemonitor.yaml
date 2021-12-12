@@ -22,11 +22,13 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   endpoints:
     - targetPort: 8080
+      interval: {{ .Values.prometheus.monitor.interval }}
       {{- if .Values.prometheus.monitor.honorLabels }}
       honorLabels: true
       {{- end }}
     {{ if .Values.selfMonitor.enabled }}
     - port: metrics
+      interval: {{ .Values.prometheus.monitor.interval }}
       {{- if .Values.prometheus.monitor.honorLabels }}
       honorLabels: true
       {{- end }}

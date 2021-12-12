@@ -39,16 +39,25 @@ spec:
       {{- end }}
       containers:
       - name: operator
-        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        image: "{{ .Values.image.operator.organization }}/{{ .Values.image.operator.repository }}:{{ .Values.image.operator.tag }}"
+        imagePullPolicy: {{ .Values.image.operator.pullPolicy | default "IfNotPresent" }}
         args:
-        - "--zap-level=info"
+          - --zap-log-level=info
+          - --leader-election-id={{ include "kiali-operator.fullname" . }}
         volumeMounts:
         - mountPath: /tmp/ansible-operator/runner
           name: runner
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
         env:
         - name: WATCH_NAMESPACE
           value: {{ .Values.watchNamespace | default "\"\""  }}
+        - name: ALLOW_AD_HOC_KIALI_IMAGE
+          value: "true"
+        - name: ALLOW_AD_HOC_KIALI_NAMESPACE
+          value: "true"
         - name: POD_NAME
           valueFrom:
             fieldRef:

@@ -92,6 +92,12 @@ namespace Neon.Kube
         /// </summary>
         public const string ReplicaCountProperty = "replica.count";
 
+        /// <summary>
+        /// <see cref="int"/>: Identifies the property specifying how often metrics
+        /// should be scraped for the service.
+        /// </summary>
+        public const string MetricsIntervalProperty = "metrics.interval";
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -191,6 +197,33 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Sets the property value or removes it when the value passed is <c>null</c>.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="name">The property name.</param>
+        /// <param name="value">The property value or <c>null</c>.</param>
+        /// <exception cref="InvalidOperationException">Thrown when the instance is in read-only mode.</exception>
+        private void SetProperty(string name, string value)
+        {
+            if (IsReadOnly)
+            {
+                throw new InvalidOperationException($"[{nameof(KubeServiceAdvice)}] is read-only.");
+            }
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                base[name] = value;
+            }
+            else
+            {
+                if (base.ContainsKey(name))
+                {
+                    base.Remove(name);
+                }
+            }
+        }
+
+        /// <summary>
         /// Specifies the CPU limit for each service pod or <c>null</c> when this property is not set.
         /// </summary>
         public double? PodCpuLimit
@@ -224,7 +257,7 @@ namespace Neon.Kube
         public decimal? PodMemoryRequest
         {
             get => GetProperty<decimal>(PodMemoryRequestProperty);
-            set => SetProperty<decimal>(PodMemoryRequestProperty, value);    
+            set => SetProperty<decimal>(PodMemoryRequestProperty, value);
         }
 
         /// <summary>
@@ -234,6 +267,15 @@ namespace Neon.Kube
         {
             get => GetProperty<int>(ReplicaCountProperty);
             set => SetProperty<int>(ReplicaCountProperty, value);
+        }
+
+        /// <summary>
+        /// Specifies the metrics scrape interval or <c>null</c> when this property is not set.
+        /// </summary>
+        public string MetricsInterval
+        {
+            get => GetProperty(MetricsIntervalProperty);
+            set => SetProperty(MetricsIntervalProperty, value);
         }
     }
 }

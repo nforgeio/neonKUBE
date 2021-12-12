@@ -25,13 +25,15 @@ spec:
             - containerPort: 60000
               name: metrics
           command:
-            - grafana-operator
+            - /manager
           args:
             - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
             - --grafana-image-tag={{ .Values.image.tag }}
             - --grafana-plugins-init-container-image={{ .Values.pluginsInit.image.organization }}/{{ .Values.pluginsInit.image.repository }}
             - --grafana-plugins-init-container-tag={{ .Values.pluginsInit.image.tag }}
             - --scan-all
+            - --zap-log-level=info
+            - --zap-stacktrace-level=info
           imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
           env:
             - name: TEMPLATE_PATH

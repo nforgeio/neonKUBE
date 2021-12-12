@@ -3,7 +3,6 @@ kind: Service
 metadata:
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-metadata:
   name: {{ template "cortex.fullname" . }}
   labels:
     heritage: {{ .Release.Service | quote }}
@@ -16,6 +15,44 @@ spec:
     name: http-cortex-server
     protocol: TCP
   clusterIP: None
+  selector:
+    app: {{ template "cortex.name" . }}
+    release: {{ .Release.Name | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "cortex.fullname" . }}-ruler
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app: {{ template "cortex.name" . }}
+    component: ruler
+spec:
+  ports:
+  - port: {{ .Values.cortexConfig.server.http_listen_port }}
+    name: http-cortex-ruler
+    protocol: TCP
+  selector:
+    app: {{ template "cortex.name" . }}
+    release: {{ .Release.Name | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "cortex.fullname" . }}-alertmanager
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app: {{ template "cortex.name" . }}
+    component: alertmanager
+spec:
+  ports:
+  - port: 9094
+    name: http-cortex-alertmanager
+    protocol: TCP
   selector:
     app: {{ template "cortex.name" . }}
     release: {{ .Release.Name | quote }}

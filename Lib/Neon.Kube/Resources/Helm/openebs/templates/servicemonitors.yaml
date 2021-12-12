@@ -1,3 +1,4 @@
+{{ $interval := .Values.serviceMonitor.interval -}}
 {{- range $monitoringAddon, $fields := .Values.openebsMonitoringAddon }}
 {{- if (and (hasKey $fields "enabled") ($fields.enabled)) }}
 {{- if (hasKey $fields "serviceMonitor") }}
@@ -17,6 +18,7 @@ spec:
 {{ toYaml $fields.serviceMonitor.namespaceSelector | indent 4 }}
   endpoints:
     - port: {{ $fields.serviceMonitor.endpoints.port }}
+      interval: {{ $interval }}
       path: {{ $fields.serviceMonitor.endpoints.path }}
 {{- if $fields.serviceMonitor.endpoints.relabelings }}
       relabelings:

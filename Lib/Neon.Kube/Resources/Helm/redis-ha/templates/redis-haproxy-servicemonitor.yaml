@@ -15,8 +15,8 @@ metadata:
 spec:
   endpoints:
   - targetPort: {{ .Values.haproxy.metrics.port }}
-{{- if .Values.haproxy.metrics.serviceMonitor.interval }}
-    interval: {{ .Values.haproxy.metrics.serviceMonitor.interval }}
+{{- if .Values.exporter.serviceMonitor.interval }}
+    interval: {{ .Values.exporter.serviceMonitor.interval }}
 {{- end }}
 {{- if .Values.haproxy.metrics.serviceMonitor.telemetryPath }}
     path: {{ .Values.haproxy.metrics.serviceMonitor.telemetryPath }}

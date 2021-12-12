@@ -10,7 +10,8 @@ metadata:
     heritage: {{ .Release.Service | quote }}
 spec:
   endpoints:
-    - port: http-metrics
+    - targetPort: {{ .Values.metrics.port }}
+      interval: {{ .Values.metrics.interval }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

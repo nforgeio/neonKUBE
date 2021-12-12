@@ -1,3 +1,4 @@
+{{- $clusterDomain := .Values.cluster.domain -}}
 {{ range .Values.tenants }}
 ---
 apiVersion: minio.min.io/v2
@@ -75,8 +76,22 @@ spec:
   serviceMetadata:
     {{ toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .env }}
   env:
+    - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+      value: "https://sso.{{ $clusterDomain }}/auth/realms/neon-sso/.well-known/openid-configuration" 
+    - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
+      value: "https://minio-console.{{ $clusterDomain }}/oauth_callback"
+    - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name:  keycloak-client-secret-minio
+          key: CLIENT_ID
+    - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name:  keycloak-client-secret-minio
+          key: CLIENT_SECRET
+  {{- with .env }}
     {{ toYaml . | nindent 4 }}
   {{- end }}
   {{ if .priorityClassName }}

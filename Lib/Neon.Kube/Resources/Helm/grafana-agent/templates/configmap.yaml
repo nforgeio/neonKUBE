@@ -11,30 +11,57 @@ data:
     integrations:
       agent:
         enabled: true
+        instance: ${HOSTNAME}
+        scrape_integration: true
       node_exporter:
         enabled: true
         wal_truncate_frequency: 15m
         rootfs_path: /host/root
         sysfs_path: /host/sys
         procfs_path: /host/proc
-    prometheus:
+        scrape_integration: true
+        instance: ${HOSTNAME}
+        include_exporter_metrics: true
+        enable_collectors:
+          - systemd
+    metrics:
       global:
+        remote_write:
+          - url: http://cortex:9009/api/prom/push
+            headers: 
+              X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+            send_exemplars: true
         external_labels:
-          cluster: {{ .Values.clusterName }}
-        scrape_interval: 60s
+          cluster: {{ .Values.cluster.name }}
+          node: ${HOSTNAME}
+        scrape_interval: {{ .Values.metrics.global.scrapeInterval | default "60s" }}
       wal_directory: /var/lib/agent/data
       configs:
+        - name: node
+          host_filter: false
+          scrape_configs:
+            - job_name: crio
+              scrape_interval:  {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
+              metrics_path: /metrics
+              static_configs:
+                - targets: [${HOST_IP}:9090]
+                  labels:
+                    instance: ${HOSTNAME}
         - host_filter: true
           name: agent
           remote_write:
             - url: http://cortex:9009/api/prom/push
+              headers: 
+                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+              send_exemplars: true
           scrape_configs:
             - job_name: 'istiod'
+              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: endpoints
                 namespaces:
                   names:
-                  - istio-system
+                  - neon-ingress
               relabel_configs:
               - source_labels:
                   - __meta_kubernetes_service_name
@@ -42,6 +69,7 @@ data:
                 action: keep
                 regex: istiod;http-monitoring
             - job_name: 'envoy-stats'
+              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
               metrics_path: /stats/prometheus
               kubernetes_sd_configs:
               - role: pod
@@ -52,6 +80,7 @@ data:
                 regex: '.*-envoy-prom'
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/kubelet
+              scrape_interval:  {{ .Values.metrics.kubelet.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: node
               relabel_configs:
@@ -66,6 +95,7 @@ data:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/cadvisor
+              scrape_interval:  {{ .Values.metrics.cadvisor.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: node
               relabel_configs:
@@ -79,20 +109,33 @@ data:
               scheme: https
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-            - job_name: "cri-o"
-              scrape_interval: 1m
-              metrics_path: /metrics
-              static_configs:
-                - targets: ["${HOST_IP}:9090"]
-                  labels:
-                    instance: "${HOSTNAME}"
-    loki:
+    logs:
       configs:
         - clients:
             - url: http://loki:3100/loki/api/v1/push
+              tenant_id: {{ .Values.cluster.name | default "neonkube" }}
           name: default
           scrape_configs:
             - job_name: journal
+              pipeline_stages:
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: journal
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: journal
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               journal:
                 path: /var/log/journal
                 max_age: 12h
@@ -140,6 +183,24 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_name
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_name
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               relabel_configs:
                 - source_labels:
                     - __meta_kubernetes_pod_label_name
@@ -183,6 +244,24 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_app
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_app
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               relabel_configs:
                 - action: drop
                   regex: .+
@@ -230,6 +309,24 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_direct_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_direct_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               relabel_configs:
                 - action: drop
                   regex: .+
@@ -283,6 +380,24 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_indirect_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_indirect_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               relabel_configs:
                 - action: drop
                   regex: .+
@@ -338,6 +453,24 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_pods_static
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_pods_static
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
               relabel_configs:
                 - action: drop
                   regex: ""
@@ -382,32 +515,57 @@ data:
                     - __meta_kubernetes_pod_container_name
                   target_label: __path__
       positions_directory: /tmp/positions
-    tempo:
+    traces:
       configs:
         - batch:
-              send_batch_size: 1000
-              timeout: 5s
+            send_batch_size: 1000
+            timeout: 5s
           name: default
           receivers:
-              jaeger:
-                  protocols:
-                      grpc: null
-                      thrift_binary: null
-                      thrift_compact: null
-                      thrift_http: null
-                  remote_sampling:
-                      insecure: true
-                      strategy_file: /etc/agent/strategies.json
-              opencensus: null
-              otlp:
-                  protocols:
-                      grpc: null
-                      http: null
-              zipkin: null
+            zipkin:
+              endpoint: "0.0.0.0:9411"
+            jaeger:
+              protocols:
+                thrift_compact: 
+                  endpoint: "0.0.0.0:6831"
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: "0.0.0.0:4317"
           remote_write:
-            - endpoint: http://tempo:3100
+            - endpoint: tempo:55680
+              headers: 
+                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+              insecure: true
               retry_on_failure:
-                  enabled: false
+                enabled: false
+          tail_sampling:
+            # policies define the rules by which traces will be sampled. Multiple policies
+            # can be added to the same pipeline.
+            policies:
+              - probabilistic:
+                  sampling_percentage: 5
+              - latency:
+                  threshold_ms: 100
+              - status_code:
+                  status_codes:
+                    - "ERROR"
+            # Time that to wait before making a decision for a trace.
+            # Longer wait times reduce the probability of sampling an incomplete trace at
+            # the cost of higher memory usage.
+            decision_wait: 5s
+          load_balancing:
+            receiver_port: 4318
+            exporter:
+              insecure: true
+            resolver:
+              dns:
+                hostname: grafana-agent-node.neon-monitor
+                port: 4318
+          service_graphs:
+            enabled: true
+          spanmetrics:
+            metrics_instance: agent
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: kubernetes-pods
@@ -429,4 +587,4 @@ data:
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
-  strategies.json: '{"default_strategy": {"param": 0.001, "type": "probabilistic"}}'
+  strategies.json: '{"default_strategy": {"param": 1.000, "type": "probabilistic"}}'

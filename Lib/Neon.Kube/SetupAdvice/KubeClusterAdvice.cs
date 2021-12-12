@@ -130,6 +130,11 @@ namespace Neon.Kube
         public static string Calico = "calico";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Cert Manager</b> service manager nodes.
+        /// </summary>
+        public static string CertManager = "cert-manager";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service manager nodes.
         /// </summary>
         public static string CitusPostgresSqlManager = "citus-postgressql-manager";
@@ -230,9 +235,9 @@ namespace Neon.Kube
         public static string HarborRegistry = "harbor-registry";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Harbor Redis</b> service.
+        /// Identifies the neonKUBE cluster's <b>Redis</b> service.
         /// </summary>
-        public static string HarborRedis = "harbor-redis";
+        public static string Redis = "redis";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Istio Proxy</b> service.
@@ -245,11 +250,6 @@ namespace Neon.Kube
         public static string IstioIngressGateway = "istio-ingressgateway";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Jaeger</b> service.
-        /// </summary>
-        public static string Jaeger = "jaeger";
-
-        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kubernetes Dashboard</b> service.
         /// </summary>
         public static string KubernetesDashboard = "kubernetes-dashboard";
@@ -260,9 +260,14 @@ namespace Neon.Kube
         public static string KubeStateMetrics = "kube-state-metrics";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Keycloak</b> service.
+        /// </summary>
+        public static string Keycloak = "keycloak";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kaili</b> service.
         /// </summary>
-        public static string Kiali = "kaili";
+        public static string Kiali = "kiali";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Loki</b> service.
@@ -283,6 +288,16 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>neon-cluster-operator</b> service.
         /// </summary>
         public static string NeonClusterOperator = "neon-cluster-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Node Problem Detector</b> service.
+        /// </summary>
+        public static string NodeProblemDetector = "node-problem-detector";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>oauth2-proxy</b> service.
+        /// </summary>
+        public static string Oauth2Proxy = "oauth2-proxy";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>OpenEBS Admission Server</b> service.
@@ -377,6 +392,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        /// <summary>
+        /// Specifies the cluster default Metrics scrape interval.
+        /// </summary>
+        public  string                                  MetricsInterval = "60s";
+        
         private Dictionary<string, KubeServiceAdvice>   services   = new Dictionary<string, KubeServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                    isReadOnly = false;
 

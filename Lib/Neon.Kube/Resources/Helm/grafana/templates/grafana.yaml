@@ -6,41 +6,56 @@ spec:
   ingress:
     enabled: False
   config:
+    server:
+      root_url: "https://grafana.{{ .Values.cluster.domain }}"
+    feature_toggles:
+      enable: recordedQueries tempoSearch
     security:
       disable_brute_force_login_protection: true
     log:
       mode: "console"
-      level: "debug"
-    auth.proxy:
+      level: "info"
+    auth:
+      oauth_auto_login: true
+    auth.generic_oauth:
+      api_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+      auth_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
+      client_id: $__env{CLIENT_ID}
+      client_secret: $__env{CLIENT_SECRET}
+      empty_scopes: false
       enabled: true
-      # HTTP Header name that will contain the username or email
-      header_name: X-WEBAUTH-USER
-      # HTTP Header property, defaults to `username` but can also be `email`
-      header_property: username
-      # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
-      auto_sign_up: true
-      # Define cache time to live in minutes
-      # If combined with Grafana LDAP integration it is also the sync interval
-      sync_ttl: 60
-      # Check out docs on this for more details on the below setting
-      enable_login_token: false
+      scopes: openid
+      token_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
+      role_attribute_path: >-
+        contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor')
+        && 'Editor' || 'Viewer'
     database:
       type: postgres
       host: db-citus-postgresql.neon-system.svc.cluster.local
       name: grafana
       user: neon_service
       password: $__env{DATABASE_PASSWORD}
+    users:
+      auto_assign_org: true
+      auto_assign_org_id: "1"
+      auto_assign_org_role: Viewer
+    alerting:
+      enabled: false
+    unified_alerting:
+      enabled: true
   service:
     name: "grafana"
     labels:
       app: "grafana"
       type: "grafana-service"
-    type: NodePort
+    type: ClusterIP
     ports:
-      - name: grafana-nodeport
+      - name: grafana
         protocol: TCP
         port: 3001
-        nodePort: 30001
         targetPort: grafana-http
   deployment:
     annotations:
@@ -48,6 +63,10 @@ spec:
     envFrom:
       - secretRef:
           name: grafana-db-password
+      - secretRef:
+          name: grafana-env
+      - secretRef:
+          name: keycloak-client-secret-grafana
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
   dashboardLabelSelector:

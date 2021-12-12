@@ -8,8 +8,8 @@ metadata:
   namespace: neon-system
 spec:
   dnsNames:
-  - webhook-service.neon-system.svc
-  - webhook-service.neon-system.svc.cluster.local
+  - registry-webhook-service.neon-system.svc
+  - registry-webhook-service.neon-system.svc.cluster.local
   issuerRef:
     kind: Issuer
     name: neon-system-selfsigned-issuer
@@ -21,10 +21,10 @@ metadata:
   name: registry-harbor
   namespace: neon-system
 spec:
-  commonName: {{ .Values.clusterDomain }}
+  commonName: {{ .Values.cluster.domain }}
   dnsNames:
-    - {{ .Values.clusterDomain }}
-    - "*.{{ .Values.clusterDomain }}"
+    - {{ .Values.cluster.domain }}
+    - "*.{{ .Values.cluster.domain }}"
   duration: 2160h0m0s
   issuerRef:
     group: cert-manager.io

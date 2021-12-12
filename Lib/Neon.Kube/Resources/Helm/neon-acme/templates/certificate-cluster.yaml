@@ -4,10 +4,10 @@ metadata:
   name: neon-cluster-certificate
   namespace: neon-ingress
 spec:
-  commonName: {{ .Values.clusterDomain }}
+  commonName: {{ .Values.cluster.domain }}
   dnsNames:
-    - {{ .Values.clusterDomain }}
-    - "*.{{ .Values.clusterDomain }}"
+    - {{ .Values.cluster.domain }}
+    - "*.{{ .Values.cluster.domain }}"
   duration: 2160h0m0s
   issuerRef:
     group: cert-manager.io
