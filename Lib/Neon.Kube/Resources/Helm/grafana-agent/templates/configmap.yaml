@@ -54,8 +54,6 @@ data:
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               send_exemplars: true
-              retry_on_http_429: false
-              max_backoff: 2s
           scrape_configs:
             - job_name: 'istiod'
               scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
@@ -534,8 +532,6 @@ data:
               protocols:
                 grpc:
                   endpoint: "0.0.0.0:4317"
-                http:
-                  endpoint: "0.0.0.0:4318"
           remote_write:
             - endpoint: tempo:55680
               headers: 
@@ -543,6 +539,21 @@ data:
               insecure: true
               retry_on_failure:
                 enabled: false
+          tail_sampling:
+            # policies define the rules by which traces will be sampled. Multiple policies
+            # can be added to the same pipeline.
+            policies:
+              - probabilistic:
+                  sampling_percentage: 5
+              - latency:
+                  threshold_ms: 100
+              - status_code:
+                  status_codes:
+                    - "ERROR"
+            # Time that to wait before making a decision for a trace.
+            # Longer wait times reduce the probability of sampling an incomplete trace at
+            # the cost of higher memory usage.
+            decision_wait: 5s
           load_balancing:
             receiver_port: 4318
             exporter:
