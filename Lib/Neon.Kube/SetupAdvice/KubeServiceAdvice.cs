@@ -199,7 +199,6 @@ namespace Neon.Kube
         /// <summary>
         /// Sets the property value or removes it when the value passed is <c>null</c>.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
         /// <param name="name">The property name.</param>
         /// <param name="value">The property value or <c>null</c>.</param>
         /// <exception cref="InvalidOperationException">Thrown when the instance is in read-only mode.</exception>

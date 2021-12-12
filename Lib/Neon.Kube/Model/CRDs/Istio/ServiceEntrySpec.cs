@@ -89,7 +89,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Service discovery mode for the hosts. Care must be taken when setting the resolution mode to NONE for a TCP port without accompanying 
-        /// IP addresses. In such cases, traffic to any IP on said port will be allowed (i.e. 0.0.0.0:<port>).
+        /// IP addresses. In such cases, traffic to any IP on said port will be allowed (i.e. 0.0.0.0:PORT).
         /// </summary>
         [JsonProperty(PropertyName = "resolution", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
