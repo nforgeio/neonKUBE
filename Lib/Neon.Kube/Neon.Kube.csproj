@@ -325,8 +325,6 @@
 
     <None Remove="Resources\Helm\harbor\assets\portal-config.conf" />
 
-    <None Remove="Resources\Helm\harbor\assets\registry-config.yaml" />
-
     <None Remove="Resources\Helm\harbor\assets\registryctl-config.yaml" />
 
     <None Remove="Resources\Helm\harbor\CONTRIBUTING.md" />
@@ -404,8 +402,6 @@
     <None Remove="Resources\Helm\keycloak\crds\keycloak.org_keycloakusers_crd.yaml" />
 
     <None Remove="Resources\Helm\keycloak\templates\admin-user.yaml" />
-
-    <None Remove="Resources\Helm\keycloak\templates\certificate.yaml" />
 
     <None Remove="Resources\Helm\keycloak\templates\cluster-realm.yaml" />
 
@@ -974,7 +970,6 @@
     <EmbeddedResource Include="Resources\Helm\harbor\assets\notaryserver-config.json" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\notarysigner-config.json" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\portal-config.conf" />
-    <EmbeddedResource Include="Resources\Helm\harbor\assets\registry-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\assets\registryctl-config.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\CONTRIBUTING.md" />
     <EmbeddedResource Include="Resources\Helm\harbor\crds\crds.yaml" />
@@ -985,7 +980,6 @@
     <EmbeddedResource Include="Resources\Helm\harbor\templates\certificate.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\configmap-template.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\servicemonitor.yaml" />
-    <EmbeddedResource Include="Resources\Helm\keycloak\templates\certificate.yaml" />
     <EmbeddedResource Include="Resources\Helm\keycloak\templates\harbor-client.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\ingress.yaml" />
     <EmbeddedResource Include="Resources\Helm\harbor\templates\rbac.yaml" />

@@ -356,6 +356,11 @@ namespace Neon.Kube
         public const string RegistrySecretKey = "registry";
 
         /// <summary>
+        /// Identifies the secret name where the harbor token cert is stored.
+        /// </summary>
+        public const string RegistryTokenCertSecretKey = "registry-token-cert";
+
+        /// <summary>
         /// Identifies the secret name where the citus credentials are stored.
         /// </summary>
         public const string CitusSecretKey = "citus";

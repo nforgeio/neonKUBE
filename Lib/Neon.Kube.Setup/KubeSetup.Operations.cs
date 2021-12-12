@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -46,6 +47,7 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Net;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Neon.Kube
 {
@@ -1156,6 +1158,8 @@ done
                         },
                         timeout:      clusterOpTimeout,
                         pollInterval: clusterOpPollInterval);
+
+                    await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespaces.NeonSystem);
                 });
         }
 
@@ -2386,7 +2390,7 @@ $@"- name: StorageType
 
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
-                    values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval);
+                    values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
 
@@ -2506,7 +2510,7 @@ $@"- name: StorageType
                                 Metadata = new V1ObjectMeta()
                                 {
                                     Name = KubeConst.CitusSecretKey,
-                                    NamespaceProperty = KubeNamespaces.NeonSystem
+                                    NamespaceProperty = KubeNamespaces.NeonMonitor
                                 },
                                 Data = new Dictionary<string, byte[]>(),
                                 StringData = new Dictionary<string, string>()
@@ -2826,14 +2830,15 @@ $@"- name: StorageType
                         {
                             var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
 
-                            if (configmap.Data.Keys.Count < 3)
+                            if (configmap.Data == null || configmap.Data.Keys.Count < 3)
                             {
+                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
                                 return false;
                             }
 
                             return true;
-                        }, TimeSpan.FromSeconds(60),
-                        TimeSpan.FromSeconds(5));
+                        }, TimeSpan.FromMinutes(5),
+                        TimeSpan.FromSeconds(15));
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
@@ -2844,26 +2849,20 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
 
-                    var secret = await k8s.ReadNamespacedSecretAsync(KubeNamespaces.NeonIngress, "kiali");
-                    var password = Encoding.UTF8.GetString(secret.Data["grafanaPassword"]);
-                    await master.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user-busybox",
-                        async () =>
-                        {
-                            var cmd = new string[]
-                            {
-                                "wget", "-O-",
-                                $@"--post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{password}"",""OrgId"":1}}",
-                                "--header='Content-Type:application/json'",
-                                "grafana.neon-monitor:3000/api/admin/users"
-                            };
-                            var pods = await k8s.NamespacedPodExecAsync(KubeNamespaces.NeonSystem, "dnsutils", "dnsutils", cmd);
-                        });
+                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
+                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
+                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonIngress);
+                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
 
-                    await master.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user",
-                        async () =>
-                        {
-                            await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespaces.NeonSystem);
-                        });
+                    var cmd = new string[]
+                    {
+                        "/bin/bash",
+                        "-c",
+                        $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
+                    };
+                    var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
+                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
                 });
 
             if (readyToGoMode == ReadyToGoMode.Setup)
@@ -3070,7 +3069,7 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> InstallMonitoringAsync(ISetupController controller)
+        public static async Task InstallMonitoringAsync(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -3091,7 +3090,7 @@ $@"- name: StorageType
             tasks.Add(InstallTempoAsync(controller, master));
             tasks.Add(InstallGrafanaAsync(controller, master));
 
-            return tasks;
+            await NeonHelper.WaitAllAsync(tasks);
         }
 
         /// <summary>
@@ -3326,6 +3325,47 @@ $@"- name: StorageType
                         await k8s.UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
                     }
 
+                    var harborCert = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = KubeConst.RegistryTokenCertSecretKey,
+                            NamespaceProperty = KubeNamespaces.NeonSystem
+                        },
+                        Data = new Dictionary<string, byte[]>(),
+                        StringData = new Dictionary<string, string>()
+                    };
+
+                    var dbPassword = Encoding.UTF8.GetString(harborSecret.Data["postgresql-password"]);
+
+                    var getCertificateCommand = new string[]
+                    {
+                            "/bin/bash",
+                            "-c",
+                            $@"psql postgresql://{KubeConst.NeonSystemDbServiceUser}:{dbPassword}@localhost:5432/keycloak -t -c ""select cc.value from component c join component_config cc on c.id = cc.component_id where c.provider_id = 'rsa-generated' and c.name = 'rsa-generated' and realm_id = 'neon-sso' and cc.name = 'certificate'"""
+                    };
+
+                    var realmCert = await k8s.NamespacedPodExecAsync(
+                            name: "db-citus-postgresql-master-0",
+                            @namespace: KubeNamespaces.NeonSystem,
+                            container: "citus",
+                            command: getCertificateCommand);
+
+                    realmCert.EnsureSuccess();
+
+                    byte[] bytes = Convert.FromBase64String(realmCert.AllText);
+                    var cert = new X509Certificate2(bytes);
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendLine("-----BEGIN CERTIFICATE-----");
+                    builder.AppendLine(
+                        Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
+                    builder.AppendLine("-----END CERTIFICATE-----");
+                    
+                    harborCert.StringData["ca.crt"] = builder.ToString();
+
+                    await k8s.UpsertSecretAsync(harborCert, KubeNamespaces.NeonSystem);
+
                     var databases = new string[] { "core", "clair", "notaryserver", "notarysigner" };
 
                     foreach (var db in databases)
@@ -3437,14 +3477,15 @@ $@"- name: StorageType
                         await harborCore.RestartAsync(GetK8sClient(controller));
                     }
 
-                    var authSecret = await k8s.ReadNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
+                    var authSecret = await k8s.ReadNamespacedSecretAsync("credential-neon-sso-crio-neon-system", KubeNamespaces.NeonSystem);
 
-                    var password = Encoding.UTF8.GetString(authSecret.Data["secret"]);
+                    var username = Encoding.UTF8.GetString(authSecret.Data["username"]);
+                    var password = Encoding.UTF8.GetString(authSecret.Data["password"]);
                     var sbScript = new StringBuilder();
                     var sbArgs   = new StringBuilder();
 
                     sbScript.AppendLineLinux("#!/bin/bash");
-                    sbScript.AppendLineLinux($"echo '{password}' | podman login neon-registry.node.local --username harbor_registry_user --password-stdin");
+                    sbScript.AppendLineLinux($"echo '{password}' | podman login neon-registry.node.local --username {username} --password-stdin");
 
                     foreach (var node in cluster.Nodes)
                     {
@@ -3830,8 +3871,6 @@ $@"- name: StorageType
                 });
         }
 
-
-
         /// <summary>
         /// Installs Oauth2-proxy.
         /// </summary>
@@ -4029,7 +4068,6 @@ $@"- name: StorageType
                                 $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/{name} -c ""SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"""
                         });
                    });
-                
             }
 
             result = await k8s.NamespacedPodExecAsync(
