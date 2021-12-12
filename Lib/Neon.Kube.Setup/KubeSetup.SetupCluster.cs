@@ -295,7 +295,7 @@ namespace Neon.Kube
 
                         if (imageVersion == null)
                         {
-                            throw new Exception("Node image is not stamped with the image version.  You'll need to regenerate the node image.");
+                            throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
                         }
 
                         if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKube))

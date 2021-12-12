@@ -84,11 +84,8 @@ namespace Neon.Kube
         where TMetadata : class
     {
         private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
-        private const string            imageTypePath    = "/etc/neonkube/image-type";
-        private const string            imageVersionPath = "/etc/neonkube/image-version";
 
         private ClusterProxy        cluster;
-        private KubeImageType?      cachedImageType;
         private StringBuilder       internalLogBuilder;
         private TextWriter          internalLogWriter;
         private bool                rootCertsUpdated = false;
@@ -175,28 +172,19 @@ namespace Neon.Kube
         {
             get
             {
-                if (cachedImageType.HasValue)
+                if (FileExists(KubeConst.ImageTypePath))
                 {
-                    return cachedImageType.Value;
-                }
-
-                if (FileExists(imageTypePath))
-                {
-                    cachedImageType = NeonHelper.ParseEnum<KubeImageType>(DownloadText(imageTypePath).Trim(), KubeImageType.Unknown);
+                    return NeonHelper.ParseEnum<KubeImageType>(DownloadText(KubeConst.ImageTypePath).Trim(), KubeImageType.Unknown);
                 }
                 else
                 {
-                    cachedImageType = KubeImageType.Unknown;
+                    return KubeImageType.Unknown;
                 }
-
-                return cachedImageType.Value;
             }
 
             set
             {
-                cachedImageType = value;
-
-                UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
+                UploadText(KubeConst.ImageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
             }
         }
 
@@ -214,26 +202,26 @@ namespace Neon.Kube
         {
             get
             {
-                if (!FileExists(imageVersionPath))
+                if (!FileExists(KubeConst.ImageVersionPath))
                 {
                     return null;
                 }
 
-                return SemanticVersion.Parse(base.DownloadText(imageVersionPath));
+                return SemanticVersion.Parse(base.DownloadText(KubeConst.ImageVersionPath));
             }
 
             set
             {
                 if (value == null)
                 {
-                    if (FileExists(imageVersionPath))
+                    if (FileExists(KubeConst.ImageVersionPath))
                     {
-                        RemoveFile(imageVersionPath);
+                        RemoveFile(KubeConst.ImageVersionPath);
                     }
                 }
                 else
                 {
-                    UploadText(imageVersionPath, value.ToString());
+                    UploadText(KubeConst.ImageVersionPath, value.ToString());
                 }
             }
         }
