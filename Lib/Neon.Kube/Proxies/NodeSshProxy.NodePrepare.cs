@@ -935,28 +935,6 @@ systemctl daemon-reload
         }
 
         /// <summary>
-        /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE Helm folder.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void NodeInstallHelmArchive(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            using (var ms = new MemoryStream())
-            {
-                controller.LogProgress(this, verb: "setup", message: "helm charts (zip)");
-
-                var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
-
-                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
-
-                ms.Seek(0, SeekOrigin.Begin);
-                Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
-            }
-        }
-
-        /// <summary>
         /// Disables the <b>neon-init</b> service during cluster setup because it is no
         /// longer necessary after the node first boots and its credentials and network
         /// settings have been configured.

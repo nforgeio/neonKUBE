@@ -48,13 +48,8 @@ namespace Neon.Kube
     /// <summary>
     /// Used to reference node proxy common properties.
     /// </summary>
-    public interface INodeSshProxy
+    public interface INodeSshProxy : ILinuxSshProxy
     {
-        /// <summary>
-        /// Returns the name of the proxy instance.
-        /// </summary>
-        string Name { get; }
-
         /// <summary>
         /// Returns the node role, one of the <see cref="NodeRole"/> identifying what the node does.
         /// This may also return <c>null</c>.
@@ -62,24 +57,71 @@ namespace Neon.Kube
         string Role { get; set; }
 
         /// <summary>
-        /// Indicates the current remote machine status.
-        /// </summary>
-        string Status { get; set; }
-
-        /// <summary>
-        /// Set to <c>true</c> when the current setup step has been completed not the node.
-        /// </summary>
-        bool IsReady { get; set; }
-
-        /// <summary>
-        /// Returns <c>true</c> when the proxy is faulted.
-        /// </summary>
-        bool IsFaulted { get; }
-
-        /// <summary>
         /// Returns the current log for the node.
         /// </summary>
         /// <returns>A <see cref="NodeLog"/>.</returns>
         NodeLog GetLog();
+
+        /// <summary>
+        /// Indicates whether an idempotent action has been completed.
+        /// </summary>
+        /// <param name="actionId">The action ID.</param>
+        /// <returns><c>true</c> when the action has already been completed.</returns>
+        bool GetIdempotentState(string actionId);
+
+        /// <summary>
+        /// Explicitly indicates that an idempotent action has been completed
+        /// on the node.
+        /// </summary>
+        /// <param name="actionId">The action ID.</param>
+        void SetIdempotentState(string actionId);
+
+        /// <summary>
+        /// Invokes a named action on the node if it has never been been performed
+        /// on the node before.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="action">The action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
+        /// </para>
+        /// <para>
+        /// This method tracks successful action completion by creating a file
+        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// To ensure idempotency, this method first checks for the existence of
+        /// this file and returns immediately without invoking the action if it is 
+        /// present.
+        /// </para>
+        /// </remarks>
+        bool InvokeIdempotent(string actionId, Action action);
+
+        /// <summary>
+        /// Invokes a named action asynchronously on the node if it has never been been performed
+        /// on the node before.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="action">The asynchronous action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
+        /// </para>
+        /// <para>
+        /// This method tracks successful action completion by creating a file
+        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// To ensure idempotency, this method first checks for the existence of
+        /// this file and returns immediately without invoking the action if it is 
+        /// present.
+        /// </para>
+        /// </remarks>
+        Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action);
     }
 }

@@ -152,12 +152,9 @@ namespace Neon.Kube
         /// Logs a progress message for a specific node.  This sets the <b>status</b>
         /// text for the node.
         /// </summary>
-        /// <param name="node">
-        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
-        /// avoid dealing with the node generic parameter here.
-        /// </param>
+        /// <param name="node">Identifies the node</param>
         /// <param name="message">The message.</param>
-        void LogProgress(LinuxSshProxy node, string message);
+        void LogProgress(ILinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>
@@ -180,13 +177,10 @@ namespace Neon.Kube
         /// Logs a progress for a specific node with a verb and message.  
         /// This will be formatted like <b>VERB: MESSAGE</b>.
         /// </summary>
-        /// <param name="node">
-        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
-        /// avoid dealing with the node generic parameter here.
-        /// </param>
+        /// <param name="node">Identifies the node</param>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogProgress(LinuxSshProxy node, string verb, string message);
+        void LogProgress(ILinuxSshProxy node, string verb, string message);
 
         /// <summary>
         /// <para>
@@ -197,12 +191,9 @@ namespace Neon.Kube
         /// via this method.
         /// </note>
         /// </summary>
-        /// <param name="node">
-        /// The node reference as a <see cref="LinuxSshProxy"/> so we can 
-        /// avoid dealing with the node generic parameter here.
-        /// </param>
+        /// <param name="node">Identifies the node</param>
         /// <param name="message">The message.</param>
-        void LogProgressError(LinuxSshProxy node, string message);
+        void LogProgressError(ILinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>
