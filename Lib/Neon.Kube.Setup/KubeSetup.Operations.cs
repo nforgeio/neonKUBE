@@ -560,7 +560,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             {
                                 master.Log("START: [kubeadm init ...] response ============================================");
 
-                                using (var reader = new StringReader(output))
+                                using (var reader = new StringReader(response.AllText))
                                 {
                                     foreach (var line in reader.Lines())
                                     {

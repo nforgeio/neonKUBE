@@ -55,7 +55,7 @@ namespace Neon.Kube
     {
         /// <summary>
         /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE Helm folder.
+        /// neonKUBE node's Helm folder.
         /// </summary>
         /// <param name="node">The node instance.</param>
         /// <param name="controller">The setup controller.</param>
@@ -67,7 +67,7 @@ namespace Neon.Kube
             {
                 controller.LogProgress(node, verb: "setup", message: "helm charts (zip)");
 
-                var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
                 helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
 

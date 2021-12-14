@@ -45,13 +45,12 @@
   <ItemGroup>
     <None Remove="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
     <None Remove="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
-    <None Remove="Resources\cluster-manifest.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
-    <EmbeddedResource Include="Resources\cluster-manifest.json" />
+    <EmbeddedResource Include="Resources/**/*"/>
   </ItemGroup>
 
   <ItemGroup>
