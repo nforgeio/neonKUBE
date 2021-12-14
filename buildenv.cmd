@@ -76,6 +76,7 @@ REM Make sure required folders exist.
 if not exist "%NF_TEMP%" mkdir "%NF_TEMP%"
 if not exist "%NF_TOOLBIN%" mkdir "%NF_TOOLBIN%"
 if not exist "%NF_BUILD%" mkdir "%NF_BUILD%"
+if not exist "%NF_BUILD%\neon" mkdir "%NF_BUILD%\neon"
 
 REM Configure the PATH.
 REM
