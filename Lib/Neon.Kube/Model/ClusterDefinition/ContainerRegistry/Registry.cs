@@ -40,10 +40,10 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Specifies details about an upstream container registry.  This can be used to block, remap or
-    /// indicate that insecure HTTP requests can be used for specific registries.  This will be used 
-    /// to generate the <b>[[registry]]</b> entries in the <b>/etc/containers/registries.conf</b>
-    /// file on the cluster nodes.
+    /// Specifies details about an upstream container registry.  This can be used to block, remap or indicate
+    /// that insecure HTTP requests can be used for specific registries.  This will be used to generate the
+    /// <b>[[registry]]</b> entries in the <b>/etc/containers/registries.conf.d/00-neon-cluster.conf</b> file
+    /// on the cluster nodes.
     /// </para>
     /// <para>
     /// See more details here: <a href="https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md">here</a>

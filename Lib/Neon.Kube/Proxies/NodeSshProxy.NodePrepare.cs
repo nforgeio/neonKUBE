@@ -1121,7 +1121,7 @@ fi
 
 # Generate the CRI-O configuration.
 
-cat <<EOF > /etc/containers/registries.conf
+cat <<EOF > /etc/containers/registries.conf.d/00-neon-cluster.conf
 {sbRegistryConfig}
 EOF
 
