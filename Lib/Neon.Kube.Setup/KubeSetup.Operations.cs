@@ -2838,11 +2838,11 @@ $@"- name: StorageType
                                     return false;
                                 }
                             } 
-                            catch (Exception e)
+                            catch
                             {
-                                
                                 return false;
                             }
+
                             return true;
                         }, TimeSpan.FromMinutes(5),
                         TimeSpan.FromSeconds(60));
