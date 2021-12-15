@@ -51,7 +51,7 @@ spec:
           - name: CONSOLE_OPERATOR_MODE
             value: "on"
           - name: CONSOLE_IDP_URL
-            value: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso" 
+            value: "https://dex.{{ .Values.cluster.domain }}" 
           - name: CONSOLE_IDP_CALLBACK
             value: "https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback"
           - name: CONSOLE_IDP_CLIENT_ID
@@ -65,7 +65,7 @@ spec:
                 name:  keycloak-client-secret-minio
                 key: CLIENT_SECRET
           - name: CONSOLE_IDP_SCOPES
-            value: "openid"
+            value: "openid email profile groups"
           - name: CONSOLE_IDP_CLAIM_NAME
             value: roles
           resources:

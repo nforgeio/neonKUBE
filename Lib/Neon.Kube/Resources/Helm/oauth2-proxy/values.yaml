@@ -36,7 +36,7 @@ config:
     redis_use_sentinel = true
     email_domains = [ "*" ] 
     upstreams = [ "static://200" ] 
-    scope = "openid"
+    scope = "openid email profile groups"
     skip_provider_button = true 
     standard_logging = true 
     request_logging = true

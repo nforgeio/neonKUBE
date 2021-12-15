@@ -19,8 +19,8 @@ spec:
   auth:
     strategy: openid
     openid:
-      client_id: "oauth2-proxy"
-      issuer_uri: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso"
+      client_id: "kubernetes"
+      issuer_uri: "https://dex.{{ .Values.cluster.domain }}"
   deployment:
     image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
     image_version: {{ .Values.image.kiali.tag }}
@@ -42,8 +42,10 @@ spec:
       enabled: true
     prometheus:
       enabled: true
-      health_check_url: http://cortex.neon-monitor:9009/prometheus
-      url: http://cortex.neon-monitor:9009/prometheus
+      health_check_url: http://cortex.neon-monitor:9009/api/prom
+      url: http://cortex.neon-monitor:9009/api/prom
+      custom_headers: 
+        X-Scope-OrgID: {{ .Values.cluster.name }}
     tracing:
       enabled: true
       in_cluster_url: http://tempo.neon-monitor:16686

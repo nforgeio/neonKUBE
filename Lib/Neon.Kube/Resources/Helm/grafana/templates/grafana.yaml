@@ -19,16 +19,16 @@ spec:
       oauth_auto_login: true
     auth.generic_oauth:
       api_url: >-
-        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/userinfo
+        https://dex.{{ .Values.cluster.domain }}
       auth_url: >-
-        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/auth
+        https://dex.{{ .Values.cluster.domain }}
       client_id: $__env{CLIENT_ID}
       client_secret: $__env{CLIENT_SECRET}
       empty_scopes: false
       enabled: true
-      scopes: openid
+      scopes: openid email profile groups
       token_url: >-
-        https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/openid-connect/token
+        https://dex.{{ .Values.cluster.domain }}
       role_attribute_path: >-
         contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor')
         && 'Editor' || 'Viewer'
