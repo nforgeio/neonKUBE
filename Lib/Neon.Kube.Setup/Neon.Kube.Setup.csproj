@@ -50,7 +50,7 @@
   <ItemGroup>
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
-    <EmbeddedResource Include="Resources/**/*"/>
+    <EmbeddedResource Include="Resources/**/*" />
   </ItemGroup>
 
   <ItemGroup>
@@ -77,6 +77,10 @@
     <PackageReference Include="Helm" Version="0.1.35" />
     <PackageReference Include="Minio" Version="3.1.13" />
     <PackageReference Include="Npgsql" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Helm\neon-kube-resources\" />
   </ItemGroup>
 
   <!--

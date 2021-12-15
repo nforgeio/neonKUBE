@@ -1,4 +1,5 @@
-﻿Neon.Nats
-=========
+﻿Neon.Kube.Resources
+===================
 
-Handy utilities and extensions for the NATS and STAN queue clients.  You can get started here: [Neon.NATS](https://doc.neonkube.com/Neon.NATS-Overview.htm)
+Defines the custom neonKUBE related Kubernetes resource types and well as the custom resource definitions (CRD)
+that will be added to clusters when they are deployed.

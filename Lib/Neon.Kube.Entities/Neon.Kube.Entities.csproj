@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>latest</LangVersion>
+    <Version>2.10.0-internal</Version>
+    <Company>neonFORGE LLC</Company>
+    <Product>neonKUBE</Product>
+    <Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
+    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+    <Authors>neonFORGE Team</Authors>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Resources/README.md</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageIcon>nuget-icon.png</PackageIcon>
+    <PackageTags>kubernetes</PackageTags>
+    <RootNamespace>Neon.Kube.Entities</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- 
+    We need to prevent the KubeOps buid targets from trying to call the non-existent
+    program entrypoint (due to this assembly being a Library) to generate the CRDs
+    and other installation related files.
+    -->
+  
+    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubeOps" Version="6.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+  </ItemGroup>
+
+</Project>

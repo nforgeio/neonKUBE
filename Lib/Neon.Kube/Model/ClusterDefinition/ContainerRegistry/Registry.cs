@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// specified to be pulled from <see cref="Prefix"/> will actually be pulled from 
         /// <see cref="Location"/> instead.  This is a nice way to be able to reuse manifests
         /// and Helm charts such that they pull images from an alternate registry without
-        /// modification.  This default to <c>null</c>.
+        /// modification.  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Location", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "location", ApplyNamingConventions = false)]

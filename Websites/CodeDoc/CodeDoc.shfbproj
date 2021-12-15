@@ -50,6 +50,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.CSharp\Neon.CSharp.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.ConPTY\Neon.ConPTY.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>

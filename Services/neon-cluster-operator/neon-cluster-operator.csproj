@@ -13,6 +13,15 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    
+    <!-- Configure the KubeOps buid targets as required. -->
+
+    <KubeOpsBasePath>install.gitignore</KubeOpsBasePath>
+    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+    <KubeOpsSkipCrds></KubeOpsSkipCrds>
+    <KubeOpsSkipRbac></KubeOpsSkipRbac>
+    <KubeOpsSkipOperator></KubeOpsSkipOperator>
+    <KubeOpsSkipInstaller></KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -32,10 +41,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="KubeOps" Version="6.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Entities\Neon.Kube.Entities.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Services\Neon.Kube.Services.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="install.gitignore\config\crds\" />
   </ItemGroup>
   
   <!--

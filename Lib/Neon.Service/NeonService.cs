@@ -253,7 +253,7 @@ namespace Neon.Service
     /// </note>
     /// <para><b>SERVICE DEPENDENCIES</b></para>
     /// <para>
-    /// Services often depend on other services to function, such as a database, REST APIs, etc.
+    /// Services often depend on other services to function, such as databases, REST APIs, etc.
     /// <see cref="NeonService"/> provides an easy to use integrated way to wait for other
     /// services to initialize themselves and become ready before your service will be allowed
     /// to start.  This is a great way to avoid a blizzard of service failures and restarts
@@ -310,13 +310,8 @@ namespace Neon.Service
     /// <para><b>NETCORE Runtime METRICS</b></para>
     /// <para>
     /// We highly recommend that you also enable .NET Runtime related metrics for services targeting
-    /// .NET Core 2.2 or greater.
+    /// .NET Core 3.1 or greater.
     /// </para>
-    /// <note>
-    /// Although the .NET Core 2.2+ runtimes are supported, the runtime apparently has some issues that
-    /// may prevent this from working properly, so that's not recommended.  Note that there's currently
-    /// no support for any .NET Framework runtime.
-    /// </note>
     /// <para>
     /// Adding support for this is easy, simply add a reference to the <a href="https://www.nuget.org/packages/prometheus-net.DotNetRuntime">prometheus-net.DotNetRuntime</a>
     /// package to your service project and then assign a function callback to <see cref="MetricsOptions.GetCollector"/>
@@ -844,11 +839,11 @@ namespace Neon.Service
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] health status changed to: [{statusString}]");
+                    Log.LogWarn($"[{Name}] health status is now: [{statusString}]");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] health status changed to: [{statusString}]");
+                    Log.LogInfo($"[{Name}] health status is now: [{statusString}]");
                 }
 
                 if (healthStatusPath != null)
@@ -1171,29 +1166,21 @@ namespace Neon.Service
                 healthFolder = string.Empty;
             }
 
-Log.LogInfo($"isLinux:      [{NeonHelper.IsLinux}]");
-Log.LogInfo($"healthFolder: [{healthFolder}]");
-
             if (NeonHelper.IsLinux && !healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
             {
-Log.LogInfo($"Configuring Health: 0");
                 if (string.IsNullOrEmpty(healthFolder))
                 {
                     healthFolder = $"/";
                 }
-Log.LogInfo($"healthFolder:     [{healthFolder}]");
-                healthStatusPath   = Path.Combine(healthFolder, "health-status");
-Log.LogInfo($"healthStatusPath: [{healthStatusPath}]");
+
+                healthStatusPath = Path.Combine(healthFolder, "health-status");
                 healthScriptPath = Path.Combine(healthFolder, "health-check");
-Log.LogInfo($"healthScriptPath: [{healthScriptPath}]");
-Log.LogInfo($"Configuring Health: 1");
 
                 try
                 {
                     // Create the health status file and set its permissions.
 
                     Directory.CreateDirectory(healthFolder);
-Log.LogInfo($"Configuring Health: 2");
 
                     File.WriteAllText(healthStatusPath, NeonHelper.EnumToString(NeonServiceStatus.Starting));
                     NeonHelper.Execute("/bin/chmod",
@@ -1234,8 +1221,6 @@ fi
                             "775",
                             healthScriptPath
                         });
-
-Log.LogInfo($"Configuring Health: 3");
                 }
                 catch (IOException e)
                 {
@@ -1244,7 +1229,6 @@ Log.LogInfo($"Configuring Health: 3");
                     // system is read-only.  We're going to log this and disable the health
                     // status feature when this happens. 
 
-Log.LogInfo($"Configuring Health: 4");
                     Log.LogError("Cannot initialize the health folder.  The status feature will be disabled.", e);
 
                     healthFolder    = null;
@@ -1254,10 +1238,8 @@ Log.LogInfo($"Configuring Health: 4");
             }
             else
             {
-Log.LogInfo($"Configuring Health: 5");
                 healthFolder = null;
             }
-Log.LogInfo($"Configuring Health: 6");
 
             // Start and run the service.
 

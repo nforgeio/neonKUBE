@@ -418,6 +418,11 @@ namespace Neon.Kube
         public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
 
         /// <summary>
+        /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
+        /// </summary>
+        public const string NeonResourceGroup = "neonkube.io";
+
+        /// <summary>
         /// 
         /// </summary>
         public const string AlertManagerSubdomain = "alertmanager";

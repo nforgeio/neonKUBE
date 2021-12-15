@@ -1,7 +1,7 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         NeonClusterOperator.cs
-// CONTRIBUTOR:  Marcus Bowyer
-// COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// FILE:        Service.cs
+// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
 
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
@@ -25,17 +28,13 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
 
-using Helm.Helm;
 using k8s;
 using k8s.Models;
-
+using KubeOps.Operator;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using Npgsql;
-
 using YamlDotNet.RepresentationModel;
-
 
 namespace NeonClusterOperator
 {
@@ -72,7 +71,15 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            // Let KubeService know that we're running.
+            // Start the operator controllers.  Note that we're not going to await
+            // this and will use the termination signal to known when toi exit.
+
+            _ = Host.CreateDefaultBuilder()
+                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                    .Build()
+                    .RunOperatorAsync(Array.Empty<string>());
+
+            // Let NeonService know that we're running.
 
             await SetRunningAsync();
 
