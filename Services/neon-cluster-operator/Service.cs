@@ -24,10 +24,8 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
-using Neon.Postgres;
 
 using Helm.Helm;
-
 using k8s;
 using k8s.Models;
 
