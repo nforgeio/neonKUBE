@@ -118,7 +118,7 @@
   -->
 
   <Target Name="K8sWithRetry" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder.exe')">
-    <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)KubernetesWithRetry.cs&quot; Neon.Kube" />
+    <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
   </Target>
 
   <!--
