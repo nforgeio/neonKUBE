@@ -16,7 +16,7 @@
     
     <!-- Configure the KubeOps buid targets as required. -->
 
-    <KubeOpsBasePath>install.gitignore</KubeOpsBasePath>
+    <KubeOpsBasePath>config.gitignore</KubeOpsBasePath>
     <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
     <KubeOpsSkipCrds></KubeOpsSkipCrds>
     <KubeOpsSkipRbac></KubeOpsSkipRbac>
@@ -50,10 +50,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.Services\Neon.Kube.Services.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="install.gitignore\config\crds\" />
   </ItemGroup>
   
   <!--
