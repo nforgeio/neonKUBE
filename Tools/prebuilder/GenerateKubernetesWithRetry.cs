@@ -531,7 +531,70 @@ $@"
                 }
                 else
                 {
-                    sb.AppendWithSeparator($"{typeReference} {NormalizeParameterName(parameter.Name)}", ", ");
+                    var defaultValueAssignment = string.Empty;
+
+                    if (parameter.HasDefaultValue)
+                    {
+                        var defaultValue = parameter.DefaultValue;
+                        var valueLiteral = string.Empty;
+
+                        var type = parameter.ParameterType;
+
+                        if (type.IsClass && defaultValue == null)
+                        {
+                            valueLiteral = "null";
+                        }
+                        else if (type.IsPrimitive || type == typeof(string) || type == typeof(Decimal) || type.IsEnum || type.FullName.StartsWith("System.Nullable`"))
+                        {
+                            if (type == typeof(string))
+                            {
+                                if (defaultValue == null)
+                                {
+                                    valueLiteral = "null";
+                                }
+                                else
+                                {
+                                    valueLiteral = $"\"{defaultValue}\"";
+                                }
+                            }
+                            else
+                            {
+                                if (type.IsEnum)
+                                {
+                                    valueLiteral = $"{type.Name}.{defaultValue}";
+                                }
+                                else if (type == typeof(bool))
+                                {
+                                    valueLiteral = NeonHelper.ToBoolString((bool)defaultValue);
+                                }
+                                else if (defaultValue == null)
+                                {
+                                    valueLiteral = "null";
+                                }
+                                else
+                                {
+                                    valueLiteral = defaultValue.ToString();
+                                }
+                            }
+                        }
+                        else if (!type.IsClass)
+                        {
+                            valueLiteral = $"default({typeReference})";
+                        }
+                        else
+                        {
+                            // Other types can't have default values.
+
+                            valueLiteral = null;
+                        }
+
+                        if (!string.IsNullOrEmpty(valueLiteral))
+                        {
+                            defaultValueAssignment = $" = {valueLiteral}";
+                        }
+                    }
+
+                    sb.AppendWithSeparator($"{typeReference} {NormalizeParameterName(parameter.Name)}{defaultValueAssignment}", ", ");
                 }
             }
 
