@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ContainerRegistryController.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
@@ -20,7 +20,7 @@ using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
-namespace NeonClusterOperator
+namespace NeonNodeAgent
 {
     /// <summary>
     /// Manages <see cref="V1ContainerRegistry"/> entities on the Kubernetes API Server.

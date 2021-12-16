@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------------------------
 // FILE:        Service.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
@@ -36,7 +36,7 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using YamlDotNet.RepresentationModel;
 
-namespace NeonClusterOperator
+namespace NeonNodeAgent
 {
     public partial class Service : NeonService
     {
@@ -202,7 +202,7 @@ namespace NeonClusterOperator
             Log.LogInfo($"[check-node-images] Getting images currently on node.");
 
             var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
-            var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
+            var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(repoTags => (JArray)repoTags);
 
             foreach (var image in clusterManifest.ContainerImages)
             {
@@ -273,7 +273,7 @@ namespace NeonClusterOperator
 
             if (exitcode != 0)
             {
-                throw new KubernetesException($@"{stdOut}
+                throw new KubernetesException($@"{stdOut + stdErr}
 
 {stdErr}");
             }

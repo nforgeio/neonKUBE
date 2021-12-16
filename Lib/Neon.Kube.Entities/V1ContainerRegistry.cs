@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1ContainerRegistryEntity.cs
+// FILE:	    V1ContainerRegistry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,27 +29,55 @@ using Neon.Kube;
 namespace Neon.Kube.Entities
 {
     /// <summary>
-    /// Custom resource describing an upstream container registry.
+    /// Describing an upstream container registry to be configured on each of the cluster nodes.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <b>neon-node-agent</b> static pods running on all clauster nodes monitor the set of 
+    /// <see cref="V1ContainerRegistry"/> as well as any referenced secrets for changes and update
+    /// the CRI-O configuration to match.
+    /// </para>
+    /// </remarks>
     [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "ContainerRegistries")]
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
-    public class V1ContainerRegistryEntity : CustomKubernetesEntity<V1ContainerRegistryEntity.V1ContainerRegistryEntitySpec, V1ContainerRegistryEntity.V1ContainerRegistryEntityStatus>
+    [Description("Custom resource describing an upstream container registry.")]
+    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistryEntitySpec>
     {
         /// <summary>
         /// The container registry specification.
         /// </summary>
         public class V1ContainerRegistryEntitySpec
         {
+            private const string prefixRegex = @"^([a-zA-Z0-9](?:(?:[a-zA-Z0-9-]*|(?<!-)\.(?![-.]))*[a-zA-Z0-9]+)?)(/[a-zA-Z0-9-\._~\[\]@\!$&'\(\)\*+,;%=]+)*$";
+
             /// <summary>
             /// <para>
             /// The target registry's hostname and optional path.  This is required.
             /// </para>
             /// <note>
-            /// The hostname may include a leading <b>"*"</b> wildcard character for subdomain matching.
+            /// The prefix may include a leading <b>"*"</b> wildcard character for subdomain matching.
             /// </note>
             /// </summary>
+            [Required]
+            [Pattern(@"^(\*.)?" + prefixRegex)]
             public string Prefix { get; set; } = null;
+
+            /// <summary>
+            /// <para>
+            /// Optionally indicates that the registry will be searched for image pulls that
+            /// don't specify a registry host/prefix.  This is often used to specify Docker Hub
+            /// <b>docker.io</b> as the default prefix since many tutotials and Helm charts 
+            /// assume this default due to the popularity of Docker.
+            /// </para>
+            /// <para>
+            /// Specify a non-negative number here to enable this.  Registries will be added to
+            /// the search list in ascending order by <see cref="SearchOrder"/> and when two
+            /// registries have the same order value, in ascending order by <see cref="Prefix"/>
+            /// (lowercase).
+            /// </para>
+            /// </summary>
+            public int SearchOrder { get; set; } = -1;
 
             /// <summary>
             /// Indicates that the registry may be accessed via HTTP.  This defaults
@@ -70,30 +98,21 @@ namespace Neon.Kube.Entities
             /// and Helm charts such that they pull images from an alternate registry without
             /// modification.  This defaults to <c>null</c>.
             /// </summary>
+            [Pattern(prefixRegex)]
             public string Location { get; set; } = null;
 
             /// <summary>
-            /// Optionally specifies the username used to authenticate with the registry.  
+            /// <para>
+            /// Optionally identifies the <b>kubernetes.io/basic-auth</b> secret used to authenticate 
+            /// with the registry.  This is formatted as: <b>NAMESPACE/SECRET-NAME</b>
+            /// </para>
+            /// <para>
             /// This defaults to <c>null</c>.
+            /// </para>
             /// </summary>
-            public string Username { get; set; } = null;
-
-            /// <summary>
-            /// Optionally specifies the password used to authenticate with the registry.  
-            /// This defaults to <c>null</c>.
-            /// </summary>
-            public string Password { get; set; } = null;
-        }
-
-        /// <summary>
-        /// The container registry status.
-        /// </summary>
-        public class V1ContainerRegistryEntityStatus
-        {
-            /// <summary>
-            /// Lists the node names that have applied the changes.
-            /// </summary>
-            public List<string> UpdatedNodes { get; set; } = new List<string>();
+            [Pattern(@"^[a-z0-9-\.]+/[a-z0-9-\.]+$")]
+            [Length(MaxLength = 253)]
+            public string Secret { get; set; } = null;
         }
     }
 }

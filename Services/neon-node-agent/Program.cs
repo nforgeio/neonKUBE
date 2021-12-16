@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 
 using System;
@@ -21,10 +21,10 @@ using k8s;
 using k8s.Models;
 using KubeOps.Operator;
 
-namespace NeonClusterOperator
+namespace NeonNodeAgent
 {
     /// <summary>
-    /// The <b>neon-cluster-operator</b> entrypoint.
+    /// The <b>neon-node-agent</b> entrypoint.
     /// </summary>
     public static class Program
     {
