@@ -18,7 +18,7 @@
 
 # Builds the neon-cluster-operator images and pushes them to Docker Hub.
 #
-# NOTE: You must be logged into Docker Hub.
+# NOTE: You must be already logged into the target container registry.
 #
 # USAGE: pwsh -file ./publish.ps1 [-all]
 

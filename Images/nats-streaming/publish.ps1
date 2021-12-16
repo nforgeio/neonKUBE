@@ -16,9 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS-STREAMING images and pushes them to Docker Hub.
+# Builds the NATS-STREAMING images and pushes them to the container registry.
 #
-# NOTE: You must be logged into Docker Hub.
+# NOTE: You must be already logged into the target container registry.
 #
 # USAGE: pwsh -file ./publish.ps1 [-all]
 
