@@ -102,7 +102,15 @@ nodeSelector: {}
 
 ## Affinity settings for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-affinity: {}
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kube-state-metrics
+          topologyKey: kubernetes.io/hostname
 
 ## Tolerations for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
