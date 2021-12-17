@@ -26,7 +26,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		LICENSE = LICENSE
 		nuget.config = nuget.config
 		README.md = README.md
-		Doc\TEST-VERSION.md = Doc\TEST-VERSION.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
@@ -417,7 +416,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-tty", "User\jefflill\t
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Entities", "Lib\Neon.Kube.Entities\Neon.Kube.Entities.csproj", "{E237E6A1-CB50-4944-977A-488A566CEDFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-node-agent", "Services\neon-node-agent\neon-node-agent.csproj", "{75653A7E-60A7-4401-AED5-1AEAAD6475A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-node-agent", "Services\neon-node-agent\neon-node-agent.csproj", "{75653A7E-60A7-4401-AED5-1AEAAD6475A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
