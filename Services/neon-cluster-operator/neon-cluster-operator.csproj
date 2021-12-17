@@ -16,7 +16,7 @@
     
     <!-- Configure the KubeOps buid targets as required. -->
 
-    <KubeOpsBasePath>config.gitignore</KubeOpsBasePath>
+    <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
     <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
     <KubeOpsSkipCrds></KubeOpsSkipCrds>
     <KubeOpsSkipRbac></KubeOpsSkipRbac>
@@ -72,6 +72,16 @@
 
   <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
     <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\netstandard2.1\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+  </Target>
+  
+  <!-- 
+  The KubeOps config file generator doesn't rebuild the files when the config output
+  directory already exists.  We're going to delete this folder to ensure that these
+  files are always regenerated.
+  -->
+
+  <Target Name="RemoveConfig">
+    <RemoveDir Directories="$(ProjectDir)config.gitignore" />
   </Target>
 
 </Project>

@@ -16,7 +16,7 @@
     
     <!-- Configure the KubeOps buid targets as required. -->
 
-    <KubeOpsBasePath>config.gitignore</KubeOpsBasePath>
+    <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
     <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
     <KubeOpsSkipCrds></KubeOpsSkipCrds>
     <KubeOpsSkipRbac></KubeOpsSkipRbac>
@@ -51,5 +51,15 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>
-  
+
+  <!-- 
+  The KubeOps config file generator doesn't rebuild the files when the config output
+  directory already exists.  We're going to delete this folder to ensure that these
+  files are always regenerated.
+  -->
+
+  <Target Name="RemoveConfig">
+    <RemoveDir Directories="$(ProjectDir)config.gitignore" />
+  </Target>
+
 </Project>
