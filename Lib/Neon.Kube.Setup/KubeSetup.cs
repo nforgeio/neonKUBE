@@ -235,9 +235,9 @@ namespace Neon.Kube
                 // the transients that happen during setup when the API server is unavailable for
                 // some reaon (like it's being restarted).
 
-                var k8sClient = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+                var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
 
-                k8sClient.RetryPolicy =
+                k8s.RetryPolicy =
                     new ExponentialRetryPolicy(
                         transientDetector: 
                             exception =>
@@ -271,7 +271,7 @@ namespace Neon.Kube
                         maxRetryInterval:     TimeSpan.FromSeconds(5),
                         timeout:              TimeSpan.FromMinutes(5));
 
-                controller.Add(KubeSetupProperty.K8sClient, k8sClient);
+                controller.Add(KubeSetupProperty.K8sClient, k8s);
             }
         }
     }
