@@ -41,6 +41,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE" Link="LICENSE">
+      <PackagePath></PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="..\nuget-icon.png" Link="nuget-icon.png">
+      <PackagePath></PackagePath>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="KubeOps" Version="6.0.17" />
   </ItemGroup>
 
