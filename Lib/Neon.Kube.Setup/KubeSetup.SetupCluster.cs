@@ -351,6 +351,12 @@ namespace Neon.Kube
                     node.NodeInstallHelm(controller);
                 });
 
+            controller.AddNodeStep("install kustomize",
+                (controller, node) =>
+                {
+                    node.NodeInstallKustomize(controller);
+                });
+
             if (uploadCharts || debugMode)
             {
                 controller.AddNodeStep("upload helm charts",

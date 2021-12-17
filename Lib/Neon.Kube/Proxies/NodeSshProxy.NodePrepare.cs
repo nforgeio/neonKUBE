@@ -1570,7 +1570,7 @@ apt-mark hold podman
         }
 
         /// <summary>
-        /// Installs the Helm client.
+        /// Installs the <b>Helm</b> client.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void NodeInstallHelm(ISetupController controller)
@@ -1591,6 +1591,32 @@ cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
 rm -f helm.tar.gz
 rm -rf linux-amd64
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs the <b>Kustomize</b> client.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void NodeInstallKustomize(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("setup/kustomize-client",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "setup", message: "kustomize client");
+
+                    var script =
+$@"
+cd /usr/local/bin
+curl {KubeHelper.CurlOptions} https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  > install-kustomize.sh
+
+bash ./install-kustomize.sh {KubeVersions.Kustomize}
+chmod 770 kustomize
+rm  install-kustomize.sh
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
