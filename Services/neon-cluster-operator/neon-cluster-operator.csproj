@@ -51,7 +51,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>
-  
+ 
   <!--
   The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
   download the cluster manifest JSON file for the current cluster version.  The manifest
@@ -73,7 +73,7 @@
   <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
     <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\netstandard2.1\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
   </Target>
-  
+ 
   <!-- 
   The KubeOps config file generator doesn't rebuild the files when the config output
   directory already exists.  We're going to delete this folder to ensure that these
@@ -83,5 +83,21 @@
   <Target Name="RemoveConfig">
     <RemoveDir Directories="$(ProjectDir)config.gitignore" />
   </Target>
+  
+  <!--
+  $hack(jefflill):
+  
+  This target copies all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
+  deleting any existing CRD files there first to ensure that the CRDs are in sync.  [GenerateAfterBuild] is the
+  KubeOps build target that generates the CRDs and other Kubernmetes manifest and kustomization files.
+  -->
 
+  <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
+    <Message Importance="high" Text="*** PublishCRDs ***"/>
+    <Delete Files="$(SolutionDir)Lib\Neon.Kube.Setup\$(MSBuildProjectName)\*"/>
+    <Message Importance="high" Text="SOURCE FILES: $(ProjectDir)config.gitignore\crds\*"/>
+    <Message Importance="high" Text="DESTINATION: $(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds)"/>
+    <Copy SourceFiles="$(ProjectDir)config.gitignore\crds\*" DestinationFolder="$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds"/>
+  </Target>
+  
 </Project>
