@@ -466,7 +466,7 @@ namespace Neon.Common
         /// in the arguments passed.
         /// </summary>
         /// <param name="args">The optional command line arguments.</param>
-        public CommandLine(object[] args = null)
+        public CommandLine(params object[] args)
         {
             if (args == null)
             {
