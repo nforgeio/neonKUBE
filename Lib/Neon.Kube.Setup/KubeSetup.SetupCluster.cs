@@ -176,6 +176,16 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.Normal}] when [{nameof(debugMode)}=TRUE].");
             }
 
+            // Do some quick checks to ensure that component versions look reasonable.
+
+            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
+            var crioVersion       = new Version(KubeVersions.Crio);
+
+            if (crioVersion.Major != kubernetesVersion.Minor || crioVersion.Minor != kubernetesVersion.Minor)
+            {
+                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+            }
+
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
