@@ -1,4 +1,4 @@
 ﻿Neon.Kube
 =========
 
-****INTERNAL USE ONLY:**** Core library used by neonKUBE related tooling.
+****INTERNAL USE ONLY:**** Common library used by neonKUBE related projects.
