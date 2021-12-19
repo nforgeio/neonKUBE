@@ -121,13 +121,4 @@
     <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
   </Target>
 
-  <!--
-  Ensures that all files under [./Resources] are actually included as embedded 
-  resources in this project file.
-  -->
-
-  <Target Name="EmbedCheck" BeforeTargets="BeforeCompile">
-    <Exec Command="neon-build embed-check &quot;$(ProjectPath)&quot; &quot;$(ProjectDir)Resources&quot;" />
-  </Target>
-
 </Project>

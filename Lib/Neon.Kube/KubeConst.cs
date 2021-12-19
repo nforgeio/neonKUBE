@@ -421,5 +421,10 @@ namespace Neon.Kube
         /// The maximum size in bytes of a node image part published as a GitHub release.
         /// </summary>
         public const long NodeImagePartSize = (long)(100 * ByteUnits.MebiBytes);
+
+        /// <summary>
+        /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
+        /// </summary>
+        public const string NeonResourceGroup = "neonkube.io";
     }
 }
