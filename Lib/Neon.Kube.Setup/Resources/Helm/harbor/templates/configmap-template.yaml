@@ -95,7 +95,7 @@ data:
         readOnly:
           enabled: {{ .Spec.Storage.Maintenance.ReadOnly.Enabled }}
       redirect: 
-        disable: {{ .Spec.Storage.Redirect.Disable }}
+        disable: true
 
       {{- if .Spec.Storage.Driver.InMemory }}
       inmemory: {}
@@ -269,10 +269,10 @@ data:
       {{- end }}`}}
     auth:
       token:
-        realm: https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso/protocol/docker-v2/auth
-        service: docker
-        issuer: https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso
-        rootcertbundle: /harbor_cust_cert/registry-token-cert.crt
+        issuer: harbor-token-issuer
+        realm: https://registry.{{ .Values.cluster.domain }}/service/token
+        rootcertbundle: /harbor_cust_cert/registry-harbor-harbor-core-tokencert.crt
+        service: harbor-registry
     notifications:
       {{`{{- if .Spec.Notifications.Endpoints }}
       endpoints:

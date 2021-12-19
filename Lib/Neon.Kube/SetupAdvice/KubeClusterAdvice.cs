@@ -155,6 +155,11 @@ namespace Neon.Kube
         public static string Cortex = "cortex";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Dex</b> service.
+        /// </summary>
+        public static string Dex = "dex";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Etc nodes</b> service.
         /// </summary>
         public static string EtcdCluster = "etcd-cluster";
@@ -168,6 +173,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>FluentBit</b> service.
         /// </summary>
         public static string FluentBit = "fluentbit";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Glauth</b> service.
+        /// </summary>
+        public static string Glauth = "glauth";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Grafana</b> service.
@@ -258,11 +268,6 @@ namespace Neon.Kube
         /// Identifies the <b>Kube State Metrics</b> service.
         /// </summary>
         public static string KubeStateMetrics = "kube-state-metrics";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Keycloak</b> service.
-        /// </summary>
-        public static string Keycloak = "keycloak";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kaili</b> service.

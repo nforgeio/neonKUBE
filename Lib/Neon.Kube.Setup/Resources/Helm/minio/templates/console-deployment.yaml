@@ -36,6 +36,11 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      volumes:
+        - name: config
+          secret:
+            secretName: minio-client
+            defaultMode: 420
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.console.image.organization }}/{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
@@ -48,28 +53,43 @@ spec:
           args:
           - server
           env:
+          - name: ACCESS_KEY
+            valueFrom:
+              secretKeyRef: 
+                name: minio
+                key: accesskey
+          - name: SECRET_KEY
+            valueFrom:
+              secretKeyRef: 
+                name: minio
+                key: secretkey
           - name: CONSOLE_OPERATOR_MODE
             value: "on"
           - name: CONSOLE_IDP_URL
-            value: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso" 
+            value: "https://sso.{{ .Values.cluster.domain }}/.well-known/openid-configuration" 
           - name: CONSOLE_IDP_CALLBACK
             value: "https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback"
           - name: CONSOLE_IDP_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name:  keycloak-client-secret-minio
-                key: CLIENT_ID
+            value: minio
           - name: CONSOLE_IDP_SECRET
             valueFrom:
               secretKeyRef:
-                name:  keycloak-client-secret-minio
-                key: CLIENT_SECRET
+                name:  dex
+                key: MINIO_CLIENT_SECRET
           - name: CONSOLE_IDP_SCOPES
-            value: "openid"
+            value: "openid,email,profile,groups"
           - name: CONSOLE_IDP_CLAIM_NAME
-            value: roles
+            value: groups
           resources:
             {{- toYaml .Values.console.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              readOnly: true
+              mountPath: /.mc-config
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "cp /.mc-config/config.json /.mc/config.json"]
       {{- with .Values.console.initContainers }}
       initContainers:
         {{- toYaml . | nindent 8 }}

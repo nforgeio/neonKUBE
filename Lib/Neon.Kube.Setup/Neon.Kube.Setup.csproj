@@ -42,10 +42,7 @@
     <DefineConstants />
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
-    <None Remove="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />

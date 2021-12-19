@@ -45,7 +45,7 @@ spec:
             - authorization
             - cookie
           port: '4180'
-          service: neon-sso-oauth2-proxy.neon-ingress.svc.cluster.local
+          service: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
         name: neon-sso-service
   components:
     ingressGateways:

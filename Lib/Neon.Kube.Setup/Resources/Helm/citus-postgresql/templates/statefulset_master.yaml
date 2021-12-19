@@ -34,6 +34,15 @@ spec:
       tolerations:
       {{ toYaml . | nindent 6 }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: {{ template "citus-postgresql.name" . }}-master
+                topologyKey: kubernetes.io/hostname
       {{- if .Values.nodeSelector }}
       nodeSelector:
       {{ toYaml .Values.nodeSelector | nindent 8 }}

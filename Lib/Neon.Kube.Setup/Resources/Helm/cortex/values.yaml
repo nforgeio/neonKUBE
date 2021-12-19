@@ -68,12 +68,25 @@ cortexConfig:
     max_series_per_user: 0
     max_metadata_per_user: 0
     max_metadata_per_metric: 100
+    compactor_blocks_retention_period: 6h
   blocks_storage:
     backend: s3
     tsdb:
       dir: /tmp/cortex/tsdb
+      block_ranges_period:
+        - 5m
+      retention_period: 30m
+      stripe_size: 4096
+      head_chunks_write_buffer_size_bytes: 1048576
     bucket_store:
       sync_dir: /tmp/cortex/tsdb-sync
+      block_sync_concurrency: 5
+      meta_sync_concurrency: 5
+      bucket_index:
+      index_cache:
+        backend: inmemory
+        inmemory:
+          max_size_bytes: 128000000
     s3:
       bucket_name: cortex
       endpoint: minio.neon-system
@@ -81,6 +94,8 @@ cortexConfig:
       secret_access_key: ${SECRET_ACCESS_KEY}
       insecure: true
   ingester:
+    retain_period: 1m
+    max_chunk_age: 1h
     lifecycler:
       # The address to advertise for this ingester. Will be autodiscovered by
       # looking up address on eth0 or en0; can be specified if this fails.
@@ -146,6 +161,15 @@ cortexConfig:
       insecure: true
       secret_access_key: ${SECRET_ACCESS_KEY}
   compactor:
+    block_ranges:
+      - 15m
+      - 1h
+    meta_sync_concurrency: 5
+    block_sync_concurrency: 5
+    compaction_retries: 1
+    cleanup_interval: 15m
+    deletion_delay: 1h
+    tenant_cleanup_delay: 1h
     data_dir: /tmp/cortex/compactor
     sharding_enabled: false
     sharding_ring:
@@ -154,9 +178,13 @@ cortexConfig:
         etcd:
           endpoints:
             - etcd.neon-system:2379
+  purger:
+    enable: true
+    delete_request_cancel_period: 5m
+    object_store_type: s3
   table_manager:
     retention_deletes_enabled: true
-    retention_period: 48h
+    retention_period: 6h
 
 strategy:
   type: RollingUpdate

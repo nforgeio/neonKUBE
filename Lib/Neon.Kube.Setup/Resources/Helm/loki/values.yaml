@@ -26,16 +26,15 @@ ingress:
 
 ## Affinity for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-affinity: {}
-# podAntiAffinity:
-#   requiredDuringSchedulingIgnoredDuringExecution:
-#   - labelSelector:
-#       matchExpressions:
-#       - key: app
-#         operator: In
-#         values:
-#         - loki
-#     topologyKey: "kubernetes.io/hostname"
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app: loki
+          topologyKey: kubernetes.io/hostname
 
 ## StatefulSet annotations
 annotations: {}
@@ -71,6 +70,7 @@ config:
     enforce_metric_name: false
     reject_old_samples: true
     reject_old_samples_max_age: 168h
+    retention_period: 6h
   server:
     http_listen_port: 3100
   ruler:
@@ -92,7 +92,7 @@ config:
     boltdb_shipper:
       active_index_directory: /loki/boltdb-shipper-active
       cache_location: /loki/boltdb-shipper-cache
-      cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
+      cache_ttl: 1h         # Can be increased for faster performance over longer query periods, uses more disk space
       shared_store: s3
     aws:
       bucketnames: loki
@@ -105,6 +105,13 @@ config:
   compactor:
     working_directory: /loki/boltdb-shipper-compactor
     shared_store: s3
+    retention_enabled: true
+    retention_delete_delay: 5m
+    retention_delete_worker_count: 5
+    delete_request_cancel_period: 5m
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 6h
 
 tracing:
   jaegerAgentHost: grafana-agent-node

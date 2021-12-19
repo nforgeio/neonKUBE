@@ -326,6 +326,11 @@ namespace Neon.Kube
         public const string NeonSystemDbAdminSecret = "neon-system-db-admin";
 
         /// <summary>
+        /// Identifies the secret containing Dex credentials.
+        /// </summary>
+        public const string DexSecret = "dex";
+
+        /// <summary>
         /// Identifies the neon-system-db superuser database.
         /// </summary>
         public const string NeonClusterOperatorDatabase = "neon_cluster_operator";
@@ -351,9 +356,9 @@ namespace Neon.Kube
         public const string NeonSystemDbGrafanaDatabase = "grafana";
 
         /// <summary>
-        /// Identifies the the secret containing database credentials used by Grafana.
+        /// Identifies the the secret containing credentials used by Grafana.
         /// </summary>
-        public const string GrafanaDatabaseSecret = "grafana-db-password";
+        public const string GrafanaSecret = "grafana-secret";
 
         /// <summary>
         /// Identifies the the secret containing admin credentials for Grafana.
@@ -421,55 +426,5 @@ namespace Neon.Kube
         /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
         /// </summary>
         public const string NeonResourceGroup = "neonkube.io";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string AlertManagerSubdomain = "alertmanager";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string GrafanaSubdomain = "grafana";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string HarborNotarySubdomain = "notary";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string HarborRegistrySubdomain = "registry";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string KeycloakSubdomain = "sso";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string KialiSubdomain = "kiali";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string KubernetesDashboardSubdomain = "k8s";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string MinioOperatorSubdomain = "minio-operator";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string MinioConsoleSubdomain = "minio-console";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public const string CortexRulerSubdomain = "cortex-ruler";
     }
 }

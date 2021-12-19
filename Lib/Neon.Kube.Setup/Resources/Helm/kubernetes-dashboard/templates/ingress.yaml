@@ -14,7 +14,7 @@ spec:
             prefix: /oauth2
       route:
         - destination:
-            host: neon-sso-oauth2-proxy.neon-ingress.svc.cluster.local
+            host: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
             port:
               number: 4180
     - match:

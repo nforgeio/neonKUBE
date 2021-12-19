@@ -518,6 +518,14 @@ namespace Neon.Kube
         public Dictionary<string, string> SetupState { get; set; } = null;
 
         /// <summary>
+        /// The cluster root user password.
+        /// </summary>
+        [JsonProperty(PropertyName = "RootPassword", Required = Required.Default)]
+        [YamlMember(Alias = "rootPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string RootPassword { get; set; } = null;
+
+        /// <summary>
         /// Adds or updates an item in <see cref="SetupState"/>.  Use this instead of accessing the dictionary
         /// directly for thread safety.
         /// </summary>

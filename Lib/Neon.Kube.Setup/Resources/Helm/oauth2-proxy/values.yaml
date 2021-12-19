@@ -36,10 +36,12 @@ config:
     redis_use_sentinel = true
     email_domains = [ "*" ] 
     upstreams = [ "static://200" ] 
-    scope = "openid"
+    scope = "openid email profile groups"
     skip_provider_button = true 
     standard_logging = true 
     request_logging = true
+    auth_logging = true
+    silence_ping_logging = true
     pass_authorization_header = true 
     pass_access_token = true
     set_authorization_header = true
