@@ -36,12 +36,27 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      volumes:
+        - name: config
+          secret:
+            secretName: minio-client
+            defaultMode: 420
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
           imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
-          {{- if or .Values.operator.clusterDomain .Values.operator.nsToWatch }}
           env:
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef: 
+                  name: minio
+                  key: accesskey
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef: 
+                  name: minio
+                  key: secretkey
+          {{- if or .Values.operator.clusterDomain .Values.operator.nsToWatch }}
             {{- if .Values.operator.clusterDomain }}
             - name: CLUSTER_DOMAIN
               value: {{ .Values.operator.clusterDomain }}
@@ -58,6 +73,14 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.operator.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              readOnly: true
+              mountPath: /.mc-config
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "cp /.mc-config/config.json /.mc/config.json"]
     {{- with .Values.operator.initContainers }}
       initContainers:
         {{- toYaml . | nindent 8 }}

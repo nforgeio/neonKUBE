@@ -76,3 +76,20 @@ spec:
     kind: Issuer
     name: neon-system-selfsigned-issuer
   secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    goharbor.io/deploy-mode: harbor
+    goharbor.io/operator-version: v1.0.1
+  name: neon-sso
+  namespace: neon-system
+spec:
+  dnsNames:
+  - {{ .Values.cluster.domain }}
+  - "*.{{ .Values.cluster.domain }}"
+  issuerRef:
+    kind: Issuer
+    name: neon-system-selfsigned-issuer
+  secretName: neon-sso-certificate

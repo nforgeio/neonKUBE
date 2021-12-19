@@ -78,19 +78,16 @@ spec:
   {{- end }}
   env:
     - name: MINIO_IDENTITY_OPENID_CONFIG_URL
-      value: "https://dex.{{ $clusterDomain }}" 
+      value: "https://sso.{{ $clusterDomain }}/.well-known/openid-configuration" 
     - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
       value: "https://minio-console.{{ $clusterDomain }}/oauth_callback"
     - name: MINIO_IDENTITY_OPENID_CLIENT_ID
-      valueFrom:
-        secretKeyRef:
-          name:  openid-client-secret-minio
-          key: CLIENT_ID
+      value: minio
     - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
       valueFrom:
         secretKeyRef:
-          name:  openid-client-secret-minio
-          key: CLIENT_SECRET
+          name: dex
+          key: MINIO_CLIENT_SECRET
   {{- with .env }}
     {{ toYaml . | nindent 4 }}
   {{- end }}

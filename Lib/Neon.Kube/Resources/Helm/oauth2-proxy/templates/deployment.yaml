@@ -65,20 +65,17 @@ spec:
         {{- if .Values.htpasswdFile.enabled }}
           - --htpasswd-file=/etc/oauth2_proxy/htpasswd/users.txt
         {{- end }}
-          - --login-url=https://dex.{{ .Values.cluster.domain }}
-          - --oidc-issuer-url=https://dex.{{ .Values.cluster.domain }}
+          - --login-url=https://sso.{{ .Values.cluster.domain }}
+          - --oidc-issuer-url=https://sso.{{ .Values.cluster.domain }}
         env:
         {{- if .Values.proxyVarsAsSecrets }}
         - name: OAUTH2_PROXY_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name:  dex-client-secret-oauth2-proxy
-              key: CLIENT_ID
+          value: kubernetes
         - name: OAUTH2_PROXY_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name:  dex-client-secret-oauth2-proxy
-              key: CLIENT_SECRET
+              name:  dex
+              key: KUBERNETES_CLIENT_SECRET
         - name: OAUTH2_PROXY_COOKIE_SECRET
           valueFrom:
             secretKeyRef:

@@ -20,7 +20,13 @@ spec:
     strategy: openid
     openid:
       client_id: "kubernetes"
-      issuer_uri: "https://dex.{{ .Values.cluster.domain }}"
+      issuer_uri: "https://sso.{{ .Values.cluster.domain }}"
+      username_claim: "email"
+      scopes:
+        - openid
+        - email
+        - profile
+        - groups
   deployment:
     image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
     image_version: {{ .Values.image.kiali.tag }}

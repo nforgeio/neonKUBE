@@ -67,12 +67,14 @@ spec:
   storage:
     kind: "S3"
     spec:
+      redirect:
+        enable: false
       s3:
         accesskey: {{ .Values.storage.s3.accessKey }}
         bucket: harbor
         encrypt: false
         region: neon
-        regionendpoint: minio.neon-system
+        regionendpoint: http://minio.neon-system
         secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
         secure: false
         skipverify: true
@@ -139,7 +141,7 @@ spec:
     {{- end }}
     relativeURLs: true
     certificateRefs:
-      - registry-token-cert
+      - registry-harbor-harbor-core-tokencert
     resources: {}
     metrics:
       enabled: true

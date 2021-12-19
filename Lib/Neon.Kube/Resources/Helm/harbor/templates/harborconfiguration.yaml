@@ -1,20 +1,24 @@
 apiVersion: goharbor.io/v1beta1
 kind: HarborConfiguration
 metadata:
-  name: oidc-config
+  name: ldap-config
   namespace: neon-system
 spec:
-  # your harbor configuration
   configuration:
-    authMode: oidc_auth
-    oidcClientSecret: harbor-oidc
-    oidcName: "keycloak"
-    oidcEndpoint: "https://sso.{{ .Values.cluster.domain }}/auth/realms/neon-sso"
-    oidcClientId: "harbor"
-    oidcGroupsClaim: "groups"
-    oidcAdminGroup: "root-user"
-    oidcScope: "openid"
-    oidcVerifyCert: false
-    oidcAutoOnboard: true
-    oidcUserClaim: email
+    authMode: ldap_auth
+    ldapBaseDn: cn=users,{{ .Values.ldap.baseDN }}
+    ldapFilter: (objectClass=posixAccount)
+    ldapGroupAdminDn: >-
+      ou=superadmin,ou=groups,{{ .Values.ldap.baseDN }}
+    ldapGroupAttributeName: cn
+    ldapGroupBaseDn: ou=users,{{ .Values.ldap.baseDN }}
+    ldapGroupMembershipAttribute: memberUid
+    ldapGroupSearchFilter: (|(objectClass=posixGroup)(objectClass=group))
+    ldapGroupSearchScope: 2
+    ldapScope: 2
+    ldapSearchDn: >-
+      cn=serviceuser,ou=admin,{{ .Values.ldap.baseDN }}
+    ldapSearchPassword: harbor-ldap
+    ldapUrl: glauth.neon-system:3893
+    ldapVerifyCert: false
   harborClusterRef: registry
