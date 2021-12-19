@@ -12,8 +12,8 @@ spec:
     {
       "__inputs": [
         {
-          "name": "DS__VICTORIAMETRICS",
-          "label": " VictoriaMetrics",
+          "name": "DS_PROMETHEUS",
+          "label": "Prometheus",
           "description": "",
           "type": "datasource",
           "pluginId": "prometheus",
@@ -112,7 +112,7 @@ spec:
       "panels": [
         {
           "collapsed": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -126,7 +126,7 @@ spec:
         },
         {
           "columns": [],
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "Partition utilization, disk read, disk write, download bandwidth, upload bandwidth, if there are multiple network cards or multiple partitions, it is the value of the network card or partition with the highest utilization rate collected.\n\nCurrEstab: The number of TCP connections whose current status is ESTABLISHED or CLOSE-WAIT.",
           "fieldConfig": {
             "defaults": {
@@ -622,7 +622,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": null,
           "description": "",
           "fieldConfig": {
@@ -782,7 +782,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 1,
           "fieldConfig": {
             "defaults": {
@@ -928,7 +928,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 1,
           "description": "",
           "fieldConfig": {
@@ -1070,7 +1070,7 @@ spec:
         },
         {
           "collapsed": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1084,7 +1084,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1164,7 +1164,7 @@ spec:
           "type": "stat"
         },
         {
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1273,7 +1273,7 @@ spec:
         },
         {
           "columns": [],
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "In this kanban: the total disk, usage, available, and usage rate are consistent with the values of the Size, Used, Avail, and Use% columns of the df command, and the value of Use% will be rounded to one decimal place, which will be more accurate .\n\nNote: The Use% algorithm in df is: (size-free) * 100 / (avail + (size-free)), the result is divisible by this value, non-divisible by this value is +1, and the unit of the result is %.\nRefer to the df command source code:",
           "fieldConfig": {
             "defaults": {
@@ -1482,7 +1482,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1574,7 +1574,7 @@ spec:
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "editable": true,
           "error": false,
           "fieldConfig": {
@@ -1637,7 +1637,7 @@ spec:
               "expr": "increase(node_network_receive_bytes_total{instance=~\"$node\",device=~\"$device\"}[60m])",
               "interval": "60m",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_receive",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_receive",
               "metric": "",
               "refId": "A",
               "step": 600,
@@ -1648,7 +1648,7 @@ spec:
               "hide": false,
               "interval": "60m",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_transmit",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_transmit",
               "refId": "B",
               "step": 600
             }
@@ -1698,7 +1698,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1776,7 +1776,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1855,7 +1855,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -1924,7 +1924,7 @@ spec:
               "instant": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}instance{{"}}"}}",
+              "legendFormat": "{{`{{`}}instance{{`}}`}}",
               "refId": "A",
               "step": 20
             }
@@ -1934,7 +1934,7 @@ spec:
         },
         {
           "cacheTimeout": null,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -2029,7 +2029,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "description": "",
           "fieldConfig": {
@@ -2193,7 +2193,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "fieldConfig": {
             "defaults": {
@@ -2388,7 +2388,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "fieldConfig": {
             "defaults": {
@@ -2451,7 +2451,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_receive",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_receive",
               "refId": "A",
               "step": 4
             },
@@ -2460,7 +2460,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_transmit",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_transmit",
               "refId": "B",
               "step": 4
             }
@@ -2517,7 +2517,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "editable": true,
           "error": false,
@@ -2672,7 +2672,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "description": "Per second read / write bytes ",
           "fieldConfig": {
@@ -2735,7 +2735,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Read bytes",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Read bytes",
               "refId": "A",
               "step": 10
             },
@@ -2745,7 +2745,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Written bytes",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Written bytes",
               "refId": "B",
               "step": 10
             }
@@ -2799,7 +2799,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 1,
           "description": "",
           "fieldConfig": {
@@ -2864,14 +2864,14 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}mountpoint{{"}}"}}",
+              "legendFormat": "{{`{{`}}mountpoint{{`}}`}}",
               "refId": "A"
             },
             {
               "expr": "node_filesystem_files_free{instance=~'$node',fstype=~\"ext.?|xfs\"} / node_filesystem_files{instance=~'$node',fstype=~\"ext.?|xfs\"}",
               "hide": true,
               "interval": "",
-              "legendFormat": "Inodes：{{"{{"}}instance{{"}}"}}：{{"{{"}}mountpoint{{"}}"}}",
+              "legendFormat": "Inodes：{{`{{`}}instance{{`}}`}}：{{`{{`}}mountpoint{{`}}`}}",
               "refId": "B"
             }
           ],
@@ -2927,7 +2927,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "description": "Read/write completions per second\n\nWrites completed: 每个磁盘分区每秒写完成次数\n\nIO now 每个磁盘分区每秒正在处理的输入/输出请求数",
           "fieldConfig": {
@@ -2991,7 +2991,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Reads completed",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Reads completed",
               "refId": "A",
               "step": 10
             },
@@ -3001,7 +3001,7 @@ spec:
               "hide": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Writes completed",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Writes completed",
               "refId": "B",
               "step": 10
             },
@@ -3011,7 +3011,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}",
+              "legendFormat": "{{`{{`}}device{{`}}`}}",
               "refId": "C"
             }
           ],
@@ -3077,7 +3077,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": null,
           "description": "The time spent on I/O in the natural time of each second.（wall-clock time）",
           "fieldConfig": {
@@ -3136,7 +3136,7 @@ spec:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_ IO time",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_ IO time",
               "refId": "C"
             }
           ],
@@ -3191,7 +3191,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "description": "Time spent on each read/write operation",
           "fieldConfig": {
@@ -3256,7 +3256,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Read time",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Read time",
               "refId": "B"
             },
             {
@@ -3266,7 +3266,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_Write time",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_Write time",
               "refId": "C"
             },
             {
@@ -3275,7 +3275,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}",
+              "legendFormat": "{{`{{`}}device{{`}}`}}",
               "refId": "A",
               "step": 10
             },
@@ -3285,7 +3285,7 @@ spec:
               "hide": true,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}device{{"}}"}}_加权",
+              "legendFormat": "{{`{{`}}device{{`}}`}}_加权",
               "refId": "D"
             }
           ],
@@ -3341,7 +3341,7 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "decimals": 2,
           "description": "Sockets_used - Sockets currently in use\n\nCurrEstab - TCP connections for which the current state is either ESTABLISHED or CLOSE- WAIT\n\nTCP_alloc - Allocated sockets\n\nTCP_tw - Sockets wating close\n\nUDP_inuse - Udp sockets currently in use\n\nRetransSegs - TCP retransmission packets\n\nOutSegs - Number of packets sent by TCP\n\nInSegs - Number of packets received by TCP",
           "fieldConfig": {
@@ -3449,14 +3449,14 @@ spec:
               "expr": "rate(node_netstat_Tcp_PassiveOpens{instance=~'$node'}[$interval])",
               "hide": true,
               "interval": "",
-              "legendFormat": "{{"{{"}}instance{{"}}"}}_Tcp_PassiveOpens",
+              "legendFormat": "{{`{{`}}instance{{`}}`}}_Tcp_PassiveOpens",
               "refId": "G"
             },
             {
               "expr": "rate(node_netstat_Tcp_ActiveOpens{instance=~'$node'}[$interval])",
               "hide": true,
               "interval": "",
-              "legendFormat": "{{"{{"}}instance{{"}}"}}_Tcp_ActiveOpens",
+              "legendFormat": "{{`{{`}}instance{{`}}`}}_Tcp_ActiveOpens",
               "refId": "F"
             },
             {
@@ -3542,7 +3542,7 @@ spec:
           "cacheTimeout": null,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS__VICTORIAMETRICS}",
+          "datasource": "${DS_PROMETHEUS}",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -3628,7 +3628,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 5,
-              "legendFormat": "使用的文件描述符占比_{{"{{"}}instance{{"}}"}}",
+              "legendFormat": "使用的文件描述符占比_{{`{{`}}instance{{`}}`}}",
               "refId": "C"
             }
           ],
@@ -3689,7 +3689,7 @@ spec:
           {
             "allValue": "",
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(origin_prometheus)",
             "hide": 0,
             "includeAll": false,
@@ -3711,7 +3711,7 @@ spec:
           {
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\"}, job)",
             "hide": 0,
             "includeAll": false,
@@ -3733,7 +3733,7 @@ spec:
           {
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}, nodename)",
             "hide": 0,
             "includeAll": true,
@@ -3756,7 +3756,7 @@ spec:
             "allFormat": "glob",
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",nodename=~\"$hostname\"},instance)",
             "hide": 0,
             "includeAll": false,
@@ -3780,7 +3780,7 @@ spec:
             "allFormat": "glob",
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(node_network_info{origin_prometheus=~\"$origin_prometheus\",device!~'tap.*|veth.*|br.*|docker.*|virbr.*|lo.*|cni.*'},device)",
             "hide": 0,
             "includeAll": true,
@@ -3858,7 +3858,7 @@ spec:
           {
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "query_result(topk(1,sort_desc (max(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",instance=~'$node',fstype=~\"ext.?|xfs\",mountpoint!~\".*pods.*\"}) by (mountpoint))))",
             "hide": 2,
             "includeAll": false,
@@ -3880,7 +3880,7 @@ spec:
           {
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",instance=~\"$node\"}, nodename)",
             "hide": 2,
             "includeAll": false,
@@ -3902,7 +3902,7 @@ spec:
           {
             "allValue": null,
             "current": {},
-            "datasource": "${DS__VICTORIAMETRICS}",
+            "datasource": "${DS_PROMETHEUS}",
             "definition": "query_result(count(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}))",
             "hide": 2,
             "includeAll": false,
