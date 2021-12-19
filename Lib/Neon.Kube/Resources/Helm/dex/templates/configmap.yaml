@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dex.configSecretName" . }}
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    issuer: {{ .Values.config.issuer }}
+    storage:
+      type: {{ .Values.config.storage.type }}
+      config:
+        inCluster: {{ .Values.config.storage.config.inCluster }}
+    web:
+      http: 0.0.0.0:5556
+      tlsCert: /etc/dex/tls/tls.crt
+      tlsKey: /etc/dex/tls/tls.key
+    connectors:
+    - type: ldap
+      # Required field for connector id.
+      id: ldap
+      # Required field for connector name.
+      name: LDAP
+      config:
+        host: {{ .Values.config.ldap.host }}
+        insecureNoSSL: true
+        insecureSkipVerify: true
+        rootCA: /etc/certs/ca.crt
+        bindDN: {{ .Values.config.ldap.bindDN }}
+        bindPW: {{ .Values.secrets.ldap }}
+        usernamePrompt: {{ .Values.config.ldap.usernamePrompt }}
+        userSearch:
+          baseDN: {{ .Values.config.ldap.userSearch.baseDN }}
+          filter: "{{ .Values.config.ldap.userSearch.filter }}"
+          username: {{ .Values.config.ldap.userSearch.username }}
+          idAttr: {{ .Values.config.ldap.userSearch.idAttr }}
+          emailAttr: {{ .Values.config.ldap.userSearch.emailAttr }}
+          nameAttr: {{ .Values.config.ldap.userSearch.nameAttr }}
+        groupSearch:
+          baseDN: {{ .Values.config.ldap.groupSearch.baseDN }}
+          filter: "{{ .Values.config.ldap.groupSearch.filter }}"
+          userMatchers:
+          {{- toYaml .Values.config.ldap.groupSearch.userMatchers | nindent 12 }}
+          nameAttr: {{ .Values.config.ldap.groupSearch.nameAttr }}
+    oauth2:
+      skipApprovalScreen: true
+    staticClients:
+    - id: grafana
+      redirectURIs:
+      - 'https://grafana.{{ .Values.cluster.domain }}/login/generic_oauth'
+      name: 'Grafana'
+      secret: "{{- .Values.secrets.grafana }}"
+    - id: kubernetes
+      redirectURIs:
+      - 'https://k8s.{{ .Values.cluster.domain }}/oauth2/callback'
+      - 'https://kiali.{{ .Values.cluster.domain }}/kiali'
+      name: 'Kubernetes'
+      secret: "{{- .Values.secrets.kubernetes }}"
+    - id: harbor
+      redirectURIs:
+      - 'https://registry.{{ .Values.cluster.domain }}/oauth_callback'
+      name: 'Harbor'
+      secret: "{{- .Values.secrets.harbor }}"
+    - id: minio
+      redirectURIs:
+      - 'https://minio-console.{{ .Values.cluster.domain }}/oauth_callback'
+      - 'https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback'
+      name: 'Minio'
+      secret: "{{- .Values.secrets.minio }}"

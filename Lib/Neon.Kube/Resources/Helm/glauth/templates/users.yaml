@@ -1,0 +1,103 @@
+{{- $clusterDomain := .Values.cluster.domain -}}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+  name: glauth
+stringData:
+  config.cfg: |
+    #################
+    # glauth.conf
+
+    #################
+    # General configuration.
+    debug = {{ .Values.debug }}
+    # syslog = true
+    #
+    # Enable hot-reload of configuration on changes
+    # - does NOT work [ldap], [ldaps], [backend] or [api] sections
+    # watchconfig = true
+
+    #################
+    # Server configuration.
+    [ldap]
+      enabled = {{ .Values.config.ldap.enabled }}
+      # run on a non privileged port
+      listen = "0.0.0.0:3893"
+
+    [ldaps]
+    # to enable ldaps genrerate a certificate, eg. with:
+    # openssl req -x509 -newkey rsa:4096 -keyout glauth.key -out glauth.crt -days 365 -nodes -subj '/CN=`hostname`'
+      enabled = {{ .Values.config.ldaps.enabled }}
+      listen = "0.0.0.0:3894"
+      cert = "glauth.crt"
+      key = "glauth.key"
+
+    #################
+    # The backend section controls the data store.
+    [backend]
+      datastore = "{{ .Values.config.backend.datastore }}"
+      baseDN = "{{ .Values.config.backend.baseDN }}"
+      nameformat = "{{ .Values.config.backend.nameformat }}"
+      groupformat = "{{ .Values.config.backend.groupformat }}"
+
+      ## Configure ssh-key attribute name, default is 'sshPublicKey'
+      # sshkeyattr = "ipaSshPubKey"
+
+    [behaviors]
+      # Ignore all capabilities restrictions, for instance allowing every user to perform a search
+      IgnoreCapabilities = false
+      # Enable a "fail2ban" type backoff mechanism temporarily banning repeated failed login attempts
+      LimitFailedBinds = true
+      # How many failed login attempts are allowed before a ban is imposed
+      NumberOfFailedBinds = 3
+      # How long (in seconds) is the window for failed login attempts
+      PeriodOfFailedBinds = 10
+      # How long (in seconds) is the ban duration
+      BlockFailedBindsFor = 60
+      # Clean learnt IP addresses every N seconds
+      PruneSourceTableEvery = 600
+      # Clean learnt IP addresses not seen in N seconds
+      PruneSourcesOlderThan = 600
+
+    #################
+    # Enable and configure the optional REST API here.
+    [api]
+      enabled = {{ .Values.config.api.enabled }}
+      internals = true # debug application performance
+      tls = false # enable TLS for production!!
+      listen = "0.0.0.0:5555"
+  users.cfg: |
+    #################
+    # The users section contains a hardcoded list of valid users.
+    #   to create a passSHA256:   echo -n "mysecret" | openssl dgst -sha256
+
+    # This user record shows all of the possible fields available
+    [[users]]
+      name = "root"
+      givenname="root"
+      sn=""
+      mail = "root@{{ $clusterDomain }}"
+      uidnumber = 5001
+      primarygroup = 5501
+      passsha256 = "{{ .Values.users.root.password | sha256sum }}" # {{ .Values.users.root.password }}
+    [[users]]
+      name = "serviceuser"
+      givenname="serviceuser"
+      sn=""
+      mail = "serviceuser@{{ $clusterDomain }}"
+      uidnumber = 5004
+      primarygroup = 5502
+      passsha256 = "{{ .Values.users.serviceuser.password | sha256sum }}" # {{ .Values.users.serviceuser.password }}
+        [[users.capabilities]]
+        action = "search"
+        object = "*"
+  groups.cfg: |
+    #################
+    # The groups section contains a hardcoded list of valid users.
+    {{ range .Values.groups }}
+    [[groups]]
+      name = "{{ .name }}"
+      gidnumber = {{ .id }}
+    {{ end }}
