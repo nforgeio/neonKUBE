@@ -77,7 +77,9 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster, CalculateCitusMasterAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker, CalculateCitusWorkerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Cortex, CalculateCortexAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Dex, CalculateDexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.EtcdCluster, CalculateEtcdClusterAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Glauth, CalculateGlauthAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Grafana, CalculateGrafanaAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.GrafanaAgent, CalculateGrafanaAgentAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.GrafanaAgentNode, CalculateGrafanaAgentNodeAdvice(cluster));
@@ -94,7 +96,6 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborRegistry, CalculateHarborRegistryAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioIngressGateway, CalculateIstioIngressGatewayAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioProxy, CalculateIstioProxyAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Keycloak, CalculateKeycloakAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Kiali, CalculateKialiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubernetesDashboard, CalculateKubernetesDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice(cluster));
@@ -380,12 +381,22 @@ namespace Neon.Kube
             return advice;
         }
 
-        private static KubeServiceAdvice CalculateKeycloakAdvice(ClusterProxy cluster)
+        private static KubeServiceAdvice CalculateDexAdvice(ClusterProxy cluster)
         {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.Keycloak);
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Dex);
 
-            advice.PodMemoryLimit = ByteUnits.Parse("512Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
+            advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateGlauthAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Glauth);
+
+            advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
 
             return advice;
         }
