@@ -333,7 +333,7 @@ namespace Neon.Kube
             controller.AddNodeStep(configureFirstMasterStepLabel,
                 (controller, node) =>
                 {
-                    node.SetupNode(controller);
+                    node.SetupNode(controller, KubeSetup.ClusterManifest);
                 },
                 (controller, node) => node == cluster.FirstMaster);
 
@@ -344,7 +344,7 @@ namespace Neon.Kube
                 controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
                     {
-                        node.SetupNode(controller);
+                        node.SetupNode(controller, KubeSetup.ClusterManifest);
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
                     (controller, node) => node != cluster.FirstMaster);

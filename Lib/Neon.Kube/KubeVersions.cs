@@ -88,7 +88,7 @@ namespace Neon.Kube
         /// Make sure the package has actually been uploaded.
         /// </para>
         /// </summary>
-        public const string Crio = "1.22.1";
+        public const string Crio = "1.21.4";
 
         /// <summary>
         /// The version of Calico to install.

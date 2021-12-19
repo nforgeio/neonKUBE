@@ -592,9 +592,11 @@ EOF
         /// Performs common node configuration.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void SetupNode(ISetupController controller)
+        /// <param name="clusterManifest">The cluster manifest.</param>
+        public void SetupNode(ISetupController controller, ClusterManifest clusterManifest)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(clusterManifest != null, nameof(clusterManifest));
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
             var clusterDefinition = Cluster.Definition;
@@ -608,7 +610,7 @@ EOF
                     SetupPackageProxy(controller);
                     UpdateHostname();
                     NodeInitialize(controller);
-                    NodeInstallCriO(controller);
+                    NodeInstallCriO(controller, clusterManifest);
                     NodeInstallIPVS(controller);
                     NodeInstallPodman(controller);
                     NodeInstallKubernetes(controller);
