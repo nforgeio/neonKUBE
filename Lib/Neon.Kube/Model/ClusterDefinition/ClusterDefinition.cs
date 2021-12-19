@@ -249,6 +249,7 @@ namespace Neon.Kube
         /// prefix.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         internal bool IsSpecialNeonCluster
         {
             get

@@ -1,0 +1,25 @@
+﻿apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-trivy-cache
+spec:
+  storageClassName: neon-internal-registry
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.trivy.cache.size }}
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-trivy-reports
+spec:
+  storageClassName: neon-internal-registry
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.trivy.reports.size }}
+  volumeMode: Filesystem

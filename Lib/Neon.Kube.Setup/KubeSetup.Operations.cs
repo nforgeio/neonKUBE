@@ -537,7 +537,7 @@ mode: {kubeProxyMode}");
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
-
+                            
                             controller.LogProgress(master, verb: "initialize", message: "cluster");
 
                             var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
@@ -557,6 +557,18 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             if (pStart == -1)
                             {
+                                master.Log("START: [kubeadm init ...] response ============================================");
+
+                                using (var reader = new StringReader(response.AllText))
+                                {
+                                    foreach (var line in reader.Lines())
+                                    {
+                                        master.Log(line);
+                                    }
+                                }
+
+                                master.Log("END: [kubeadm init ...] response ==============================================");
+
                                 throw new KubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
                             }
 
@@ -2840,11 +2852,11 @@ $@"- name: StorageType
                                     return false;
                                 }
                             } 
-                            catch (Exception e)
+                            catch
                             {
-                                
                                 return false;
                             }
+
                             return true;
                         }, TimeSpan.FromMinutes(5),
                         TimeSpan.FromSeconds(60));

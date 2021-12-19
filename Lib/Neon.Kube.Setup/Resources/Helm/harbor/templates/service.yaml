@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    goharbor.io/deploy-mode: harbor
+    goharbor.io/operator-version: v1.0.0
+  name: registry-webhook-service
+  namespace: neon-system
+spec:
+  ports:
+  - port: 443
+    targetPort: 9443
+    protocol: TCP
+    name: https
+  selector:
+    control-plane: harbor-operator

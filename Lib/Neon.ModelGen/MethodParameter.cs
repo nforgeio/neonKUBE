@@ -53,7 +53,7 @@ namespace Neon.ModelGen
         public string Name => ParameterInfo.Name;
 
         /// <summary>
-        /// Specifies how the parameter shoud be passed to the service endpoint.
+        /// Specifies how the parameter should be passed to the service endpoint.
         /// </summary>
         public Pass Pass { get; set; } = Pass.AsQuery;
 

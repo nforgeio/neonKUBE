@@ -90,6 +90,10 @@ OPTIONS:
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
 
+    --check             - Performs development related checks against the cluster
+                          after it's been setup.  Note that checking is disabled
+                          when [--debug] is specified.
+
     --automation-folder - Indicates that the command must not impact normal clusters
                           by changing the current login, Kubernetes config or
                           other files like cluster deployment logs.  This is
@@ -108,7 +112,7 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--max-parallel", "--force", "--upload-charts", "--debug", "--automation-folder" };
+        public override string[] ExtendedOptions => new string[] { "--unredacted", "--max-parallel", "--force", "--upload-charts", "--debug", "--check", "--automation-folder" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -135,6 +139,7 @@ OPTIONS:
             var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
             var unredacted        = commandLine.HasOption("--unredacted");
             var debug             = commandLine.HasOption("--debug");
+            var check             = commandLine.HasOption("--check");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
             var automationFolder  = commandLine.GetOption("--automation-folder");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
@@ -232,6 +237,12 @@ OPTIONS:
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
                     Console.WriteLine();
+
+                    if (check && !debug)
+                    {
+                        await CheckAsync();
+                    }
+
                     Program.Exit(0);
                     break;
 
@@ -259,6 +270,85 @@ OPTIONS:
             }
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Performs development related cluster checks.
+        /// </summary>
+        private async Task CheckAsync()
+        {
+            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+
+            await CheckContainerImagesAsync(k8s);
+        }
+
+        /// <summary>
+        /// Verifies that all of the container images loaded on the pods are specified in the
+        /// container manifest.  Any images that aren't in the manifest need to be preloaded
+        /// into the node image.
+        /// </summary>
+        /// <param name="k8s">The cluster's Kubernertes client.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CheckContainerImagesAsync(Kubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            Console.Error.WriteLine("* Checking container images");
+
+            var installedImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var image in KubeSetup.ClusterManifest.ContainerImages)
+            {
+                installedImages.Add(image.SourceRef);
+            }
+
+            var nodes      = await k8s.ListNodeAsync();
+            var badImages  = new List<string>();
+            var sbBadImage = new StringBuilder();
+
+            foreach (var node in nodes.Items)
+            {
+                foreach (var image in node.Status.Images)
+                {
+                    var found = false;
+
+                    foreach (var name in image.Names)
+                    {
+                        if (installedImages.Contains(name))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        sbBadImage.Clear();
+
+                        foreach (var name in image.Names.OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase))
+                        {
+                            sbBadImage.AppendWithSeparator(name, ", ");
+                        }
+
+                        badImages.Add(sbBadImage.ToString());
+                    }
+                }
+            }
+
+            if (badImages.Count > 0)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine($"WARNING!");
+                Console.Error.WriteLine($"========");
+                Console.Error.WriteLine($"[{badImages.Count}] container images are present in cluster without being included");
+                Console.Error.WriteLine($"in the cluster manifest.  These images need to be added to the node image.");
+                Console.Error.WriteLine();
+
+                foreach (var badImage in badImages)
+                {
+                    Console.Error.WriteLine(badImage);
+                }
+            }
         }
     }
 }

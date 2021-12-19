@@ -1,0 +1,27 @@
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: MetricsInstance
+metadata:
+  name: primary
+  namespace: neon-monitor
+  labels:
+    agent: grafana-agent
+spec:
+  remoteWrite:
+  - url: http://cortex:9009/api/prom/push
+    headers:
+      X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+    send_exemplars: true
+  # Supply an empty namespace selector to look in all namespaces. Remove
+  # this to only look in the same namespace.
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+
+  # Supply an empty namespace selector to look in all namespaces. Remove
+  # this to only look in the same namespace.
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+
+  # Supply an empty namespace selector to look in all namespaces. Remove
+  # this to only look in the same namespace.
+  probeNamespaceSelector: {}
+  probeSelector: {}

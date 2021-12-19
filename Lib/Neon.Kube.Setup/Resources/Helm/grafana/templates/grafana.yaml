@@ -1,0 +1,85 @@
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: grafana
+spec:
+  ingress:
+    enabled: False
+  config:
+    server:
+      root_url: "https://grafana.{{ .Values.cluster.domain }}"
+    feature_toggles:
+      enable: recordedQueries tempoSearch
+    security:
+      disable_brute_force_login_protection: true
+    log:
+      mode: "console"
+      level: "info"
+    auth:
+      oauth_auto_login: true
+    auth.generic_oauth:
+      api_url: >-
+        https://sso.{{ .Values.cluster.domain }}/userinfo
+      auth_url: >-
+        https://sso.{{ .Values.cluster.domain }}/auth
+      client_id: $__env{CLIENT_ID}
+      client_secret: $__env{CLIENT_SECRET}
+      empty_scopes: false
+      enabled: true
+      scopes: openid email profile groups
+      token_url: >-
+        https://sso.{{ .Values.cluster.domain }}/token
+      role_attribute_path: >-
+        contains(groups[*], 'superadmin') && 'Admin' || contains(groups[*], 'admin') && 'Editor' || 'Viewer'
+    database:
+      type: postgres
+      host: db-citus-postgresql.neon-system.svc.cluster.local
+      name: grafana
+      user: neon_service
+      password: $__env{DATABASE_PASSWORD}
+    users:
+      auto_assign_org: true
+      auto_assign_org_id: "1"
+      auto_assign_org_role: Viewer
+    alerting:
+      enabled: false
+    unified_alerting:
+      enabled: true
+  service:
+    name: "grafana"
+    labels:
+      app: "grafana"
+      type: "grafana-service"
+    type: ClusterIP
+    ports:
+      - name: grafana
+        protocol: TCP
+        port: 3001
+        targetPort: grafana-http
+  deployment:
+    annotations:
+      reloader.stakater.com/search: "true"
+    envFrom:
+      - secretRef:
+          name: grafana-secret
+      - secretRef:
+          name: grafana-env
+    nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+  dashboardLabelSelector:
+    - matchExpressions:
+        - { key: app, operator: In, values: [ grafana ] }
+  # initResources:
+  #   # Optionally specify initResources
+  #   limits:
+  #     cpu: 1000m
+  #     memory: 512Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 128Mi
+  resources:
+    # Optionally specify container resources
+    limits:
+      memory: {{ .Values.resources.limits.memory }}
+    requests:
+      memory: {{ .Values.resources.requests.memory }}

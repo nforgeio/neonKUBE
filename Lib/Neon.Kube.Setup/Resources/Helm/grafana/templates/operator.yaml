@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: grafana-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: grafana-operator
+    spec:
+      serviceAccountName: grafana-operator
+      serviceAccount: grafana-operator
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: grafana-operator
+          image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
+          ports:
+            - containerPort: 60000
+              name: metrics
+          command:
+            - /manager
+          args:
+            - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
+            - --grafana-image-tag={{ .Values.image.tag }}
+            - --grafana-plugins-init-container-image={{ .Values.pluginsInit.image.organization }}/{{ .Values.pluginsInit.image.repository }}
+            - --grafana-plugins-init-container-tag={{ .Values.pluginsInit.image.tag }}
+            - --scan-all
+            - --zap-log-level=error
+            - --zap-stacktrace-level=error
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          env:
+            - name: TEMPLATE_PATH
+              value: /usr/local/bin/templates
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "grafana-operator"

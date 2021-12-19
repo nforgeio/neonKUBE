@@ -1,0 +1,596 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-agent-node
+  namespace: neon-monitor
+data:
+  agent.yml: |
+    server:
+      log_level: info
+      http_listen_port: 8080
+    integrations:
+      agent:
+        enabled: true
+        instance: ${HOSTNAME}
+        scrape_integration: true
+      node_exporter:
+        enabled: true
+        wal_truncate_frequency: 15m
+        rootfs_path: /host/root
+        sysfs_path: /host/sys
+        procfs_path: /host/proc
+        scrape_integration: true
+        instance: ${HOSTNAME}
+        include_exporter_metrics: true
+        enable_collectors:
+          - systemd
+    metrics:
+      global:
+        remote_write:
+          - url: http://cortex:9009/api/prom/push
+            headers: 
+              X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+            send_exemplars: true
+        external_labels:
+          cluster: {{ .Values.cluster.name }}
+          node: ${HOSTNAME}
+        scrape_interval: {{ .Values.metrics.global.scrapeInterval | default "60s" }}
+      wal_directory: /var/lib/agent/data
+      wal_cleanup_age: 1h
+      wal_cleanup_period: 15m
+      configs:
+        - name: node
+          host_filter: false
+          wal_truncate_frequency: 15m
+          max_wal_time: 1h
+          scrape_configs:
+            - job_name: crio
+              scrape_interval:  {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
+              metrics_path: /metrics
+              static_configs:
+                - targets: [${HOST_IP}:9090]
+                  labels:
+                    instance: ${HOSTNAME}
+        - host_filter: true
+          name: agent
+          wal_truncate_frequency: 15m
+          max_wal_time: 1h
+          remote_write:
+            - url: http://cortex:9009/api/prom/push
+              headers: 
+                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+              send_exemplars: true
+          scrape_configs:
+            - job_name: 'istiod'
+              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
+              kubernetes_sd_configs:
+              - role: endpoints
+                namespaces:
+                  names:
+                  - neon-ingress
+              relabel_configs:
+              - source_labels:
+                  - __meta_kubernetes_service_name
+                  - __meta_kubernetes_endpoint_port_name
+                action: keep
+                regex: istiod;http-monitoring
+            - job_name: 'envoy-stats'
+              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
+              metrics_path: /stats/prometheus
+              kubernetes_sd_configs:
+              - role: pod
+              relabel_configs:
+              - source_labels: 
+                  - __meta_kubernetes_pod_container_port_name
+                action: keep
+                regex: '.*-envoy-prom'
+            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              job_name: integrations/kubernetes/kubelet
+              scrape_interval:  {{ .Values.metrics.kubelet.scrapeInterval | default "60s" }}
+              kubernetes_sd_configs:
+              - role: node
+              relabel_configs:
+              - replacement: kubernetes.default.svc:443
+                target_label: __address__
+              - regex: (.+)
+                source_labels: [__meta_kubernetes_node_name]
+                replacement: /api/v1/nodes/$1/proxy/metrics
+                target_label: __metrics_path__
+              scheme: https
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              job_name: integrations/kubernetes/cadvisor
+              scrape_interval:  {{ .Values.metrics.cadvisor.scrapeInterval | default "60s" }}
+              kubernetes_sd_configs:
+              - role: node
+              relabel_configs:
+              - replacement: kubernetes.default.svc:443
+                target_label: __address__
+              - regex: (.+)
+                replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+                source_labels:
+                - __meta_kubernetes_node_name
+                target_label: __metrics_path__
+              scheme: https
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    logs:
+      configs:
+        - clients:
+            - url: http://loki:3100/loki/api/v1/push
+              tenant_id: {{ .Values.cluster.name | default "neonkube" }}
+          name: default
+          scrape_configs:
+            - job_name: journal
+              pipeline_stages:
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: journal
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: journal
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              journal:
+                path: /var/log/journal
+                max_age: 12h
+                labels:
+                  job: systemd-journal
+              relabel_configs:
+                - source_labels:
+                    - '__journal__systemd_unit'
+                  target_label: 'unit'
+                - source_labels:
+                    - '__journal__hostname'
+                  target_label: 'hostname'
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: node_name
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - namespace
+                    - app
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - action: replace
+                  replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_uid
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+            - job_name: kubernetes-pods-name
+              kubernetes_sd_configs:
+                - role: pod
+              pipeline_stages:
+                - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_name
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_name
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              relabel_configs:
+                - source_labels:
+                    - __meta_kubernetes_pod_label_name
+                  target_label: __service__
+                - source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: __host__
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __service__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                    - __service__
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_uid
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+            - job_name: kubernetes-pods-app
+              kubernetes_sd_configs:
+                - role: pod
+              pipeline_stages:
+                - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_app
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_app
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              relabel_configs:
+                - action: drop
+                  regex: .+
+                  source_labels:
+                    - __meta_kubernetes_pod_label_name
+                - source_labels:
+                    - __meta_kubernetes_pod_label_app
+                  target_label: __service__
+                - source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: __host__
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __service__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                    - __service__
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_uid
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+            - job_name: kubernetes-pods-direct-controllers
+              kubernetes_sd_configs:
+                - role: pod
+              pipeline_stages:
+                - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_direct_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_direct_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              relabel_configs:
+                - action: drop
+                  regex: .+
+                  separator: ""
+                  source_labels:
+                    - __meta_kubernetes_pod_label_name
+                    - __meta_kubernetes_pod_label_app
+                - action: drop
+                  regex: '[0-9a-z-.]+-[0-9a-f]{8,10}'
+                  source_labels:
+                    - __meta_kubernetes_pod_controller_name
+                - source_labels:
+                    - __meta_kubernetes_pod_controller_name
+                  target_label: __service__
+                - source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: __host__
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __service__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                    - __service__
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_uid
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+            - job_name: kubernetes-pods-indirect-controller
+              kubernetes_sd_configs:
+                - role: pod
+              pipeline_stages:
+                - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_indirect_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_indirect_controllers
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              relabel_configs:
+                - action: drop
+                  regex: .+
+                  separator: ""
+                  source_labels:
+                    - __meta_kubernetes_pod_label_name
+                    - __meta_kubernetes_pod_label_app
+                - action: keep
+                  regex: '[0-9a-z-.]+-[0-9a-f]{8,10}'
+                  source_labels:
+                    - __meta_kubernetes_pod_controller_name
+                - action: replace
+                  regex: ([0-9a-z-.]+)-[0-9a-f]{8,10}
+                  source_labels:
+                    - __meta_kubernetes_pod_controller_name
+                  target_label: __service__
+                - source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: __host__
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __service__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                    - __service__
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_uid
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+            - job_name: kubernetes-pods-static
+              kubernetes_sd_configs:
+                - role: pod
+              pipeline_stages:
+                - cri: {}
+                - metrics:
+                    log_lines_total:
+                      type: Counter
+                      description: "total number of log lines"
+                      prefix: kubernetes_pods_pods_static
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        action: inc
+                    log_bytes_total:
+                      type: Counter
+                      description: "total bytes of log lines"
+                      prefix: kubernetes_pods_pods_static
+                      max_idle_duration: 24h
+                      config:
+                        match_all: true
+                        count_entry_bytes: true
+                        action: add
+              relabel_configs:
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __meta_kubernetes_pod_annotation_kubernetes_io_config_mirror
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_label_component
+                  target_label: __service__
+                - source_labels:
+                    - __meta_kubernetes_pod_node_name
+                  target_label: __host__
+                - action: drop
+                  regex: ""
+                  source_labels:
+                    - __service__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - action: replace
+                  replacement: $1
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                    - __service__
+                  target_label: job
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+                - replacement: /var/log/pods/*$1/*.log
+                  separator: /
+                  source_labels:
+                    - __meta_kubernetes_pod_annotation_kubernetes_io_config_mirror
+                    - __meta_kubernetes_pod_container_name
+                  target_label: __path__
+      positions_directory: /tmp/positions
+    traces:
+      configs:
+        - batch:
+            send_batch_size: 1000
+            timeout: 5s
+          name: default
+          receivers:
+            zipkin:
+              endpoint: "0.0.0.0:9411"
+            jaeger:
+              protocols:
+                thrift_compact: 
+                  endpoint: "0.0.0.0:6831"
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: "0.0.0.0:4317"
+          remote_write:
+            - endpoint: tempo:55680
+              headers: 
+                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
+              insecure: true
+              retry_on_failure:
+                enabled: false
+          tail_sampling:
+            # policies define the rules by which traces will be sampled. Multiple policies
+            # can be added to the same pipeline.
+            policies:
+              - probabilistic:
+                  sampling_percentage: 5
+              - latency:
+                  threshold_ms: 100
+              - status_code:
+                  status_codes:
+                    - "ERROR"
+            # Time that to wait before making a decision for a trace.
+            # Longer wait times reduce the probability of sampling an incomplete trace at
+            # the cost of higher memory usage.
+            decision_wait: 5s
+          load_balancing:
+            receiver_port: 4318
+            exporter:
+              insecure: true
+            resolver:
+              dns:
+                hostname: grafana-agent-node.neon-monitor
+                port: 4318
+          service_graphs:
+            enabled: true
+          spanmetrics:
+            metrics_instance: agent
+          scrape_configs:
+            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              job_name: kubernetes-pods
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+              tls_config:
+                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  insecure_skip_verify: false
+  strategies.json: '{"default_strategy": {"param": 1.000, "type": "probabilistic"}}'

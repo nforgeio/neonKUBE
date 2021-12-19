@@ -96,7 +96,7 @@ namespace TemporalService
                     Log.LogInfo("Starting worker.");
                     await worker.StartAsync();
 
-                    // Let KubeService know that we're running.
+                    // Let NeonService know that we're running.
 
                     Log.LogInfo("Ready for work.");
                     await SetRunningAsync();

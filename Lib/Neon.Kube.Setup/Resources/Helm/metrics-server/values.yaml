@@ -1,0 +1,8 @@
+# This is default chart for Calico, that deploys Calico CNI on AWS EKS. 
+# If this chart is used for deployment on other platforms, please change values datastore,
+# network, vxlan and ipam according to your deployment. 
+
+image:
+  organization: neon-registry.node.local
+  repository: metrics-server
+  tag: v0.4.2

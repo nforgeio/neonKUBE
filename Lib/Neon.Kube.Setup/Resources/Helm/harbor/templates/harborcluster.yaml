@@ -1,0 +1,163 @@
+﻿apiVersion: goharbor.io/v1beta1
+kind: HarborCluster
+metadata:
+  name: registry
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  version: {{ .Values.harbor.version }}
+  exporter:
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 8 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+  chartmuseum:
+    absoluteUrl: false
+    image: {{ .Values.image.organization }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 8 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    resources: {}
+  core:
+    image: {{ .Values.image.organization }}/harbor-core:v{{ .Values.harbor.version }}
+    resources: {}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 8 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    tokenIssuer:
+      kind: Issuer
+      name: neon-system-selfsigned-issuer
+  database:
+    kind: PostgreSQL
+    spec:
+      postgresql:
+        hosts:
+          - host: db-citus-postgresql.neon-system
+            port: 5432
+        passwordRef: registry
+        prefix: harbor_
+        sslMode: disable
+        username: neon_service
+  expose:
+    core:
+      ingress:
+        host: registry.{{ .Values.cluster.domain }}
+      tls:
+        certificateRef: neon-cluster-certificate
+    notary:
+      ingress:
+        host: notary.{{ .Values.cluster.domain }}
+      tls:
+        certificateRef: neon-cluster-certificate
+  externalURL: https://registry.{{ .Values.cluster.domain }}
+  harborAdminPasswordRef: registry
+  storage:
+    kind: "S3"
+    spec:
+      redirect:
+        enable: false
+      s3:
+        accesskey: {{ .Values.storage.s3.accessKey }}
+        bucket: harbor
+        encrypt: false
+        region: neon
+        regionendpoint: http://minio.neon-system
+        secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
+        secure: false
+        skipverify: true
+        storageclass: STANDARD
+        v4auth: true
+  imageSource:
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    repository: {{ .Values.image.organization }}
+  internalTLS:
+    enabled: false
+  jobservice:
+    image: {{ .Values.image.organization }}/harbor-jobservice:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    resources: {}
+    workerCount: 10
+  logLevel: info
+  notary:
+    migrationEnabled: true
+    server:
+      image: {{ .Values.image.organization }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- if .Values.tolerations }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+    signer:
+      image: {{ .Values.image.organization }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
+      nodeSelector:
+      {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- if .Values.tolerations }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+  portal:
+    resources: {}
+  cache:
+    kind: Redis
+    spec:
+      redis:
+        host: neon-redis
+        port: 26379
+        sentinelMasterSet: master
+  registry:
+    image: {{ .Values.image.organization }}/harbor-registry-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    relativeURLs: true
+    certificateRefs:
+      - registry-harbor-harbor-core-tokencert
+    resources: {}
+    metrics:
+      enabled: true
+  trivy:
+    image: {{ .Values.image.organization }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
+    nodeSelector:
+    {{- toYaml .Values.nodeSelector | nindent 6 }}
+    {{- if .Values.tolerations }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    resources: {}
+    skipUpdate: false
+    storage:
+      cachePersistentVolume:
+        claimName: registry-trivy-cache
+  updateStrategyType: RollingUpdate

@@ -84,11 +84,8 @@ namespace Neon.Kube
         where TMetadata : class
     {
         private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
-        private const string            imageTypePath    = "/etc/neonkube/image-type";
-        private const string            imageVersionPath = "/etc/neonkube/image-version";
 
         private ClusterProxy        cluster;
-        private KubeImageType?      cachedImageType;
         private StringBuilder       internalLogBuilder;
         private TextWriter          internalLogWriter;
         private bool                rootCertsUpdated = false;
@@ -175,28 +172,19 @@ namespace Neon.Kube
         {
             get
             {
-                if (cachedImageType.HasValue)
+                if (FileExists(KubeConst.ImageTypePath))
                 {
-                    return cachedImageType.Value;
-                }
-
-                if (FileExists(imageTypePath))
-                {
-                    cachedImageType = NeonHelper.ParseEnum<KubeImageType>(DownloadText(imageTypePath).Trim(), KubeImageType.Unknown);
+                    return NeonHelper.ParseEnum<KubeImageType>(DownloadText(KubeConst.ImageTypePath).Trim(), KubeImageType.Unknown);
                 }
                 else
                 {
-                    cachedImageType = KubeImageType.Unknown;
+                    return KubeImageType.Unknown;
                 }
-
-                return cachedImageType.Value;
             }
 
             set
             {
-                cachedImageType = value;
-
-                UploadText(imageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
+                UploadText(KubeConst.ImageTypePath, NeonHelper.EnumToString(value), permissions: "664", owner: "sysadmin");
             }
         }
 
@@ -214,26 +202,26 @@ namespace Neon.Kube
         {
             get
             {
-                if (!FileExists(imageVersionPath))
+                if (!FileExists(KubeConst.ImageVersionPath))
                 {
                     return null;
                 }
 
-                return SemanticVersion.Parse(base.DownloadText(imageVersionPath));
+                return SemanticVersion.Parse(base.DownloadText(KubeConst.ImageVersionPath));
             }
 
             set
             {
                 if (value == null)
                 {
-                    if (FileExists(imageVersionPath))
+                    if (FileExists(KubeConst.ImageVersionPath))
                     {
-                        RemoveFile(imageVersionPath);
+                        RemoveFile(KubeConst.ImageVersionPath);
                     }
                 }
                 else
                 {
-                    UploadText(imageVersionPath, value.ToString());
+                    UploadText(KubeConst.ImageVersionPath, value.ToString());
                 }
             }
         }
@@ -385,48 +373,19 @@ namespace Neon.Kube
             return clone;
         }
 
-        /// <summary>
-        /// Indicates whether an idempotent action has been completed.
-        /// </summary>
-        /// <param name="actionId">The action ID.</param>
-        /// <returns><c>true</c> when the action has already been completed.</returns>
+        /// <inheritdoc/>
         public bool GetIdempotentState(string actionId)
         {
             return FileExists(LinuxPath.Combine(KubeNodeFolders.State, actionId));
         }
 
-        /// <summary>
-        /// Explicitly indicates that an idempotent action has been completed
-        /// on the node.
-        /// </summary>
-        /// <param name="actionId">The action ID.</param>
+        /// <inheritdoc/>
         public void SetIdempotentState(string actionId)
         {
             SudoCommand($"mkdir -p {KubeNodeFolders.State} && touch {KubeNodeFolders.State}/{actionId}", RunOptions.FaultOnError);
         }
 
-        /// <summary>
-        /// Invokes a named action on the node if it has never been been performed
-        /// on the node before.
-        /// </summary>
-        /// <param name="actionId">The node-unique action ID.</param>
-        /// <param name="action">The action to be performed.</param>
-        /// <returns><c>true</c> if the action was invoked.</returns>
-        /// <remarks>
-        /// <para>
-        /// <paramref name="actionId"/> must uniquely identify the action on the node.
-        /// This may include letters, digits, dashes and periods as well as one or
-        /// more forward slashes that can be used to organize idempotent status files
-        /// into folders.
-        /// </para>
-        /// <para>
-        /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existence of
-        /// this file and returns immediately without invoking the action if it is 
-        /// present.
-        /// </para>
-        /// </remarks>
+        /// <inheritdoc/>
         public bool InvokeIdempotent(string actionId, Action action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
@@ -475,28 +434,7 @@ namespace Neon.Kube
             return true;
         }
 
-        /// <summary>
-        /// Invokes a named action asynchronously on the node if it has never been been performed
-        /// on the node before.
-        /// </summary>
-        /// <param name="actionId">The node-unique action ID.</param>
-        /// <param name="action">The asynchronous action to be performed.</param>
-        /// <returns><c>true</c> if the action was invoked.</returns>
-        /// <remarks>
-        /// <para>
-        /// <paramref name="actionId"/> must uniquely identify the action on the node.
-        /// This may include letters, digits, dashes and periods as well as one or
-        /// more forward slashes that can be used to organize idempotent status files
-        /// into folders.
-        /// </para>
-        /// <para>
-        /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
-        /// To ensure idempotency, this method first checks for the existence of
-        /// this file and returns immediately without invoking the action if it is 
-        /// present.
-        /// </para>
-        /// </remarks>
+        /// <inheritdoc/>
         public async Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));

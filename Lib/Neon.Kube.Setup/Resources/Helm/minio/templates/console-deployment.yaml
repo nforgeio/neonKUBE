@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "minio-operator.console-fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "minio-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.console.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "minio-operator.console-selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "minio-operator.console-selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.operator.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: console-sa
+    {{- with .Values.console.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.console.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.console.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.console.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: config
+          secret:
+            secretName: minio-client
+            defaultMode: 420
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.console.image.organization }}/{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
+          imagePullPolicy: {{ .Values.console.image.pullPolicy }}
+          ports:
+          - containerPort: 9090
+            name: http
+          - containerPort: 9443
+            name: https
+          args:
+          - server
+          env:
+          - name: ACCESS_KEY
+            valueFrom:
+              secretKeyRef: 
+                name: minio
+                key: accesskey
+          - name: SECRET_KEY
+            valueFrom:
+              secretKeyRef: 
+                name: minio
+                key: secretkey
+          - name: CONSOLE_OPERATOR_MODE
+            value: "on"
+          - name: CONSOLE_IDP_URL
+            value: "https://sso.{{ .Values.cluster.domain }}/.well-known/openid-configuration" 
+          - name: CONSOLE_IDP_CALLBACK
+            value: "https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback"
+          - name: CONSOLE_IDP_CLIENT_ID
+            value: minio
+          - name: CONSOLE_IDP_SECRET
+            valueFrom:
+              secretKeyRef:
+                name:  dex
+                key: MINIO_CLIENT_SECRET
+          - name: CONSOLE_IDP_SCOPES
+            value: "openid,email,profile,groups"
+          - name: CONSOLE_IDP_CLAIM_NAME
+            value: groups
+          resources:
+            {{- toYaml .Values.console.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              readOnly: true
+              mountPath: /.mc-config
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "cp /.mc-config/config.json /.mc/config.json"]
+      {{- with .Values.console.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}

@@ -1,0 +1,759 @@
+# Default values for openebs.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  pspEnabled: false
+
+serviceAccount:
+  create: true
+  name: openebs-maya-operator
+
+release:
+  # "openebs.io/version" label for control plane components
+  version: "2.4.0"
+
+image:
+  pullPolicy: IfNotPresent
+  repository: ""
+
+apiserver:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-m-apiserver
+    tag: 2.12.2
+  replicas: 1
+  ports:
+    externalPort: 5656
+    internalPort: 5656
+  sparse:
+    enabled: "false"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+defaultStorageConfig:
+  enabled: "true"
+
+# Directory used by the OpenEBS to store debug information and so forth
+# that are generated in the course of running OpenEBS containers.
+varDirectoryPath:
+  baseDir: "/var/openebs"
+
+provisioner:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-k8s-provisioner
+    tag: 2.12.2
+  replicas: 1
+  enableLeaderElection: true
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+localprovisioner:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-provisioner-localpv
+    tag: 3.0.0
+  replicas: 1
+  enableLeaderElection: true
+  basePath: "/var/openebs/local"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+snapshotOperator:
+  enabled: true
+  controller:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-snapshot-controller
+      tag: 2.12.2
+  provisioner:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-snapshot-provisioner
+      tag: 2.12.2
+  replicas: 1
+  enableLeaderElection: true
+  upgradeStrategy: "Recreate"
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+ndm:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-node-disk-manager
+    tag: 1.7.0
+  sparse:
+    path: "/var/openebs/sparse"
+    size: "10737418240"
+    count: "0"
+  filters:
+    enableOsDiskExcludeFilter: true
+    enableVendorFilter: true
+    excludeVendors: "CLOUDBYT,OpenEBS"
+    enablePathFilter: true
+    includePaths: ""
+    excludePaths: "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd"
+  probes:
+    enableSeachest: false
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+
+ndmOperator:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-node-disk-operator
+    tag: 1.7.0
+  replicas: 1
+  upgradeStrategy: Recreate
+  nodeSelector: {}
+  tolerations:
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+  readinessCheck:
+    initialDelaySeconds: 4
+    periodSeconds: 10
+    failureThreshold: 1
+
+ndmExporter:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-node-disk-exporter
+    tag: 1.7.0
+  nodeExporter:
+    name: ndm-node-exporter
+    podLabels:
+      name: openebs-ndm-node-exporter
+    # The TCP port number used for exposing ndm-node-exporter metrics.
+    # If not set, service will not be created to expose metrics endpoint to serviceMonitor
+    # and listen-port flag will not be set and container port will be empty.
+    metricsPort: 9101
+  clusterExporter:
+    name: ndm-cluster-exporter
+    podLabels:
+      name: openebs-ndm-cluster-exporter
+    # The TCP port number used for exposing ndm-cluster-exporter metrics.
+    # If not set, service will not be created to expose metrics endpoint to serviceMonitor
+    # and listen-port flag will not be set and container port will be empty.
+    metricsPort: 9100
+
+webhook:
+  enabled: true
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-admission-server
+    tag: 2.12.2
+  failurePolicy: "Fail"
+  replicas: 1
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 60
+  nodeSelector: {}
+  tolerations: 
+  - operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+    effect: "NoExecute"
+  affinity: {}
+  hostNetwork: false
+
+jiva:
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-jiva
+    tag: 3.0.0
+  replicas: 3
+  defaultStoragePath: "/var/openebs"
+
+cstor:
+  pool:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-cstor-pool
+      tag: 3.0.0
+  poolMgmt:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-cstor-pool-manager
+      tag: 3.0.0
+  target:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-cstor-istgt
+      tag: 3.0.0
+  volumeMgmt:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-cstor-volume-mgmt
+      tag: 2.12.2
+  webhook:
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-cstor-webhook
+      tag: 3.0.0
+
+helper:
+  image:
+    organization: neon-registry.node.local
+    repository: openebs-linux-utils
+    tag: 3.0.0
+
+featureGates:
+  enabled: true
+  GPTBasedUUID:
+    enabled: true
+    featureGateFlag: "GPTBasedUUID"
+  APIService:
+    enabled: false
+    featureGateFlag: "APIService"
+  UseOSDisk:
+    enabled: false
+    featureGateFlag: "UseOSDisk"
+  MountChangeDetection:
+    enabled: false
+    featureGateFlag: "MountChangeDetection"
+
+crd:
+  enableInstall: true
+
+policies:
+  monitoring:
+    enabled: true
+    image:
+      organization: neon-registry.node.local
+      repository: openebs-m-exporter
+      tag: 3.0.0
+
+analytics:
+  enabled: false
+  # Specify in hours the duration after which a ping event needs to be sent.
+  pingInterval: "24h"
+
+
+## Configuration for installing openebs-monitoring addons
+openebsMonitoringAddon:
+  cStor:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+      ## Endpoints of the selected service to be monitored
+      endpoints:
+        ## Name of the endpoint's service port
+        ## Mutually exclusive with targetPort
+        #  port: ""
+        port: exporter
+
+        ## HTTP path to scrape for metrics
+        #  path: /metrics
+        path: /metrics
+
+        ## relabel configs to apply to samples before ingestion.
+        ##
+        # relabelings: []
+        #   - sourceLabels: [__meta_kubernetes_service_name]
+        #     separator: ;
+        #     regex: (.*)
+        #     targetLabel: service
+        #     replacement: $1
+        #     action: replace
+        relabelings:
+          ## RelabelConfigs to apply to samples before scraping.
+          ## More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+          ## To know more about RelabelConfig schema visit: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
+          - sourceLabels: [__meta_kubernetes_pod_label_monitoring]
+            regex: volume_exporter_prometheus
+            action: keep
+          ## Below entry ending with vsm is deprecated and is maintained for
+          ## backward compatibility purpose.
+          - sourceLabels: [__meta_kubernetes_pod_label_vsm]
+            action: replace
+            targetLabel: openebs_pv
+          ## Below entry is the correct entry. Though the above and below entries
+          ## are having same target_label as openebs_pv, only one of them will be
+          ## valid for any release.
+          - sourceLabels:
+              [__meta_kubernetes_pod_label_openebs_io_persistent_volume]
+            action: replace
+            targetLabel: openebs_pv
+          - sourceLabels:
+              [__meta_kubernetes_pod_label_openebs_io_persistent_volume_claim]
+            action: replace
+            targetLabel: openebs_pvc
+          - sourceLabels:
+              [__meta_kubernetes_endpoints_label_openebs_io_cas_type]
+            action: replace
+            targetLabel: openebs_cas_type
+
+      ## Label selector for services to which this ServiceMonitor applies
+      # selector: {}
+      #   matchLabels: {}
+
+      ## Example
+
+      # selector:
+      #   matchLabels:
+      #     cas-type: cstor
+
+      selector:
+        matchLabels:
+          openebs.io/cas-type: cstor
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select
+      # matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+    podMonitor:
+      enabled: true
+
+      ## Endpoints of the selected pods to be monitored
+      ## https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#podmetricsendpoint
+      podMetricsEndpoints:
+        ## Name or number of the endpoint's target port
+        ## Mutually exclusive with port
+        #  targetPort: ""
+        targetPort: 9500
+
+        ## HTTP path to scrape for metrics
+        #     path: /metrics
+        path: /metrics
+
+        ## relabel configs to apply to samples before ingestion.
+        ##
+        #     relabelings: []
+        #     - sourceLabels: [__meta_kubernetes_pod_node_name]
+        #       separator: ;
+        #       regex: ^(.*)$
+        #       targetLabel: nodename
+        #       replacement: $1
+        #       action: replace
+        relabelings:
+          ## RelabelConfigs to apply to samples before scraping.
+          ## More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+          ## To know more about RelabelConfig schema visit: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
+          - sourceLabels:
+              [__meta_kubernetes_pod_annotation_openebs_io_monitoring]
+            regex: pool_exporter_prometheus
+            action: keep
+            ## Adding comma-separated source_labels below in order to fetch the metrics for pool claim instances of SPC and CSPC kind
+          - sourceLabels:
+              [
+                __meta_kubernetes_pod_label_openebs_io_storage_pool_claim,
+                __meta_kubernetes_pod_label_openebs_io_cstor_pool_cluster,
+              ]
+            action: replace
+            ## separator: Separator placed between concatenated source label values, default -> ;
+            separator: " "
+            targetLabel: storage_pool_claim
+            ## Adding comma-separated source_labels below in order to fetch the metrics for pool instances of CSP and CSPI kind
+          - sourceLabels:
+              [
+                __meta_kubernetes_pod_label_openebs_io_cstor_pool,
+                __meta_kubernetes_pod_label_openebs_io_cstor_pool_instance,
+              ]
+            action: replace
+            ## separator: Separator placed between concatenated source label values, default -> ;
+            separator: " "
+            targetLabel: cstor_pool
+          - sourceLabels:
+              [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: ${1}:${2}
+            targetLabel: __address__
+
+      ## Label selector for pods to which this PodMonitor applies
+      # selector: {}
+      #   matchlabels: {}
+
+      ## Example
+
+      # selector: {}
+      #   matchLabels:
+      #       app: cstor-pod
+
+      selector:
+        matchLabels:
+          app: cstor-pool
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select using matchNames
+      # matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+  jiva:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+      ## Endpoints of the selected service to be monitored
+      endpoints:
+        ## Name of the endpoint's service port
+        ## Mutually exclusive with targetPort
+        #  port: ""
+        port: exporter
+
+        ## HTTP path to scrape for metrics
+        #  path: /metrics
+        path: /metrics
+
+        ## relabel configs to apply to samples before ingestion.
+        ##
+        #  relabelings: []
+        #    - sourceLabels: [__meta_kubernetes_service_name]
+        #      separator: ;
+        #      regex: (.*)
+        #      targetLabel: service
+        #      replacement: $1
+        #      action: replace
+        relabelings:
+          ## RelabelConfigs to apply to samples before scraping.
+          ## More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+          ## To know more about RelabelConfig schema visit: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
+          ## Below entry ending with vsm is deprecated and is maintained for
+          ## backward compatibility purpose.
+          - sourceLabels: [__meta_kubernetes_pod_label_vsm]
+            action: replace
+            targetLabel: openebs_pv
+          ## Below entry is the correct entry. Though the above and below entries
+          ## are having same target_label as openebs_pv, only one of them will be
+          ## valid for any release.
+          - sourceLabels:
+              [__meta_kubernetes_pod_label_openebs_io_persistent_volume]
+            action: replace
+            targetLabel: openebs_pv
+          - sourceLabels:
+              [__meta_kubernetes_pod_label_openebs_io_persistent_volume_claim]
+            action: replace
+            targetLabel: openebs_pvc
+          - sourceLabels:
+              [__meta_kubernetes_endpoints_label_openebs_io_cas_type]
+            action: replace
+            targetLabel: openebs_cas_type
+
+      ## Label selector for services to which this ServiceMonitor applies
+      # selector: {}
+      #   matchLabels: {}
+
+      ## Example
+
+      # selector:
+      #   matchLabels:
+      #     cas-type: jiva
+
+      selector:
+        matchLabels:
+          openebs.io/cas-type: jiva
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select
+      #   matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+  lvmLocalPV:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+      ## Endpoints of the selected service to be monitored
+      endpoints:
+        ## Name of the endpoint's service port
+        ## Mutually exclusive with targetPort
+        #  port: ""
+        port: metrics
+
+        ## HTTP path to scrape for metrics
+        #  path: /metrics
+        path: /metrics
+
+      ## Label selector for services to which this ServiceMonitor applies
+      # selector: {}
+      #   matchLabels: {}
+
+      ## Example
+
+      # selector:
+      #   matchLabels:
+      #     name: openebs-lvm-node
+
+      selector:
+        matchLabels:
+          name: openebs-lvm-node
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select
+      #   matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+  deviceLocalPV:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+      ## Endpoints of the selected service to be monitored
+      endpoints:
+        ## Name of the endpoint's service port
+        ## Mutually exclusive with targetPort
+        #  port: ""
+        port: metrics
+
+        ## HTTP path to scrape for metrics
+        #  path: /metrics
+        path: /metrics
+
+      ## Label selector for services to which this ServiceMonitor applies
+      # selector: {}
+      #   matchLabels: {}
+
+      ## Example
+
+      # selector:
+      #   matchLabels:
+      #     name: openebs-device-node
+
+      selector:
+        matchLabels:
+          name: openebs-device-node
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select
+      #   matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+  ndm:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+      ## Endpoints of the selected service to be monitored
+      endpoints:
+        ## Name of the endpoint's service port
+        ## Mutually exclusive with targetPort
+        #  port: ""
+        port: metrics
+
+        ## HTTP path to scrape for metrics
+        #  path: /metrics
+        path: /metrics
+
+      ## Label selector for services to which this ServiceMonitor applies
+      # selector: {}
+      #   matchLabels: {}
+
+      ## Example
+
+      # selector:
+      #   matchLabels:
+      #     name: openebs-lvm-node
+
+      selector:
+        matchLabels:
+          name: openebs-ndm-exporter
+
+      ## Namespaces from which services are selected
+      # namespaceSelector: []
+      ## Match any namespace
+      #   any: true
+
+      ## Example
+
+      # namespaceSelector:
+      #   any: true
+
+      ## Explicit list of namespace names to select
+      #   matchNames: []
+
+      ## Example
+
+      # namespaceSelector:
+      #   matchNames:
+      #   - openebs
+      #   - default
+
+      namespaceSelector:
+        any: true
+
+  npd:
+    enabled: true
+    dashboards:
+      enabled: true
+    alertRules:
+      enabled: true
+
+  volume:
+    enabled: true
+    alertRules:
+      enabled: true
+
+  localPV:
+    enabled: true
+    dashboards:
+      enabled: true
+
+  zfsLocalPV:
+    enabled: true
+    dashboards:
+      enabled: true

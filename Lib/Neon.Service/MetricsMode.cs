@@ -55,7 +55,7 @@ namespace Neon.Service
         /// </para>
         /// <note>
         /// This mode is really intended for test environments where these errors aren't
-        /// relevent.  We don't recommend this for production deployments.
+        /// relavent.  We don't recommend this for production deployments.
         /// </note>
         /// </summary>
         ScrapeIgnoreErrors,

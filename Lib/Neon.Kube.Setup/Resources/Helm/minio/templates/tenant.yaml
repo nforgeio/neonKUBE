@@ -1,0 +1,97 @@
+{{- $clusterDomain := .Values.cluster.domain -}}
+{{ range .Values.tenants }}
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  ## Optionally pass labels to be applied to the statefulset pods
+  labels:
+    app: minio
+  {{ if .scheduler.name }}
+  scheduler:
+    name: {{ .scheduler.name }}
+  {{ end }}
+spec:
+  image: "{{ .image.organization}}/{{ .image.repository }}:{{ .image.tag }}"
+  imagePullPolicy: {{ .image.pullPolicy }}
+  {{ if .imagePullSecret.name }}
+  imagePullSecret:
+    name: {{ .imagePullSecret.name }}
+  {{ end }}
+  ## Secret with credentials to be used by MinIO Tenant.
+  credsSecret:
+    name: {{ .secrets.name }}
+  {{ range .pools }}
+  pools:
+    - servers: {{ .servers }}
+      volumesPerServer: {{ .volumesPerServer }}
+      volumeClaimTemplate:
+        metadata:
+          name: data
+        spec:
+          storageClassName: {{ .storageClassName }}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .size }}
+      {{- with .tolerations }}
+      tolerations:
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
+      {{- with .affinity }}
+      affinity:
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
+      {{- with .resources }}
+      resources:
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
+      {{- with .securityContext }}
+      securityContext:
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
+  {{ end }}
+  mountPath: {{ .mountPath }}
+  subPath: {{ .subPath }}
+  {{- with .certificate.externalCertSecret }}
+  externalCertSecret:
+    {{ toYaml . | nindent 6 }}
+  {{ end }}
+  requestAutoCert: {{ .certificate.requestAutoCert }}
+  s3:
+    bucketDNS: {{ .s3.bucketDNS }}
+  {{- with .certificate.certConfig }}
+  certConfig:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  podManagementPolicy: {{ .podManagementPolicy }}
+  {{- with .serviceMetadata }}
+  serviceMetadata:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  env:
+    - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+      value: "https://sso.{{ $clusterDomain }}/.well-known/openid-configuration" 
+    - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
+      value: "https://minio-console.{{ $clusterDomain }}/oauth_callback"
+    - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+      value: minio
+    - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: dex
+          key: MINIO_CLIENT_SECRET
+  {{- with .env }}
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{ if .priorityClassName }}
+  priorityClassName: {{ .priorityClassName }}
+  {{ end }}
+{{ end }}

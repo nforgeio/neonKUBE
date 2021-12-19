@@ -1,0 +1,19 @@
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: grafana-dashboard-virtual-service
+  namespace: neon-ingress
+spec:
+  gateways:
+    - neoncluster-gateway
+  hosts:
+    - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: grafana.neon-monitor.svc.cluster.local
+            port:
+              number: 3000

@@ -1,0 +1,96 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: 'neon-system/serving-cert'
+  name: '{{ include "chart.fullname" . }}-validating-webhook-configuration'
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  - v1
+  clientConfig:
+    service:
+      name: registry-webhook-service
+      namespace: neon-system
+      path: /validate-goharbor-io-v1beta1-harbor
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  name: vharbor.kb.io
+  rules:
+  - apiGroups:
+    - goharbor.io
+    - goharbor.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - harbors
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  - v1
+  clientConfig:
+    service:
+      name: registry-webhook-service
+      namespace: neon-system
+      path: /validate-goharbor-io-v1beta1-jobservice
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  name: vjobservice.kb.io
+  rules:
+  - apiGroups:
+    - goharbor.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - jobservices
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  - v1
+  clientConfig:
+    service:
+      name: registry-webhook-service
+      namespace: neon-system
+      path: /validate-goharbor-io-v1beta1-registry
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  name: vregistry.kb.io
+  rules:
+  - apiGroups:
+    - goharbor.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - registries
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  - v1
+  clientConfig:
+    service:
+      name: registry-webhook-service
+      namespace: neon-system
+      path: /validate-goharbor-io-v1beta1-harborcluster
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  name: vharborcluster.kb.io
+  rules:
+  - apiGroups:
+    - goharbor.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - harborclusters
+  sideEffects: None

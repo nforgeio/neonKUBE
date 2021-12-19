@@ -1,0 +1,59 @@
+{{ if .Values.cr.create }}
+---
+apiVersion: kiali.io/v1alpha1
+kind: Kiali
+metadata:
+  {{- if .Values.watchNamespace }}
+  namespace: {{ .Values.watchNamespace }}
+  {{- else if .Values.cr.namespace }}
+  namespace: {{ .Values.cr.namespace }}
+  {{- end }}
+  name: {{ .Values.cr.name }}
+  labels:
+  {{- include "kiali-operator.labels" . | nindent 4 }}
+annotations:
+  ansible.operator-sdk/verbosity: {{ .Values.debug.verbosity | quote }}
+spec:
+  version: default
+  istio_namespace: neon-ingress
+  auth:
+    strategy: openid
+    openid:
+      client_id: "kubernetes"
+      issuer_uri: "https://sso.{{ .Values.cluster.domain }}"
+      username_claim: "email"
+      scopes:
+        - openid
+        - email
+        - profile
+        - groups
+  deployment:
+    image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
+    image_version: {{ .Values.image.kiali.tag }}
+    image_pull_policy: {{ .Values.image.kiali.pullPolicy }}
+    pullPolicy: {{ .Values.image.kiali.pullSecrets }}
+    accessible_namespaces:
+    - '**'
+    service_type: "ClusterIP"
+  external_services:
+    grafana:
+      auth:
+        type: basic
+        password: "secret:kiali:grafanaPassword"
+        username: kiali
+      enabled: true
+      in_cluster_url: http://grafana.neon-monitor:3000
+      url: https://grafana.{{ .Values.cluster.domain }}
+    istio:
+      enabled: true
+    prometheus:
+      enabled: true
+      health_check_url: http://cortex.neon-monitor:9009/api/prom
+      url: http://cortex.neon-monitor:9009/api/prom
+      custom_headers: 
+        X-Scope-OrgID: {{ .Values.cluster.name }}
+    tracing:
+      enabled: true
+      in_cluster_url: http://tempo.neon-monitor:16686
+      url: http://localhost:16686
+{{ end }}

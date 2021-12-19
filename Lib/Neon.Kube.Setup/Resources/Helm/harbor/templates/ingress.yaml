@@ -1,0 +1,88 @@
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: registry-gateway
+  namespace: neon-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - neon-registry.node.local
+      port:
+        name: http-neoncluster
+        number: 8080
+        protocol: HTTP
+      tls:
+        httpsRedirect: false
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: harbor-virtual-service
+  namespace: neon-ingress
+spec:
+  gateways:
+    - neoncluster-gateway
+    - registry-gateway
+  hosts:
+    - {{ .Values.ingress.registry.subdomain }}.{{ .Values.cluster.domain }}
+    - {{ .Values.ingress.notary.subdomain }}.{{ .Values.cluster.domain }}
+    - neon-registry.node.local
+  http:
+    - match:
+        - uri:
+            prefix: /c/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /v2/
+      route:
+        - destination:
+            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - fault:
+        abort:
+          httpStatus: 404
+      match:
+        - uri:
+            prefix: /v1/
+      route:
+        - destination:
+            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /service/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /chartrepo/
+      route:
+        - destination:
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
+            port:
+              number: 80
+    - route:
+        - destination:
+            host: registry-harbor-harbor-portal.neon-system.svc.cluster.local
+            port:
+              number: 80

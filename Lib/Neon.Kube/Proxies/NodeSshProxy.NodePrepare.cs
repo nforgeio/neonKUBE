@@ -935,28 +935,6 @@ systemctl daemon-reload
         }
 
         /// <summary>
-        /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE Helm folder.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void NodeInstallHelmArchive(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            using (var ms = new MemoryStream())
-            {
-                controller.LogProgress(this, verb: "setup", message: "helm charts (zip)");
-
-                var helmFolder = KubeHelper.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
-
-                helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
-
-                ms.Seek(0, SeekOrigin.Begin);
-                Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
-            }
-        }
-
-        /// <summary>
         /// Disables the <b>neon-init</b> service during cluster setup because it is no
         /// longer necessary after the node first boots and its credentials and network
         /// settings have been configured.
@@ -1143,7 +1121,7 @@ fi
 
 # Generate the CRI-O configuration.
 
-cat <<EOF > /etc/containers/registries.conf
+cat <<EOF > /etc/containers/registries.conf.d/00-neon-cluster.conf
 {sbRegistryConfig}
 EOF
 
@@ -1592,7 +1570,7 @@ apt-mark hold podman
         }
 
         /// <summary>
-        /// Installs the Helm client.
+        /// Installs the <b>Helm</b> client.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void NodeInstallHelm(ISetupController controller)
@@ -1613,6 +1591,32 @@ cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
 rm -f helm.tar.gz
 rm -rf linux-amd64
+";
+                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
+        /// Installs the <b>Kustomize</b> client.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void NodeInstallKustomize(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            InvokeIdempotent("setup/kustomize-client",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "setup", message: "kustomize client");
+
+                    var script =
+$@"
+cd /usr/local/bin
+curl {KubeHelper.CurlOptions} https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  > install-kustomize.sh
+
+bash ./install-kustomize.sh {KubeVersions.Kustomize}
+chmod 770 kustomize
+rm  install-kustomize.sh
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

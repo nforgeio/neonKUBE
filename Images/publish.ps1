@@ -18,7 +18,7 @@
 
 # Builds and publishes all of the Neon Docker images.
 #
-# NOTE: You must be logged into Docker Hub.
+# NOTE: You must be already logged into the target container registry.
 #
 # USAGE: pwsh -file ./publish-all.ps1 [-all]
 
@@ -144,6 +144,7 @@ try
     {
         Publish "$image_root\neon-acme"
         Publish "$image_root\neon-cluster-operator"
+        Publish "$image_root\neon-node-agent"
         Publish "$image_root\test-api"
     }
 

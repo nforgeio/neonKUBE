@@ -214,6 +214,16 @@ namespace Neon.Kube
         public const string LocalVolumePath = "/var/lib/neonkube/volumes";
 
         /// <summary>
+        /// Path to the node image file holding the image type defined by <see cref="KubeImageType"/>.
+        /// </summary>
+        public const string ImageTypePath = "/etc/neonkube/image-type";
+
+        /// <summary>
+        /// Path to the node image file holding the neonKUBE version.
+        /// </summary>
+        public const string ImageVersionPath = "/etc/neonkube/image-version";
+
+        /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
         public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");

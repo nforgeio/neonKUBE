@@ -1,5 +1,0 @@
-apiVersion: v2
-name: metrics-server
-description: A Helm chart for metrics-server
-version: 0.1.1
-appVersion: master
