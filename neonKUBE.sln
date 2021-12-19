@@ -413,7 +413,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{B2FA7057-8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jefflill", "jefflill", "{0098C102-BE54-4918-A2D2-2CA54B75E9E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-tty", "User\jefflill\test-tty\test-tty.csproj", "{B075D6FE-EEA8-46D4-AB66-B673F7B79D48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-tty", "User\jefflill\test-tty\test-tty.csproj", "{B075D6FE-EEA8-46D4-AB66-B673F7B79D48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
