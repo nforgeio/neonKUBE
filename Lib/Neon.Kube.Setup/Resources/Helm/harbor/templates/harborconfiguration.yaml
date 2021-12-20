@@ -12,7 +12,7 @@ spec:
       ou=superadmin,ou=groups,{{ .Values.ldap.baseDN }}
     ldapGroupAttributeName: cn
     ldapGroupBaseDn: ou=users,{{ .Values.ldap.baseDN }}
-    ldapGroupMembershipAttribute: memberUid
+    ldapGroupMembershipAttribute: memberOf
     ldapGroupSearchFilter: (|(objectClass=posixGroup)(objectClass=group))
     ldapGroupSearchScope: 2
     ldapScope: 2
