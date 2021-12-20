@@ -83,10 +83,17 @@ namespace Neon.Kube
         /// <para>
         /// The version of CRI-O container runtime to be installed.
         /// </para>
+        /// <note>
+        /// <para>
+        /// CRI-O is tied to specific Kubernetes releases and the CRI-O major and minor
+        /// versions must match the Kubernetes major and minor version numbers.  The 
+        /// revision/patch properties may be different.
+        /// </para>
         /// <para>
         /// Versions can be seen here: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/
         /// Make sure the package has actually been uploaded.
         /// </para>
+        /// </note>
         /// </summary>
         public const string Crio = "1.21.4";
 

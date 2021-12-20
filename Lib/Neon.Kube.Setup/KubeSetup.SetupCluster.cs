@@ -181,7 +181,7 @@ namespace Neon.Kube
             var kubernetesVersion = new Version(KubeVersions.Kubernetes);
             var crioVersion       = new Version(KubeVersions.Crio);
 
-            if (crioVersion.Major != kubernetesVersion.Minor || crioVersion.Minor != kubernetesVersion.Minor)
+            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
             {
                 throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
             }
