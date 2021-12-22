@@ -34,31 +34,6 @@ namespace Neon.Kube
     public static class KubeDownloads
     {
         /// <summary>
-        /// The <b>kubectl</b> binary download URI for Linux.
-        /// </summary>
-        public static readonly string KubeCtlLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubectl";
-
-        /// <summary>
-        /// The <b>kubectl</b> binary download URI for OS/X.
-        /// </summary>
-        public static readonly string KubeCtlOsxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/bin/darwin/amd64/kubectl";
-
-        /// <summary>
-        /// The <b>kubectl</b> binary download URI for Windows.
-        /// </summary>
-        public static readonly string KubeCtlWindowsUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/bin/windows/amd64/kubectl.exe";
-
-        /// <summary>
-        /// The <b>kubeadm</b> binary download URI for Linux.
-        /// </summary>
-        public static readonly string KubeAdmLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubeadm";
-
-        /// <summary>
-        /// The <b>kubelet</b> binary download URI for Linux.
-        /// </summary>
-        public static readonly string KubeletLinuxUri = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.Kubernetes}/linux/amd64/kubelet";
-
-        /// <summary>
         /// The Helm binary URL for Linux.
         /// </summary>
         public static readonly string HelmLinuxUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-linux-amd64.tar.gz";
@@ -72,21 +47,6 @@ namespace Neon.Kube
         /// The Helm binary URL for Windows.
         /// </summary>
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
-
-        /// <summary>
-        /// The Calico RBAC rules download (YAML for kubectl).
-        /// </summary>
-        public static readonly string CalicoRbacYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.Calico}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml";
-
-        /// <summary>
-        /// The Calico setup download (YAML for kubectl).
-        /// </summary>
-        public static readonly string CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.Calico}/manifests/calico.yaml";
-
-        /// <summary>
-        /// The Istio binary URL for Linux.
-        /// </summary>
-        public static readonly string IstioLinuxUri = $"https://github.com/istio/istio/releases/download/{KubeVersions.Istio}/istioctl-{KubeVersions.Istio}-linux-amd64.tar.gz";
 
         /// <summary>
         /// The URI for the public AWS S3 bucket where we persist cluster VM images 
