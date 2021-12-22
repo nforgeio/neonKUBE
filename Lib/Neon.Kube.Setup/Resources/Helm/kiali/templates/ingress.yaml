@@ -9,14 +9,6 @@ spec:
   hosts:
     - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
   http:
-    - match:
-        - uri:
-            prefix: /api/auth/openid_redirect
-      route:
-        - destination:
-            host: neon-sso-oauth2-proxy.neon-ingress.svc.cluster.local
-            port:
-              number: 4180
     - headers:
         request:
           set:
@@ -26,6 +18,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: kiali.neon-ingress.svc.cluster.local
+            host: kiali.neon-system.svc.cluster.local
             port:
               number: 20001

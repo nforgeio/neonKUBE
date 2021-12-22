@@ -4,6 +4,7 @@ metadata:
   name: {{ include "minio-operator.console-fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
+    app: minio
     {{- include "minio-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.console.replicaCount }}

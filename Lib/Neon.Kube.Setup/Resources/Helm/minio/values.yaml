@@ -86,7 +86,7 @@ tenants:
       ## Note that the operator does not support upgrading from standalone to distributed mode.
       - servers: 4
         ## volumesPerServer specifies the number of volumes attached per MinIO Tenant Pod / Server.
-        volumesPerServer: 4
+        volumesPerServer: 1
         ## size specifies the capacity per volume
         size: 10Gi
         ## storageClass specifies the storage class name to be used for this pool
