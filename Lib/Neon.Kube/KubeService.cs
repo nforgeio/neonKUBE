@@ -23,6 +23,10 @@ namespace Neon.Kube
     public static class KubeService
     {
         /// <summary>
+        /// Neon Dashboard.
+        /// </summary>
+        public const string NeonDashboard = "neon-dashboard";
+        /// <summary>
         /// Cluster operator.
         /// </summary>
         public const string NeonClusterOperator = "neon-cluster-operator";

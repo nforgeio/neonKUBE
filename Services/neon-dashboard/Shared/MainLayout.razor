@@ -1,0 +1,36 @@
+﻿@*-----------------------------------------------------------------------------
+// FILE:	    MainLayout.razor
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.*@
+
+@inherits LayoutComponentBase
+
+<div class="top-row px-4">
+    <AuthorizeView>
+        <Authorized>
+            <form method="get" action="logout">
+                <button type="submit" class="nav-link btn btn-link">Log out</button>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <a href="login?redirectUri=/">Log in</a>
+        </NotAuthorized>
+    </AuthorizeView>
+    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+</div> 
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>

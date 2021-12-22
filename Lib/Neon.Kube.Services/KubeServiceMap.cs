@@ -108,6 +108,7 @@ namespace Neon.Kube
         {
             serviceMaps["production"] = new KubeServiceMap();
             serviceMaps["production"].AddServiceDescription(KubeService.NeonClusterOperator, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonDashboard, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(KubeService.NeonSystemDb, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 5432 }, @namespace: KubeNamespaces.NeonSystem);
 
             VerifyInit(Production);

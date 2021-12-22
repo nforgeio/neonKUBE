@@ -1,0 +1,26 @@
+﻿@*-----------------------------------------------------------------------------
+// FILE:	    Index.razor
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.*@
+
+@page "/"
+@inherits PageBase
+
+<PageBase PageTitle="@PageTitle"></PageBase>
+ 
+<AuthorizeView>
+     <Authorized>
+         <h1>Hello, @context.User.Identity.Name !</h1>
+         <div class="dashboard-container">
+         @foreach (var dashboard in AppState.Dashboards)
+         {
+             <div class="dashboard-frame">
+                 <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
+             </div>
+         }
+         </div>
+     </Authorized>
+     <NotAuthorized>
+         <p>Not Authorized</p>
+     </NotAuthorized>
+ </AuthorizeView>
