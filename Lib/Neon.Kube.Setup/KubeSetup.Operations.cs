@@ -2944,7 +2944,6 @@ $@"- name: StorageType
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add("ingress.operator.subdomain", ClusterDomain.MinioOperator);
-                            values.Add("ingress.console.subdomain", ClusterDomain.MinioConsole);
 
                             if (serviceAdvice.ReplicaCount > 1)
                             {
