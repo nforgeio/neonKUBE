@@ -609,7 +609,19 @@ namespace Neon.Kube
                     if (osDiskBytes > KubeConst.MinNodeDiskSizeGiB)
                     {
                         node.Status = $"resize: OS disk";
-                        node.SudoCommand($"growpart {osDisk} 2", RunOptions.FaultOnError);
+
+                        var response = node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
+
+                        // Ignore errors reported when the partition is already at its
+                        // maximum size and cannot be grown:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/1352
+
+                        if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
+                        {
+                            response.EnsureSuccess();
+                        }
+
                         node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
                     }
                 }
