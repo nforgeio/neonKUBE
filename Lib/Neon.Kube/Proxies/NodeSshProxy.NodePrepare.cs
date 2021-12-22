@@ -981,9 +981,11 @@ $@"
         /// Installs the <b>CRI-O</b> container runtime.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void NodeInstallCriO(ISetupController controller)
+        /// <param name="clusterManifest">The cluster manifest.</param>
+        public void NodeInstallCriO(ISetupController controller, ClusterManifest clusterManifest)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(clusterManifest != null, nameof(clusterManifest));
 
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var reconfigureOnly = !controller.Get<bool>(KubeSetupProperty.Preparing, true);
@@ -1112,8 +1114,13 @@ EOF
 deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.Crio}/xUbuntu_20.04/ /
 EOF
 
-    curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-    curl {KubeHelper.CurlOptions} https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    # $note(jefflill):
+    #
+    # CRI-O mirror management (by the famous 'haircommander') is unreliable, so we're
+    # going to use the [--verbose] option here to make it easier to see what happened.
+
+    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
     {KubeNodeFolders.Bin}/safe-apt-get update -y
     {KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
@@ -1536,6 +1543,73 @@ set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
             SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+
+            // $todo(jefflill): Remove this hack when no longer necessary.
+            //
+            // We need to install a slightly customized version of CRI-O that has
+            // a somewhat bastardized implementation of container image "pinning",
+            // to prevent Kubelet from evicting critical setup images that cannot
+            // be pulled automatically from GHCR.
+            //
+            // The customized version is built by [neon-image build cri-o ...]
+            // and [neon-image prepare node ...] (by default) with the binary
+            // being uploaded to S3.
+            //
+            // The custom CRI-O loads images references from [/etc/neonkube/pinned-images]
+            // (one per line) and simply prevents any listed images from being deleted.
+            // As of CRI API 1.23+, the list-images endpoint can return a pinned field
+            // which Kubelet will honor when handling disk preassure, but unfortunately
+            // CRI-O as of 1.23.0 doesn't appear to have vendored the updated CRI yet.
+            // It does look like pinning is coming soon, so we can probably stick with
+            // this delete based approach until then.
+
+            if (!reconfigureOnly)
+            {
+                var crioUpdateScript =
+$@"
+set -euo pipefail
+
+# Install the [pinned-images] config file.
+
+cp pinned-images /etc/neonkube/pinned-images
+chmod 664 /etc/neonkube/pinned-images
+
+# Replace the CRI-O binary with our custom one.
+
+systemctl stop crio
+curl {KubeHelper.CurlOptions} https://neon-public.s3.us-west-2.amazonaws.com/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
+systemctl start crio
+";
+                var bundle         = CommandBundle.FromScript(crioUpdateScript);
+                var sbPinnedImages = new StringBuilder();
+
+                // Generate the [/etc/neonkube/pinned-images] config file listing the 
+                // the container images that our modified version of CRI-O will consider
+                // as pinned and will not allow these images to be removed by Kubelet
+                // and probably via podman as well.
+
+                sbPinnedImages.AppendLine("# WARNING: automatic generation");
+                sbPinnedImages.AppendLine();
+                sbPinnedImages.AppendLine("# This file is generated automatically during cluster setup as well as by the");
+                sbPinnedImages.AppendLine("# [neon-node-agent] so any manual changes may be overwitten at any time.");
+                sbPinnedImages.AppendLine();
+                sbPinnedImages.AppendLine("# This file specifies the container image references to be treated as pinned");
+                sbPinnedImages.AppendLine("# by a slightly customized version of CRI-O which blocks the removal of any");
+                sbPinnedImages.AppendLine("# image references listed here.");
+
+                foreach (var image in clusterManifest.ContainerImages)
+                {
+                    sbPinnedImages.AppendLine();
+                    sbPinnedImages.AppendLine(image.SourceRef);
+                    sbPinnedImages.AppendLine(image.SourceDigestRef);
+                    sbPinnedImages.AppendLine(image.InternalRef);
+                    sbPinnedImages.AppendLine(image.InternalDigestRef);
+                }
+
+                bundle.AddFile("pinned-images", sbPinnedImages.ToString());
+
+                SudoCommand(bundle).EnsureSuccess();
+            }
         }
 
         /// <summary>

@@ -116,7 +116,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The exit code.</returns>
-        public static async Task<int> Main(params string[] args)
+        public static async Task<int> Main(string[] args)
         {
             string usage = $@"
 {Program.Name} [v{Program.Version}]

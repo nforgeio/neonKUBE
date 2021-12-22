@@ -59,8 +59,16 @@ namespace Neon.Kube
         public string SourceRef { get; set; }
 
         /// <summary>
+        /// Specifies the reference to the container image including the <b>image digest</b>
+        /// within one of the neonFORGE container registeries.
+        /// </summary>
+        [JsonProperty(PropertyName = "SourceDigestRef", Required = Required.Always)]
+        [YamlMember(Alias = "sourceDigestRef", ApplyNamingConventions = false)]
+        public string SourceDigestRef { get; set; }
+
+        /// <summary>
         /// <para>
-        /// Specifies the internal cluster reference to the container imag as deployed
+        /// Specifies the internal cluster reference to the container image as deployed
         /// within the cluster.  This is the reference used for persisting the container
         /// to the local registry as well as executing the container on cluster nodes
         /// via CRI-O.
@@ -75,5 +83,15 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "InternalRef", Required = Required.Always)]
         [YamlMember(Alias = "internalRef", ApplyNamingConventions = false)]
         public string InternalRef { get; set; }
+
+        /// <summary>
+        /// Specifies the reference to the container image including the <b>image digest</b>
+        /// within as deployed within the cluster.  This is the reference used for persisting 
+        /// the container to the local registry as well as executing the container on cluster
+        /// nodes via CRI-O.
+        /// </summary>
+        [JsonProperty(PropertyName = "InternalDigestRef", Required = Required.Always)]
+        [YamlMember(Alias = "internalDigestRef", ApplyNamingConventions = false)]
+        public string InternalDigestRef { get; set; }
     }
 }

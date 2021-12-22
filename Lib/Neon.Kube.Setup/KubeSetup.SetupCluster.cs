@@ -176,6 +176,16 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.Normal}] when [{nameof(debugMode)}=TRUE].");
             }
 
+            // Do some quick checks to ensure that component versions look reasonable.
+
+            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
+            var crioVersion       = new Version(KubeVersions.Crio);
+
+            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
+            {
+                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+            }
+
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
@@ -323,7 +333,7 @@ namespace Neon.Kube
             controller.AddNodeStep(configureFirstMasterStepLabel,
                 (controller, node) =>
                 {
-                    node.SetupNode(controller);
+                    node.SetupNode(controller, KubeSetup.ClusterManifest);
                 },
                 (controller, node) => node == cluster.FirstMaster);
 
@@ -334,7 +344,7 @@ namespace Neon.Kube
                 controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
                     {
-                        node.SetupNode(controller);
+                        node.SetupNode(controller, KubeSetup.ClusterManifest);
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
                     (controller, node) => node != cluster.FirstMaster);
