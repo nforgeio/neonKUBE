@@ -1780,7 +1780,7 @@ subjects:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "kiali", releaseName: "kiali-operator", @namespace: KubeNamespaces.NeonIngress, values: values);
+                    await master.InstallHelmChartAsync(controller, "kiali", releaseName: "kiali-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/kiali-ready",
@@ -1791,8 +1791,8 @@ subjects:
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
+                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
+                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
                         });
                 });
 
