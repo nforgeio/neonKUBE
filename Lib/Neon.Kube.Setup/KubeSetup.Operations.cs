@@ -534,10 +534,31 @@ mode: {kubeProxyMode}");
 
                             SetupEtcdHaProxy(controller, master);
 
+                            // CRI-O needs to be running and listening on its unix domain socket so that
+                            // Kubelet can start and the cluster can be initialized via [kubeadm].  CRI-O
+                            // takes perhaps 20-30 seconds to start and we've run into occassional trouble
+                            // with cluster setup failures because CRI-O hadn't started listening on its
+                            // socket in time.
+                            //
+                            // We're going to wait for the presence of the CRI-O socket here.
+
+                            const string crioSocket = "/var/run/crio/crio.sock";
+
+                            NeonHelper.WaitFor(
+                                () =>
+                                {
+                                    var socketResponse  = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
+
+                                    return socketResponse.Success && socketResponse.OutputText.Contains(crioSocket);
+
+                                },
+                                pollInterval: TimeSpan.FromSeconds(0.5),
+                                timeout: TimeSpan.FromSeconds(60));
+
                             // Configure the control plane's API server endpoint and initialize
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
-                            
+
                             controller.LogProgress(master, verb: "initialize", message: "cluster");
 
                             var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
@@ -545,7 +566,7 @@ mode: {kubeProxyMode}");
                             var kubeInitScript =
 $@"
 systemctl enable kubelet.service
-kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests
+kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}
 ";
                             var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
@@ -557,17 +578,17 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                             if (pStart == -1)
                             {
-                                master.Log("START: [kubeadm init ...] response ============================================");
+                                master.LogLine("START: [kubeadm init ...] response ============================================");
 
                                 using (var reader = new StringReader(response.AllText))
                                 {
                                     foreach (var line in reader.Lines())
                                     {
-                                        master.Log(line);
+                                        master.LogLine(line);
                                     }
                                 }
 
-                                master.Log("END: [kubeadm init ...] response ==============================================");
+                                master.LogLine("END: [kubeadm init ...] response ==============================================");
 
                                 throw new KubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
                             }
@@ -3007,7 +3028,7 @@ $@"- name: StorageType
                                     Name = secret.Name(),
                                     Annotations = new Dictionary<string, string>()
                                     {
-                                        {  "reloader.stakater.com/match", "true" }
+                                        { "reloader.stakater.com/match", "true" }
                                     }
                                 },
                                 Data = secret.Data,
@@ -3046,15 +3067,19 @@ $@"- name: StorageType
                                     $"/mc admin policy info minio consoleAdmin > /tmp/consoleAdmin.json"
                                 });
 
-                            await k8s.NamespacedPodExecAsync(
-                                KubeNamespaces.NeonSystem,
-                                minioPod.Name(),
-                                "minio-operator",
-                                new string[] {
-                                    "/bin/bash",
-                                    "-c",
-                                    $"/mc admin policy add minio superadmin /tmp/consoleAdmin.json"
-                                });
+                            // $todo(marcusbooyah):
+                            //
+                            //      https://github.com/nforgeio/neonKUBE/issues/1354
+
+                            //await k8s.NamespacedPodExecAsync(
+                            //    KubeNamespaces.NeonSystem,
+                            //    minioPod.Name(),
+                            //    "minio-operator",
+                            //    new string[] {
+                            //        "/bin/bash",
+                            //        "-c",
+                            //        $"/mc admin policy add minio superadmin /tmp/consoleAdmin.json"
+                            //    });
                         });
                 });
 
@@ -3538,6 +3563,10 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
+            // $todo(jefflill): Temporarily disabling setup until the refactor is complete
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1302#issuecomment-999883172
+#if TODO
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/cluster-operator",
@@ -3569,6 +3598,7 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
+#endif // TODO
         }
 
         /// <summary>

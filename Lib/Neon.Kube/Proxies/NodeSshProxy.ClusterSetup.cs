@@ -602,7 +602,7 @@ EOF
             var clusterDefinition = Cluster.Definition;
             var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
-            InvokeIdempotent("setup/common",
+            InvokeIdempotent("setup/node",
                 () =>
                 {
                     PrepareNode(controller);

@@ -620,7 +620,7 @@ namespace Neon.Kube
             var cleanScript =
 $@"#!/bin/bash
 
-# Remove all log files (but retaining the directories).
+# Remove all log files (but retain the directories).
 
 find -type f -exec rm {{}} +
 

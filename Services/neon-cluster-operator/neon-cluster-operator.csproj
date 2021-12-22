@@ -18,10 +18,10 @@
 
     <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
     <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-    <KubeOpsSkipCrds></KubeOpsSkipCrds>
-    <KubeOpsSkipRbac></KubeOpsSkipRbac>
-    <KubeOpsSkipOperator></KubeOpsSkipOperator>
-    <KubeOpsSkipInstaller></KubeOpsSkipInstaller>
+    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
