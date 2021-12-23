@@ -12,6 +12,9 @@ spec:
       enable: recordedQueries tempoSearch
     security:
       disable_brute_force_login_protection: true
+      cookie_secure: true
+      cookie_samesite: none
+      allow_embedding: true
     log:
       mode: "console"
       level: "info"
