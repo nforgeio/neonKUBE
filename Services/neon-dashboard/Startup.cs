@@ -45,6 +45,16 @@ namespace NeonDashboard
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")))
+            {
+                NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", Environment.GetEnvironmentVariable("CLUSTER_DOMAIN"));
+            }
+
+            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET")))
+            {
+                NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Environment.GetEnvironmentVariable("SSO_CLIENT_SECRET"));
+            }
+
             services.AddRazorPages();
             services.AddServerSideBlazor();
 

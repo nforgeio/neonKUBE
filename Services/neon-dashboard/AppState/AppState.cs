@@ -102,11 +102,14 @@ namespace NeonDashboard
                 var clusterDomain = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
                 Dashboards = new List<Dashboard>()
                 {
-                    new Dashboard("Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{clusterDomain}"),
-                    new Dashboard("Grafana", $"https://{ClusterDomain.Grafana}.{clusterDomain}"),
-                    new Dashboard("Minio", $"https://{ClusterDomain.MinioOperator}.{clusterDomain}"),
-                    new Dashboard("Kiali", $"https://{ClusterDomain.Kiali}.{clusterDomain}"),
-                    new Dashboard("Harbor", $"https://{ClusterDomain.HarborRegistry}.{clusterDomain}")
+                    //new Dashboard("Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{clusterDomain}"),
+                    //new Dashboard("Grafana", $"https://{ClusterDomain.Grafana}.{clusterDomain}"),
+                    //new Dashboard("Minio", $"https://{ClusterDomain.MinioOperator}.{clusterDomain}"),
+                    //new Dashboard("Kiali", $"https://{ClusterDomain.Kiali}.{clusterDomain}"),
+                    //new Dashboard("Harbor", $"https://{ClusterDomain.HarborRegistry}.{clusterDomain}")
+
+                    new Dashboard("loooooopie", $"https://loopielaundry.com/"),
+                    new Dashboard("uwu", $"https://www.dictionary.com/e/slang/uwu"),
                 };
             }
 

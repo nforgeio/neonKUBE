@@ -8,7 +8,16 @@
 
 <PageBase PageTitle="@PageTitle"></PageBase>
  
-<AuthorizeView>
+<div class="dashboard-container">
+@foreach (var dashboard in AppState.Dashboards)
+{
+    <div class="dashboard-frame">
+        <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
+    </div>
+}
+</div>
+
+@*<AuthorizeView>
      <Authorized>
          <h1>Hello, @context.User.Identity.Name !</h1>
          <div class="dashboard-container">
@@ -23,4 +32,4 @@
      <NotAuthorized>
          <p>Not Authorized</p>
      </NotAuthorized>
- </AuthorizeView>
+ </AuthorizeView>*@
