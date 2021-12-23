@@ -1,8 +1,7 @@
 ﻿apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: cookie-filter-harbor
-  namespace: neon-system
+  name: cookie-filter-oauth2-proxy
 spec:
   configPatches:
     - applyTo: HTTP_FILTER
@@ -36,4 +35,4 @@ spec:
               end
   workloadSelector:
     labels:
-      goharbor.io/operator-version: v1.1.1
+      app: oauth2-proxy

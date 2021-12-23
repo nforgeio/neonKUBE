@@ -1,12 +1,12 @@
 ﻿apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: cookie-filter
+  name: cookie-filter-kiali
 spec:
   configPatches:
     - applyTo: HTTP_FILTER
       match:
-        context: SIDECAR_OUTBOUND
+        context: SIDECAR_INBOUND
         listener:
           filterChain:
             filter:
