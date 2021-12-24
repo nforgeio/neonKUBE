@@ -1681,7 +1681,7 @@ rm -rf linux-amd64
             InvokeIdempotent("setup/kustomize-client",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "kustomize client");
+                    controller.LogProgress(this, verb: "setup", message: "kustomize");
 
                     var script =
 $@"
