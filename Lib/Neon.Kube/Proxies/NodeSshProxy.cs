@@ -620,6 +620,8 @@ namespace Neon.Kube
             var cleanScript =
 $@"#!/bin/bash
 
+set -euo pipefail
+
 # Remove all log files (but retain the directories).
 
 find -type f -exec rm {{}} +

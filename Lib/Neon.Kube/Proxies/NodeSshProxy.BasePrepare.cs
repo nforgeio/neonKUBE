@@ -132,6 +132,8 @@ namespace Neon.Kube
 
                     var script =
 @"
+set -euo pipefail
+
 #------------------------------------------------------------------------------
 # We need to modify how [getaddressinfo] handles DNS lookups 
 # so that IPv4 lookups are preferred over IPv6.  Ubuntu prefers
@@ -179,6 +181,7 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
 
                     var script =
 @"
+set -euo pipefail
 echo '. /etc/environment' > /etc/profile.d/env.sh
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -367,6 +370,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
 
                     var guestServicesScript =
 $@"#!/bin/bash
+set -euo pipefail
+
 cat <<EOF >> /etc/initramfs-tools/modules
 hv_vmbus
 hv_storvsc
@@ -403,7 +408,9 @@ update-initramfs -u
 
                     var initNetPlanScript =
 $@"
-rm /etc/netplan/*
+set -euo pipefail
+
+rm -rf /etc/netplan/*
 
 cat <<EOF > /etc/netplan/no-dhcp.yaml
 # This file is used to disable the network when a new VM is created 
@@ -450,6 +457,7 @@ EOF
 
                     var disableCloudInitScript =
 $@"
+set -euo pipefail
 touch /etc/cloud/cloud-init.disabled
 ";
                     SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -525,6 +533,8 @@ rm -rf /snap
 
 var removePackagesScript =
 $@"
+set -euo pipefail
+
 {KubeNodeFolders.Bin}/safe-apt-get purge -y \
     apt \
     aptitude \
@@ -575,7 +585,10 @@ $@"
                     // We're going to disable apt updating services so we can control when this happens.
 
                     var disableAptServices =
-@"#------------------------------------------------------------------------------
+@"
+set -euo pipefail
+
+#------------------------------------------------------------------------------
 # Disable the [apt-timer] and [apt-daily] services.  We're doing this 
 # for two reasons:
 #
@@ -814,6 +827,8 @@ systemctl daemon-reload
 
                     var folderScript =
 $@"
+set -euo pipefail
+
 mkdir -p {KubeNodeFolders.Bin}
 chmod 750 {KubeNodeFolders.Bin}
 

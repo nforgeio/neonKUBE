@@ -2025,7 +2025,7 @@ cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 
 # Remove any existing netplan files so we can update the configuration.
 
-rm /etc/netplan/*
+rm -rf /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
 # Static network configuration is initialized during first boot by the 

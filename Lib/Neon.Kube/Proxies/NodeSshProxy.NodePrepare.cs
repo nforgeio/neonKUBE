@@ -246,6 +246,8 @@ fi
 
                     var InstallNfsScript =
 @"
+set -euo pipefail
+
 safe-apt-get update -y
 safe-apt-get install -y nfs-common
 ";
@@ -268,9 +270,7 @@ safe-apt-get install -y nfs-common
 
                     var filterScript =
 @"
-# neonKUBE: 
-#
-# Filter [rsyslog.service] log events we don't care about.
+# neonKUBE: Filter [rsyslog.service] log events we don't care about.
 
 cat <<EOF > /etc/rsyslog.d/60-filter.conf
 if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
@@ -328,6 +328,8 @@ systemctl restart rsyslog.service
 
                         var floppyScript =
 @"
+set -euo pipefail
+
 # We need to blacklist the floppy drive.  Not doing this can cause
 # node failures:
 
@@ -345,6 +347,8 @@ dpkg-reconfigure initramfs-tools
 
                         var statScript =
 @"
+set -euo pipefail
+
 # Enable system statistics collection (e.g. Page Faults,...)
 
 sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
@@ -970,6 +974,8 @@ systemctl daemon-reload
 
                     var setupScript =
 $@"
+set -euo pipefail
+
 {KubeNodeFolders.Bin}/safe-apt-get update -y
 {KubeNodeFolders.Bin}/safe-apt-get install -y ipset ipvsadm
 ";
@@ -1006,9 +1012,9 @@ $@"
 
                 var moduleScript =
 @"
-# Create the .conf file to load required modules during boot.
-
 set -euo pipefail
+
+# Create the .conf file to load required modules during boot.
 
 cat <<EOF > /etc/modules-load.d/crio.conf
 overlay
@@ -1627,6 +1633,8 @@ systemctl start crio
 
                     var setupScript =
 $@"
+set -euo pipefail
+
 source /etc/os-release
 echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${{VERSION_ID}}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${{VERSION_ID}}/Release.key -O- | apt-key add -
@@ -1658,6 +1666,8 @@ apt-mark hold podman
 
                     var script =
 $@"
+set -euo pipefail
+
 cd /tmp
 curl {KubeHelper.CurlOptions} {KubeDownloads.HelmLinuxUri} > helm.tar.gz
 tar xvf helm.tar.gz
@@ -1685,6 +1695,8 @@ rm -rf linux-amd64
 
                     var script =
 $@"
+set -euo pipefail
+
 cd /usr/local/bin
 curl {KubeHelper.CurlOptions} https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  > install-kustomize.sh
 
@@ -1859,6 +1871,8 @@ rm  install-kustomize.sh
 
                         var confScript =
 @"
+set -euo pipefail
+
 cat <<EOF > /etc/sysctl.d/990-wsl2-no-ipv6
 # neonKUBE needs to disable IPv6 when hosted on WSL2.
 
@@ -1878,18 +1892,27 @@ sysctl -p /etc/sysctl.d/990-wsl2-no-ipv6
 
                     var mainScript =
 $@"
+set -euo pipefail
+
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 {KubeNodeFolders.Bin}/safe-apt-get update
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeletPackage}
 {KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubectl={KubeVersions.KubectlPackage}
+
+# Note that the [kubeadm] install also installs [kubelet] and [kubectl] but that the
+# versions installed may be more recent than the Kubernetes version.  We want our
+# clusters to use consistent versions of all tools so we're going to install these
+# two packages again with specific versions and allow them to be downgraded.
+
+{KubeNodeFolders.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage}
+{KubeNodeFolders.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage}
 
 # Prevent the package manager these components from starting automatically.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
+set -euo pipefail
 
 # Configure kublet:
 
