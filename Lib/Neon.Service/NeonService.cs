@@ -236,8 +236,14 @@ namespace Neon.Service
     /// values.  The status file path defaults to <b>/health-status</b>.
     /// </para>
     /// <para>
-    /// The health check script file will be created at <b>/health-check</b> by default
-    /// and it returns a non-zero exit code when the service is not ready.  A service is
+    /// The health check script file will be created at <b>/health-check</b> by default.
+    /// This returns a non-zero exit code when the service is not healthy.  A service is
+    /// considered healthy only when the status is <see cref="NeonServiceStatus.Running"/>
+    /// or <see cref="NeonServiceStatus.NotReady"/>.
+    /// </para>
+    /// <para>
+    /// The ready check script file will be created at <b>/ready-check</b> by default.
+    /// This returns a non-zero exit code when the service is not ready.  A service is
     /// considered ready only when the status is <see cref="NeonServiceStatus.Running"/>.
     /// </para>
     /// <para>
@@ -250,6 +256,53 @@ namespace Neon.Service
     /// <note>
     /// Health status is supported only for services running on Linux.  This feature is disabled
     /// entirely for Windows and OS/X.
+    /// </note>
+    /// <note>
+    /// <para>
+    /// For Kubernetes deployments, we recommend that you configure your pod specifications
+    /// with startup and liveliness probes along with an optional readiness probe when appropriate.
+    /// This will look something like:
+    /// </para>
+    /// <code language="yaml">
+    /// apiVersion: apps/v1
+    /// kind: Deployment
+    /// metadata:
+    ///   name: my-app
+    /// spec:
+    ///   replicas: 1
+    ///   selector:
+    ///     matchLabels:
+    ///       operator: my-app
+    ///   template:
+    ///     metadata:
+    ///       labels:
+    ///         operator: my-app
+    ///     spec:
+    ///       containers:
+    ///       - name: my-app
+    ///         image: docker.io/my-app:latest
+    ///         startupProbe:
+    ///           exec:
+    ///             command:
+    ///             - /health-check         # $lt;--- this script works for both startup and liveliness probes
+    ///             timeoutSeconds: 1
+    ///          livenessProbe:
+    ///            exec:
+    ///              command:
+    ///              - /health-check
+    ///              initialDelaySeconds: 1 # $lt;--- we don't need a long (fixed) delay here with a startup probe
+    ///              timeoutSeconds: 1
+    ///          readinessProbe:
+    ///            exec:
+    ///              command:
+    ///              - /ready-check         # $lt;--- separate script for readiness probes
+    ///              initialDelaySeconds: 1
+    ///              timeoutSeconds: 1
+    ///         ports:
+    ///         - containerPort: 5000
+    ///           name: http
+    ///       terminationGracePeriodSeconds: 10
+    /// </code>
     /// </note>
     /// <para><b>SERVICE DEPENDENCIES</b></para>
     /// <para>
@@ -505,6 +558,7 @@ namespace Neon.Service
         private string                          healthFolder;
         private string                          healthStatusPath;
         private string                          healthScriptPath;
+        private string                          readyScriptPath;
         private IRetryPolicy                    healthRetryPolicy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
@@ -817,7 +871,9 @@ namespace Neon.Service
         /// Updates the service status.  This is typically called internally by this
         /// class but service code may set this to <see cref="NeonServiceStatus.Unhealthy"/>
         /// when there's a problem and back to <see cref="NeonServiceStatus.Running"/>
-        /// when the service is healthy again.
+        /// when the service is healthy again.  This may also be set to <see cref="NeonServiceStatus.NotReady"/>
+        /// to indicate that the service is running but is not ready to accept external
+        /// traffic.
         /// </summary>
         /// <param name="status">The new status.</param>
         public async Task SetStatusAsync(NeonServiceStatus status)
@@ -1157,9 +1213,9 @@ namespace Neon.Service
             await Task.Delay(Dependencies.Wait);
 
             // Initialize the health status paths when enabled on Linux and
-            // generate the health check script.  We'll log any errors and
-            // disable status generation if we have trouble accessing the
-            // folder.
+            // generate the health and ready check scripts.  We'll log any
+            // errors and disable status generation if we have trouble
+            // accessing the folder.
 
             if (string.IsNullOrWhiteSpace(healthFolder))
             {
@@ -1175,6 +1231,7 @@ namespace Neon.Service
 
                 healthStatusPath = Path.Combine(healthFolder, "health-status");
                 healthScriptPath = Path.Combine(healthFolder, "health-check");
+                readyScriptPath  = Path.Combine(healthFolder, "ready-check");
 
                 try
                 {
@@ -1190,11 +1247,16 @@ namespace Neon.Service
                             healthStatusPath
                         });
 
-                    // Create the health check script and set its permissions.
+                    // Create the [health-check] script and set its permissions.
 
                     var healthScript =
 $@"
 #!/bin/sh
+
+# Used by health probes to indicate that the service is running but is not
+# necessarily ready for external traffic.
+#
+# Generated by: Neon.Service.NeonServer
 
 # Service is unhealthy when the status file doesn't exist.
 
@@ -1202,18 +1264,58 @@ if [ ! -f '{healthStatusPath}' ] ; then
     exit 1
 fi
 
-# Service is healthy only when the status file is set to: running
+# Service is healthy only when the status file is set to: running or not-ready
 
 status=$(head -n 1 '{healthStatusPath}')
 
-if [ ""$status"" = ""running"" ]
+case ""$status"" in
+    
+    'running')
+    'not-ready')
+        exit 0;;
+
+    *)
+        exit 1;;
+esac
+";
+                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+
+                    NeonHelper.Execute("/bin/chmod",
+                        new object[]
+                        {
+                            "775",
+                            healthScriptPath
+                        });
+
+                    // Create the [ready-check] script and set its permissions.
+
+                    var readyScript =
+$@"
+#!/bin/sh
+
+# Used by readiness probes to indicate that the service is running and is
+# ready for external traffic.
+#
+# Generated by: Neon.Service.NeonServer
+
+# Service is not ready when the status file doesn't exist.
+
+if [ ! -f '{healthStatusPath}' ] ; then
+    exit 1
+fi
+
+# Service is ready only when the status file is set to: running
+
+status=$(head -n 1 '{healthStatusPath}')
+
+if [ ""$status"" = 'running' ] }} 
 then
     exit 0
 else
     exit 1
 fi
 ";
-                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+                    File.WriteAllText(readyScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
 
                     NeonHelper.Execute("/bin/chmod",
                         new object[]
@@ -1231,8 +1333,8 @@ fi
 
                     Log.LogError("Cannot initialize the health folder.  The status feature will be disabled.", e);
 
-                    healthFolder    = null;
-                    healthStatusPath  = null;
+                    healthFolder     = null;
+                    healthStatusPath = null;
                     healthScriptPath = null;
                 }
             }
