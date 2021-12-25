@@ -213,12 +213,16 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-29. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
+29. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
 
-30. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+    https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
-31. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+30. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
 
-32: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+31. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-33: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+32. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+
+33: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+
+34: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
