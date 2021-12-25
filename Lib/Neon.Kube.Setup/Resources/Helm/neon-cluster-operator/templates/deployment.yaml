@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    operator-deployment: neon-cluster-operator
+  name: neon-cluster-operator
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      operator: neon-cluster-operator
+  template:
+    metadata:
+      labels:
+        operator: neon-cluster-operator
+    spec:
+      containers:
+      - name: neon-cluster-operator
+        image: operator
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: webhook-config
+        startupProbe:
+          exec:
+            command:
+            - /health-check
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - /health-check
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        ports:
+        - containerPort: 5000
+          name: http
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+      terminationGracePeriodSeconds: 30

@@ -87,17 +87,16 @@
   <!--
   $hack(jefflill):
   
-  This target copies all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
-  deleting any existing CRD files there first to ensure that the CRDs are in sync.  [GenerateAfterBuild] is the
-  KubeOps build target that generates the CRDs and other Kubernmetes manifest and kustomization files.
+  This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
+  deleting any existing CRD files there first to ensure that the CRDs are in sync.
+  
+  NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernmetes manifest 
+        and kustomization files.
   -->
 
-  <!--<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-    <Message Importance="high" Text="*** PublishCRDs ***"/>
-    <Delete Files="$(SolutionDir)Lib\Neon.Kube.Setup\$(MSBuildProjectName)\*"/>
-    <Message Importance="high" Text="SOURCE FILES: $(ProjectDir)config.gitignore\crds\*"/>
-    <Message Importance="high" Text="DESTINATION: $(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds)"/>
-    <Copy SourceFiles="$(ProjectDir)config.gitignore\crds\*" DestinationFolder="$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds"/>
-  </Target>-->
+  <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
+    <Message Importance="high" Text="*** PublishCRDs ***" />
+	<Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />  
+  </Target>
   
 </Project>
