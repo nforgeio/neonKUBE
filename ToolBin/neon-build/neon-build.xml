@@ -76,6 +76,20 @@
             </summary>
             <param name="commandLine">The command line.</param>
         </member>
+        <member name="M:NeonBuild.Program.PublishFiles(Neon.Common.CommandLine,System.Boolean)">
+            <summary>
+            Implements the <b>publish-files</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+            <param name="noDelete">Optionally indicates that any existing folder <b>should not</b> be deleted.</param>
+        </member>
+        <member name="M:NeonBuild.Program.PublishFolder(Neon.Common.CommandLine,System.Boolean)">
+            <summary>
+            Implements the <b>publish-folder</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+            <param name="noDelete">Optionally indicates that any existing folder <b>should not</b> be deleted.</param>
+        </member>
         <member name="M:NeonBuild.Program.ReadVersion(Neon.Common.CommandLine)">
             <summary>
             Reads named version constant from a C# source file and writes it to SDTOUT.

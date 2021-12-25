@@ -30,7 +30,7 @@ namespace NeonBuild
     /// </summary>
     public static partial class Program
     {
-        private const string version = "1.3";
+        private const string version = "1.4";
 
         private static readonly string usage =
 $@"
@@ -192,6 +192,33 @@ ARGUMENTS:
     TYPE-NAME       - Fully qualified name of the type with the constant
     CONST-NAME      - Name of the constant within the class
     TARGET-PATH     - Path to the output file
+
+----------------------------------------
+neon-build publish-folder SOURCE-FOLDER TARGET-FOLDER
+
+Recurisively copies the files in the SOURCE-FOLDER to the TARGET-FOLDER,
+removing any existing target files or creating the TARGET-FOLDER if it
+doesn't already exist.
+
+ARGUMENTS:
+
+    SOURCE-FOLDER   - Path to the source folder
+    TARGET-FOLDER   - Path to the target folder
+
+----------------------------------------
+neon-build publish-files SOURCE-PATTERN TARGET-FOLDER [--exclude-kustomize]
+
+Copies files matching the SOURCE-PATTERN to TARGET-FOLDER, removing any
+existing files there or creating the target folder when it doesn't exist.
+
+ARGUMENTS:
+
+    SOURCE-PATTERN  - Path and source file pattern
+    TARGET-FOLDER   - Path to the target folder
+
+OPTIONS:
+
+    --exclude-kustomize     - Exclude [kustomization.yaml] files
 
 ";
         private static CommandLine commandLine;
@@ -439,6 +466,16 @@ ARGUMENTS:
                     case "download-const-uri":
 
                         DownloadConstUri(commandLine);
+                        break;
+
+                    case "publish-folder":
+
+                        PublishFolder(commandLine);
+                        break;
+
+                    case "publish-files":
+
+                        PublishFiles(commandLine);
                         break;
 
                     default:

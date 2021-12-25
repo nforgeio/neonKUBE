@@ -537,11 +537,11 @@
         }
       },
       "System.ValueTuple/4.5.0": {},
-      "YamlDotNet/11.1.1": {
+      "YamlDotNet/11.2.1": {
         "runtime": {
           "lib/netstandard2.1/YamlDotNet.dll": {
             "assemblyVersion": "11.0.0.0",
-            "fileVersion": "11.1.1.0"
+            "fileVersion": "11.2.1.0"
           }
         }
       },
@@ -559,7 +559,7 @@
           "System.Runtime.Serialization.Primitives": "4.3.0",
           "System.Threading.Thread": "4.3.0",
           "System.ValueTuple": "4.5.0",
-          "YamlDotNet": "11.1.1",
+          "YamlDotNet": "11.2.1",
           "prometheus-net": "4.1.1"
         },
         "runtime": {
@@ -1036,12 +1036,12 @@
       "path": "system.valuetuple/4.5.0",
       "hashPath": "system.valuetuple.4.5.0.nupkg.sha512"
     },
-    "YamlDotNet/11.1.1": {
+    "YamlDotNet/11.2.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-FWSee6b+CnrimzZijOF+Bcym9Hf9qWQ/dyhk1f0KGeZ4Eh++6kymVZGWKOYIqcaEh5/IUx7b2lnq+JeeSn7E3Q==",
-      "path": "yamldotnet/11.1.1",
-      "hashPath": "yamldotnet.11.1.1.nupkg.sha512"
+      "sha512": "sha512-tBt8K+korVfrjH9wyDEhiLKxbs8qoLCLIFwvYgkSUuMC9//w3z0cFQ8LQAI/5MCKq+BMil0cfRTRvPeE7eXhQw==",
+      "path": "yamldotnet/11.2.1",
+      "hashPath": "yamldotnet.11.2.1.nupkg.sha512"
     },
     "Neon.Common/2.18.2": {
       "type": "project",
