@@ -285,19 +285,22 @@ namespace Neon.Service
     ///           exec:
     ///             command:
     ///             - /health-check         # $lt;--- this script works for both startup and liveliness probes
+    ///             periodSeconds: 5
     ///             timeoutSeconds: 1
-    ///          livenessProbe:
-    ///            exec:
-    ///              command:
-    ///              - /health-check
-    ///              initialDelaySeconds: 1 # $lt;--- we don't need a long (fixed) delay here with a startup probe
-    ///              timeoutSeconds: 1
-    ///          readinessProbe:
-    ///            exec:
-    ///              command:
-    ///              - /ready-check         # $lt;--- separate script for readiness probes
-    ///              initialDelaySeconds: 1
-    ///              timeoutSeconds: 1
+    ///         livenessProbe:
+    ///           exec:
+    ///             command:
+    ///             - /health-check
+    ///             initialDelaySeconds: 1  # $lt;--- we don't need a long (fixed) delay here with a startup probe
+    ///             periodSeconds: 5
+    ///             timeoutSeconds: 1
+    ///         readinessProbe:
+    ///           exec:
+    ///             command:
+    ///             - /ready-check          # $lt;--- separate script for readiness probes
+    ///             initialDelaySeconds: 1
+    ///             periodSeconds: 5
+    ///             timeoutSeconds: 1
     ///         ports:
     ///         - containerPort: 5000
     ///           name: http
