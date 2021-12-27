@@ -30,7 +30,7 @@ namespace NeonBuild
     /// </summary>
     public static partial class Program
     {
-        private const string version = "1.4";
+        private const string version = "1.5";
 
         private static readonly string usage =
 $@"
@@ -206,7 +206,7 @@ ARGUMENTS:
     TARGET-FOLDER   - Path to the target folder
 
 ----------------------------------------
-neon-build publish-files SOURCE-PATTERN TARGET-FOLDER [--exclude-kustomize]
+neon-build publish-files SOURCE-PATTERN TARGET-FOLDER [--exclude-kustomize] [--no-delete]
 
 Copies files matching the SOURCE-PATTERN to TARGET-FOLDER, removing any
 existing files there or creating the target folder when it doesn't exist.
@@ -219,7 +219,37 @@ ARGUMENTS:
 OPTIONS:
 
     --exclude-kustomize     - Exclude [kustomization.yaml] files
+    --no-delete             - Don't delete the folder
 
+----------------------------------------
+neon-build rm FILE-PATH
+
+Removes files matching a pattern if they exist.
+
+ARGUMENTS:
+
+    FILE-PATH       - Path to the file being deleted, optionally including
+                      ""?"" and/or ""*"" wildcards
+
+----------------------------------------
+neon-build rmdir FOLDER-PATH
+
+Removes a directory (rercursively) if it exists.
+
+ARGUMENTS:
+
+    FOLDER-PATH     - Path to the folder being deleted
+
+----------------------------------------
+neon-build kustomize build SOURCE-FOLDER TARGET-PATH
+
+Runs [kustomize build SOURCE-FOLDER] and writes the output to TARGET-PATH,
+creating any parent directories as required.
+
+ARGUMENTS:
+
+    SOURCE-FOLDER   - Path to the source folder
+    TARGET-PATH     - Path to the output file
 ";
         private static CommandLine commandLine;
 
@@ -476,6 +506,21 @@ OPTIONS:
                     case "publish-files":
 
                         PublishFiles(commandLine);
+                        break;
+
+                    case "rm":
+
+                        Rm(commandLine);
+                        break;
+
+                    case "rmdir":
+
+                        Rmdir(commandLine);
+                        break;
+
+                    case "kustomize":
+
+                        Kustomize(commandLine);
                         break;
 
                     default:

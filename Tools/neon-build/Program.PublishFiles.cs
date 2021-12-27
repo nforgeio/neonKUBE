@@ -31,8 +31,7 @@ namespace NeonBuild
         /// Implements the <b>publish-files</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        /// <param name="noDelete">Optionally indicates that any existing folder <b>should not</b> be deleted.</param>
-        public static void PublishFiles(CommandLine commandLine, bool noDelete = false)
+        public static void PublishFiles(CommandLine commandLine)
         {
             commandLine = commandLine.Shift(1);
 
@@ -45,6 +44,7 @@ namespace NeonBuild
             var sourcePattern    = commandLine.Arguments[0];
             var targetFolder     = commandLine.Arguments[1];
             var excludeKustomize = commandLine.HasOption("--exclude-kustomize");
+            var noDelete         = commandLine.HasOption("--no-delete");
             var sourceFolder     = Path.GetDirectoryName(sourcePattern);
 
             Console.WriteLine($"neon-build publish-files: {sourcePattern} --> {targetFolder}");
@@ -55,7 +55,7 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
-            if (Directory.Exists(targetFolder))
+            if (!noDelete && Directory.Exists(targetFolder))
             {
                 Directory.Delete(targetFolder, recursive: true);
             }
@@ -77,7 +77,10 @@ namespace NeonBuild
                 count++;
             }
 
-            Console.Error.WriteLine("*** WARNING: [0] files published");
+            if (count == 0)
+            {
+                Console.Error.WriteLine("*** WARNING: [0] files published");
+            }
         }
     }
 }

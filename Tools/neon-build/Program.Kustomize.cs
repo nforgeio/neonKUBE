@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.PublishFolder.cs
+// FILE:	    Program.Kustomize.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,10 +28,10 @@ namespace NeonBuild
     public static partial class Program
     {
         /// <summary>
-        /// Implements the <b>publish-folder</b> command.
+        /// Implements the <b>kustomize</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        public static void PublishFolder(CommandLine commandLine)
+        public static void Kustomize(CommandLine commandLine)
         {
             commandLine = commandLine.Shift(1);
 
@@ -42,22 +42,10 @@ namespace NeonBuild
             }
 
             var sourceFolder = commandLine.Arguments[0];
-            var targetFolder = commandLine.Arguments[1];
+            var targetPath   = commandLine.Arguments[1];
 
-            Console.WriteLine($"neon-build publish-folder: {sourceFolder} --> {targetFolder}");
-
-            if (!Directory.Exists(sourceFolder))
-            {
-                Console.Error.WriteLine($"*** ERROR: [SOURCE-FOLDER={sourceFolder}] does not exist!");
-                Program.Exit(1);
-            }
-
-            if (Directory.Exists(targetFolder))
-            {
-                Directory.Delete(targetFolder, recursive: true);
-            }
-
-            NeonHelper.CopyFolder(sourceFolder, targetFolder);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+            NeonHelper.ExecuteCapture("kustomize", new object[] { "build", sourceFolder, "--output", targetPath }).EnsureSuccess();
         }
     }
 }

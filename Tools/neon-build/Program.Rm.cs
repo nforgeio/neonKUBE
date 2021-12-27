@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.PublishFolder.cs
+// FILE:	    Program.Rm.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,36 +28,38 @@ namespace NeonBuild
     public static partial class Program
     {
         /// <summary>
-        /// Implements the <b>publish-folder</b> command.
+        /// Implements the <b>rm</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        public static void PublishFolder(CommandLine commandLine)
+        public static void Rm(CommandLine commandLine)
         {
             commandLine = commandLine.Shift(1);
 
-            if (commandLine.Arguments.Length != 2)
+            if (commandLine.Arguments.Length != 1)
             {
                 Console.WriteLine(usage);
                 Program.Exit(1);
             }
 
-            var sourceFolder = commandLine.Arguments[0];
-            var targetFolder = commandLine.Arguments[1];
+            var filePath = Path.GetFullPath(commandLine.Arguments[0]);
 
-            Console.WriteLine($"neon-build publish-folder: {sourceFolder} --> {targetFolder}");
-
-            if (!Directory.Exists(sourceFolder))
+            if (filePath.IndexOfAny(new char[] { '?', '*' }) == -1)
             {
-                Console.Error.WriteLine($"*** ERROR: [SOURCE-FOLDER={sourceFolder}] does not exist!");
-                Program.Exit(1);
+                NeonHelper.DeleteFile(filePath);
             }
-
-            if (Directory.Exists(targetFolder))
+            else
             {
-                Directory.Delete(targetFolder, recursive: true);
-            }
+                var directoryPath = Path.GetDirectoryName(filePath);
+                var pattern       = Path.GetFileName(filePath);
 
-            NeonHelper.CopyFolder(sourceFolder, targetFolder);
+                if (Directory.Exists(directoryPath))
+                {
+                    foreach (var file in Directory.GetFiles(directoryPath, pattern, SearchOption.TopDirectoryOnly))
+                    {
+                        NeonHelper.DeleteFile(file);
+                    }
+                }
+            }
         }
     }
 }

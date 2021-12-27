@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.PublishFolder.cs
+// FILE:	    Program.Rmdir.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,36 +28,25 @@ namespace NeonBuild
     public static partial class Program
     {
         /// <summary>
-        /// Implements the <b>publish-folder</b> command.
+        /// Implements the <b>rmdir</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        public static void PublishFolder(CommandLine commandLine)
+        public static void Rmdir(CommandLine commandLine)
         {
             commandLine = commandLine.Shift(1);
 
-            if (commandLine.Arguments.Length != 2)
+            if (commandLine.Arguments.Length != 1)
             {
                 Console.WriteLine(usage);
                 Program.Exit(1);
             }
 
-            var sourceFolder = commandLine.Arguments[0];
-            var targetFolder = commandLine.Arguments[1];
+            var folderPath = Path.GetFullPath(commandLine.Arguments[0]);
 
-            Console.WriteLine($"neon-build publish-folder: {sourceFolder} --> {targetFolder}");
-
-            if (!Directory.Exists(sourceFolder))
+            if (Directory.Exists(folderPath))
             {
-                Console.Error.WriteLine($"*** ERROR: [SOURCE-FOLDER={sourceFolder}] does not exist!");
-                Program.Exit(1);
+                Directory.Delete(folderPath, recursive: true);
             }
-
-            if (Directory.Exists(targetFolder))
-            {
-                Directory.Delete(targetFolder, recursive: true);
-            }
-
-            NeonHelper.CopyFolder(sourceFolder, targetFolder);
         }
     }
 }
