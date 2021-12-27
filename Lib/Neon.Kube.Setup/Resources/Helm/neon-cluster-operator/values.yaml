@@ -1,9 +1,12 @@
 # Default values for neon-cluster-operator.
 
+namespace: neon-system
+
 image:
-  organization: neon-registry.node.local
+  # organization: neon-registry.node.local
+  organization: ghcr.io/neonkube-dev
   repository: neon-cluster-operator
-  pullPolicy: IfNotPresent
+  tag: neonkube-0.3.0-alpha
 
 logging:
   level: info

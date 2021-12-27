@@ -17,6 +17,10 @@ namespace NeonClusterOperator
     /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Configures depdendency injection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             // $note(jefflill):
@@ -28,6 +32,10 @@ namespace NeonClusterOperator
                 .AddResourceAssembly(typeof(Neon.Kube.Entities.V1ContainerRegistry).Assembly);
         }
 
+        /// <summary>
+        /// Configures the operator web service controllers.
+        /// </summary>
+        /// <param name="app">The application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
             app.UseKubernetesOperator();

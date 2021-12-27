@@ -13,15 +13,10 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    
-    <!-- Configure the KubeOps buid targets as required. -->
 
-    <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+    <!-- Write generated installation YAML to an ephemeral folder -->
+
+	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

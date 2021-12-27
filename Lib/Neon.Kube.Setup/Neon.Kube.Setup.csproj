@@ -49,6 +49,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
@@ -72,6 +76,10 @@
     <PackageReference Include="Helm" Version="0.1.35" />
     <PackageReference Include="Minio" Version="3.1.13" />
     <PackageReference Include="Npgsql" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
   </ItemGroup>
 
 
