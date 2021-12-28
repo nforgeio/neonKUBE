@@ -596,27 +596,6 @@ namespace Neon.Kube
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
-            var cleanCommand = "fstrim /";
-
-            switch (hostingEnvironment)
-            {
-                 case HostingEnvironment.Wsl2:
-
-                    // We don't need to clean WSL2 because the VM image being
-                    // created is a TAR file rather than a block device image.
-
-                    cleanCommand = string.Empty;
-                    break;
-
-                case HostingEnvironment.XenServer:
-
-                    // XenServer doesn't support [fstrim] so we'll fill free 
-                    // space with zeros instead.
-
-                    cleanCommand = "sfill -fllz /";
-                    break;
-            }
-
             var cleanScript =
 $@"#!/bin/bash
 
@@ -635,7 +614,8 @@ rm -rf /var/lib/dhcp/*
 
 # Filesystem cleaning
 
-{cleanCommand}
+fstrim /
+sfill -fllz /
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }
