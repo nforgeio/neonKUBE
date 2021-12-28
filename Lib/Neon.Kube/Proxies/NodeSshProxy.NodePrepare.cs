@@ -1535,6 +1535,7 @@ cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
 EOF
 
 # Remove shortnames.
+
 rm -f /etc/containers/registries.conf.d/000-shortnames.conf
 
 # Configure CRI-O to start on boot and then restart it to pick up the new options.
@@ -1583,7 +1584,7 @@ chmod 664 /etc/neonkube/pinned-images
 # Replace the CRI-O binary with our custom one.
 
 systemctl stop crio
-curl {KubeHelper.CurlOptions} https://neon-public.s3.us-west-2.amazonaws.com/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
+curl {KubeHelper.CurlOptions} {KubeDownloads.NeonPublicBucketUri}/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
 systemctl start crio
 ";
                 var bundle         = CommandBundle.FromScript(crioUpdateScript);
@@ -1610,6 +1611,12 @@ systemctl start crio
                     sbPinnedImages.AppendLine(image.SourceDigestRef);
                     sbPinnedImages.AppendLine(image.InternalRef);
                     sbPinnedImages.AppendLine(image.InternalDigestRef);
+
+                    var atPos = image.InternalDigestRef.IndexOf('@');
+
+                    Covenant.Assert(atPos != -1);
+
+                    sbPinnedImages.AppendLine(image.InternalDigestRef.Substring(atPos + 1));
                 }
 
                 bundle.AddFile("pinned-images", sbPinnedImages.ToString());
