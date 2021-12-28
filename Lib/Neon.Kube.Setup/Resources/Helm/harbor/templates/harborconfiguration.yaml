@@ -19,6 +19,6 @@ spec:
     ldapSearchDn: >-
       cn=serviceuser,ou=admin,{{ .Values.ldap.baseDN }}
     ldapSearchPassword: harbor-ldap
-    ldapUrl: glauth.neon-system:3893
+    ldapUrl: neon-sso-glauth.neon-system:3893
     ldapVerifyCert: false
   harborClusterRef: registry
