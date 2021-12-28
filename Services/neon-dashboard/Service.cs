@@ -85,7 +85,7 @@ namespace NeonDashboard
 
             // Indicate that the service is ready for business.
 
-            await SetRunningAsync();
+            await StartedAsync();
             Log.LogInfo("Service running");
 
             // Wait for the process terminator to signal that the service is stopping.

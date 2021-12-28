@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   labels:
     operator-element: rbac
-  name: "{{ .Release.namespace }}-role"
+  name: operator-role
 rules:
 - apiGroups:
   - neonkube.io
@@ -50,11 +50,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     operator-element: rbac
-  name: "{{ .Release.namespace }}-role-binding"
+  name: operator-role-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: "{{ .Release.namespace }}-role"
+  name: operator-role
 subjects:
 - kind: ServiceAccount
   name: default

@@ -59,11 +59,11 @@ namespace Neon.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="NeonService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  You should perform any
-    /// initialization and then call <see cref="SetRunningAsync"/> to indicate that the service is ready for
+    /// initialization and then call <see cref="StartedAsync"/> to indicate that the service is ready for
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is important
+    /// Note that calling <see cref="StartedAsync(NeonServiceStatus)"/> after your service has initialized is important
     /// because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
@@ -332,10 +332,15 @@ namespace Neon.Service
     /// terminated if any of the services cannot be reached after the specified timeout.
     /// </para>
     /// <para>
-    /// You can also specity an additional time to wait after all services are available
+    /// You can also specify additional time to wait after all services are available
     /// to give them a chance to perform additional internal initialization.
     /// </para>
     /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <note>
+    /// Service dependencies are currently waited for when the service status is <see cref="NeonServiceStatus.Starting"/>,
+    /// which means that they will need to complete before the startup or libeliness probes time out
+    /// resulting in service termination.  This behavior may change in the future: https://github.com/nforgeio/neonKUBE/issues/1361
+    /// </note>
     /// <para><b>CRON JOBS</b></para>
     /// <para>
     /// <see cref="NeonService"/>s that implement Kubernetes CRON jobs should consider setting 
@@ -666,11 +671,18 @@ namespace Neon.Service
         }
 
         /// <summary>
+        /// <para>
         /// Used to specify other services that must be reachable via the network before a
         /// <see cref="NeonService"/> will be allowed to start.  This is exposed via the
         /// <see cref="NeonService.Dependencies"/> where these values can be configured in
         /// code before <see cref="NeonService.RunAsync(bool)"/> is called or they can
         /// also be configured via environment variables as described in <see cref="ServiceDependencies"/>.
+        /// </para>
+        /// <note>
+        /// Service dependencies are currently waited for when the service status is <see cref="NeonServiceStatus.Starting"/>,
+        /// which means that they will need to complete before the startup or libeliness probes time out
+        /// resulting in service termination.  This behavior may change in the future: https://github.com/nforgeio/neonKUBE/issues/1361
+        /// </note>
         /// </summary>
         public ServiceDependencies Dependencies { get; set; } = new ServiceDependencies();
 
@@ -784,7 +796,7 @@ namespace Neon.Service
         /// post this request when the service receives a termination signal.
         /// </para>
         /// <para>
-        /// We recommend that you set this property before calling <see cref="SetRunningAsync"/>
+        /// We recommend that you set this property before calling <see cref="StartedAsync"/>
         /// in your service initialization code.
         /// </para>
         /// <note>
@@ -947,13 +959,29 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Called by <see cref="OnRunAsync"/> implementation after they've completed any
-        /// initialization and are ready for traffic.  This sets <see cref="Status"/> to
-        /// <see cref="NeonServiceStatus.Running"/>.
+        /// Called by <see cref="OnRunAsync"/> implementation to indicate that the service
+        /// is either <see cref="NeonServiceStatus.Running"/> (the default) or <see cref="NeonServiceStatus.NotReady"/>.
         /// </summary>
-        public async Task SetRunningAsync()
+        /// <remarks>
+        /// <para>
+        /// For most situations, the default <see cref="NeonServiceStatus.Running"/> argument is
+        /// appropriate.  This indicates that the service will satisfy all of the probes: startup,
+        /// liveliness, and readiness.
+        /// </para>
+        /// <para>
+        /// Advanced services that may take some time to perform additional initialization 
+        /// before being ready to service requests may pass <see cref="NeonServiceStatus.NotReady"/>.
+        /// This means that the startup and liveliness probes will pass, preventing Kubernetes
+        /// from terminating the container but that the readiness probe will fail, preventing
+        /// Kubernetes from forwarding traffic to the container until <see cref="NeonServiceStatus.Running"/>
+        /// is passed to <see cref="SetStatusAsync(NeonServiceStatus)"/>.
+        /// </para>
+        /// </remarks>
+        public async Task StartedAsync(NeonServiceStatus status = NeonServiceStatus.Running)
         {
-            await SetStatusAsync(NeonServiceStatus.Running);
+            Covenant.Requires<ArgumentException>(status == NeonServiceStatus.Running || status == NeonServiceStatus.NotReady, nameof(status));
+
+            await SetStatusAsync(status);
         }
 
         /// <summary>
@@ -1549,7 +1577,7 @@ fi
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then they must call <see cref="SetRunningAsync()"/>
+        /// Services should perform any required initialization and then they must call <see cref="StartedAsync()"/>
         /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 

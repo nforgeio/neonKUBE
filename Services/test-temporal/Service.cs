@@ -99,7 +99,7 @@ namespace TemporalService
                     // Let NeonService know that we're running.
 
                     Log.LogInfo("Ready for work.");
-                    await SetRunningAsync();
+                    await StartedAsync();
 
                     // Wait for the process terminator to signal that the service is stopping.
 

@@ -64,7 +64,7 @@ namespace TestXunit
 
             protected async override Task<int> OnRunAsync()
             {
-                await SetRunningAsync();
+                await StartedAsync();
 
                 while (!Terminator.CancellationToken.IsCancellationRequested)
                 {
@@ -83,7 +83,7 @@ namespace TestXunit
 
             protected async override Task<int> OnRunAsync()
             {
-                await SetRunningAsync();
+                await StartedAsync();
 
                 while (!Terminator.CancellationToken.IsCancellationRequested)
                 {

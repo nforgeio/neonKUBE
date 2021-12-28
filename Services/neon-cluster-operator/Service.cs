@@ -81,7 +81,7 @@ namespace NeonClusterOperator
 
             // Let Kubernetes know that we're running.
 
-            await SetRunningAsync();
+            await StartedAsync();
 
             // Launch the sub-tasks.  These will run until the service is terminated.
 
