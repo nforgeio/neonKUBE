@@ -77,6 +77,8 @@ namespace NeonSsoProxy
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            await SetStatusAsync(NeonServiceStatus.Starting);
+
             if (!NeonHelper.IsDevWorkstation)
             {
                 MetricsOptions.Mode = MetricsMode.Scrape;
@@ -106,7 +108,7 @@ namespace NeonSsoProxy
 
             // Indicate that the service is ready for business.
 
-            await SetRunningAsync();
+            await SetStatusAsync(NeonServiceStatus.Running);
             Log.LogInfo("Service running");
 
             // Wait for the process terminator to signal that the service is stopping.
