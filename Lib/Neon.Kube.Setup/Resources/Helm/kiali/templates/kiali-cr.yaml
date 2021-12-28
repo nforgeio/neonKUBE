@@ -17,7 +17,7 @@ spec:
   version: default
   istio_namespace: neon-ingress
   auth:
-    strategy: openid
+    strategy: header
     openid:
       client_id: "kubernetes"
       issuer_uri: "https://sso.{{ .Values.cluster.domain }}"
