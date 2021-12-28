@@ -122,9 +122,9 @@ Go/**/__debug_bin
 # OS/X related files
 .DS_Store
 
-############################
-### Neon.ModelGenberator ###
-############################
+###########################
+### Neon.ModelGenerator ###
+###########################
 
 # This library includes binaries that shouldn't be committed.
 
@@ -132,6 +132,16 @@ Go/**/__debug_bin
 /Lib/Neon.ModelGenerator/osx-x64/**
 /Lib/Neon.ModelGenerator/win-x64/**
 /Lib/**/*.bak
+
+###################
+# Neon.Kube.Setup #
+###################
+
+# All neonKUBE CRDs are defined in the [Neon.Kube] library and are generated
+# when [neon-cluster-operator] is built and copied into the [neon-cluster-operator]
+# Helm chart which will be used to install the CRDs as well as the operator.
+
+/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
 
 #############################
 ### Other generated files ###

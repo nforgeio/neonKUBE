@@ -40,7 +40,7 @@ using System.Resources;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the cloud or colocation/on-premise hosting settings.
+    /// Specifies the cloud or co-location/on-premise hosting settings.
     /// </summary>
     public class HostingOptions
     {

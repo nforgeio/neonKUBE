@@ -269,7 +269,7 @@ namespace Neon.Kube
         /// Hyper-V and XenServer Ubuntu images.
         /// </note>
         /// </summary>
-        public const int MinNodeDiskSizeGiB = 64;
+        public const int MinNodeDiskSizeGiB = 32;
 
         /// <summary>
         /// Returns the URL to the neonKUBE GitHub repository.

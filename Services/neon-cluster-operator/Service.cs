@@ -72,16 +72,16 @@ namespace NeonClusterOperator
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when toi exit.
+            // this and will use the termination signal to known when to exit.
 
             _ = Host.CreateDefaultBuilder()
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
-            // Let NeonService know that we're running.
+            // Let Kubernetes know that we're running.
 
-            await SetRunningAsync();
+            await StartedAsync();
 
             // Launch the sub-tasks.  These will run until the service is terminated.
 

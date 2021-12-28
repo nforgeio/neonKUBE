@@ -16475,22 +16475,22 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: master</summary>
+            <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ba8ae161d</summary>
+            <summary>Commit: 731d77eab</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ba8ae161d6fad41e0ab60de28c1fc15036d85999</summary>
+            <summary>Sha: 731d77eabae23e085287bb0d96ce4bb68ac275f6</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-12-10T21:15:10-08:00</summary>
+            <summary>Commit date: 2021-12-26T16:51:39-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 56</summary>
+            <summary>Commits on top of base version: 177</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: release-neonKUBE-v0.2.0-alpha-56-gba8ae161d</summary>
+            <summary>Tag: release-neonKUBE-v0.2.0-alpha-177-g731d77eab</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: release-neonKUBE-v0.2.0-alpha</summary>
@@ -16517,7 +16517,7 @@
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 56</summary>
+            <summary>Patch: 177</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

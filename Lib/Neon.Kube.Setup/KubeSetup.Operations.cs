@@ -565,6 +565,8 @@ mode: {kubeProxyMode}");
 
                             var kubeInitScript =
 $@"
+set -euo pipefail
+
 systemctl enable kubelet.service
 kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}
 ";
@@ -855,6 +857,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var kubeInitScript =
 $@"
+set -euo pipefail
+
 rm -rf /etc/kubernetes/pki/*
 rm -f /etc/kubernetes/admin.conf
 rm -f /etc/kubernetes/kubelet.conf
@@ -862,6 +866,8 @@ rm -f /etc/kubernetes/controller-manager.conf
 rm -f /etc/kubernetes/scheduler.conf
 kubeadm init --config cluster.yaml phase certs all
 kubeadm init --config cluster.yaml phase kubeconfig all
+
+set +e
 
 until kubectl get pods
 do

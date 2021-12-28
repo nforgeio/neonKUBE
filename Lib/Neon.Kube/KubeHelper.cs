@@ -97,7 +97,7 @@ namespace Neon.Kube
         /// <summary>
         /// CURL command common options.
         /// </summary>
-        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30";
+        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30 --max-redirs 10";
 
         /// <summary>
         /// Static constructor.
@@ -2025,7 +2025,7 @@ cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 
 # Remove any existing netplan files so we can update the configuration.
 
-rm /etc/netplan/*
+rm -rf /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
 # Static network configuration is initialized during first boot by the 

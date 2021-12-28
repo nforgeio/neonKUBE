@@ -37,6 +37,26 @@ namespace Neon.Service
     /// <summary>
     /// Enumerates the possible <see cref="NeonService"/> running states.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Most of these values are self-explanatory, but <see cref="Running"/> and
+    /// <see cref="NotReady"/> may be a bit confusing.
+    /// </para>
+    /// <para>
+    /// <see cref="Running"/> means that the service is healthy and is ready to
+    /// process requests where as <see cref="NotReady"/> means that the service
+    /// is healthy but is <b>not ready to process requests</b>.
+    /// </para>
+    /// <para>
+    /// Most services are ready to accept traffic almost immediately after starting,
+    /// so setting <see cref="Running"/> makes sense most of the time.  Some services
+    /// though, may take some time after starting before being ready to process
+    /// requests.  The problem is that the service typically has a limited amount
+    /// of time before startup or liveliness probes will fail and resulting in the
+    /// service termination.  Setting the <see cref="NotReady"/> state along with
+    /// a readiness probe will prevent these other probes from terminating the service.
+    /// </para>
+    /// </remarks>
     public enum NeonServiceStatus
     {
         /// <summary>
@@ -57,6 +77,13 @@ namespace Neon.Service
         /// </summary>
         [EnumMember(Value = "running")]
         Running,
+
+        /// <summary>
+        /// Indicates that the service is running but it's not ready to receive
+        /// external traffic.
+        /// </summary>
+        [EnumMember(Value = "not-ready")]
+        NotReady,
 
         /// <summary>
         /// The service is running but is not healthy.

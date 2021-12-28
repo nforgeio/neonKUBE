@@ -14,14 +14,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     
-    <!-- Configure the KubeOps buid targets as required. -->
+    <!-- Write generated installation YAML to an ephemeral folder -->
 
     <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -85,19 +80,26 @@
   </Target>
   
   <!--
-  $hack(jefflill):
+  This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
+  deleting any existing CRD files first to ensure that the CRDs are fully in sync.
   
-  This target copies all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
-  deleting any existing CRD files there first to ensure that the CRDs are in sync.  [GenerateAfterBuild] is the
-  KubeOps build target that generates the CRDs and other Kubernmetes manifest and kustomization files.
+  This also copies all generated installation related manifests to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/templates/*]
+  after kustomizing them.
+  
+  NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernmetes manifest 
+        and kustomization files.
   -->
 
-  <!--<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-    <Message Importance="high" Text="*** PublishCRDs ***"/>
-    <Delete Files="$(SolutionDir)Lib\Neon.Kube.Setup\$(MSBuildProjectName)\*"/>
-    <Message Importance="high" Text="SOURCE FILES: $(ProjectDir)config.gitignore\crds\*"/>
-    <Message Importance="high" Text="DESTINATION: $(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds)"/>
-    <Copy SourceFiles="$(ProjectDir)config.gitignore\crds\*" DestinationFolder="$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds"/>
-  </Target>-->
+  <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
+	  
+	  <Message Importance="high" Text="*** Publish CRDs ***" />
+	  <Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
+	  <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
+	  
+	  <Message Importance="high" Text="*** Publish Templates ***" />
+      <Exec Command="neon-build publish-folder &quot;$(ProjectDir)config\templates&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates&quot;" />
+      <Exec Command="neon-build kustomize &quot;$(ProjectDir)config.gitignore\rbac&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates\rbac.yaml&quot;" />
+  
+  </Target>
   
 </Project>

@@ -59,6 +59,9 @@ HELM COMMANDS (note that you'll need to prefix these with ""neon""):
         public override string[] Words => new string[] { "helm" };
 
         /// <inheritdoc/>
+        public override bool CheckOptions => false;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

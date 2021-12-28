@@ -59,11 +59,11 @@ namespace Neon.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="NeonService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  You should perform any
-    /// initialization and then call <see cref="SetRunningAsync"/> to indicate that the service is ready for
+    /// initialization and then call <see cref="StartedAsync"/> to indicate that the service is ready for
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is important
+    /// Note that calling <see cref="StartedAsync(NeonServiceStatus)"/> after your service has initialized is important
     /// because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
@@ -236,8 +236,14 @@ namespace Neon.Service
     /// values.  The status file path defaults to <b>/health-status</b>.
     /// </para>
     /// <para>
-    /// The health check script file will be created at <b>/health-check</b> by default
-    /// and it returns a non-zero exit code when the service is not ready.  A service is
+    /// The health check script file will be created at <b>/health-check</b> by default.
+    /// This returns a non-zero exit code when the service is not healthy.  A service is
+    /// considered healthy only when the status is <see cref="NeonServiceStatus.Running"/>
+    /// or <see cref="NeonServiceStatus.NotReady"/>.
+    /// </para>
+    /// <para>
+    /// The ready check script file will be created at <b>/ready-check</b> by default.
+    /// This returns a non-zero exit code when the service is not ready.  A service is
     /// considered ready only when the status is <see cref="NeonServiceStatus.Running"/>.
     /// </para>
     /// <para>
@@ -250,6 +256,57 @@ namespace Neon.Service
     /// <note>
     /// Health status is supported only for services running on Linux.  This feature is disabled
     /// entirely for Windows and OS/X.
+    /// </note>
+    /// <note>
+    /// <para>
+    /// For Kubernetes deployments, we recommend that you configure your pod specifications
+    /// with startup and liveliness probes along with an optional readiness probe when appropriate.
+    /// This will look something like:
+    /// </para>
+    /// <code language="yaml">
+    /// apiVersion: apps/v1
+    /// kind: Deployment
+    /// metadata:
+    ///   name: my-app
+    /// spec:
+    ///   replicas: 1
+    ///   selector:
+    ///     matchLabels:
+    ///       operator: my-app
+    ///   template:
+    ///     metadata:
+    ///       labels:
+    ///         operator: my-app
+    ///     spec:
+    ///       containers:
+    ///       - name: my-app
+    ///         image: docker.io/my-app:latest
+    ///         startupProbe:
+    ///           exec:
+    ///             command:
+    ///             - /health-check         # $lt;--- this script works for both startup and liveliness probes
+    ///           initialDelaySeconds: 1
+    ///           periodSeconds: 5
+    ///           timeoutSeconds: 1
+    ///         livenessProbe:
+    ///           exec:
+    ///             command:
+    ///             - /health-check
+    ///           initialDelaySeconds: 1    # $lt;--- we don't need a long (fixed) delay here with a startup probe
+    ///           periodSeconds: 5
+    ///           timeoutSeconds: 1
+    ///         readinessProbe:
+    ///           exec:
+    ///             command:
+    ///             - /ready-check          # $lt;--- separate script for readiness probes
+    ///           initialDelaySeconds: 1
+    ///           periodSeconds: 5
+    ///           timeoutSeconds: 1
+    ///         ports:
+    ///         - containerPort: 5000
+    ///           name: http
+    ///       terminationGracePeriodSeconds: 10
+    /// </code>
     /// </note>
     /// <para><b>SERVICE DEPENDENCIES</b></para>
     /// <para>
@@ -275,10 +332,15 @@ namespace Neon.Service
     /// terminated if any of the services cannot be reached after the specified timeout.
     /// </para>
     /// <para>
-    /// You can also specity an additional time to wait after all services are available
+    /// You can also specify additional time to wait after all services are available
     /// to give them a chance to perform additional internal initialization.
     /// </para>
     /// <code source="..\..\Snippets\Snippets.NeonService\Program-Dependencies.cs" language="c#" title="Waiting for service dependencies:"/>
+    /// <note>
+    /// Service dependencies are currently waited for when the service status is <see cref="NeonServiceStatus.Starting"/>,
+    /// which means that they will need to complete before the startup or libeliness probes time out
+    /// resulting in service termination.  This behavior may change in the future: https://github.com/nforgeio/neonKUBE/issues/1361
+    /// </note>
     /// <para><b>CRON JOBS</b></para>
     /// <para>
     /// <see cref="NeonService"/>s that implement Kubernetes CRON jobs should consider setting 
@@ -505,6 +567,7 @@ namespace Neon.Service
         private string                          healthFolder;
         private string                          healthStatusPath;
         private string                          healthScriptPath;
+        private string                          readyScriptPath;
         private IRetryPolicy                    healthRetryPolicy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
@@ -608,11 +671,18 @@ namespace Neon.Service
         }
 
         /// <summary>
+        /// <para>
         /// Used to specify other services that must be reachable via the network before a
         /// <see cref="NeonService"/> will be allowed to start.  This is exposed via the
         /// <see cref="NeonService.Dependencies"/> where these values can be configured in
         /// code before <see cref="NeonService.RunAsync(bool)"/> is called or they can
         /// also be configured via environment variables as described in <see cref="ServiceDependencies"/>.
+        /// </para>
+        /// <note>
+        /// Service dependencies are currently waited for when the service status is <see cref="NeonServiceStatus.Starting"/>,
+        /// which means that they will need to complete before the startup or libeliness probes time out
+        /// resulting in service termination.  This behavior may change in the future: https://github.com/nforgeio/neonKUBE/issues/1361
+        /// </note>
         /// </summary>
         public ServiceDependencies Dependencies { get; set; } = new ServiceDependencies();
 
@@ -726,7 +796,7 @@ namespace Neon.Service
         /// post this request when the service receives a termination signal.
         /// </para>
         /// <para>
-        /// We recommend that you set this property before calling <see cref="SetRunningAsync"/>
+        /// We recommend that you set this property before calling <see cref="StartedAsync"/>
         /// in your service initialization code.
         /// </para>
         /// <note>
@@ -817,7 +887,9 @@ namespace Neon.Service
         /// Updates the service status.  This is typically called internally by this
         /// class but service code may set this to <see cref="NeonServiceStatus.Unhealthy"/>
         /// when there's a problem and back to <see cref="NeonServiceStatus.Running"/>
-        /// when the service is healthy again.
+        /// when the service is healthy again.  This may also be set to <see cref="NeonServiceStatus.NotReady"/>
+        /// to indicate that the service is running but is not ready to accept external
+        /// traffic.
         /// </summary>
         /// <param name="status">The new status.</param>
         public async Task SetStatusAsync(NeonServiceStatus status)
@@ -887,13 +959,29 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Called by <see cref="OnRunAsync"/> implementation after they've completed any
-        /// initialization and are ready for traffic.  This sets <see cref="Status"/> to
-        /// <see cref="NeonServiceStatus.Running"/>.
+        /// Called by <see cref="OnRunAsync"/> implementation to indicate that the service
+        /// is either <see cref="NeonServiceStatus.Running"/> (the default) or <see cref="NeonServiceStatus.NotReady"/>.
         /// </summary>
-        public async Task SetRunningAsync()
+        /// <remarks>
+        /// <para>
+        /// For most situations, the default <see cref="NeonServiceStatus.Running"/> argument is
+        /// appropriate.  This indicates that the service will satisfy all of the probes: startup,
+        /// liveliness, and readiness.
+        /// </para>
+        /// <para>
+        /// Advanced services that may take some time to perform additional initialization 
+        /// before being ready to service requests may pass <see cref="NeonServiceStatus.NotReady"/>.
+        /// This means that the startup and liveliness probes will pass, preventing Kubernetes
+        /// from terminating the container but that the readiness probe will fail, preventing
+        /// Kubernetes from forwarding traffic to the container until <see cref="NeonServiceStatus.Running"/>
+        /// is passed to <see cref="SetStatusAsync(NeonServiceStatus)"/>.
+        /// </para>
+        /// </remarks>
+        public async Task StartedAsync(NeonServiceStatus status = NeonServiceStatus.Running)
         {
-            await SetStatusAsync(NeonServiceStatus.Running);
+            Covenant.Requires<ArgumentException>(status == NeonServiceStatus.Running || status == NeonServiceStatus.NotReady, nameof(status));
+
+            await SetStatusAsync(status);
         }
 
         /// <summary>
@@ -1157,9 +1245,9 @@ namespace Neon.Service
             await Task.Delay(Dependencies.Wait);
 
             // Initialize the health status paths when enabled on Linux and
-            // generate the health check script.  We'll log any errors and
-            // disable status generation if we have trouble accessing the
-            // folder.
+            // generate the health and ready check scripts.  We'll log any
+            // errors and disable status generation if we have trouble
+            // accessing the folder.
 
             if (string.IsNullOrWhiteSpace(healthFolder))
             {
@@ -1175,6 +1263,7 @@ namespace Neon.Service
 
                 healthStatusPath = Path.Combine(healthFolder, "health-status");
                 healthScriptPath = Path.Combine(healthFolder, "health-check");
+                readyScriptPath  = Path.Combine(healthFolder, "ready-check");
 
                 try
                 {
@@ -1190,11 +1279,16 @@ namespace Neon.Service
                             healthStatusPath
                         });
 
-                    // Create the health check script and set its permissions.
+                    // Create the [health-check] script and set its permissions.
 
                     var healthScript =
 $@"
 #!/bin/sh
+
+# Used by health probes to indicate that the service is running but is not
+# necessarily ready for external traffic.
+#
+# Generated by: Neon.Service.NeonServer
 
 # Service is unhealthy when the status file doesn't exist.
 
@@ -1202,18 +1296,58 @@ if [ ! -f '{healthStatusPath}' ] ; then
     exit 1
 fi
 
-# Service is healthy only when the status file is set to: running
+# Service is healthy only when the status file is set to: running or not-ready
 
 status=$(head -n 1 '{healthStatusPath}')
 
-if [ ""$status"" = ""running"" ]
+case ""$status"" in
+    
+    'running')
+    'not-ready')
+        exit 0;;
+
+    *)
+        exit 1;;
+esac
+";
+                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+
+                    NeonHelper.Execute("/bin/chmod",
+                        new object[]
+                        {
+                            "775",
+                            healthScriptPath
+                        });
+
+                    // Create the [ready-check] script and set its permissions.
+
+                    var readyScript =
+$@"
+#!/bin/sh
+
+# Used by readiness probes to indicate that the service is running and is
+# ready for external traffic.
+#
+# Generated by: Neon.Service.NeonServer
+
+# Service is not ready when the status file doesn't exist.
+
+if [ ! -f '{healthStatusPath}' ] ; then
+    exit 1
+fi
+
+# Service is ready only when the status file is set to: running
+
+status=$(head -n 1 '{healthStatusPath}')
+
+if [ ""$status"" = 'running' ] }} 
 then
     exit 0
 else
     exit 1
 fi
 ";
-                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+                    File.WriteAllText(readyScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
 
                     NeonHelper.Execute("/bin/chmod",
                         new object[]
@@ -1231,8 +1365,8 @@ fi
 
                     Log.LogError("Cannot initialize the health folder.  The status feature will be disabled.", e);
 
-                    healthFolder    = null;
-                    healthStatusPath  = null;
+                    healthFolder     = null;
+                    healthStatusPath = null;
                     healthScriptPath = null;
                 }
             }
@@ -1443,7 +1577,7 @@ fi
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then they must call <see cref="SetRunningAsync()"/>
+        /// Services should perform any required initialization and then they must call <see cref="StartedAsync(NeonServiceStatus)"/>
         /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 

@@ -123,7 +123,7 @@ namespace TestApiService
 
             // Indicate that the service is ready for business.
 
-            await SetRunningAsync();
+            await StartedAsync();
 
             // Wait for the process terminator to signal that the service is stopping.
 

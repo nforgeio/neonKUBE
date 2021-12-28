@@ -304,11 +304,12 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 }
 
                 // This is one of our commands, so ensure that there are no unexpected
-                // command line options.
+                // command line options when the command enables option checks.
 
-                var validOptions = new HashSet<string>();
-
+                if (command.CheckOptions)
                 {
+                    var validOptions = new HashSet<string>();
+
                     foreach (var optionName in command.ExtendedOptions)
                     {
                         validOptions.Add(optionName);

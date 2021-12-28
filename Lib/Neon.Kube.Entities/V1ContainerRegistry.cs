@@ -38,10 +38,10 @@ namespace Neon.Kube.Entities
     /// the CRI-O configuration to match.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "ContainerRegistries")]
+    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "containerregistry", PluralName = "containerregistries")]
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
-    [Description("Custom resource describing an upstream container registry.")]
+    [Description("Describes a neonKUBE cluster upstream container registry.")]
     public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistryEntitySpec>
     {
         /// <summary>
@@ -49,7 +49,7 @@ namespace Neon.Kube.Entities
         /// </summary>
         public class V1ContainerRegistryEntitySpec
         {
-            private const string prefixRegex = @"^([a-zA-Z0-9](?:(?:[a-zA-Z0-9-]*|(?<!-)\.(?![-.]))*[a-zA-Z0-9]+)?)(/[a-zA-Z0-9-\._~\[\]@\!$&'\(\)\*+,;%=]+)*$";
+            private const string prefixRegex = @"^([\*a-zA-Z0-9-_]?\.)+([a-zA-Z0-9-_]+\.)[a-zA-Z0-9-_]+(/[a-zA-Z0-9-\._~\[\]@\!$&'\(\)\*+,;%=]*)*$";
 
             /// <summary>
             /// <para>

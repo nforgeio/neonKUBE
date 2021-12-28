@@ -230,7 +230,7 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{readyTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.StartedAsync)}()] within [{readyTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.StartedAsync)}()] is being called or increase the timeout.");
             }
 
             IsRunning = Service.Status == NeonServiceStatus.Running;
@@ -349,7 +349,7 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.StartedAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.StartedAsync)}()] is being called or increase the timeout.");
             }
 
             IsRunning = Service.Status == NeonServiceStatus.Running;

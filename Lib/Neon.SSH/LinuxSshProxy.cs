@@ -2831,6 +2831,8 @@ echo $? > {cmdFolder}/exit
             {
                 var setScript =
 @"
+set -euo pipefail
+
 mkdir -p /etc/neon-init
 touch /etc/neon-init/ready
 ";
@@ -2840,8 +2842,9 @@ touch /etc/neon-init/ready
             {
                 var resetScript =
 @"
-mkdir -p /etc/neon-init
+set -euo pipefail
 
+mkdir -p /etc/neon-init
 rm -rf /etc/neon-init/*
 ";
                 SudoCommand(CommandBundle.FromScript(resetScript));
@@ -2855,9 +2858,11 @@ rm -rf /etc/neon-init/*
 
                 var resetScript =
 @"
+set -euo pipefail
+
 mkdir -p /etc/neon-init
 
-rm -r /etc/netplan/*
+rm -rf /etc/netplan/*
 cp -r /etc/neon-init/netplan-backup/* /etc/netplan
 rm -r /etc/neon-init/netplan-backup
 

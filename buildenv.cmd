@@ -49,7 +49,7 @@ set NF_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
 set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
 set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
-set MSBUILDPATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
+set MSBUILDPATH=C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe
 
 REM Persist the environment variables.
 

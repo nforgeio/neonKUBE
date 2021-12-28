@@ -633,6 +633,8 @@ EOF
 
                     var script =
 @"
+set -euo pipefail
+
 echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
@@ -720,12 +722,16 @@ service kubelet restart
 
                     var helmChartScript =
 $@"
+set -euo pipefail
+
 cd {KubeNodeFolders.Helm}
 
 helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
+
+set +e
 
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do

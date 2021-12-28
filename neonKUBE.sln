@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		LICENSE = LICENSE
 		nuget.config = nuget.config
 		README.md = README.md
+		wsl.conf = wsl.conf
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
@@ -394,6 +395,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Deployment", "Test\Test.Neon.Deployment\Test.Neon.Deployment.csproj", "{F6A4A1FF-165D-4A02-8211-CF202CD64E0B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Setup", "Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj", "{AD7E0027-D9D3-4CDB-9AD6-AC614BA2B3A4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CF9B5668-C2A9-4855-AA5D-983249932883} = {CF9B5668-C2A9-4855-AA5D-983249932883}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cluster-operator", "Services\neon-cluster-operator\neon-cluster-operator.csproj", "{CF9B5668-C2A9-4855-AA5D-983249932883}"
 EndProject

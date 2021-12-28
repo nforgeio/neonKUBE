@@ -65,7 +65,6 @@ Follow the steps below to configure a development or test workstation:
 8. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
   * Select **all workloads** on the first panel
-  * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio to install any updates
@@ -83,30 +82,15 @@ Follow the steps below to configure a development or test workstation:
 11. Install some SDKs:
 
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1) (.NET SDK x64 installer)
-   * Install **.NET 5.0 SDK 5.0.300** from [here](https://dotnet.microsoft.com/download/dotnet/5.0) (.NET SDK x64 installer)
+   * Install **.NET 5.0 SDK 5.0.403* from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-12. Enable **WSL2**:
-
-    * Open a **pwsh** console **as administrator** and execute these commands:
-    ```
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-    ```
-
-    * Install the Microsoft [WSL2 Linux kernel update package for x64 machines](https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi)
-
-    * Close that console and open another **as administrator** and execute this:
-    ```
-    wsl --set-default-version 2
-    ```
-
-13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+12. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
     * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
 
-14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -117,17 +101,34 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-15. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+14. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
-16. Configure the build **environment variables**:
+15. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
+16. Enable **WSL2**:
+
+    * Open a **pwsh** console **as administrator** and execute these commands:
+    ```
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    ```
+
+    * Execute these commands to install Ubuntu-20.04 on WSL2:
+    ```
+    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
+    wsl --import Ubuntu-20.04 "%USERPROFILE%\Wsl2" ubuntu.tar
+    Remove-Item ubuntu.tar
+    wsl --set-default-version 2
+    wsl --set-default Ubuntu-20.04
+    ```
+
 17. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
@@ -212,12 +213,16 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-29. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
+29. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
 
-30. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+    https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
-31. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+30. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
 
-32: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+31. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-33: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+32. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+
+33: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+
+34: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.

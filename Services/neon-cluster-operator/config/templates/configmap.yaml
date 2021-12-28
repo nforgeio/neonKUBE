@@ -1,0 +1,7 @@
+﻿apiVersion: v1
+data:
+  KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
+kind: ConfigMap
+metadata:
+  name: neon-cluster-operator-webhook
+

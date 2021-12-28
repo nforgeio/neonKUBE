@@ -42,12 +42,14 @@
     <DefineConstants />
   </PropertyGroup>
 
-
-
   <ItemGroup>
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
     <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
     <EmbeddedResource Include="Resources/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -78,9 +80,8 @@
 
   <ItemGroup>
     <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
-    <Folder Include="Resources\Helm\neon-cluster-operator\templates\" />
-    <Folder Include="Resources\Helm\neon-kube-resources\" />
   </ItemGroup>
+
 
   <!--
   The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
