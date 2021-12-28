@@ -295,6 +295,11 @@ namespace Neon.Kube
         public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>neon-sso-session-proxy</b> service.
+        /// </summary>
+        public static string NeonSsoSessionProxy = "neon-sso-session-proxy";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Node Problem Detector</b> service.
         /// </summary>
         public static string NodeProblemDetector = "node-problem-detector";

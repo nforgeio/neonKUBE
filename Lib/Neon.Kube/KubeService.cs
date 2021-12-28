@@ -23,13 +23,24 @@ namespace Neon.Kube
     public static class KubeService
     {
         /// <summary>
+        /// Dex.
+        /// </summary>
+        public const string Dex = "neon-sso-dex";
+
+        /// <summary>
         /// Neon Dashboard.
         /// </summary>
         public const string NeonDashboard = "neon-dashboard";
+
         /// <summary>
         /// Cluster operator.
         /// </summary>
         public const string NeonClusterOperator = "neon-cluster-operator";
+
+        /// <summary>
+        /// SSO Proxy.
+        /// </summary>
+        public const string NeonSsoSessionProxy = "neon-sso-session-proxy";
 
         /// <summary>
         /// Neon system database.

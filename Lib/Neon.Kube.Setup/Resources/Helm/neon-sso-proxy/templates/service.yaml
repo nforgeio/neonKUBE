@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "neon-sso-session-proxy.fullname" . }}
+  labels:
+    {{- include "neon-sso-session-proxy.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 5000
+      protocol: TCP
+      name: http
+    - port: {{ .Values.metrics.port }}
+      targetPort: {{ .Values.metrics.port }}
+      protocol: TCP
+      name: "http-metrics"
+  selector:
+    {{- include "neon-sso-session-proxy.selectorLabels" . | nindent 4 }}
