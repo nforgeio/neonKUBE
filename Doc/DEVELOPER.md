@@ -79,18 +79,28 @@ Follow the steps below to configure a development or test workstation:
     * Navigate to **Text Editor/YAML/General**
     * Uncheck **YAML validation** at the top of the right panel
 
-11. Install some SDKs:
+11. Configure Visual Studio Plain Text Editor:
+
+    * Start Visual Studio
+    * Select **Tools/Options...**
+    * Navigate to **Text Editor/Plain Text/Tabs**
+    * Set:
+      * **Tab Size** = 2
+      * **Indent Size** = 2
+      * Select **Insert Spaces**
+
+12. Install some SDKs:
 
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1) (.NET SDK x64 installer)
    * Install **.NET 5.0 SDK 5.0.403* from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-12. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
     * You'll need to create a DockerHub account if you don't already have one.
     * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
 
-13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -101,18 +111,18 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-14. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+15. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
-15. Configure the build **environment variables**:
+16. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-16. Enable **WSL2**:
+17. Enable **WSL2**:
 
     * Open a **pwsh** console **as administrator** and execute these commands:
     ```
@@ -129,7 +139,7 @@ Follow the steps below to configure a development or test workstation:
     wsl --set-default Ubuntu-20.04
     ```
 
-17. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
+18. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
     * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
@@ -151,13 +161,13 @@ Follow the steps below to configure a development or test workstation:
     git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
-18. **Close** any running instances of **Visual Studio**
+19. **Close** any running instances of **Visual Studio**
 
-19. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+20. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-20. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+21. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-21. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -166,22 +176,22 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-22. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
+23. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
 
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.17.2.windows-amd64.msi** from: [here](https://golang.org/dl/go1.17.2.windows-amd64.msi)
 
-23. Confirm that the solution builds:
+24. Confirm that the solution builds:
 
     * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-24. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+25. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-25. *Optional:* Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+26. *Optional:* Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-26. *Optional:* Install **Cmdr/Mini** command shell:
+27. *Optional:* Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -190,9 +200,9 @@ Follow the steps below to configure a development or test workstation:
   * Consider removing the alias definitions in `$\vendor\user_aliases.cmd.default` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
   * Run Cmdr to complete the installation.
 
-27. *Optional:* Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+28. *Optional:* Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-28. *Optional:* Maintainers who will be publishing releases will need to:
+29. *Optional:* Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
 
@@ -213,16 +223,16 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-29. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
+30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
 
     https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
-30. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
+31. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
 
-31. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+32. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-32. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+33. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
 
-33: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+34: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-34: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+35: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
