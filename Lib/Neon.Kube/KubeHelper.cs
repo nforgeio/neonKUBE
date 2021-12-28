@@ -97,7 +97,7 @@ namespace Neon.Kube
         /// <summary>
         /// CURL command common options.
         /// </summary>
-        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30";
+        public const string CurlOptions = "-4fsSL --retry 10 --retry-delay 30 --max-redirs 10";
 
         /// <summary>
         /// Static constructor.

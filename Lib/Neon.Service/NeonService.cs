@@ -1577,7 +1577,7 @@ fi
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then they must call <see cref="StartedAsync()"/>
+        /// Services should perform any required initialization and then they must call <see cref="StartedAsync(NeonServiceStatus)"/>
         /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 
