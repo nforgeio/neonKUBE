@@ -1301,11 +1301,8 @@ fi
 status=$(head -n 1 '{healthStatusPath}')
 
 case ""$status"" in
-    
-    'running')
-    'not-ready')
+    '{NeonHelper.EnumToString(NeonServiceStatus.Running).ToUpperInvariant()}'|'{NeonHelper.EnumToString(NeonServiceStatus.NotReady).ToUpperInvariant()}')
         exit 0;;
-
     *)
         exit 1;;
 esac
@@ -1340,20 +1337,20 @@ fi
 
 status=$(head -n 1 '{healthStatusPath}')
 
-if [ ""$status"" = 'running' ] }} 
+if [ ""$status"" = '{NeonHelper.EnumToString(NeonServiceStatus.Running).ToUpperInvariant()}' ]
 then
     exit 0
 else
     exit 1
 fi
 ";
-                    File.WriteAllText(readyScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
+                    File.WriteAllText(readyScriptPath, NeonHelper.ToLinuxLineEndings(readyScript));
 
                     NeonHelper.Execute("/bin/chmod",
                         new object[]
                         {
                             "775",
-                            healthScriptPath
+                            readyScriptPath
                         });
                 }
                 catch (IOException e)
