@@ -30,16 +30,6 @@ namespace NeonSsoProxy
     /// </summary>
     public class NeonSsoProxyService : NeonService
     {
-        /// <summary>
-        /// Port to listen on.
-        /// </summary>
-        private static int webPort = 5000;
-
-        /// <summary>
-        /// Port to listen on for metrics.
-        /// </summary>
-        private static int metricsPort = 5001;
-
         // class fields
         private IWebHost webHost;
 
@@ -78,12 +68,14 @@ namespace NeonSsoProxy
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
+            
+            var endpoint = Description.Endpoints.Default;
 
             if (!NeonHelper.IsDevWorkstation)
             {
                 MetricsOptions.Mode = MetricsMode.Scrape;
                 MetricsOptions.Path = "/metrics";
-                MetricsOptions.Port = metricsPort;
+                MetricsOptions.Port = endpoint.Port + 1;
 
                 MetricsOptions.GetCollector = () =>
                                 DotNetRuntimeStatsBuilder
@@ -93,18 +85,16 @@ namespace NeonSsoProxy
 
             // Start the web service.
 
-            var endpoint = Description.Endpoints.Default;
-
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, webPort))
+                .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
                 .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoProxyService), this))
                 .UseStaticWebAssets()
                 .Build();
 
-            webHost.Run();
+            _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:{webPort}");
+            Log.LogInfo($"Listening on {IPAddress.Any}:{endpoint.Port}");
 
             // Indicate that the service is ready for business.
 
