@@ -5,7 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: glauth/glauth
+  organization: neon-registry.node.local
+  repository: glauth-glauth
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v2.1.0-rc1"

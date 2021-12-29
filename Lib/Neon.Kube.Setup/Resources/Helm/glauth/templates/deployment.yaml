@@ -33,7 +33,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /app/glauth 
@@ -46,19 +46,6 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
-              readOnly: true
-        - name: {{ .Chart.Name }}-busybox
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: ubuntu:latest
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - sleep
-          args: 
-            - infinity
           volumeMounts:
             - name: config
               mountPath: /app/config
