@@ -30,9 +30,9 @@ using Neon.Net;
 namespace Neon.WSL
 {
     /// <summary>
-    /// Handles interactions with our neonKUBE WSL2 distribution running on the
-    /// local Windows workstation.  Note that this is not intended to be generally
-    /// useful at this time (but it's probably pretty close).
+    /// <b>INTERNAL USE ONLY:</b> Handles interactions with our neonKUBE WSL2 distribution
+    /// running on the local Windows workstation.  Note that this is not intended to be 
+    /// generally useful at this time.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -465,6 +465,37 @@ namespace Neon.WSL
                 }
 
                 return cachedOsRelease;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> for Debian/Ubuntu based distributions.
+        /// </summary>
+        public bool IsDebian
+        {
+            get
+            {
+                var osRelease = OSRelease;
+
+                if (osRelease.TryGetValue("ID", out var id))
+                {
+                    if (id.Equals("debian", StringComparison.InvariantCultureIgnoreCase) ||
+                        id.Equals("ubuntu", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                if (osRelease.TryGetValue("ID_LIKE", out var idLike))
+                {
+                    if (idLike.Equals("debian", StringComparison.InvariantCultureIgnoreCase) ||
+                        idLike.Equals("ubuntu", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 
