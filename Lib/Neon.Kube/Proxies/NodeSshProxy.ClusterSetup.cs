@@ -444,14 +444,6 @@ service ntp restart
 
             SudoCommand($"hostnamectl set-hostname {Name}");
 
-            // We need to edit [/etc/cloud/cloud.cfg] to preserve the hostname change.
-
-            var cloudCfg = DownloadText("/etc/cloud/cloud.cfg");
-
-            cloudCfg = cloudCfg.Replace("preserve_hostname: false", "preserve_hostname: true");
-
-            UploadText("/etc/cloud/cloud.cfg", cloudCfg);
-
             // Update the [/etc/hosts] file to resolve the new hostname.
 
             var sbHosts = new StringBuilder();
