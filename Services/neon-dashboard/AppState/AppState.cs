@@ -75,6 +75,11 @@ namespace NeonDashboard
         public List<Dashboard> Dashboards;
 
         /// <summary>
+        /// List of dashboards that have been loaded.
+        /// </summary>
+        public List<Dashboard> DashboardFrames { get; set; } = new List<Dashboard>();
+
+        /// <summary>
         /// The name of the currently selected dashboard.
         /// </summary>
         public string CurrentDashboard;
@@ -111,25 +116,13 @@ namespace NeonDashboard
                     new Dashboard("loooooopie", $"https://loopielaundry.com/"),
                     new Dashboard("uwu", $"https://www.dictionary.com/e/slang/uwu"),
                 };
+
+                DashboardFrames = new List<Dashboard>(); 
             }
-
-            if (string.IsNullOrEmpty(CurrentDashboard))
-            {
-                CurrentDashboard = Dashboards.FirstOrDefault().Name;
-            }
-        }
-
-        public async Task SetDashboardAsync(string name)
-        {
-            CurrentDashboard = name;
-
-            NotifyDashboardChanged();
-
-            await Task.CompletedTask;
         }
 
         public event Action OnDashboardChange;
-        private void NotifyDashboardChanged() => OnDashboardChange?.Invoke();
+        public void NotifyDashboardChanged() => OnDashboardChange?.Invoke();
 
         public event Action OnChange;
         private void NotifyStateChanged() => OnChange?.Invoke();

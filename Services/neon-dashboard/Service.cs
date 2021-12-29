@@ -18,6 +18,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Service;
+using Neon.Common;
+
+using Prometheus.DotNetRuntime;
 
 namespace NeonDashboard
 {
@@ -26,11 +29,6 @@ namespace NeonDashboard
     /// </summary>
     public class NeonDashboardService : NeonService
     {
-        /// <summary>
-        /// Port to listen on.
-        /// </summary>
-        private static int webPort = 5000;
-
         // class fields
         private IWebHost webHost;
 
@@ -68,20 +66,34 @@ namespace NeonDashboard
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            // Start the web service.
+            await SetStatusAsync(NeonServiceStatus.Starting);
 
             var endpoint = Description.Endpoints.Default;
 
+            if (!NeonHelper.IsDevWorkstation)
+            {
+                MetricsOptions.Mode = MetricsMode.Scrape;
+                MetricsOptions.Path = "/metrics";
+                MetricsOptions.Port = endpoint.Port + 1;
+
+                MetricsOptions.GetCollector = () =>
+                                DotNetRuntimeStatsBuilder
+                                    .Default()
+                                    .StartCollecting();
+            }
+
+            // Start the web service.
+
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, webPort))
+                .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
                 .ConfigureServices(services => services.AddSingleton(typeof(NeonDashboardService), this))
                 .UseStaticWebAssets()
                 .Build();
 
-            webHost.Run();
+            _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:{webPort}");
+            Log.LogInfo($"Listening on {IPAddress.Any}:{endpoint.Port}");
 
             // Indicate that the service is ready for business.
 

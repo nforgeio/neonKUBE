@@ -3,19 +3,23 @@
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.*@
 
-@page "/"
+@page "/{currentDashboard?}"
 @inherits PageBase
 
-<PageBase PageTitle="@PageTitle"></PageBase>
+<PageBase PageTitle="@PageTitle" />
+<CascadingValue Value="@CurrentDashboard" Name="CurrentDashboard" />
  
-<div class="dashboard-container">
-@foreach (var dashboard in AppState.Dashboards)
-{
-    <div class="dashboard-frame">
-        <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
-    </div>
+@if (AppState.DashboardFrames != null){
+  <div class="dashboard-container">
+  @foreach (var dashboard in AppState.DashboardFrames)
+  {
+      <div class="dashboard-frame">
+          <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
+      </div>
+  }
+  </div>
 }
-</div>
+
 
 @*<AuthorizeView>
      <Authorized>

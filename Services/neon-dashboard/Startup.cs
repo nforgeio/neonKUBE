@@ -118,7 +118,7 @@ namespace NeonDashboard
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();
