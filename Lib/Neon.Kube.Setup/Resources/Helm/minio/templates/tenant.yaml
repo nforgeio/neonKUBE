@@ -77,17 +77,6 @@ spec:
     {{ toYaml . | nindent 4 }}
   {{- end }}
   env:
-    - name: MINIO_IDENTITY_OPENID_CONFIG_URL
-      value: "https://sso.{{ $clusterDomain }}/.well-known/openid-configuration" 
-    - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
-      value: "https://minio-console.{{ $clusterDomain }}/oauth_callback"
-    - name: MINIO_IDENTITY_OPENID_CLIENT_ID
-      value: minio
-    - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: neon-sso-dex
-          key: MINIO_CLIENT_SECRET
   {{- with .env }}
     {{ toYaml . | nindent 4 }}
   {{- end }}

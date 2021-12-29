@@ -69,7 +69,7 @@ spec:
           - name: CONSOLE_IDP_URL
             value: "https://sso.{{ .Values.cluster.domain }}/.well-known/openid-configuration" 
           - name: CONSOLE_IDP_CALLBACK
-            value: "https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback"
+            value: "https://{{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}/oauth_callback"
           - name: CONSOLE_IDP_CLIENT_ID
             value: minio
           - name: CONSOLE_IDP_SECRET

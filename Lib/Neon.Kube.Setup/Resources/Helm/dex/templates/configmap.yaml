@@ -63,7 +63,6 @@ data:
       secret: "{{- .Values.secrets.harbor }}"
     - id: minio
       redirectURIs:
-      - 'https://minio-console.{{ .Values.cluster.domain }}/oauth_callback'
-      - 'https://minio-operator.{{ .Values.cluster.domain }}/oauth_callback'
+      - 'https://minio.{{ .Values.cluster.domain }}/oauth_callback'
       name: 'Minio'
       secret: "{{- .Values.secrets.minio }}"
