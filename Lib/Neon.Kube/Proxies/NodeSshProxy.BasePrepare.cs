@@ -458,6 +458,7 @@ EOF
                     var disableCloudInitScript =
 $@"
 set -euo pipefail
+mkdir -p /etc/cloud
 touch /etc/cloud/cloud-init.disabled
 ";
                     SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.Defaults | RunOptions.FaultOnError);
