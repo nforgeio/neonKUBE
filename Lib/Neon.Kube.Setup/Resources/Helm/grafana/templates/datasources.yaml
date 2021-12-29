@@ -43,7 +43,7 @@ spec:
         httpHeaderName1: 'X-Scope-OrgID'
         derivedFields:
           - datasourceName: Tempo
-            matcherRegex: '[\"]?(?:trace|Trace|TRACE)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
+            matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
             name: traceID
             url: "$${__value.raw}"
             datasourceUid: tempo
