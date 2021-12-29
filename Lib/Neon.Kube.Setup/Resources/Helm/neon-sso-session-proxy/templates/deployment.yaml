@@ -67,7 +67,7 @@ spec:
               - /ready-check          # $lt;--- separate script for readiness probes
             initialDelaySeconds: 1
             periodSeconds: 10
-  /         timeoutSeconds: 1
+            timeoutSeconds: 1
           volumeMounts:
             - name: config
               mountPath: /etc/neonkube/neon-sso-session-proxy
