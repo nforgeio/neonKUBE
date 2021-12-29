@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neon-sso-proxy images and pushes them to Docker Hub.
+# Builds the neon-sso-session-proxy images and pushes them to Docker Hub.
 #
 # NOTE: You must be already logged into the target container registry.
 #
@@ -42,7 +42,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeSetupRegistry "neon-sso-proxy"
+	$registry    = GetKubeSetupRegistry "neon-sso-session-proxy"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 

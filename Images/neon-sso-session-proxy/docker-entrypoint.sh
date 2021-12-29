@@ -10,4 +10,4 @@ PATH=${PATH}:/
 
 # Launch the service.
 
-exec neon-sso-proxy
+exec neon-sso-session-proxy
