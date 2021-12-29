@@ -169,6 +169,7 @@ SetVersion Neon.SSH                 $libraryVersion
 SetVersion Neon.Temporal            $libraryVersion
 SetVersion Neon.Web                 $libraryVersion
 SetVersion Neon.WinTTY              $libraryVersion
+SetVersion Neon.WSL                 $libraryVersion
 SetVersion Neon.XenServer           $libraryVersion
 SetVersion Neon.Xunit               $libraryVersion
 SetVersion Neon.Xunit.Cadence       $libraryVersion
@@ -212,6 +213,7 @@ Publish Neon.SSH                    $libraryVersion
 Publish Neon.Temporal               $libraryVersion
 Publish Neon.Web                    $libraryVersion
 Publish Neon.WinTTY                 $libraryVersion
+Publish Neon.WSL                    $libraryVersion
 Publish Neon.XenServer              $libraryVersion
 Publish Neon.Xunit                  $libraryVersion
 Publish Neon.Xunit.Cadence          $libraryVersion

@@ -116,8 +116,8 @@ namespace Neon.Xunit
         public const string NeonCassandra = "Neon.Cassandra";
 
         /// <summary>
-        /// Identifies <b>Neon.Identity</b> tests.
+        /// Identifies <b>Neon.WSL</b> tests.
         /// </summary>
-        public const string NeonIdentity = "Neon.Identity";
+        public const string NeonWSL = "Neon.WSL";
     }
 }
