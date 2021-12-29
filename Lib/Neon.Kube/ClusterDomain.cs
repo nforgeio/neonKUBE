@@ -72,7 +72,7 @@ namespace Neon.Kube
         /// <summary>
         /// Minio Operator dashboard.
         /// </summary>
-        public const string MinioOperator = "minio-operator";
+        public const string Minio = "minio";
 
         /// <summary>
         /// Cortex Ruler service.
