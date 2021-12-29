@@ -3069,22 +3069,18 @@ $@"- name: StorageType
                                 new string[] {
                                     "/bin/bash",
                                     "-c",
-                                    $"/mc admin policy info minio consoleAdmin > /tmp/consoleAdmin.json"
+                                    $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
                                 });
 
-                            // $todo(marcusbooyah):
-                            //
-                            //      https://github.com/nforgeio/neonKUBE/issues/1354
-
-                            //await k8s.NamespacedPodExecAsync(
-                            //    KubeNamespaces.NeonSystem,
-                            //    minioPod.Name(),
-                            //    "minio-operator",
-                            //    new string[] {
-                            //        "/bin/bash",
-                            //        "-c",
-                            //        $"/mc admin policy add minio superadmin /tmp/consoleAdmin.json"
-                            //    });
+                            await k8s.NamespacedPodExecAsync(
+                                KubeNamespaces.NeonSystem,
+                                minioPod.Name(),
+                                "minio-operator",
+                                new string[] {
+                                    "/bin/bash",
+                                    "-c",
+                                    $"/mc admin policy add minio superadmin /tmp/superadmin.json"
+                                });
                         });
                 });
 
@@ -3884,6 +3880,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
             await InstallDexAsync(controller, master);
+            await InstallNeonSsoProxyAsync(controller, master);
             await InstallGlauthAsync(controller, master);
             await InstallOauth2ProxyAsync(controller, master);
         }
@@ -3899,8 +3896,8 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Dex);
@@ -3909,7 +3906,7 @@ $@"- name: StorageType
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("ingress.subdomain", ClusterDomain.Dex);
+            values.Add("ingress.subdomain", ClusterDomain.Sso);
 
             values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(32));
             values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(32));
@@ -3917,12 +3914,12 @@ $@"- name: StorageType
             values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(32));
             values.Add("secrets.ldap", NeonHelper.GetCryptoRandomPassword(32));
 
-            values.Add("config.issuer", $"https://{ClusterDomain.Dex}.{cluster.Definition.Domain}");
+            values.Add("config.issuer", $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
 
             // LDAP
             var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
-            values.Add("config.ldap.bindDN", $@"cn=serviceuser\,ou=admin\,{baseDN}"); 
-            values.Add("config.ldap.bindPW", $@"cn=serviceuser\,ou=admin\,{baseDN}"); 
+            values.Add("config.ldap.bindDN", $@"cn=serviceuser\,ou=admin\,{baseDN}");
+            values.Add("config.ldap.bindPW", $@"cn=serviceuser\,ou=admin\,{baseDN}");
             values.Add("config.ldap.userSearch.baseDN", $@"cn=users\,{baseDN}");
             values.Add("config.ldap.groupSearch.baseDN", $@"ou=users\,{baseDN}");
 
@@ -3949,6 +3946,51 @@ $@"- name: StorageType
         }
 
 
+
+        /// <summary>
+        /// Installs Neon SSO Session Proxy.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonSsoProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
+
+            var values = new Dictionary<string, object>();
+
+            values.Add("cluster.name", cluster.Definition.Name);
+            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
+
+            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
+            {
+                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+            }
+
+            await master.InvokeIdempotentAsync("setup/neon-sso-proxy-install",
+                async () =>
+                {
+                    await master.InstallHelmChartAsync(controller, "neon_sso_proxy", releaseName: "neon-sso-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "dex");
+                });
+
+            await master.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-sso-proxy");
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                });
+        }
 
         /// <summary>
         /// Installs Glauth.

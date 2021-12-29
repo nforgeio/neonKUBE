@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 
 using NeonDashboard.Shared;
 using NeonDashboard.Shared.Components;
@@ -35,7 +36,6 @@ namespace NeonDashboard.Pages
         [Parameter]
         public string Description { get; set; } = "";
 
-        public string Testaroo;
 
         public PageBase()
         {

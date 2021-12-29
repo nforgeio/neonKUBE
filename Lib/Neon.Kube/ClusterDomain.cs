@@ -42,7 +42,7 @@ namespace Neon.Kube
         /// <summary>
         /// Single sign on service.
         /// </summary>
-        public const string Dex = "sso";
+        public const string Sso = "sso";
 
         /// <summary>
         /// Grafana dashboard.

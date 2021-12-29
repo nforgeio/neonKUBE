@@ -28,6 +28,9 @@ namespace NeonDashboard.Shared.Components
             Description = description;
         }
 
+        [CascadingParameter(Name = "CurrentDashboard")]
+        public string CurrentDashboard { get; set; }
+
         [Parameter]
         public string Name { get; set; } = null;
 
@@ -41,18 +44,13 @@ namespace NeonDashboard.Shared.Components
         {
             get 
             { 
-                if (AppState != null)
-                {
-                    return AppState.CurrentDashboard == Name;
-                }
-                return false;
+                return AppState.CurrentDashboard == Name;
             }
         }
 
         protected override void OnInitialized()
         {
             AppState.OnDashboardChange += StateHasChanged;
-
         }
 
         public void Dispose()

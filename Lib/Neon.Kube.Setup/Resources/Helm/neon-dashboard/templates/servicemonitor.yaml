@@ -1,0 +1,34 @@
+{{- if and .Values.metrics.enabled .Values.metrics.servicemonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "neon-dashboard.fullname" . }}
+{{- if .Values.metrics.servicemonitor.namespace }}
+  namespace: {{ .Values.metrics.servicemonitor.namespace }}
+{{- else }}
+  namespace: {{ .Release.Namespace | quote }}
+{{- end }}
+  labels:
+    app: {{ template "neon-dashboard.name" . }}
+    chart: {{ template "neon-dashboard.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Values.metrics.servicemonitor.prometheusInstance }}
+{{- if .Values.metrics.servicemonitor.labels }}
+{{ toYaml .Values.metrics.servicemonitor.labels | indent 4}}
+{{- end }}
+spec:
+  jobLabel: {{ template "neon-dashboard.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "neon-dashboard.name" . }}
+      release: {{ .Release.Name }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+  - targetPort: {{ .Values.metrics.port }}
+    path: "/metrics"
+    interval: {{ .Values.metrics.servicemonitor.interval }}
+    scrapeTimeout: {{ .Values.metrics.servicemonitor.scrapeTimeout }}
+{{- end }}

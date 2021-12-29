@@ -22,7 +22,7 @@ imagePullSecrets: []
 nameOverride: ""
 
 # -- A name to substitute for the full names of resources.
-fullnameOverride: ""
+fullnameOverride: "neon-sso-dex"
 
 # -- A list of hosts and IPs that will be injected into the pod's hosts file if specified.
 # See the [API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#hostname-and-name-resolution)
@@ -60,7 +60,7 @@ config:
     tlsCert: /etc/dex/tls/tls.crt
     tlsKey: /etc/dex/tls/tls.key
   ldap:
-    host: glauth.neon-system:3893
+    host: neon-sso-glauth.neon-system:3893
     bindDN: cn=serviceuser,ou=admin,dc=cluster,dc=neoncluster,dc=io
     bindPW: mysecret
 

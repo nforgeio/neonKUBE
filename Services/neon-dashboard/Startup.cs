@@ -55,7 +55,6 @@ namespace NeonDashboard
                 NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Environment.GetEnvironmentVariable("SSO_CLIENT_SECRET"));
             }
 
-            services.AddRazorPages();
             services.AddServerSideBlazor();
 
             services.AddAuthentication(options => {
@@ -67,7 +66,7 @@ namespace NeonDashboard
             {
                 options.ClientId = "kubernetes";
                 options.ClientSecret = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
-                options.Authority = $"https://{ClusterDomain.Dex}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
+                options.Authority = $"https://{ClusterDomain.Sso}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -119,7 +118,7 @@ namespace NeonDashboard
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

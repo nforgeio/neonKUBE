@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 
 using NeonDashboard.Shared.Components;
 
@@ -28,9 +29,32 @@ namespace NeonDashboard.Pages
 {
     public partial class Index : PageBase
     {
+        [Parameter]
+        public string CurrentDashboard { get; set; }
+
         public Index()
+            
         {
         }
 
+        protected override void OnInitialized()
+        {
+            AppState.OnDashboardChange += StateHasChanged;
+        }
+        protected override async Task OnParametersSetAsync()
+        {
+            if (!AppState.DashboardFrames.Any(d => d.Name == CurrentDashboard))
+            {
+                var dashboard = AppState.Dashboards.Where(d => d.Name == CurrentDashboard).FirstOrDefault();
+                if (dashboard != null)
+                {
+                    AppState.DashboardFrames.Add(dashboard);
+                }
+            }
+
+            AppState.CurrentDashboard = CurrentDashboard;
+
+            AppState.NotifyDashboardChanged();
+        }
     }
 }

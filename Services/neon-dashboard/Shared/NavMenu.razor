@@ -14,10 +14,13 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <nav class="flex-column">
+        <div class="nav-item px-3">
+          <button @onclick="@(() => NavigationManager.NavigateTo("/"))">Home</button>
+        </div>
         @foreach (var dashboard in AppState.Dashboards)
         {
             <div class="nav-item px-3">
-                <button @onclick="@(async () => await AppState.SetDashboardAsync(dashboard.Name))">@dashboard.Name</button>
+                <button @onclick="@(() => NavigationManager.NavigateTo(dashboard.Name))">@dashboard.Name</button>
             </div>
         }
     </nav>
