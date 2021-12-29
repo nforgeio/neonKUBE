@@ -109,8 +109,8 @@ namespace Neon.Kube
             serviceMaps["production"] = new KubeServiceMap();
             serviceMaps["production"].AddServiceDescription(KubeService.Dex, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Http, Port = 5556}, @namespace: KubeNamespaces.NeonSystem);
             serviceMaps["production"].AddServiceDescription(KubeService.NeonClusterOperator, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(KubeService.NeonDashboard, new ServiceEndpoint());
-            serviceMaps["production"].AddServiceDescription(KubeService.NeonSsoSessionProxy, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonDashboard, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 11000 }, @namespace: KubeNamespaces.NeonSystem);
+            serviceMaps["production"].AddServiceDescription(KubeService.NeonSsoSessionProxy, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 11001 }, @namespace: KubeNamespaces.NeonSystem);
             serviceMaps["production"].AddServiceDescription(KubeService.NeonSystemDb, new ServiceEndpoint() { Protocol = ServiceEndpointProtocol.Tcp, Port = 5432 }, @namespace: KubeNamespaces.NeonSystem);
 
             VerifyInit(Production);
