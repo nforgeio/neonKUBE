@@ -55,6 +55,8 @@ namespace NeonDashboard.Pages
             AppState.CurrentDashboard = CurrentDashboard;
 
             AppState.NotifyDashboardChanged();
+
+            await Task.CompletedTask;
         }
     }
 }

@@ -136,12 +136,6 @@ namespace NeonDashboard
         {
             ShowSidebar = !ShowSidebar;
             NotifySidebarChanged();
-
-            var state = "open";
-            if (ShowSidebar)
-            {
-                state = "close";
-            }
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace NeonDashboard.Shared
     {
         private bool collapseNavMenu = true;
 
-        private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+        private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
         private void ToggleNavMenu()
         {
