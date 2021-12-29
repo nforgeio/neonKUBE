@@ -1696,6 +1696,25 @@ subjects:
                     await master.InstallHelmChartAsync(controller, "kubernetes_dashboard", releaseName: "kubernetes-dashboard", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "kubernetes-dashboard");
 
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/k8s-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update k8s ingress");
+
+                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "k8s-dashboard-virtual-service")).ToObject<VirtualService>();
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "k8s-dashboard-virtual-service");
+                    });
+            }
         }
 
         /// <summary>
@@ -1776,6 +1795,7 @@ subjects:
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
             var k8s = GetK8sClient(controller);
 
@@ -1823,7 +1843,24 @@ subjects:
                         });
                 });
 
-            await Task.CompletedTask;
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/kiali-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update kiali ingress");
+
+                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "kiali-dashboard-virtual-service")).ToObject<VirtualService>();
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{ClusterDomain.Kiali}.{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "kiali-dashboard-virtual-service");
+                    });
+            }
         }
 
         /// <summary>
@@ -2916,21 +2953,37 @@ $@"- name: StorageType
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-secrets",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "renew grafana secrets");
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "renew grafana secrets");
 
-                    var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaSecret, KubeNamespaces.NeonMonitor);
+                        var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                        var grafanaSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaSecret, KubeNamespaces.NeonMonitor);
 
-                    grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
+                        grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
 
-                    var grafanaAdminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
+                        var grafanaAdminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
 
-                    grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                    grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
 
-                });
+                    });
+
+                await master.InvokeIdempotentAsync("ready-to-go/grafana-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update grafana ingress");
+                    
+                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service")).ToObject<VirtualService>();
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{ClusterDomain.Grafana}.{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service");
+                    });
             }
         }
 
@@ -3087,60 +3140,76 @@ $@"- name: StorageType
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 await master.InvokeIdempotentAsync("ready-to-go/minio-secrets",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "renew minio secret");
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "renew minio secret");
 
-                    var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+                        var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
 
-                    secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                    secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                    await k8s.ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
+                        secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        await k8s.ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
 
-                    var monitoringSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
+                        var monitoringSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
 
-                    monitoringSecret.Data["accesskey"] = secret.Data["accesskey"];
-                    monitoringSecret.Data["secretkey"] = secret.Data["secretkey"];
-                    await k8s.ReplaceNamespacedSecretAsync(monitoringSecret, monitoringSecret.Name(), KubeNamespaces.NeonMonitor);
+                        monitoringSecret.Data["accesskey"] = secret.Data["accesskey"];
+                        monitoringSecret.Data["secretkey"] = secret.Data["secretkey"];
+                        await k8s.ReplaceNamespacedSecretAsync(monitoringSecret, monitoringSecret.Name(), KubeNamespaces.NeonMonitor);
 
-                    var registrySecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+                        var registrySecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
 
-                    registrySecret.Data["accesskey"] = secret.Data["accesskey"];
-                    registrySecret.Data["secretkey"] = secret.Data["secretkey"];
-                    await k8s.ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
+                        registrySecret.Data["accesskey"] = secret.Data["accesskey"];
+                        registrySecret.Data["secretkey"] = secret.Data["secretkey"];
+                        await k8s.ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
 
-                    // Delete certs so that they will be regenerated.
+                        // Delete certs so that they will be regenerated.
 
-                    await k8s.DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
-                    await k8s.DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
+                        await k8s.DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
+                        await k8s.DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
 
-                    // Restart minio components.
+                        // Restart minio components.
 
-                    var minioOperator = await k8s.ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
+                        var minioOperator = await k8s.ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
 
-                    await minioOperator.RestartAsync(GetK8sClient(controller));
+                        await minioOperator.RestartAsync(GetK8sClient(controller));
 
-                    var minioStatefulSet = (await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
-                    await minioStatefulSet.RestartAsync(GetK8sClient(controller));
+                        var minioStatefulSet = (await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
+                        await minioStatefulSet.RestartAsync(GetK8sClient(controller));
                     
-                    // Restart registry components.
+                        // Restart registry components.
 
-                    var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
+                        var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
 
-                    await harborChartmuseum.RestartAsync(GetK8sClient(controller));
+                        await harborChartmuseum.RestartAsync(GetK8sClient(controller));
 
-                    var harborCore = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
+                        var harborCore = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
 
-                    await harborCore.RestartAsync(GetK8sClient(controller));
+                        await harborCore.RestartAsync(GetK8sClient(controller));
 
-                    var harborRegistry = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
+                        var harborRegistry = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
 
-                    await harborRegistry.RestartAsync(GetK8sClient(controller));
+                        await harborRegistry.RestartAsync(GetK8sClient(controller));
 
-                    var harborRegistryctl = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registryctl", KubeNamespaces.NeonSystem);
+                        var harborRegistryctl = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registryctl", KubeNamespaces.NeonSystem);
 
-                    await harborRegistryctl.RestartAsync(GetK8sClient(controller));
-                });
+                        await harborRegistryctl.RestartAsync(GetK8sClient(controller));
+                    });
+
+                await master.InvokeIdempotentAsync("ready-to-go/minio-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update minio ingress");
+
+                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "minio-operator-dashboard-virtual-service")).ToObject<VirtualService>();
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{ClusterDomain.Minio}.{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "minio-operator-dashboard-virtual-service");
+                    });
             }
         }
 
@@ -3542,8 +3611,8 @@ $@"- name: StorageType
                 virtualService.Spec.Hosts =
                     new List<string>()
                     {
-                        $"registry.{cluster.Definition.Domain}",
-                        $"notary.{cluster.Definition.Domain}",
+                        $"{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}",
+                        $"{ClusterDomain.HarborNotary}.{cluster.Definition.Domain}",
                         KubeConst.LocalClusterRegistry
                     };
 
@@ -3990,6 +4059,25 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso ingress");
+
+                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "neon-sso-session-proxy")).ToObject<VirtualService>();
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{ClusterDomain.Sso}.{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "neon-sso-session-proxy");
+                    });
+            }
         }
 
         /// <summary>
