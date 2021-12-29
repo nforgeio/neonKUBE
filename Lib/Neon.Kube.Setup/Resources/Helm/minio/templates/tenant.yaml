@@ -86,7 +86,7 @@ spec:
     - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
       valueFrom:
         secretKeyRef:
-          name: dex
+          name: neon-sso-dex
           key: MINIO_CLIENT_SECRET
   {{- with .env }}
     {{ toYaml . | nindent 4 }}

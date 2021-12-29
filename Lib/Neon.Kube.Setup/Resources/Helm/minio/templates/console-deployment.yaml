@@ -75,7 +75,7 @@ spec:
           - name: CONSOLE_IDP_SECRET
             valueFrom:
               secretKeyRef:
-                name:  dex
+                name:  neon-sso-dex
                 key: MINIO_CLIENT_SECRET
           - name: CONSOLE_IDP_SCOPES
             value: "openid,email,profile,groups"

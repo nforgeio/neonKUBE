@@ -8,7 +8,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 5000
+      targetPort: 11001
       protocol: TCP
       name: http
     - port: {{ .Values.metrics.port }}

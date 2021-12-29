@@ -31,12 +31,12 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: COOKIE_CIPHER
               valueFrom:
-                  secretKeyRef:
+                secretKeyRef:
                   name: {{ include "neon-sso-session-proxy.fullname" . }}
                   key: CIPHER_KEY
           ports:
@@ -49,7 +49,8 @@ spec:
           startupProbe:
             exec:
               command:
-              - /health-check         # $lt;--- this script works for both startup and liveliness probes
+                - sh
+                - /health-check         # $lt;--- this script works for both startup and liveliness probes
             initialDelaySeconds: 1
             failureThreshold: 30
             periodSeconds: 5
@@ -57,14 +58,16 @@ spec:
           livenessProbe:
             exec:
               command:
-              - /health-check
+                - sh
+                - /health-check
             initialDelaySeconds: 1    # $lt;--- we don't need a long (fixed) delay here with a startup probe
             periodSeconds: 10
             timeoutSeconds: 1
           readinessProbe:
             exec:
               command:
-              - /ready-check          # $lt;--- separate script for readiness probes
+                - sh
+                - /ready-check          # $lt;--- separate script for readiness probes
             initialDelaySeconds: 1
             periodSeconds: 10
             timeoutSeconds: 1
@@ -89,4 +92,4 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: dex
+            name: neon-sso-dex
