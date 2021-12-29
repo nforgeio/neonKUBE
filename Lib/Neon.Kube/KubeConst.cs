@@ -328,7 +328,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the secret containing Dex credentials.
         /// </summary>
-        public const string DexSecret = "dex";
+        public const string DexSecret = "neon-sso-dex";
 
         /// <summary>
         /// Identifies the neon-system-db superuser database.
