@@ -18,8 +18,8 @@
 
     <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
 	  
-	  
 	<!-- $debug(jefflill): Remove this after we figure out how to run without a kubeconfig -->  
+	  
     <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
 	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
 	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
