@@ -23,12 +23,12 @@ using Neon.Common;
 using Prometheus;
 using Prometheus.DotNetRuntime;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
     /// <summary>
     /// Implements the Neon Dashboard service.
     /// </summary>
-    public class NeonSsoProxyService : NeonService
+    public class NeonSsoSessionProxyService : NeonService
     {
         // class fields
         private IWebHost webHost;
@@ -43,7 +43,7 @@ namespace NeonSsoProxy
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public NeonSsoProxyService(ServiceMap serviceMap, string name)
+        public NeonSsoSessionProxyService(ServiceMap serviceMap, string name)
              : base(name,
                   $@"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : "")}",
                   serviceMap: serviceMap)
@@ -88,7 +88,7 @@ namespace NeonSsoProxy
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
-                .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoProxyService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoSessionProxyService), this))
                 .UseStaticWebAssets()
                 .Build();
 

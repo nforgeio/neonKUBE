@@ -17,7 +17,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
     public class SsoSessionMiddleware
     {
@@ -40,13 +40,13 @@ namespace NeonSsoProxy
         /// </summary>
         public async Task InvokeAsync(
             HttpContext context,
-            NeonSsoProxyService neonSsoProxyService,
+            NeonSsoSessionProxyService NeonSsoSessionProxyService,
             IDistributedCache cache, 
             AesCipher cipher)
         {
             try
             {
-                if (context.Request.Cookies.TryGetValue(NeonSsoProxyService.SessionCookieName, out var requestCookieBase64))
+                if (context.Request.Cookies.TryGetValue(NeonSsoSessionProxyService.SessionCookieName, out var requestCookieBase64))
                 {
                     var requestCookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
 
@@ -80,7 +80,7 @@ namespace NeonSsoProxy
             }
             catch (Exception e)
             {
-                neonSsoProxyService.Log.LogError(e);
+                NeonSsoSessionProxyService.Log.LogError(e);
             }
 
             await _next(context);

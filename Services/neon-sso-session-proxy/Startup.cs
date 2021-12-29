@@ -21,24 +21,24 @@ using Prometheus;
 
 using Yarp;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
-        public NeonSsoProxyService NeonSsoProxyService;
+        public NeonSsoSessionProxyService NeonSsoSessionProxyService;
 
-        public Startup(IConfiguration configuration, NeonSsoProxyService service)
+        public Startup(IConfiguration configuration, NeonSsoSessionProxyService service)
         {
             Configuration = configuration;
-            this.NeonSsoProxyService = service;
+            this.NeonSsoSessionProxyService = service;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            if (NeonSsoProxyService.InDevelopment)
+            if (NeonSsoSessionProxyService.InDevelopment)
             {
                 services.AddDistributedMemoryCache();
             }
@@ -62,9 +62,9 @@ namespace NeonSsoProxy
             services.AddHttpClient();
 
             // Dex config
-            var configFile = NeonSsoProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-proxy/config.yaml");
+            var configFile = NeonSsoSessionProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
             var config = NeonHelper.YamlDeserialize<dynamic>(File.ReadAllText(configFile));
-            var dexClient = new DexClient(NeonSsoProxyService.ServiceMap[KubeService.Dex].Endpoints.Default.Uri);
+            var dexClient = new DexClient(NeonSsoSessionProxyService.ServiceMap[KubeService.Dex].Endpoints.Default.Uri);
             
             // Load in each of the clients from the Dex config into the client.
             foreach (var client in config["staticClients"])
@@ -85,7 +85,7 @@ namespace NeonSsoProxy
             services.AddSingleton(httpMessageInvoker);
 
             // Cookie encryption cipher.
-            var aesCipher = new AesCipher(NeonSsoProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey()));
+            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey()));
             services.AddSingleton(aesCipher);
 
             services.AddControllers()
@@ -95,8 +95,8 @@ namespace NeonSsoProxy
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (NeonSsoProxyService.InDevelopment 
-                || !string.IsNullOrEmpty(NeonSsoProxyService.GetEnvironmentVariable("DEBUG")))
+            if (NeonSsoSessionProxyService.InDevelopment 
+                || !string.IsNullOrEmpty(NeonSsoSessionProxyService.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }

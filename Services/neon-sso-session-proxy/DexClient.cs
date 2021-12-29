@@ -11,7 +11,7 @@ using Neon.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
 
     public class DexClient : IDisposable

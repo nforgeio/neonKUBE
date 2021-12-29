@@ -24,12 +24,12 @@ using Yarp;
 using Yarp.ReverseProxy;
 using Yarp.ReverseProxy.Forwarder;
 
-namespace NeonSsoProxy.Controllers
+namespace NeonSsoSessionProxy.Controllers
 {
     [ApiController]
     public class AuthController : NeonControllerBase
     {
-        private NeonSsoProxyService neonSsoProxyService;
+        private NeonSsoSessionProxyService NeonSsoSessionProxyService;
         private HttpMessageInvoker  httpClient;
         private IHttpForwarder      forwarder;
         private SessionTransformer   transformer;
@@ -40,26 +40,26 @@ namespace NeonSsoProxy.Controllers
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="neonSsoProxyService"></param>
+        /// <param name="NeonSsoSessionProxyService"></param>
         /// <param name="httpClient"></param>
         /// <param name="forwarder"></param>
         /// <param name="cache"></param>
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
         public AuthController(
-            NeonSsoProxyService neonSsoProxyService,
+            NeonSsoSessionProxyService NeonSsoSessionProxyService,
             HttpMessageInvoker  httpClient,
             IHttpForwarder      forwarder,
             IDistributedCache   cache,
             AesCipher           aesCipher,
             DexClient           dexClient)
         {
-            this.neonSsoProxyService = neonSsoProxyService;
+            this.NeonSsoSessionProxyService = NeonSsoSessionProxyService;
             this.httpClient          = httpClient;
             this.forwarder           = forwarder;
             this.cache               = cache;
             this.cipher              = aesCipher;    
-            this.transformer         = new SessionTransformer(cache, aesCipher, dexClient,neonSsoProxyService.Log);
+            this.transformer         = new SessionTransformer(cache, aesCipher, dexClient,NeonSsoSessionProxyService.Log);
             this.dexClient           = dexClient;
         }
 
@@ -72,7 +72,7 @@ namespace NeonSsoProxy.Controllers
         {
             var error = await forwarder.SendAsync(
                 HttpContext, 
-                neonSsoProxyService.ServiceMap[KubeService.Dex].Endpoints.Default.Uri.ToString(), 
+                NeonSsoSessionProxyService.ServiceMap[KubeService.Dex].Endpoints.Default.Uri.ToString(), 
                 httpClient, new ForwarderRequestConfig(), 
                 transformer);
 

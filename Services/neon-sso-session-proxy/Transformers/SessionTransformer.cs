@@ -16,7 +16,7 @@ using Neon.Diagnostics;
 using Yarp.ReverseProxy.Forwarder;
 using Yarp.ReverseProxy.Transforms;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
     public class SessionTransformer : HttpTransformer
     {
@@ -78,7 +78,7 @@ namespace NeonSsoProxy
 
             Cookie cookie = null;
 
-            if (httpContext.Request.Cookies.TryGetValue(NeonSsoProxyService.SessionCookieName, out var requestCookieBase64))
+            if (httpContext.Request.Cookies.TryGetValue(NeonSsoSessionProxyService.SessionCookieName, out var requestCookieBase64))
             {
                 try
                 {
@@ -115,7 +115,7 @@ namespace NeonSsoProxy
                         cookie.TokenResponse = token;
 
                         httpContext.Response.Cookies.Append(
-                            NeonSsoProxyService.SessionCookieName,
+                            NeonSsoSessionProxyService.SessionCookieName,
                             cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                             new CookieOptions()
                             {
@@ -162,7 +162,7 @@ namespace NeonSsoProxy
             }
 
             httpContext.Response.Cookies.Append(
-                NeonSsoProxyService.SessionCookieName,
+                NeonSsoSessionProxyService.SessionCookieName,
                 cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                 new CookieOptions()
                 {

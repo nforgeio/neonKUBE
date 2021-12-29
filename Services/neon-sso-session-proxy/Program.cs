@@ -16,7 +16,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Service;
 
-namespace NeonSsoProxy
+namespace NeonSsoSessionProxy
 {
     /// <summary>
     /// Holds the global program state.
@@ -29,7 +29,7 @@ namespace NeonSsoProxy
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            var service = new NeonSsoProxyService(KubeServiceMap.Production, KubeService.NeonSsoSessionProxy);
+            var service = new NeonSsoSessionProxyService(KubeServiceMap.Production, KubeService.NeonSsoSessionProxy);
             var exitCode = await service.RunAsync();
 
             Environment.Exit(exitCode);
