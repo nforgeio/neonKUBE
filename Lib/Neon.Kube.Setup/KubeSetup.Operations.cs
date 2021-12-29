@@ -2970,7 +2970,7 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
-                            values.Add("ingress.operator.subdomain", ClusterDomain.MinioOperator);
+                            values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
                             if (serviceAdvice.ReplicaCount > 1)
                             {
@@ -3941,7 +3941,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-sso");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
         }
 
@@ -3977,18 +3977,18 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
-            await master.InvokeIdempotentAsync("setup/neon-sso-proxy-install",
+            await master.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "neon_sso_proxy", releaseName: "neon-sso-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "dex");
+                    await master.InstallHelmChartAsync(controller, "neon_sso_session_proxy", releaseName: "neon-sso-session-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso-session-proxy");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "neon-sso-proxy");
+                    controller.LogProgress(master, verb: "wait for", message: "neon-sso-session-proxy");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
         }
 
@@ -4039,7 +4039,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "glauth");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
         }
 
