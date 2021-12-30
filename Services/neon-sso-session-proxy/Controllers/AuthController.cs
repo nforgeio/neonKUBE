@@ -66,7 +66,7 @@ namespace NeonSsoSessionProxy.Controllers
         /// <summary>
         /// Catchall method responsible for forwarding requests to Dex.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         [Route("{**catchAll}")]
         public async Task CatchAllAsync()
         {
@@ -84,12 +84,12 @@ namespace NeonSsoSessionProxy.Controllers
                 LogError("CatchAll", exception);
             }
         }
-        
+
         /// <summary>
         /// Token request endpoint. Returns the token from cache with given code.
         /// </summary>
         /// <param name="code"></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
