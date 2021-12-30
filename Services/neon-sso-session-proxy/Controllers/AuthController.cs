@@ -29,14 +29,15 @@ namespace NeonSsoSessionProxy.Controllers
     [ApiController]
     public class AuthController : NeonControllerBase
     {
-        private NeonSsoSessionProxyService NeonSsoSessionProxyService;
-        private HttpMessageInvoker  httpClient;
-        private IHttpForwarder      forwarder;
-        private SessionTransformer   transformer;
-        private IDistributedCache   cache;
-        private AesCipher           cipher;
-        private DexClient           dexClient;
-
+        private NeonSsoSessionProxyService   NeonSsoSessionProxyService;
+        private HttpMessageInvoker           httpClient;
+        private IHttpForwarder               forwarder;
+        private SessionTransformer           transformer;
+        private IDistributedCache            cache;
+        private AesCipher                    cipher;
+        private DexClient                    dexClient;
+        private DistributedCacheEntryOptions cacheOptions;
+        private SessionTransformer           sessionTransformer;
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -47,20 +48,24 @@ namespace NeonSsoSessionProxy.Controllers
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
         public AuthController(
-            NeonSsoSessionProxyService NeonSsoSessionProxyService,
-            HttpMessageInvoker  httpClient,
-            IHttpForwarder      forwarder,
-            IDistributedCache   cache,
-            AesCipher           aesCipher,
-            DexClient           dexClient)
+            NeonSsoSessionProxyService   NeonSsoSessionProxyService,
+            HttpMessageInvoker           httpClient,
+            IHttpForwarder               forwarder,
+            IDistributedCache            cache,
+            AesCipher                    aesCipher,
+            DexClient                    dexClient,
+            SessionTransformer           sessionTransformer,
+            DistributedCacheEntryOptions cacheOptions
+            )
         {
             this.NeonSsoSessionProxyService = NeonSsoSessionProxyService;
-            this.httpClient          = httpClient;
-            this.forwarder           = forwarder;
-            this.cache               = cache;
-            this.cipher              = aesCipher;    
-            this.transformer         = new SessionTransformer(cache, aesCipher, dexClient,NeonSsoSessionProxyService.Log);
-            this.dexClient           = dexClient;
+            this.httpClient                 = httpClient;
+            this.forwarder                  = forwarder;
+            this.cache                      = cache;
+            this.cipher                     = aesCipher;    
+            this.transformer                = sessionTransformer;
+            this.dexClient                  = dexClient;
+            this.cacheOptions               = cacheOptions;
         }
 
         /// <summary>

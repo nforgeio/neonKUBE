@@ -96,6 +96,12 @@ namespace NeonSsoSessionProxy
             };
             services.AddSingleton(cacheOptions);
 
+            services.AddSingleton<SessionTransformer>(sp =>
+            {
+                var fooService = sp.GetRequiredService<IDistributedCache>();
+                return new SessionTransformer(sp.GetService<IDistributedCache>(), aesCipher, dexClient, NeonSsoSessionProxyService.Log, cacheOptions);
+            });
+            
             services.AddControllers()
                 .AddNeon();
         }
