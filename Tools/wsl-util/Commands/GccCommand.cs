@@ -125,7 +125,9 @@ ARGUMENTS:
                 NeonHelper.DeleteFolder(windowsUtilFolder);
                 NeonHelper.CopyFolder(sourceFolder, windowsBuildFolder);
 
-                // Install [safe-apt-get] if it's not already present.
+                // Install [safe-apt-get] if it's not already present.  We're using this
+                // because it's possible that projects build in parallel and it's possible
+                // that multiple GCC commands could also be running in parallel.
 
                 var linuxSafeAptGetPath   = "/usr/bin/safe-apt-get";
                 var windowsSafeAptGetPath = distro.ToWindowsPath(linuxSafeAptGetPath);
