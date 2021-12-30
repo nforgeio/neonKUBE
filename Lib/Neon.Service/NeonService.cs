@@ -24,6 +24,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,11 +35,11 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Tasks;
 using Neon.Windows;
 
 using DnsClient;
 using Prometheus;
-using Neon.Tasks;
 
 namespace Neon.Service
 {
@@ -222,29 +223,38 @@ namespace Neon.Service
     /// emulated services, but this shouldn't be a problem for more situations.
     /// </note>
     /// <para><b>HEALTH PROBES</b></para>
+    /// <note>
+    /// Health probes are supported only on Linux running as AMD64.  This is not supported
+    /// on Windows, OS/X, 32-bit or ARM platforms.
+    /// </note>
     /// <para>
     /// Hosting environments such as Kubernetes will often require service instances
     /// to be able to report their health via health probes.  These probes are typically
-    /// implemented as a script that is called periodically by the hosting environment
-    /// with the script return code indicating the service instance health.
+    /// implemented as a small executable that is called periodically by the hosting 
+    /// environment with the return code indicating the service instance health.
     /// </para>
     /// <para>
     /// The <see cref="Neon.Service.NeonService"/> class supports this by optionally
-    /// writing a text file with various strings indicating the health status as well as
-    /// generating a health check script.  The status file will consists of a single line
-    /// of text <b>without line ending characters</b> holding one of the <see cref="NeonServiceStatus"/>
-    /// values.  The status file path defaults to <b>/health-status</b>.
+    /// writing a text file with various strings indicating the health status.  The 
+    /// status file will consist of a single line of text holding one of the serialized
+    /// <see cref="NeonServiceStatus"/> values.  The status file path defaults to 
+    /// <b>/health-status</b>.
     /// </para>
     /// <para>
-    /// The health check script file will be created at <b>/health-check</b> by default.
-    /// This returns a non-zero exit code when the service is not healthy.  A service is
-    /// considered healthy only when the status is <see cref="NeonServiceStatus.Running"/>
+    /// <see cref="Neon.Service.NeonService"/> also deploys two status checking tools
+    /// called <b>health-check</b> and <b>ready-check</b> to the same directory where
+    /// <b>health-status</b> is written.
+    /// </para>
+    /// <para>
+    /// The health check tool will be created at <b>/health-check</b> by default and it
+    /// returns a non-zero exit code when the service is not healthy.  A service is
+    /// considered healthy only when the status is on of <see cref="NeonServiceStatus.Running"/>
     /// or <see cref="NeonServiceStatus.NotReady"/>.
     /// </para>
     /// <para>
-    /// The ready check script file will be created at <b>/ready-check</b> by default.
-    /// This returns a non-zero exit code when the service is not ready.  A service is
-    /// considered ready only when the status is <see cref="NeonServiceStatus.Running"/>.
+    /// The ready check tool file will be created at <b>/ready-check</b> by default and it
+    /// returns a non-zero exit code when the service is not ready.  A service is considered 
+    /// ready only when the status is <see cref="NeonServiceStatus.Running"/>.
     /// </para>
     /// <para>
     /// You may pass a custom health folder path to the constructor so that the <b>status</b> 
@@ -253,10 +263,6 @@ namespace Neon.Service
     /// file system is read-only.  You can disable this feature entirely by passing <b>"DISABLED"</b>
     /// as the health folder path.
     /// </para>
-    /// <note>
-    /// Health status is supported only for services running on Linux.  This feature is disabled
-    /// entirely for Windows and OS/X.
-    /// </note>
     /// <note>
     /// <para>
     /// For Kubernetes deployments, we recommend that you configure your pod specifications
@@ -566,8 +572,8 @@ namespace Neon.Service
         private Dictionary<string, FileInfo>    configFiles;
         private string                          healthFolder;
         private string                          healthStatusPath;
-        private string                          healthScriptPath;
-        private string                          readyScriptPath;
+        private string                          healthCheckPath;
+        private string                          readyCheckPath;
         private IRetryPolicy                    healthRetryPolicy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
         private MetricServer                    metricServer;
         private MetricPusher                    metricPusher;
@@ -584,12 +590,12 @@ namespace Neon.Service
         /// </param>
         /// <param name="healthFolder">
         /// <para>
-        /// Optionally specifies the folder path where the service will maintain the <b>status</b>
-        /// file and generate the <b>check</b> script.  See the class documentation for more information 
-        /// <see cref="Neon.Service"/>.
+        /// Optionally specifies the folder path where the service will maintain the <b>health-status</b>
+        /// file and deploy the <b>health-check</b> and <b>ready-check</b> binaries.  See the class 
+        /// documentation for more information: <see cref="Neon.Service"/>.
         /// </para>
         /// <para>
-        /// This defaults to: <b>/</b> to make it easy to configure the Kubernetes liveliness probe.
+        /// This defaults to: <b>/</b> to make it easy to configure the Kubernetes probes.
         /// You can disable this feature by passing <b>"DISABLED"</b> instead.
         /// </para>
         /// <note>
@@ -654,7 +660,7 @@ namespace Neon.Service
             this.version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
-            this.healthFolder           = healthFolder;
+            this.healthFolder           = healthFolder ?? "/";
             this.ServiceMap             = serviceMap;
             this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
 
@@ -879,7 +885,8 @@ namespace Neon.Service
         public List<string> Arguments { get; private set; } = new List<string>();
 
         /// <summary>
-        /// Returns the service current running status.
+        /// Returns the service current running status.  Use <see cref="SetStatusAsync(NeonServiceStatus)"/>
+        /// to update the service status.
         /// </summary>
         public NeonServiceStatus Status { get; private set; }
 
@@ -907,7 +914,7 @@ namespace Neon.Service
 
                 this.Status = status;
 
-                var statusString = NeonHelper.EnumToString(status).ToUpperInvariant();
+                var statusString = NeonHelper.EnumToString(status);
 
                 if (status == NeonServiceStatus.Unhealthy)
                 {
@@ -921,8 +928,8 @@ namespace Neon.Service
                 if (healthStatusPath != null)
                 {
                     // We're going to use a retry policy to handle the rare situations
-                    // where the health poll and this method try to access this file 
-                    // at the exact same moment.
+                    // where the [health-check] or [ready-check] binaries and this method
+                    // try to access this file at the exact same moment.
 
                     healthRetryPolicy.Invoke(() => File.WriteAllText(healthStatusPath, statusString));
                 }
@@ -1075,6 +1082,101 @@ namespace Neon.Service
             else
             {
                 Log.LogInfo(() => $"Starting [{Name}]");
+            }
+
+            // Initialize the health status paths when enabled on Linux and
+            // deploy the health and ready check tools.  We'll log any
+            // errors and disable status generation if we have trouble
+            // accessing the folder.
+
+            if (string.IsNullOrWhiteSpace(healthFolder))
+            {
+                healthFolder = string.Empty;
+            }
+
+            if (NeonHelper.IsLinux && NeonHelper.Is64BitOS && !NeonHelper.IsARM && !healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(healthFolder))
+                {
+                    healthFolder = $"/";
+                }
+
+                healthStatusPath = Path.Combine(healthFolder, "health-status");
+                healthCheckPath  = Path.Combine(healthFolder, "health-check");
+                readyCheckPath   = Path.Combine(healthFolder, "ready-check");
+
+                try
+                {
+                    // Create the health status file, set its permissions as well
+                    // as its initial STARTING state.
+
+                    Directory.CreateDirectory(healthFolder);
+                    File.WriteAllText(healthStatusPath, NeonHelper.EnumToString(NeonServiceStatus.Starting));
+
+                    NeonHelper.Execute("/bin/chmod",
+                        new object[]
+                        {
+                            "664",
+                            healthStatusPath
+                        });
+
+                    // Copy the [health-check] and [ready-check] binaries into the same folder
+                    // as the [health-status] file.
+
+                    var resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Service.Resources");
+
+                    using (var toolStream = resources.GetFile("/health-check").OpenStream())
+                    {
+                        using (var output = File.OpenWrite(healthCheckPath))
+                        {
+                            toolStream.CopyTo(output);
+                        }
+
+                        NeonHelper.Execute("/bin/chmod",
+                            new object[]
+                            {
+                                "755",
+                                healthCheckPath
+                            });
+                    }
+
+                    using (var toolStream = resources.GetFile("/ready-check").OpenStream())
+                    {
+                        using (var output = File.OpenWrite(readyCheckPath))
+                        {
+                            toolStream.CopyTo(output);
+                        }
+
+                        NeonHelper.Execute("/bin/chmod",
+                            new object[]
+                            {
+                                "755",
+                                readyCheckPath
+                            });
+                    }
+                }
+                catch (IOException e)
+                {
+                    // This may happen if the health folder path is invalid, the process
+                    // doesn't have permissions for the folder or perhaps when the file
+                    // system is read-only.  We're going to log this and disable the health
+                    // status feature in this case. 
+
+                    Log.LogError($"Cannot initialize the health folder [{healthFolder}].  The health status feature will be disabled.", e);
+
+                    healthFolder     = null;
+                    healthStatusPath = null;
+                    healthCheckPath  = null;
+                }
+            }
+            else
+            {
+                if (!healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Log.LogWarn("NeonService health checking is currently only supported on Linux/AMD64.");
+                }
+
+                healthFolder = null;
             }
 
             // Initialize Prometheus metrics when enabled.
@@ -1243,134 +1345,6 @@ namespace Neon.Service
             }
 
             await Task.Delay(Dependencies.Wait);
-
-            // Initialize the health status paths when enabled on Linux and
-            // generate the health and ready check scripts.  We'll log any
-            // errors and disable status generation if we have trouble
-            // accessing the folder.
-
-            if (string.IsNullOrWhiteSpace(healthFolder))
-            {
-                healthFolder = string.Empty;
-            }
-
-            if (NeonHelper.IsLinux && !healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
-            {
-                if (string.IsNullOrEmpty(healthFolder))
-                {
-                    healthFolder = $"/";
-                }
-
-                healthStatusPath = Path.Combine(healthFolder, "health-status");
-                healthScriptPath = Path.Combine(healthFolder, "health-check");
-                readyScriptPath  = Path.Combine(healthFolder, "ready-check");
-
-                try
-                {
-                    // Create the health status file and set its permissions.
-
-                    Directory.CreateDirectory(healthFolder);
-
-                    File.WriteAllText(healthStatusPath, NeonHelper.EnumToString(NeonServiceStatus.Starting));
-                    NeonHelper.Execute("/bin/chmod",
-                        new object[]
-                        {
-                            "664",
-                            healthStatusPath
-                        });
-
-                    // Create the [health-check] script and set its permissions.
-
-                    var healthScript =
-$@"
-#!/bin/sh
-
-# Used by health probes to indicate that the service is running but is not
-# necessarily ready for external traffic.
-#
-# Generated by: Neon.Service.NeonServer
-
-# Service is unhealthy when the status file doesn't exist.
-
-if [ ! -f '{healthStatusPath}' ] ; then
-    exit 1
-fi
-
-# Service is healthy only when the status file is set to: running or not-ready
-
-status=$(head -n 1 '{healthStatusPath}')
-
-case ""$status"" in
-    '{NeonHelper.EnumToString(NeonServiceStatus.Running).ToUpperInvariant()}'|'{NeonHelper.EnumToString(NeonServiceStatus.NotReady).ToUpperInvariant()}')
-        exit 0;;
-    *)
-        exit 1;;
-esac
-";
-                    File.WriteAllText(healthScriptPath, NeonHelper.ToLinuxLineEndings(healthScript));
-
-                    NeonHelper.Execute("/bin/chmod",
-                        new object[]
-                        {
-                            "775",
-                            healthScriptPath
-                        });
-
-                    // Create the [ready-check] script and set its permissions.
-
-                    var readyScript =
-$@"
-#!/bin/sh
-
-# Used by readiness probes to indicate that the service is running and is
-# ready for external traffic.
-#
-# Generated by: Neon.Service.NeonServer
-
-# Service is not ready when the status file doesn't exist.
-
-if [ ! -f '{healthStatusPath}' ] ; then
-    exit 1
-fi
-
-# Service is ready only when the status file is set to: running
-
-status=$(head -n 1 '{healthStatusPath}')
-
-if [ ""$status"" = '{NeonHelper.EnumToString(NeonServiceStatus.Running).ToUpperInvariant()}' ]
-then
-    exit 0
-else
-    exit 1
-fi
-";
-                    File.WriteAllText(readyScriptPath, NeonHelper.ToLinuxLineEndings(readyScript));
-
-                    NeonHelper.Execute("/bin/chmod",
-                        new object[]
-                        {
-                            "775",
-                            readyScriptPath
-                        });
-                }
-                catch (IOException e)
-                {
-                    // This may happen if the health folder path is invalid, the process
-                    // doesn't have permissions for the folder or perhaps when the file
-                    // system is read-only.  We're going to log this and disable the health
-                    // status feature when this happens. 
-
-                    Log.LogError("Cannot initialize the health folder.  The status feature will be disabled.", e);
-
-                    healthFolder     = null;
-                    healthStatusPath = null;
-                    healthScriptPath = null;
-                }
-            }
-            else
-            {
-                healthFolder = null;
-            }
 
             // Start and run the service.
 
