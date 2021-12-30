@@ -45,16 +45,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\health-check" />
-    <None Remove="Resources\ready-check" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\health-check" />
-    <EmbeddedResource Include="Resources\ready-check" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.4.0" />
     <PackageReference Include="GitInfo" Version="2.1.2">
       <PrivateAssets>all</PrivateAssets>
@@ -73,6 +63,10 @@
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
 	
 	<!--
 	This target builds the [health-check] and [ready-check] probe binaries for Linux.
@@ -82,7 +76,7 @@
 	These are C programs built via the [wsl-util gcc ...] command.
 	-->
 
-  <Target Name="BuildProbes" BeforeTargets="CoreCompile">
+  <Target Name="BuildProbes" BeforeTargets="Build">
 	<Message Importance="high" Text="Building: health-check" />
     <Exec Command="wsl-util gcc &quot;$(NF_ROOT)\Lib\Neon.Service\health-probes\health-check&quot; &quot;$(NF_ROOT)\Lib\Neon.Service\Resources\health-check&quot;" />
 	  
