@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexStorage.cs
+// FILE:	    DexLogConfig.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,32 +28,31 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Dex configuration model.
+    /// Dex Logging configuration.
     /// </summary>
-    public class DexStorage
+    public class DexLogConfig
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexStorage()
+        public DexLogConfig()
         {
         }
 
         /// <summary>
-        /// Supported options include SQL flavors and Kubernetes third party resources.
+        /// Log Level.
         /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
-        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Level", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "level", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public DexStorageType Type { get; set; }
+        public string Level { get; set; }
 
         /// <summary>
-        /// Config See the documentation (https://dexidp.io/docs/storage/) for further 
-        /// information.
+        /// Logformat. Valid options are text or json.
         /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Always)]
-        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Format", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "format", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, object> Config { get; set; }
+        public string Format { get; set; }
     }
 }
