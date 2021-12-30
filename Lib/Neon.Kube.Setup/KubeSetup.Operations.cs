@@ -4012,9 +4012,19 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/dex-config",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update dex configuration");
+
+                        var configMap = NeonHelper.JsonDeserialize<dynamic>((await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespaces.NeonSystem)).Data["config.yaml"]);
+
+                    });
+            }
         }
-
-
 
         /// <summary>
         /// Installs Neon SSO Session Proxy.
