@@ -1612,11 +1612,19 @@ systemctl start crio
                     sbPinnedImages.AppendLine(image.InternalRef);
                     sbPinnedImages.AppendLine(image.InternalDigestRef);
 
-                    var atPos = image.InternalDigestRef.IndexOf('@');
+                    // We need to extract the image ID from the internal digest reference which
+                    // look something like this:
+                    //
+                    //      neon-registry.node.local/redis@sha256:561AABD123...
+                    //
+                    // where we need to extract the HEX bytes after the [@sha256:] prefix
 
-                    Covenant.Assert(atPos != -1);
+                    var idPrefix    = "@sha256:";
+                    var idPrefixPos = image.InternalDigestRef.IndexOf(idPrefix);
 
-                    sbPinnedImages.AppendLine(image.InternalDigestRef.Substring(atPos + 1));
+                    Covenant.Assert(idPrefixPos != -1);
+
+                    sbPinnedImages.AppendLine(image.InternalDigestRef.Substring(idPrefixPos + idPrefix.Length));
                 }
 
                 bundle.AddFile("pinned-images", sbPinnedImages.ToString());
