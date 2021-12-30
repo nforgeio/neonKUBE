@@ -143,6 +143,12 @@ Go/**/__debug_bin
 
 /Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
 
+################
+# Neon.Service #
+################
+
+/Lib/Neon.Service/Resources/**
+
 #############################
 ### Other generated files ###
 #############################
