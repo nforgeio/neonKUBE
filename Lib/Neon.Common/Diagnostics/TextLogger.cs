@@ -390,13 +390,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogDebug(object message, string activityId = null)
+        public void LogDebug(string message, string activityId = null)
         {
             if (IsLogDebugEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Debug, message?.ToString(), activityId);
+                    Log(LogLevel.Debug, message, activityId);
                 }
                 catch
                 {
@@ -406,7 +406,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogDebug(object message, Exception e, string activityId = null)
+        public void LogDebug(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -431,13 +431,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogTransient(object message, string activityId = null)
+        public void LogTransient(string message, string activityId = null)
         {
             if (IsLogTransientEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Transient, message?.ToString(), activityId);
+                    Log(LogLevel.Transient, message, activityId);
                 }
                 catch
                 {
@@ -447,7 +447,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogTransient(object message, Exception e, string activityId = null)
+        public void LogTransient(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -472,13 +472,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogError(object message, string activityId = null)
+        public void LogError(string message, string activityId = null)
         {
             if (IsLogErrorEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Error, message?.ToString(), activityId);
+                    Log(LogLevel.Error, message, activityId);
                 }
                 catch
                 {
@@ -488,7 +488,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogError(object message, Exception e, string activityId = null)
+        public void LogError(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -513,13 +513,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogSError(object message, string activityId = null)
+        public void LogSError(string message, string activityId = null)
         {
             if (IsLogSErrorEnabled)
             {
                 try
                 {
-                    Log(LogLevel.SError, message?.ToString(), activityId);
+                    Log(LogLevel.SError, message, activityId);
                 }
                 catch
                 {
@@ -529,7 +529,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogSError(object message, Exception e, string activityId = null)
+        public void LogSError(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -554,13 +554,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogCritical(object message, string activityId = null)
+        public void LogCritical(string message, string activityId = null)
         {
             if (IsLogCriticalEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Critical, message?.ToString(), activityId);
+                    Log(LogLevel.Critical, message, activityId);
                 }
                 catch
                 {
@@ -570,7 +570,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogCritical(object message, Exception e, string activityId = null)
+        public void LogCritical(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -595,13 +595,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogInfo(object message, string activityId = null)
+        public void LogInfo(string message, string activityId = null)
         {
             if (IsLogInfoEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Info, message?.ToString(), activityId);
+                    Log(LogLevel.Info, message, activityId);
                 }
                 catch
                 {
@@ -611,7 +611,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogInfo(object message, Exception e, string activityId = null)
+        public void LogInfo(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -636,13 +636,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogSInfo(object message, string activityId = null)
+        public void LogSInfo(string message, string activityId = null)
         {
             if (IsLogSInfoEnabled)
             {
                 try
                 {
-                    Log(LogLevel.SInfo, message?.ToString(), activityId);
+                    Log(LogLevel.SInfo, message, activityId);
                 }
                 catch
                 {
@@ -652,7 +652,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogSInfo(object message, Exception e, string activityId = null)
+        public void LogSInfo(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
@@ -677,13 +677,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogWarn(object message, string activityId = null)
+        public void LogWarn(string message, string activityId = null)
         {
             if (IsLogWarnEnabled)
             {
                 try
                 {
-                    Log(LogLevel.Warn, message?.ToString(), activityId);
+                    Log(LogLevel.Warn, message, activityId);
                 }
                 catch
                 {
@@ -693,7 +693,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogWarn(object message, Exception e, string activityId = null)
+        public void LogWarn(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 

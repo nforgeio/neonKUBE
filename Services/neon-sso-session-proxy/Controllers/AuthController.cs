@@ -80,7 +80,8 @@ namespace NeonSsoSessionProxy.Controllers
             {
                 var errorFeature = HttpContext.GetForwarderErrorFeature();
                 var exception = errorFeature.Exception;
-                LogError(exception);
+
+                LogError("CatchAll", exception);
             }
         }
         

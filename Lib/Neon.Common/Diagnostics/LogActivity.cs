@@ -107,8 +107,8 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>debug</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
-        public void Debug(object message)
+        /// <param name="message">The message.</param>
+        public void Debug(string message)
         {
             if (log != null)
             {
@@ -119,8 +119,8 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs an <b>info</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
-        public void Info(object message)
+        /// <param name="message">The message.</param>
+        public void Info(string message)
         {
             if (log != null)
             {
@@ -131,8 +131,8 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>warn</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
-        public void Warn(object message)
+        /// <param name="message">The message.</param>
+        public void Warn(string message)
         {
             if (log != null)
             {
@@ -143,8 +143,8 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs an <b>error</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
-        public void Error(object message)
+        /// <param name="message">The message.</param>
+        public void Error(string message)
         {
             if (log != null)
             {
@@ -155,8 +155,8 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>critical</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
-        public void Critical(object message)
+        /// <param name="message">The message.</param>
+        public void Critical(string message)
         {
             if (log != null)
             {
@@ -167,9 +167,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>debug</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
-        public void Debug(object message, Exception e)
+        public void Debug(string message, Exception e)
         {
             if (log != null)
             {
@@ -180,9 +180,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs an <b>info</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
-        public void Info(object message, Exception e)
+        public void Info(string message, Exception e)
         {
             if (log != null)
             {
@@ -193,9 +193,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>warn</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
-        public void Warn(object message, Exception e)
+        public void Warn(string message, Exception e)
         {
             if (log != null)
             {
@@ -206,9 +206,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs an <b>error</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
-        public void Error(object message, Exception e)
+        public void Error(string message, Exception e)
         {
             if (log != null)
             {
@@ -219,9 +219,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>critical</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
-        public void Critical(object message, Exception e)
+        public void Critical(string message, Exception e)
         {
             if (log != null)
             {

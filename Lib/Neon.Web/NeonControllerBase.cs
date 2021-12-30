@@ -207,112 +207,112 @@ namespace Neon.Web
 
         /// <inheritdoc/>
         [NonAction]
-        public void Critical(object message, string activityId = null)
+        public void Critical(string message, string activityId = null)
         {
             GetLogger().LogCritical(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Critical(object message, Exception e, string activityId = null)
+        public void Critical(string message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Debug(object message, string activityId = null)
+        public void Debug(string message, string activityId = null)
         {
             GetLogger().LogDebug(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Debug(object message, Exception e, string activityId = null)
+        public void Debug(string message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Transient(object message, Exception e, string activityId = null)
+        public void Transient(string message, Exception e, string activityId = null)
         {
             GetLogger().LogTransient(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Transient(object message, string activityId = null)
+        public void Transient(string message, string activityId = null)
         {
             GetLogger().LogTransient(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Error(object message, string activityId = null)
+        public void Error(string message, string activityId = null)
         {
             GetLogger().LogError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Error(object message, Exception e, string activityId = null)
+        public void Error(string message, Exception e, string activityId = null)
         {
             GetLogger().LogError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Info(object message, string activityId = null)
+        public void Info(string message, string activityId = null)
         {
             GetLogger().LogInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Info(object message, Exception e, string activityId = null)
+        public void Info(string message, Exception e, string activityId = null)
         {
             GetLogger().LogInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void SError(object message, string activityId = null)
+        public void SError(string message, string activityId = null)
         {
             GetLogger().LogSError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void SError(object message, Exception e, string activityId = null)
+        public void SError(string message, Exception e, string activityId = null)
         {
             GetLogger().LogSError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void SInfo(object message, string activityId = null)
+        public void SInfo(string message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void SInfo(object message, Exception e, string activityId = null)
+        public void SInfo(string message, Exception e, string activityId = null)
         {
             GetLogger().LogSInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Warn(object message, string activityId = null)
+        public void Warn(string message, string activityId = null)
         {
             GetLogger().LogWarn(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void Warn(object message, Exception e, string activityId = null)
+        public void Warn(string message, Exception e, string activityId = null)
         {
             GetLogger().LogWarn(message, e, activityId ?? this.ActivityId);
         }
@@ -326,112 +326,112 @@ namespace Neon.Web
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogDebug(object message, string activityId = null)
+        public void LogDebug(string message, string activityId = null)
         {
             GetLogger().LogDebug(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogTransient(object message, string activityId = null)
+        public void LogTransient(string message, string activityId = null)
         {
             GetLogger().LogTransient(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogSInfo(object message, string activityId = null)
+        public void LogSInfo(string message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogInfo(object message, string activityId = null)
+        public void LogInfo(string message, string activityId = null)
         {
             GetLogger().LogInfo(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogWarn(object message, string activityId = null)
+        public void LogWarn(string message, string activityId = null)
         {
             GetLogger().LogWarn(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogSError(object message, string activityId = null)
+        public void LogSError(string message, string activityId = null)
         {
             GetLogger().LogSError(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogError(object message, string activityId = null)
+        public void LogError(string message, string activityId = null)
         {
             GetLogger().LogError(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogCritical(object message, string activityId = null)
+        public void LogCritical(string message, string activityId = null)
         {
             GetLogger().LogCritical(message, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogDebug(object message, Exception e, string activityId = null)
+        public void LogDebug(string message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogTransient(object message, Exception e, string activityId = null)
+        public void LogTransient(string message, Exception e, string activityId = null)
         {
             GetLogger().LogTransient(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogSInfo(object message, Exception e, string activityId = null)
+        public void LogSInfo(string message, Exception e, string activityId = null)
         {
             GetLogger().LogSInfo(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogInfo(object message, Exception e, string activityId = null)
+        public void LogInfo(string message, Exception e, string activityId = null)
         {
             GetLogger().LogInfo(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogWarn(object message, Exception e, string activityId = null)
+        public void LogWarn(string message, Exception e, string activityId = null)
         {
             GetLogger().LogWarn(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogError(object message, Exception e, string activityId = null)
+        public void LogError(string message, Exception e, string activityId = null)
         {
             GetLogger().LogError(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogSError(object message, Exception e, string activityId = null)
+        public void LogSError(string message, Exception e, string activityId = null)
         {
             GetLogger().LogSError(message, e, activityId);
         }
 
         /// <inheritdoc/>
         [NonAction]
-        public void LogCritical(object message, Exception e, string activityId = null)
+        public void LogCritical(string message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId);
         }

@@ -157,89 +157,89 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void LogDebug(object message, string activityId = null)
+        public void LogDebug(string message, string activityId = null)
         {
         }
 
         /// <inheritdoc/>
-        public void LogDebug(object message, Exception e, string activityId = null)
-        {
-            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
-        }
-
-        /// <inheritdoc/>
-        public void LogTransient(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogTransient(object message, Exception e, string activityId = null)
+        public void LogDebug(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
         }
 
         /// <inheritdoc/>
-        public void LogError(object message, string activityId = null)
+        public void LogTransient(string message, string activityId = null)
         {
         }
 
         /// <inheritdoc/>
-        public void LogError(object message, Exception e, string activityId = null)
-        {
-            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
-        }
-
-        /// <inheritdoc/>
-        public void LogSError(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogSError(object message, Exception e, string activityId = null)
+        public void LogTransient(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
         }
 
         /// <inheritdoc/>
-        public void LogCritical(object message, string activityId = null)
+        public void LogError(string message, string activityId = null)
         {
         }
 
         /// <inheritdoc/>
-        public void LogCritical(object message, Exception e, string activityId = null)
-        {
-            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
-        }
-
-        /// <inheritdoc/>
-        public void LogInfo(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogInfo(object message, Exception e, string activityId = null)
+        public void LogError(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
         }
 
         /// <inheritdoc/>
-        public void LogSInfo(object message, string activityId = null)
+        public void LogSError(string message, string activityId = null)
         {
         }
 
         /// <inheritdoc/>
-        public void LogSInfo(object message, Exception e, string activityId = null)
+        public void LogSError(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
         }
 
         /// <inheritdoc/>
-        public void LogWarn(object message, string activityId = null)
+        public void LogCritical(string message, string activityId = null)
         {
         }
 
         /// <inheritdoc/>
-        public void LogWarn(object message, Exception e, string activityId = null)
+        public void LogCritical(string message, Exception e, string activityId = null)
+        {
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(string message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(string message, Exception e, string activityId = null)
+        {
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(string message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(string message, Exception e, string activityId = null)
+        {
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(string message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(string message, Exception e, string activityId = null)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
         }
