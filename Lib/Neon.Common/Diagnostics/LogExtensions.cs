@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 namespace Neon.Diagnostics
 {
     /// <summary>
-    /// Extends the <see cref="INeonLogger"/> types.
+    /// Extends <see cref="INeonLogger"/>.
     /// </summary>
     public static class LogExtensions
     {
