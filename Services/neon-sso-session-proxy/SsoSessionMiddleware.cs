@@ -22,7 +22,6 @@ namespace NeonSsoSessionProxy
     public class SsoSessionMiddleware
     {
         private readonly RequestDelegate _next;
-
         public SsoSessionMiddleware(RequestDelegate next)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
@@ -42,7 +41,8 @@ namespace NeonSsoSessionProxy
             HttpContext context,
             NeonSsoSessionProxyService NeonSsoSessionProxyService,
             IDistributedCache cache, 
-            AesCipher cipher)
+            AesCipher cipher,
+            DistributedCacheEntryOptions cacheOptions)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace NeonSsoSessionProxy
                     if (requestCookie.TokenResponse != null)
                     {
                         var code = NeonHelper.GetCryptoRandomPassword(10);
-                        await cache.SetAsync(code, NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse));
+                        await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
                         var query = new Dictionary<string, string>()
                         {

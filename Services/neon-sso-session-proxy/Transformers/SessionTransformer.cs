@@ -20,12 +20,12 @@ namespace NeonSsoSessionProxy
 {
     public class SessionTransformer : HttpTransformer
     {
-        private IDistributedCache cache;
-        private AesCipher         cipher;
-        private DexClient         dexClient;
-        private string            dexHost;
-        private INeonLogger       logger;
-
+        private IDistributedCache            cache;
+        private AesCipher                    cipher;
+        private DexClient                    dexClient;
+        private string                       dexHost;
+        private INeonLogger                  logger;
+        private DistributedCacheEntryOptions cacheOptions;
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -37,13 +37,15 @@ namespace NeonSsoSessionProxy
             IDistributedCache cache, 
             AesCipher aesCipher, 
             DexClient dexClient,
-            INeonLogger logger)
+            INeonLogger logger,
+            DistributedCacheEntryOptions cacheOptions)
         {
             this.cache     = cache;
             this.cipher    = aesCipher;
             this.dexClient = dexClient;
             this.dexHost   = dexClient.BaseAddress.Host;
             this.logger    = logger;
+            this.cacheOptions = cacheOptions;
         }
 
         /// <summary>
@@ -110,7 +112,7 @@ namespace NeonSsoSessionProxy
                         var redirect = cookie.RedirectUri;
 
                         var token = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
-                        await cache.SetAsync(code, NeonHelper.JsonSerializeToBytes(token));
+                        await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);
                         logger.LogDebug(NeonHelper.JsonSerialize(token));
                         cookie.TokenResponse = token;
 

@@ -93,7 +93,7 @@ namespace NeonSsoSessionProxy.Controllers
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
             LogDebug($"Processing request for code: [{code}]");
-            var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(await cache.GetAsync(code));
+            var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));
             
             _ = cache.RemoveAsync(code);
 

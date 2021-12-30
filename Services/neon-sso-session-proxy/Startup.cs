@@ -9,6 +9,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Caching.Distributed;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
@@ -87,6 +89,12 @@ namespace NeonSsoSessionProxy
             // Cookie encryption cipher.
             var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey()));
             services.AddSingleton(aesCipher);
+
+            var cacheOptions = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            };
+            services.AddSingleton(cacheOptions);
 
             services.AddControllers()
                 .AddNeon();
