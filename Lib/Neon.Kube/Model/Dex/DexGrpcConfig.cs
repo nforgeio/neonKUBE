@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexWebConfig.cs
+// FILE:	    DexGrpcConfig.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,32 +28,32 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Configuration for the http server.
+    /// Configuration GRPC endpoint.
     /// </summary>
-    public class DexWebConfig
+    public class DexGrpcConfig
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexWebConfig()
+        public DexGrpcConfig()
         {
         }
 
         /// <summary>
         /// Http Endpoint.
         /// </summary>
-        [JsonProperty(PropertyName = "Http", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "http", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Addr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "addr", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Http { get; set; }
+        public string Addr { get; set; }
 
         /// <summary>
-        /// Https Endpoint.
+        /// Reference to TLS client CA file.
         /// </summary>
-        [JsonProperty(PropertyName = "Https", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "https", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "TlsClientCA", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tlsClientCA", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Https { get; set; }
+        public string TlsClientCA { get; set; }
 
         /// <summary>
         /// Reference to TLS certificate file.
@@ -72,14 +72,5 @@ namespace Neon.Kube
         [YamlMember(Alias = "tlsKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string TlsKey { get; set; }
-
-        /// <summary>
-        /// Configuration for dex appearance.
-        /// information.
-        /// </summary>
-        [JsonProperty(PropertyName = "Frontend", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "frontend", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public DexFrontendConfig Frontend { get; set; }
     }
 }

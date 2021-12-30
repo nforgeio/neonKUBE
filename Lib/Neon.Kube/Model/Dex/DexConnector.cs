@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexStorage.cs
+// FILE:	    DexConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,30 +28,46 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Dex configuration model.
+    /// Configuration for backend connectors.
     /// </summary>
-    public class DexStorage
+    public class DexConnector
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexStorage()
+        public DexConnector()
         {
         }
 
         /// <summary>
-        /// Supported options include SQL flavors and Kubernetes third party resources.
+        /// Connector ID
         /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
-        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public DexStorageType Type { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
-        /// Config See the documentation (https://dexidp.io/docs/storage/) for further 
+        /// Connector type. 
+        /// </summary>
+        [JsonProperty(PropertyName = "Type", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
+        public DexConnectorType Type { get; set; }
+
+        /// <summary>
+        /// Connector name.
         /// information.
         /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Connector specific config.
+        /// information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, object> Config { get; set; }

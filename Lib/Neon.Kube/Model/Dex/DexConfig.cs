@@ -21,10 +21,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
-using k8s;
-using k8s.Models;
-
 using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -45,7 +44,8 @@ namespace Neon.Kube
         /// This is the canonical URL that all clients MUST use to refer to dex. If a
         /// path is provided, dex's HTTP service will listen at a non-root URL.
         /// </summary>
-        [JsonProperty(PropertyName = "issuer", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Issuer", Required = Required.Always)]
+        [YamlMember(Alias = "issuer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Issuer { get; set; }
 
@@ -54,8 +54,79 @@ namespace Neon.Kube
         /// options include SQL flavors and Kubernetes third party resources. 
         /// See the documentation (https://dexidp.io/docs/storage/) for further information.
         /// </summary>
-        [JsonProperty(PropertyName = "storage", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Storage", Required = Required.Always)]
+        [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DexStorage Storage { get; set; }
+
+        /// <summary>
+        /// The storage configuration determines where dex stores its state. Supported
+        /// options include SQL flavors and Kubernetes third party resources. 
+        /// See the documentation (https://dexidp.io/docs/storage/) for further information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Connectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "connectors", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<DexConnector> Connectors { get; set; }
+
+        /// <summary>
+        /// Configuration for telemetry.
+        /// </summary>
+        [JsonProperty(PropertyName = "Telemetry", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "telemetry", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexTelemetryConfig Telemetry { get; set; }
+
+        /// <summary>
+        /// This block to enable the gRPC API. This values MUST be different
+        /// from the HTTP endpoints.
+        /// </summary>
+        [JsonProperty(PropertyName = "Grpc", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "grpc", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexGrpcConfig Grpc { get; set; }
+
+        /// <summary>
+        /// Options for controlling the logger.
+        /// </summary>
+        [JsonProperty(PropertyName = "Logger", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logger", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public LogOptions Logger { get; set; }
+
+        /// <summary>
+        /// Options for Oauth2 related settings.
+        /// </summary>
+        [JsonProperty(PropertyName = "Oauth2", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "oauth2", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexOauth2Config Oauth2 { get; set; }
+
+        /// <summary>
+        /// Instead of reading from an external storage, use this list of clients.
+        /// If this option isn't chosen clients may be added through the gRPC API.
+        /// </summary>
+        [JsonProperty(PropertyName = "StaticClients", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "staticClients", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<DexClient> StaticClients { get; set; }
+
+        /// <summary>
+        /// Let dex keep a list of passwords which can be used to login to dex.
+        /// </summary>
+        [JsonProperty(PropertyName = "EnablePasswordDb", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "enablePasswordDb", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public bool? EnablePasswordDb { get; set; }
+
+        /// <summary>
+        /// A static list of passwords to login the end user. By identifying here, dex
+        /// won't look in its underlying storage for passwords.
+        /// <note>If this option isn't chosen users may be added through the gRPC API.</note>
+        /// </summary>
+        [JsonProperty(PropertyName = "StaticPasswords", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "staticPasswords", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<DexStaticUser> StaticPasswords { get; set; }
     }
 }

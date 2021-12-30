@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexStorage.cs
+// FILE:	    DexConnectorType.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,42 +18,34 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
-using YamlDotNet.Serialization;
+using Neon.Common;
+using Neon.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Dex configuration model.
+    /// Enumerates Dex storage types.
     /// </summary>
-    public class DexStorage
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum DexConnectorType
     {
         /// <summary>
-        /// Constructor.
+        /// LDAP
         /// </summary>
-        public DexStorage()
-        {
-        }
-
-        /// <summary>
-        /// Supported options include SQL flavors and Kubernetes third party resources.
-        /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
-        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public DexStorageType Type { get; set; }
-
-        /// <summary>
-        /// Config See the documentation (https://dexidp.io/docs/storage/) for further 
-        /// information.
-        /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Always)]
-        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public Dictionary<string, object> Config { get; set; }
+        [EnumMember(Value = "ldap")]
+        Ldap = 0
     }
 }
