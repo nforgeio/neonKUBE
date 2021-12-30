@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -119,10 +120,37 @@ ARGUMENTS:
             try
             {
                 // Delete the [/tmp/wsl-util] folder on Linux and the copy the
-                // source from thw Windows side into a fresh distro folder.
+                // source from the Windows side into a fresh distro folder.
 
                 NeonHelper.DeleteFolder(windowsUtilFolder);
                 NeonHelper.CopyFolder(sourceFolder, windowsBuildFolder);
+
+                // Install [safe-apt-get] if it's not already present.
+
+                var linuxSafeAptGetPath   = "/usr/bin/safe-apt-get";
+                var windowsSafeAptGetPath = distro.ToWindowsPath(linuxSafeAptGetPath);
+
+                if (!File.Exists(windowsSafeAptGetPath))
+                {
+                    var resources  = Assembly.GetExecutingAssembly().GetResourceFileSystem("WslUtil.Resources");
+                    var toolScript = resources.GetFile("/safe-apt-get.sh").ReadAllText();
+
+                    // Note that we need to escape all "$" characters in the script
+                    // so the upload script won't attempt to replace any variables
+                    // (with blanks).
+
+                    toolScript = toolScript.Replace("$", "\\$");
+
+                    var uploadScript =
+$@"
+cat <<EOF > {linuxSafeAptGetPath}
+{toolScript}
+EOF
+
+chmod 754 {linuxSafeAptGetPath}
+";
+                    distro.SudoExecuteScript(uploadScript).EnsureSuccess();
+                }
 
                 // Perform the build.
 
@@ -130,7 +158,7 @@ ARGUMENTS:
 $@"
 set -euo pipefail
 
-apt-get install -yq gcc
+safe-apt-get install -yq gcc
 
 cd {linuxBuildFolder}
 gcc *.c -o {linuxOutputPath} {sbGccArgs}

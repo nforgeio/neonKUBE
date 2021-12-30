@@ -4220,7 +4220,12 @@
         </member>
         <member name="P:Neon.Common.NeonHelper.IsOSX">
             <summary>
-            Returns <c>true</c> if the current process is running on Max OSX.
+            Returns <c>true</c> if the current process is running on Mac OSX.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.IsARM">
+            <summary>
+            Returns <c>true</c> if the current process is runniong on an ARM processor.
             </summary>
         </member>
         <member name="P:Neon.Common.NeonHelper.IsCI">
@@ -6823,123 +6828,123 @@
             <param name="logLevel">The log level.</param>
             <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.String,System.String)">
             <summary>
             Logs a <b>debug</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.String,System.String)">
             <summary>
             Logs a <b>transient</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogSInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogSInfo(System.String,System.String)">
             <summary>
             Logs an <b>sinfo</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogInfo(System.String,System.String)">
             <summary>
             Logs an <b>info</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogWarn(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogWarn(System.String,System.String)">
             <summary>
             Logs a <b>warn</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogSError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogSError(System.String,System.String)">
             <summary>
             Logs an <b>serror</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogError(System.String,System.String)">
             <summary>
             Logs an <b>error</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogCritical(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogCritical(System.String,System.String)">
             <summary>
             Logs a <b>critical</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.String,System.Exception,System.String)">
             <summary>
             Logs a <b>debug</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.String,System.Exception,System.String)">
             <summary>
             Logs a <b>transient</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogSInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogSInfo(System.String,System.Exception,System.String)">
             <summary>
             Logs an <b>sinfo</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogInfo(System.String,System.Exception,System.String)">
             <summary>
             Logs an <b>info</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogWarn(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogWarn(System.String,System.Exception,System.String)">
             <summary>
             Logs a <b>warn</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogError(System.String,System.Exception,System.String)">
             <summary>
             Logs an <b>error</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogSError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogSError(System.String,System.Exception,System.String)">
             <summary>
             Logs an <b>serror</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogCritical(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.INeonLogger.LogCritical(System.String,System.Exception,System.String)">
             <summary>
             Logs a <b>critical</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
@@ -7001,69 +7006,69 @@
             Returns the activity ID.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Debug(System.Object)">
+        <member name="M:Neon.Diagnostics.LogActivity.Debug(System.String)">
             <summary>
             Logs a <b>debug</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Info(System.Object)">
+        <member name="M:Neon.Diagnostics.LogActivity.Info(System.String)">
             <summary>
             Logs an <b>info</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Warn(System.Object)">
+        <member name="M:Neon.Diagnostics.LogActivity.Warn(System.String)">
             <summary>
             Logs a <b>warn</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Error(System.Object)">
+        <member name="M:Neon.Diagnostics.LogActivity.Error(System.String)">
             <summary>
             Logs an <b>error</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Critical(System.Object)">
+        <member name="M:Neon.Diagnostics.LogActivity.Critical(System.String)">
             <summary>
             Logs a <b>critical</b> message.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Debug(System.Object,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogActivity.Debug(System.String,System.Exception)">
             <summary>
             Logs a <b>debug</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Info(System.Object,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogActivity.Info(System.String,System.Exception)">
             <summary>
             Logs an <b>info</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Warn(System.Object,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogActivity.Warn(System.String,System.Exception)">
             <summary>
             Logs a <b>warn</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Error(System.Object,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogActivity.Error(System.String,System.Exception)">
             <summary>
             Logs an <b>error</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogActivity.Critical(System.Object,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogActivity.Critical(System.String,System.Exception)">
             <summary>
             Logs a <b>critical</b> message along with exception information.
             </summary>
-            <param name="message">The object that will be serialized into the message.</param>
+            <param name="message">The message.</param>
             <param name="e">The exception.</param>
         </member>
         <member name="T:Neon.Diagnostics.LogEvent">
@@ -7130,110 +7135,122 @@
         </member>
         <member name="T:Neon.Diagnostics.LogExtensions">
             <summary>
-            Extends the <see cref="T:Neon.Diagnostics.INeonLogger"/> types.
+            Extends <see cref="T:Neon.Diagnostics.INeonLogger"/>.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogDebug(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogDebug(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs a debug message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs a transient message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogInfo(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogInfo(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs an informational message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogWarn(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogWarn(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs a warning message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogError(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogError(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs an error message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogCritical(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogCritical(Neon.Diagnostics.INeonLogger,System.Func{System.String},System.String)">
             <summary>
             Logs a critical message retrieved via a message function.
             </summary>
             <param name="log">The log.</param>
             <param name="messageFunc">The message function.</param>
+            <param name="activityId">The optional activity ID.</param>
             <remarks>
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogDebug(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogDebug(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs a debug exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs a transient exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogInfo(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogInfo(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs an info exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogWarn(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogWarn(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs a warning exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogError(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogError(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs an error exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.LogExtensions.LogCritical(Neon.Diagnostics.INeonLogger,System.Exception)">
+        <member name="M:Neon.Diagnostics.LogExtensions.LogCritical(Neon.Diagnostics.INeonLogger,System.Exception,System.String)">
             <summary>
             Logs a critical exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
         </member>
         <member name="T:Neon.Diagnostics.LogLevel">
             <summary>
@@ -7477,52 +7494,52 @@
             <param name="message">The event message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="T:Neon.Diagnostics.NullLogger.Scope">
@@ -7663,52 +7680,52 @@
             <param name="activityId">The optional activity ID.</param>
             <param name="e">The optional event exception.</param>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="T:Neon.Diagnostics.TestLogger.Scope">
@@ -7824,52 +7841,52 @@
             <param name="message">The event message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.String,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="T:Neon.Diagnostics.TextLogger.Scope">
@@ -16478,19 +16495,19 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 4d4376695</summary>
+            <summary>Commit: 427d97a4d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 4d4376695b40d7caf732a1e0589755044711f4b4</summary>
+            <summary>Sha: 427d97a4df0f9eb4348917d077e05d41ed706139</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-12-29T09:05:26-08:00</summary>
+            <summary>Commit date: 2021-12-29T20:31:57-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 52</summary>
+            <summary>Commits on top of base version: 62</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.19.0-52-g4d4376695</summary>
+            <summary>Tag: neonLIBRARY-v2.19.0-62-g427d97a4d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.19.0</summary>
@@ -16517,7 +16534,7 @@
             <summary>Minor: 19</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 52</summary>
+            <summary>Patch: 62</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>
