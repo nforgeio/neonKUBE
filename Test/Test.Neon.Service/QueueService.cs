@@ -185,7 +185,7 @@ namespace TestNeonService
                     }
                     else
                     {
-                        Log.LogError(e);
+                        Log.LogError("SendTaskFunc", e);
                     }
                 }
             }
@@ -209,7 +209,7 @@ namespace TestNeonService
             {
                 if (!terminating)
                 {
-                    Log.LogError(e);
+                    Log.LogError("ReceiveTaskFunc", e);
                 }
             }
 

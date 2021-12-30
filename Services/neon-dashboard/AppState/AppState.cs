@@ -144,7 +144,7 @@ namespace NeonDashboard
         /// <param name="method"></param>
         /// <param name="exception"></param>
         /// <param name="isFatal"></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task TrackExceptionAsync(MethodBase method, Exception exception, bool? isFatal = false)
         {
             Logger.LogError(exception);

@@ -44,11 +44,13 @@ namespace Neon.Kube
         /// <summary>
         /// Restarts a <see cref="V1Deployment"/>.
         /// </summary>
-        /// <param name="deployment"></param>
-        /// <param name="kubernetes"></param>
-        /// <returns></returns>
-        public static async Task RestartAsync(this V1Deployment deployment, IKubernetes kubernetes)
+        /// <param name="deployment">The target deployment.</param>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
             // $todo(jefflill):
             //
             // Fish out the k8s client from the deployment so we don't have to pass it in as a parameter.
@@ -68,14 +70,14 @@ namespace Neon.Kube
     }}
 }}";
 
-            await kubernetes.PatchNamespacedDeploymentAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), deployment.Name(), deployment.Namespace());
+            await k8s.PatchNamespacedDeploymentAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), deployment.Name(), deployment.Namespace());
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await kubernetes.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        var newDeployment = await k8s.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -92,7 +94,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        deployment = await kubernetes.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        deployment = await k8s.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
 
                         return (deployment.Status.Replicas == deployment.Status.AvailableReplicas) && deployment.Status.UnavailableReplicas == null;
                     }
@@ -109,10 +111,12 @@ namespace Neon.Kube
         /// Restarts a <see cref="V1StatefulSet"/>.
         /// </summary>
         /// <param name="statefulset">The deployment being restarted.</param>
-        /// <param name="kubernetes">The <see cref="IKubernetes"/> client to be used for the operation.</param>
-        /// <returns></returns>
-        public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes kubernetes)
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
             // $todo(jefflill):
             //
             // Fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
@@ -132,14 +136,14 @@ namespace Neon.Kube
     }}
 }}";
 
-            await kubernetes.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
+            await k8s.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await kubernetes.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        var newDeployment = await k8s.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -156,7 +160,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        statefulset = await kubernetes.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        statefulset = await k8s.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
 
                         return (statefulset.Status.Replicas == statefulset.Status.ReadyReplicas) && statefulset.Status.UpdatedReplicas == null;
                     }

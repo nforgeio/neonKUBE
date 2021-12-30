@@ -42,6 +42,7 @@ namespace Neon.Common
         private static bool             isLinux;
         private static bool             isOSX;
         private static bool?            is64BitBuild;
+        private static bool             isARM;
         private static bool?            isDevWorkstation;
         private static bool?            isKubernetes;
 
@@ -62,6 +63,8 @@ namespace Neon.Common
                 isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                 isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
                 isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                isARM                = RuntimeInformation.OSArchitecture == Architecture.Arm ||
+                                       RuntimeInformation.OSArchitecture == Architecture.Arm64;
 
                 if (isWindows)
                 {
@@ -140,7 +143,6 @@ namespace Neon.Common
         /// Returns <c>true</c> for 64-bit operating systems.
         /// </summary>
         public static bool Is64BitOS => Environment.Is64BitOperatingSystem;
-
 
         /// <summary>
         /// Returns the .NET runtime description.
@@ -356,7 +358,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the current process is running on Max OSX.
+        /// Returns <c>true</c> if the current process is running on Mac OSX.
         /// </summary>
         public static bool IsOSX
         {
@@ -369,6 +371,23 @@ namespace Neon.Common
 
                 DetectOS();
                 return isOSX;
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the current process is runniong on an ARM processor.
+        /// </summary>
+        public static bool IsARM
+        {
+            get
+            {
+                if (osChecked)
+                {
+                    return isOSX;
+                }
+
+                DetectOS();
+                return isARM;
             }
         }
 

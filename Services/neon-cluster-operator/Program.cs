@@ -50,12 +50,16 @@ namespace NeonClusterOperator
 
             if (args.FirstOrDefault() == "generator")
             {
-                await Host.CreateDefaultBuilder(args)
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
-                    .Build()
-                    .RunOperatorAsync(args);
+                // $debug(jefflill): Temporailiy disabled.
 
                 return;
+
+                //await Host.CreateDefaultBuilder(args)
+                //    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                //    .Build()
+                //    .RunOperatorAsync(args);
+
+                //return;
             }
 
             await new Service(KubeService.NeonClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();

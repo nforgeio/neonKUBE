@@ -20,7 +20,7 @@
 	  <RepositoryType>git</RepositoryType>
 	  <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
 	  <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-	  <PackageLicenseFile>C:\src\neonKUBE\LICENSE</PackageLicenseFile>
+	  <PackageLicenseFile>LICENSE</PackageLicenseFile>
 	  <Configurations>Debug;Release;CodeDoc</Configurations>
 	  <PackageIcon>nuget-icon.png</PackageIcon>
 	  <PackageTags>WSL</PackageTags>
@@ -46,6 +46,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE" Link="LICENSE">
+      <PackagePath></PackagePath>
+      <Pack>True</Pack>
+    </None>
     <None Include="..\nuget-icon.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

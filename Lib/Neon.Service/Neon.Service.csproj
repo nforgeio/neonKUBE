@@ -64,4 +64,24 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+	
+	<!--
+	This target builds the [health-check] and [ready-check] probe binaries for Linux.
+	These need to be built before the Neon.Service library so they can be embedded
+	as resources.
+	
+	These are C programs built via the [wsl-util gcc ...] command.
+	-->
+
+  <Target Name="BuildProbes" BeforeTargets="Build">
+	<Message Importance="high" Text="Building: health-check" />
+    <Exec Command="wsl-util gcc &quot;$(NF_ROOT)\Lib\Neon.Service\health-probes\health-check&quot; &quot;$(NF_ROOT)\Lib\Neon.Service\Resources\health-check&quot;" />
+	  
+	<Message Importance="high" Text="Building: ready-check" />
+    <Exec Command="wsl-util gcc &quot;$(NF_ROOT)\Lib\Neon.Service\health-probes\ready-check&quot; &quot;$(NF_ROOT)\Lib\Neon.Service\Resources\ready-check&quot;" />
+  </Target>
+
 </Project>

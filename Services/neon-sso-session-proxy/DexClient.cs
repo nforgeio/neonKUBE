@@ -19,8 +19,8 @@ namespace NeonSsoSessionProxy
         public Dictionary<string, BasicAuthenticationHeaderValue> AuthHeaders;
         public Uri BaseAddress => jsonClient.BaseAddress;
 
-        private readonly JsonClient jsonClient;
-        private bool isDisposed;
+        private readonly    JsonClient jsonClient;
+        private bool        isDisposed;
         
         public DexClient(Uri baseAddress)
         {
@@ -38,7 +38,7 @@ namespace NeonSsoSessionProxy
         /// <param name="url"></param>
         /// <param name="_object"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task<T> PostFormAsync<T>(string url, dynamic _object, CancellationToken cancellationToken = default)
         {
             var payloadString = "";
@@ -96,7 +96,7 @@ namespace NeonSsoSessionProxy
         /// <param name="redirect_uri"></param>
         /// <param name="grant_type"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>The token response.</returns>
         public async Task<TokenResponse> GetTokenAsync(
             string client,
             string code, 

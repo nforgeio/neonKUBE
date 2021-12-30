@@ -101,7 +101,7 @@ namespace NeonNodeAgent
         /// Responsible for making sure cluster container images are present in the local
         /// cluster registry.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task CheckNodeImagesAsync()
         {
             // check busybox doesn't already exist

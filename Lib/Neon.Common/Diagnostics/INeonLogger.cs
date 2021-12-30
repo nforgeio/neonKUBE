@@ -86,121 +86,121 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs a <b>debug</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogDebug(object message, string activityId = null);
+        void LogDebug(string message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>transient</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogTransient(object message, string activityId = null);
+        void LogTransient(string message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogSInfo(object message, string activityId = null);
+        void LogSInfo(string message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>info</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogInfo(object message, string activityId = null);
+        void LogInfo(string message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>warn</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogWarn(object message, string activityId = null);
+        void LogWarn(string message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>serror</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogSError(object message, string activityId = null);
+        void LogSError(string message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>error</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogError(object message, string activityId = null);
+        void LogError(string message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>critical</b> message.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogCritical(object message, string activityId = null);
+        void LogCritical(string message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>debug</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogDebug(object message, Exception e, string activityId = null);
+        void LogDebug(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>transient</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogTransient(object message, Exception e, string activityId = null);
+        void LogTransient(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogSInfo(object message, Exception e, string activityId = null);
+        void LogSInfo(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>info</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogInfo(object message, Exception e, string activityId = null);
+        void LogInfo(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>warn</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogWarn(object message, Exception e, string activityId = null);
+        void LogWarn(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>error</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogError(object message, Exception e, string activityId = null);
+        void LogError(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>serror</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogSError(object message, Exception e, string activityId = null);
+        void LogSError(string message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>critical</b> message along with exception information.
         /// </summary>
-        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="message">The message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void LogCritical(object message, Exception e, string activityId = null);
+        void LogCritical(string message, Exception e, string activityId = null);
     }
 }
