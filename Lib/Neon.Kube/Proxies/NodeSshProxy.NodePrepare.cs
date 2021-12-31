@@ -365,6 +365,12 @@ $@"
 timedatectl set-timezone UTC
 
 #------------------------------------------------------------------------------
+# Configure the [apt] package manager to retry downloads up to 5 times.
+
+echo 'APT::Acquire::Retries ""5"";' > /etc/apt/apt.conf.d/80-retries
+chmod 644 /etc/apt/apt.conf.d/80-retries
+
+#------------------------------------------------------------------------------
 # We need to increase the number of file descriptors and also how much memory
 # can be locked by root processes.  We're simply going to overwrite the default
 # version of [/etc/security/limits.conf] with our own copy.
