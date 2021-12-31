@@ -903,43 +903,59 @@ namespace Neon.Service
         /// <param name="newStatus">The new status.</param>
         public async Task SetStatusAsync(NeonServiceStatus newStatus)
         {
+// #debug(jefflill): DELETE THE LOGGING
+Log.LogInfo("SetStatus 0:");
             var orgStatus       = this.Status;
             var newStatusString = NeonHelper.EnumToString(newStatus);
 
+Log.LogInfo("SetStatus 1:");
             using (await asyncMutex.AcquireAsync())
             {
+Log.LogInfo("SetStatus 2:");
                 if (newStatus == orgStatus)
                 {
+Log.LogInfo("SetStatus 3:");
                     // Status is unchanged.
 
                     return;
                 }
                 else if (orgStatus == NeonServiceStatus.Terminated)
                 {
+Log.LogInfo("SetStatus 4:");
                     throw new InvalidOperationException($"Service status cannot be set to [{newStatus}] when the service status is [{NeonServiceStatus.Terminated}].");
                 }
+Log.LogInfo("SetStatus 5:");
 
                 this.Status = newStatus;
 
                 if (newStatus == NeonServiceStatus.Unhealthy)
                 {
+Log.LogInfo("SetStatus 6:");
                     unhealthyCount.Inc();
                     Log.LogWarn($"[{Name}] health status is now: [{newStatusString}]");
+Log.LogInfo("SetStatus 7:");
                 }
                 else
                 {
+Log.LogInfo("SetStatus 8:");
                     Log.LogInfo($"[{Name}] health status is now: [{newStatusString}]");
+Log.LogInfo("SetStatus 9:");
                 }
 
+Log.LogInfo("SetStatus 10:");
                 if (healthStatusPath != null)
                 {
+Log.LogInfo("SetStatus 11:");
                     // We're going to use a retry policy to handle the rare situations
                     // where the [health-check] or [ready-check] binaries and this method
                     // try to access this file at the exact same moment.
 
+Log.LogInfo("SetStatus 12:");
                     healthRetryPolicy.Invoke(() => File.WriteAllText(healthStatusPath, newStatusString));
                 }
+Log.LogInfo("SetStatus 13:");
             }
+Log.LogInfo("SetStatus 14:");
         }
 
         /// <summary>

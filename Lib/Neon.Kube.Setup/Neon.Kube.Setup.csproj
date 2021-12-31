@@ -82,7 +82,6 @@
     <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
   </ItemGroup>
 
-
   <!--
   The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
   download the cluster manifest JSON file for the current cluster version.  The manifest

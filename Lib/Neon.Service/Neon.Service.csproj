@@ -64,6 +64,10 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources/**/*" />
+	</ItemGroup>
+	
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
