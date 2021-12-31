@@ -1106,9 +1106,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 
             var setupScript =
 $@"
-set -euo pipefail
-
 if [ ""{install}"" = ""true"" ]; then
+
+    set -euo pipefail
 
     # Install the CRI-O packages.
 
@@ -1122,15 +1122,31 @@ EOF
 
     # $note(jefflill):
     #
-    # CRI-O mirror management (by the famous 'haircommander') is unreliable, so we're
+    # CRI-O mirror management (by the famous [haircommander]) is unreliable, so we're
     # going to use the [--verbose] option here to make it easier to see what happened.
+    #
+    # This may actually be due to a cURL bug:
+    #
+    #   https://curl-library.cool.haxx.narkive.com/EtiNq1og/libcurl-reports-error-in-the-http2-framing-layer-16-for-outgoing-request
+    #
+    # I'm going to comment this out and switch to WGET.
+    #
+    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
-    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key -O /tmp/key
+    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    rm /tmp/key
+
+    wget https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key -O /tmp/key
+    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    rm /tmp/key
 
     {KubeNodeFolders.Bin}/safe-apt-get update -y
     {KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
 fi
+
+set -euo pipefail
 
 # Generate the CRI-O configuration.
 
