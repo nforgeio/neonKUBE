@@ -31,8 +31,8 @@ namespace Service_RuntimeMetrics
 
             // The line above collects all of the available runtime metrics.  You can 
             // customize which metrics are collected using this commented line, but
-            // we recommend collecting everything because you never know when you'll
-            // need it:
+            // we recommend collecting everything because you never know what you'll
+            // need:
 
             //service.MetricsOptions.GetCollector = () =>
             //    DotNetRuntimeStatsBuilder
@@ -51,7 +51,7 @@ namespace Service_RuntimeMetrics
 
     public class MyService : NeonService
     {
-        public static Counter runTimeCounter = Metrics.CreateCounter("run-time", "Service run time in seconds.");
+        public static Counter demoCounter = Metrics.CreateCounter("demo_counter", "Demo metrics counter.");
 
         public MyService() : base("my-service")
         {
@@ -68,7 +68,7 @@ namespace Service_RuntimeMetrics
             while (!Terminator.CancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(TimeSpan.FromSeconds(1));
-                runTimeCounter.Inc();
+                demoCounter.Inc();
             }
 
             return 0;

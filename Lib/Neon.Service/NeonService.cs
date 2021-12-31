@@ -438,8 +438,10 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly char[]  equalArray = new char[] { '=' };
-        private static readonly Gauge   infoGauge  = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
+        private static readonly char[]      equalArray      = new char[] { '=' };
+        private static readonly Gauge       infoGauge       = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
+        private static readonly Counter     runtimeCount    = Metrics.CreateCounter("runtime", "Service runtime in seconds.");
+        private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
 
         /// <summary>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
@@ -898,31 +900,35 @@ namespace Neon.Service
         /// to indicate that the service is running but is not ready to accept external
         /// traffic.
         /// </summary>
-        /// <param name="status">The new status.</param>
-        public async Task SetStatusAsync(NeonServiceStatus status)
+        /// <param name="newStatus">The new status.</param>
+        public async Task SetStatusAsync(NeonServiceStatus newStatus)
         {
+            var orgStatus       = this.Status;
+            var newStatusString = NeonHelper.EnumToString(newStatus);
+
             using (await asyncMutex.AcquireAsync())
             {
-                if (this.Status == status)
+                if (newStatus == orgStatus)
                 {
+                    // Status is unchanged.
+
                     return;
                 }
-                else if (this.Status == NeonServiceStatus.Terminated)
+                else if (orgStatus == NeonServiceStatus.Terminated)
                 {
-                    throw new InvalidOperationException($"Service status cannot be set to [{status}] when the service status is [{NeonServiceStatus.Terminated}].");
+                    throw new InvalidOperationException($"Service status cannot be set to [{newStatus}] when the service status is [{NeonServiceStatus.Terminated}].");
                 }
 
-                this.Status = status;
+                this.Status = newStatus;
 
-                var statusString = NeonHelper.EnumToString(status);
-
-                if (status == NeonServiceStatus.Unhealthy)
+                if (newStatus == NeonServiceStatus.Unhealthy)
                 {
-                    Log.LogWarn($"[{Name}] health status is now: [{statusString}]");
+                    unhealthyCount.Inc();
+                    Log.LogWarn($"[{Name}] health status is now: [{newStatusString}]");
                 }
                 else
                 {
-                    Log.LogInfo($"[{Name}] health status is now: [{statusString}]");
+                    Log.LogInfo($"[{Name}] health status is now: [{newStatusString}]");
                 }
 
                 if (healthStatusPath != null)
@@ -931,7 +937,7 @@ namespace Neon.Service
                     // where the [health-check] or [ready-check] binaries and this method
                     // try to access this file at the exact same moment.
 
-                    healthRetryPolicy.Invoke(() => File.WriteAllText(healthStatusPath, statusString));
+                    healthRetryPolicy.Invoke(() => File.WriteAllText(healthStatusPath, newStatusString));
                 }
             }
         }
@@ -1346,7 +1352,12 @@ namespace Neon.Service
 
             await Task.Delay(Dependencies.Wait);
 
-            // Start and run the service.
+            // Start the service runtime counter task.
+
+            var runtimerCts  = new CancellationTokenSource();
+            var runtimerTask = Runtimer(runtimerCts.Token);
+
+            // Call the user code to start the service.
 
             try
             {
@@ -1408,6 +1419,9 @@ namespace Neon.Service
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
 
+            runtimerCts.Cancel();
+            await runtimerTask;
+
             if (metricServer != null)
             {
                 await metricServer.StopAsync();
@@ -1430,6 +1444,26 @@ namespace Neon.Service
             await SetStatusAsync(NeonServiceStatus.Terminated);
 
             return ExitCode;
+        }
+
+        /// <summary>
+        /// Handles incrementing the <b>runtime</b> metrics counter.
+        /// </summary>
+        /// <param name="cancellationToken">Specifies the cancellation token used to stop the timer.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// This method loops, incrementing <see cref="runtimeCount"/> ince a second
+        /// until <paramref name="cancellationToken"/> requests a cancellation.
+        /// </remarks>
+        private async Task Runtimer(CancellationToken cancellationToken)
+        {
+            var second = TimeSpan.FromSeconds(1);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(second);
+                runtimeCount.Inc();
+            }
         }
 
         /// <summary>
