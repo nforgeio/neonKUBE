@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
