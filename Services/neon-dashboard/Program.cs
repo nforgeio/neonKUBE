@@ -29,7 +29,7 @@ namespace NeonDashboard
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            var service = new NeonDashboardService(KubeServiceMap.Production, KubeService.NeonDashboard);
+            var service  = new NeonDashboardService(KubeService.NeonDashboard);
             var exitCode = await service.RunAsync();
 
             Environment.Exit(exitCode);

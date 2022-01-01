@@ -35,7 +35,7 @@ namespace NeonClusterOperator
         /// <summary>
         /// Configures the operator web service controllers.
         /// </summary>
-        /// <param name="app">The application builder.</param>
+        /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
             app.UseKubernetesOperator();

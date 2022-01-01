@@ -50,7 +50,7 @@ namespace NeonClusterOperator
 
             if (args.FirstOrDefault() == "generator")
             {
-                // $debug(jefflill): Temporailiy disabled.
+                // $debug(jefflill): Temporarily disabled.
 
                 return;
 
@@ -62,7 +62,7 @@ namespace NeonClusterOperator
                 //return;
             }
 
-            await new Service(KubeService.NeonClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();
+            await new Service(KubeService.NeonClusterOperator).RunAsync();
         }
     }
 }

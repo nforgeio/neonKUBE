@@ -29,7 +29,7 @@ namespace NeonSsoSessionProxy
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            var service = new NeonSsoSessionProxyService(KubeServiceMap.Production, KubeService.NeonSsoSessionProxy);
+            var service  = new NeonSsoSessionProxyService(KubeService.NeonSsoSessionProxy);
             var exitCode = await service.RunAsync();
 
             Environment.Exit(exitCode);

@@ -57,7 +57,7 @@ namespace NeonNodeAgent
                 return;
             }
 
-            await new Service(KubeService.NeonClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();
+            await new Service(KubeService.NeonClusterOperator).RunAsync();
         }
     }
 }

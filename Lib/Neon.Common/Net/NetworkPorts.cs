@@ -291,7 +291,7 @@ namespace Neon.Net
         /// <summary>
         /// The Postgres database port.
         /// </summary>
-        public const int Postgres = 5433;
+        public const int Postgres = 5432;
 
         /// <summary>
         /// Default port for the Grafana dashboard.

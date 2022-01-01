@@ -38,6 +38,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace NeonNodeAgent
 {
+    /// <summary>
+    /// Implements the <b>neon-node-agent</b> service.
+    /// </summary>
     public partial class Service : NeonService
     {
         private const string StateTable = "state";
@@ -48,9 +51,8 @@ namespace NeonNodeAgent
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        /// <param name="serviceMap">Optionally specifies the service map.</param>
-        public Service(string name, ServiceMap serviceMap = null)
-            : base(name, version: KubeVersions.NeonKube, serviceMap: serviceMap)
+        public Service(string name)
+            : base(name, version: KubeVersions.NeonKube)
         {
             k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 

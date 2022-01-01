@@ -1,4 +1,4 @@
 ﻿Neon.Kube.Services
 ==================
 
-**INTERNAL USE ONLY:** Core library used by neonKUBE related tooling.
+**INTERNAL USE ONLY:** Common code for neonKUBE service implementations.

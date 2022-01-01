@@ -23,10 +23,10 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Kube.Models
+namespace Neon.Kube.Services
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Data models used to communicate with the neonKUBE Headend service.
+    /// <b>INTERNAL USE ONLY:</b> Common code for neonKUBE service implementations.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

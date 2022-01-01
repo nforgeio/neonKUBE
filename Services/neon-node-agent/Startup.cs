@@ -17,6 +17,10 @@ namespace NeonNodeAgent
     /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Configures depdendency injection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddKubernetesOperator(

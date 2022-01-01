@@ -38,6 +38,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace NeonClusterOperator
 {
+    /// <summary>
+    /// Implements the <b>neon-cluster-operator</b> service.
+    /// </summary>
     public partial class Service : NeonService
     {
         private const string StateTable = "state";
