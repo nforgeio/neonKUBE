@@ -347,7 +347,7 @@ $@"@echo off
             //
             // will publish their output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\publish
             //
             // Projects that use <RuntimeIdentifiers/> (plural) with one
             // or more runtime identifiers like:
@@ -356,7 +356,7 @@ $@"@echo off
             //
             // will publish output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\win10-x64\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\win10-x64\publish
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.

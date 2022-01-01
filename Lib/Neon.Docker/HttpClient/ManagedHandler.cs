@@ -249,7 +249,7 @@ namespace Microsoft.Net.Http.Client
                 }
                 else
                 {
-                    pathAndQuery = Uri.EscapeUriString(request.RequestUri.ToString());
+                    pathAndQuery = Uri.EscapeDataString(request.RequestUri.ToString());
                 }
                 request.SetPathAndQueryProperty(pathAndQuery);
             }

@@ -16492,22 +16492,22 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: master</summary>
+            <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 427d97a4d</summary>
+            <summary>Commit: f622659e4</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 427d97a4df0f9eb4348917d077e05d41ed706139</summary>
+            <summary>Sha: f622659e466b3743bec72198609cbc5cb1e7937d</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-12-29T20:31:57-08:00</summary>
+            <summary>Commit date: 2021-12-31T19:25:36-08:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 62</summary>
+            <summary>Commits on top of base version: 83</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.19.0-62-g427d97a4d</summary>
+            <summary>Tag: neonLIBRARY-v2.19.0-83-gf622659e4</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.19.0</summary>
@@ -16534,7 +16534,7 @@
             <summary>Minor: 19</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 62</summary>
+            <summary>Patch: 83</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

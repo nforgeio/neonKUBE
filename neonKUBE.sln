@@ -382,7 +382,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-modelgen", "Tools\neon-modelgen\neon-modelgen.csproj", "{FE55ED55-F4B5-45B0-AFF2-EBDCAACF691A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Services", "Lib\Neon.Kube.Services\Neon.Kube.Services.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Service", "Lib\Neon.Kube.Service\Neon.Kube.Service.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
 EndProject
@@ -429,7 +429,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.WSL", "Lib\Neon.WSL\Ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.WSL", "Test\Test.Neon.WSL\Test.Neon.WSL.csproj", "{47E0DC4F-BF8D-474B-8C2C-D656659D9480}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wsl-util", "Tools\wsl-util\wsl-util.csproj", "{776E985C-E4C6-428A-8259-A29DF873A84E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wsl-util", "Tools\wsl-util\wsl-util.csproj", "{776E985C-E4C6-428A-8259-A29DF873A84E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

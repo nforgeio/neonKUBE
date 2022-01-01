@@ -42,7 +42,7 @@ namespace TestCryptography
         {
             // Encrypt/decrypt using low-level methods to understand how this works.
 
-            using (var aes = new AesManaged())
+            using (var aes = Aes.Create())
             {
                 var key          = aes.Key;
                 var IV           = aes.IV;

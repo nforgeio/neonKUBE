@@ -23,7 +23,7 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Kube.Services
+namespace Neon.Kube.Service
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Common code for neonKUBE service implementations.

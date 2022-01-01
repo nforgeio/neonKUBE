@@ -65,7 +65,7 @@ namespace TestCouchbase
             {
             }
 
-            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+            public void Configure(IApplicationBuilder app)
             {
                 // This is a simple test that replies to all requests with: [Answer].
 
