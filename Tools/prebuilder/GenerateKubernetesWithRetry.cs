@@ -143,8 +143,22 @@ namespace {targetNamespace}
                 foreach (var constructor in kubernetesType.GetConstructors())
                 {
                     var parameters = constructor.GetParameters();
+                    var obsolete   = constructor.GetCustomAttribute<ObsoleteAttribute>();
 
                     writer.WriteLine();
+
+                    if (obsolete != null)
+                    {
+                        if (string.IsNullOrEmpty(obsolete.Message))
+                        {
+                            writer.WriteLine($"        [Obsolete]");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"        [Obsolete(\"{obsolete.Message}\")]");
+                        }
+                    }
+
                     writer.WriteLine($"        public {wrapperClassName}({GetParameterDefinition(parameters)})");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            k8s = new Kubernetes({GetParameterNames(parameters)});");
@@ -255,6 +269,7 @@ namespace {targetNamespace}
                         var isAsync    = method.ReturnType == typeof(Task) || method.ReturnType.ToString().StartsWith("System.Threading.Tasks.Task`");
                         var isOverride = false;
                         var @override  = string.Empty;
+                        var obsolete   = method.GetCustomAttribute<ObsoleteAttribute>();
 
                         if (generatingExtensions)
                         {
@@ -302,21 +317,25 @@ namespace {targetNamespace}
                                 continue;
                         }
 
-                        if (!generatingExtensions)
-                        {
-                            // The generated extension methods need the [new] override to prevent
-                            // conflicts with the actual IKubernetes extension methods because our
-                            // generated type also needs to implement [IKubernetes].
-
-                            //@override += " new";
-                        }
-
                         if (isAsync)
                         {
                             Covenant.Assert(!isOverride);
 
                             writer.WriteLine();
                             writer.WriteLine($"        /// <inheritdoc/>");
+
+                            if (obsolete != null)
+                            {
+                                if (string.IsNullOrEmpty(obsolete.Message))
+                                {
+                                    writer.WriteLine($"        [Obsolete]");
+                                }
+                                else
+                                {
+                                    writer.WriteLine($"        [Obsolete(\"{obsolete.Message}\")]");
+                                }
+                            }
+
                             writer.WriteLine($"        public{@override} async {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
                             writer.WriteLine($"        {{");
 
@@ -341,6 +360,19 @@ namespace {targetNamespace}
                         {
                             writer.WriteLine();
                             writer.WriteLine($"        /// <inheritdoc/>");
+
+                            if (obsolete != null)
+                            {
+                                if (string.IsNullOrEmpty(obsolete.Message))
+                                {
+                                    writer.WriteLine($"        [Obsolete]");
+                                }
+                                else
+                                {
+                                    writer.WriteLine($"        [Obsolete(\"{obsolete.Message}\")]");
+                                }
+                            }
+
                             writer.WriteLine($"        public{@override} {ResolveTypeReference(method.ReturnType, isResultType: true)} {method.Name}{GetGenericArgsDefinition(method)}({GetParameterDefinition(parameters)})");
                             writer.WriteLine($"        {{");
 
