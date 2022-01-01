@@ -657,6 +657,7 @@ namespace Neon.Service
             }
 
             this.Name                   = name;
+            this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator();
             this.version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
