@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    public class DexConnector
+    public class DexConnector<T> where T : class
     {
         /// <summary>
         /// Constructor.
@@ -48,13 +48,6 @@ namespace Neon.Kube
         public string Id { get; set; }
 
         /// <summary>
-        /// Connector type. 
-        /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
-        public DexConnectorType Type { get; set; }
-
-        /// <summary>
         /// Connector name.
         /// information.
         /// </summary>
@@ -70,6 +63,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, object> Config { get; set; }
+        public virtual T Config { get; set; }
     }
 }

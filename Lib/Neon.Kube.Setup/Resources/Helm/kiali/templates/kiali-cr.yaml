@@ -35,6 +35,8 @@ spec:
     accessible_namespaces:
     - '**'
     service_type: "ClusterIP"
+    pod_annotations:
+      reloader.stakater.com/auto: true
   external_services:
     grafana:
       auth:

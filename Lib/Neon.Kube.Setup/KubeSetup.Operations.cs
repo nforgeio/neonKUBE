@@ -952,6 +952,28 @@ done
                     clusterLogin.Save();
                     }
                 });
+
+                master.InvokeIdempotent("ready-to-go/kube-apiserver-running-config",
+                () =>
+                {
+                    var k8s = GetK8sClient(controller);
+                    var configMap = k8s.ReadNamespacedConfigMap("kubeadm-config", KubeNamespaces.KubeSystem);
+                    var clusterConfig = configMap.Data["ClusterConfiguration"];
+                    clusterConfig = Regex.Replace(clusterConfig, @"^[\s]+oidc-issuer-url.*", $"        oidc-issuer-url: https://sso.{cluster.Definition.Domain}");
+                    configMap.Data["ClusterConfiguration"] = clusterConfig;
+
+                    k8s.ReplaceNamespacedConfigMap(configMap, configMap.Name(), configMap.Namespace());
+                });
+
+                master.InvokeIdempotent("ready-to-go/kube-apiserver-static-config",
+                () =>
+                {
+                    var kubeletConfig = master.DownloadText("/etc/kubernetes/manifests/kube-apiserver.yaml");
+
+                    kubeletConfig = Regex.Replace(kubeletConfig, @"^[-\s]+oidc-issuer-url.*", $"    - --oidc-issuer-url=https://sso.{cluster.Definition.Domain}");
+
+                    master.UploadText("/etc/kubernetes/manifests/kube-apiserver.yaml", kubeletConfig, permissions: "600", owner: "root:root");
+                });
             }
         }
 
@@ -1860,7 +1882,20 @@ subjects:
 
                         await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "kiali-dashboard-virtual-service");
                     });
+
+                await master.InvokeIdempotentAsync("ready-to-go/kiali-crd-config",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update kiali crd config");
+
+                        var kiali = ((JObject)await k8s.GetNamespacedCustomObjectAsync("kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "v1alpha1", "kiali")).ToObject<dynamic>();
+
+                        kiali["spec"]["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
+                        kiali["spec"]["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
+                    });
             }
+
+
         }
 
         /// <summary>
@@ -2973,7 +3008,7 @@ $@"- name: StorageType
                     async () =>
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update grafana ingress");
-                    
+
                         var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service")).ToObject<VirtualService>();
 
                         virtualService.Spec.Hosts =
@@ -2983,6 +3018,20 @@ $@"- name: StorageType
                             };
 
                         await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service");
+                    });
+
+                await master.InvokeIdempotentAsync("ready-to-go/grafana-crd-config",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update grafana crd config");
+
+                        var grafana = ((JObject)await k8s.GetNamespacedCustomObjectAsync("integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "v1alpha1", "grafana")).ToObject<dynamic>();
+                        
+                        grafana["spec"]["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
+                        grafana["spec"]["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
+                        grafana["spec"]["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
+
+                        grafana["spec"]["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
                     });
             }
         }
@@ -4015,13 +4064,68 @@ $@"- name: StorageType
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
+                await master.InvokeIdempotentAsync("ready-to-go/dex-secret",
+                   async () =>
+                   {
+                       var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
+
+                       foreach (var key in secret.Data.Keys)
+                       {
+                           secret.StringData[key] = NeonHelper.GetCryptoRandomPassword(32);
+                       }
+
+                       await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
+                   });
+
                 await master.InvokeIdempotentAsync("ready-to-go/dex-config",
                     async () =>
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update dex configuration");
 
-                        var configMap = NeonHelper.JsonDeserialize<dynamic>((await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespaces.NeonSystem)).Data["config.yaml"]);
+                        var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
+                        var dexConfig = NeonHelper.JsonDeserialize<DexConfig>((await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespaces.NeonSystem)).Data["config.yaml"]);
 
+                        dexConfig.Issuer = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
+
+                        var ldapConnector = dexConfig.Connectors.Where(c => c.Type == DexConnectorType.Ldap).FirstOrDefault();
+
+                        ((DexLdapConfig)ldapConnector.Config).BindPW = Encoding.UTF8.GetString(dexSecret.Data["LDAP_SECRET"]);
+
+                        foreach (var client in dexConfig.StaticClients)
+                        {
+                            switch (client.Name)
+                            {
+                                case "Grafana":
+                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["GRAFANA_CLIENT_SECRET"]);
+                                    client.RedirectUris = new List<string>()
+                                    {
+                                        $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}/login/generic_oauth",
+                                    };
+                                    break;
+                                case "Kubernetes":
+                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["KUBERNETES_CLIENT_SECRET"]);
+                                    client.RedirectUris = new List<string>()
+                                    {
+                                        $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}/oauth2/callback",
+                                        $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}/kiali"
+                                    };
+                                    break;
+                                case "Harbor":
+                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["KUBERNETES_CLIENT_SECRET"]);
+                                    client.RedirectUris = new List<string>()
+                                    {
+                                        $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}/oauth_callback",
+                                    };
+                                    break;
+                                case "Minio":
+                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["MINIO_CLIENT_SECRET"]);
+                                    client.RedirectUris = new List<string>()
+                                    {
+                                        $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}/oauth_callback",
+                                    };
+                                    break;
+                            }
+                        }
                     });
             }
         }
@@ -4086,6 +4190,17 @@ $@"- name: StorageType
                             };
 
                         await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "neon-sso-session-proxy");
+                    });
+
+                await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso secret");
+
+                        var sessionSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoSessionProxySecret, KubeNamespaces.NeonSystem);
+                        sessionSecret.StringData["CIPHER_KEY"] = AesCipher.GenerateKey(256);
+
+                        await k8s.ReplaceNamespacedSecretAsync(sessionSecret, sessionSecret.Name(), sessionSecret.Namespace());
                     });
             }
         }
@@ -4181,6 +4296,20 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-oauth2-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-secret",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso secret");
+
+                        var oauth2Secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoOauth2ProxySecret, KubeNamespaces.NeonSystem);
+                        oauth2Secret.StringData["cookie-secret"] = NeonHelper.GetCryptoRandomPassword(32);
+
+                        await k8s.ReplaceNamespacedSecretAsync(oauth2Secret, oauth2Secret.Name(), oauth2Secret.Namespace());
+                    });
+            }
         }
 
         /// <summary>
