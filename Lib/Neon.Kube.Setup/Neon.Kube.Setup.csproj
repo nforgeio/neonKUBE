@@ -10,7 +10,7 @@
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
@@ -56,7 +56,7 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Services\Neon.Kube.Services.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Service\Neon.Kube.Service.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
   </ItemGroup>
@@ -82,7 +82,6 @@
   <ItemGroup>
     <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
   </ItemGroup>
-
 
   <!--
   The [ClusterManifest] build target executes a [neon-build download-const-uri] command to

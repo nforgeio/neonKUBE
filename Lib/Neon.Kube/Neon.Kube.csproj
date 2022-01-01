@@ -10,7 +10,7 @@
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
@@ -117,8 +117,8 @@
   Generates the [KubernetesWithRetry.cs] file.
   -->
 
-  <Target Name="K8sWithRetry" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder.exe')">
-    <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net5.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
+  <Target Name="K8sWithRetry" BeforeTargets="BeforeCompile" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
+    <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
   </Target>
 
 </Project>

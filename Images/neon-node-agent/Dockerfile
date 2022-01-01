@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        mcr.microsoft.com/dotnet/aspnet:5.0.12-focal-amd64
+FROM        mcr.microsoft.com/dotnet/aspnet:6.0.1-focal-amd64
 MAINTAINER  jeff@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

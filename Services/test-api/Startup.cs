@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Startup.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ using Neon.Xunit;
 namespace TestApiService
 {
     /// <summary>
-    /// Handles the web service configuration.
+    /// Configures the operator's service controllers.
     /// </summary>
     public class Startup
     {
@@ -55,9 +55,9 @@ namespace TestApiService
         public IConfiguration Configuration { get; private set; }
 
         /// <summary>
-        /// Configures any required services.
+        /// Configures depdendency injection.
         /// </summary>
-        /// <param name="services">The services collection.</param>
+        /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             services
@@ -66,10 +66,10 @@ namespace TestApiService
         }
 
         /// <summary>
-        /// Configures the request pipeline.
+        /// Configures the operator web service controllers.
         /// </summary>
-        /// <param name="app">The application builder.</param>
-        /// <param name="env">The hosting environment.</param>
+        /// <param name="app">Specifies the application builder.</param>
+        /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

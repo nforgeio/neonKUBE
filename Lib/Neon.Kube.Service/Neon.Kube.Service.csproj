@@ -10,9 +10,9 @@
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Services/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Service/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <RepositoryType>git</RepositoryType>

@@ -14,7 +14,7 @@
 
       NOTE: You must have a .NET Core 3.1 SDK or runtime installed for this to work because the client is built on this SDK.
     </Description>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGenerator/README.md</PackageProjectUrl>
@@ -98,9 +98,9 @@
 
     <!-- Build the [modelgen] tool for the supported platforms -->
     
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --runtime linux-x64" />
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --runtime osx-x64" />
-    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net5.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --runtime win-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --self-contained --runtime linux-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --self-contained --runtime osx-x64" />
+    <Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --self-contained --runtime win-x64" />
   </Target>
 
 </Project>

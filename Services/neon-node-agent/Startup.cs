@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Startup.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
 
@@ -17,6 +17,10 @@ namespace NeonNodeAgent
     /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Configures depdendency injection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddKubernetesOperator(

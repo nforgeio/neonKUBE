@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Test_NeonHelper.Process.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ namespace TestCommon
 #else
                 var confguration = "Release";
 #endif
-                return Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Test", "Test.ExecTarget", "bin", confguration, "net5.0", "Test.ExecTarget.exe");
+                return Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Test", "Test.ExecTarget", "bin", confguration, "net6.0", "Test.ExecTarget.exe");
             }
         }
 

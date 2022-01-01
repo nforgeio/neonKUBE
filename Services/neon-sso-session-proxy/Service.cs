@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Service.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System.Threading.Tasks;
 using System.Net;
@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Service;
 using Neon.Common;
+using Neon.Kube;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
@@ -26,7 +27,7 @@ using Prometheus.DotNetRuntime;
 namespace NeonSsoSessionProxy
 {
     /// <summary>
-    /// Implements the Neon Dashboard service.
+    /// Implements the <b>neon-sso-session-proxy</b> service.
     /// </summary>
     public class NeonSsoSessionProxyService : NeonService
     {
@@ -41,12 +42,9 @@ namespace NeonSsoSessionProxy
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public NeonSsoSessionProxyService(ServiceMap serviceMap, string name)
-             : base(name,
-                  $@"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : "")}",
-                  serviceMap: serviceMap)
+        public NeonSsoSessionProxyService(string name)
+             : base(name, version: KubeVersions.NeonKube)
         {
         }
 
@@ -68,38 +66,37 @@ namespace NeonSsoSessionProxy
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
-            
-            var endpoint = Description.Endpoints.Default;
 
             if (!NeonHelper.IsDevWorkstation)
             {
-                MetricsOptions.Mode = MetricsMode.Scrape;
-                MetricsOptions.Path = "/metrics";
-                MetricsOptions.Port = endpoint.Port + 1;
-
-                MetricsOptions.GetCollector = () =>
-                                DotNetRuntimeStatsBuilder
-                                    .Default()
-                                    .StartCollecting();
+                MetricsOptions.Mode         = MetricsMode.Scrape;
+                MetricsOptions.Path         = "/metrics";
+                MetricsOptions.Port         = 11002;
+                MetricsOptions.GetCollector =
+                    () =>
+                    {
+                        return DotNetRuntimeStatsBuilder
+                            .Default()
+                            .StartCollecting();
+                    };
             }
 
             // Start the web service.
 
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
+                .UseKestrel(options => options.Listen(IPAddress.Any, 11001))
                 .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoSessionProxyService), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:{endpoint.Port}");
+            Log.LogInfo($"Listening on {IPAddress.Any}:11001");
 
             // Indicate that the service is ready for business.
 
             await SetStatusAsync(NeonServiceStatus.Running);
-            Log.LogInfo("Service running");
 
             // Wait for the process terminator to signal that the service is stopping.
 

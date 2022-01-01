@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.Operations.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -4326,8 +4326,8 @@ $@"- name: StorageType
             var secret     = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
             var username   = Encoding.UTF8.GetString(secret.Data["username"]);
             var password   = Encoding.UTF8.GetString(secret.Data["password"]);
-            var dbHost     = KubeServiceMap.Production[KubeService.NeonSystemDb].Endpoints.Default.Uri.Host;
-            var dbPort     = KubeServiceMap.Production[KubeService.NeonSystemDb].Endpoints.Default.Uri.Port;
+            var dbHost     = KubeService.NeonSystemDb;
+            var dbPort     = NetworkPorts.Postgres;
             var connString = $"Host={dbHost};Port={dbPort};Username={username};Password={password};Database=postgres";
 
             if (controller.Get<bool>(KubeSetupProperty.Redact, true))
@@ -4371,28 +4371,28 @@ $@"- name: StorageType
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres -t -c ""SELECT 1 FROM pg_database WHERE datname = '{name}';"""
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -t -c ""SELECT 1 FROM pg_database WHERE datname = '{name}';"""
                 };
 
             var selectRoleCommand = new string[]
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres -t -c ""SELECT 1 FROM pg_roles WHERE rolname='{username}'"""
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -t -c ""SELECT 1 FROM pg_roles WHERE rolname='{username}'"""
                 };
 
             var createDatabaseCommand = new string[]
                 {
                     "/bin/bash", 
                     "-c", 
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres -c ""CREATE DATABASE {name};"""
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c ""CREATE DATABASE {name};"""
                 };
 
             var createExtensionCommand = new string[]
                 {
                     "/bin/bash", 
                     "-c", 
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/{name} -c ""CREATE EXTENSION citus;"""
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""CREATE EXTENSION citus;"""
                 };
 
             ExecuteResponse result;
@@ -4463,7 +4463,7 @@ $@"- name: StorageType
                            {
                                 "/bin/bash",
                                 "-c",
-                                $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/{name} -c ""SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"""
+                                $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"""
                         });
                    });
             }
@@ -4484,7 +4484,7 @@ $@"- name: StorageType
                     {
                         "/bin/bash",
                         "-c",
-                        $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/{name} -c ""CREATE USER {username} WITH PASSWORD '{password}';"""
+                        $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""CREATE USER {username} WITH PASSWORD '{password}';"""
                     });
             }
 
@@ -4496,7 +4496,7 @@ $@"- name: StorageType
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres -c ""GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"""
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c ""GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"""
                 });
 
             await k8s.NamespacedPodExecAsync(
@@ -4507,7 +4507,7 @@ $@"- name: StorageType
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres << SQL
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres << SQL
 SELECT run_command_on_workers($cmd$
   /* the command to run */
   DO
@@ -4533,7 +4533,7 @@ SQL"
                 {
                     "/bin/bash",
                     "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:5432/postgres << SQL
+                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres << SQL
 SELECT run_command_on_workers($cmd$
   /* the command to run */
   GRANT ALL PRIVILEGES ON DATABASE {name} TO {username}

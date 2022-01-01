@@ -40,8 +40,7 @@ spec:
           startupProbe:
             exec:
               command:
-                - sh
-                - /health-check         # $lt;--- this script works for both startup and liveliness probes
+                - /health-check
             initialDelaySeconds: 1
             failureThreshold: 30
             periodSeconds: 5
@@ -49,16 +48,14 @@ spec:
           livenessProbe:
             exec:
               command:
-                - sh
                 - /health-check
-            initialDelaySeconds: 1    # $lt;--- we don't need a long (fixed) delay here with a startup probe
+            initialDelaySeconds: 1
             periodSeconds: 10
             timeoutSeconds: 1
           readinessProbe:
             exec:
               command:
-                - sh
-                - /ready-check          # $lt;--- separate script for readiness probes
+                - /ready-check
             initialDelaySeconds: 1
             periodSeconds: 10
             timeoutSeconds: 1

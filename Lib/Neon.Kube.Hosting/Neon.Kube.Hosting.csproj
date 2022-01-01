@@ -9,7 +9,7 @@
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: neonKUBE hosting manager common classes.</Description>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <RootNamespace>Neon.Kube</RootNamespace>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

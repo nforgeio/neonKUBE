@@ -13,7 +13,7 @@
 The other major type is CommandBundle.  Command bundles provide a way to upload a script or executable to a temporary working directory and then run the script or program in the context of the working directory so the script or program will have access to the files.  Command  bundle executions can also tolerate transient network disconnections.
  
 NOTE: This package has been tested against remote machines running Ubuntu 18.04+ and will probably run fine on many other Debian-based distributions.  RedHat and other non-Debian distributions probably won't be compatible.</Description>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.SSH/README.md</PackageProjectUrl>
     <PackageIcon>nuget-icon.png</PackageIcon>

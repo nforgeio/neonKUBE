@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +29,7 @@ namespace NeonDashboard
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            var service = new NeonDashboardService(KubeServiceMap.Production, KubeService.NeonDashboard);
+            var service  = new NeonDashboardService(KubeService.NeonDashboard);
             var exitCode = await service.RunAsync();
 
             Environment.Exit(exitCode);

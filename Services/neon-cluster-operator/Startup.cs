@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Startup.cs
 // CONTRIBUTOR: Marcus Bowyer, Jeff Lill
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
 
@@ -35,7 +35,7 @@ namespace NeonClusterOperator
         /// <summary>
         /// Configures the operator web service controllers.
         /// </summary>
-        /// <param name="app">The application builder.</param>
+        /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
             app.UseKubernetesOperator();

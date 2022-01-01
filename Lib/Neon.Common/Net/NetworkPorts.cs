@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NetworkPorts.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -291,7 +291,7 @@ namespace Neon.Net
         /// <summary>
         /// The Postgres database port.
         /// </summary>
-        public const int Postgres = 5433;
+        public const int Postgres = 5432;
 
         /// <summary>
         /// Default port for the Grafana dashboard.

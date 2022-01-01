@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Marcus Bowyer, Jeff Lill
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ namespace NeonClusterOperator
 
             if (args.FirstOrDefault() == "generator")
             {
-                // $debug(jefflill): Temporailiy disabled.
+                // $debug(jefflill): Temporarily disabled.
 
                 return;
 
@@ -62,7 +62,7 @@ namespace NeonClusterOperator
                 //return;
             }
 
-            await new Service(KubeService.NeonClusterOperator, serviceMap: KubeServiceMap.Production).RunAsync();
+            await new Service(KubeService.NeonClusterOperator).RunAsync();
         }
     }
 }

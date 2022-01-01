@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Test_RunCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,14 +48,14 @@ namespace Test.NeonCli
             {
                 // Verify that the help command works.
 
-                var result = await runner.ExecuteAsync(Program.Main, "run", "--help");
+                var result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--help");
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("Runs a sub-command, optionally injecting settings and secrets and/or", result.OutputText);
 
                 // Verify ther error we get when there's no right command line.
 
-                result = await runner.ExecuteAsync(Program.Main, "run");
+                result = await runner.ExecuteAsync(Program.Main, "tool", "run");
 
                 Assert.NotEqual(0, result.ExitCode);
                 Assert.Contains("*** ERROR: Expected a command after a [--] argument.", result.ErrorText);
@@ -106,7 +106,7 @@ TEST_B=B-VALUE
 TEST_C=C-VALUE
 TEST_D=D-VALUE
 ");
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -177,7 +177,7 @@ TEST_D=D-VALUE
                             File.WriteAllBytes("var2.txt", vault.Encrypt("var2.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("var2.txt"));
 
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -221,7 +221,7 @@ TEST_D=D-VALUE
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -277,7 +277,7 @@ $<<TEST_B>>
 $<<TEST_C>>
 $<<TEST_D>>
 ");
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -337,7 +337,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -392,7 +392,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "--", "test.cmd", "_...file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--", "test.cmd", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -410,7 +410,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = await runner.ExecuteAsync(Program.Main, $"run", "--", "cat", "_...file.txt");
+                            result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--", "cat", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             Assert.Contains(plainText, result.OutputText);
@@ -451,7 +451,7 @@ $<<TEST_D>>
 
                             File.WriteAllText("test.txt", "Hello World!");
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--", "cat", "test.txt");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--", "cat", "test.txt");
                             Assert.Equal(0, result.ExitCode);
                             Assert.Contains("Hello World!", result.AllText);
                         }
@@ -484,7 +484,7 @@ $<<TEST_D>>
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"run", "--", "test.cmd", "-foo", "--bar=foobar", "--hello", "world");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--", "test.cmd", "-foo", "--bar=foobar", "--hello", "world");
                             Assert.Equal(0, result.ExitCode);
 
                             Assert.Contains("-foo --bar=foobar --hello world", File.ReadAllText("output.txt"));

@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Startup.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -30,19 +30,29 @@ using Blazor.Analytics.Components;
 
 namespace NeonDashboard
 {
+    /// <summary>
+    /// Configures the operator's service controllers.
+    /// </summary>
     public class Startup
     {
         public IConfiguration Configuration { get; }
         public NeonDashboardService NeonDashboardService;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="configuration">Specifies the service configuration.</param>
+        /// <param name="service">Specifies the service.</param>
         public Startup(IConfiguration configuration, NeonDashboardService service)
         {
-            Configuration = configuration;
+            Configuration             = configuration;
             this.NeonDashboardService = service;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        /// <summary>
+        /// Configures depdendency injection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")))
@@ -58,22 +68,22 @@ namespace NeonDashboard
             services.AddServerSideBlazor();
 
             services.AddAuthentication(options => {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
             .AddCookie()
             .AddOpenIdConnect("oidc", options =>
             {
-                options.ClientId = "kubernetes";
-                options.ClientSecret = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
-                options.Authority = $"https://{ClusterDomain.Sso}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
-                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.ClientId                      = "kubernetes";
+                options.ClientSecret                  = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
+                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
+                options.ResponseType                  = OpenIdConnectResponseType.Code;
                 options.GetClaimsFromUserInfoEndpoint = true;
-                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.SaveTokens = true;
-                options.RequireHttpsMetadata = false;
-                options.RemoteAuthenticationTimeout = TimeSpan.FromSeconds(120);
-                options.CallbackPath = "/oauth2/callback";
+                options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.SaveTokens                    = true;
+                options.RequireHttpsMetadata          = false;
+                options.RemoteAuthenticationTimeout   = TimeSpan.FromSeconds(120);
+                options.CallbackPath                  = "/oauth2/callback";
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
@@ -95,7 +105,11 @@ namespace NeonDashboard
                 .AddNeon();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Configures the operator web service controllers.
+        /// </summary>
+        /// <param name="app">The application builder.</param>
+        /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

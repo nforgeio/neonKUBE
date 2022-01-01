@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <Version>2.10.0-internal</Version>
     <Company>neonFORGE LLC</Company>
     <Product>neonKUBE</Product>
     <Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
-    <Copyright>Copyright © 2005-2021 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Authors>neonFORGE Team</Authors>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NodeSshProxy.NodePrepare.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -363,6 +363,12 @@ $@"
 # Basic initialization
 
 timedatectl set-timezone UTC
+
+#------------------------------------------------------------------------------
+# Configure the [apt] package manager to retry downloads up to 5 times.
+
+echo 'APT::Acquire::Retries ""5"";' > /etc/apt/apt.conf.d/80-retries
+chmod 644 /etc/apt/apt.conf.d/80-retries
 
 #------------------------------------------------------------------------------
 # We need to increase the number of file descriptors and also how much memory
@@ -749,7 +755,7 @@ cat <<EOF > /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
 # FILE:         journald.conf
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -820,7 +826,7 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-cleaner
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -1106,9 +1112,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 
             var setupScript =
 $@"
-set -euo pipefail
-
 if [ ""{install}"" = ""true"" ]; then
+
+    set -euo pipefail
 
     # Install the CRI-O packages.
 
@@ -1122,15 +1128,31 @@ EOF
 
     # $note(jefflill):
     #
-    # CRI-O mirror management (by the famous 'haircommander') is unreliable, so we're
+    # CRI-O mirror management (by the famous [haircommander]) is unreliable, so we're
     # going to use the [--verbose] option here to make it easier to see what happened.
+    #
+    # This may actually be due to a cURL bug:
+    #
+    #   https://curl-library.cool.haxx.narkive.com/EtiNq1og/libcurl-reports-error-in-the-http2-framing-layer-16-for-outgoing-request
+    #
+    # I'm going to comment this out and switch to WGET.
+    #
+    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
 
-    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-    curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key -O /tmp/key
+    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    rm /tmp/key
+
+    wget https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key -O /tmp/key
+    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    rm /tmp/key
 
     {KubeNodeFolders.Bin}/safe-apt-get update -y
     {KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
 fi
+
+set -euo pipefail
 
 # Generate the CRI-O configuration.
 
@@ -1612,11 +1634,19 @@ systemctl start crio
                     sbPinnedImages.AppendLine(image.InternalRef);
                     sbPinnedImages.AppendLine(image.InternalDigestRef);
 
-                    var atPos = image.InternalDigestRef.IndexOf('@');
+                    // We need to extract the image ID from the internal digest reference which
+                    // look something like this:
+                    //
+                    //      neon-registry.node.local/redis@sha256:561AABD123...
+                    //
+                    // where we need to extract the HEX bytes after the [@sha256:] prefix
 
-                    Covenant.Assert(atPos != -1);
+                    var idPrefix    = "@sha256:";
+                    var idPrefixPos = image.InternalDigestRef.IndexOf(idPrefix);
 
-                    sbPinnedImages.AppendLine(image.InternalDigestRef.Substring(atPos + 1));
+                    Covenant.Assert(idPrefixPos != -1);
+
+                    sbPinnedImages.AppendLine(image.InternalDigestRef.Substring(idPrefixPos + idPrefix.Length));
                 }
 
                 bundle.AddFile("pinned-images", sbPinnedImages.ToString());

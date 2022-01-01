@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -189,7 +189,7 @@ SetVersion Neon.YugaByte            $libraryVersion
 # SetVersion Neon.Kube.HyperVLocal    $kubeVersion
 # SetVersion Neon.Kube.Models         $kubeVersion
 # SetVersion Neon.Kube.Setup          $kubeVersion
-# SetVersion Neon.Kube.Services       $kubeVersion
+# SetVersion Neon.Kube.Service        $kubeVersion
 # SetVersion Neon.Kube.XenServer      $kubeVersion
 # SetVersion Neon.Kube.Xunit          $kubeVersion
 
@@ -233,7 +233,7 @@ Publish Neon.YugaByte               $libraryVersion
 # Publish Neon.Kube.HyperVLocal       $kubeVersion
 # Publish Neon.Kube.Models            $kubeVersion
 # Publish Neon.Kube.Setup             $kubeVersion
-# Publish Neon.Kube.Services          $kubeVersion
+# Publish Neon.Kube.Service           $kubeVersion
 # Publish Neon.Kube.XenServer         $kubeVersion
 # Publish Neon.Kube.Xunit             $kubeVersion
 

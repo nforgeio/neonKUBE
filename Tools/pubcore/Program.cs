@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -186,7 +186,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                     var sbOutput = new StringBuilder();
 
                     process.StartInfo.FileName               = "dotnet.exe";
-                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --no-restore --no-dependencies";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-restore --no-dependencies";
                     process.StartInfo.CreateNoWindow         = true;
                     process.StartInfo.UseShellExecute        = false;
                     process.StartInfo.RedirectStandardError  = true;
@@ -347,7 +347,7 @@ $@"@echo off
             //
             // will publish their output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\publish
             //
             // Projects that use <RuntimeIdentifiers/> (plural) with one
             // or more runtime identifiers like:
@@ -356,7 +356,7 @@ $@"@echo off
             //
             // will publish output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\net5.0\win10-x64\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\win10-x64\publish
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.
