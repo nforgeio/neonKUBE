@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.7.1" />
+    <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.16.3" />
   </ItemGroup>
 
   <ItemGroup>

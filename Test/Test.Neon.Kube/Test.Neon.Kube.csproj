@@ -55,7 +55,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="NATS.Client" Version="0.14.3" />
     <PackageReference Include="STAN.Client" Version="0.3.0" />
     <PackageReference Include="xunit" Version="2.4.1" />

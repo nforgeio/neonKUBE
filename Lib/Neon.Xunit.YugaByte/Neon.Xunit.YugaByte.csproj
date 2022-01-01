@@ -58,9 +58,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="6.0.1" />
+    <PackageReference Include="Npgsql" Version="6.0.2" />
     <PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
-    <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.7.1" />
+    <PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.16.3" />
   </ItemGroup>
 
   <ItemGroup>
