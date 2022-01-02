@@ -70,16 +70,21 @@
     </PackageReference>
   </ItemGroup>
 
-  <ImportGroup Condition=""'$(TargetFramework)' == 'netcoreapp3.1'"">
-	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.16" />
-	  <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.15" />
-  </ImportGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.16" />
+	<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.15" />
+  </ItemGroup>
 
-  <ImportGroup Condition=""'$(TargetFramework)' != 'netcoreapp3.1'"">
-	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
-	  <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.1" />
-  </ImportGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.13" />
+	<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="5.0.13" />
+  </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
+	<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.1" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
