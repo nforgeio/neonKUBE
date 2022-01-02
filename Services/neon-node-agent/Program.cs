@@ -16,6 +16,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Service;
 
 using k8s;
@@ -38,18 +39,11 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            // Intercept KubeOps [generator] commands and execute them here.  
-            // These commands will be invoked by the KubeOps MSBUILD targets
-            // immediately after the assembly is complied and are responsible
-            // for generating the CRDs and Kubernetes installation manifests.
+            // Intercept and handle KubeOps [generator] commands executed by the 
+            // KubeOps MSBUILD tasks.
 
-            if (args.FirstOrDefault() == "generator")
+            if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
             {
-                await Host.CreateDefaultBuilder(args)
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
-                    .Build()
-                    .RunOperatorAsync(args);
-
                 return;
             }
 
