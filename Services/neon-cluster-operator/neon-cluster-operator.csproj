@@ -90,18 +90,16 @@
         and kustomization files.
   -->
 
-  <!--
   <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
 	  
-	  <Message Importance="high" Text="*** Publish CRDs ***" />
+	  <Message Importance="high" Text="Publish CRDs" />
 	  <Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
-	  <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; exclude-kustomize" />
+	  <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
 	  
-	  <Message Importance="high" Text="*** Publish Templates ***" />
-      <Exec Command="neon-build publish-folder &quot;$(ProjectDir)config\templates&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates&quot;" />
-      <Exec Command="neon-build kustomize &quot;$(ProjectDir)config.gitignore\rbac&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates\rbac.yaml&quot;" />
+	  <Message Importance="high" Text="Publish Templates" />
+    <Exec Command="neon-build publish-folder &quot;$(ProjectDir)config\templates&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates&quot;" />
+    <Exec Command="neon-build kustomize &quot;$(ProjectDir)config.gitignore\rbac&quot; &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\templates\rbac.yaml&quot;" />
   
   </Target>
-  -->
   
 </Project>
