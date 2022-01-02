@@ -1,10 +1,19 @@
-﻿apiVersion: apps/v1
+﻿# WARNING!
+#
+# This file commited to the solutions in [$/Services/neon-cluster-operator/config/templates] 
+# and is copied to the [Neon.Kube.Setup] Helm folder at the tail end of the operator build
+# process.
+#
+# Be sure to edit this file in [$/Services/neon-cluster-operator/config/templates] to ensure
+# that your changes are retained.
+
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     operator-deployment: neon-cluster-operator
     operator-element: operator-instance
-  name: operator
+  name: neon-cluster-operator
   namespace: neon-system
 spec:
   revisionHistoryLimit: 0
@@ -19,7 +28,8 @@ spec:
         operator-element: operator-instance
     spec:
       containers:
-      - env:
+      - name: main
+        env:
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
@@ -28,27 +38,25 @@ spec:
         - configMapRef:
             name: neon-cluster-operator-webhook
         image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          pullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         startupProbe:
           exec:
             command:
             - /health-check
-            periodSeconds: 5
-            timeoutSeconds: 1
+          failureThreshold: 30
+          periodSeconds: 1
         livenessProbe:
           exec:
             command:
             - /health-check
-            initialDelaySeconds: 1
-            periodSeconds: 5
-            timeoutSeconds: 1
+          failureThreshold: 1
+          periodSeconds: 5
         readinessProbe:
           exec:
             command:
             - /ready-check
-            periodSeconds: 5
-            initialDelaySeconds: 1
-            timeoutSeconds: 1
+          periodSeconds: 5
+          initialDelaySeconds: 5
         ports:
         - containerPort: 5000
           name: http

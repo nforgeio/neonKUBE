@@ -86,7 +86,7 @@
   This also copies all generated installation related manifests to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/templates/*]
   after kustomizing them.
   
-  NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernmetes manifest 
+  NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernetes manifest 
         and kustomization files.
   -->
 
