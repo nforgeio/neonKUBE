@@ -59,10 +59,10 @@ Most people should reference the [Neon.ModelGenerator] library since it includes
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.11.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.CodeDom" Version="5.0.0" />
+    <PackageReference Include="System.CodeDom" Version="6.0.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
 
