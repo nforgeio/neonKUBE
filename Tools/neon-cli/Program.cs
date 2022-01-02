@@ -264,6 +264,14 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 command = GetCommand(CommandLine, commands);
 
+                if (CommandLine.Arguments[0] == "tool" && command == null)
+                {
+                    // Special case invalid command detection for [tool] commands.
+
+                    Console.WriteLine(usage);
+                    Program.Exit(1);
+                }
+
                 if (command == null)
                 {
                     // This must be a [kubectl] command, so spawn [kubectl] to handle it.

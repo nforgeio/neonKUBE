@@ -64,6 +64,7 @@ USAGE:
         public override async Task RunAsync(CommandLine commandLine)
         {
             Help();
+            Program.Exit(commandLine.Arguments.Length == 0 ? 0 : 1);
             await Task.CompletedTask;
         }
     }

@@ -61,13 +61,6 @@ namespace Test.NeonCli
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Manages neonKUBE passwords.", result.OutputText);
 
-                    // Verify that the "--help" option does the same thing.
-
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "--help");
-
-                    Assert.Equal(0, result.ExitCode);
-                    Assert.Contains("Manages neonKUBE passwords.", result.OutputText);
-
                     // Verify that an invalid command fails.
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "bad");
@@ -171,9 +164,9 @@ pwd-3
             {
                 using (var runner = new ProgramRunner())
                 {
-                    // Verify that [--help] works:
+                    // Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "set");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Creates or modifies a named password.", result.OutputText);
 
@@ -209,13 +202,13 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "one", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "tool", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "two", "password", "set", "pwd-2", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "two", "tool", "password", "set", "pwd-2", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "three", "password", "set", "pwd-3", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "three", "tool", "password", "set", "pwd-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "pwd-1");
@@ -235,14 +228,14 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "one", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "tool", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "pwd-1");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Equal("one", result.OutputText.Trim());
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "1", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "1", "tool", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "pwd-1");
@@ -254,7 +247,7 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "password", "password", "set", "a.1_2-3", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "password", "tool", "password", "set", "a.1_2-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "a.1_2-3");
@@ -263,7 +256,7 @@ pwd-3
 
                     // Verify that a 20 character password is generated when no PATH argument is passed:
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "password", "password", "set", "abc");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "password", "tool", "password", "set", "abc");
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "abc");
@@ -272,7 +265,7 @@ pwd-3
 
                     // Verify that we see errors for missing arguments:
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "password", "password", "set");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "password", "tool", "password", "set");
                     Assert.NotEqual(0, result.ExitCode);
                     Assert.Contains("NAME argument is required.", result.ErrorText);
 
@@ -281,10 +274,10 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "", "password", "set", "pwd@1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "", "tool", "password", "set", "pwd@1", "-");
                     Assert.NotEqual(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "", "password", "set", $"{new string('a', 101)}", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "", "tool", "password", "set", $"{new string('a', 101)}", "-");
                     Assert.NotEqual(0, result.ExitCode);
 
                     // Verify that password length error checking works:
@@ -292,7 +285,7 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", "", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "", "tool", "password", "set", "pwd-1", "-");
                     Assert.NotEqual(0, result.ExitCode);
                 }
             }
@@ -307,9 +300,9 @@ pwd-3
             {
                 using (var runner = new ProgramRunner())
                 {
-                    //// Verify that [--help] works:
+                    //// Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "generate", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "generate");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Generates a cryptographically secure password.", result.OutputText);
 
@@ -375,9 +368,9 @@ pwd-3
             {
                 using (var runner = new ProgramRunner())
                 {
-                    // Verify that [--help] works:
+                    // Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "remove", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "remove");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Removes a specific named password or all passwords.", result.OutputText);
 
@@ -454,9 +447,9 @@ pwd-3
             {
                 using (var runner = new ProgramRunner())
                 {
-                    // Verify that [--help] works:
+                    // Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "list", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "list");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Lists passwords.", result.OutputText);
 
@@ -465,13 +458,13 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "tool", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "two", "password", "set", "pwd-2", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "two", "tool", "password", "set", "pwd-2", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "three", "password", "set", "pwd-3", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "three", "tool", "password", "set", "pwd-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     // Verify that we can list via: list
@@ -510,9 +503,9 @@ pwd-3
             {
                 using (var runner = new ProgramRunner())
                 {
-                    // Verify that [import --help] works:
+                    // Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "import", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "import");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Imports passwords from an encrypted ZIP file.", result.OutputText);
 
@@ -522,9 +515,9 @@ pwd-3
                     Assert.NotEqual(0, result.ExitCode);
                     Assert.Contains("PATH argument is required.", result.ErrorText);
 
-                    // Verify that [export --help] works:
+                    // Verify that [help] works:
 
-                    result = await runner.ExecuteAsync(Program.Main, "tool", "password", "export", "--help");
+                    result = await runner.ExecuteAsync(Program.Main, "help", "tool", "password", "export");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Contains("Exports selected passwords to an encrypted ZIP file.", result.OutputText);
 
@@ -545,20 +538,20 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "password", "set", "pwd-1", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "one", "tool", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "two", "password", "set", "pwd-2", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "two", "tool", "password", "set", "pwd-2", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "three", "password", "set", "pwd-3", "-");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, "three", "tool", "password", "set", "pwd-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     // Export all passwords to a ZIP file:
 
                     var zipPath = Path.Combine(testManager.TestFolder, "passwords.zip");
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "password", "export", "--stdin", zipPath, "*");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "tool", "password", "export", "--stdin", zipPath, "*");
                     Assert.Equal(0, result.ExitCode);
                     Assert.True(File.Exists(zipPath));
 
@@ -567,7 +560,7 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "password", "import", "--stdin", zipPath);
+                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "tool", "password", "import", "--stdin", zipPath);
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "pwd-1");
@@ -584,7 +577,7 @@ pwd-3
 
                     // Export two of the three passwords to a ZIP file:
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, "tool", zipPassword, "password", "export", "--stdin", zipPath, "pwd-1", "pwd-2");
+                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "tool", "password", "export", "--stdin", zipPath, "pwd-1", "pwd-2");
                     Assert.Equal(0, result.ExitCode);
                     Assert.True(File.Exists(zipPath));
 
@@ -593,7 +586,7 @@ pwd-3
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "rm", "--force", "*");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "password", "import", "--stdin", zipPath);
+                    result = await runner.ExecuteWithInputAsync(Program.Main, zipPassword, "tool", "password", "import", "--stdin", zipPath);
                     Assert.Equal(0, result.ExitCode);
 
                     result = await runner.ExecuteAsync(Program.Main, "tool", "password", "get", "pwd-1");

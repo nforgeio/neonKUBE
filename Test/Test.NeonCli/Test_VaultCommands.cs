@@ -110,14 +110,14 @@ namespace Test.NeonCli
                                 result = await runner.ExecuteAsync(Program.Main, "tool", "vault", "create", "test3.txt", missingPasswordName);
 
                                 Assert.NotEqual(0, result.ExitCode);
-                                Assert.Contains($"*** ERROR: [CryptographicException]: Password named [{missingPasswordName}] not found or is blank or whitespace.", result.ErrorText);
+                                Assert.Contains($"*** ERROR: [System.Security.Cryptography.CryptographicException]: Password named [{missingPasswordName}] not found or is blank or whitespace.", result.ErrorText);
 
                                 // Verify that we see an error for an invalid password.
 
                                 result = await runner.ExecuteAsync(Program.Main, "tool", "vault", "create", "test4.txt", badPasswordName);
 
                                 Assert.NotEqual(0, result.ExitCode);
-                                Assert.Contains($"*** ERROR: [CryptographicException]: Password name [bad/password] contains invalid characters.  Only ASCII letters, digits, underscores, dashs and dots are allowed.", result.ErrorText);
+                                Assert.Contains($"*** ERROR: [System.Security.Cryptography.CryptographicException]: Password name [bad/password] contains invalid characters.  Only ASCII letters, digits, underscores, dashs and dots are allowed.", result.ErrorText);
 
                                 // Verify that a local [.password-name] file is used successfully when we don't 
                                 // explicitly pass a password name.
