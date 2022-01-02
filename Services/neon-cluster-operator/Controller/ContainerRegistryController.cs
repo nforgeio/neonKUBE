@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Entities;
+using Neon.Kube.Resources;
 
 using k8s.Models;
 using KubeOps.Operator.Controller;
