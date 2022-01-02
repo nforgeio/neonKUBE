@@ -26,7 +26,12 @@ using Neon.Common;
 namespace Neon.Kube.Service
 {
     /// <summary>
+    /// <para>
     /// <b>INTERNAL USE ONLY:</b> Common code for neonKUBE service implementations.
+    /// </para>
+    /// <note>
+    /// This is only supported for .NET 6.0 applications.
+    /// </note>
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
