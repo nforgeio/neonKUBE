@@ -16,6 +16,8 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Service;
 
+using Prometheus.DotNetRuntime;
+
 namespace NeonDashboard
 {
     /// <summary>
@@ -30,6 +32,18 @@ namespace NeonDashboard
         public static async Task Main(string[] args)
         {
             var service  = new NeonDashboardService(KubeService.NeonDashboard);
+
+            service.MetricsOptions.Mode = MetricsMode.Scrape;
+            service.MetricsOptions.Path = "metrics/";
+            service.MetricsOptions.Port = 9762;
+            service.MetricsOptions.GetCollector =
+                () =>
+                {
+                    return DotNetRuntimeStatsBuilder
+                        .Default()
+                        .StartCollecting();
+                };
+
             var exitCode = await service.RunAsync();
 
             Environment.Exit(exitCode);

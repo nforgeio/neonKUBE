@@ -28,6 +28,8 @@ using Neon.Web;
 using Blazor.Analytics;
 using Blazor.Analytics.Components;
 
+using Prometheus;
+
 namespace NeonDashboard
 {
     /// <summary>
@@ -129,6 +131,7 @@ namespace NeonDashboard
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseHttpMetrics();
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
