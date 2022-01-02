@@ -79,6 +79,7 @@
 
   <ItemGroup>
     <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
+    <Folder Include="Resources\Helm\neon-cluster-operator\templates\" />
   </ItemGroup>
 
   <!--

@@ -142,6 +142,7 @@ Go/**/__debug_bin
 # Helm chart which will be used to install the CRDs as well as the operator.
 
 /Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
+/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/templates/*
 
 ################
 # Neon.Service #
