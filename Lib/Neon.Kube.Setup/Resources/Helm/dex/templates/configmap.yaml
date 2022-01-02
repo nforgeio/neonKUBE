@@ -50,19 +50,35 @@ data:
       - 'https://grafana.{{ .Values.cluster.domain }}/login/generic_oauth'
       name: 'Grafana'
       secret: "{{- .Values.secrets.grafana }}"
+      trustedPeers:
+        - kubernetes
+        - harbor
+        - minio
     - id: kubernetes
       redirectURIs:
       - 'https://k8s.{{ .Values.cluster.domain }}/oauth2/callback'
       - 'https://kiali.{{ .Values.cluster.domain }}/kiali'
       name: 'Kubernetes'
       secret: "{{- .Values.secrets.kubernetes }}"
+      trustedPeers:
+        - grafana
+        - harbor
+        - minio
     - id: harbor
       redirectURIs:
       - 'https://registry.{{ .Values.cluster.domain }}/oauth_callback'
       name: 'Harbor'
       secret: "{{- .Values.secrets.harbor }}"
+      trustedPeers:
+        - grafana
+        - kubernetes
+        - minio
     - id: minio
       redirectURIs:
       - 'https://minio.{{ .Values.cluster.domain }}/oauth_callback'
       name: 'Minio'
       secret: "{{- .Values.secrets.minio }}"
+      trustedPeers:
+        - grafana
+        - kubernetes
+        - harbor
