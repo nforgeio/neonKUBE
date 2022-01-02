@@ -33,9 +33,16 @@ namespace Neon.Kube
         public const string NeonDashboard = "neon-dashboard";
 
         /// <summary>
-        /// Cluster operator.
+        /// Neon cluster operator.  This implements several control loops that help
+        /// manage the cluster.
         /// </summary>
         public const string NeonClusterOperator = "neon-cluster-operator";
+
+        /// <summary>
+        /// Neon node agent.  This is an operator provisioned on each cluster node as
+        /// a daemonset that performs node managment tasks.
+        /// </summary>
+        public const string NeonNodeAgent = "neon-node-agent";
 
         /// <summary>
         /// SSO Proxy.

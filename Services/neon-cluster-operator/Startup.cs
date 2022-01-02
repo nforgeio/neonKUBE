@@ -23,8 +23,9 @@ namespace NeonClusterOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddKubernetesOperator()
-                .AddResourceAssembly(typeof(Neon.Kube.Resources.V1ContainerRegistry).Assembly);
+            var operatorBuilder = services.AddKubernetesOperator();
+
+            Program.AddResourceAssemblies(operatorBuilder);
         }
 
         /// <summary>
