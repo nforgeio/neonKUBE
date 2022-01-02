@@ -16,7 +16,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Service;
+using Neon.Kube.Operator;
 using Neon.Service;
 
 using k8s;

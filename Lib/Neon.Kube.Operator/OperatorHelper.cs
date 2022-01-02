@@ -33,7 +33,7 @@ using Neon.IO;
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;
 
-namespace Neon.Kube.Service
+namespace Neon.Kube.Operator
 {
     /// <summary>
     /// Useful utilities for the <b>KubeOps</b> operatort SDK.

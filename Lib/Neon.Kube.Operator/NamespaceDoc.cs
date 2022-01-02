@@ -23,7 +23,7 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Kube.Service
+namespace Neon.Kube.Operator
 {
     /// <summary>
     /// <para>

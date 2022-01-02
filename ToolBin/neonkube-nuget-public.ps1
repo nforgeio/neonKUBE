@@ -187,9 +187,9 @@ SetVersion Neon.YugaByte            $libraryVersion
 # SetVersion Neon.Kube.HyperV         $kubeVersion
 # SetVersion Neon.Kube.HyperVLocal    $kubeVersion
 # SetVersion Neon.Kube.Models         $kubeVersion
+# SetVersion Neon.Kube.Operator       $kubeVersion
 # SetVersion Neon.Kube.Resources      $kubeVersion
 # SetVersion Neon.Kube.Setup          $kubeVersion
-# SetVersion Neon.Kube.Service        $kubeVersion
 # SetVersion Neon.Kube.XenServer      $kubeVersion
 # SetVersion Neon.Kube.Xunit          $kubeVersion
 
@@ -231,9 +231,9 @@ Publish Neon.YugaByte               $libraryVersion
 # Publish Neon.Kube.HyperV            $kubeVersion
 # Publish Neon.Kube.HyperVLocal       $kubeVersion
 # Publish Neon.Kube.Models            $kubeVersion
+# Publish Neon.Kube.Operator          $kubeVersion
 # Publish Neon.Kube.Resources         $kubeVersion
 # Publish Neon.Kube.Setup             $kubeVersion
-# Publish Neon.Kube.Service           $kubeVersion
 # Publish Neon.Kube.XenServer         $kubeVersion
 # Publish Neon.Kube.Xunit             $kubeVersion
 

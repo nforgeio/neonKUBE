@@ -382,7 +382,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-modelgen", "Tools\neon-modelgen\neon-modelgen.csproj", "{FE55ED55-F4B5-45B0-AFF2-EBDCAACF691A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Service", "Lib\Neon.Kube.Service\Neon.Kube.Service.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator", "Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
 EndProject
