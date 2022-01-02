@@ -67,7 +67,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Connectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "connectors", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<DexConnector> Connectors { get; set; }
+        public List<IDexConnector> Connectors { get; set; }
 
         /// <summary>
         /// Configuration for telemetry.

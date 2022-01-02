@@ -4087,9 +4087,9 @@ $@"- name: StorageType
 
                         dexConfig.Issuer = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
 
-                        var ldapConnector = dexConfig.Connectors.Where(c => c.Type == DexConnectorType.Ldap).FirstOrDefault();
+                        var ldapConnector = (DexLdapConnector)dexConfig.Connectors.Where(c => c.Type == DexConnectorType.Ldap).FirstOrDefault();
 
-                        ((DexLdapConfig)ldapConnector.Config).BindPW = Encoding.UTF8.GetString(dexSecret.Data["LDAP_SECRET"]);
+                        ldapConnector.Config.BindPW = Encoding.UTF8.GetString(dexSecret.Data["LDAP_SECRET"]);
 
                         foreach (var client in dexConfig.StaticClients)
                         {
