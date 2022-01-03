@@ -138,8 +138,8 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
         /// <param name="version">
-        /// Optionally specifies the semantic version of the current program.  This can be an somewhat string 
-        /// arbitrary string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
+        /// Optionally specifies the semantic version of the current program.  This can be a somewhat arbitrary
+        /// string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
         /// </param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
         public LogManager(bool parseLogLevel = true, string version = null, TextWriter writer = null)
