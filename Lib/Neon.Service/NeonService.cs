@@ -569,7 +569,6 @@ namespace Neon.Service
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
-        private string                          version;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
         private string                          healthFolder;
@@ -637,7 +636,7 @@ namespace Neon.Service
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            version = version ?? string.Empty;
+            Version = version ?? string.Empty;
 
             if (serviceMap != null)
             {
@@ -660,7 +659,7 @@ namespace Neon.Service
             this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator();
-            this.version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
+            this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
             this.healthFolder           = healthFolder ?? "/";
@@ -759,6 +758,11 @@ namespace Neon.Service
         /// Returns the service name.
         /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// Returns the service version or <b>"unknown"</b>.
+        /// </summary>
+        public string Version { get; private set; }
 
         /// <summary>
         /// Returns the service map (if any).
@@ -1071,20 +1075,20 @@ namespace Neon.Service
             if (GlobalLogging)
             {
                 LogManager          = global::Neon.Diagnostics.LogManager.Default;
-                LogManager.Version = version;
+                LogManager.Version = Version;
             }
             else
             {
-                LogManager = new LogManager(parseLogLevel: false, version: this.version);
+                LogManager = new LogManager(parseLogLevel: false, version: this.Version);
             }
 
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();
 
-            if (!string.IsNullOrEmpty(version))
+            if (!string.IsNullOrEmpty(Version))
             {
-                Log.LogInfo(() => $"Starting [{Name}:{version}]");
+                Log.LogInfo(() => $"Starting [{Name}:{Version}]");
             }
             else
             {
