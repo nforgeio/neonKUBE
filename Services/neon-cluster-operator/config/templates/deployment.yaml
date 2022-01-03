@@ -26,9 +26,11 @@ spec:
       labels:
         operator: neon-cluster-operator
         operator-element: operator-instance
+      annotations:
+        kubectl.kubernetes.io/default-container: neon-cluster-operator
     spec:
       containers:
-      - name: main
+      - name: neon-cluster-operator
         env:
         - name: POD_NAMESPACE
           valueFrom:
