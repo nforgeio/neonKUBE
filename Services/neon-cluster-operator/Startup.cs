@@ -23,13 +23,19 @@ namespace NeonClusterOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var operatorBuilder = services.AddKubernetesOperator();
+            var operatorBuilder = services
+                .AddKubernetesOperator(
+                    settings =>
+                    {
+                        settings.EnableAssemblyScanning = true;
+                        settings.EnableLeaderElection   = false;
+                    });
 
             Program.AddResourceAssemblies(operatorBuilder);
         }
 
         /// <summary>
-        /// Configures the operator web service controllers.
+        /// Configures the operator service controllers.
         /// </summary>
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)

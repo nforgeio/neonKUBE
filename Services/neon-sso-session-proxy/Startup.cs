@@ -123,7 +123,7 @@ namespace NeonSsoSessionProxy
         }
 
         /// <summary>
-        /// Configures the operator web service controllers.
+        /// Configures the service controllers.
         /// </summary>
         /// <param name="app">Specifies the application builder.</param>
         /// <param name="env">Specifies the web hosting environment.</param>

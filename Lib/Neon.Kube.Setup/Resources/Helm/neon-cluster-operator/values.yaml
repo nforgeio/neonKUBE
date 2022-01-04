@@ -1,30 +1,5 @@
-# Default values for neon-cluster-operator.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+# Number service replicas to be deployed.
 replicaCount: 1
 
-image:
-  organization: neon-registry.node.local
-  repository: neon-cluster-operator
-  pullPolicy: IfNotPresent
-  tag: "neonkube-0.3.0-alpha"
-
-metrics:
-  # Enable Prometheus metrics endpoint
-  enabled: true
-  # Serve Prometheus metrics on this port
-  port: 9762
-  servicemonitor:
-    # Enable Prometheus Operator ServiceMonitor
-    enabled: true
-    # Define the namespace where to deploy the ServiceMonitor resource
-    namespace: ""
-    # Prometheus Instance definition
-    prometheusInstance: default
-    # Prometheus scrape interval
-    interval: 60s
-    # Prometheus scrape timeout
-    scrapeTimeout: 30s
-    # Add custom labels to the ServiceMonitor resource
-    labels: {}
+# Container image tag (aka the neonKUBE version)
+imageTag: "neonkube-0.3.0-alpha"

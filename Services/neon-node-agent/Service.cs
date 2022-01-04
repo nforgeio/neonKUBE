@@ -19,6 +19,7 @@ using System.Net.Sockets;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Data;
@@ -78,6 +79,12 @@ namespace NeonNodeAgent
 
             _ = Host.CreateDefaultBuilder()
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                    .ConfigureLogging(
+                        logging =>
+                        {
+                            logging.ClearProviders();
+                            logging.AddProvider(new LogManager(version: base.Version));
+                        })
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 

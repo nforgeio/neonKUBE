@@ -64,6 +64,14 @@ namespace Neon.Service
     /// business.
     /// </para>
     /// <note>
+    /// We recommend that your service constructor be limited to configuring base service properties
+    /// and that you perform the bulk of your service initialization in <see cref="OnRunAsync"/> before
+    /// you call <see cref="StartedAsync(NeonServiceStatus)"/>.  Any logging performed in the constructor
+    /// will be handled by a default console logger because the regular logger isn't initialized until
+    /// <see cref="RunAsync(bool)"/> is called to start the service.  We recommend that you avoid any
+    /// logging from within the constructor.
+    /// </note>
+    /// <note>
     /// Note that calling <see cref="StartedAsync(NeonServiceStatus)"/> after your service has initialized is important
     /// because the <b>NeonServiceFixture</b> won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
@@ -664,6 +672,16 @@ namespace Neon.Service
             this.configFiles            = new Dictionary<string, FileInfo>();
             this.healthFolder           = healthFolder ?? "/";
             this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
+
+            // Set a default logger so logging calls in the service constructor won't 
+            // fail with a [NullReferenceException].  Note that we don't recommend
+            // logging from withing the constructor.
+
+            LogManager = new LogManager(parseLogLevel: false, version: this.Version);
+
+            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+
+            Log = LogManager.GetLogger();
 
             // Update the Prometheus metrics port from the service description if present.
 

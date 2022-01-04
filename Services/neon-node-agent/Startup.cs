@@ -23,19 +23,19 @@ namespace NeonNodeAgent
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var operatorBuilder = services.AddKubernetesOperator(
-                settings =>
-                {
-                    // Node agents need to run in parallel to manage the node each is running on.
-
-                    settings.EnableLeaderElection = false;
-                });
+            var operatorBuilder = services
+                .AddKubernetesOperator(
+                    settings =>
+                    {
+                        settings.EnableAssemblyScanning = true;
+                        settings.EnableLeaderElection   = false;    // node agents run in parallel to manage their cluster nodes
+                    });
 
             Program.AddResourceAssemblies(operatorBuilder);
         }
 
         /// <summary>
-        /// Configures the operator web service controllers.
+        /// Configures the operator service controllers.
         /// </summary>
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)

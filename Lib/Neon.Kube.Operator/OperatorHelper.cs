@@ -56,6 +56,12 @@ namespace Neon.Kube.Operator
             {
                 Covenant.Assert(operatorAssembly != null);
 
+                //services.AddLogging(
+                //    loggingBuilder =>
+                //    {
+                //        loggingBuilder.
+                //    });
+
                 var operatorBuilder = services.AddKubernetesOperator();
 
                 operatorBuilder.AddResourceAssembly(OperatorHelper.operatorAssembly);
@@ -67,7 +73,7 @@ namespace Neon.Kube.Operator
             }
 
             /// <summary>
-            /// Configures the operator web service controllers.
+            /// Configures the operator service controllers.
             /// </summary>
             /// <param name="app">Specifies the application builder.</param>
             public void Configure(IApplicationBuilder app)

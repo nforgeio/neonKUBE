@@ -41,7 +41,7 @@ namespace Neon.Kube.Resources
     /// </remarks>
     [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
     [KubernetesEntityShortNames]
-    [EntityScope(EntityScope.Namespaced)]
+    [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
     public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistryEntitySpec>
     {

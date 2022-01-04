@@ -57,14 +57,16 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Identifies assemblies that may include custom resource types by adding these
-        /// assemblies to the <see cref="IOperatorBuilder"/> passed.
+        /// Identifies assemblies that may include custom resource types as well adding the
+        /// program assembly so the controller endpoints can also be discovered.  This method
+        /// adds these assemblies to the <see cref="IOperatorBuilder"/> passed.
         /// </summary>
         /// <param name="operatorBuilder">The target operator builder.</param>
         internal static void AddResourceAssemblies(IOperatorBuilder operatorBuilder)
         {
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 
+            operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
             operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.V1ContainerRegistry).Assembly);
         }
     }

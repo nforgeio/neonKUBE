@@ -19,22 +19,26 @@ using System.Net.Sockets;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
 
+using DotnetKubernetesClient;
 using k8s;
 using k8s.Models;
+
 using KubeOps.Operator;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using Npgsql;
-using YamlDotNet.RepresentationModel;
 
 namespace NeonClusterOperator
 {
@@ -45,7 +49,7 @@ namespace NeonClusterOperator
     {
         private const string StateTable = "state";
         
-        private static KubernetesWithRetry k8s;
+        private static KubernetesClient k8s;
 
         /// <summary>
         /// Constructor.
@@ -55,14 +59,24 @@ namespace NeonClusterOperator
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, version: KubeVersions.NeonKube, serviceMap: serviceMap)
         {
-            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
-            k8s.RetryPolicy = new ExponentialRetryPolicy(
-                e => true,
-                maxAttempts:          int.MaxValue,
-                initialRetryInterval: TimeSpan.FromSeconds(0.25),
-                maxRetryInterval:     TimeSpan.FromSeconds(10),
-                timeout:              TimeSpan.FromMinutes(5));
+            Log.LogInfo("**************************************");
+            Log.LogInfo($"NAMESPACE:   {config.Namespace}");
+            Log.LogInfo($"HOST:        {config.Host}");
+            Log.LogInfo($"USERNAME:    {config.Username}");
+            Log.LogInfo($"PASSWORD:    {config.Password}");
+            Log.LogInfo($"ACCESSTOKEN: {config.AccessToken}");
+            Log.LogInfo($"CERTPATH:    {config.ClientCertificateFilePath}");
+            Log.LogInfo("**************************************");
+
+            k8s = new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            k8s.Watch<V1ContainerRegistry>(TimeSpan.FromSeconds(10),
+                (type, instance) =>
+                {
+                    Log.LogInfo($"*** WATCH: type={type} instance={instance.Name}");
+                });
         }
 
         /// <inheritdoc/>
@@ -75,14 +89,18 @@ namespace NeonClusterOperator
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when to exit.
+            // this and will use the termination signal instead to exit.
 
             _ = Host.CreateDefaultBuilder()
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                    .ConfigureLogging(
+                        logging =>
+                        {
+                            logging.ClearProviders();
+                            logging.AddProvider(new LogManager(version: base.Version));
+                        })
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
-
-            // Let Kubernetes know that we're running.
 
             await StartedAsync();
 
@@ -91,15 +109,10 @@ namespace NeonClusterOperator
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(5));
-
-                // $todo(jefflill):
-                // 
-                // We're disabling all activities until we code proper operators.
-
-                // await CheckNodeImagesAsync();
             }
         }
 
+#if TODO
         /// <summary>
         /// Responsible for making sure cluster container images are present in the local
         /// cluster registry.
@@ -289,5 +302,6 @@ namespace NeonClusterOperator
 
             return result.ToString();
         }
+#endif
     }
 }
