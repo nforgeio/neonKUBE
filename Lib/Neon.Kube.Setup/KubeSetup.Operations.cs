@@ -247,8 +247,9 @@ spec:
         }
 
         /// <summary>
-        /// Initializes the cluster on the first manager, then joins the remaining
-        /// masters and workers to the cluster.
+        /// Initializes the cluster on the first manager, joins the remaining
+        /// masters and workers to the cluster and then performs the rest of
+        /// cluster setup.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="maxParallel">
@@ -269,7 +270,8 @@ spec:
 
             cluster.ClearStatus();
 
-            ConfigureKubernetes(controller, cluster.FirstMaster);
+            ConfigureKubernetes(controller, master);
+            ConfigureFeatureGates(controller, cluster.Masters);
             ConfigureWorkstation(controller, master);
 
             ConnectCluster(controller);
@@ -952,6 +954,171 @@ done
                     clusterLogin.Save();
                     }
                 });
+            }
+        }
+
+        /// <summary>
+        /// Configures the Kubernetes feature gates specified by the <see cref="ClusterDefinition.FeatureGates"/> dictionary.
+        /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
+        /// on the master nodes as required.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="masterNodes">The target master nodes.</param>
+        /// <remarks>
+        /// This operation doesn't do anything when we're preparing a ready-to-go node image.
+        /// </remarks>
+        public static void ConfigureFeatureGates(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> masterNodes)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(masterNodes != null, nameof(masterNodes));
+            Covenant.Requires<ArgumentException>(masterNodes.Count() > 0, nameof(masterNodes));
+
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
+
+            if (readyToGoMode == ReadyToGoMode.Prepare)
+            {
+                return;
+            }
+
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster.Definition;
+
+            if (clusterDefinition.FeatureGates.Count() == 0)
+            {
+                return;
+            }
+
+            // We need to generate a "--feature-gates=..." command line option and add it to the end
+            // of the command arguments in the API server static pod manifest at: 
+            //
+            // Here's what the static pod manifest looks like:
+            //
+            //  apiVersion: v1
+            //  kind: Pod
+            //  metadata:
+            //  annotations:
+            //      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 100.64.0.2:6443
+            //    creationTimestamp: null
+            //    labels:
+            //      component: kube-apiserver
+            //      tier: control-plane
+            //    name: kube-apiserver
+            //    namespace: kube-system
+            //  spec:
+            //    containers:
+            //    - command:
+            //      - kube-apiserver
+            //      - --advertise-address=0.0.0.0
+            //      - --allow-privileged=true
+            //      - --api-audiences=api
+            //      - --authorization-mode=Node,RBAC
+            //      - --bind-address=0.0.0.0
+            //      - --client-ca-file=/etc/kubernetes/pki/ca.crt
+            //      - --default-not-ready-toleration-seconds=30
+            //      - --default-unreachable-toleration-seconds=30
+            //      - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+            //      - --enable-bootstrap-token-auth=true
+            //      - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+            //      - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+            //      - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+            //      - --etcd-servers=https://127.0.0.1:2379
+            //      - --insecure-port=0
+            //      - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+            //      - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+            //      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+            //      - --logging-format=json
+            //      - --oidc-client-id=kubernetes
+            //      - --oidc-groups-claim=groups
+            //      - --oidc-groups-prefix=
+            //      - --oidc-issuer-url=https://sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
+            //      - --oidc-username-claim=email
+            //      - --oidc-username-prefix=-
+            //      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
+            //      - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+            //      - --requestheader-allowed-names=front-proxy-client
+            //      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+            //      - --requestheader-extra-headers-prefix=X-Remote-Extra-
+            //      - --requestheader-group-headers=X-Remote-Group
+            //      - --requestheader-username-headers=X-Remote-User
+            //      - --secure-port=6443
+            //      - --service-account-issuer=kubernetes.default.svc
+            //      - --service-account-key-file=/etc/kubernetes/pki/sa.key
+            //      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+            //      - --service-cluster-ip-range=10.253.0.0/16
+            //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+            //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+            //      - --feature-gates=EphemeralContainers=true,...                        <<--- WE'RE INSERTING SOMETHING LIKE THIS!
+            //      image: neon-registry.node.local/kube-apiserver:v1.21.4
+            //      imagePullPolicy: IfNotPresent
+            //      livenessProbe:
+            //        failureThreshold: 8
+            //        httpGet:
+            //          host: 100.64.0.2
+            //          path: /livez
+            //          port: 6443
+            //          scheme: HTTPS
+            //        initialDelaySeconds: 10
+            //        periodSeconds: 10
+            //        timeoutSeconds: 15
+            //      name: kube-apiserver
+            //      ...
+            //
+            // Note that Kublet will automatically restart the API server's static pod when it
+            // notices that that static pod manifest has been modified.
+
+            const string manifestPath = "/etc/kubernetes/manifests/kube-apiserver.yaml";
+
+            foreach (var master in masterNodes)
+            {
+                master.InvokeIdempotent("setup/feature-gates",
+                    () =>
+                    {
+                        controller.LogProgress(master, verb: "configure", message: "feature-gates");
+
+                        var manifestText = master.DownloadText(manifestPath);
+                        var manifest     = NeonHelper.YamlDeserialize<dynamic>(manifestText);
+                        var spec         = manifest["spec"];
+                        var containers   = spec["containers"];
+                        var container    = containers[0];
+                        var command      = (List<object>)container["command"];
+                        var sbFeatures   = new StringBuilder();
+
+                        foreach (var featureGate in clusterDefinition.FeatureGates)
+                        {
+                            sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
+                        }
+
+                        // Search for a [--feature-gates] command line argument.  If one is present,
+                        // we'll replace it, otherwise we'll append a new one.  We may see an
+                        // existing option when setting up a ready-to-go cluster.
+
+                        var featureGateOption = $"--feature-gates={sbFeatures}";
+                        var existingArgIndex  = -1;
+
+                        for (int i = 0; i < command.Count; i++)
+                        {
+                            var arg = (string)command[i];
+
+                            if (arg.StartsWith("--feature-gates="))
+                            {
+                                existingArgIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (existingArgIndex >= 0)
+                        {
+                            command[existingArgIndex] = featureGateOption;
+                        }
+                        else
+                        {
+                            command.Add(featureGateOption);
+                        }
+
+                        manifestText = NeonHelper.YamlSerialize(manifest);
+
+                        master.UploadText(manifestPath, manifestText, permissions: "600", owner: "root");
+                    });
             }
         }
 
