@@ -47,10 +47,6 @@ namespace NeonClusterOperator
     /// </summary>
     public partial class Service : NeonService
     {
-        private const string StateTable = "state";
-        
-        private static KubernetesClient k8s;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -59,24 +55,6 @@ namespace NeonClusterOperator
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, version: KubeVersions.NeonKube, serviceMap: serviceMap)
         {
-            var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-            Log.LogInfo("**************************************");
-            Log.LogInfo($"NAMESPACE:   {config.Namespace}");
-            Log.LogInfo($"HOST:        {config.Host}");
-            Log.LogInfo($"USERNAME:    {config.Username}");
-            Log.LogInfo($"PASSWORD:    {config.Password}");
-            Log.LogInfo($"ACCESSTOKEN: {config.AccessToken}");
-            Log.LogInfo($"CERTPATH:    {config.ClientCertificateFilePath}");
-            Log.LogInfo("**************************************");
-
-            k8s = new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig());
-
-            k8s.Watch<V1ContainerRegistry>(TimeSpan.FromSeconds(10),
-                (type, instance) =>
-                {
-                    Log.LogInfo($"*** WATCH: type={type} instance={instance.Name}");
-                });
         }
 
         /// <inheritdoc/>
@@ -113,6 +91,8 @@ namespace NeonClusterOperator
         }
 
 #if TODO
+        private const string StateTable = "state";
+        
         /// <summary>
         /// Responsible for making sure cluster container images are present in the local
         /// cluster registry.
