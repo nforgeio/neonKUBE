@@ -43,11 +43,6 @@ rules:
   - patch
   - update
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: neon-cluster-operator
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

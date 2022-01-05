@@ -28,3 +28,5 @@ Creates a new **netshoot** container named **debug** in POD and starts an intera
 https://github.com/eldadru/ksniff
 
 This looks interesting.  It claims to be able to forward network traffic from a pod network namespace to Wireshark running on your workstation.
+
+NOTE: This only works on LINUX!

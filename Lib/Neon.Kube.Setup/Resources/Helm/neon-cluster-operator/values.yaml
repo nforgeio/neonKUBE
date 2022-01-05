@@ -1,12 +1,54 @@
+# neonKUBE service [values.yaml] files are lightly used for specifying parameters 
+# based on cluster-advice recommendations (e.g. for single-node clusters vs. 
+# larger multi-node clusters).
+#
+# NOTE: Cluster setup will likely replace some or all of these values via [--set]
+#       options when deploying this.
+#
+# We also use this for specifying temporary DEBUG related configurations.
+
 # Number of replicas to be deployed.
 replicaCount: 1
 
-# Container imagge details.
+# Container image details.
+
+image:
+  organization: neon-registry.node.local
+  repository: neon-cluster-operator
+  pullPolicy: IfNotPresent
+  tag: "neonkube-0.3.0-alpha"
 
 # Debugging image details (comment out for production).
+
 image:
   organization: ghcr.io/neonkube-dev
   repository: neon-cluster-operator
   pullPolicy: Always
   tag: "neonkube-0.3.0-alpha"
 
+# Resource requests and limits
+
+resource:
+  limits:
+    cpu: 100m
+    memory: 200Mi
+  requests:
+    cpu: 100m
+    memory: 200Mi
+
+# Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
+
+logLevel: info
+
+#==============================================================================
+# WARNING: BE SURE TO COMMENT THIS OUT FOR PRODUCTION!
+#
+# DEBUGGING related configurations.
+
+image:
+  organization: ghcr.io/neonkube-dev
+  repository: neon-cluster-operator
+  pullPolicy: Always
+  tag: "neonkube-0.3.0-alpha"
+
+logLevel: debug

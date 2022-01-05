@@ -21,16 +21,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="neon-cluster-operator\appsettings.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="neon-cluster-operator\appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="_common\" />
   </ItemGroup>
 

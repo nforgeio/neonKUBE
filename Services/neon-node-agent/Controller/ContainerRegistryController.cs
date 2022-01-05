@@ -41,9 +41,9 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="entity">The new entity.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> CreatedAsync(V1ContainerRegistry entity)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry entity)
         {
-            log.LogInfo($"entity {entity.Name()} called {nameof(CreatedAsync)}.");
+            log.LogInfo($"entity {entity.Name()} called {nameof(ReconcileAsync)}.");
 
             return await Task.FromResult(ResourceControllerResult.RequeueEvent(TimeSpan.FromSeconds(5)));
         }

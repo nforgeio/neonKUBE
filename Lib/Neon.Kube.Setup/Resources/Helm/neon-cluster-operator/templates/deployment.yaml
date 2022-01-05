@@ -1,4 +1,18 @@
-﻿apiVersion: apps/v1
+﻿apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neon-cluster-operator
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    operator-element: operator-instance
+  name: webhook-config
+data:
+  KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -13,10 +27,14 @@ spec:
     metadata:
       labels:
         app: neon-cluster-operator
+        kubectl.kubernetes.io/default-container: neon-cluster-operator
     spec:
+      serviceAccountName: neon-cluster-operator
       containers:
       - name: neon-cluster-operator
         env:
+        - name: LOG_LEVEL
+          value: {{ .Values.logLevel }}
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
@@ -30,7 +48,7 @@ spec:
           exec:
             command:
             - /health-check
-          initialDelaySeconds: 1
+          initialDelaySeconds: 5
           failureThreshold: 30
           periodSeconds: 1
           timeoutSeconds: 1
@@ -51,9 +69,9 @@ spec:
           name: http
         resources:
           limits:
-            cpu: 100m
-            memory: 200Mi
+            cpu: {{ .Values.resource.limits.cpu }}
+            memory: {{ .Values.resource.limits.memory }}
           requests:
-            cpu: 100m
-            memory: 200Mi
+            cpu: {{ .Values.resource.requests.cpu }}
+            memory: {{ .Values.resource.requests.memory }}
       terminationGracePeriodSeconds: 10
