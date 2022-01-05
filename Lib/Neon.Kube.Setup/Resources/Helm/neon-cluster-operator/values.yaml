@@ -1,5 +1,12 @@
-# Number service replicas to be deployed.
+# Number of replicas to be deployed.
 replicaCount: 1
 
-# Container image tag (aka the neonKUBE version)
-imageTag: "neonkube-0.3.0-alpha"
+# Container imagge details.
+
+# Debugging image details (comment out for production).
+image:
+  organization: ghcr.io/neonkube-dev
+  repository: neon-cluster-operator
+  pullPolicy: Always
+  tag: "neonkube-0.3.0-alpha"
+

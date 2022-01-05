@@ -51,6 +51,7 @@
   <ItemGroup>
     <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
+    <None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
   </ItemGroup>
