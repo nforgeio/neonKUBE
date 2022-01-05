@@ -373,8 +373,9 @@ namespace Neon.Kube
         /// </item>
         /// </list>
         /// </remarks>
-        [JsonProperty(PropertyName = "FeatureGates", Required = Required.Always)]
+        [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
 
         /// <summary>
