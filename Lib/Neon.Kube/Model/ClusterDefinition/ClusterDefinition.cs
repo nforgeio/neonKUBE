@@ -357,18 +357,25 @@ namespace Neon.Kube
         /// </note>
         /// <para>
         /// neonKUBE clusters enables specific features by default when you you haven't
-        /// explicitly disabled them via this property:
+        /// explicitly disabled them via this property.  Note that some features are 
+        /// required and cannot be disabled.
         /// </para>
         /// <list type="table">
         /// <item>
         ///     <term><b>EphemeralContainers</b></term>
         ///     <description>
         ///     <para>
-        ///     Enable the ability to add ephemeral containers to running pods.
+        ///     Enables the ability to add ephemeral containers to running pods.
         ///     </para>
         ///     <para>
         ///     This is very handy for debugging pods.
         ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>RunAsGroup</b></term>
+        ///     <description>
+        ///     <b>REQUIRED:</b> Allows pods processes to run in a specific security group.
         ///     </description>
         /// </item>
         /// </list>
@@ -929,12 +936,17 @@ namespace Neon.Kube
 
             new HostingManagerFactory().Validate(this);
 
+            // Configure the required features.
+
+            FeatureGates["RunAsGroup"] = true;
+
             // Add any neonKUBE default feature gates unless the user specifically configures them.
 
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {
                 FeatureGates["EphemeralContainers"] = true;
             }
+
 
             // Validate the NTP time sources.
 
