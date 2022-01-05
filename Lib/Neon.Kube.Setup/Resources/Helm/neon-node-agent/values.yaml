@@ -14,7 +14,7 @@ replicaCount: 1
 
 image:
   organization: neon-registry.node.local
-  repository: neon-cluster-operator
+  repository: neon-node-agent
   pullPolicy: IfNotPresent
   tag: neonkube-0.3.0-alpha
 
@@ -39,7 +39,7 @@ logLevel: info
 
 #image:
 #  organization: ghcr.io/neonkube-dev
-#  repository: neon-cluster-operator
+#  repository: neon-node-agent
 #  pullPolicy: Always
 #  tag: neonkube-0.3.0-alpha
 

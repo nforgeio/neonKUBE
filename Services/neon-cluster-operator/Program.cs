@@ -34,11 +34,6 @@ namespace NeonClusterOperator
     public static class Program
     {
         /// <summary>
-        /// Returns the static direrctory holding the service embedded resources.
-        /// </summary>
-        public static IStaticDirectory Resources { get; private set; } = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Resources");
-
-        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -67,7 +62,7 @@ namespace NeonClusterOperator
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 
             operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
-            operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.V1ContainerRegistry).Assembly);
+            operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.Stub).Assembly);
         }
     }
 }

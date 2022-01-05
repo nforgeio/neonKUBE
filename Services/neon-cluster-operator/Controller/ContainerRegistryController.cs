@@ -37,13 +37,15 @@ namespace NeonClusterOperator
         // Instance members
 
         /// <summary>
-        /// Called when an entity is added or has seen a non-status update.
+        /// Called for each existing custom resource when the controller starts so that the controller
+        /// can maintain the status of all resources and then afterwards, this will be called whenever
+        /// a resource is added or has a non-status update.
         /// </summary>
         /// <param name="entity">The new entity.</param>
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry entity)
         {
-            log.LogInfo($"entity {entity.Name()} called {nameof(ReconcileAsync)}.");
+            log.LogInfo($"RECONCILE: {entity.Name()}");
 
             await Task.CompletedTask;
 
@@ -51,13 +53,13 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Called when an entity's status has been modified.
+        /// Called when a custom resource's status has been modified.
         /// </summary>
         /// <param name="entity">The updated entity.</param>
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry entity)
         {
-            log.LogInfo($"entity {entity.Name()} called {nameof(StatusModifiedAsync)}.");
+            log.LogInfo($"MODIFIED: {entity.Name()}");
 
             await Task.CompletedTask;
 
@@ -65,13 +67,13 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Called when an entity is removed from the API Server.
+        /// Called when a custom resource is removed from the API Server.
         /// </summary>
         /// <param name="entity">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1ContainerRegistry entity)
         {
-            log.LogInfo($"entity {entity.Name()} called {nameof(DeletedAsync)}.");
+            log.LogInfo($"DELETED: {entity.Name()}");
 
             await Task.CompletedTask;
         }

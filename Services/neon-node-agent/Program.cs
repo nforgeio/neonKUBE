@@ -61,7 +61,7 @@ namespace NeonNodeAgent
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 
             operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
-            operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.V1ContainerRegistry).Assembly);
+            operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.Stub).Assembly);
         }
     }
 }
