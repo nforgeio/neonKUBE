@@ -639,7 +639,17 @@ service kubelet restart
         /// Installs a prepositioned Helm chart from a master node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="chartName">The name of the Helm chart.</param>
+        /// <param name="chartName">
+        /// <para>
+        /// The name of the Helm chart.
+        /// </para>
+        /// <note>
+        /// Helm does not allow dashes <b>(-)</b> in chart names but to avoid problems
+        /// with copy/pasting, we will automatically convert any dashes to underscores
+        /// before installing the chart.  This is also nice because this means that the 
+        /// chart name passed can be the same as the release name in the calling code.
+        /// </note>
+        /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
@@ -661,6 +671,8 @@ service kubelet restart
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
+
+            chartName = chartName.Replace('-', '_');
 
             if (string.IsNullOrEmpty(releaseName))
             {

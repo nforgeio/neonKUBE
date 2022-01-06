@@ -13,13 +13,12 @@ data:
   KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     app: neon-node-agent
   name: neon-node-agent
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: neon-node-agent
@@ -30,6 +29,8 @@ spec:
         kubectl.kubernetes.io/default-container: neon-node-agent
     spec:
       serviceAccountName: neon-node-agent
+      tolerations:
+      - operator: Exists
       containers:
       - name: neon-node-agent
         env:

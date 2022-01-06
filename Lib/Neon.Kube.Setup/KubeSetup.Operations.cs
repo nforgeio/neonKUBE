@@ -311,8 +311,9 @@ spec:
             await InstallHarborAsync(controller, master);
             await InstallMonitoringAsync(controller);
 
-            // Install the cluster operator and Harbor.
+            // Install our custom operators.
 
+            await InstallNodeAgentAsync(controller, master);
             await InstallClusterOperatorAsync(controller, master);
         }
 
@@ -1478,7 +1479,7 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "metrics_server", releaseName: "metrics-server", @namespace: KubeNamespaces.KubeSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespaces.KubeSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
@@ -1637,7 +1638,7 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "cert_manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
+                    await master.InstallHelmChartAsync(controller, "cert-manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
 
                 });
 
@@ -1680,7 +1681,7 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "neon_acme", releaseName: "neon-acme", @namespace: KubeNamespaces.NeonIngress, values: values);
+                    await master.InstallHelmChartAsync(controller, "neon-acme", releaseName: "neon-acme", @namespace: KubeNamespaces.NeonIngress, values: values);
 
                 });
 
@@ -1860,7 +1861,7 @@ subjects:
                     values.Add("ingress.subdomain", ClusterDomain.KubernetesDashboard);
                     values.Add($"metricsScraper.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                    await master.InstallHelmChartAsync(controller, "kubernetes_dashboard", releaseName: "kubernetes-dashboard", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "kubernetes-dashboard");
+                    await master.InstallHelmChartAsync(controller, "kubernetes-dashboard", releaseName: "kubernetes-dashboard", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "kubernetes-dashboard");
 
                 });
 
@@ -2046,7 +2047,7 @@ subjects:
                 {
                     controller.LogProgress(master, verb: "setup", message: "kubernetes");
 
-                    await master.InstallHelmChartAsync(controller, "cluster_setup");
+                    await master.InstallHelmChartAsync(controller, "cluster-setup");
                 });
         }
 
@@ -2075,7 +2076,7 @@ subjects:
             await master.InvokeIdempotentAsync("setup/node-problem-detector",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "node_problem_detector", releaseName: "node-problem-detector", @namespace: KubeNamespaces.NeonSystem);
+                    await master.InstallHelmChartAsync(controller, "node-problem-detector", releaseName: "node-problem-detector", @namespace: KubeNamespaces.NeonSystem);
                 });
 
             await master.InvokeIdempotentAsync("setup/node-problem-detector-ready",
@@ -2203,7 +2204,7 @@ subjects:
 
                     values.Add("admissionServer.image.organization", KubeConst.LocalClusterRegistry);
 
-                    await master.InstallHelmChartAsync(controller, "openebs_cstor_operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespaces.NeonStorage);
+                    await master.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespaces.NeonStorage);
                 });
 
             await WaitForOpenEbsReady(controller, master);
@@ -2588,7 +2589,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "etcd_cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "etcd-cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
@@ -2657,7 +2658,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "grafana_agent", releaseName: "grafana-agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "grafana-agent", releaseName: "grafana-agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
         }
 
@@ -2940,7 +2941,7 @@ $@"- name: StorageType
 
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                    await master.InstallHelmChartAsync(controller, "kube_state_metrics", releaseName: "kube-state-metrics", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "kube-state-metrics", releaseName: "kube-state-metrics", @namespace: KubeNamespaces.NeonMonitor, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
@@ -3531,7 +3532,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "redis_ha", releaseName: "neon-redis", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "redis-ha", releaseName: "neon-redis", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/redis-ready",
@@ -3788,7 +3789,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs the Neon Cluster Operator.
+        /// Installs <b>neon-cluster-operator</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -3800,10 +3801,6 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            // $todo(jefflill): Temporarily disabling setup until the refactor is complete
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1302#issuecomment-999883172
-#if TODO
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/cluster-operator",
@@ -3816,16 +3813,7 @@ $@"- name: StorageType
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
 
-                    int i = 0;
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystem, "true"))
-                    {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
-
-                    await master.InstallHelmChartAsync(controller, "neon_cluster_operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "neon-cluster-operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
@@ -3835,7 +3823,43 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
-#endif // TODO
+        }
+
+        /// <summary>
+        /// Installs <b>neon-node-agent</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s = GetK8sClient(controller);
+
+            await master.InvokeIdempotentAsync("setup/neon-node-agent",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-node-agent");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+
+                    await master.InstallHelmChartAsync(controller, "neon-node-agent", releaseName: "neon-node-agent", @namespace: KubeNamespaces.NeonSystem, values: values);
+                });
+
+            await master.InvokeIdempotentAsync("setup/neon-node-agent-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-node-agent");
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                });
         }
 
         /// <summary>
@@ -4001,7 +4025,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus_postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
+                    await master.InstallHelmChartAsync(controller, "citus-postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
 
                     
                 });
@@ -4226,7 +4250,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "neon_sso_session_proxy", releaseName: "neon-sso-session-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso-session-proxy");
+                    await master.InstallHelmChartAsync(controller, "neon-sso-session-proxy", releaseName: "neon-sso-session-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso-session-proxy");
                 });
 
             await master.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
@@ -4338,7 +4362,7 @@ $@"- name: StorageType
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(32)));
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                    await master.InstallHelmChartAsync(controller, "oauth2_proxy", releaseName: "neon-sso", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso proxy");
+                    await master.InstallHelmChartAsync(controller, "oauth2-proxy", releaseName: "neon-sso", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso proxy");
                 });
 
             await master.InvokeIdempotentAsync("setup/oauth2-proxy-ready",

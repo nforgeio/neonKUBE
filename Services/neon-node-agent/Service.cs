@@ -75,16 +75,16 @@ namespace NeonNodeAgent
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when toi exit.
+            // this and will use the termination signal to known when to exit.
 
             _ = Host.CreateDefaultBuilder()
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
                     .ConfigureLogging(
                         logging =>
                         {
                             logging.ClearProviders();
                             logging.AddProvider(new LogManager(version: base.Version));
                         })
+                    .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 

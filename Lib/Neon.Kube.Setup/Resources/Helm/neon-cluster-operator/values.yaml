@@ -8,6 +8,7 @@
 # We also use this for specifying temporary DEBUG related configurations.
 
 # Number of replicas to be deployed.
+
 replicaCount: 1
 
 # Container image details.
@@ -23,10 +24,10 @@ image:
 resource:
   limits:
     cpu: 100m
-    memory: 200Mi
+    memory: 110Mi
   requests:
     cpu: 100m
-    memory: 200Mi
+    memory: 110Mi
 
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 

@@ -30,6 +30,8 @@ spec:
         kubectl.kubernetes.io/default-container: neon-cluster-operator
     spec:
       serviceAccountName: neon-cluster-operator
+      tolerations:
+      - operator: Exists
       containers:
       - name: neon-cluster-operator
         env:

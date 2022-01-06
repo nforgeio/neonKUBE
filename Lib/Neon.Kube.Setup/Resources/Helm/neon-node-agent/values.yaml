@@ -7,9 +7,6 @@
 #
 # We also use this for specifying temporary DEBUG related configurations.
 
-# Number of replicas to be deployed.
-replicaCount: 1
-
 # Container image details.
 
 image:
@@ -23,10 +20,10 @@ image:
 resource:
   limits:
     cpu: 100m
-    memory: 200Mi
+    memory: 110Mi
   requests:
     cpu: 100m
-    memory: 200Mi
+    memory: 110Mi
 
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
@@ -37,10 +34,10 @@ logLevel: info
 #
 # $debug(): DEBUG related configurations.
 
-#image:
-#  organization: ghcr.io/neonkube-dev
-#  repository: neon-node-agent
-#  pullPolicy: Always
-#  tag: neonkube-0.3.0-alpha
+image:
+  organization: ghcr.io/neonkube-dev
+  repository: neon-node-agent
+  pullPolicy: Always
+  tag: neonkube-0.3.0-alpha
 
-#logLevel: debug
+logLevel: debug
