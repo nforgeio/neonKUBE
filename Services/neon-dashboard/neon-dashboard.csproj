@@ -7,13 +7,12 @@
 
   <ItemGroup>
     <PackageReference Include="Blazor-Analytics" Version="3.10.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.13" />
-	<PackageReference Include="GitInfo" Version="2.1.2">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
+	<PackageReference Include="GitInfo" Version="2.2.0">
 		<PrivateAssets>all</PrivateAssets>
 		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
 	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.2.0-rc1" />
-	<PackageReference Include="OpenTelemetry.Exporter.Zipkin" Version="1.1.0-rc1" />
 	<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc8" />
 	<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc8" />
 	<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc8" />
@@ -24,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    Stub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -10,26 +10,29 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS
+// distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Reflection;
+using System.Text;
 
-using Neon.Common;
+using DotnetKubernetesClient.Entities;
+using k8s.Models;
+using KubeOps.Operator.Entities;
+using KubeOps.Operator.Entities.Annotations;
 
-namespace Neon.Kube.Service
+using Neon.Kube;
+
+namespace Neon.Kube.Resources
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Common code for neonKUBE service implementations.
+    /// Used for obtaining a reference to the <b>Neon.Kube.Resources</b> assembly
+    /// by our Kubernetes operators for registering custom resource types.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    class NamespaceDoc
+    public static class Stub
     {
     }
 }

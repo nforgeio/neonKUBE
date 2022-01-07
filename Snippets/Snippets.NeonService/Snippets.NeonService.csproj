@@ -20,8 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="prometheus-net" Version="4.1.1" />
-    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.1.0" />
+    <PackageReference Include="prometheus-net" Version="5.0.2" />
+    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
   </ItemGroup>
 
   <ItemGroup>

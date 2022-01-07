@@ -409,7 +409,7 @@ namespace Neon.Kube
         // Define the neon-system related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// Reserved label name for core neonKUBE system components.
         /// </summary>
         public const string LabelNeonSystem = ClusterDefinition.ReservedLabelPrefix + "neon-system";
 

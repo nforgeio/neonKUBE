@@ -1,6 +1,6 @@
 apiVersion: v2
-name: neon-cluster-operator
-description: Manages neonKUBE clusters via multiple control loops
+name: neon-node-agent
+description: Manages cluster nodes as a daemonset 
 
 # A chart can be either an 'application' or a 'library' chart.
 #

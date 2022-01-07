@@ -28,7 +28,7 @@ https://docs.microsoft.com/en-us/nuget/consume-packages/package-references-in-pr
 STEP 2: Add a pre-build target that uses [neon-modelgen] to generate your models:
 ---------------------------------------------------------------------------------
 
-  <Target Name="ModelGen" BeforeTargets="CoreCompile">
+  <Target Name="ModelGen" BeforeTargets="BeforeBuild">
     <!--- Generate the model source files -->
     <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; PATH-TO-MODEL-PROJECT/models.dll models/models.g.cs" />
     <ItemGroup>

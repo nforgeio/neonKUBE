@@ -14,17 +14,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 
-    <!-- Write generated installation YAML to an ephemeral folder -->
+  	<!-- Write generated installation YAML to an git-ignored folder -->
 
-	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-
-    <!-- $debug(jefflill): Remove this after we figure out how to run without a kubeconfig -->
-
-    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	  <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -46,13 +38,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubeOps" Version="6.0.17" />
+    <PackageReference Include="KubeOps" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Entities\Neon.Kube.Entities.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>

@@ -1,39 +1,38 @@
 ﻿apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: neon-cluster-operator
+  name: neon-node-agent
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
     operator-element: operator-instance
-  name: neon-cluster-operator-webhook
+  name: neon-node-agent-webhook
 data:
   KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
-    app: neon-cluster-operator
-  name: neon-cluster-operator
+    app: neon-node-agent
+  name: neon-node-agent
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: neon-cluster-operator
+      app: neon-node-agent
   template:
     metadata:
       labels:
-        app: neon-cluster-operator
-        kubectl.kubernetes.io/default-container: neon-cluster-operator
+        app: neon-node-agent
+        kubectl.kubernetes.io/default-container: neon-node-agent
     spec:
-      serviceAccountName: neon-cluster-operator
+      serviceAccountName: neon-node-agent
       tolerations:
       - operator: Exists
       containers:
-      - name: neon-cluster-operator
+      - name: neon-node-agent
         env:
         - name: LOG_LEVEL
           value: {{ .Values.logLevel }}
@@ -43,7 +42,7 @@ spec:
               fieldPath: metadata.namespace
         envFrom:
         - configMapRef:
-            name: neon-cluster-operator-webhook
+            name: neon-node-agent-webhook
         image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         startupProbe:

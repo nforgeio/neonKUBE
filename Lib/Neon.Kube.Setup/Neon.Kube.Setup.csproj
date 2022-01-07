@@ -49,14 +49,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
+    <None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
+    <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
+    <None Remove="Resources\Helm\neon-node-agent\.helmignore" />
+    <None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
+    <None Remove="Resources\Helm\neon-node-agent\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
+    <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Service\Neon.Kube.Service.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
   </ItemGroup>
@@ -75,9 +83,9 @@
   <ItemGroup>
     <PackageReference Include="Helm" Version="0.1.35" />
     <PackageReference Include="Minio" Version="3.1.13" />
-    <PackageReference Include="Npgsql" Version="6.0.1" />
     <PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
     <PackageReference Include="Tomlyn" Version="0.1.2" />
+    <PackageReference Include="Npgsql" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>

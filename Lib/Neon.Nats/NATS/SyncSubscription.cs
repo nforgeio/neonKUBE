@@ -55,6 +55,9 @@ namespace NATS.Client
         }
 
         /// <inheritdoc/>
+        public long Sid => subscription.Sid;
+
+        /// <inheritdoc/>
         public string Subject => subscription.Subject;
 
         /// <inheritdoc/>

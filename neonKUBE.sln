@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
 		Lib\Neon.Kube.HyperVLocal\HyperVLocalHostingManager.cs = Lib\Neon.Kube.HyperVLocal\HyperVLocalHostingManager.cs
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
+		Doc\TECHNIQUES.md = Doc\TECHNIQUES.md
 		Doc\TEST-VERSION.md = Doc\TEST-VERSION.md
 	EndProjectSection
 EndProject
@@ -382,7 +383,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.ModelGenerator", "Lib\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-modelgen", "Tools\neon-modelgen\neon-modelgen.csproj", "{FE55ED55-F4B5-45B0-AFF2-EBDCAACF691A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Service", "Lib\Neon.Kube.Service\Neon.Kube.Service.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator", "Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj", "{98CA999D-D048-45A3-AB81-9F66145D3E8C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGenCli", "Test\Test.Neon.ModelGenCli\Test.Neon.ModelGenCli.csproj", "{4763008F-F4FE-48D8-9CF4-A02D692267EB}"
 EndProject
@@ -417,7 +418,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jefflill", "jefflill", "{00
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-tty", "User\jefflill\test-tty\test-tty.csproj", "{B075D6FE-EEA8-46D4-AB66-B673F7B79D48}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Entities", "Lib\Neon.Kube.Entities\Neon.Kube.Entities.csproj", "{E237E6A1-CB50-4944-977A-488A566CEDFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Resources", "Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj", "{E237E6A1-CB50-4944-977A-488A566CEDFA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-node-agent", "Services\neon-node-agent\neon-node-agent.csproj", "{75653A7E-60A7-4401-AED5-1AEAAD6475A5}"
 EndProject

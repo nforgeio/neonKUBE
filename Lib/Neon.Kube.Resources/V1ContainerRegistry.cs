@@ -26,19 +26,20 @@ using KubeOps.Operator.Entities.Annotations;
 
 using Neon.Kube;
 
-namespace Neon.Kube.Entities
+namespace Neon.Kube.Resources
 {
     /// <summary>
     /// Describing an upstream container registry to be configured on each of the cluster nodes.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The <b>neon-node-agent</b> static pods running on all clauster nodes monitor the set of 
-    /// <see cref="V1ContainerRegistry"/> as well as any referenced secrets for changes and update
-    /// the CRI-O configuration to match.
+    /// The <b>neon-node-agent</b> pods running as a daemonset on all cluster nodes monitor the  
+    /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-systemt</b> namespace as well 
+    /// as any referenced secrets for changes and update the CRI-O configuration on each node 
+    /// to match.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "containerregistry", PluralName = "containerregistries")]
+    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
@@ -49,7 +50,7 @@ namespace Neon.Kube.Entities
         /// </summary>
         public class V1ContainerRegistryEntitySpec
         {
-            private const string prefixRegex = @"^([\*a-zA-Z0-9-_]?\.)+([a-zA-Z0-9-_]+\.)[a-zA-Z0-9-_]+(/[a-zA-Z0-9-\._~\[\]@\!$&'\(\)\*+,;%=]*)*$";
+            private const string prefixRegex = @"^(\*\.)?([a-zA-Z0-9-_]+\.)*([a-zA-Z0-9-_]+)(/[a-zA-Z0-9-\._~\[\]@\!&'\(\)\*+,;%=\$]+)*$";
 
             /// <summary>
             /// <para>

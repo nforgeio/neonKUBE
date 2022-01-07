@@ -19,6 +19,7 @@ using System.Net.Sockets;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Data;
@@ -74,10 +75,16 @@ namespace NeonNodeAgent
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when toi exit.
+            // this and will use the termination signal to known when to exit.
 
             _ = Host.CreateDefaultBuilder()
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                    .ConfigureLogging(
+                        logging =>
+                        {
+                            logging.ClearProviders();
+                            logging.AddProvider(new LogManager(version: base.Version));
+                        })
+                    .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
@@ -97,196 +104,6 @@ namespace NeonNodeAgent
 
                 // await CheckNodeImagesAsync();
             }
-        }
-
-        /// <summary>
-        /// Responsible for making sure cluster container images are present in the local
-        /// cluster registry.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task CheckNodeImagesAsync()
-        {
-            // check busybox doesn't already exist
-
-            var pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
-
-            if (pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox"))
-            {
-                Log.LogInfo($"[check-node-images] Removing existing busybox pod.");
-                
-                await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
-
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
-
-                        return !pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox");
-                    }, 
-                    timeout:      TimeSpan.FromSeconds(60),
-                    pollInterval: TimeSpan.FromSeconds(2));
-            }
-
-            Log.LogInfo($"[check-node-images] Creating busybox pod.");
-
-            var busybox = await k8s.CreateNamespacedPodAsync(
-                new V1Pod()
-                {
-                    Metadata = new V1ObjectMeta()
-                    {
-                        Name              = "check-node-images-busybox",
-                        NamespaceProperty = KubeNamespaces.NeonSystem
-                    },
-                    Spec = new V1PodSpec()
-                    {
-                        Tolerations = new List<V1Toleration>()
-                        {
-                            { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                            { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                        },
-                        HostNetwork = true,
-                        HostPID     = true,
-                        HostIPC     = true,
-                        Volumes     = new List<V1Volume>()
-                        {
-                            new V1Volume()
-                            {
-                                Name     = "noderoot",
-                                HostPath = new V1HostPathVolumeSource()
-                                {
-                                    Path = "/",
-                                }
-                            }
-                        },
-                        Containers = new List<V1Container>()
-                        {
-                            new V1Container()
-                            {
-                                Name            = "check-node-images-busybox",
-                                Image           = $"{KubeConst.LocalClusterRegistry}/busybox:{KubeVersions.Busybox}",
-                                Command         = new List<string>() {"sleep", "infinity" },
-                                ImagePullPolicy = "IfNotPresent",
-                                SecurityContext = new V1SecurityContext()
-                                {
-                                    Privileged = true
-                                },
-                                VolumeMounts = new List<V1VolumeMount>()
-                                {
-                                    new V1VolumeMount()
-                                    {
-                                        Name      = "noderoot",
-                                        MountPath = "/host"
-                                    }
-                                }
-                            }
-                        },
-                        RestartPolicy      = "Always",
-                        ServiceAccount     = KubeService.NeonClusterOperator,
-                        ServiceAccountName = KubeService.NeonClusterOperator
-                    }
-                }, KubeNamespaces.NeonSystem);
-
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
-
-                    return pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox");
-                },
-                timeout:      TimeSpan.FromSeconds(60),
-                pollInterval: TimeSpan.FromSeconds(2));
-
-            Log.LogInfo($"[check-node-images] Loading cluster manifest.");
-
-            var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-            var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
-
-            Log.LogInfo($"[check-node-images] Getting images currently on node.");
-
-            var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
-            var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(repoTags => (JArray)repoTags);
-
-            foreach (var image in clusterManifest.ContainerImages)
-            {
-                if (nodeImages.Contains(image.InternalRef))
-                {
-                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] exists. Pushing to registry.");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
-                } 
-                else
-                {
-                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] doesn't exist. Pulling from [{image.SourceRef}].");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman pull {image.SourceRef}", retry: true);
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman tag {image.SourceRef} {image.InternalRef}");
-
-                    Log.LogInfo($"[check-node-images] Pushing [{image.InternalRef}] to cluster registry.");
-                    await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
-                }
-            }
-
-            Log.LogInfo($"[check-node-images] Removing busybox.");
-            await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
-
-            Log.LogInfo($"[check-node-images] Finished.");
-        }
-
-        /// <summary>
-        /// Helper method for running node commands via a busybox container.
-        /// </summary>
-        /// <param name="podName"></param>
-        /// <param name="namespace"></param>
-        /// <param name="command"></param>
-        /// <param name="containerName"></param>
-        /// <param name="retry"></param>
-        /// <returns>The command output as lines of text.</returns>
-        public async Task<string> ExecInPodAsync(
-            string      podName,
-            string      @namespace,
-            string      command,
-            string      containerName = null,
-            bool        retry         = false)
-        {
-            var podCommand = new string[]
-            {
-                "chroot",
-                "/host",
-                "/bin/bash",
-                "-c",
-                command
-            };
-
-            var pod = await k8s.ReadNamespacedPodAsync(podName, @namespace);
-
-            if (string.IsNullOrEmpty(containerName))
-            {
-                containerName = pod.Spec.Containers.FirstOrDefault().Name;
-            }
-
-            string stdOut = "";
-            string stdErr = "";
-
-            var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
-            {
-                stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
-                stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
-            });
-
-            var exitcode = await k8s.NamespacedPodExecAsync(podName, @namespace, containerName, podCommand, true, handler, CancellationToken.None);
-
-            if (exitcode != 0)
-            {
-                throw new KubernetesException($@"{stdOut + stdErr}
-
-{stdErr}");
-            }
-
-            var result = new StringBuilder();
-            foreach (var line in stdOut.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
-            {
-                result.AppendLine(line);
-            }
-
-            return result.ToString();
         }
     }
 }

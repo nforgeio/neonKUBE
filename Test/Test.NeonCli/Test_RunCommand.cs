@@ -82,7 +82,7 @@ namespace Test.NeonCli
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             File.WriteAllText(".password-name", "test");
@@ -148,7 +148,7 @@ TEST_D=D-VALUE
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             File.WriteAllText(".password-name", "test");
@@ -261,7 +261,7 @@ TEST_D=D-VALUE
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
@@ -318,7 +318,7 @@ $<<TEST_D>>
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
@@ -378,7 +378,7 @@ $<<TEST_D>>
                             // Create a test password and a [.password-name] file in the
                             // temp test folder.
 
-                            var result = await runner.ExecuteAsync(Program.Main, $"password", "set", "test");
+                            var result = await runner.ExecuteAsync(Program.Main, "tool", "password", "set", "test");
                             Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------

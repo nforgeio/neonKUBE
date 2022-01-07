@@ -108,7 +108,7 @@ namespace NeonDashboard
         }
 
         /// <summary>
-        /// Configures the operator web service controllers.
+        /// Configures the operator service controllers.
         /// </summary>
         /// <param name="app">The application builder.</param>
         /// <param name="env">Specifies the web hosting environment.</param>

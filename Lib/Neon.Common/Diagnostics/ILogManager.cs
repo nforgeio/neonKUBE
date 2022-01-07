@@ -92,7 +92,7 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Intended to reset the log manager to its default condition.  Implementations may cxustomize
         /// what this actually does but the default <see cref="LogManager"/> implementation resets its
-        /// emitted event counter to zewro, clears and cached loggers, and resets the <see cref="LoggerCreator"/>
+        /// emitted event counter to zero, clears and cached loggers, and resets the <see cref="LoggerCreator"/>
         /// delegate.
         /// </summary>
         void Reset();

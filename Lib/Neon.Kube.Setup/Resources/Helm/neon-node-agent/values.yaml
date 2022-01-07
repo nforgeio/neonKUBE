@@ -7,15 +7,11 @@
 #
 # We also use this for specifying temporary DEBUG related configurations.
 
-# Number of replicas to be deployed.
-
-replicaCount: 1
-
 # Container image details.
 
 image:
   organization: neon-registry.node.local
-  repository: neon-cluster-operator
+  repository: neon-node-agent
   pullPolicy: IfNotPresent
   tag: neonkube-0.3.0-alpha
 
@@ -38,10 +34,10 @@ logLevel: info
 #
 # $debug(): DEBUG related configurations.
 
-#image:
-#  organization: ghcr.io/neonkube-dev
-#  repository: neon-cluster-operator
-#  pullPolicy: Always
-#  tag: neonkube-0.3.0-alpha
+image:
+  organization: ghcr.io/neonkube-dev
+  repository: neon-node-agent
+  pullPolicy: Always
+  tag: neonkube-0.3.0-alpha
 
-#logLevel: debug
+logLevel: debug
