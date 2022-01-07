@@ -107,5 +107,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "userSearch", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DexLdapSearch UserSearch { get; set; }
+
+        /// <summary>
+        /// Group search config.
+        /// information.
+        /// </summary>
+        [JsonProperty(PropertyName = "GroupSearch", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "groupSearch", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexLdapSearch GroupSearch { get; set; }
     }
 }

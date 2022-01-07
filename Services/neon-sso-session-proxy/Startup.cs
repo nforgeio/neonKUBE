@@ -146,7 +146,6 @@ namespace NeonSsoSessionProxy
                 endpoints.MapMetrics();
                 endpoints.MapControllers();
             });
-            app.UseHttpMetrics();
         }
     }
 }

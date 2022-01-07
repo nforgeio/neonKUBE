@@ -22,7 +22,8 @@ using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
-
+using Newtonsoft.Json.Linq;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube
@@ -30,6 +31,7 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
+    [JsonConverter(typeof(DexConnectorConverter))]
     public interface IDexConnector
     {
         /// <summary>
@@ -57,5 +59,39 @@ namespace Neon.Kube
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         DexConnectorType Type { get; set; }
+    }
+
+    public class DexConnectorConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(IDexConnector);
+        }
+
+        public override object ReadJson(JsonReader reader,
+               Type objectType, object existingValue,
+               JsonSerializer serializer)
+        {
+            var jsonObject = JObject.Load(reader);
+            var connector = default(IDexConnector);
+
+            var value = jsonObject.Value<string>("Type");
+            DexConnectorType type;
+            Enum.TryParse(value, out type);
+            switch (type)
+            {
+                case DexConnectorType.Ldap:
+                    connector = new DexLdapConnector();
+                    break;
+            }
+            
+            serializer.Populate(jsonObject.CreateReader(), connector);
+            return connector;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value);
+        }
     }
 }

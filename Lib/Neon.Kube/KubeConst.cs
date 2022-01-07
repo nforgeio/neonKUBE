@@ -338,7 +338,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the secret containing Neon SSO Oauth2 Proxy credentials.
         /// </summary>
-        public const string NeonSsoOauth2ProxySecret = "neon-sso-oauth2-proxy";
+        public const string NeonSsoOauth2Proxy = "neon-sso-oauth2-proxy";
 
         /// <summary>
         /// Identifies the neon-system-db superuser database.

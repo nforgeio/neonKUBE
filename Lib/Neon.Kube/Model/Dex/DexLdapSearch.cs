@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexLdapUserSearch.cs
+// FILE:	    DexLdapSearch.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2021 by neonFORGE LLC.  All rights reserved.
 //
@@ -56,6 +56,14 @@ namespace Neon.Kube
         public string Filter { get; set; }
 
         /// <summary>
+        /// The username attribute name on the LDAP server.
+        /// </summary>
+        [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Username { get; set; }
+
+        /// <summary>
         /// The ID attribute name on the LDAP server.
         /// </summary>
         [JsonProperty(PropertyName = "IdAttr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -85,6 +93,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "UserMatchers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "userMatchers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, string> UserMatchers { get; set; }
+        public List<DexUserMatcher> UserMatchers { get; set; }
     }
 }

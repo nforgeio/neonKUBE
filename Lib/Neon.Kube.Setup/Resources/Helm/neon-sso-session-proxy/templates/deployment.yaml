@@ -4,6 +4,8 @@ metadata:
   name: {{ include "neon-sso-session-proxy.fullname" . }}
   labels:
     {{- include "neon-sso-session-proxy.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}

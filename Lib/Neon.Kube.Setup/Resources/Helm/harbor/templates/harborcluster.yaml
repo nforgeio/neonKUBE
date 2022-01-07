@@ -144,7 +144,7 @@ spec:
       - registry-harbor-harbor-core-tokencert
     resources: {}
     metrics:
-      enabled: true
+      enabled: {{ .Values.metrics.enabled }}
   trivy:
     image: {{ .Values.image.organization }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
     nodeSelector:

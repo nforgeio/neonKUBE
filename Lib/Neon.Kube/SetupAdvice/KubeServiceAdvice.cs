@@ -93,6 +93,12 @@ namespace Neon.Kube
         public const string ReplicaCountProperty = "replica.count";
 
         /// <summary>
+        /// <see cref="int"/>: Identifies the property specifying whether metrics
+        /// are enabled for the service.
+        /// </summary>
+        public const string MetricsEnabledProperty = "metrics.enabled";
+
+        /// <summary>
         /// <see cref="int"/>: Identifies the property specifying how often metrics
         /// should be scraped for the service.
         /// </summary>
@@ -266,6 +272,15 @@ namespace Neon.Kube
         {
             get => GetProperty<int>(ReplicaCountProperty);
             set => SetProperty<int>(ReplicaCountProperty, value);
+        }
+
+        /// <summary>
+        /// Specifies whether metrics should be collected for the service.
+        /// </summary>
+        public bool? MetricsEnabled
+        {
+            get => GetProperty<bool>(MetricsEnabledProperty);
+            set => SetProperty<bool>(MetricsEnabledProperty, value);
         }
 
         /// <summary>
