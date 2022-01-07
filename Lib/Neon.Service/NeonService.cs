@@ -197,6 +197,24 @@ namespace Neon.Service
     /// to open its listening socket on port 80. 
     /// </para>
     /// </note>
+    /// <para><b>DEPLOYMENT</b></para>
+    /// <para>
+    /// <b>IMPORTANT: DO NOT DEPLOY SERVICES TO THE FILE SYSTEM ROOT!</b> 
+    /// </para>
+    /// <para>
+    /// We've seen this cause problems due to .NET CORE trying to watch the entire file system,
+    /// presumably to watch .NET runtime config files or something and we've seen crashes when
+    /// host volumes are mounted into pods on Kubernetes.
+    /// </para>
+    /// <para>
+    /// We recommend that you deploy your service files within a directory holding just
+    /// your service binaries and related content files.
+    /// </para>
+    /// <para>
+    /// For applications deployed as containers, we recommend that you deploy your application
+    /// files to a folder directly under the file system root like <b>/my-app</b> and then
+    /// have your docker entrypoint or entry script execute the application there.
+    /// </para>
     /// <para><b>LOGGING</b></para>
     /// <para>
     /// Each <see cref="NeonService"/> instance maintains its own <see cref="LogManager"/>
@@ -233,7 +251,7 @@ namespace Neon.Service
     /// <para><b>HEALTH PROBES</b></para>
     /// <note>
     /// Health probes are supported only on Linux running as AMD64.  This is not supported
-    /// on Windows, OS/X, 32-bit or ARM platforms.
+    /// on Windows, OS/X, 32-bit or ARM platforms at this time.
     /// </note>
     /// <para>
     /// Hosting environments such as Kubernetes will often require service instances
@@ -268,8 +286,8 @@ namespace Neon.Service
     /// You may pass a custom health folder path to the constructor so that the <b>status</b> 
     /// and <b>check</b> files so these can be located elsewhere to avoid conflicts such as 
     /// when multiple services will be running on a machine or container or when the root
-    /// file system is read-only.  You can disable this feature entirely by passing <b>"DISABLED"</b>
-    /// as the health folder path.
+    /// file system is read-only.  You can also disable this feature entirely by passing
+    /// <b>"DISABLED"</b> as the health folder path.
     /// </para>
     /// <note>
     /// <para>
