@@ -37,7 +37,7 @@ namespace NeonSsoSessionProxy.Controllers
         private AesCipher                    cipher;
         private DexClient                    dexClient;
         private DistributedCacheEntryOptions cacheOptions;
-        private SessionTransformer           sessionTransformer;
+
         /// <summary>
         /// Constructor.
         /// </summary>

@@ -509,6 +509,8 @@ mode: {kubeProxyMode}");
                     master.UploadText("/etc/kubernetes/manifests/kube-apiserver.yaml", kubeletConfig, permissions: "600", owner: "root:root");
 
                     master.SudoCommand("systemctl", "restart", "kubelet");
+
+                    await Task.CompletedTask;
                 });
         }
 
@@ -4207,6 +4209,8 @@ $@"- name: StorageType
                        // ready-to-go node image was created.
 
                        // $todo(marcusbooyah): implement this
+
+                       await Task.CompletedTask;
                    });
              }
 
@@ -4918,6 +4922,7 @@ $cmd$);'"
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <param name="name">The new bucket name.</param>
+        /// <param name="quota">The bucket quota.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateMinioBucketAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, string name, string quota = null)
         {

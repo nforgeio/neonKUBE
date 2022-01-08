@@ -27,6 +27,9 @@ using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
+    /// <summary>
+    /// Dex User Matcher.
+    /// </summary>
     public class DexUserMatcher
     {
         /// <summary>
