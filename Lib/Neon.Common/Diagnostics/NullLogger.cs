@@ -40,7 +40,6 @@ namespace Neon.Diagnostics
     {
         private ILogManager     logManager;
         private string          sourceModule;
-        private TextWriter      writer;
         private string          contextId;
 
         /// <inheritdoc/>
@@ -80,20 +79,13 @@ namespace Neon.Diagnostics
         /// context for logged events.  For example, the Neon.Cadence client uses this 
         ///  to record the ID of the workflow recording events.
         /// </param>
-        /// <remarks>
-        /// <para>
-        /// The instances returned will log nothing if <paramref name="logManager"/>
-        /// is passed as <c>null</c>.
-        /// </para>
-        /// </remarks>
         public NullLogger(
-            ILogManager     logManager, 
-            string          sourceModule     = null, 
-            string          contextId        = null)
+            ILogManager             logManager, 
+            string                  sourceModule = null, 
+            string                  contextId    = null)
         {
             this.logManager   = logManager ?? LogManager.Disabled;
             this.sourceModule = sourceModule ?? string.Empty;
-            this.writer       = writer ?? Console.Error;
             this.contextId    = contextId;
         }
 

@@ -81,7 +81,7 @@ namespace Neon.Diagnostics
         /// Specifies the one-based position of the event in the stream of events
         /// logged by the log manager.
         /// </summary>
-        public long Index { get; private set; }
+        public long Index { get; internal set; }
 
         /// <summary>
         /// Time (UTC) when the event was logged.

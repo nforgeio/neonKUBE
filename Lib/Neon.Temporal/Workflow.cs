@@ -117,7 +117,7 @@ namespace Neon.Temporal
             this.Worker                    = worker;
             this.IsReplaying               = isReplaying;
             this.Execution                 = new WorkflowExecution(workflowId, runId);
-            this.Logger                    = LogManager.Default.GetLogger(module: workflowTypeName, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
+            this.Logger                    = LogManager.Default.GetLogger(module: workflowTypeName, contextId: runId, logFilter: null, isLogEnabledFunc: () => !IsReplaying || Client.Settings.LogDuringReplay);
 
             if (Client.Settings.Debug)
             {

@@ -132,6 +132,7 @@ namespace Neon.Diagnostics
         private LogLevel                                    logLevel       = LogLevel.Info;
         private long                                        emitCount;
         private LoggerCreatorDelegate                       loggerCreator;
+        private Func<LogEvent, bool>                        logFilter;
 
         /// <summary>
         /// Default constructor.
@@ -141,8 +142,13 @@ namespace Neon.Diagnostics
         /// Optionally specifies the semantic version of the current program.  This can be a somewhat arbitrary
         /// string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
         /// </param>
+        /// <param name="logFilter">
+        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
-        public LogManager(bool parseLogLevel = true, string version = null, TextWriter writer = null)
+        public LogManager(bool parseLogLevel = true, string version = null, Func<LogEvent, bool> logFilter = null, TextWriter writer = null)
         {
             if (parseLogLevel && !Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
             {
@@ -158,7 +164,8 @@ namespace Neon.Diagnostics
                 this.Version = "unknown";
             }
 
-            this.writer = writer;
+            this.logFilter = logFilter;
+            this.writer    = writer;
 
             // $hack(jefflill):
             //
@@ -309,26 +316,31 @@ namespace Neon.Diagnostics
         /// context for logged events.  For example, the Neon.Cadence client uses this 
         ///  to record the ID of the workflow recording events.
         /// </param>
+        /// <param name="logFilter">
+        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
         /// <param name="isLogEnabledFunc">
         /// Optionally specifies a function that will be called at runtime to
         /// determine whether to actually log an event.  This defaults to <c>null</c>
         /// which will always log events.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        private INeonLogger CreateLogger(string module, TextWriter writer, string contextId, Func<bool> isLogEnabledFunc)
+        private INeonLogger CreateLogger(string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc)
         {
             if (LoggerCreator == null)
             {
-                return new TextLogger(this, module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+                return new TextLogger(this, module, writer: writer, contextId: contextId, logFilter, isLogEnabledFunc: isLogEnabledFunc);
             }
             else
             {
-                return loggerCreator(this, module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+                return loggerCreator(this, module, writer: writer, contextId: contextId, logFilter: logFilter, isLogEnabledFunc: isLogEnabledFunc);
             }
         }
 
         /// <inheritdoc/>
-        private INeonLogger InternalGetLogger(string module, TextWriter writer = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        private INeonLogger InternalGetLogger(string module, TextWriter writer = null, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null)
         {
             var moduleKey = module ?? string.Empty;
 
@@ -336,7 +348,7 @@ namespace Neon.Diagnostics
             {
                 if (!moduleToLogger.TryGetValue(moduleKey, out var logger))
                 {
-                    logger = CreateLogger(module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+                    logger = CreateLogger(module, writer: writer, contextId: contextId, logFilter: logFilter, isLogEnabledFunc: isLogEnabledFunc);
 
                     moduleToLogger.Add(moduleKey, logger);
                 }
@@ -346,21 +358,21 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(string module = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        public INeonLogger GetLogger(string module = null, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(module, writer, contextId, isLogEnabledFunc);
+            return InternalGetLogger(module, writer, contextId, logFilter, isLogEnabledFunc);
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(Type type, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        public INeonLogger GetLogger(Type type, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(type.FullName, writer, contextId, isLogEnabledFunc);
+            return InternalGetLogger(type.FullName, writer, contextId, logFilter, isLogEnabledFunc);
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger<T>(string contextId = null, Func<bool> isLogEnabledFunc = null)
+        public INeonLogger GetLogger<T>(string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(typeof(T).FullName, writer, contextId, isLogEnabledFunc);
+            return InternalGetLogger(typeof(T).FullName, writer, contextId, logFilter, isLogEnabledFunc);
         }
 
         //---------------------------------------------------------------------
