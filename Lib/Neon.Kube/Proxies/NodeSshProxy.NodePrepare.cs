@@ -1573,7 +1573,7 @@ apt-mark hold cri-o cri-o-runc
 ";
             SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
 
-            // $todo(jefflill): Remove this hack when no longer necessary.
+            // $todo(jefflill): Remove this hack when/if it's no longer necessary.
             //
             // We need to install a slightly customized version of CRI-O that has
             // a somewhat bastardized implementation of container image "pinning",

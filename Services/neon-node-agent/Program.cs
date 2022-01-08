@@ -33,6 +33,11 @@ namespace NeonNodeAgent
     public static class Program
     {
         /// <summary>
+        /// The Linux path where the host node's file system is mounted;
+        /// </summary>
+        public const string HostMount = "/mnt/host";
+
+        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
