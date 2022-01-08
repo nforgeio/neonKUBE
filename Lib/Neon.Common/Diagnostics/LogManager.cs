@@ -109,7 +109,7 @@ namespace Neon.Diagnostics
         /// </summary>
         static LogManager()
         {
-            Default  = new LogManager();
+            Default  = new LogManager(name: "DEFAULT");
             Disabled = new LogManager(parseLogLevel: false)
             {
                 LogLevel = LogLevel.None
@@ -133,6 +133,7 @@ namespace Neon.Diagnostics
         private long                                        emitCount;
         private LoggerCreatorDelegate                       loggerCreator;
         private Func<LogEvent, bool>                        logFilter;
+        private Func<bool>                                  isLogEnabledFunc;
 
         /// <summary>
         /// Default constructor.
@@ -145,11 +146,22 @@ namespace Neon.Diagnostics
         /// <param name="logFilter">
         /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
         /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to event logging is actually enabled.  This defaults
+        /// to <c>null</c> which will always log events.
+        /// </param>
+        /// <param name="name">
+        /// Optionally specifies the logr manager's name.  This can be useful when debugging the
+        /// log manager itself.
         /// </param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
-        public LogManager(bool parseLogLevel = true, string version = null, Func<LogEvent, bool> logFilter = null, TextWriter writer = null)
+        public LogManager(bool parseLogLevel = true, string version = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null, TextWriter writer = null, string name = null)
         {
+            this.Name = name;
+
             if (parseLogLevel && !Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
             {
                 logLevel = LogLevel.Info;
@@ -164,8 +176,9 @@ namespace Neon.Diagnostics
                 this.Version = "unknown";
             }
 
-            this.logFilter = logFilter;
-            this.writer    = writer;
+            this.logFilter        = logFilter;
+            this.isLogEnabledFunc = isLogEnabledFunc;
+            this.writer           = writer;
 
             // $hack(jefflill):
             //
@@ -195,15 +208,20 @@ namespace Neon.Diagnostics
         {
             lock (syncRoot)
             {
-                LoggerCreator = null;
-                LogLevel      = LogLevel.Info;
-                EmitIndex     = true;
-                emitCount     = 0;
+                LoggerCreator    = null;
+                LogLevel         = LogLevel.Info;
+                logFilter        = null;
+                isLogEnabledFunc = null;
+                EmitIndex        = true;
+                emitCount        = 0;
 
                 moduleToLogger.Clear();
                 TestLogger.ClearEvents();
             }
         }
+
+        /// <inheritdoc/>
+        public string Name { get; private set; } = null;
 
         /// <inheritdoc/>
         public string Version { get; set; } = null;
@@ -317,21 +335,24 @@ namespace Neon.Diagnostics
         ///  to record the ID of the workflow recording events.
         /// </param>
         /// <param name="logFilter">
-        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
-        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// Optionally overrides the manager's log filter predicate.  This examines the <see cref="LogEvent"/>
+        /// and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+        /// All events will be logged when this is and the managers filter is <c>null</c>.
         /// </param>
         /// <param name="isLogEnabledFunc">
-        /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
+        /// Optionally specifies a function that will be called at runtime to determine whether to event
+        /// logging is actually enabled.  This overrides the parent <see cref="ILogManager"/> function
+        /// if any.  Events will be logged for <c>null</c> functions.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
         private INeonLogger CreateLogger(string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc)
         {
+            logFilter        ??= this.logFilter;
+            isLogEnabledFunc ??= this.isLogEnabledFunc;
+
             if (LoggerCreator == null)
             {
-                return new TextLogger(this, module, writer: writer, contextId: contextId, logFilter, isLogEnabledFunc: isLogEnabledFunc);
+                return new TextLogger(this, module, writer: writer, contextId: contextId, logFilter: logFilter, isLogEnabledFunc: isLogEnabledFunc);
             }
             else
             {
@@ -342,15 +363,15 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         private INeonLogger InternalGetLogger(string module, TextWriter writer = null, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null)
         {
-            var moduleKey = module ?? string.Empty;
+            module = module ?? string.Empty;
 
             lock (syncRoot)
             {
-                if (!moduleToLogger.TryGetValue(moduleKey, out var logger))
+                if (!moduleToLogger.TryGetValue((string)module, out var logger))
                 {
-                    logger = CreateLogger(module, writer: writer, contextId: contextId, logFilter: logFilter, isLogEnabledFunc: isLogEnabledFunc);
+                    logger = CreateLogger((string)module, writer: writer, contextId: contextId, logFilter: logFilter, isLogEnabledFunc: isLogEnabledFunc);
 
-                    moduleToLogger.Add(moduleKey, logger);
+                    moduleToLogger.Add((string)module, logger);
                 }
 
                 return logger;
@@ -393,20 +414,18 @@ namespace Neon.Diagnostics
             if (disposing)
             {
                 GC.SuppressFinalize(this);
-
-                // Actually dispose any disposable members here if we add
-                // any in the future.
             }
         }
 
         /// <summary>
         /// Creates a logger.
         /// </summary>
-        /// <param name="sourceModule">Identifies the source module.</param>
+        /// <param name="module">Identifies the source module.</param>
         /// <returns>The created <see cref="ILogger"/>.</returns>
-        public ILogger CreateLogger(string sourceModule)
+        public ILogger CreateLogger(string module)
         {
-            return (ILogger)GetLogger(sourceModule);
+
+            return (ILogger)GetLogger(module: module);
         }
     }
 }

@@ -129,15 +129,15 @@ namespace Neon.Diagnostics
         /// context for logged events.  For example, the Neon.Cadence client uses this 
         ///  to record the ID of the workflow recording events.
         /// </param>
-        /// <param name="isLogEnabledFunc">
-        /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
-        /// </param>
         /// <param name="logFilter">
         /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
         /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to event logging is actually enabled.  This defaults
+        /// to <c>null</c> which will always log events.
         /// </param>
         /// <remarks>
         /// <para>

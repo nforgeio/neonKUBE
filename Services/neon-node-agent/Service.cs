@@ -25,6 +25,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -45,24 +46,14 @@ namespace NeonNodeAgent
     public partial class Service : NeonService
     {
         private const string StateTable = "state";
-        
-        private static KubernetesWithRetry k8s;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube)
+            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
         {
-            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
-
-            k8s.RetryPolicy = new ExponentialRetryPolicy(
-                e => true,
-                maxAttempts:          int.MaxValue,
-                initialRetryInterval: TimeSpan.FromSeconds(0.25),
-                maxRetryInterval:     TimeSpan.FromSeconds(10),
-                timeout:              TimeSpan.FromMinutes(5));
         }
 
         /// <inheritdoc/>
@@ -96,7 +87,7 @@ namespace NeonNodeAgent
                         logging =>
                         {
                             logging.ClearProviders();
-                            logging.AddProvider(new LogManager(version: base.Version));
+                            logging.AddProvider(base.LogManager);
                         })
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()

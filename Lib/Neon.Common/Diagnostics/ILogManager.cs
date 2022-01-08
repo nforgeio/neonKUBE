@@ -48,14 +48,15 @@ namespace Neon.Diagnostics
     ///  to record the ID of the workflow recording events.
     /// </param>
     /// <param name="logFilter">
-    /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
-    /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-    /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+    /// Optionally specifies a filter predicate that overrides the parent <see cref="ILogManager"/> filter
+    /// (if any) used for filtering log entries.  This examines the <see cref="LogEvent"/> and returns <c>true</c>
+    /// if the event should be logged or <c>false</c> when it is to be ignored.  All events will be logged when
+    /// this is <c>null</c>.
     /// </param>
     /// <param name="isLogEnabledFunc">
-    /// Optionally specifies a function that will be called at runtime to
-    /// determine whether to actually log an event.  This defaults to <c>null</c>
-    /// which will always log events.
+    /// Optionally specifies a function that will be called at runtime to determine whether to event
+    /// logging is actually enabled.  This overrides the parent <see cref="ILogManager"/> function
+    /// if any.  Events will be logged for <c>null</c> functions.
     /// </param>
     /// <returns>The <see cref="INeonLogger"/> instance.</returns>
     public delegate INeonLogger LoggerCreatorDelegate(LogManager logManager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc);
@@ -101,6 +102,12 @@ namespace Neon.Diagnostics
         /// delegate.
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// Returns the log manager's name.  This can be useful for debugging the log manager itself.
+        /// This defaults to <c>null</c>.
+        /// </summary>
+        string Name { get; }
 
         /// <summary>
         /// The version of the current program or <c>null</c> if not known.
@@ -173,17 +180,17 @@ namespace Neon.Diagnostics
         /// <param name="contextId">
         /// Optionally specifies additional information that can be used to identify
         /// context for logged events.  For example, the Neon.Cadence client uses this 
-        ///  to record the ID of the workflow recording events.
+        /// to record the ID of the workflow recording events.
         /// </param>
         /// <param name="logFilter">
-        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
-        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// Optionally overrides the manager's log filter predicate.  This examines the <see cref="LogEvent"/>
+        /// and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+        /// All events will be logged when this is and the managers filter is <c>null</c>.
         /// </param>
         /// <param name="isLogEnabledFunc">
-        /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
+        /// Optionally specifies a function that will be called at runtime to determine whether to event
+        /// logging is actually enabled.  This overrides the parent <see cref="ILogManager"/> function
+        /// if any.  Events will be logged for <c>null</c> functions.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
         INeonLogger GetLogger(string module = null, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null);
@@ -195,17 +202,17 @@ namespace Neon.Diagnostics
         /// <param name="contextId">
         /// Optionally specifies additional information that can be used to identify
         /// context for logged events.  For example, the Neon.Cadence client uses this 
-        ///  to record the ID of the workflow recording events.
+        /// to record the ID of the workflow recording events.
         /// </param>
         /// <param name="logFilter">
-        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
-        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// Optionally overrides the manager's log filter predicate.  This examines the <see cref="LogEvent"/>
+        /// and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+        /// All events will be logged when this is and the managers filter is <c>null</c>.
         /// </param>
         /// <param name="isLogEnabledFunc">
-        /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
+        /// Optionally specifies a function that will be called at runtime to determine whether to event
+        /// logging is actually enabled.  This overrides the parent <see cref="ILogManager"/> function
+        /// if any.  Events will be logged for <c>null</c> functions.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
         INeonLogger GetLogger(Type type, string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null);
@@ -217,17 +224,17 @@ namespace Neon.Diagnostics
         /// <param name="contextId">
         /// Optionally specifies additional information that can be used to identify
         /// context for logged events.  For example, the Neon.Cadence client uses this 
-        ///  to record the ID of the workflow recording events.
+        /// to record the ID of the workflow recording events.
         /// </param>
         /// <param name="logFilter">
-        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
-        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
-        /// if it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// Optionally overrides the manager's log filter predicate.  This examines the <see cref="LogEvent"/>
+        /// and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+        /// All events will be logged when this is and the managers filter is <c>null</c>.
         /// </param>
         /// <param name="isLogEnabledFunc">
-        /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
+        /// Optionally specifies a function that will be called at runtime to determine whether to event
+        /// logging is actually enabled.  This overrides the parent <see cref="ILogManager"/> function
+        /// if any.  Events will be logged for <c>null</c> functions.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
         INeonLogger GetLogger<T>(string contextId = null, Func<LogEvent, bool> logFilter = null, Func<bool> isLogEnabledFunc = null);

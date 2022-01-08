@@ -470,10 +470,16 @@ namespace Neon.Service
         private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
 
         /// <summary>
+        /// <para>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
         /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
         /// log manager.  This defaults to <c>true</c> which will be appropriate for most
         /// production situations.  It may be useful to disable this for some unit tests.
+        /// </para>
+        /// <note>
+        /// This applies only for services that were not passed a <see cref="LogManager"/>
+        /// to their constructor.
+        /// </note>
         /// </summary>
         public static bool GlobalLogging = true;
 
@@ -615,6 +621,11 @@ namespace Neon.Service
         /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
         /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
         /// </param>
+        /// <param name="logFilter">
+        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+        /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
         /// <param name="healthFolder">
         /// <para>
         /// Optionally specifies the folder path where the service will maintain the <b>health-status</b>
@@ -654,11 +665,12 @@ namespace Neon.Service
         /// within the <see cref="ServiceMap"/>.
         /// </exception>
         public NeonService(
-            string      name, 
-            string      version                = null,
-            string      healthFolder           = null,
-            ServiceMap  serviceMap             = null,
-            string      terminationMessagePath = null)
+            string                  name, 
+            string                  version                = null,
+            Func<LogEvent, bool>    logFilter              = null,
+            string                  healthFolder           = null,
+            ServiceMap              serviceMap             = null,
+            string                  terminationMessagePath = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -695,7 +707,7 @@ namespace Neon.Service
             // fail with a [NullReferenceException].  Note that we don't recommend
             // logging from withing the constructor.
 
-            LogManager = new LogManager(parseLogLevel: false, version: this.Version);
+            LogManager = new LogManager(parseLogLevel: false, version: this.Version, logFilter: logFilter);
 
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
@@ -1106,19 +1118,22 @@ namespace Neon.Service
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the log manager.
+            // Initialize the log manager, when one isn't already assigned.
 
-            if (GlobalLogging)
+            if (LogManager == null)
             {
-                LogManager          = global::Neon.Diagnostics.LogManager.Default;
-                LogManager.Version = Version;
-            }
-            else
-            {
-                LogManager = new LogManager(parseLogLevel: false, version: this.Version);
-            }
+                if (GlobalLogging)
+                {
+                    LogManager = global::Neon.Diagnostics.LogManager.Default;
+                    LogManager.Version = Version;
+                }
+                else
+                {
+                    LogManager = new LogManager(parseLogLevel: false, version: this.Version);
+                }
 
-            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+                LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+            }
 
             Log = LogManager.GetLogger();
 

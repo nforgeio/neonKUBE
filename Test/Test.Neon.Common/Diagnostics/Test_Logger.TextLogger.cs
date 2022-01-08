@@ -91,9 +91,67 @@ namespace TestCommon
         }
 
         [Fact]
-        public void Verify_TextLogger_Filtered()
+        public void Verify_TextLogger_Filtered_ViaManager()
         {
-            // Verify that we can configure and use the [TestLogger].
+            // Verify that we can configure and use the [TestLogger] specified by the test manager.
+
+            var logFilter  = new Func<LogEvent, bool>(logEvent => !logEvent.Message.Contains("FILTER ME!"));
+            var logManager = new LogManager(logFilter: logFilter);
+
+            Assert.NotNull(logManager);
+
+            try
+            {
+                // Configure the log manager to use [TextLogger] loggers while redirecting
+                // the output to a local [StringWriter].
+
+                var logBuilder = new StringBuilder();
+                var logWriter  = new StringWriter(logBuilder);
+
+                logManager.LoggerCreator =
+                    (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
+                    {
+                        return new TextLogger(manager, module, logWriter, contextId, logFilter, isLogEnabledFunc);
+                    };
+
+                logManager.EmitIndex = true;
+
+                logBuilder.Clear();
+                Assert.Empty(logBuilder.ToString());
+
+                var log = logManager.GetLogger();
+
+                // Log some events and verify.
+
+                log.LogInfo("information");
+                log.LogError("error");
+                log.LogInfo("information: FILTER ME!");
+                log.LogError("error: FILTER ME!");
+
+                var lines = SplitLines(logBuilder);
+
+                Assert.Equal(2, lines.Length);
+
+                Assert.Contains("[INFO]", lines[0]);
+                Assert.Contains("[index:1]", lines[0]);
+                Assert.Contains("information", lines[0]);
+
+                Assert.Contains("[ERROR]", lines[1]);
+                Assert.Contains("[index:2]", lines[1]);
+                Assert.Contains("error", lines[1]);
+            }
+            finally
+            {
+                // Reset the log manager so we don't impact other test cases.
+
+                logManager.Reset();
+            }
+        }
+
+        [Fact]
+        public void Verify_TextLogger_Filtered_ViaCreator()
+        {
+            // Verify that we can configure and use the [TestLogger] specified in the CreateLogger() call.
 
             var logManager = LogManager.Default;
 
@@ -105,7 +163,7 @@ namespace TestCommon
                 // the output to a local [StringWriter].
 
                 var logBuilder = new StringBuilder();
-                var logWriter  = new StringWriter(logBuilder);
+                var logWriter = new StringWriter(logBuilder);
 
                 logManager.LoggerCreator =
                     (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
