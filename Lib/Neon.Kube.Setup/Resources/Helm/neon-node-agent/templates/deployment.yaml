@@ -31,6 +31,11 @@ spec:
       serviceAccountName: neon-node-agent
       tolerations:
       - operator: Exists
+      volumes:
+      - name: host
+        hostPath:
+          path: /
+          type: Directory
       containers:
       - name: neon-node-agent
         env:
@@ -45,6 +50,11 @@ spec:
             name: neon-node-agent-webhook
         image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext: 
+          privileged: true
+        volumeMounts:
+        - name: host
+          mountPath: /mnt/host
         startupProbe:
           exec:
             command:

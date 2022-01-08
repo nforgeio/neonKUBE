@@ -295,6 +295,8 @@ spec:
                 await InstallEtcdAsync(controller, master);
             }
 
+            await InstallNodeAgentAsync(controller, master);
+            await InstallClusterOperatorAsync(controller, master);
             await InstallPrometheusAsync(controller, master);
             await InstallCertManagerAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
@@ -310,11 +312,6 @@ spec:
             await SetupGrafanaAsync(controller, master);
             await InstallHarborAsync(controller, master);
             await InstallMonitoringAsync(controller);
-
-            // Install our custom operators.
-
-            await InstallNodeAgentAsync(controller, master);
-            await InstallClusterOperatorAsync(controller, master);
         }
 
         /// <summary>

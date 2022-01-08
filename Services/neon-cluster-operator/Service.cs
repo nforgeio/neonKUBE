@@ -70,6 +70,20 @@ namespace NeonClusterOperator
             // this and will use the termination signal instead to exit.
 
             _ = Host.CreateDefaultBuilder()
+                    .ConfigureAppConfiguration(
+                        (hostingContext, config) =>
+                        {
+                            // $note(jefflill): 
+                            //
+                            // The .NET runtime watches the entire file system for configuration
+                            // changes which can cause real problems on Linux.  We're working around
+                            // this by removing all configuration sources which we aren't using
+                            // anyway for Kubernetes apps.
+                            //
+                            // https://github.com/nforgeio/neonKUBE/issues/1390
+
+                            config.Sources.Clear();
+                        })
                     .ConfigureLogging(
                         logging =>
                         {

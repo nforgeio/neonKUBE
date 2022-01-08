@@ -16,7 +16,8 @@
 
   	<!-- Write generated installation YAML to an git-ignored folder -->
 
-	  <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

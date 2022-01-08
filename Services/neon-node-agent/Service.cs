@@ -75,9 +75,23 @@ namespace NeonNodeAgent
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when to exit.
+            // this and will use the termination signal to exit.
 
             _ = Host.CreateDefaultBuilder()
+                    .ConfigureAppConfiguration(
+                        (hostingContext, config) =>
+                        {
+                            // $note(jefflill): 
+                            //
+                            // The .NET runtime watches the entire file system for configuration
+                            // changes which can cause real problems on Linux.  We're working around
+                            // this by removing all configuration sources which we aren't using
+                            // anyway for Kubernetes apps.
+                            //
+                            // https://github.com/nforgeio/neonKUBE/issues/1390
+
+                            config.Sources.Clear();
+                        })
                     .ConfigureLogging(
                         logging =>
                         {
