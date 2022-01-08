@@ -41,11 +41,11 @@ namespace NeonNodeAgent
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="entity">The new entity.</param>
+        /// <param name="resource">The new entity.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry entity)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry resource)
         {
-            log.LogInfo($"RECONCILE: {entity.Name()}");
+            log.LogInfo($"RECONCILE: {resource.Name()}");
 
             await Task.CompletedTask;
 
@@ -55,11 +55,11 @@ namespace NeonNodeAgent
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="entity">The updated entity.</param>
+        /// <param name="resource">The updated entity.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry entity)
+        public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry resource)
         {
-            log.LogInfo($"MODIFIED: {entity.Name()}");
+            log.LogInfo($"MODIFIED: {resource.Name()}");
 
             await Task.CompletedTask;
 
@@ -69,11 +69,11 @@ namespace NeonNodeAgent
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="entity">The deleted entity.</param>
+        /// <param name="resource">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1ContainerRegistry entity)
+        public async Task DeletedAsync(V1ContainerRegistry resource)
         {
-            log.LogInfo($"DELETED: {entity.Name()}");
+            log.LogInfo($"DELETED: {resource.Name()}");
 
             await Task.CompletedTask;
         }
