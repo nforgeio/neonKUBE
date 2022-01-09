@@ -81,7 +81,7 @@ namespace Neon.Kube.Operator
         /// <para>
         /// Call this when your controller receives a <b>reconciled</b> event, passing the
         /// resource.  This method adds the resource to the collection if it  doesn't already 
-        /// exist.  Operators can a <c>true</c> result to detect when the collection has 
+        /// exist.  Operators can use a <c>true</c> result to detect when the collection has 
         /// changed and take appropriate actions.
         /// </para>
         /// <para>
@@ -95,8 +95,9 @@ namespace Neon.Kube.Operator
         /// exist, after the resource was added.
         /// </param>
         /// <returns>
-        /// <c>true</c> when the resource wasn't already in the collection and was added, 
-        /// indicating that the collection has changed.
+        /// <c>true</c> when the resource wasn't already in the collection and was added or if
+        /// the resource has been changed.  Operators can use a <c>true</c> result to determine
+        /// when actions need to be taken.
         /// </returns>
         public bool Reconciled(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null)
         {
@@ -104,9 +105,12 @@ namespace Neon.Kube.Operator
 
             lock (this)
             {
-                if (Contains(resource.Metadata.Name))
+                if (TryGetResource(resource.Metadata.Name, out var existing))
                 {
-                    return false;
+                    // Return TRUE if the existing resource is different from the new one.
+                    // We're going to use the metadata generation field to detect changes.
+
+                    return resource.Metadata.Generation != existing.Metadata.Generation;
                 }
 
                 resources[resource.Metadata.Name] = resource;

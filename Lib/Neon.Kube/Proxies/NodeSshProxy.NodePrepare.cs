@@ -1096,6 +1096,7 @@ $@"
 prefix   = ""{registry.Prefix}""
 insecure = {NeonHelper.ToBoolString(registry.Insecure)}
 blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
+location = ""{registry.Prefix}""
 ");
 
                 if (!string.IsNullOrEmpty(registry.Location))

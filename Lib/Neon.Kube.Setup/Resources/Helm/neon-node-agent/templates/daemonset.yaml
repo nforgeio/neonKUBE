@@ -29,6 +29,7 @@ spec:
         kubectl.kubernetes.io/default-container: neon-node-agent
     spec:
       serviceAccountName: neon-node-agent
+      hostPID: true
       tolerations:
       - operator: Exists
       volumes:

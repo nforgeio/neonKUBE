@@ -69,8 +69,7 @@ namespace NeonNodeAgent
 
         private static readonly INeonLogger                             log             = LogManager.Default.GetLogger<ContainerRegistryController>();
         private static readonly ResourceManager<V1ContainerRegistry>    resourceManager = new ResourceManager<V1ContainerRegistry>();
-        private static readonly string                                  configPath      = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
-        private static readonly string                                  pkillPath       = LinuxPath.Combine(Program.HostMount, "usr/bin/pkill");
+        private static readonly string                                  configMountPath = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -133,19 +132,16 @@ namespace NeonNodeAgent
         /// <param name="registries">The current registry configurations.</param>
         private void UpdateContainerRegistries(IEnumerable<V1ContainerRegistry> registries)
         {
-log.LogInfo($"UpdateContainerRegistries: 0");   // $debug(jefflill): DELETE THESE!
             var sbRegistryConfig   = new StringBuilder();
             var searchRegistries   = registries.Where(registry => registry.Spec.SearchOrder > 0);
             var sbSearchRegistries = new StringBuilder();
 
             // Specify any unqualified search registries.
 
-log.LogInfo($"UpdateContainerRegistries: 1");
             foreach (var registry in searchRegistries.OrderBy(registry => registry.Spec.SearchOrder))
             {
                 sbSearchRegistries.AppendWithSeparator($"\"{registry.Spec.Prefix}\"", ", ");
             }
-log.LogInfo($"UpdateContainerRegistries: 2");
 
             sbRegistryConfig.Append(
 $@"unqualified-search-registries = [{sbSearchRegistries}]
@@ -162,7 +158,6 @@ blocked  = false
 location = ""{KubeConst.LocalClusterRegistry}""
 ");
 
-log.LogInfo($"UpdateContainerRegistries: 3");
             // Specify any custom upstream registries.
 
             foreach (var registry in registries)
@@ -173,6 +168,7 @@ $@"
 prefix   = ""{registry.Spec.Prefix}""
 insecure = {NeonHelper.ToBoolString(registry.Spec.Insecure)}
 blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
+location = ""{registry.Spec.Prefix}""
 ");
 
                 if (!string.IsNullOrEmpty(registry.Spec.Location))
@@ -181,21 +177,16 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 }
             }
 
-log.LogInfo($"UpdateContainerRegistries: 4");
             // Convert the generated config to Linux line endings and then compare the new
             // config against what's already configured on the host node.  We'll rewrite the
-            // host file and then signal CRI-O reload its config when the files differ.
+            // host file and then signal CRI-O to reload its config when the files differ.
 
             var newConfig = NeonHelper.ToLinuxLineEndings(sbRegistryConfig.ToString());
-log.LogInfo($"UpdateContainerRegistries: 5\r\n{newConfig}");
 
-            if (File.ReadAllText(configPath) != newConfig)
+            if (File.ReadAllText(configMountPath) != newConfig)
             {
-log.LogInfo($"UpdateContainerRegistries: 6");
-                File.WriteAllText(configPath, newConfig);
-log.LogInfo($"UpdateContainerRegistries: 7");
-                NeonHelper.ExecuteCapture(pkillPath, new object[] { "-HUP", "crio" }).EnsureSuccess();
-log.LogInfo($"UpdateContainerRegistries: 8");
+                File.WriteAllText(configMountPath, newConfig);
+                Program.HostExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
             }
         }
     }
