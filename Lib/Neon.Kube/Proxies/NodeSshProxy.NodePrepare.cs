@@ -1040,70 +1040,32 @@ sysctl --system
             //-----------------------------------------------------------------
             // Generate the container registry config file contents for:
             //
-            //      /etc/containers/registries.conf
+            //      /etc/containers/registries.conf.d/00-neon-cluster.conf
             //
-            // We'll add this to the installtion script below.
+            // NOTE: We're only generating the reference to the built-in local
+            //       Harbor registry here.  Any additional registries will be
+            //       configured during cluster setup as custom [ContainerRegistry]
+            //       resources to be configured by the [neon-node-agent].
+            //
+            // We'll add this to the installation script below.
 
             // $hack(jefflill):
             //
             // [cluster] will be NULL when preparing a node image so we'll set the
             // default here and this will be reconfigured during cluster setup.
 
-            var sbRegistryConfig   = new StringBuilder();
-            var searchRegistries   = cluster?.Definition?.Registry.SearchRegistries ?? new RegistryOptions().SearchRegistries;
-            var registries         = cluster?.Definition?.Registry.Registries ?? new List<Registry>();
-            var sbSearchRegistries = new StringBuilder();
-
-            // Specify any unqualified search registries.
-
-            foreach (var registry in searchRegistries)
-            {
-                if (string.IsNullOrEmpty(registry))
-                {
-                    continue;
-                }
-
-                sbSearchRegistries.AppendWithSeparator($"\"{registry}\"", ", ");
-            }
-
-            sbRegistryConfig.Append(
-$@"unqualified-search-registries = [{sbSearchRegistries}]
-");
-
-            // Specify the built-in cluster registry.
+            var sbRegistryConfig = new StringBuilder();
 
             sbRegistryConfig.Append(
 $@"
+unqualified-search-registries = []
+
 [[registry]]
 prefix   = ""{KubeConst.LocalClusterRegistry}""
 insecure = true
 blocked  = false
 location = ""{KubeConst.LocalClusterRegistry}""
 ");
-
-            // Specify any custom upstream registry configurations.
-
-            foreach (var registry in registries)
-            {
-                if (registry == null)
-                {
-                    continue;
-                }
-
-                sbRegistryConfig.Append(
-$@"
-[[registry]]
-prefix   = ""{registry.Prefix}""
-insecure = {NeonHelper.ToBoolString(registry.Insecure)}
-blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
-location = ""{registry.Prefix}""
-");
-
-                if (!string.IsNullOrEmpty(registry.Location))
-                {
-                    sbRegistryConfig.AppendLine($"location = \"{registry.Location}\"");
-                }
-            }
 
             //-----------------------------------------------------------------
             // Install and configure CRI-O.
