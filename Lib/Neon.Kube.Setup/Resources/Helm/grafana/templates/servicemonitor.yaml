@@ -1,3 +1,4 @@
+{{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -6,7 +7,7 @@ metadata:
 spec:
   endpoints:
     - targetPort: 3001
-      interval: {{ .Values.metrics.interval }}
+      interval: {{ .Values.serviceMonitor.interval }}
   jobLabel: grafana
   namespaceSelector:
     matchNames:
@@ -14,3 +15,4 @@ spec:
   selector:
     matchLabels:
       app: grafana
+{{- end }}

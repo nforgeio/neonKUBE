@@ -78,7 +78,7 @@ namespace NeonSsoSessionProxy
 
             var configFile = NeonSsoSessionProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
             var config     = NeonHelper.YamlDeserialize<dynamic>(File.ReadAllText(configFile));
-            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:80"));
+            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"));
             
             // Load in each of the clients from the Dex config into the client.
 
@@ -134,6 +134,11 @@ namespace NeonSsoSessionProxy
                 app.UseDeveloperExceptionPage();
             }
             app.UseRouting();
+            app.UseHttpMetrics(options =>
+            {
+                // This identifies the page when using Razor Pages.
+                options.AddRouteParameter("page");
+            });
             app.UseSsoSessionMiddleware();
             app.UseEndpoints(endpoints =>
             {
@@ -141,7 +146,6 @@ namespace NeonSsoSessionProxy
                 endpoints.MapMetrics();
                 endpoints.MapControllers();
             });
-            app.UseHttpMetrics();
         }
     }
 }

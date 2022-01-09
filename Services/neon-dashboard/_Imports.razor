@@ -5,12 +5,15 @@
 
 @using System.Net.Http
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Http
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
+
+@using Neon.Diagnostics
 
 @using NeonDashboard
 @using NeonDashboard.Pages
@@ -21,6 +24,9 @@
 @using Blazor.Analytics.Components
 
 @inject AppState AppState
+@inject NeonDashboardService NeonDashboardService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 @inject Blazor.Analytics.IAnalytics Analytics
+@inject IHttpContextAccessor httpContextAccessor
+@inject INeonLogger neonLogger

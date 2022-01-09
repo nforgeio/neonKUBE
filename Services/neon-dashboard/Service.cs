@@ -21,6 +21,7 @@ using Neon.Service;
 using Neon.Common;
 using Neon.Kube;
 
+using Prometheus;
 using Prometheus.DotNetRuntime;
 
 namespace NeonDashboard
@@ -39,12 +40,24 @@ namespace NeonDashboard
         public const string sessionCookieName = ".NeonKUBE.Dashboard.Session.Cookie";
 
         /// <summary>
+        /// Dashboard view counter.
+        /// </summary>
+        public static Counter DashboardViewCounter = Metrics.CreateCounter(
+            "neondashboard_external_dashboard_view", 
+            "External dashboard views.",
+            new CounterConfiguration
+            {
+                LabelNames = new[] { "dashboard" }
+            });
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public NeonDashboardService(string name)
              : base(name, version: KubeVersions.NeonKube)
         {
+            
         }
 
         /// <inheritdoc/>
@@ -65,33 +78,19 @@ namespace NeonDashboard
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
-
-            if (!NeonHelper.IsDevWorkstation)
-            {
-                MetricsOptions.Mode         = MetricsMode.Scrape;
-                MetricsOptions.Path         = "/metrics";
-                MetricsOptions.Port         = 11001;
-                MetricsOptions.GetCollector =
-                    () =>
-                    {
-                        return DotNetRuntimeStatsBuilder
-                            .Default()
-                            .StartCollecting();
-                    };
-            }
-
+            
             // Start the web service.
 
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, 11000))
+                .UseKestrel(options => options.Listen(IPAddress.Any, 80))
                 .ConfigureServices(services => services.AddSingleton(typeof(NeonDashboardService), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:11000");
+            Log.LogInfo($"Listening on {IPAddress.Any}:80");
 
             // Indicate that the service is ready for business.
 

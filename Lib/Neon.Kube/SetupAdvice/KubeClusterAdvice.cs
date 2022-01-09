@@ -403,10 +403,30 @@ namespace Neon.Kube
         // Instance members
 
         /// <summary>
+        /// Specifies whether cluster metrics are enabled by default.
+        /// </summary>
+        public bool? MetricsEnabled = true;
+
+        /// <summary>
         /// Specifies the cluster default Metrics scrape interval.
         /// </summary>
-        public  string                                  MetricsInterval = "60s";
-        
+        public string MetricsInterval = "60s";
+
+        /// <summary>
+        /// Specifies the cluster default Metrics quota.
+        /// </summary>
+        public string MetricsQuota = "10Gi";
+
+        /// <summary>
+        /// Specifies the cluster default Logs quota.
+        /// </summary>
+        public string LogsQuota = "10Gi";
+
+        /// <summary>
+        /// Specifies the cluster default Traces quota.
+        /// </summary>
+        public string TracesQuota = "10Gi";
+
         private Dictionary<string, KubeServiceAdvice>   services   = new Dictionary<string, KubeServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                    isReadOnly = false;
 

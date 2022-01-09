@@ -21,8 +21,7 @@ spec:
   jobLabel: {{ template "neon-dashboard.fullname" . }}
   selector:
     matchLabels:
-      app: {{ template "neon-dashboard.name" . }}
-      release: {{ .Release.Name }}
+    {{- include "neon-dashboard.labels" . | nindent 6 }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

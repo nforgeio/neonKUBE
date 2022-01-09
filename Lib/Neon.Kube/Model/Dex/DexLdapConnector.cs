@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexConnector.cs
+// FILE:	    DexLdapConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,38 +30,25 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    public class DexConnector
+    public class DexLdapConnector : IDexConnector
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexConnector()
+        public DexLdapConnector()
         {
+            Type = DexConnectorType.Ldap;
         }
 
-        /// <summary>
-        /// Connector ID
-        /// </summary>
-        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
+        /// <inheritdoc/>
         public string Id { get; set; }
 
-        /// <summary>
-        /// Connector type. 
-        /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
-        public DexConnectorType Type { get; set; }
 
-        /// <summary>
-        /// Connector name.
-        /// information.
-        /// </summary>
-        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
+        /// <inheritdoc/>
         public string Name { get; set; }
+
+        /// <inheritdoc/>
+        public DexConnectorType Type { get; set; }
 
         /// <summary>
         /// Connector specific config.
@@ -70,6 +57,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, object> Config { get; set; }
+        public DexLdapConfig Config { get; set; }
     }
 }

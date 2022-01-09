@@ -271,5 +271,6 @@ readinessProbe:
   failureThreshold: 10
   periodSeconds: 10
 
-metrics:
+serviceMonitor:
+  enabled: true
   interval: 60s

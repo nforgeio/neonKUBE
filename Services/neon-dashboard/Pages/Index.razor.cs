@@ -33,7 +33,6 @@ namespace NeonDashboard.Pages
         public string CurrentDashboard { get; set; }
 
         public Index()
-            
         {
         }
 
@@ -53,6 +52,11 @@ namespace NeonDashboard.Pages
             }
 
             AppState.CurrentDashboard = CurrentDashboard;
+
+            if (!string.IsNullOrEmpty(CurrentDashboard))
+            {
+                NeonDashboardService.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
+            }
 
             AppState.NotifyDashboardChanged();
 
