@@ -42,12 +42,12 @@ using Npgsql;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.Resources;
 using Neon.Postgres;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Net;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Neon.Kube
 {
@@ -259,6 +259,8 @@ spec:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -295,8 +297,6 @@ spec:
                 await InstallEtcdAsync(controller, master);
             }
 
-            await InstallNodeAgentAsync(controller, master);
-            await InstallClusterOperatorAsync(controller, master);
             await InstallPrometheusAsync(controller, master);
             await InstallCertManagerAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
@@ -312,6 +312,15 @@ spec:
             await SetupGrafanaAsync(controller, master);
             await InstallHarborAsync(controller, master);
             await InstallMonitoringAsync(controller);
+
+            // Install the cluster operators and any required custom resources.
+            //
+            // NOTE: The neonKUBE CRDs are installed with [neon-cluster-operator]
+            //       so we need to install that first.
+
+            await InstallClusterOperatorAsync(controller, master);
+            await InstallNodeAgentAsync(controller, master);
+            await InstallContainerRegistryResources(controller);
         }
 
         /// <summary>
@@ -447,6 +456,8 @@ mode: {kubeProxyMode}");
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartPodsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -1216,7 +1227,7 @@ done
                                             // Exceptions like this happen when a API server connection can't be established
                                             // because the server isn't running or ready.
 
-                                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
+                                        if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
                                         {
                                             return true;
                                         }
@@ -1226,19 +1237,19 @@ done
                                             return true;
                                         }
 
-                                            // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
+                                        // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
-                                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
+                                        if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
                                         {
                                             return true;
                                         }
 
                                         return false;
                                     },
-                                            maxAttempts:          int.MaxValue,
-                                            initialRetryInterval: TimeSpan.FromSeconds(1),
-                                            maxRetryInterval:     TimeSpan.FromSeconds(5),
-                                            timeout:              TimeSpan.FromMinutes(5));
+                                    maxAttempts:          int.MaxValue,
+                                    initialRetryInterval: TimeSpan.FromSeconds(1),
+                                    maxRetryInterval:     TimeSpan.FromSeconds(5),
+                                    timeout:              TimeSpan.FromMinutes(5));
 
                         controller[KubeSetupProperty.K8sClient] = k8sClient;
                     }
@@ -1374,6 +1385,11 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureMetadataAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
             node.InvokeIdempotent("cluster-metadata",
                 () =>
                 {
@@ -1496,6 +1512,8 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -1601,6 +1619,8 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2036,6 +2056,8 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2056,6 +2078,8 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeProblemDetectorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2091,6 +2115,8 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOpenEbsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2168,6 +2194,8 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task DeployOpenEbsWithcStor(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
@@ -2303,6 +2331,8 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task WaitForOpenEbsReady(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/openebs-ready",
@@ -2340,6 +2370,8 @@ subjects:
             string                          name,
             bool                            istioInjectionEnabled = true)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2378,6 +2410,13 @@ subjects:
             int                             replicaCount = 3,
             string                          storagePool  = "default")
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
+
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
@@ -2426,6 +2465,12 @@ $@"- name: ReplicaCount
             NodeSshProxy<NodeDefinition>    master,
             string                          name)
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
@@ -2472,6 +2517,13 @@ $@"- name: StorageType
             string                          cstorPoolCluster = "cspc-stripe",
             int                             replicaCount     = 3)
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
+
             var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
@@ -2518,6 +2570,13 @@ $@"- name: StorageType
             string                          name,
             int                             replicaCount = 3)
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentException>(replicaCount > 0, nameof(replicaCount));
+
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             switch (cluster.Definition.OpenEbs.Engine)
@@ -2556,6 +2615,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2608,6 +2669,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2667,6 +2730,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2696,6 +2761,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCortexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2811,6 +2878,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+            
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2869,6 +2938,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallTempoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2921,6 +2992,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubeStateMetricsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2958,6 +3031,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallReloaderAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2995,6 +3070,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -3160,6 +3237,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -3385,8 +3464,6 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMonitoringAsync(ISetupController controller)
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
             await SyncContext.ClearAsync;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -3415,6 +3492,8 @@ $@"- name: StorageType
         /// <remarks>The tracking <see cref="Task"/>.</remarks>
         public static async Task InstallJaegerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -3860,6 +3939,32 @@ $@"- name: StorageType
         }
 
         /// <summary>
+        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallContainerRegistryResources(ISetupController controller)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            if (readyToGoMode == ReadyToGoMode.Prepare)
+            {
+                // Defer registry configuration until full cluster setup
+
+                return;
+            }
+
+            var k8s = GetK8sClient(controller);
+
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <summary>
         /// Creates required namespaces.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -3867,6 +3972,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -3889,6 +3996,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4128,6 +4237,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSsoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4150,6 +4261,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallDexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4222,6 +4335,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNeonSsoProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4286,6 +4401,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGlauthAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4337,6 +4454,8 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOauth2ProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -4379,6 +4498,8 @@ $@"- name: StorageType
         /// <returns>The connection string.</returns>
         public static async Task<string> GetSystemDatabaseConnectionStringAsync(ISetupController controller)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var k8s        = GetK8sClient(controller);
@@ -4411,13 +4532,18 @@ $@"- name: StorageType
         /// <param name="password">Optionally specifies the password.</param>
         /// <returns>The tracking <see cref="Task"/>The tracking <see cref="Task"/>.</returns>
         private static async Task CreateSystemDatabaseAsync(
-            ISetupController controller, 
-            NodeSshProxy<NodeDefinition> master, 
-            string name, 
-            string username, 
-            string password = null)
+            ISetupController                controller, 
+            NodeSshProxy<NodeDefinition>    master, 
+            string                          name, 
+            string                          username, 
+            string                          password = null)
         {
+            await SyncContext.ClearAsync;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
             var k8s           = GetK8sClient(controller);
             var workers       = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-worker");
@@ -4609,7 +4735,12 @@ SQL"
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task SetupGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            var k8s = GetK8sClient(controller);
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s = GetK8sClient(controller); Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             // Create the Grafana database within the system database deployment.
 
@@ -4676,11 +4807,17 @@ SQL"
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateMinioBucketAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, string name)
         {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires < ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
-            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-            var k8s = GetK8sClient(controller);
-            var minioPod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
+            var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+            var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+            var k8s         = GetK8sClient(controller);
+            var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
 
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
