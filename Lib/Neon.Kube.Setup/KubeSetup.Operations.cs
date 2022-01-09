@@ -467,22 +467,6 @@ mode: {kubeProxyMode}");
             var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s                = GetK8sClient(controller);
 
-            //await master.InvokeIdempotentAsync("ready-to-go/cluster-domain",
-            //    async () =>
-            //    {
-            //        controller.LogProgress(master, verb: "ready-to-go", message: "set cluster domain");
-
-            //        if (IPAddress.TryParse(clusterIp, out var ip))
-            //        {
-            //            using (var jsonClient = new JsonClient())
-            //            {
-            //                jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
-            //                clusterLogin.ClusterDefinition.Domain = await jsonClient.GetAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
-            //                clusterLogin.Save();
-            //            }
-            //        }
-            //    });
-
             await master.InvokeIdempotentAsync("ready-to-go/kube-apiserver-running-config",
                 async () =>
                 {
@@ -1648,7 +1632,7 @@ done
                 await master.InvokeIdempotentAsync("ready-to-go/neoncluster-gateway",
                 async () =>
                 {
-                    var gateway      = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "gateways", "neoncluster-gateway")).ToObject<Gateway>();
+                    var gateway = await k8s.GetNamespacedCustomObjectAsync<Gateway>(KubeNamespaces.NeonIngress, "neoncluster-gateway");
                     var regexPattern = "[a-z0-9]+.neoncluster.io";
                     var servers      = new List<Server>();
 
@@ -1663,7 +1647,7 @@ done
                         server.Hosts = hosts;
                     }
 
-                    await k8s.ReplaceNamespacedCustomObjectAsync(gateway, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "gateways", "neoncluster-gateway");
+                    await k8s.ReplaceNamespacedCustomObjectAsync<Gateway>(gateway, gateway.Namespace(), gateway.Name());
                 });
             }
         }
@@ -1764,7 +1748,7 @@ done
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
 
-                        var cert = ((JObject)await k8s.GetNamespacedCustomObjectAsync("cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate")).ToObject<Certificate>();
+                        var cert = await k8s.GetNamespacedCustomObjectAsync<Certificate>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
 
                         cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
                         cert.Spec.DnsNames   = new List<string>()
@@ -1773,7 +1757,7 @@ done
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(cert, "cert-manager.io", "v1", KubeNamespaces.NeonIngress, "certificates", "neon-cluster-certificate");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<Certificate>(cert, cert.Namespace(), cert.Name());
 
             });
             }
@@ -1911,7 +1895,7 @@ subjects:
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update k8s ingress");
 
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "k8s-dashboard-virtual-service")).ToObject<VirtualService>();
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "k8s-dashboard-virtual-service");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -1919,7 +1903,7 @@ subjects:
                                 $"{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "k8s-dashboard-virtual-service");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
             }
         }
@@ -2056,8 +2040,8 @@ subjects:
                     async () =>
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update kiali ingress");
-
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "kiali-dashboard-virtual-service")).ToObject<VirtualService>();
+                        
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "kiali-dashboard-virtual-service");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -2065,7 +2049,7 @@ subjects:
                                 $"{ClusterDomain.Kiali}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "kiali-dashboard-virtual-service");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/kiali-crd-config",
@@ -2073,7 +2057,7 @@ subjects:
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update kiali crd config");
 
-                        var kiali = ((JObject)await k8s.GetNamespacedCustomObjectAsync("kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali")).ToObject<dynamic>();
+                        var kiali = ((dynamic)await k8s.GetNamespacedCustomObjectAsync("kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali"));
 
                         kiali["spec"]["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
                         kiali["spec"]["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
@@ -2282,8 +2266,8 @@ subjects:
                         }
                     };
 
-                    var blockDevices = ((JObject)await k8s.ListNamespacedCustomObjectAsync("openebs.io", "v1alpha1", KubeNamespaces.NeonStorage, "blockdevices")).ToObject<V1CStorBlockDeviceList>();
-
+                    var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDeviceList>(KubeNamespaces.NeonStorage);
+                    
                     foreach (var node in cluster.Definition.Nodes)
                     {
                         if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
@@ -2325,7 +2309,7 @@ subjects:
                         }
                     }
 
-                    k8s.CreateNamespacedCustomObject(cStorPoolCluster, "cstor.openebs.io", "v1", KubeNamespaces.NeonStorage, "cstorpoolclusters");
+                    await k8s.CreateNamespacedCustomObjectAsync<V1CStorPoolCluster>(cStorPoolCluster, KubeNamespaces.NeonStorage);
                 });
 
             await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
@@ -3202,7 +3186,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update grafana ingress");
 
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service")).ToObject<VirtualService>();
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "grafana-dashboard-virtual-service");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -3210,7 +3194,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Grafana}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "grafana-dashboard-virtual-service");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-crd-config",
@@ -3218,7 +3202,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update grafana crd config");
 
-                        var grafana = ((JObject)await k8s.GetNamespacedCustomObjectAsync("integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana")).ToObject<dynamic>();
+                        var grafana = (dynamic)await k8s.GetNamespacedCustomObjectAsync("integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana");
                         
                         grafana["spec"]["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
                         grafana["spec"]["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
@@ -3428,7 +3412,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update minio ingress");
 
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "minio-operator-dashboard-virtual-service")).ToObject<VirtualService>();
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "minio-operator-dashboard-virtual-service");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -3436,7 +3420,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Minio}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "minio-operator-dashboard-virtual-service");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
             }
         }
@@ -3891,7 +3875,7 @@ $@"- name: StorageType
                 await master.InvokeIdempotentAsync($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/harbor-ingress",
                     async () =>
                     {
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "harbor-virtual-service")).ToObject<VirtualService>();
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "harbor-virtual-service");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -3901,7 +3885,7 @@ $@"- name: StorageType
                                 KubeConst.LocalClusterRegistry
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "harbor-virtual-service");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
             }
 
@@ -4433,7 +4417,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso ingress");
 
-                        var virtualService = ((JObject)await k8s.GetNamespacedCustomObjectAsync("networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "neon-sso-session-proxy")).ToObject<VirtualService>();
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "neon-sso-session-proxy");
 
                         virtualService.Spec.Hosts =
                             new List<string>()
@@ -4441,7 +4425,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Sso}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync(virtualService, "networking.istio.io", "v1alpha3", KubeNamespaces.NeonIngress, "virtualservices", "neon-sso-session-proxy");
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
