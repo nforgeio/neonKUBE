@@ -13,11 +13,19 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    
-    <!-- Write generated installation YAML to an git-ignored folder -->
+  </PropertyGroup>
 
-    <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+  <PropertyGroup>
+    <!-- Write generated installation YAML to an git-ignored folder -->
+	<!--<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>-->
+		
+	<!-- $debug(jefflill): DELETE THIS AND UNCOMMENT ABOVE -->
+	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+	<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+	<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -59,7 +67,7 @@
   
   The [neon-build download-const-uri] obtains the URI for the manifest from:
   
-      assembly:   Neon.Kube.dll (netstandard2.1)
+      assembly:   Neon.Kube.dll
       constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
   
   We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
@@ -71,7 +79,7 @@
   -->
 
   <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\netstandard2.1\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
   </Target>
  
   <!-- 

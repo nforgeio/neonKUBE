@@ -17,7 +17,19 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<PropertyGroup>
+		<!-- 
+    We need to prevent the KubeOps build targets from trying to call the program
+    entrypoint to generate the CRDs and other installation related files.
+    -->
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
@@ -78,9 +90,20 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+	
+	<!-- 
+	$debug(jefflill): RESTORE THIS AFTER FIGURING OUT WHY THIS IS HANGING
+	
+	This is probably due to KubeOps trying to call the generator command.
+	
+	We'll need to change "-x-no-cmd" below back to a normal option since we
+	couldn't comment it out as is.
+	-->
 
-  <Target Name="PubCore" AfterTargets="AfterBuild">
-    <Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+  <!--
+	<Target Name="PubCore" AfterTargets="AfterBuild">
+    <Exec Command="pubcore -x-no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
   </Target>
+	-->
 
 </Project>

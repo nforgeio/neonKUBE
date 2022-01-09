@@ -91,9 +91,10 @@ Follow the steps below to configure a development or test workstation:
 
 12. Install some SDKs:
 
+   * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1) (.NET SDK x64 installer)
    * Install **.NET 5.0 SDK 5.0.403* from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
-   * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
+   * Note: **.NET SDK 6.0.101** is already installed with Visual Studio
 
 13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 

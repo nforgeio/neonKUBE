@@ -97,8 +97,4 @@
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-    <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
-  </ItemGroup>
-
 </Project>

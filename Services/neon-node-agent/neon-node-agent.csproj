@@ -13,12 +13,13 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-
-  	<!-- Write generated installation YAML to an git-ignored folder -->
-
-	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
   </PropertyGroup>
+
+	<PropertyGroup>
+  	<!-- Write generated installation YAML to an git-ignored folder -->
+	  <KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+	  <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants />
