@@ -109,6 +109,26 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 Console.WriteLine($"===========================================================");
                 Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
                 Console.WriteLine($"===========================================================");
+                Console.WriteLine();
+
+                var sbCommandLine = new StringBuilder("pubcore");
+
+                foreach (var arg in args)
+                {
+                    sbCommandLine.Append(' ');
+
+                    if (arg.Contains(' '))
+                    {
+                        sbCommandLine.Append($"\"{arg}\"");
+                    }
+                    else
+                    {
+                        sbCommandLine.Append(arg);
+                    }
+                }
+
+                Console.WriteLine(sbCommandLine.ToString());
+                Console.WriteLine();
 
                 // Look for the [--no-cmd] option and then remove it from the
                 // arguments when present.
