@@ -92,9 +92,9 @@ Follow the steps below to configure a development or test workstation:
 12. Install some SDKs:
 
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
-   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1) (.NET SDK x64 installer)
-   * Install **.NET 5.0 SDK 5.0.403* from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
-   * Note: **.NET SDK 6.0.101** is already installed with Visual Studio
+   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
 
 13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
@@ -112,7 +112,7 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-15. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
+15. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
