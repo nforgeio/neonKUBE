@@ -133,8 +133,8 @@ Follow the steps below to configure a development or test workstation:
 
     * Execute these commands to install Ubuntu-20.04 on WSL2:
     ```
-    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
-    wsl --import Ubuntu-20.04 "%USERPROFILE%\Wsl2" ubuntu.tar
+    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/wsl2/ubuntu-20.04.tar.gz -OutFile ubuntu.tar
+    wsl --import Ubuntu-20.04 "%USERPROFILE%\wsl-Ubuntu" ubuntu.tar
     Remove-Item ubuntu.tar
     wsl --set-default-version 2
     wsl --set-default Ubuntu-20.04
