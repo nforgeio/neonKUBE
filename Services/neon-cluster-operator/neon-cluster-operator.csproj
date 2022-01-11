@@ -17,15 +17,8 @@
 
   <PropertyGroup>
     <!-- Write generated installation YAML to an git-ignored folder -->
-	<!--<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>-->
-		
-	<!-- $debug(jefflill): DELETE THIS AND UNCOMMENT ABOVE -->
+	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
 	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-	<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-	<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
