@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,7 +44,8 @@ namespace Neon.Kube
     /// outbound traffic can be captured by the Proxy. Alternatively, for HTTP services, the application could directly communicate 
     /// with the proxy (e.g., by setting HTTP_PROXY) to talk to these services.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum Resolution
     {
         /// <summary>

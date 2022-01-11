@@ -277,6 +277,8 @@ spec:
 
             cluster.ClearStatus();
 
+            KubeHelper.K8sClientConverterInitialize();
+
             ConfigureKubernetes(controller, master);
             ConfigureFeatureGates(controller, cluster.Masters);
             ConfigureWorkstation(controller, master);

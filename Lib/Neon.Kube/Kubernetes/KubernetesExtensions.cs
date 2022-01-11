@@ -33,6 +33,7 @@ using Newtonsoft.Json;
 using k8s;
 using k8s.Models;
 using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace Neon.Kube
 {
@@ -531,7 +532,7 @@ namespace Neon.Kube
                         pretty,
                         cancellationToken);
 
-            return ((JObject)result).ToObject<T>();
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
 
         /// <summary>
@@ -558,7 +559,7 @@ namespace Neon.Kube
 
             var result = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty);
 
-            return ((JObject)result).ToObject<T>();
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
 
         /// <summary>
@@ -581,7 +582,7 @@ namespace Neon.Kube
 
             var result = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name);
 
-            return ((JObject)result).ToObject<T>();
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
 
         /// <summary>
@@ -610,7 +611,7 @@ namespace Neon.Kube
 
             var result = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager);
 
-            return ((JObject)result).ToObject<T>();
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
     }
 }

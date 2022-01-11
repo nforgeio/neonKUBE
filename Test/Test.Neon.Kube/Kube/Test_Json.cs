@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KeyEncoding.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    Test_Json.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,43 +17,41 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
 using Neon.Common;
-using Neon.Net;
+using Neon.IO;
+using Neon.Kube;
+using Neon.Kube.Xunit;
+using Neon.Xunit;
+using Xunit;
 
-namespace Neon.Kube
+namespace TestKube
 {
-    /// <summary>
-    /// The private key cryptography standards (PKCS) for this certificate's private key to be encoded in. 
-    /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
-    public enum KeyEncoding
+    [Trait(TestTrait.Category, TestArea.NeonKube)]
+    [Collection(TestCollection.NonParallel)]
+    [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
+    public class Test_Json
     {
-        /// <summary>
-        /// PKCS#1
-        /// </summary>
-        [EnumMember(Value = "pkcs1")]
-        PKCS1 = 0,
+        public Test_Json()
+        {
 
-        /// <summary>
-        /// PKCS#8
-        /// </summary>
-        [EnumMember(Value = "pkcs8")]
-        PKCS8
+        }
+        
+        [Fact]
+        public void SerializeEnum()
+        {
+            var serializerOptions = new JsonSerializerOptions();
+
+            serializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
+            var t = DataRaidGroupType.Stripe;
+            string jsonString = JsonSerializer.Serialize(t, serializerOptions);
+        }
     }
 }
