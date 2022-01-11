@@ -141,6 +141,23 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
+17. Enable **WSL2**:
+
+    * Open a **pwsh** console **as administrator** and execute these commands:
+    ```
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    ```
+
+    * Execute these commands to install Ubuntu-20.04 on WSL2:
+    ```
+    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
+    wsl --import Ubuntu-20.04 "%USERPROFILE%\wsl-Ubuntu" ubuntu.tar
+    Remove-Item ubuntu.tar
+    wsl --set-default-version 2
+    wsl --set-default Ubuntu-20.04
+    ```
+
 18. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
