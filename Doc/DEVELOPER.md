@@ -62,46 +62,7 @@ Follow the steps below to configure a development or test workstation:
     powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     ```
 
-8. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
-
-  * Select **all workloads** on the first panel
-  * Select the **Individual Components** tab, search for "git" and check **Git for Windows**
-  * Click **Install** (and take a coffee break)
-  * Apply any pending **Visual Studio updates**
-  * **Close** Visual Studio to install any updates
-  * **NOTE:** You need sign into Visual Studio using a Windows account (like **sally@neonforge.com** for internal developers)
-
-9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
-
-10. Disable **Visual Studio YAML validation:**
-
-    * Start Visual Studio
-    * Select **Tools/Options...**
-    * Navigate to **Text Editor/YAML/General**
-    * Uncheck **YAML validation** at the top of the right panel
-
-11. Configure Visual Studio Plain Text Editor:
-
-    * Start Visual Studio
-    * Select **Tools/Options...**
-    * Navigate to **Text Editor/Plain Text/Tabs**
-    * Set:
-      * **Tab Size** = 2
-      * **Indent Size** = 2
-      * Select **Insert Spaces**
-
-12. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
-
-   ![System Tray](Images/Developer/PythonImports.png?raw=true)
-  
-13. Install some SDKs:
-
-   * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
-   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
-   * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
-   * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
-
-14. Enable **WSL2**:
+8. Enable **WSL2**:
 
     * Open a **pwsh** console **as administrator** and execute these commands:
     ```
@@ -112,16 +73,56 @@ Follow the steps below to configure a development or test workstation:
     * Execute these Powershell commands to install Ubuntu-20.04 on WSL2:
     ```
     Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
-    wsl --import Ubuntu-20.04 "%USERPROFILE%\Wsl2" ubuntu.tar
+    wsl --import Ubuntu-20.04 $env:USERPROFILE ubuntu.tar
     Remove-Item ubuntu.tar
     wsl --set-default-version 2
     wsl --set-default Ubuntu-20.04
     ```
 
-15. Install **Docker for Windows (Stable)** from [here](https://www.docker.com/products/docker-desktop)
+9. Install **Docker for Windows (Stable)** from [here](https://www.docker.com/products/docker-desktop)
 
     * You'll need to create a DockerHub account if you don't already have one.
     * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
+    * **IMPORTANT!** Go to **Settings/Resources/NETWORK** and enable Manual DNS configuration (8.8.8.8)
+
+10. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+
+  * Select **all workloads** on the first panel
+  * Select the **Individual Components** tab, search for "git" and check **Git for Windows**
+  * Click **Install** (and take a coffee break)
+  * Apply any pending **Visual Studio updates**
+  * **Close** Visual Studio to install any updates
+  * **NOTE:** You need sign into Visual Studio using a Windows account (like **sally@neonforge.com** for internal developers)
+
+11. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
+
+12. Disable **Visual Studio YAML validation:**
+
+    * Start Visual Studio
+    * Select **Tools/Options...**
+    * Navigate to **Text Editor/YAML/General**
+    * Uncheck **YAML validation** at the top of the right panel
+
+13. Configure Visual Studio Plain Text Editor:
+
+    * Start Visual Studio
+    * Select **Tools/Options...**
+    * Navigate to **Text Editor/Plain Text/Tabs**
+    * Set:
+      * **Tab Size** = 2
+      * **Indent Size** = 2
+      * Select **Insert Spaces**
+
+14. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
+
+   ![System Tray](Images/Developer/PythonImports.png?raw=true)
+  
+15. Install some SDKs:
+
+   * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
+   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
 
 16. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
@@ -242,7 +243,7 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
+30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this:
 
     https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
