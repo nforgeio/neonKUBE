@@ -70,6 +70,13 @@ namespace NeonClusterOperator
             // this and will use the termination signal instead to exit.
 
             _ = Host.CreateDefaultBuilder()
+                    .ConfigureHostOptions(
+                        options =>
+                        {
+                            // Ensure that the processor terminator and ASP.NET shutdown times match.
+
+                            options.ShutdownTimeout = ProcessTerminator.DefaultMinShutdownTime;
+                        })
                     .ConfigureAppConfiguration(
                         (hostingContext, config) =>
                         {

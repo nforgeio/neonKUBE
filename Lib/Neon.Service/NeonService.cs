@@ -197,24 +197,6 @@ namespace Neon.Service
     /// to open its listening socket on port 80. 
     /// </para>
     /// </note>
-    /// <para><b>DEPLOYMENT</b></para>
-    /// <para>
-    /// <b>IMPORTANT: DO NOT DEPLOY SERVICES TO THE FILE SYSTEM ROOT!</b> 
-    /// </para>
-    /// <para>
-    /// We've seen this cause problems due to .NET CORE trying to watch the entire file system,
-    /// presumably to watch .NET runtime config files or something and we've seen crashes when
-    /// host volumes are mounted into pods on Kubernetes.
-    /// </para>
-    /// <para>
-    /// We recommend that you deploy your service files within a directory holding just
-    /// your service binaries and related content files.
-    /// </para>
-    /// <para>
-    /// For applications deployed as containers, we recommend that you deploy your application
-    /// files to a folder directly under the file system root like <b>/my-app</b> and then
-    /// have your docker entrypoint or entry script execute the application there.
-    /// </para>
     /// <para><b>LOGGING</b></para>
     /// <para>
     /// Each <see cref="NeonService"/> instance maintains its own <see cref="LogManager"/>
@@ -646,6 +628,15 @@ namespace Neon.Service
         /// or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
         /// or containers.  This is a somewhat advanced topic that needs documentation.
         /// </param>
+        /// <param name="gracefulShutdownTimeout">
+        /// Optionally specifies the termination timeout (defaults to <see cref="ProcessTerminator.DefaultGracefulTimeout"/>).  
+        /// See <see cref="ProcessTerminator"/> for more information.
+        /// </param>
+        /// <param name="minShutdownTime">
+        /// Optionally specifies the minimum time to wait before allowing termination to proceed.
+        /// This defaults to <see cref="ProcessTerminator.DefaultMinShutdownTime"/>.  See 
+        /// <see cref="ProcessTerminator"/> for more information.
+        /// </param>
         /// <param name="terminationMessagePath">
         /// <para>
         /// Optionally specifies the path where Kubernetes may write a termination message
@@ -666,11 +657,13 @@ namespace Neon.Service
         /// </exception>
         public NeonService(
             string                  name, 
-            string                  version                = null,
-            Func<LogEvent, bool>    logFilter              = null,
-            string                  healthFolder           = null,
-            ServiceMap              serviceMap             = null,
-            string                  terminationMessagePath = null)
+            string                  version                 = null,
+            Func<LogEvent, bool>    logFilter               = null,
+            string                  healthFolder            = null,
+            ServiceMap              serviceMap              = null,
+            string                  terminationMessagePath  = null,
+            TimeSpan                gracefulShutdownTimeout = default,
+            TimeSpan                minShutdownTime         = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -696,7 +689,7 @@ namespace Neon.Service
             this.Name                   = name;
             this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
-            this.Terminator             = new ProcessTerminator();
+            this.Terminator             = new ProcessTerminator(gracefulShutdownTimeout: gracefulShutdownTimeout, minShutdownTime: minShutdownTime);
             this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
