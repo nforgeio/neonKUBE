@@ -82,8 +82,9 @@ Follow the steps below to configure a development or test workstation:
 9. Install **Docker for Windows (Stable)** from [here](https://www.docker.com/products/docker-desktop)
 
     * You'll need to create a DockerHub account if you don't already have one.
-    * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
-    * **IMPORTANT!** Go to **Settings/Resources/NETWORK** and enable Manual DNS configuration (8.8.8.8)
+    * BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
+    * Go to **Settings/Resources/NETWORK** and enable Manual DNS configuration (8.8.8.8)
+	* Start a command window and use `docker login` to login using your GitHub credentials.
 
 10. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
@@ -251,7 +252,7 @@ Follow the steps below to configure a development or test workstation:
 
 32. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-33. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+33. *Optional:* Maintainers will need to install the **GitHub CLI** from here: https://cli.github.com/
 
 34: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
