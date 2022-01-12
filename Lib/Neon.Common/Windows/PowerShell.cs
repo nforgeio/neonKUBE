@@ -227,14 +227,16 @@ catch [Exception] {{
 
             using (var file = new TempFile(suffix: ".ps1"))
             {
-                // Note that we're hardcoding DEPTH=4.  This seems like a
-                // reasonable limit.  We don't want this to be too large
-                // because often times the objects returned have cycles.
+                // Note that we're hardcoding JSON DEPTH.  This need to 
+                // be constrained because sometimes the objects returned
+                // have cycles.
+
+                const int depth = 4;
 
                 File.WriteAllText(file.Path,
 $@"
 try {{
-    {command} | ConvertTo-Json -Depth 4 -EnumsAsStrings -AsArray
+    {command} | ConvertTo-Json -Depth {depth} -EnumsAsStrings -AsArray
 }}
 catch [Exception] {{
     write-error $_Exception.Message
@@ -254,12 +256,35 @@ catch [Exception] {{
                     throw new PowerShellException(result.AllText);
                 }
 
+                // Powershell 7.1+ may include warning line (grrrr!) when the result is truncated due
+                // to [depth] being too small to capture the entire graph (which may have cycles!).
+                //
+                // The warning goes to STDOUT and there doesn't appear to be a way to disable it.
+                // This is a breaking change that I can't believe the Powershell guys released.
+                //
+                // We need to detect and remove this line if present, so we can parse the JSON.
+                // I'm worried that the cmdlet may be localized so we're going to detect this by
+                // looking for TTY formatting commands at the beginning of the first line instead
+                // looking at the warning message.
+
+                var json = result.OutputText;
+
+                if (json.StartsWith("[33;1m"))
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var line in new StringReader(json).Lines().Skip(1))
+                    {
+                        sb.AppendLine(line);
+                    }
+
+                    json = sb.ToString();
+                }
+
                 // Even though we specified [-AsArray] we still get a empty string
                 // for operations that return an empty list (like Get-VM when there
                 // are no VMs).  I'm not sure this happens for all such commands but
                 // we'll handle that here.
-
-                var json = result.OutputText;
 
                 if (string.IsNullOrEmpty(json))
                 {
