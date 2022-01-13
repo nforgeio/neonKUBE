@@ -77,9 +77,6 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CertManager, CalculateCertManagerAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager, CalculateCitusManagerAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster, CalculateCitusMasterAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker, CalculateCitusWorkerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Cortex, CalculateCortexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Dex, CalculateDexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.EtcdCluster, CalculateEtcdClusterAdvice(cluster));
@@ -108,6 +105,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Minio, CalculateMinioAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSystemDb, CalculateNeonSystemDbAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NodeProblemDetector, CalculateNodeProblemDetectorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Oauth2Proxy, CalculateOauth2ProxyAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsAdmissionServer, CalculateOpenEbsAdmissionServerAdvice(cluster));
@@ -174,47 +172,15 @@ namespace Neon.Kube
             return advice;
         }
 
-        private static KubeServiceAdvice CalculateCitusManagerAdvice(ClusterProxy cluster)
+        private static KubeServiceAdvice CalculateNeonSystemDbAdvice(ClusterProxy cluster)
         {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager);
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonSystemDb);
 
             advice.ReplicaCount = 1;
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsEnabled = false;
-            }
-
-            return advice;
-        }
-
-        private static KubeServiceAdvice CalculateCitusMasterAdvice(ClusterProxy cluster)
-        {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
-
-            advice.ReplicaCount = 1;
-
-            if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
-            {
-                advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsEnabled = false;
-            }
-
-            return advice;
-        }
-
-        private static KubeServiceAdvice CalculateCitusWorkerAdvice(ClusterProxy cluster)
-        {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker);
-
-            advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.NeonSystemDb).Count()));
-
-            if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
-            {
-                advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
                 advice.MetricsEnabled = false;
             }

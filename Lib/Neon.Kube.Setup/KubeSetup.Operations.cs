@@ -3457,79 +3457,6 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs Jaeger
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <remarks>The tracking <see cref="Task"/>.</remarks>
-        public static async Task InstallJaegerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var k8s = GetK8sClient(controller);
-
-            await master.InvokeIdempotentAsync("setup/monitoring-jaeger",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "deploy", message: "jaeger");
-
-                    var values = new Dictionary<string, object>();
-
-                    int i = 0;
-
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelLogs, "true"))
-                    {
-                        values.Add($"ingester.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"ingester.tolerations[{i}].effect", taint.Effect);
-                        values.Add($"ingester.tolerations[{i}].operator", "Exists");
-
-                        values.Add($"agent.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"agent.tolerations[{i}].effect", taint.Effect);
-                        values.Add($"agent.tolerations[{i}].operator", "Exists");
-
-                        values.Add($"collector.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"collector.tolerations[{i}].effect", taint.Effect);
-                        values.Add($"collector.tolerations[{i}].operator", "Exists");
-
-                        values.Add($"query.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"query.tolerations[{i}].effect", taint.Effect);
-                        values.Add($"query.tolerations[{i}].operator", "Exists");
-
-                        values.Add($"esIndexCleaner.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"esIndexCleaner.tolerations[{i}].effect", taint.Effect);
-                        values.Add($"esIndexCleaner.tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
-
-                    await master.InstallHelmChartAsync(controller, "jaeger", releaseName: "jaeger", @namespace: KubeNamespaces.NeonMonitor, values: values);
-                });
-
-            await master.InvokeIdempotentAsync("setup/monitoring-jaeger-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "jaeger");
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var deployments = await k8s.ListNamespacedDeploymentAsync(KubeNamespaces.NeonMonitor, labelSelector: "release=jaeger");
-
-                            if (deployments == null || deployments.Items.Count < 2)
-                            {
-                                return false;
-                            }
-
-                            return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas);
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval);
-                });
-
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
         /// Installs a harbor container registry and required components.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -3689,13 +3616,6 @@ $@"- name: StorageType
 
                         await k8s.UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
                     }
-
-                    var databases = new string[] { "core", "clair", "notaryserver", "notarysigner" };
-
-                    foreach (var db in databases)
-                    {
-                        await CreateSystemDatabaseAsync(controller, master, $"{KubeConst.NeonSystemDbHarborPrefix}_{db}", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(dbSecret.Data["password"]));
-                    }
                 });
 
                 await master.InvokeIdempotentAsync("setup/harbor",
@@ -3837,13 +3757,13 @@ $@"- name: StorageType
 
                         await k8s.DeleteNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
 
-                        var master = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-master")).Items.First();
+                        var master = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
 
                         var command = new string[]
                             {
                                 "/bin/bash",
                                 "-c",
-                                $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/harbor_core -t -c ""UPDATE public.harbor_user SET password='', salt = '' WHERE user_id = 1;"""
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} harbor_core -t -c ""UPDATE public.harbor_user SET password='', salt = '' WHERE user_id = 1;"""
                             };
 
                         var result = await k8s.NamespacedPodExecAsync(
@@ -3997,7 +3917,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-node-agent");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
         }
 
@@ -4038,45 +3958,24 @@ $@"- name: StorageType
             var k8s           = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var managerAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlManager);
-            var masterAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlMaster);
-            var workerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CitusPostgresSqlWorker);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
 
             var values = new Dictionary<string, object>();
 
-            values.Add($"image.organization", KubeConst.LocalClusterRegistry);
-            values.Add($"busybox.image.organization", KubeConst.LocalClusterRegistry);
-            values.Add($"prometheus.image.organization", KubeConst.LocalClusterRegistry);
-            values.Add($"manager.image.organization", KubeConst.LocalClusterRegistry);
-            values.Add($"manager.namespace", KubeNamespaces.NeonSystem);
-            values.Add($"metrics.enabled", managerAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-            values.Add($"metrics.interval", managerAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+            values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+            values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
             if (cluster.Definition.IsDesktopCluster)
             {
-                values.Add($"worker.persistence.size", "1Gi");
-                values.Add($"master.persistence.size", "1Gi");
+                values.Add($"persistence.size", "1Gi");
             }
 
-            await CreateStorageClass(controller, master, "neon-internal-citus-master");
-            await CreateStorageClass(controller, master, "neon-internal-citus-worker");
+            await CreateStorageClass(controller, master, "neon-internal-system-db");
 
-            if (managerAdvice.PodMemoryRequest.HasValue && managerAdvice.PodMemoryLimit.HasValue)
+            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
-                values.Add($"manager.resources.requests.memory", ToSiString(managerAdvice.PodMemoryRequest));
-                values.Add($"manager.resources.limits.memory", ToSiString(managerAdvice.PodMemoryLimit));
-            }
-
-            if (masterAdvice.PodMemoryRequest.HasValue && masterAdvice.PodMemoryLimit.HasValue)
-            {
-                values.Add($"master.resources.requests.memory", ToSiString(masterAdvice.PodMemoryRequest));
-                values.Add($"master.resources.limits.memory", ToSiString(masterAdvice.PodMemoryLimit));
-            }
-
-            if (workerAdvice.PodMemoryRequest.HasValue && workerAdvice.PodMemoryLimit.HasValue)
-            {
-                values.Add($"worker.resources.requests.memory", ToSiString(workerAdvice.PodMemoryRequest));
-                values.Add($"worker.resources.limits.memory", ToSiString(workerAdvice.PodMemoryLimit));
+                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
             await master.InvokeIdempotentAsync("setup/db-credentials-admin",
@@ -4084,9 +3983,6 @@ $@"- name: StorageType
                 {
                     var username = KubeConst.NeonSystemDbAdminUser;
                     var password = NeonHelper.GetCryptoRandomPassword(20);
-
-                    values.Add($"superuser.password", password);
-                    values.Add($"superuser.username", KubeConst.NeonSystemDbAdminUser);
 
                     var secret = new V1Secret()
                     {
@@ -4141,19 +4037,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "setup", message: "cluster database (citus)");
 
-                    values.Add($"manager.replicas", managerAdvice.ReplicaCount);
-                    values.Add($"master.replicas", masterAdvice.ReplicaCount);
-                    values.Add($"worker.replicas", workerAdvice.ReplicaCount);
-
-                    if (workerAdvice.ReplicaCount < 3)
-                    {
-                        values.Add($"manager.minimumWorkers", "1");
-                    }
-
-                    if (workerAdvice.ReplicaCount < 3)
-                    {
-                        values.Add($"persistence.replicaCount", "1");
-                    }
+                    values.Add($"replicas", serviceAdvice.ReplicaCount);
 
                     int i = 0;
 
@@ -4165,9 +4049,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "citus-postgresql", releaseName: "db-citus-postgresql", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
-
-                    
+                    await master.InstallHelmChartAsync(controller, "postgres-operator", releaseName: "neon-system-db", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
                 });
 
             await master.InvokeIdempotentAsync("setup/system-db-ready",
@@ -4178,9 +4060,8 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "db-citus-postgresql-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "db-citus-postgresql-master", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "db-citus-postgresql-worker", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
+                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-system-db-postgres-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
+                            k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "neon-system-db", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
                         });
                 });
 
@@ -4189,18 +4070,37 @@ $@"- name: StorageType
                 await master.InvokeIdempotentAsync("setup/system-db-ready-to-go",
                    async () =>
                    {
-                       // We need to generate new passwords for the system database users when finalizing
-                       // a ready-to-go cluster so passwords will be unique across cluster deployments,
-                       // otherwise the clusters would mall have the same password created when the 
-                       // ready-to-go node image was created.
+                       await ResetPostgresUserAsync(k8s, "postgres", "postgres.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
+                       await ResetPostgresUserAsync(k8s, "standby", "standby.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
+                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbAdminUser, KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
+                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbServiceUser, KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
 
-                       // $todo(marcusbooyah): implement this
-
-                       await Task.CompletedTask;
+                       await (await k8s.ReadNamespacedStatefulSetAsync("neon-system-db", KubeNamespaces.NeonSystem)).RestartAsync(k8s);
                    });
              }
+        }
 
-            await Task.CompletedTask;
+        private static async Task ResetPostgresUserAsync(IKubernetes k8s, string username, string secretName, string secretNamespace)
+        {
+            var secret = await k8s.ReadNamespacedSecretAsync(secretName, secretNamespace);
+            var password = NeonHelper.GetCryptoRandomPassword(20);
+            secret.Data["password"] = Encoding.UTF8.GetBytes(password);
+            await k8s.UpsertSecretAsync(secret);
+
+            var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+
+            var command = new string[]
+            {
+                "/bin/bash",
+                "-c",
+                $@"psql -U {KubeConst.NeonSystemDbAdminUser} postgres -t -c ""ALTER ROLE {username} WITH PASSWORD '{password}';"""
+            };
+
+            var result = await k8s.NamespacedPodExecAsync(
+                name: postgres.Name(),
+                @namespace: postgres.Namespace(),
+                container: "postgres",
+                command: command);
         }
 
         /// <summary>
@@ -4640,202 +4540,6 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Creates a database within the <see cref="KubeService.NeonSystemDb"/> when the database doesn't already exist.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <param name="name">Specifies the database name.</param>
-        /// <param name="username">Specifies the database user name.</param>
-        /// <param name="password">Optionally specifies the password.</param>
-        /// <returns>The tracking <see cref="Task"/>The tracking <see cref="Task"/>.</returns>
-        private static async Task CreateSystemDatabaseAsync(
-            ISetupController controller, 
-            NodeSshProxy<NodeDefinition> master, 
-            string name, 
-            string username, 
-            string password = null)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var k8s           = GetK8sClient(controller);
-            var workers       = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-worker");
-            var masters       = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=citus-postgresql-master");
-            var secret        = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
-            var adminUsername = Encoding.UTF8.GetString(secret.Data["username"]);
-            var adminPassword = Encoding.UTF8.GetString(secret.Data["password"]);
-
-            var selectDatabaseCommand = new string[]
-                {
-                    "/bin/bash",
-                    "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -t -c ""SELECT 1 FROM pg_database WHERE datname = '{name}';"""
-                };
-
-            var selectRoleCommand = new string[]
-                {
-                    "/bin/bash",
-                    "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -t -c ""SELECT 1 FROM pg_roles WHERE rolname='{username}'"""
-                };
-
-            var createDatabaseCommand = new string[]
-                {
-                    "/bin/bash", 
-                    "-c", 
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c ""CREATE DATABASE {name};"""
-                };
-
-            var createExtensionCommand = new string[]
-                {
-                    "/bin/bash", 
-                    "-c", 
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""CREATE EXTENSION citus;"""
-                };
-
-            ExecuteResponse result;
-
-            foreach (var worker in workers.Items)
-            {
-                result = await k8s.NamespacedPodExecAsync(
-                    name:       worker.Name(),
-                    @namespace: worker.Namespace(),
-                    container:  "citus",
-                    command:    selectDatabaseCommand);
-
-                if (result.OutputText.Trim() != "1")
-                {
-                    await k8s.NamespacedPodExecAsync(
-                        name:       worker.Name(),
-                        @namespace: worker.Namespace(),
-                        container:  "citus",
-                        command:    createDatabaseCommand);
-
-                    await k8s.NamespacedPodExecAsync(
-                        name:       worker.Name(),
-                        @namespace: worker.Namespace(),
-                        container:  "citus",
-                        command:     createExtensionCommand);
-                }
-            }
-
-            result = await k8s.NamespacedPodExecAsync(
-                name:       masters.Items.First().Name(),
-                @namespace: masters.Items.First().Namespace(),
-                container:  "citus",
-                command:    selectDatabaseCommand);
-
-            if (result.OutputText.Trim() != "1")
-            {
-                await master.InvokeIdempotentAsync($"setup/citus-create-db-{name}",
-                      async () =>
-                      {
-                          await k8s.NamespacedPodExecAsync(
-                              name: masters.Items.First().Name(),
-                              @namespace: masters.Items.First().Namespace(),
-                              container: "citus",
-                              command: createDatabaseCommand);
-                      });
-
-                await master.InvokeIdempotentAsync($"setup/citus-create-db-extension-{name}",
-                      async () =>
-                      {
-                          await k8s.NamespacedPodExecAsync(
-                              name: masters.Items.First().Name(),
-                              @namespace: masters.Items.First().Namespace(),
-                              container: "citus",
-                              command: createExtensionCommand);
-                      });
-            }
-
-            foreach (var worker in workers.Items)
-            {
-                await master.InvokeIdempotentAsync($"setup/citus-add-worker-{name}-{worker.Name()}",
-                   async () =>
-                   {
-                       await k8s.NamespacedPodExecAsync(
-                           name: masters.Items.First().Name(),
-                           @namespace: masters.Items.First().Namespace(),
-                           container: "citus",
-                           command: new string[]
-                           {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""SELECT * from master_add_node('{worker.Name()}.db-citus-postgresql-worker', 5432);"""
-                        });
-                   });
-            }
-
-            result = await k8s.NamespacedPodExecAsync(
-                name:       masters.Items.First().Name(),
-                @namespace: masters.Items.First().Namespace(),
-                container:  "citus",
-                command:    selectRoleCommand);
-
-            if (result.OutputText.Trim() != "1")
-            {
-                await k8s.NamespacedPodExecAsync(
-                    name:       masters.Items.First().Name(),
-                    @namespace: masters.Items.First().Namespace(),
-                    container:  "citus",
-                    command:    new string[]
-                    {
-                        "/bin/bash",
-                        "-c",
-                        $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/{name} -c ""CREATE USER {username} WITH PASSWORD '{password}';"""
-                    });
-            }
-
-            await k8s.NamespacedPodExecAsync(
-                name:       masters.Items.First().Name(),
-                @namespace: masters.Items.First().Namespace(),
-                container:  "citus",
-                command:    new string[]
-                {
-                    "/bin/bash",
-                    "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c ""GRANT ALL PRIVILEGES ON DATABASE {name} TO {username};"""
-                });
-
-            await k8s.NamespacedPodExecAsync(
-                name:       masters.Items.First().Name(),
-                @namespace: masters.Items.First().Namespace(),
-                container:  "citus",
-                command:    new string[]
-                {
-                    "/bin/bash",
-                    "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c '
-SELECT run_command_on_workers($cmd$
-  DO
-$do$
-BEGIN
-   IF NOT EXISTS (
-      SELECT FROM pg_catalog.pg_roles  -- SELECT list can be empty for this
-      WHERE  rolname = '""'""'{username}'""'""') THEN
-
-      CREATE ROLE {username} LOGIN PASSWORD '""'""'{password}'""'""';
-   END IF;
-END
-$do$;
-$cmd$);'"
-                });
-
-            await k8s.NamespacedPodExecAsync(
-                name:       masters.Items.First().Name(),
-                @namespace: masters.Items.First().Namespace(),
-                container:  "citus",
-                command:    new string[]
-                {
-                    "/bin/bash",
-                    "-c",
-                    $@"psql postgresql://{adminUsername}:{adminPassword}@localhost:{NetworkPorts.Postgres}/postgres -c '
-SELECT run_command_on_workers($cmd$
-  GRANT ALL PRIVILEGES ON DATABASE {name} TO {username}
-$cmd$);'"
-                });
-        }
-
-        /// <summary>
         /// Deploys a Kubernetes job that runs Grafana setup.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -4845,18 +4549,6 @@ $cmd$);'"
         {
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-
-            // Create the Grafana database within the system database deployment.
-
-            await master.InvokeIdempotentAsync("setup/grafana-db",
-                async () =>
-                {
-                    master.Status = $"[{KubeService.NeonSystemDb}]: create: grafana database.";
-
-                    var systemDbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-
-                    await CreateSystemDatabaseAsync(controller, master, "grafana", KubeConst.NeonSystemDbServiceUser, Encoding.UTF8.GetString(systemDbSecret.Data["password"]));
-                });
 
             // Perform the Grafana Minio configuration.
 

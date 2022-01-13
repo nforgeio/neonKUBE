@@ -45,7 +45,7 @@ spec:
     spec:
       postgresql:
         hosts:
-          - host: db-citus-postgresql.neon-system
+          - host: neon-system-db.neon-system
             port: 5432
         passwordRef: registry
         prefix: harbor_

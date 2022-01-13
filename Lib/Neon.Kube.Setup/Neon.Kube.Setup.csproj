@@ -59,6 +59,9 @@
     <None Remove="Resources\Helm\neon-node-agent\templates\deployment.yaml" />
     <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
     <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
   </ItemGroup>
 
   <ItemGroup>

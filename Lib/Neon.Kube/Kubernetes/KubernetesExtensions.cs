@@ -548,14 +548,13 @@ namespace Neon.Kube
         /// <returns></returns>
         public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
             this IKubernetes k8s,
-            object body,
+            T body,
             string namespaceParameter,
             string dryRun = null,
             string fieldManager = null,
-            bool? pretty = null) where T : IKubernetesObject, new()
+            bool? pretty = null) where T : IKubernetesObject
         {
-            var customObject = new T();
-            var typeMetadata = customObject.GetKubernetesTypeMetadata();
+            var typeMetadata = body.GetKubernetesTypeMetadata();
 
             var result = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty);
 
@@ -599,15 +598,14 @@ namespace Neon.Kube
         /// <returns></returns>
         public static async Task<T> ReplaceNamespacedCustomObjectAsync<T>(
             this IKubernetes k8s,
-            object body, 
+            T body, 
             string namespaceParameter, 
             string name, 
             string dryRun = null,
             string fieldManager = null,
-            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject, new()
+            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject
         {
-            var customObject = (T)body;
-            var typeMetadata = customObject.GetKubernetesTypeMetadata();
+            var typeMetadata = body.GetKubernetesTypeMetadata();
 
             var result = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager);
 

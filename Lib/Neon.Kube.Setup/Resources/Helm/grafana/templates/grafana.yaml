@@ -36,7 +36,7 @@ spec:
         contains(groups[*], 'superadmin') && 'Admin' || contains(groups[*], 'admin') && 'Editor' || 'Viewer'
     database:
       type: postgres
-      host: db-citus-postgresql.neon-system.svc.cluster.local
+      host: neon-system-db.neon-system.svc.cluster.local
       name: grafana
       user: neon_service
       password: $__env{DATABASE_PASSWORD}
