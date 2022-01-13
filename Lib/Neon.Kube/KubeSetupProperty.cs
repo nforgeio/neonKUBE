@@ -17,6 +17,8 @@
 
 using System;
 
+using Neon.Common;
+
 using k8s;
 
 namespace Neon.Kube
@@ -155,5 +157,17 @@ namespace Neon.Kube
         /// deployments.
         /// </summary>
         public const string Redact = "redact";
+
+        /// <summary>
+        /// <para>
+        /// Property name for a <see cref="Credentials"/> object holding the username and password
+        /// to be used to authenticate <b>podman</b> on the cluster node with the local Harbor
+        /// registry.
+        /// </para>
+        /// <note>
+        /// Token based credentials are not supported.
+        /// </note>
+        /// </summary>
+        public const string HarborCredentials = "harbor-credentials";
     }
 }

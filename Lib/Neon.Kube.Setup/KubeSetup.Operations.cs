@@ -331,7 +331,7 @@ spec:
 
             await InstallClusterOperatorAsync(controller, master);
             await InstallNodeAgentAsync(controller, master);
-            await InstallContainerRegistryResources(controller);
+            await InstallContainerRegistryResources(controller, master);
         }
 
         /// <summary>
@@ -3724,6 +3724,7 @@ $@"- name: StorageType
                         values.Add($"storage.s3.secretKeyRef", "registry-minio");
 
                         var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+
                         values.Add($"ldap.baseDN", baseDN);
                         values.Add($"ldap.secret", Encoding.UTF8.GetString(ldapSecret.Data["LDAP_SECRET"]));
 
@@ -3743,49 +3744,51 @@ $@"- name: StorageType
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-cluster",
-                async () =>
-                {
-                    dynamic harborCluster = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
-                    var minioSecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
-                    harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+                    async () =>
+                    {
+                        dynamic harborCluster = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
+                        var minioSecret       = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+
+                        harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                        harborCluster["spec"]["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
 
 
-                    await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborCluster, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
-                });
+                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborCluster, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
+                    });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-configuration",
-                async () =>
-                {
-                    dynamic harborConfig = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
+                    async () =>
+                    {
+                        dynamic harborConfig = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
+                        var baseDN           = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
 
-                    var baseDN = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
+                        harborConfig["spec"]["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
+                        harborConfig["spec"]["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
+                        harborConfig["spec"]["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
+                        harborConfig["spec"]["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
 
-                    harborConfig["spec"]["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
-
-                    await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborConfig, "goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
-                });
+                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborConfig, "goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
+                    });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-registry-configuration",
-                async () =>
-                {
-                    var registryTemplateConfig = await k8s.ReadNamespacedConfigMapAsync("harbor-operator-config-template", KubeNamespaces.NeonSystem);
-                    var registryTemplate = registryTemplateConfig.Data["registry-config.yaml.tmpl"];
-                    registryTemplate = Regex.Replace(registryTemplate, @"https:\/\/registry.*.neoncluster.io\/service\/token", $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}/service/token");
-                    registryTemplateConfig.Data["registry-config.yaml.tmpl"] = registryTemplate;
-                    await k8s.ReplaceNamespacedConfigMapAsync(registryTemplateConfig, registryTemplateConfig.Name(), registryTemplateConfig.Namespace());
+                    async () =>
+                    {
+                        var registryTemplateConfig = await k8s.ReadNamespacedConfigMapAsync("harbor-operator-config-template", KubeNamespaces.NeonSystem);
+                        var registryTemplate       = registryTemplateConfig.Data["registry-config.yaml.tmpl"];
 
-                    var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("harbor-operator", KubeNamespaces.NeonSystem);
+                        registryTemplate           = Regex.Replace(registryTemplate, @"https:\/\/registry.*.neoncluster.io\/service\/token", $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}/service/token");
 
-                    await harborChartmuseum.RestartAsync(GetK8sClient(controller));
+                        registryTemplateConfig.Data["registry-config.yaml.tmpl"] = registryTemplate;
+                        await k8s.ReplaceNamespacedConfigMapAsync(registryTemplateConfig, registryTemplateConfig.Name(), registryTemplateConfig.Namespace());
 
-                    await k8s.DeleteNamespacedConfigMapAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
-                });
+                        var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("harbor-operator", KubeNamespaces.NeonSystem);
+
+                        await harborChartmuseum.RestartAsync(GetK8sClient(controller));
+
+                        await k8s.DeleteNamespacedConfigMapAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
+                    });
             }
 
 
@@ -3816,15 +3819,15 @@ $@"- name: StorageType
 
                     if (readyToGoMode == ReadyToGoMode.Setup)
                     {
-                        var adminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
+                        var adminSecret   = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
                         var adminUsername = Encoding.UTF8.GetString(adminSecret.Data["username"]);
                         var adminPassword = Encoding.UTF8.GetString(adminSecret.Data["password"]);
 
-                        var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                        var secret       = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
                         var harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
 
                         harborSecret.Data["postgresql-password"] = secret.Data["password"];
-                        harborSecret.Data["secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        harborSecret.Data["secret"]              = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
 
                         await k8s.UpsertSecretAsync(harborSecret, harborSecret.Namespace());
 
@@ -3842,10 +3845,10 @@ $@"- name: StorageType
                             };
 
                         var result = await k8s.NamespacedPodExecAsync(
-                            name: master.Name(),
+                            name:               master.Name(),
                             namespaceParameter: master.Namespace(),
-                            container: "citus",
-                            command: command);
+                            container:          "citus",
+                            command:            command);
 
                         // Restart registry components.
 
@@ -3890,11 +3893,10 @@ $@"- name: StorageType
                 async () =>
                 {
                     var authSecret = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-
-                    var username = "root";
-                    var password = Encoding.UTF8.GetString(authSecret.Data[username]);
-                    var sbScript = new StringBuilder();
-                    var sbArgs   = new StringBuilder();
+                    var username   = "root";
+                    var password   = Encoding.UTF8.GetString(authSecret.Data[username]);
+                    var sbScript   = new StringBuilder();
+                    var sbArgs     = new StringBuilder();
 
                     sbScript.AppendLineLinux("#!/bin/bash");
                     sbScript.AppendLineLinux($"echo '{password}' | podman login neon-registry.node.local --username {username} --password-stdin");
@@ -3906,17 +3908,16 @@ $@"- name: StorageType
                             {
                                 try
                                 {
-                                    await Task.CompletedTask;
-                                    var result = master.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.None);
-                                    result.EnsureSuccess();
-                                    return true;
+                                    master.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.None).EnsureSuccess();
+
+                                    return await Task.FromResult(true);
                                 }
                                 catch
                                 {
-                                    return false;
+                                    return await Task.FromResult(false);
                                 }
                             },
-                            timeout: TimeSpan.FromSeconds(120),
+                            timeout:      TimeSpan.FromSeconds(120),
                             pollInterval: TimeSpan.FromSeconds(1));
                     }
                 });
@@ -4001,6 +4002,7 @@ $@"- name: StorageType
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
@@ -4008,32 +4010,71 @@ $@"- name: StorageType
         /// because that's where the cluster CRDs get installed.
         /// </note>
         /// </remarks>
-        public static async Task InstallContainerRegistryResources(ISetupController controller)
+        public static async Task InstallContainerRegistryResources(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.ClearAsync;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
             if (readyToGoMode == ReadyToGoMode.Prepare)
             {
-                // Defer registry configuration until full cluster setup
+                // Defer registry configuration until full cluster setup.
 
                 return;
             }
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            await master.InvokeIdempotentAsync("setup/container-registries",
+                async () =>
+                {
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s     = GetK8sClient(controller);
 
-            foreach (var registry in cluster.Definition.Registry.Registries)
-            {
-                // $todo(jefflill
-            }
+                    // We need to add the implict local cluster Harbor registry.
+
+                    var localRegistries = new List<Registry>();
+                    var localRegistry   = new Registry();
+
+                    localRegistry.Name     = 
+                    localRegistry.Prefix   =
+                    localRegistry.Location = "neon-registry.node.local";
+                    localRegistry.Blocked  = false;
+                    localRegistry.Insecure = true;
+                    localRegistry.Username = "";
+                    localRegistry.Password = "";
+
+                    localRegistries.Add(localRegistry);
+
+                    // Add registries from the cluster definition.
+
+                    foreach (var registry in cluster.Definition.Registry.Registries)
+                    {
+                        localRegistries.Add(registry);
+                    }
+
+                    // Write the custom resources to the cluster.
+
+                    foreach (var registry in localRegistries)
+                    {
+                        var clusterRegistry = new V1ContainerRegistry();
+
+                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Registry.SearchRegistries.IndexOf(registry.Location);
+                        clusterRegistry.Spec.Prefix      = registry.Prefix;
+                        clusterRegistry.Spec.Location    = registry.Location;
+                        clusterRegistry.Spec.Blocked     = registry.Blocked;
+                        clusterRegistry.Spec.Insecure    = registry.Insecure;
+                        clusterRegistry.Spec.Username    = registry.Username;
+                        clusterRegistry.Spec.Password    = registry.Password;
+
+                        await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                    }
+                });
         }
 
         /// <summary>
-        /// Creates required namespaces.
+        /// Creates the required namespaces.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -4482,11 +4523,9 @@ $@"- name: StorageType
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Glauth);
-
-            var values = new Dictionary<string, object>();
-
-            var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
-            var ldapPassword = Encoding.UTF8.GetString(secret.Data["LDAP_SECRET"]);
+            var values        = new Dictionary<string, object>();
+            var secret        = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
+            var ldapPassword  = Encoding.UTF8.GetString(secret.Data["LDAP_SECRET"]);
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
@@ -4523,17 +4562,17 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update glauth config");
 
-                        var config = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
+                        var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["config.cfg"];
+                        var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
+                        var table       = doc.Tables.Where(t => t.Name.Key.ToString() == "backend").First();
+                        var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
+                        var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
 
-                        var doc = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var table = doc.Tables.Where(t => t.Name.Key.ToString() == "backend").First();
-
-                        var baseDN = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
-                        var items = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
                         items.First().Value = new StringValueSyntax(baseDN);
                         
                         config.Data["config.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
+
                         await k8s.ReplaceNamespacedSecretAsync(config, config.Name(), config.Namespace());
                     });
 
@@ -4542,22 +4581,23 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
 
-                        var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        
-                        var config = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
+                        var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+                        var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["users.cfg"];
+                        var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
+                        var tableArray  = doc.Tables.Where(t => t.Name.Key.ToString() == "users");
+                        var root        = tableArray.Where(t => t.Items.First().Value.ToString() == "\"root\"").First();
 
-                        var doc = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var tableArray = doc.Tables.Where(t => t.Name.Key.ToString() == "users");
-                        var root = tableArray.Where(t => t.Items.First().Value.ToString() == "\"root\"").First();
                         root.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"root@{cluster.Definition.Domain}");
                         root.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["root"])));
 
                         var serviceuser = tableArray.Where(t => t.Items.First().Value.ToString() == "\"serviceuser\"").First();
+
                         serviceuser.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"serviceuser@{cluster.Definition.Domain}");
                         serviceuser.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["serviceuser"])));
 
                         config.Data["users.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
+
                         await k8s.ReplaceNamespacedSecretAsync(config, config.Name(), config.Namespace());
                     });
             }
