@@ -30,6 +30,7 @@ spec:
     spec:
       serviceAccountName: neon-node-agent
       hostPID: true
+      hostNetwork: true
       tolerations:
       - operator: Exists
       volumes:

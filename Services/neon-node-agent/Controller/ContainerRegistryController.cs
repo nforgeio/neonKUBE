@@ -132,13 +132,19 @@ namespace NeonNodeAgent
         /// <param name="registries">The current registry configurations.</param>
         private void UpdateContainerRegistries(IEnumerable<V1ContainerRegistry> registries)
         {
+            // NOTE: Here's the documentation for the config file we're generating:
+            //
+            //      https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
+            //
+
             var sbRegistryConfig   = new StringBuilder();
-            var searchRegistries   = registries.Where(registry => registry.Spec.SearchOrder > 0);
             var sbSearchRegistries = new StringBuilder();
 
             // Specify any unqualified search registries.
 
-            foreach (var registry in searchRegistries.OrderBy(registry => registry.Spec.SearchOrder))
+            foreach (var registry in registries
+                .Where(registry => registry.Spec.SearchOrder >= 0)
+                .OrderBy(registry => registry.Spec.SearchOrder))
             {
                 sbSearchRegistries.AppendWithSeparator($"\"{registry.Spec.Prefix}\"", ", ");
             }
@@ -168,7 +174,6 @@ $@"
 prefix   = ""{registry.Spec.Prefix}""
 insecure = {NeonHelper.ToBoolString(registry.Spec.Insecure)}
 blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
-location = ""{registry.Spec.Prefix}""
 ");
 
                 if (!string.IsNullOrEmpty(registry.Spec.Location))
@@ -187,6 +192,27 @@ location = ""{registry.Spec.Prefix}""
             {
                 File.WriteAllText(configMountPath, newConfig);
                 Program.HostExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
+            }
+
+            // We also need to log into each of the registries that require credentials
+            // via [podman] on the node.
+
+            foreach (var registry in registries)
+            {
+                if (string.IsNullOrEmpty(registry.Spec.Username))
+                {
+                    // The registry doesn't have a username so we'll logout to clear any old credentials.
+                    // We're going to ignore any errors here in case we're not currently logged into
+                    // the registry.
+
+                    Program.HostExecuteCapture("podman", "logout", registry.Spec.Location);
+                }
+                else
+                {
+                    // The registry has credentials so login using them.
+
+                    Program.HostExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+                }
             }
         }
     }
