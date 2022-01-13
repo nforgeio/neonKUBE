@@ -3944,6 +3944,12 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This must be called after <see cref="InstallClusterOperatorAsync(ISetupController, NodeSshProxy{NodeDefinition})"/>
+        /// because that's where the cluster CRDs get installed.
+        /// </note>
+        /// </remarks>
         public static async Task InstallContainerRegistryResources(ISetupController controller)
         {
             await SyncContext.ClearAsync;
@@ -3959,9 +3965,13 @@ $@"- name: StorageType
                 return;
             }
 
-            var k8s = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
 
-            throw new NotImplementedException("$todo(jefflill)");
+            foreach (var registry in cluster.Definition.Registry.Registries)
+            {
+                // $todo(jefflill
+            }
         }
 
         /// <summary>
