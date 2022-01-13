@@ -1,6 +1,6 @@
 image:
   registry: neon-registry.node.local
-  repository: acid/postgres-operator
+  repository: zalan-postgres-operator
   tag: v1.7.1
   pullPolicy: "IfNotPresent"
 
@@ -37,7 +37,7 @@ configGeneral:
   # Select if setup uses endpoints (default), or configmaps to manage leader (DCS=k8s)
   kubernetes_use_configmaps: true
   # Spilo docker image
-  docker_image: registry.opensource.zalan.do/acid/spilo-14:2.1-p3
+  docker_image: neon-registry.node.local/zalan-spilo-14:2.1-p3
   # min number of instances in Postgres cluster. -1 = no limit
   min_instances: -1
   # max number of instances in Postgres cluster. -1 = no limit

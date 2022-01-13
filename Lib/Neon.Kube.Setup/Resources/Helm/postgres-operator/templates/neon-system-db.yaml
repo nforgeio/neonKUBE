@@ -9,7 +9,7 @@ metadata:
 #    "delete-date": "2020-08-31"  # can only be deleted on that day if "delete-date "key is configured
 #    "delete-clustername": "neon-system-db"  # can only be deleted when name matches if "delete-clustername" key is configured
 spec:
-  dockerImage: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+  dockerImage: "{{ .Values.configGeneral.docker_image }}"
   teamId: "neon-system"
   numberOfInstances: {{ .Values.replicas }}
   users:  # Application/Robot users
