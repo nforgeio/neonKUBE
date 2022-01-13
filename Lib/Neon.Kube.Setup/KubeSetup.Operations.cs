@@ -3843,7 +3843,7 @@ $@"- name: StorageType
 
                         var result = await k8s.NamespacedPodExecAsync(
                             name: master.Name(),
-                            @namespace: master.Namespace(),
+                            namespaceParameter: master.Namespace(),
                             container: "citus",
                             command: command);
 
@@ -4213,7 +4213,7 @@ $@"- name: StorageType
 
             var result = await k8s.NamespacedPodExecAsync(
                 name: postgres.Name(),
-                @namespace: postgres.Namespace(),
+                namespaceParameter: postgres.Namespace(),
                 container: "postgres",
                 command: command);
         }
