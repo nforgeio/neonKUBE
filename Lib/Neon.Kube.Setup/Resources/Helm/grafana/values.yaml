@@ -149,8 +149,10 @@ resources:
   requests:
     memory: 256Mi
 
-metrics:
+serviceMonitor:
+  enabled: true
   interval: 60s
+  # scrapeTimeout: 10s
 
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/
@@ -427,7 +429,7 @@ dashboardsConfigMaps: {}
 grafana.ini:
   database:
     type: postgres
-    host: db-citus-postgresql.neon-system.svc.cluster.local
+    host: neon-system-db.neon-system.svc.cluster.local
     name: grafana
     user: neon_service
     password: $__env{DATABASE_PASSWORD}

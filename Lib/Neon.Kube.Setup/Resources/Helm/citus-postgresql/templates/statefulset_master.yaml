@@ -88,37 +88,7 @@ spec:
         {{ end }}
       containers:
       {{- if .Values.metrics.enabled }}
-      - name: prometheus-metrics
-        image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
-        ports:
-        - name: http-metrics
-          containerPort: {{ .Values.metrics.port }}
-        resources:
-        {{ toYaml .Values.metrics.resources | nindent 10 }}
-        env:
-        - name: DATA_SOURCE_URI
-          value: localhost/postgres?sslmode=disable
-        - name: DATA_SOURCE_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "citus-postgresql.fullname" . }}-secret
-              key: superuser-username
-        - name: DATA_SOURCE_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "citus-postgresql.fullname" . }}-secret
-              key: superuser-password
-        args:
-        {{- if .Values.metrics.disableDefaultMetrics }}
-        - "--disable-default-metrics"
-        {{- end }}
-        - "--extend.query-path=/etc/queries.yaml"
-        - "--log.level={{ .Values.metrics.logLevel }}"
-        volumeMounts:
-        - name: queries
-          mountPath: /etc/queries.yaml
-          subPath: queries.yaml
+      
       {{- end }}
       - name: citus
         image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

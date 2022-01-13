@@ -1,3 +1,4 @@
+{{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -16,9 +17,10 @@ spec:
       - {{ .Release.Namespace | quote }}
   endpoints:
   - targetPort: {{ .Values.cortexConfig.server.http_listen_port }}
-    interval: {{ .Values.metrics.interval }}
+    interval: {{ .Values.serviceMonitor.interval }}
   jobLabel: cortex
   selector:
     matchLabels:
       app: {{ template "cortex.name" . }}
       release: {{ .Release.Name | quote }}
+{{- end }}

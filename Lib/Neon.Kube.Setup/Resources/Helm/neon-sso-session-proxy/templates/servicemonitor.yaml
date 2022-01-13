@@ -21,8 +21,7 @@ spec:
   jobLabel: {{ template "neon-sso-session-proxy.fullname" . }}
   selector:
     matchLabels:
-      app: {{ template "neon-sso-session-proxy.name" . }}
-      release: {{ .Release.Name }}
+    {{- include "neon-sso-session-proxy.labels" . | nindent 6 }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

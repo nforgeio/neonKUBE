@@ -85,7 +85,7 @@ metrics:
   # Enable Prometheus metrics endpoint
   enabled: true
   # Serve Prometheus metrics on this port
-  port: 11001
+  port: 9762
   servicemonitor:
     # Enable Prometheus Operator ServiceMonitor
     enabled: true

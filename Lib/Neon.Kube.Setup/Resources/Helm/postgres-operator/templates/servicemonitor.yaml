@@ -1,0 +1,22 @@
+{{- if and .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "postgres-operator.fullname" . }}
+  labels:
+    app: {{ template "postgres-operator.name" . }}
+    chart: {{ template "postgres-operator.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+spec:
+  endpoints:
+    - targetPort: {{ .Values.metrics.port }}
+      interval: {{ .Values.metrics.interval }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app: {{ template "postgres-operator.name" . }}
+      release: {{ .Release.Name }}
+{{- end }}

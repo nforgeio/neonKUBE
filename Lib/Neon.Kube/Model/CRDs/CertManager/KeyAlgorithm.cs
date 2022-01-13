@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,7 +43,8 @@ namespace Neon.Kube
     /// key size of 256 will be used for `ECDSA` key algorithm and key size of 2048 will be used for 
     /// `RSA` key algorithm.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum KeyAlgorithm
     {
         /// <summary>

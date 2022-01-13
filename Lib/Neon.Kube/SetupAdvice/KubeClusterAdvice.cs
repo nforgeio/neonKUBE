@@ -135,19 +135,9 @@ namespace Neon.Kube
         public static string CertManager = "cert-manager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service manager nodes.
+        /// Identifies the neonKUBE cluster's system database.
         /// </summary>
-        public static string CitusPostgresSqlManager = "citus-postgressql-manager";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
-        /// </summary>
-        public static string CitusPostgresSqlMaster = "citus-postgressql-master";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
-        /// </summary>
-        public static string CitusPostgresSqlWorker = "citus-postgressql-worker";
+        public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Cortex</b> service.
@@ -403,10 +393,30 @@ namespace Neon.Kube
         // Instance members
 
         /// <summary>
+        /// Specifies whether cluster metrics are enabled by default.
+        /// </summary>
+        public bool? MetricsEnabled = true;
+
+        /// <summary>
         /// Specifies the cluster default Metrics scrape interval.
         /// </summary>
-        public  string                                  MetricsInterval = "60s";
-        
+        public string MetricsInterval = "60s";
+
+        /// <summary>
+        /// Specifies the cluster default Metrics quota.
+        /// </summary>
+        public string MetricsQuota = "10Gi";
+
+        /// <summary>
+        /// Specifies the cluster default Logs quota.
+        /// </summary>
+        public string LogsQuota = "10Gi";
+
+        /// <summary>
+        /// Specifies the cluster default Traces quota.
+        /// </summary>
+        public string TracesQuota = "10Gi";
+
         private Dictionary<string, KubeServiceAdvice>   services   = new Dictionary<string, KubeServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                    isReadOnly = false;
 

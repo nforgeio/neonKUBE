@@ -34,6 +34,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -2907,6 +2909,19 @@ TCPKeepAlive yes
                 };
 
             return GetToolPath(installFolder, "helm", toolChecker, toolUriRetriever, userToolsFolder);
+        }
+
+        /// <summary>
+        /// Configure the kubernetes client to use the <see cref="JsonStringEnumMemberConverter"/>.
+        /// </summary>
+        public static void K8sClientConverterInitialize()
+        {
+            var type = typeof(Kubernetes).Assembly.GetType("k8s.KubernetesJson");
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
+            var member = type.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+            var s = (JsonSerializerOptions)member.GetValue(type);
+            s.Converters.Add(new JsonStringEnumMemberConverter());
         }
     }
 }

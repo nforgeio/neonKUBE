@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,9 +28,12 @@ using Microsoft.AspNetCore.JsonPatch;
 
 using Neon.Common;
 
+using Newtonsoft.Json;
+
 using k8s;
 using k8s.Models;
-using System.Diagnostics.Contracts;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace Neon.Kube
 {
@@ -103,7 +107,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(30),
+                timeout:      TimeSpan.FromSeconds(120),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
@@ -169,7 +173,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(90),
+                timeout:      TimeSpan.FromSeconds(120),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
@@ -473,6 +477,139 @@ namespace Neon.Kube
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// List a namespaced custom object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="k8s"></param>
+        /// <param name="namespaceParameter"></param>
+        /// <param name="allowWatchBookmarks"></param>
+        /// <param name="continueParameter"></param>
+        /// <param name="fieldSelector"></param>
+        /// <param name="labelSelector"></param>
+        /// <param name="limit"></param>
+        /// <param name="resourceVersion"></param>
+        /// <param name="resourceVersionMatch"></param>
+        /// <param name="timeoutSeconds"></param>
+        /// <param name="watch"></param>
+        /// <param name="pretty"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task<T> ListNamespacedCustomObjectAsync<T>(
+            this IKubernetes k8s,
+            string namespaceParameter,
+            bool? allowWatchBookmarks = null,
+            string continueParameter = null,
+            string fieldSelector = null,
+            string labelSelector = null,
+            int? limit = null,
+            string resourceVersion = null,
+            string resourceVersionMatch = null,
+            int? timeoutSeconds = null,
+            bool? watch = null,
+            bool? pretty = null,
+            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject, new()
+        {
+            var customObject = new T();
+            var typeMetadata = customObject.GetKubernetesTypeMetadata();
+
+            var result = await k8s.ListNamespacedCustomObjectAsync(
+                        typeMetadata.Group,
+                        typeMetadata.ApiVersion,
+                        namespaceParameter,
+                        typeMetadata.PluralName,
+                        allowWatchBookmarks,
+                        continueParameter,
+                        fieldSelector,
+                        labelSelector,
+                        limit,
+                        resourceVersion,
+                        resourceVersionMatch,
+                        timeoutSeconds,
+                        watch,
+                        pretty,
+                        cancellationToken);
+
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+        }
+
+        /// <summary>
+        /// Create a namespaced custom object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="k8s"></param>
+        /// <param name="body"></param>
+        /// <param name="namespaceParameter"></param>
+        /// <param name="dryRun"></param>
+        /// <param name="fieldManager"></param>
+        /// <param name="pretty"></param>
+        /// <returns></returns>
+        public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
+            this IKubernetes k8s,
+            T body,
+            string namespaceParameter,
+            string dryRun = null,
+            string fieldManager = null,
+            bool? pretty = null) where T : IKubernetesObject
+        {
+            var typeMetadata = body.GetKubernetesTypeMetadata();
+
+            var result = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty);
+
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+        }
+
+        /// <summary>
+        /// Returns a namespaced custom object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="k8s"></param>
+        /// <param name="namespaceParameter"></param>
+        /// <param name="name"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task<T> GetNamespacedCustomObjectAsync<T>(
+            this IKubernetes k8s,
+            string namespaceParameter,
+            string name,
+            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject, new()
+        {
+            var customObject = new T();
+            var typeMetadata = customObject.GetKubernetesTypeMetadata();
+
+            var result = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name);
+
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+        }
+
+        /// <summary>
+        /// Replace a namespaced custom object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="k8s"></param>
+        /// <param name="body"></param>
+        /// <param name="namespaceParameter"></param>
+        /// <param name="name"></param>
+        /// <param name="dryRun"></param>
+        /// <param name="fieldManager"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task<T> ReplaceNamespacedCustomObjectAsync<T>(
+            this IKubernetes k8s,
+            T body, 
+            string namespaceParameter, 
+            string name, 
+            string dryRun = null,
+            string fieldManager = null,
+            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject
+        {
+            var typeMetadata = body.GetKubernetesTypeMetadata();
+
+            var result = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager);
+
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
     }
 }

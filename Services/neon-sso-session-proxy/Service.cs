@@ -67,32 +67,18 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            if (!NeonHelper.IsDevWorkstation)
-            {
-                MetricsOptions.Mode         = MetricsMode.Scrape;
-                MetricsOptions.Path         = "/metrics";
-                MetricsOptions.Port         = 11002;
-                MetricsOptions.GetCollector =
-                    () =>
-                    {
-                        return DotNetRuntimeStatsBuilder
-                            .Default()
-                            .StartCollecting();
-                    };
-            }
-
             // Start the web service.
 
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, 11001))
+                .UseKestrel(options => options.Listen(IPAddress.Any, 80))
                 .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoSessionProxyService), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:11001");
+            Log.LogInfo($"Listening on {IPAddress.Any}:80");
 
             // Indicate that the service is ready for business.
 

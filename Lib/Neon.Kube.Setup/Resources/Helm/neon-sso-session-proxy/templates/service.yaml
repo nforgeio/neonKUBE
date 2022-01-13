@@ -8,12 +8,10 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 11001
       protocol: TCP
-      name: http
+      name: http-web
     - port: {{ .Values.metrics.port }}
-      targetPort: {{ .Values.metrics.port }}
       protocol: TCP
-      name: "http-metrics"
+      name: http-metrics
   selector:
     {{- include "neon-sso-session-proxy.selectorLabels" . | nindent 4 }}

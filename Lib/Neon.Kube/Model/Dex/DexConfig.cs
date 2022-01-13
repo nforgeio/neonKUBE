@@ -60,6 +60,14 @@ namespace Neon.Kube
         public DexStorage Storage { get; set; }
 
         /// <summary>
+        /// Configuration for the http server.
+        /// </summary>
+        [JsonProperty(PropertyName = "Web", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "web", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexWebConfig Web { get; set; }
+
+        /// <summary>
         /// The storage configuration determines where dex stores its state. Supported
         /// options include SQL flavors and Kubernetes third party resources. 
         /// See the documentation (https://dexidp.io/docs/storage/) for further information.
@@ -67,7 +75,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Connectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "connectors", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<DexConnector> Connectors { get; set; }
+        public List<IDexConnector> Connectors { get; set; }
 
         /// <summary>
         /// Configuration for telemetry.

@@ -323,12 +323,22 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbAdminUser"/>.
         /// </summary>
-        public const string NeonSystemDbAdminSecret = "neon-system-db-admin";
+        public const string NeonSystemDbAdminSecret = "neon-admin.neon-system-db.credentials.postgresql";
 
         /// <summary>
         /// Identifies the secret containing Dex credentials.
         /// </summary>
         public const string DexSecret = "neon-sso-dex";
+
+        /// <summary>
+        /// Identifies the secret containing Neon SSO Session Proxy credentials.
+        /// </summary>
+        public const string NeonSsoSessionProxySecret = "neon-sso-session-proxy";
+
+        /// <summary>
+        /// Identifies the secret containing Neon SSO Oauth2 Proxy credentials.
+        /// </summary>
+        public const string NeonSsoOauth2Proxy = "neon-sso-oauth2-proxy";
 
         /// <summary>
         /// Identifies the neon-system-db superuser database.
@@ -343,7 +353,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the secret containing the password for the <see cref="NeonSystemDbServiceUser"/>.
         /// </summary>
-        public const string NeonSystemDbServiceSecret = "neon-system-db-service";
+        public const string NeonSystemDbServiceSecret = "neon-service.neon-system-db.credentials.postgresql";
 
         /// <summary>
         /// Identifies the prefix to be used by the Harbor Operator when creating Harbor related databases in neon-system-db.

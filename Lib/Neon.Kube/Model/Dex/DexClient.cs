@@ -81,5 +81,13 @@ namespace Neon.Kube
         [YamlMember(Alias = "public", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool? Public { get; set; }
+
+        /// <summary>
+        /// List of trusted clients peers.
+        /// </summary>
+        [JsonProperty(PropertyName = "TrustedPeers", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "trustedPeers", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> TrustedPeers { get; set; }
     }
 }
