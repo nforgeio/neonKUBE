@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.9";
+        public const string Version = "1.10";
 
         /// <summary>
         /// Program entrypoint.
@@ -327,8 +327,24 @@ $@"@echo off
                     }
                 }
 
-                Console.WriteLine($"Publish time [{targetName}]: {stopwatch.Elapsed}");
+                // For some bizarre reason, [dotnet publish] copies [dotnet.exe] to the publish
+                // folder and this is causing trouble running [dotnet] commands for other apps.
+                // I'm also seeing other random DLLs being published as well for single-file
+                // executables, which is really strange.
+                //
+                // This might be a new Visual Studio 2022 (bad?) behavior.  I'm going to mitigate
+                // by removing the [dotnet.exe] file from the publish folder if present.
 
+                var dotnetPath = Path.Combine(binFolder, "dotnet.exe");
+
+                if (File.Exists(dotnetPath))
+                {
+                    File.Delete(dotnetPath);
+                }
+
+                // Finish up
+
+                Console.WriteLine($"Publish time [{targetName}]: {stopwatch.Elapsed}");
                 Environment.Exit(0);
             }
             catch (Exception e)
