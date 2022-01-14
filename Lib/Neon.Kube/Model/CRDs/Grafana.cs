@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1CStorPoolCluster.cs
+// FILE:	    Grafana.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -28,38 +29,38 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// OpenEBS cStor pool cluster.
+    /// Grafana.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
+    public class Grafana : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "CStorPoolCluster";
+        public const string KubeKind = "Grafana";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "cstor.openebs.io";
+        public const string KubeGroup = "integreatly.org";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "cstorpoolclusters";
+        public const string KubePlural = "grafanas";
 
         /// <summary>
-        /// Initializes a new instance of the V1CStorPoolCluster class.
+        /// Initializes a new instance of the Grafana class.
         /// </summary>
-        public V1CStorPoolCluster()
+        public Grafana()
         {
-            ApiVersion = "cstor.openebs.io/v1";
-            Kind       = "CStorPoolCluster";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind = KubeKind;
         }
 
         /// <summary>
@@ -90,10 +91,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// Block device.
+        /// Grafana.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public V1CStorPoolClusterSpec Spec { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
+        public dynamic Spec { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -102,7 +104,7 @@ namespace Neon.Kube
         /// Thrown if validation fails
         /// </exception>
         public virtual void Validate()
-        {   
+        {
         }
     }
 }

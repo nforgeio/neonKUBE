@@ -2078,14 +2078,12 @@ subjects:
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update kiali crd config");
 
-                        var result = await k8s.GetNamespacedCustomObjectAsync("kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali");
-                        var kiali = NeonHelper.JsonDeserialize<dynamic>(((JsonElement)result).GetRawText());
+                        var kiali = await k8s.GetNamespacedCustomObjectAsync<Kiali>(KubeNamespaces.NeonSystem, "kiali");
 
-                        kiali["spec"]["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-                        kiali["spec"]["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
+                        kiali.Spec["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
+                        kiali.Spec["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
 
-                        var body = System.Text.Json.JsonSerializer.Deserialize<dynamic>(NeonHelper.JsonSerialize(kiali));
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JsonElement)body, "kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali");
+                        await k8s.ReplaceNamespacedCustomObjectAsync(kiali, KubeNamespaces.NeonSystem, kiali.Name());
                     });
             }
         }
@@ -3280,17 +3278,15 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update grafana crd config");
 
-                        var result = await k8s.GetNamespacedCustomObjectAsync("integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana");
-                        var grafana = NeonHelper.JsonDeserialize<dynamic>(((JsonElement)result).GetRawText());
+                        var grafana = await k8s.GetNamespacedCustomObjectAsync<Grafana>(KubeNamespaces.NeonMonitor, "grafana");
 
-                        grafana["spec"]["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
-                        grafana["spec"]["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
-                        grafana["spec"]["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
+                        grafana.Spec["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
+                        grafana.Spec["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
+                        grafana.Spec["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
 
-                        grafana["spec"]["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
+                        grafana.Spec["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
 
-                        var body = System.Text.Json.JsonSerializer.Deserialize<dynamic>(NeonHelper.JsonSerialize(grafana));
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JsonElement)body, "integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana");
+                        await k8s.ReplaceNamespacedCustomObjectAsync(grafana, KubeNamespaces.NeonMonitor, grafana.Name());
                     });
             }
         }
@@ -3748,34 +3744,30 @@ $@"- name: StorageType
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-cluster",
                 async () =>
                 {
-                    var result = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
-                    var harborCluster = NeonHelper.JsonDeserialize<dynamic>(((JsonElement)result).GetRawText());
+                    var harborCluster = await k8s.GetNamespacedCustomObjectAsync<HarborCluster>(KubeNamespaces.NeonSystem, "registry");
 
                     var minioSecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
-                    harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster["spec"]["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+                    ((dynamic)harborCluster.Spec)["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                    ((dynamic)harborCluster.Spec)["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
+                    ((dynamic)harborCluster.Spec)["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                    ((dynamic)harborCluster.Spec)["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
 
-                    var body = System.Text.Json.JsonSerializer.Deserialize<dynamic>(NeonHelper.JsonSerialize(harborCluster));
-                    await k8s.ReplaceNamespacedCustomObjectAsync((JsonElement)body, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
+                    await k8s.ReplaceNamespacedCustomObjectAsync(harborCluster, KubeNamespaces.NeonSystem, harborCluster.Name());
                 });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-configuration",
                 async () =>
                 {
-                    var result = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
-                    var harborConfig = NeonHelper.JsonDeserialize<dynamic>(((JsonElement)result).GetRawText());
+                    var harborConfig = await k8s.GetNamespacedCustomObjectAsync<HarborConfiguration>(KubeNamespaces.NeonSystem, "ldap-config");
 
                     var baseDN = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
 
-                    harborConfig["spec"]["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
-                    harborConfig["spec"]["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
+                    ((dynamic)harborConfig.Spec)["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
+                    ((dynamic)harborConfig.Spec)["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
+                    ((dynamic)harborConfig.Spec)["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
+                    ((dynamic)harborConfig.Spec)["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
 
-                    var body = System.Text.Json.JsonSerializer.Deserialize<dynamic>(NeonHelper.JsonSerialize(harborConfig));
-                    await k8s.ReplaceNamespacedCustomObjectAsync((JsonElement)body, "goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
+                    await k8s.ReplaceNamespacedCustomObjectAsync(harborConfig, KubeNamespaces.NeonSystem, harborConfig.Name());
                 });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-registry-configuration",
@@ -3794,7 +3786,6 @@ $@"- name: StorageType
                     await k8s.DeleteNamespacedConfigMapAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
                 });
             }
-
 
             await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
@@ -3850,7 +3841,7 @@ $@"- name: StorageType
 
                         var result = await k8s.NamespacedPodExecAsync(
                             name: master.Name(),
-                            @namespace: master.Namespace(),
+                            namespaceParameter: master.Namespace(),
                             container: "postgres",
                             command: command);
 

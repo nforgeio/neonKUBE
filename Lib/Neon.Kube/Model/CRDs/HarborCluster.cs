@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1CStorPoolCluster.cs
+// FILE:	    HarborCluster.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,50 +16,52 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-
+using System.Text.Json;
 using k8s;
 using k8s.Models;
-
+using Neon.Common;
 using Newtonsoft.Json;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// OpenEBS cStor pool cluster.
+    /// HarborCluster.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
+    public class HarborCluster : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1";
+        public const string KubeApiVersion = "v1alpha3";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "CStorPoolCluster";
+        public const string KubeKind = "HarborCluster";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "cstor.openebs.io";
+        public const string KubeGroup = "goharbor.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "cstorpoolclusters";
+        public const string KubePlural = "harborclusters";
 
         /// <summary>
-        /// Initializes a new instance of the V1CStorPoolCluster class.
+        /// Initializes a new instance of the HarborCluster class.
         /// </summary>
-        public V1CStorPoolCluster()
+        public HarborCluster()
         {
-            ApiVersion = "cstor.openebs.io/v1";
-            Kind       = "CStorPoolCluster";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind = KubeKind;
         }
 
         /// <summary>
@@ -90,10 +92,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// Block device.
+        /// HarborCluster.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public V1CStorPoolClusterSpec Spec { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
+        public dynamic Spec { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -102,7 +105,7 @@ namespace Neon.Kube
         /// Thrown if validation fails
         /// </exception>
         public virtual void Validate()
-        {   
+        {
         }
     }
 }

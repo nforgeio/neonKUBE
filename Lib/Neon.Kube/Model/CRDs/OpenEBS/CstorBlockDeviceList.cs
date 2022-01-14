@@ -30,9 +30,29 @@ namespace Neon.Kube
     /// <summary>
     /// OpenEBS cStor block devices.
     /// </summary>
-    [KubernetesEntity(Group = "openebs.io", Kind = "BlockDeviceList", ApiVersion = "v1alpha1", PluralName = "blockdevices")]
+    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class V1CStorBlockDeviceList : IKubernetesObject<V1ListMeta>, IItems<V1CStorBlockDevice>, IValidate
     {
+        /// <summary>
+        /// The API version this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeApiVersion = "v1alpha1";
+
+        /// <summary>
+        /// The Kubernetes named schema this object is based on.
+        /// </summary>
+        public const string KubeKind = "BlockDeviceList";
+
+        /// <summary>
+        /// The Group this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeGroup = "openebs.io";
+
+        /// <summary>
+        /// The plural name of the entity.
+        /// </summary>
+        public const string KubePlural = "blockdevices";
+
         /// <summary>
         /// Initializes a new instance of the V1CStorBlockDeviceList class.
         /// </summary>
