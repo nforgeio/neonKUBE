@@ -306,7 +306,7 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager);
+                    return await k8s.CreateNamespacedCustomObjectAsync<T>(body, namespaceParameter, dryRun, fieldManager);
                 }
                 else
                 {
