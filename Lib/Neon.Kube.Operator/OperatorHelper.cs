@@ -88,14 +88,14 @@ namespace Neon.Kube.Operator
         /// </summary>
         static OperatorHelper()
         {
-            // KubeOps spams the logs with unnecessary INFO events when events are raised to
-            // the controller.  We're going to filter these and do our own logging using this
-            // filter.  The filter returns TRUE for events to be logged and FALSE for events
-            // to be ignored.
-
             LogFilter =
                 logEvent =>
                 {
+                    // KubeOps spams the logs with unnecessary INFO events when events are raised to
+                    // the controller.  We're going to filter these and do our own logging using this
+                    // filter.  The filter returns TRUE for events to be logged and FALSE for events
+                    // to be ignored.
+
                     if (logEvent.LogLevel == LogLevel.Info && logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
                     {
                         if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
@@ -106,12 +106,22 @@ namespace Neon.Kube.Operator
                         }
                     }
 
+                    // Kubernetes client is not handling watches correctly when there are no objects
+                    // to be watched.  I read that the API server is returning a blank body in this
+                    // case but the Kubernetes client is expecting valid JSON, like an empty array.
+
+                    if (logEvent.LogLevel == LogLevel.Error && logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher" && logEvent.Module.Contains("The input does not contain any JSON tokens"))
+                    {
+                        return false;
+                    }
+
                     return true;
                 };
         }
 
         /// <summary>
-        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps.
+        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps
+        /// and the Kubernetes client.
         /// </summary>
         public static Func<LogEvent, bool> LogFilter { get; private set; }
 
