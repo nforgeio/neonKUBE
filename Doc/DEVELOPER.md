@@ -62,24 +62,49 @@ Follow the steps below to configure a development or test workstation:
     powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     ```
 
-8. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+8. Enable **WSL2**:
+
+    * Open a **pwsh** console **as administrator** and execute these commands:
+    ```
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    ```
+
+    * Execute these Powershell commands to install Ubuntu-20.04 on WSL2:
+    ```
+    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
+    wsl --import Ubuntu-20.04 $env:USERPROFILE ubuntu.tar
+    Remove-Item ubuntu.tar
+    wsl --set-default-version 2
+    wsl --set-default Ubuntu-20.04
+    ```
+
+9. Install **Docker for Windows (Stable)** from [here](https://www.docker.com/products/docker-desktop)
+
+    * You'll need to create a DockerHub account if you don't already have one.
+    * BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
+    * Go to **Settings/Resources/NETWORK** and enable Manual DNS configuration (8.8.8.8)
+	* Start a command window and use `docker login` to login using your GitHub credentials.
+
+10. Install **Visual Studio 2022 Community 17.0.4+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
   * Select **all workloads** on the first panel
+  * Select the **Individual Components** tab, search for "git" and check **Git for Windows**
   * Click **Install** (and take a coffee break)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio to install any updates
   * **NOTE:** You need sign into Visual Studio using a Windows account (like **sally@neonforge.com** for internal developers)
 
-9. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
+11. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
-10. Disable **Visual Studio YAML validation:**
+12. Disable **Visual Studio YAML validation:**
 
     * Start Visual Studio
     * Select **Tools/Options...**
     * Navigate to **Text Editor/YAML/General**
     * Uncheck **YAML validation** at the top of the right panel
 
-11. Configure Visual Studio Plain Text Editor:
+13. Configure Visual Studio Plain Text Editor:
 
     * Start Visual Studio
     * Select **Tools/Options...**
@@ -89,18 +114,18 @@ Follow the steps below to configure a development or test workstation:
       * **Indent Size** = 2
       * Select **Insert Spaces**
 
-12. Install some SDKs:
+14. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
 
-   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.1) (.NET SDK x64 installer)
-   * Install **.NET 5.0 SDK 5.0.403* from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
+   ![System Tray](Images/Developer/PythonImports.png?raw=true)
+  
+15. Install some SDKs:
+
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
+   * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
 
-13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
-
-    * You'll need to create a DockerHub account if you don't already have one.
-    * **IMPORTANT!** BuildKit causes random problems so be sure to disable it by setting **buildkit=false** in **Docker/Settings/Docker Engine**
-
-14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+16. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -111,11 +136,7 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-15. Disable **Python Import Warnings** via **Tools/Options: by unchecking this**
-
-   ![System Tray](Images/Developer/PythonImports.png?raw=true)
-  
-16. Configure the build **environment variables**:
+17. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
@@ -133,7 +154,7 @@ Follow the steps below to configure a development or test workstation:
     * Execute these commands to install Ubuntu-20.04 on WSL2:
     ```
     Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
-    wsl --import Ubuntu-20.04 "%USERPROFILE%\Wsl2" ubuntu.tar
+    wsl --import Ubuntu-20.04 "%USERPROFILE%\wsl-Ubuntu" ubuntu.tar
     Remove-Item ubuntu.tar
     wsl --set-default-version 2
     wsl --set-default Ubuntu-20.04
@@ -167,7 +188,7 @@ Follow the steps below to configure a development or test workstation:
 
 21. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer.  Install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -223,7 +244,7 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this feature:
+30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this:
 
     https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
@@ -231,7 +252,7 @@ Follow the steps below to configure a development or test workstation:
 
 32. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-33. *Optional:* Maintainers will need to install then **GitHub CLI** from here: https://cli.github.com/
+33. *Optional:* Maintainers will need to install the **GitHub CLI** from here: https://cli.github.com/
 
 34: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 

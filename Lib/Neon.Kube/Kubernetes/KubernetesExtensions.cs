@@ -40,7 +40,7 @@ namespace Neon.Kube
     /// <summary>
     /// Kubernetes related extension methods.
     /// </summary>
-    public static class KubernetesExtensions
+    public static partial class KubernetesExtensions
     {
         //---------------------------------------------------------------------
         // Deployment extensions
@@ -210,12 +210,12 @@ namespace Neon.Kube
         /// Waits for a service deployment to complete.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespace">The namespace.</param>
+        /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
         /// <param name="labelSelector">The optional label selector.</param>
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -223,14 +223,14 @@ namespace Neon.Kube
         /// </remarks>
         public static async Task WaitForDeploymentAsync(
             this IKubernetes    k8s, 
-            string              @namespace, 
+            string              namespaceParameter, 
             string              name          = null, 
             string              labelSelector = null,
             string              fieldSelector = null,
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
             if (pollInterval <= TimeSpan.Zero)
@@ -260,7 +260,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var deployments = await k8s.ListNamespacedDeploymentAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await k8s.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (deployments == null || deployments.Items.Count == 0)
                         {
@@ -283,12 +283,12 @@ namespace Neon.Kube
         /// Waits for a stateful set deployment to complete.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespace">The namespace.</param>
+        /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
         /// <param name="labelSelector">The optional label selector.</param>
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -296,14 +296,14 @@ namespace Neon.Kube
         /// </remarks>
         public static async Task WaitForStatefulSetAsync(
             this IKubernetes    k8s,
-            string              @namespace,
+            string              namespaceParameter,
             string              name          = null,
             string              labelSelector = null,
             string              fieldSelector = null,
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
             if (pollInterval <= TimeSpan.Zero)
@@ -333,7 +333,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var statefulsets = await k8s.ListNamespacedStatefulSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var statefulsets = await k8s.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
@@ -355,12 +355,12 @@ namespace Neon.Kube
         /// Waits for a daemon set deployment to complete.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespace">The namespace.</param>
+        /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
         /// <param name="labelSelector">The optional label selector.</param>
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30m seconds.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -369,14 +369,14 @@ namespace Neon.Kube
         public static async Task WaitForDaemonsetAsync(
 
             this IKubernetes    k8s,
-            string              @namespace,
+            string              namespaceParameter,
             string              name          = null,
             string              labelSelector = null,
             string              fieldSelector = null,
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
             if (pollInterval <= TimeSpan.Zero)
@@ -405,7 +405,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var daemonsets = await k8s.ListNamespacedDaemonSetAsync(@namespace, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await k8s.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
@@ -427,7 +427,7 @@ namespace Neon.Kube
         /// Executes a program within a pod container.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespace">Specifies the namespace hosting the pod.</param>
+        /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
@@ -437,14 +437,14 @@ namespace Neon.Kube
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecAsync(
             this IKubernetes    k8s,
-            string              @namespace,
+            string              namespaceParameter,
             string              name,
             string              container,
             string[]            command,
             CancellationToken   cancellationToken = default,
             bool                noSuccessCheck    = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
             Covenant.Requires<ArgumentException>(command.Length > 0, nameof(command));
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(command[0]), nameof(command));
@@ -462,12 +462,12 @@ namespace Neon.Kube
 
             var exitCode = await k8s.NamespacedPodExecAsync(
                 name:              name,
-                @namespace:        @namespace,
+                @namespace:        namespaceParameter,
                 container:         container,
                 command:           command,
                 tty:               false,
                 action:            handler,
-                cancellationToken: CancellationToken.None);
+                cancellationToken: cancellationToken);
 
             var response = new ExecuteResponse(exitCode, stdOut, stdErr);
 
@@ -477,139 +477,6 @@ namespace Neon.Kube
             }
 
             return response;
-        }
-
-        /// <summary>
-        /// List a namespaced custom object.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="k8s"></param>
-        /// <param name="namespaceParameter"></param>
-        /// <param name="allowWatchBookmarks"></param>
-        /// <param name="continueParameter"></param>
-        /// <param name="fieldSelector"></param>
-        /// <param name="labelSelector"></param>
-        /// <param name="limit"></param>
-        /// <param name="resourceVersion"></param>
-        /// <param name="resourceVersionMatch"></param>
-        /// <param name="timeoutSeconds"></param>
-        /// <param name="watch"></param>
-        /// <param name="pretty"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<T> ListNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            string namespaceParameter,
-            bool? allowWatchBookmarks = null,
-            string continueParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            int? limit = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            bool? watch = null,
-            bool? pretty = null,
-            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject, new()
-        {
-            var customObject = new T();
-            var typeMetadata = customObject.GetKubernetesTypeMetadata();
-
-            var result = await k8s.ListNamespacedCustomObjectAsync(
-                        typeMetadata.Group,
-                        typeMetadata.ApiVersion,
-                        namespaceParameter,
-                        typeMetadata.PluralName,
-                        allowWatchBookmarks,
-                        continueParameter,
-                        fieldSelector,
-                        labelSelector,
-                        limit,
-                        resourceVersion,
-                        resourceVersionMatch,
-                        timeoutSeconds,
-                        watch,
-                        pretty,
-                        cancellationToken);
-
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
-        }
-
-        /// <summary>
-        /// Create a namespaced custom object.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="k8s"></param>
-        /// <param name="body"></param>
-        /// <param name="namespaceParameter"></param>
-        /// <param name="dryRun"></param>
-        /// <param name="fieldManager"></param>
-        /// <param name="pretty"></param>
-        /// <returns></returns>
-        public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            T body,
-            string namespaceParameter,
-            string dryRun = null,
-            string fieldManager = null,
-            bool? pretty = null) where T : IKubernetesObject
-        {
-            var typeMetadata = body.GetKubernetesTypeMetadata();
-
-            var result = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty);
-
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
-        }
-
-        /// <summary>
-        /// Returns a namespaced custom object.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="k8s"></param>
-        /// <param name="namespaceParameter"></param>
-        /// <param name="name"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<T> GetNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            string namespaceParameter,
-            string name,
-            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject, new()
-        {
-            var customObject = new T();
-            var typeMetadata = customObject.GetKubernetesTypeMetadata();
-
-            var result = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name);
-
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
-        }
-
-        /// <summary>
-        /// Replace a namespaced custom object.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="k8s"></param>
-        /// <param name="body"></param>
-        /// <param name="namespaceParameter"></param>
-        /// <param name="name"></param>
-        /// <param name="dryRun"></param>
-        /// <param name="fieldManager"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<T> ReplaceNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            T body, 
-            string namespaceParameter, 
-            string name, 
-            string dryRun = null,
-            string fieldManager = null,
-            CancellationToken cancellationToken = default(CancellationToken)) where T : IKubernetesObject
-        {
-            var typeMetadata = body.GetKubernetesTypeMetadata();
-
-            var result = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager);
-
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
     }
 }

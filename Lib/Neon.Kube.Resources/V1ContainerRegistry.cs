@@ -34,9 +34,7 @@ namespace Neon.Kube.Resources
     /// <remarks>
     /// <para>
     /// The <b>neon-node-agent</b> pods running as a daemonset on all cluster nodes monitor the  
-    /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-systemt</b> namespace as well 
-    /// as any referenced secrets for changes and update the CRI-O configuration on each node 
-    /// to match.
+    /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
     [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
@@ -103,17 +101,14 @@ namespace Neon.Kube.Resources
             public string Location { get; set; } = null;
 
             /// <summary>
-            /// <para>
-            /// Optionally identifies the <b>kubernetes.io/basic-auth</b> secret used to authenticate 
-            /// with the registry.  This is formatted as: <b>NAMESPACE/SECRET-NAME</b>
-            /// </para>
-            /// <para>
-            /// This defaults to <c>null</c>.
-            /// </para>
+            /// Optionally specifies the username to be used to authenticate against the upstream registry.
             /// </summary>
-            [Pattern(@"^[a-z0-9-\.]+/[a-z0-9-\.]+$")]
-            [Length(MaxLength = 253)]
-            public string Secret { get; set; } = null;
+            public string Username { get; set; } = null;
+
+            /// <summary>
+            /// Optionally specifies the password to be used to authenticate against the upstream registry.
+            /// </summary>
+            public string Password { get; set; } = null;
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
@@ -32,6 +33,11 @@ namespace NeonNodeAgent
     /// </summary>
     public static class Program
     {
+        /// <summary>
+        /// The Linux path where the host node's file system is mounted;
+        /// </summary>
+        public const string HostMount = "/mnt/host";
+
         /// <summary>
         /// The program entry point.
         /// </summary>
@@ -62,6 +68,35 @@ namespace NeonNodeAgent
 
             operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
             operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.Stub).Assembly);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Executes a command on the host node, setting the file system root to <see cref="HostMount"/>
+        /// where the host's file system is mounted.
+        /// </para>
+        /// <note>
+        /// WARNING! This relies on the pod's environment variables like PATH matching the host
+        /// environment, which is currently the case because the Microsoft .NET container images
+        /// are based on Ubuntu, as are neonKUBE cluster nodes.
+        /// </note>
+        /// </summary>
+        /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
+        /// <param name="args">Optional command arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse HostExecuteCapture(string command, params object[] args)
+        {
+            var actualArgs = new List<object>();
+
+            actualArgs.Add(HostMount);
+            actualArgs.Add(command);
+
+            foreach (var arg in args)
+            {
+                actualArgs.Add(arg);
+            }
+
+            return NeonHelper.ExecuteCapture("chroot", actualArgs.ToArray());
         }
     }
 }

@@ -49,9 +49,9 @@ namespace TestCommon
                 // Configure the log manager to use [TestLogger] loggers.
 
                 logManager.LoggerCreator =
-                    (LogManager manager, string module, TextWriter writer, string contextId, Func<bool> isLogEnabledFunc) =>
+                    (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
                     {
-                        return new TestLogger(manager, module, writer, contextId, isLogEnabledFunc);
+                        return new TestLogger(manager, module, contextId: contextId);
                     };
 
                 logManager.EmitIndex = true;
@@ -104,6 +104,76 @@ namespace TestCommon
         }
 
         [Fact]
+        public void Verify_TestLogger_Filtered()
+        {
+            // Verify that event filtering works.
+
+            var logManager = LogManager.Default;
+
+            Assert.NotNull(logManager);
+
+            try
+            {
+                // Configure the log manager to use [TestLogger] loggers.
+
+                logManager.LoggerCreator =
+                    (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
+                    {
+                        return new TestLogger(manager, module, contextId: contextId, logFilter: logFilter);
+                    };
+
+                logManager.EmitIndex = true;
+
+                TestLogger.ClearEvents();
+                Assert.Empty(TestLogger.GetEvents());
+
+                var log = logManager.GetLogger(logFilter: logEvent => !logEvent.Message.Contains("FILTER ME!"));
+
+                // Log some events and verify.
+
+                var startTimeUtc = DateTime.UtcNow;
+
+                log.LogInfo("information");
+                log.LogError("error");
+                log.LogInfo("information: FILTER ME!");
+                log.LogError("error: FILTER ME!");
+
+                var endTimeUtc = DateTime.UtcNow;
+                var events     = TestLogger.GetEvents();
+
+                Assert.Equal(2, events.Length);
+
+                var evt = events[0];
+
+                Assert.True(startTimeUtc <= evt.TimeUtc && evt.TimeUtc <= endTimeUtc);
+                Assert.Null(evt.ActivityId);
+                Assert.Null(evt.ContextId);
+                Assert.Null(evt.Exception);
+                Assert.Equal(1, evt.Index);
+                Assert.Equal(LogLevel.Info, evt.LogLevel);
+                Assert.Null(evt.Module);
+                Assert.Equal("information", evt.Message);
+
+                evt = events[1];
+
+                Assert.True(startTimeUtc <= evt.TimeUtc && evt.TimeUtc <= endTimeUtc);
+                Assert.Null(evt.ActivityId);
+                Assert.Null(evt.ContextId);
+                Assert.Null(evt.Exception);
+                Assert.Equal(2, evt.Index);
+                Assert.Equal(LogLevel.Error, evt.LogLevel);
+                Assert.Null(evt.Module);
+                Assert.Equal("error", evt.Message);
+            }
+            finally
+            {
+                // Reset the log manager so we don't impact other test cases.
+
+                logManager.Reset();
+            }
+        }
+
+        [Fact]
         public void Verify_TestLogger_Levels()
         {
             // Verify that log level filtering works correctly.
@@ -117,9 +187,9 @@ namespace TestCommon
                 // Configure the log manager to use [TestLogger] loggers.
 
                 logManager.LoggerCreator =
-                    (LogManager manager, string module, TextWriter writer, string contextId, Func<bool> isLogEnabledFunc) =>
+                    (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
                     {
-                        return new TestLogger(manager, module, writer, contextId, isLogEnabledFunc);
+                        return new TestLogger(manager, module, writer, contextId, logFilter, isLogEnabledFunc);
                     };
 
                 logManager.EmitIndex = true;

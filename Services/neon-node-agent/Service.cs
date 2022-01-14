@@ -25,6 +25,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -45,24 +46,14 @@ namespace NeonNodeAgent
     public partial class Service : NeonService
     {
         private const string StateTable = "state";
-        
-        private static KubernetesWithRetry k8s;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube)
+            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
         {
-            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
-
-            k8s.RetryPolicy = new ExponentialRetryPolicy(
-                e => true,
-                maxAttempts:          int.MaxValue,
-                initialRetryInterval: TimeSpan.FromSeconds(0.25),
-                maxRetryInterval:     TimeSpan.FromSeconds(10),
-                timeout:              TimeSpan.FromMinutes(5));
         }
 
         /// <inheritdoc/>
@@ -75,14 +66,35 @@ namespace NeonNodeAgent
         protected async override Task<int> OnRunAsync()
         {
             // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to known when to exit.
+            // this and will use the termination signal to exit.
 
             _ = Host.CreateDefaultBuilder()
+                    .ConfigureHostOptions(
+                        options =>
+                        {
+                            // Ensure that the processor terminator and ASP.NET shutdown times match.
+
+                            options.ShutdownTimeout = ProcessTerminator.DefaultMinShutdownTime;
+                        })
+                    .ConfigureAppConfiguration(
+                        (hostingContext, config) =>
+                        {
+                            // $note(jefflill): 
+                            //
+                            // The .NET runtime watches the entire file system for configuration
+                            // changes which can cause real problems on Linux.  We're working around
+                            // this by removing all configuration sources which we aren't using
+                            // anyway for Kubernetes apps.
+                            //
+                            // https://github.com/nforgeio/neonKUBE/issues/1390
+
+                            config.Sources.Clear();
+                        })
                     .ConfigureLogging(
                         logging =>
                         {
                             logging.ClearProviders();
-                            logging.AddProvider(new LogManager(version: base.Version));
+                            logging.AddProvider(base.LogManager);
                         })
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()

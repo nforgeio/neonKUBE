@@ -171,9 +171,9 @@ namespace Test.Neon.Web.Controller
                 // Configure the log manager to use [TestLogger] loggers.
 
                 logManager.LoggerCreator =
-                    (LogManager manager, string module, TextWriter writer, string contextId, Func<bool> isLogEnabledFunc) =>
+                    (LogManager manager, string module, TextWriter writer, string contextId, Func<LogEvent, bool> logFilter, Func<bool> isLogEnabledFunc) =>
                     {
-                        return new TestLogger(manager, module, writer, contextId, isLogEnabledFunc);
+                        return new TestLogger(manager, module, writer, contextId, logFilter, isLogEnabledFunc);
                     };
 
                 logManager.EmitIndex = true;

@@ -2261,5 +2261,55 @@ namespace Neon.Common
 
             return partitions;
         }
+
+        /// <summary>
+        /// Determines the minimum <see cref="TimeSpan"/> value.
+        /// </summary>
+        /// <param name="values">The values to compare.</param>
+        /// <returns>The minimum of the values passed or <see cref="TimeSpan.Zero"/> when nothing is passed..</returns>
+        public static TimeSpan Min(params TimeSpan[] values)
+        {
+            if (values == null || values.Length == 0)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var minValue = values.First();
+
+            foreach (var value in values.Skip(1))
+            {
+                if (value < minValue)
+                {
+                    minValue = value;
+                }
+            }
+
+            return minValue;
+        }
+
+        /// <summary>
+        /// Determines the maximum <see cref="TimeSpan"/> value.
+        /// </summary>
+        /// <param name="values">The values to compare.</param>
+        /// <returns>The minimum of the values passed or <see cref="TimeSpan.Zero"/> when nothing is passed..</returns>
+        public static TimeSpan Max(params TimeSpan[] values)
+        {
+            if (values == null || values.Length == 0)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var maxValue = values.First();
+
+            foreach (var value in values.Skip(1))
+            {
+                if (value > maxValue)
+                {
+                    maxValue = value;
+                }
+            }
+
+            return maxValue;
+        }
     }
 }

@@ -84,12 +84,12 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Instance members
 
-        private ILogManager     logManager;
-        private string          module;
-        private bool            infoAsDebug;
-        private TextWriter      writer;
-        private string          contextId;
-        private Func<bool>      isLogEnabledFunc;
+        private ILogManager             logManager;
+        private string                  module;
+        private bool                    infoAsDebug;
+        private string                  contextId;
+        private Func<bool>              isLogEnabledFunc;
+        private Func<LogEvent, bool>    logFilter;
 
         /// <inheritdoc/>
         public string ContextId => this.contextId;
@@ -123,16 +123,21 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="logManager">The parent log manager or <c>null</c>.</param>
         /// <param name="module">Optionally identifies the event source module or <c>null</c>.</param>
-        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        /// <param name="writer">Optionally specifies the output writer.  This is ignored for the <see cref="TestLogger"/>.</param>
         /// <param name="contextId">
         /// Optionally specifies additional information that can be used to identify
         /// context for logged events.  For example, the Neon.Cadence client uses this 
         ///  to record the ID of the workflow recording events.
         /// </param>
+        /// <param name="logFilter">
+        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+        /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
         /// <param name="isLogEnabledFunc">
         /// Optionally specifies a function that will be called at runtime to
-        /// determine whether to actually log an event.  This defaults to <c>null</c>
-        /// which will always log events.
+        /// determine whether to event logging is actually enabled.  This defaults
+        /// to <c>null</c> which will always log events.
         /// </param>
         /// <remarks>
         /// <para>
@@ -148,16 +153,17 @@ namespace Neon.Diagnostics
         /// </note>
         /// </remarks>
         public TestLogger(
-            ILogManager     logManager, 
-            string          module           = null, 
-            TextWriter      writer           = null,
-            string          contextId        = null,
-            Func<bool>      isLogEnabledFunc = null)
+            ILogManager             logManager, 
+            string                  module           = null, 
+            TextWriter              writer           = null,
+            string                  contextId        = null,
+            Func<LogEvent, bool>    logFilter        = null,
+            Func<bool>              isLogEnabledFunc = null)
         {
             this.logManager       = logManager ?? LogManager.Disabled;
             this.module           = module;
-            this.writer           = writer ?? Console.Error;
             this.contextId        = contextId;
+            this.logFilter        = logFilter;
             this.isLogEnabledFunc = isLogEnabledFunc;
 
             // $hack(jefflill):
@@ -290,13 +296,21 @@ namespace Neon.Diagnostics
                     new LogEvent(
                         module:         module,
                         contextId:      contextId,
-                        index:          logManager.GetNextEventIndex(),
+                        index:          0,                  // We don't set this when filtering
                         timeUtc:        DateTime.UtcNow,
                         logLevel:       logLevel,
                         message:        message,
                         activityId:     activityId,
                         e:              e);
 
+                if (logFilter != null && !logFilter(logEvent))
+                {
+                    // Ignore filtered logs.
+
+                    return;
+                }
+
+                logEvent.Index = logManager.GetNextEventIndex();
                 events.Add(logEvent);
             }
         }
