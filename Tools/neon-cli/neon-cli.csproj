@@ -6,7 +6,7 @@
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
@@ -18,7 +18,6 @@
 
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
-	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
 	<!-- 
     We need to prevent the KubeOps build targets from trying to call the program
