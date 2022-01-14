@@ -52,6 +52,22 @@ namespace Neon.Kube
     public class Registry
     {
         /// <summary>
+        /// <para>
+        /// Specifies the name to be used when persisting this as a <b>V1ContainerRegistry</b> to the cluster.
+        /// This must be a valid Kubernetes name:
+        /// </para>
+        /// <list type="bullet">
+        /// <item>contain no more than 253 characters</item>
+        /// <item>contain only lowercase alphanumeric characters, '-' or '.'</item>
+        /// <item>start with an alphanumeric character</item>
+        /// <item>end with an alphanumeric character</item>
+        /// </list>
+        /// </summary>
+        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
+        public string Name { get; set; }
+
+        /// <summary>
         /// Specifies registry prefix, optionally with a subdomain <b>"*"</b> wildcard character for subdomain matching.
         /// </summary>
         [JsonProperty(PropertyName = "Prefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -90,6 +106,24 @@ namespace Neon.Kube
         public string Location { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies the username to be used for authenticating with the upstream
+        /// container registry.  This defaults to <c>null</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Username { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the password to be used for authenticating with the upstream
+        /// container registry.  This defaults to <c>null</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Password { get; set; } = null;
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -100,6 +134,15 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             RegistryOptions.ValidateRegistryPrefix(Prefix, allowWildcard: true, propertyPath: $"{nameof(RegistryOptions)}.{nameof(RegistryOptions.Registries)}.{nameof(Prefix)}");
+
+            try
+            {
+                KubeHelper.CheckName(this.Name);
+            }
+            catch (Exception e)
+            {
+                throw new ClusterDefinitionException(e.Message, e);
+            }
 
             if (!Prefix.StartsWith("*.") && !string.IsNullOrEmpty(Location))
             {

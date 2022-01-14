@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
-        public object Spec { get; set; }
+        public dynamic Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

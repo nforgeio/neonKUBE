@@ -182,6 +182,50 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
+        /// Determines whether a name is a valid Kubernetes name.
+        /// </para>
+        /// <list type="bullet">
+        /// <item>contain no more than 253 characters</item>
+        /// <item>contain only lowercase alphanumeric characters, '-' or '.'</item>
+        /// <item>start with an alphanumeric character</item>
+        /// <item>end with an alphanumeric character</item>
+        /// </list>
+        /// </summary>
+        /// <param name="name">The name to check.</param>
+        /// <exception cref="ArgumentNullException">Thrown for null or empty names.</exception>
+        /// <exception cref="FormatException">Thrown for invalid names.</exception>
+        public static void CheckName(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (name.Length > 253)
+            {
+                throw new FormatException($"Name exceeds 253 characters: {name}");
+            }
+
+            if (!char.IsLetterOrDigit(name.First()))
+            {
+                throw new FormatException($"Name starts with a non-alphanum character: {name}");
+            }
+
+            if (!char.IsLetterOrDigit(name.Last()))
+            {
+                throw new FormatException($"Name ends with a non-alphanum character: {name}");
+            }
+
+            foreach (var ch in name)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-')
+                {
+                    continue;
+                }
+
+                throw new FormatException($"Name includes invalid character: [{ch}]");
+            }
+        }
+
+        /// <summary>
         /// Reads a file as text, retrying if the file is already open.
         /// </summary>
         /// <param name="path">The file path.</param>

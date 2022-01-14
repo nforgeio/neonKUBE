@@ -50,8 +50,9 @@ namespace Neon.Kube
         /// Consstructs an instance with a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        public ClusterDefinitionException(string message)
-            : base(message)
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public ClusterDefinitionException(string message, Exception innerException = null)
+            : base(message, innerException)
         {
         }
     }
