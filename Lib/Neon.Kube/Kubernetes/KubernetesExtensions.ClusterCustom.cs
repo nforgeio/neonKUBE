@@ -141,7 +141,7 @@ namespace Neon.Kube
             bool?               watch                = null,
             CancellationToken   cancellationToken    = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             var typeMetadata = new T().GetKubernetesTypeMetadata();
 
@@ -188,7 +188,7 @@ namespace Neon.Kube
             string              dryRun       = null,
             string              fieldManager = null) 
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
@@ -209,7 +209,7 @@ namespace Neon.Kube
             string              name,
             CancellationToken   cancellationToken = default(CancellationToken)) 
             
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             var typeMetadata = new T().GetKubernetesTypeMetadata();
             var result       = await k8s.GetClusterCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, cancellationToken);
@@ -245,7 +245,7 @@ namespace Neon.Kube
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
@@ -282,7 +282,7 @@ namespace Neon.Kube
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
@@ -295,6 +295,8 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
+                    body.Metadata.Name = name;
+
                     return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager);
                 }
                 else

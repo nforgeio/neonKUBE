@@ -19,8 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using DotnetKubernetesClient.Entities;
+using k8s;
 using k8s.Models;
+
+using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 
@@ -43,6 +45,14 @@ namespace Neon.Kube.Resources
     [Description("Describes a neonKUBE cluster upstream container registry.")]
     public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistryEntitySpec>
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public V1ContainerRegistry()
+        {
+            ((IKubernetesObject)this).SetMetadata();
+        }
+
         /// <summary>
         /// The container registry specification.
         /// </summary>

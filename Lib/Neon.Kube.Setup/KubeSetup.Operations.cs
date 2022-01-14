@@ -618,7 +618,7 @@ mode: {kubeProxyMode}");
                             NeonHelper.WaitFor(
                                 () =>
                                 {
-                                    var socketResponse  = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
+                                    var socketResponse = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
 
                                     return socketResponse.Success && socketResponse.OutputText.Contains(crioSocket);
 
@@ -4067,9 +4067,7 @@ $@"- name: StorageType
                         clusterRegistry.Spec.Username    = registry.Username;
                         clusterRegistry.Spec.Password    = registry.Password;
 
-                        // $todo(jefflill): FINISH THIS!
-
-                        // await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                        await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
                     }
                 });
         }
