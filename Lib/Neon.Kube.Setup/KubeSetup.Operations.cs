@@ -4067,7 +4067,9 @@ $@"- name: StorageType
                         clusterRegistry.Spec.Username    = registry.Username;
                         clusterRegistry.Spec.Password    = registry.Password;
 
-                        await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                        // $todo(jefflill): FINISH THIS!
+
+                        // await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
                     }
                 });
         }

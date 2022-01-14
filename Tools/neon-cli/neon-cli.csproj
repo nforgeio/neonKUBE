@@ -6,7 +6,7 @@
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
@@ -15,21 +15,23 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
 
-	<PropertyGroup>
-		<!-- 
+	<PublishSingleFile>true</PublishSingleFile>
+	<SelfContained>true</SelfContained>
+
+	<!-- 
     We need to prevent the KubeOps build targets from trying to call the program
     entrypoint to generate the CRDs and other installation related files.
     -->
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-	</PropertyGroup>
+	  
+	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+	<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+	<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 

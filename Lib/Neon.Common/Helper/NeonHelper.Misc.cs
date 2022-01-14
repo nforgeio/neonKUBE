@@ -1483,11 +1483,29 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the fully qualified path to the folder where the executable resides.
+        /// This will include the terminating "\".
+        /// </summary>
+        /// <returns>Path to the folder holding the executable</returns>
+        public static string GetBaseDirectory()
+        {
+            var directory = AppContext.BaseDirectory;
+
+            if (directory.EndsWith("/"))
+            {
+                directory += "/";
+            }
+
+            return directory;
+        }
+
+        /// <summary>
         /// Returns the fully qualified path to the folder holding the
         /// assembly passed (includes the terminating "\").
         /// </summary>
         /// <param name="assembly">The assembly.</param>
         /// <returns>Path to the folder holding the assembly.</returns>
+        [Obsolete("Avoid this because it is not compatable with single-file executables.")]
         public static string GetAssemblyFolder(Assembly assembly)
         {
             // Get the path to the directory hosting the assembly by
@@ -1511,6 +1529,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="assembly">The assembly.</param>
         /// <returns>The assembly's path.</returns>
+        [Obsolete("Avoid this because it is not compatable with single-file executables.")]
         public static string GetAssemblyPath(Assembly assembly)
         {
             // Get the path to the directory hosting the assembly by
@@ -1524,6 +1543,7 @@ namespace Neon.Common
         /// Returns the fully qualified path the entry assembly for the current process.
         /// </summary>
         /// <returns>The entry assembly file path.</returns>
+        [Obsolete("Avoid this because it is not compatable with single-file executables.")]
         public static string GetEntryAssemblyPath()
         {
             return GetAssemblyPath(Assembly.GetEntryAssembly());
