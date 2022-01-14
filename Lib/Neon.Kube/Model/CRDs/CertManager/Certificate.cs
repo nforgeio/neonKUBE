@@ -32,16 +32,36 @@ namespace Neon.Kube
     /// Secret resource named in `spec.secretName`. \n The stored certificate will be renewed before it expires 
     /// (as configured by `spec.renewBefore`)."
     /// </summary>
-    [KubernetesEntity(Group = "cert-manager.io", Kind = "Certificate", ApiVersion = "v1", PluralName = "certificates")]
+    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class Certificate : IKubernetesObject<V1ObjectMeta>, ISpec<CertificateSpec>, IValidate
     {
         /// <summary>
+        /// The API version this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeApiVersion = "v1";
+
+        /// <summary>
+        /// The Kubernetes named schema this object is based on.
+        /// </summary>
+        public const string KubeKind = "Certificate";
+
+        /// <summary>
+        /// The Group this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeGroup = "cert-manager.io";
+
+        /// <summary>
+        /// The plural name of the entity.
+        /// </summary>
+        public const string KubePlural = "certificates";
+        /// <summary>
         /// Initializes a new instance of the Certificate class.
         /// </summary>
+        /// 
         public Certificate()
         {
-            ApiVersion = "cert-manager.io/v1alpha2";
-            Kind = "Certificate";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind = KubeKind;
         }
 
         /// <summary>

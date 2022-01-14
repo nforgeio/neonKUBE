@@ -177,6 +177,6 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "usages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<X509Usages> Usages { get; set; }
+        public string[] Usages { get; set; }
     }
 }

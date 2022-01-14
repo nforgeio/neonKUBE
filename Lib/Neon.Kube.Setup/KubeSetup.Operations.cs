@@ -56,6 +56,7 @@ using Tomlyn.Syntax;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NodeDeserializers;
 using YamlDotNet.Serialization.NamingConventions;
+using System.Text.Json;
 
 namespace Neon.Kube
 {
@@ -545,26 +546,26 @@ mode: {kubeProxyMode}");
                     }
                 });
 
-            await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
-                async () =>
-                {
-                    await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                try
-                                {
-                                    var pods = await k8s.ListPodForAllNamespacesAsync();
+            //await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
+            //    async () =>
+            //    {
+            //        await NeonHelper.WaitForAsync(
+            //                async () =>
+            //                {
+            //                    try
+            //                    {
+            //                        var pods = await k8s.ListPodForAllNamespacesAsync();
 
-                                    return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
-                            },
-                            timeout:      TimeSpan.FromMinutes(10),
-                            pollInterval: TimeSpan.FromMilliseconds(500));
-                });
+            //                        return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
+            //                    }
+            //                    catch
+            //                    {
+            //                        return false;
+            //                    }
+            //                },
+            //                timeout:      TimeSpan.FromMinutes(10),
+            //                pollInterval: TimeSpan.FromMilliseconds(500));
+            //    });
         }
         
         /// <summary>
@@ -1665,7 +1666,7 @@ done
                         server.Hosts = hosts;
                     }
 
-                    await k8s.ReplaceNamespacedCustomObjectAsync<Gateway>(gateway, gateway.Namespace(), gateway.Name());
+                    await k8s.ReplaceNamespacedCustomObjectAsync<Gateway>(gateway, KubeNamespaces.NeonIngress, gateway.Name());
                 });
             }
         }
@@ -1777,7 +1778,7 @@ done
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<Certificate>(cert, cert.Namespace(), cert.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<Certificate>(cert, KubeNamespaces.NeonIngress, cert.Name());
 
             });
             }
@@ -1923,7 +1924,7 @@ subjects:
                                 $"{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
             }
         }
@@ -2069,7 +2070,7 @@ subjects:
                                 $"{ClusterDomain.Kiali}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/kiali-crd-config",
@@ -2077,16 +2078,14 @@ subjects:
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update kiali crd config");
 
-                        var kiali = ((dynamic)await k8s.GetNamespacedCustomObjectAsync("kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali"));
+                        var kiali = await k8s.GetNamespacedCustomObjectAsync<Kiali>(KubeNamespaces.NeonSystem, "kiali");
 
-                        kiali["spec"]["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-                        kiali["spec"]["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
+                        kiali.Spec["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
+                        kiali.Spec["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)kiali, "kiali.io", "v1alpha1", KubeNamespaces.NeonSystem, "kialis", "kiali");
+                        await k8s.ReplaceNamespacedCustomObjectAsync(kiali, KubeNamespaces.NeonSystem, kiali.Name());
                     });
             }
-
-
         }
 
         /// <summary>
@@ -3271,7 +3270,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Grafana}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-crd-config",
@@ -3279,15 +3278,15 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update grafana crd config");
 
-                        var grafana = (dynamic)await k8s.GetNamespacedCustomObjectAsync("integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana");
-                        
-                        grafana["spec"]["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
-                        grafana["spec"]["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
-                        grafana["spec"]["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
+                        var grafana = await k8s.GetNamespacedCustomObjectAsync<Grafana>(KubeNamespaces.NeonMonitor, "grafana");
 
-                        grafana["spec"]["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)grafana, "integreatly.org", "v1alpha1", KubeNamespaces.NeonMonitor, "grafanas", "grafana");
+                        grafana.Spec["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
+                        grafana.Spec["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
+                        grafana.Spec["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
 
+                        grafana.Spec["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync(grafana, KubeNamespaces.NeonMonitor, grafana.Name());
                     });
             }
         }
@@ -3499,7 +3498,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Minio}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
             }
         }
@@ -3744,33 +3743,33 @@ $@"- name: StorageType
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-cluster",
-                    async () =>
-                    {
-                        dynamic harborCluster = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
-                        var minioSecret       = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+                async () =>
+                {
+                    var harborCluster = await k8s.GetNamespacedCustomObjectAsync<HarborCluster>(KubeNamespaces.NeonSystem, "registry");
+                    var minioSecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
 
-                        harborCluster["spec"]["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                        harborCluster["spec"]["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
-                        harborCluster["spec"]["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                        harborCluster["spec"]["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+                    harborCluster.Spec["expose"]["core"]["ingress"]["host"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                    harborCluster.Spec["expose"]["notary"]["ingress"]["host"] = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
+                    harborCluster.Spec["externalURL"] = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
+                    harborCluster.Spec["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
 
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborCluster, "goharbor.io", "v1alpha3", KubeNamespaces.NeonSystem, "harborclusters", "registry");
-                    });
+                    await k8s.ReplaceNamespacedCustomObjectAsync(harborCluster, KubeNamespaces.NeonSystem, harborCluster.Name());
+                });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-configuration",
-                    async () =>
-                    {
-                        dynamic harborConfig = await k8s.GetNamespacedCustomObjectAsync("goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
-                        var baseDN           = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
+                async () =>
+                {
+                    var harborConfig = await k8s.GetNamespacedCustomObjectAsync<HarborConfiguration>(KubeNamespaces.NeonSystem, "ldap-config");
 
-                        harborConfig["spec"]["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
-                        harborConfig["spec"]["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
-                        harborConfig["spec"]["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
-                        harborConfig["spec"]["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
+                    var baseDN = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync((JObject)harborConfig, "goharbor.io", "v1beta1", KubeNamespaces.NeonSystem, "harborconfigurations", "ldap-config");
-                    });
+                    harborConfig.Spec["configuration"]["ldapBaseDn"] = $"cn=users,{baseDN}";
+                    harborConfig.Spec["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
+                    harborConfig.Spec["configuration"]["ldapGroupBaseDn"] = $"ou=users,{baseDN}";
+                    harborConfig.Spec["configuration"]["ldapSearchDn"] = $"cn=serviceuser,ou=admin,{baseDN}";
+
+                    await k8s.ReplaceNamespacedCustomObjectAsync(harborConfig, KubeNamespaces.NeonSystem, harborConfig.Name());
+                });
 
                 await master.InvokeIdempotentAsync($"ready-to-go/harbor-registry-configuration",
                     async () =>
@@ -3847,7 +3846,7 @@ $@"- name: StorageType
                         var result = await k8s.NamespacedPodExecAsync(
                             name:               master.Name(),
                             namespaceParameter: master.Namespace(),
-                            container:          "citus",
+                            container:          "postgres",
                             command:            command);
 
                         // Restart registry components.
@@ -3885,7 +3884,7 @@ $@"- name: StorageType
                                 KubeConst.LocalClusterRegistry
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
             }
 
@@ -4241,7 +4240,7 @@ $@"- name: StorageType
             var secret = await k8s.ReadNamespacedSecretAsync(secretName, secretNamespace);
             var password = NeonHelper.GetCryptoRandomPassword(20);
             secret.Data["password"] = Encoding.UTF8.GetBytes(password);
-            await k8s.UpsertSecretAsync(secret);
+            await k8s.UpsertSecretAsync(secret, secretNamespace);
 
             var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
 
@@ -4489,7 +4488,7 @@ $@"- name: StorageType
                                 $"{ClusterDomain.Sso}.{cluster.Definition.Domain}"
                             };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Namespace(), virtualService.Name());
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
