@@ -37,7 +37,8 @@ affinity:
           topologyKey: kubernetes.io/hostname
 
 ## StatefulSet annotations
-annotations: {}
+annotations:
+  reloader.stakater.com/auto: "true"
 
 config:
   auth_enabled: true
