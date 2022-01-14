@@ -15,8 +15,6 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
 
 	<!-- 
