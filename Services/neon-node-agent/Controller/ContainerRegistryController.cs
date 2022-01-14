@@ -4,6 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,11 +22,13 @@ using Neon.Kube.Resources;
 using Neon.Kube.Operator;
 
 using k8s.Models;
+
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
-using System.Collections.Generic;
+
+using Prometheus;
 
 namespace NeonNodeAgent
 {
@@ -67,9 +70,24 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger                             log             = LogManager.Default.GetLogger<ContainerRegistryController>();
-        private static readonly ResourceManager<V1ContainerRegistry>    resourceManager = new ResourceManager<V1ContainerRegistry>();
-        private static readonly string                                  configMountPath = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static readonly INeonLogger                             log                            = LogManager.Default.GetLogger<ContainerRegistryController>();
+        private static readonly ResourceManager<V1ContainerRegistry>    resourceManager                = new ResourceManager<V1ContainerRegistry>();
+        private static readonly string                                  configMountPath                = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+
+        private static readonly Counter                                 reconciledReceivedCounter      = Metrics.CreateCounter("container_registry_reconciled_received", "Received ContainerRegistry reconcile events.");
+        private static readonly Counter                                 deletedReceivedCounter         = Metrics.CreateCounter("container_registry_deleted_received", "Received ContainerRegistry deleted events.");
+        private static readonly Counter                                 statusModifiedReceivedCounter  = Metrics.CreateCounter("container_registry_statusmodified_received", "Received ContainerRegistry status-modified events.");
+
+        private static readonly Counter                                 reconciledProcessedCounter     = Metrics.CreateCounter("container_registry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
+        private static readonly Counter                                 deletedProcessedCounter        = Metrics.CreateCounter("container_registry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
+        private static readonly Counter                                 statusModifiedProcessedCounter = Metrics.CreateCounter("container_registry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
+
+        private static readonly Counter                                 reconciledErrorCounter         = Metrics.CreateCounter("container_registry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
+        private static readonly Counter                                 deletedErrorCounter            = Metrics.CreateCounter("container_registry_deleted_error", "Failed ContainerRegistry deleted event processing.");
+        private static readonly Counter                                 statusModifiedErrorCounter     = Metrics.CreateCounter("container_registry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
+
+        private static readonly Counter                                 configUpdateCounter            = Metrics.CreateCounter("container_registry_node_updated", "Number of node config updates.");
+        private static readonly Counter                                 loginErrorCounter              = Metrics.CreateCounter("container_registry_login_error", "Number of failed container registry logins.");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -83,11 +101,23 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry resource)
         {
-            if (resourceManager.Reconciled(resource, resources => UpdateContainerRegistries(resources)))
+            try
             {
-                log.LogInfo($"RECONCILE: {resource.Name()}");
+                reconciledReceivedCounter.Inc();
 
-                await Task.CompletedTask;
+                if (resourceManager.Reconciled(resource, resources => UpdateContainerRegistries(resources)))
+                {
+                    log.LogInfo($"RECONCILE: {resource.Name()}");
+                    reconciledProcessedCounter.Inc();
+
+                    await Task.CompletedTask;
+                }
+
+            }
+            catch (Exception e)
+            {
+                reconciledErrorCounter.Inc();
+                log.LogError(e);
             }
 
             return null;
@@ -100,11 +130,22 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1ContainerRegistry resource)
         {
-            if (resourceManager.Deleted(resource, resources => UpdateContainerRegistries(resources)))
+            try
             {
-                log.LogInfo($"DELETED: {resource.Name()}");
+                deletedReceivedCounter.Inc();
 
-                await Task.CompletedTask;
+                if (resourceManager.Deleted(resource, resources => UpdateContainerRegistries(resources)))
+                {
+                    log.LogInfo($"DELETED: {resource.Name()}");
+                    deletedReceivedCounter.Inc();
+
+                    await Task.CompletedTask;
+                }
+            }
+            catch (Exception e)
+            {
+                deletedErrorCounter.Inc();
+                log.LogError(e);
             }
         }
 
@@ -115,11 +156,22 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry resource)
         {
-            if (resourceManager.StatusModified(resource))
+            try
             {
-                log.LogInfo($"MODIFIED: {resource.Name()}");
+                statusModifiedReceivedCounter.Inc();
 
-                await Task.CompletedTask;
+                if (resourceManager.StatusModified(resource))
+                {
+                    log.LogInfo($"MODIFIED: {resource.Name()}");
+                    statusModifiedProcessedCounter.Inc();
+
+                    await Task.CompletedTask;
+                }
+            }
+            catch (Exception e)
+            {
+                statusModifiedErrorCounter.Inc();
+                log.LogError(e);
             }
 
             return null;
@@ -190,28 +242,39 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
             if (File.ReadAllText(configMountPath) != newConfig)
             {
+                configUpdateCounter.Inc();
+
                 File.WriteAllText(configMountPath, newConfig);
                 Program.HostExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
             }
 
             // We also need to log into each of the registries that require credentials
-            // via [podman] on the node.
+            // via [podman] on the node.  We'll log individual login failures but continue
+            // to try logging into any remaining registries.
 
             foreach (var registry in registries)
             {
-                if (string.IsNullOrEmpty(registry.Spec.Username))
+                try
                 {
-                    // The registry doesn't have a username so we'll logout to clear any old credentials.
-                    // We're going to ignore any errors here in case we're not currently logged into
-                    // the registry.
+                    if (string.IsNullOrEmpty(registry.Spec.Username))
+                    {
+                        // The registry doesn't have a username so we'll logout to clear any old credentials.
+                        // We're going to ignore any errors here in case we're not currently logged into
+                        // the registry.
 
-                    Program.HostExecuteCapture("podman", "logout", registry.Spec.Location);
+                        Program.HostExecuteCapture("podman", "logout", registry.Spec.Location);
+                    }
+                    else
+                    {
+                        // The registry has credentials so login using them.
+
+                        Program.HostExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    // The registry has credentials so login using them.
-
-                    Program.HostExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+                    loginErrorCounter.Inc();
+                    log.LogError(e);
                 }
             }
         }
