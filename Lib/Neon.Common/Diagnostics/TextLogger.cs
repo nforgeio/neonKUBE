@@ -45,7 +45,7 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly Counter LogEventCountByLevel = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
+        private static readonly Counter LogEventCountByLevel = Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
 
         //---------------------------------------------------------------------
         // Instance members
