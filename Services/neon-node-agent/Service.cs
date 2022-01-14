@@ -43,6 +43,25 @@ namespace NeonNodeAgent
     /// <summary>
     /// Implements the <b>neon-node-agent</b> service.
     /// </summary>
+    /// <remarks>
+    /// <para><b>ENVIRONMENT VARIABLES</b></para>
+    /// <para>
+    /// The <b>neon-node-agent</b> is configured using these environment variables:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>CONTAINER_REGISTRY_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> 
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b></b></term>
+    ///     <description>
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     public partial class Service : NeonService
     {
         private const string StateTable = "state";

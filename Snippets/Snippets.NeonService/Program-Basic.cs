@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Neon.Common;
@@ -15,6 +16,21 @@ namespace Service_Basic
 
             await new MyService().RunAsync();
         }
+    }
+    
+    public enum TestEnum
+    {
+        [EnumMember(Value = "ZERO")]
+        Zero,
+
+        [EnumMember(Value = "ONE")]
+        One,
+
+        [EnumMember(Value = "TWO")]
+        Two,
+
+        [EnumMember(Value = "THREE")]
+        Three
     }
 
     public class MyService : NeonService
@@ -40,6 +56,15 @@ namespace Service_Basic
 
             var mySetting    = GetEnvironmentVariable("MY_SETTING");
             var myConfigPath = GetConfigFilePath("/my-config.yaml");
+
+            // You can also use the [NeonService.Environment] property to take advantage
+            // of standard settings parsers.
+
+            var myInterval = Environment.Get("my-interval", TimeSpan.FromSeconds(10));
+            var myBool     = Environment.Get("my-bool", true);
+            var myInt      = Environment.Get("my-int", 0, required: true);
+            var myDouble   = Environment.Get("my-double", 0.0, validator: value => value >= 0);
+            var myEnum     = Environment.Get("my-enum", TestEnum.Zero);
 
             // Use this base class property to log things.  These will be picked up
             // automatically by Kubernetes and Docker.
