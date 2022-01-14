@@ -6,7 +6,7 @@
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
@@ -15,6 +15,18 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<SelfContained>true</SelfContained>
+
+	<!-- 
+    We need to prevent the KubeOps build targets from trying to call the program
+    entrypoint to generate the CRDs and other installation related files.
+    -->
+	  
+	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+	<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+	<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -44,7 +56,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="KubernetesClient" Version="6.0.26" />
+    <PackageReference Include="KubernetesClient" Version="7.0.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
@@ -78,7 +90,7 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-
+	
   <Target Name="PubCore" AfterTargets="AfterBuild">
     <Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
   </Target>

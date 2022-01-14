@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.8";
+        public const string Version = "1.10";
 
         /// <summary>
         /// Program entrypoint.
@@ -55,7 +55,7 @@ namespace pubcore
 $@"
 .NET Core Publishing Utility: PUBCORE v{Version}
 
-usage: pubcore [--no-cmd] PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
+usage: pubcore [--no-cmd] PROJECT-PATH TARGET-NAME CONFIG OUTPUT-PATH PUBLISH-DIR RUNTIME
 
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
@@ -109,6 +109,26 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 Console.WriteLine($"===========================================================");
                 Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
                 Console.WriteLine($"===========================================================");
+                Console.WriteLine();
+
+                var sbCommandLine = new StringBuilder("pubcore");
+
+                foreach (var arg in args)
+                {
+                    sbCommandLine.Append(' ');
+
+                    if (arg.Contains(' '))
+                    {
+                        sbCommandLine.Append($"\"{arg}\"");
+                    }
+                    else
+                    {
+                        sbCommandLine.Append(arg);
+                    }
+                }
+
+                Console.WriteLine(sbCommandLine.ToString());
+                Console.WriteLine();
 
                 // Look for the [--no-cmd] option and then remove it from the
                 // arguments when present.
@@ -132,7 +152,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
 
                 var targetName = args[1];
                 var config     = args[2];
-                var targetDir  = Path.Combine(Path.GetDirectoryName(projectPath), args[3]);
+                var outputDir  = Path.Combine(Path.GetDirectoryName(projectPath), args[3]);
                 var publishDir = args[4];
                 var runtime    = args.ElementAtOrDefault(5);
                 var binFolder  = Path.Combine(publishDir, targetName);
@@ -165,6 +185,12 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 // Ensure that the output folder exists.
 
                 Directory.CreateDirectory(publishDir);
+
+                // Time how long publication takes.
+
+                var stopwatch = new Stopwatch();
+
+                stopwatch.Start();
 
                 // It appears that [dotnet publish] is sometimes unable to write
                 // output files due to locks being held by somebody else (I'm guessing
@@ -285,7 +311,7 @@ $@"@echo off
 
                         Directory.CreateDirectory(binFolder);
 
-                        CopyRecursive(GetPublishDir(targetDir, runtime), binFolder);
+                        CopyRecursive(GetPublishDir(outputDir, runtime), binFolder);
                         break;
                     }
                     catch (Exception e)
@@ -301,6 +327,24 @@ $@"@echo off
                     }
                 }
 
+                // For some bizarre reason, [dotnet publish] copies [dotnet.exe] to the publish
+                // folder and this is causing trouble running [dotnet] commands for other apps.
+                // I'm also seeing other random DLLs being published as well for single-file
+                // executables, which is really strange.
+                //
+                // This might be a new Visual Studio 2022 (bad?) behavior.  I'm going to mitigate
+                // by removing the [dotnet.exe] file from the publish folder if present.
+
+                var dotnetPath = Path.Combine(binFolder, "dotnet.exe");
+
+                if (File.Exists(dotnetPath))
+                {
+                    File.Delete(dotnetPath);
+                }
+
+                // Finish up
+
+                Console.WriteLine($"Publish time [{targetName}]: {stopwatch.Elapsed}");
                 Environment.Exit(0);
             }
             catch (Exception e)
@@ -336,10 +380,10 @@ $@"@echo off
         /// Returns the directory path where <b>dotnet publish</b> actually published
         /// the tool binaries.
         /// </summary>
-        /// <param name="targetDir">The project's target directory path.</param>
+        /// <param name="outputDir">The project's output directory path.</param>
         /// <param name="runtime">The runtime identifier.</param>
         /// <returns>The projects publish directory path.</returns>
-        private static string GetPublishDir(string targetDir, string runtime)
+        private static string GetPublishDir(string outputDir, string runtime)
         {
             // Projects specifying a single runtime identifier like:
             //
@@ -361,7 +405,7 @@ $@"@echo off
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.
 
-            var probeDir1 = Path.Combine(targetDir, "publish");
+            var probeDir1 = Path.Combine(outputDir, "publish");
 
             if (Directory.Exists(probeDir1))
             {
@@ -369,7 +413,7 @@ $@"@echo off
             }
             else
             {
-                var probeDir2 = Path.Combine(targetDir, runtime, "publish");
+                var probeDir2 = Path.Combine(outputDir, "..", runtime, "publish");
 
                 if (!Directory.Exists(probeDir2))
                 {

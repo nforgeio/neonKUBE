@@ -174,7 +174,7 @@ namespace Neon.XenServer
             this.username = username;
             this.password = password;
             this.Name     = name;
-            this.xePath   = Path.Combine(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
+            this.xePath   = Path.Combine(NeonHelper.GetBaseDirectory(), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
             this.xeFolder = Path.GetDirectoryName(xePath);
 
             // Connect via SFTP.

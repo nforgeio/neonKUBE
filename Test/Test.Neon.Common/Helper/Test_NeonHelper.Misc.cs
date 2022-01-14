@@ -391,5 +391,29 @@ namespace TestCommon
 
             Assert.Throws<ArgumentException>(() => NeonHelper.PartitionCount((ulong)1, (ulong)0));
         }
+
+        [Fact]
+        public void TimeSpan_Min()
+        {
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Min());
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Min(new TimeSpan[0]));
+            Assert.Equal(TimeSpan.FromSeconds(-1), NeonHelper.Min(TimeSpan.FromSeconds(-1)));
+            Assert.Equal(TimeSpan.FromSeconds(-1), NeonHelper.Min(TimeSpan.FromSeconds(-1), TimeSpan.Zero));
+            Assert.Equal(TimeSpan.FromSeconds(-1), NeonHelper.Min(TimeSpan.Zero, TimeSpan.FromSeconds(-1)));
+            Assert.Equal(TimeSpan.FromSeconds(1), NeonHelper.Min(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3)));
+            Assert.Equal(TimeSpan.FromSeconds(1), NeonHelper.Min(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
+        }
+
+        [Fact]
+        public void TimeSpan_Max()
+        {
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Max());
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Max(new TimeSpan[0]));
+            Assert.Equal(TimeSpan.FromSeconds(-1), NeonHelper.Max(TimeSpan.FromSeconds(-1)));
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Max(TimeSpan.FromSeconds(-1), TimeSpan.Zero));
+            Assert.Equal(TimeSpan.Zero, NeonHelper.Max(TimeSpan.Zero, TimeSpan.FromSeconds(-1)));
+            Assert.Equal(TimeSpan.FromSeconds(3), NeonHelper.Max(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3)));
+            Assert.Equal(TimeSpan.FromSeconds(3), NeonHelper.Max(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
+        }
     }
 }

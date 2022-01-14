@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.IO;
 
 using KubeOps.Operator;
@@ -56,12 +57,6 @@ namespace Neon.Kube.Operator
             {
                 Covenant.Assert(operatorAssembly != null);
 
-                //services.AddLogging(
-                //    loggingBuilder =>
-                //    {
-                //        loggingBuilder.
-                //    });
-
                 var operatorBuilder = services.AddKubernetesOperator();
 
                 operatorBuilder.AddResourceAssembly(OperatorHelper.operatorAssembly);
@@ -87,6 +82,38 @@ namespace Neon.Kube.Operator
 
         private static Assembly                     operatorAssembly;
         private static Action<IOperatorBuilder>     builderCallback;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static OperatorHelper()
+        {
+            // KubeOps spams the logs with unnecessary INFO events when events are raised to
+            // the controller.  We're going to filter these and do our own logging using this
+            // filter.  The filter returns TRUE for events to be logged and FALSE for events
+            // to be ignored.
+
+            LogFilter =
+                logEvent =>
+                {
+                    if (logEvent.LogLevel == LogLevel.Info && logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                    {
+                        if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
+                            logEvent.Message.Contains("Event type \"Modified\"") ||
+                            logEvent.Message.Contains("Event type \"Deleted\""))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                };
+        }
+
+        /// <summary>
+        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps.
+        /// </summary>
+        public static Func<LogEvent, bool> LogFilter { get; private set; }
 
         /// <summary>
         /// Handles <b>generator</b> commands invoked on an operator application

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
@@ -30,16 +30,21 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+	<PropertyGroup>
+		<!-- 
+    We need to prevent the KubeOps build targets from trying to call the non-existent
+    program entrypoint (due to this assembly being a Library) to generate the CRDs
+    and other installation related files.
+    -->
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netstandard2.1|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-    <DefineConstants />
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,15 +61,19 @@
     <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
     <None Remove="Resources\Helm\neon-node-agent\.helmignore" />
     <None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
-    <None Remove="Resources\Helm\neon-node-agent\templates\deployment.yaml" />
+    <None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
     <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
     <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
+    <None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+    <ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
   </ItemGroup>
@@ -99,7 +108,7 @@
   
   The [neon-build download-const-uri] obtains the URI for the manifest from:
   
-      assembly:   Neon.Kube.dll (netstandard2.1)
+      assembly:   Neon.Kube.dll
       constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
   
   We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
@@ -111,7 +120,7 @@
   -->
 
   <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\netstandard2.1\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
   </Target>
 
 </Project>

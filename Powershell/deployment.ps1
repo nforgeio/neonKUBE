@@ -40,9 +40,12 @@ Pop-Location | Out-Null
 # Load these assemblies from the [neon-assistant] installation folder
 # to ensure we'll be compatible.
 
-Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
-Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
-Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
+{
+  Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+  Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
+  Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+}
 
 #------------------------------------------------------------------------------
 # Returns a global [Neon.Deployment.ProfileClient] instance creating one if necessary.

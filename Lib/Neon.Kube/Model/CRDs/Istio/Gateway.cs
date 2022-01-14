@@ -31,9 +31,29 @@ namespace Neon.Kube
     /// <summary>
     /// 
     /// </summary>
-    [KubernetesEntity(Group = "networking.istio.io", Kind = "Gateway", ApiVersion = "v1beta1", PluralName = "gateways")]
+    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class Gateway : IKubernetesObject<V1ObjectMeta>, ISpec<GatewaySpec>, IValidate
     {
+        /// <summary>
+        /// The API version this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeApiVersion = "v1beta1";
+
+        /// <summary>
+        /// The Kubernetes named schema this object is based on.
+        /// </summary>
+        public const string KubeKind = "Gateway";
+
+        /// <summary>
+        /// The Group this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeGroup = "networking.istio.io";
+
+        /// <summary>
+        /// The plural name of the entity.
+        /// </summary>
+        public const string KubePlural = "gateways";
+
         /// <summary>
         /// Initializes a new instance of the Gateway class.
         /// </summary>

@@ -715,7 +715,7 @@ namespace Neon.Cadence
 
                 if (string.IsNullOrEmpty(binaryFolder))
                 {
-                    binaryFolder = NeonHelper.GetAssemblyFolder(thisAssembly);
+                    binaryFolder = NeonHelper.GetBaseDirectory();
                 }
 
                 string resourcePath;

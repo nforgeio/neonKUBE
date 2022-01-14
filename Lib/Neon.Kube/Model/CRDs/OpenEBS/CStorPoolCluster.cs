@@ -30,9 +30,29 @@ namespace Neon.Kube
     /// <summary>
     /// OpenEBS cStor pool cluster.
     /// </summary>
-    [KubernetesEntity(Group = "cstor.openebs.io", Kind = "CStorPoolCluster", ApiVersion = "v1", PluralName = "cstorpoolclusters")]
+    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class V1CStorPoolCluster : IKubernetesObject<V1ObjectMeta>, ISpec<V1CStorPoolClusterSpec>, IValidate
     {
+        /// <summary>
+        /// The API version this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeApiVersion = "v1";
+
+        /// <summary>
+        /// The Kubernetes named schema this object is based on.
+        /// </summary>
+        public const string KubeKind = "CStorPoolCluster";
+
+        /// <summary>
+        /// The Group this Kubernetes type belongs to.
+        /// </summary>
+        public const string KubeGroup = "cstor.openebs.io";
+
+        /// <summary>
+        /// The plural name of the entity.
+        /// </summary>
+        public const string KubePlural = "cstorpoolclusters";
+
         /// <summary>
         /// Initializes a new instance of the V1CStorPoolCluster class.
         /// </summary>

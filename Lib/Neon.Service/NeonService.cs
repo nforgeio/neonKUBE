@@ -233,7 +233,7 @@ namespace Neon.Service
     /// <para><b>HEALTH PROBES</b></para>
     /// <note>
     /// Health probes are supported only on Linux running as AMD64.  This is not supported
-    /// on Windows, OS/X, 32-bit or ARM platforms.
+    /// on Windows, OS/X, 32-bit or ARM platforms at this time.
     /// </note>
     /// <para>
     /// Hosting environments such as Kubernetes will often require service instances
@@ -268,8 +268,8 @@ namespace Neon.Service
     /// You may pass a custom health folder path to the constructor so that the <b>status</b> 
     /// and <b>check</b> files so these can be located elsewhere to avoid conflicts such as 
     /// when multiple services will be running on a machine or container or when the root
-    /// file system is read-only.  You can disable this feature entirely by passing <b>"DISABLED"</b>
-    /// as the health folder path.
+    /// file system is read-only.  You can also disable this feature entirely by passing
+    /// <b>"DISABLED"</b> as the health folder path.
     /// </para>
     /// <note>
     /// <para>
@@ -452,10 +452,16 @@ namespace Neon.Service
         private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
 
         /// <summary>
+        /// <para>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
         /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
         /// log manager.  This defaults to <c>true</c> which will be appropriate for most
         /// production situations.  It may be useful to disable this for some unit tests.
+        /// </para>
+        /// <note>
+        /// This applies only for services that were not passed a <see cref="LogManager"/>
+        /// to their constructor.
+        /// </note>
         /// </summary>
         public static bool GlobalLogging = true;
 
@@ -597,6 +603,11 @@ namespace Neon.Service
         /// Optionally specifies the version of your service formatted as a valid <see cref="SemanticVersion"/>.
         /// This will default to <b>"unknown"</b> when not set or when the value passed is invalid.
         /// </param>
+        /// <param name="logFilter">
+        /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+        /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+        /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
         /// <param name="healthFolder">
         /// <para>
         /// Optionally specifies the folder path where the service will maintain the <b>health-status</b>
@@ -617,6 +628,15 @@ namespace Neon.Service
         /// or other means to avoid port conflicts or to emulate a cluster of services without Kubernetes
         /// or containers.  This is a somewhat advanced topic that needs documentation.
         /// </param>
+        /// <param name="gracefulShutdownTimeout">
+        /// Optionally specifies the termination timeout (defaults to <see cref="ProcessTerminator.DefaultGracefulTimeout"/>).  
+        /// See <see cref="ProcessTerminator"/> for more information.
+        /// </param>
+        /// <param name="minShutdownTime">
+        /// Optionally specifies the minimum time to wait before allowing termination to proceed.
+        /// This defaults to <see cref="ProcessTerminator.DefaultMinShutdownTime"/>.  See 
+        /// <see cref="ProcessTerminator"/> for more information.
+        /// </param>
         /// <param name="terminationMessagePath">
         /// <para>
         /// Optionally specifies the path where Kubernetes may write a termination message
@@ -636,11 +656,14 @@ namespace Neon.Service
         /// within the <see cref="ServiceMap"/>.
         /// </exception>
         public NeonService(
-            string      name, 
-            string      version                = null,
-            string      healthFolder           = null,
-            ServiceMap  serviceMap             = null,
-            string      terminationMessagePath = null)
+            string                  name, 
+            string                  version                 = null,
+            Func<LogEvent, bool>    logFilter               = null,
+            string                  healthFolder            = null,
+            ServiceMap              serviceMap              = null,
+            string                  terminationMessagePath  = null,
+            TimeSpan                gracefulShutdownTimeout = default,
+            TimeSpan                minShutdownTime         = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -666,7 +689,7 @@ namespace Neon.Service
             this.Name                   = name;
             this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
-            this.Terminator             = new ProcessTerminator();
+            this.Terminator             = new ProcessTerminator(gracefulShutdownTimeout: gracefulShutdownTimeout, minShutdownTime: minShutdownTime);
             this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
@@ -677,7 +700,7 @@ namespace Neon.Service
             // fail with a [NullReferenceException].  Note that we don't recommend
             // logging from withing the constructor.
 
-            LogManager = new LogManager(parseLogLevel: false, version: this.Version);
+            LogManager = new LogManager(parseLogLevel: false, version: this.Version, logFilter: logFilter);
 
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
@@ -1088,19 +1111,22 @@ namespace Neon.Service
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the log manager.
+            // Initialize the log manager, when one isn't already assigned.
 
-            if (GlobalLogging)
+            if (LogManager == null)
             {
-                LogManager          = global::Neon.Diagnostics.LogManager.Default;
-                LogManager.Version = Version;
-            }
-            else
-            {
-                LogManager = new LogManager(parseLogLevel: false, version: this.Version);
-            }
+                if (GlobalLogging)
+                {
+                    LogManager = global::Neon.Diagnostics.LogManager.Default;
+                    LogManager.Version = Version;
+                }
+                else
+                {
+                    LogManager = new LogManager(parseLogLevel: false, version: this.Version);
+                }
 
-            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+                LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+            }
 
             Log = LogManager.GetLogger();
 

@@ -25,7 +25,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Resources;
+using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -53,7 +53,7 @@ namespace NeonClusterOperator
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public Service(string name, ServiceMap serviceMap = null)
-            : base(name, version: KubeVersions.NeonKube, serviceMap: serviceMap)
+            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
         {
         }
 
@@ -70,11 +70,32 @@ namespace NeonClusterOperator
             // this and will use the termination signal instead to exit.
 
             _ = Host.CreateDefaultBuilder()
+                    .ConfigureHostOptions(
+                        options =>
+                        {
+                            // Ensure that the processor terminator and ASP.NET shutdown times match.
+
+                            options.ShutdownTimeout = ProcessTerminator.DefaultMinShutdownTime;
+                        })
+                    .ConfigureAppConfiguration(
+                        (hostingContext, config) =>
+                        {
+                            // $note(jefflill): 
+                            //
+                            // The .NET runtime watches the entire file system for configuration
+                            // changes which can cause real problems on Linux.  We're working around
+                            // this by removing all configuration sources which we aren't using
+                            // anyway for Kubernetes apps.
+                            //
+                            // https://github.com/nforgeio/neonKUBE/issues/1390
+
+                            config.Sources.Clear();
+                        })
                     .ConfigureLogging(
                         logging =>
                         {
                             logging.ClearProviders();
-                            logging.AddProvider(new LogManager(version: base.Version));
+                            logging.AddProvider(base.LogManager);
                         })
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()

@@ -167,7 +167,7 @@ gcc *.c -o {linuxOutputPath} {sbGccArgs}
 ";
                 distro.SudoExecuteScript(buildScript).EnsureSuccess();
 
-                // Copy the build output to the windows output path.
+                // Copy the build output to the Windows output path.
 
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
                 NeonHelper.DeleteFile(outputPath);

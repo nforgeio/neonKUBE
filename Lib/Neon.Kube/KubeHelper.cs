@@ -34,6 +34,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -176,6 +178,50 @@ namespace Neon.Kube
                 }
 
                 return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Resources");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether a name is a valid Kubernetes name.
+        /// </para>
+        /// <list type="bullet">
+        /// <item>contain no more than 253 characters</item>
+        /// <item>contain only lowercase alphanumeric characters, '-' or '.'</item>
+        /// <item>start with an alphanumeric character</item>
+        /// <item>end with an alphanumeric character</item>
+        /// </list>
+        /// </summary>
+        /// <param name="name">The name to check.</param>
+        /// <exception cref="ArgumentNullException">Thrown for null or empty names.</exception>
+        /// <exception cref="FormatException">Thrown for invalid names.</exception>
+        public static void CheckName(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (name.Length > 253)
+            {
+                throw new FormatException($"Name exceeds 253 characters: {name}");
+            }
+
+            if (!char.IsLetterOrDigit(name.First()))
+            {
+                throw new FormatException($"Name starts with a non-alphanum character: {name}");
+            }
+
+            if (!char.IsLetterOrDigit(name.Last()))
+            {
+                throw new FormatException($"Name ends with a non-alphanum character: {name}");
+            }
+
+            foreach (var ch in name)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-')
+                {
+                    continue;
+                }
+
+                throw new FormatException($"Name includes invalid character: [{ch}]");
             }
         }
 
@@ -2907,6 +2953,19 @@ TCPKeepAlive yes
                 };
 
             return GetToolPath(installFolder, "helm", toolChecker, toolUriRetriever, userToolsFolder);
+        }
+
+        /// <summary>
+        /// Configure the kubernetes client to use the <see cref="JsonStringEnumMemberConverter"/>.
+        /// </summary>
+        public static void K8sClientConverterInitialize()
+        {
+            var type = typeof(Kubernetes).Assembly.GetType("k8s.KubernetesJson");
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
+            var member = type.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+            var s = (JsonSerializerOptions)member.GetValue(type);
+            s.Converters.Add(new JsonStringEnumMemberConverter());
         }
     }
 }

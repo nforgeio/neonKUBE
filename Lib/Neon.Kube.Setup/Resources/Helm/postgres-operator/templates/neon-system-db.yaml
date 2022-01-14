@@ -1,0 +1,192 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: neon-system-db
+#  labels:
+#    environment: demo
+#  annotations:
+#    "acid.zalan.do/controller": "second-operator"
+#    "delete-date": "2020-08-31"  # can only be deleted on that day if "delete-date "key is configured
+#    "delete-clustername": "neon-system-db"  # can only be deleted when name matches if "delete-clustername" key is configured
+spec:
+  dockerImage: "{{ .Values.configGeneral.docker_image }}"
+  teamId: "neon-system"
+  numberOfInstances: {{ .Values.replicas }}
+  users:  # Application/Robot users
+    neon_admin:
+    - superuser
+    - createdb
+    neon_service:
+    - login
+  enableMasterLoadBalancer: false
+  enableReplicaLoadBalancer: false
+  enableConnectionPooler: false # enable/disable connection pooler deployment
+  enableReplicaConnectionPooler: false # set to enable connectionPooler for replica service
+  allowedSourceRanges:  # load balancers' source ranges for both master and replica services
+  - 127.0.0.1/32
+  databases:
+    grafana: neon_service
+    harbor_core: neon_service
+    harbor_clair: neon_service
+    harbor_notaryserver: neon_service
+    harbor_notarysigner: neon_service
+  postgresql:
+    version: "14"
+  volume:
+    size: {{ .Values.persistence.size }}
+    storageClass: {{ .Values.persistence.storageClass }}
+#    iops: 1000  # for EBS gp3
+#    throughput: 250  # in MB/s for EBS gp3
+#    selector:
+#      matchExpressions:
+#        - { key: flavour, operator: In, values: [ "banana", "chocolate" ] }
+#      matchLabels:
+#        environment: dev
+#        service: postgres
+#  additionalVolumes:
+#    - name: empty
+#      mountPath: /opt/empty
+#      targetContainers:
+#        - all
+#      volumeSource:
+#        emptyDir: {}
+#    - name: data
+#      mountPath: /home/postgres/pgdata/partitions
+#      targetContainers:
+#        - postgres
+#      volumeSource:
+#        PersistentVolumeClaim:
+#          claimName: pvc-postgresql-data-partitions
+#          readyOnly: false
+#    - name: conf
+#      mountPath: /etc/telegraf
+#      subPath: telegraf.conf
+#      targetContainers:
+#        - telegraf-sidecar
+#      volumeSource:
+#        configMap:
+#          name: my-config-map
+
+  enableShmVolume: true
+#  spiloRunAsUser: 101
+#  spiloRunAsGroup: 103
+#  spiloFSGroup: 103
+#  podAnnotations:
+#    annotation.key: value
+#  serviceAnnotations:
+#    annotation.key: value
+#  podPriorityClassName: "spilo-pod-priority"
+  {{- with .Values.tolerations }}
+  tolerations:
+  {{ toYaml . | nindent 2 }}
+  {{- end }}
+  resources:
+{{ toYaml .Values.resources | indent 4 }}
+  patroni:
+    initdb:
+      encoding: "UTF8"
+      locale: "en_US.UTF-8"
+      data-checksums: "true"
+    pg_hba:
+      - local     all             all                             trust
+      - host      all             all          all                md5
+      - local     replication     standby                         trust
+      - host      replication     standby      all                md5
+#    slots:
+#      permanent_physical_1:
+#        type: physical
+#      permanent_logical_1:
+#        type: logical
+#        database: foo
+#        plugin: pgoutput
+    ttl: 30
+    loop_wait: &loop_wait 10
+    retry_timeout: 10
+    synchronous_mode: false
+    synchronous_mode_strict: false
+    maximum_lag_on_failover: 33554432
+
+# restore a Postgres DB with point-in-time-recovery
+# with a non-empty timestamp, clone from an S3 bucket using the latest backup before the timestamp
+# with an empty/absent timestamp, clone from an existing alive cluster using pg_basebackup
+#  clone:
+#    uid: "efd12e58-5786-11e8-b5a7-06148230260c"
+#    cluster: "acid-batman"
+#    timestamp: "2017-12-19T12:40:33+01:00"  # timezone required (offset relative to UTC, see RFC 3339 section 5.6)
+#    s3_wal_path: "s3://custom/path/to/bucket"
+
+# run periodic backups with k8s cron jobs
+#  enableLogicalBackup: true
+#  logicalBackupSchedule: "30 00 * * *"
+
+#  maintenanceWindows:
+#  - 01:00-06:00  #UTC
+#  - Sat:00:00-04:00
+
+# overwrite custom properties for connection pooler deployments
+#  connectionPooler:
+#    numberOfInstances: 2
+#    mode: "transaction"
+#    schema: "pooler"
+#    user: "pooler"
+#    resources:
+#      requests:
+#        cpu: 300m
+#        memory: 100Mi
+#      limits:
+#        cpu: "1"
+#        memory: 100Mi
+
+  initContainers: []
+  sidecars:
+  - name: metrics
+    image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+    imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+    ports:
+    - name: http-metrics
+      containerPort: {{ .Values.metrics.port }}
+    env:
+    - name: DATA_SOURCE_URI
+      value: localhost/postgres?sslmode=disable
+    - name: DATA_SOURCE_USER
+      valueFrom:
+        secretKeyRef:
+          name: neon-admin.neon-system-db.credentials.postgresql
+          key: username
+    - name: DATA_SOURCE_PASS
+      valueFrom:
+        secretKeyRef:
+          name: neon-admin.neon-system-db.credentials.postgresql
+          key: password
+    args:
+    - "--extend.query-path=/etc/queries.yaml"
+    - "--log.level={{ .Values.metrics.logLevel }}"
+    volumeMounts:
+    - name: queries
+      mountPath: /etc/queries.yaml
+      subPath: queries.yaml
+
+# Custom TLS certificate. Disabled unless tls.secretName has a value.
+  tls:
+    secretName: ""  # should correspond to a Kubernetes Secret resource to load
+    certificateFile: "tls.crt"
+    privateKeyFile: "tls.key"
+    caFile: ""  # optionally configure Postgres with a CA certificate
+    caSecretName: "" # optionally the ca.crt can come from this secret instead.
+# file names can be also defined with absolute path, and will no longer be relative
+# to the "/tls/" path where the secret is being mounted by default, and "/tlsca/"
+# where the caSecret is mounted by default.
+# When TLS is enabled, also set spiloFSGroup parameter above to the relevant value.
+# if unknown, set it to 103 which is the usual value in the default spilo images.
+# In Openshift, there is no need to set spiloFSGroup/spilo_fsgroup.
+
+# Add node affinity support by allowing postgres pods to schedule only on nodes that
+# have label: "postgres-operator:enabled" set.
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: neonkube.io/node.role 
+              operator: In
+              values:
+                - master

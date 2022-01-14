@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,7 +43,8 @@ namespace Neon.Kube
     /// the mesh, Istio’s mTLS authentication is disabled, and policy enforcement is performed on the client-side as opposed to
     /// server-side.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum Location
     {
         /// <summary>

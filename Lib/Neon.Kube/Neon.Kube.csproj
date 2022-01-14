@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>neonFORGE Team</Authors>
@@ -50,10 +50,6 @@
     <NoWarn></NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
-    <NoWarn>1701;1702;</NoWarn>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Properties\**" />
     <EmbeddedResource Remove="Properties\**" />
@@ -78,8 +74,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-      <PackageReference Include="KubernetesClient" Version="6.0.26" />
-      <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
+    <PackageReference Include="KubernetesClient" Version="7.0.5" />
+    <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />

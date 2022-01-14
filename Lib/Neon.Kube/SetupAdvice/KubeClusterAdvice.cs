@@ -135,19 +135,9 @@ namespace Neon.Kube
         public static string CertManager = "cert-manager";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service manager nodes.
+        /// Identifies the neonKUBE cluster's system database.
         /// </summary>
-        public static string CitusPostgresSqlManager = "citus-postgressql-manager";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
-        /// </summary>
-        public static string CitusPostgresSqlMaster = "citus-postgressql-master";
-
-        /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Citus Postres</b> service master nodes.
-        /// </summary>
-        public static string CitusPostgresSqlWorker = "citus-postgressql-worker";
+        public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Cortex</b> service.

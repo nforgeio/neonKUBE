@@ -34,17 +34,9 @@
     <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netstandard2.1|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
+    <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.XenServer\Neon.XenServer.csproj" />
   </ItemGroup>
 
