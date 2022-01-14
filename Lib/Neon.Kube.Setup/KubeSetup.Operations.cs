@@ -1782,17 +1782,21 @@ done
                         }
                         catch (HttpOperationException e)
                         {
-                            if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                            {
-                                return;
-                            }
-                            else
+                            if (e.Response.StatusCode != HttpStatusCode.NotFound)
                             {
                                 throw;
                             }
                         }
 
-                        var cert = new Certificate();
+                        var cert = new Certificate()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "neon-cluster-certificate",
+                                NamespaceProperty = KubeNamespaces.NeonIngress
+                            },
+                            Spec = new CertificateSpec()
+                        };
 
                         cert.Spec.CommonName  = clusterLogin.ClusterDefinition.Domain;
                         cert.Spec.RenewBefore = "360h0m0s";
@@ -1819,8 +1823,7 @@ done
                         };
 
                         await k8s.UpsertNamespacedCustomObjectAsync<Certificate>(cert, KubeNamespaces.NeonIngress, cert.Name());
-
-            });
+                    });
             }
         }
 
@@ -3295,6 +3298,7 @@ $@"- name: StorageType
                         grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
                         grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
 
+                        await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-ingress",
@@ -3956,7 +3960,7 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout:      TimeSpan.FromSeconds(120),
+                            timeout:      TimeSpan.FromSeconds(300),
                             pollInterval: TimeSpan.FromSeconds(1));
                     }
                 });
@@ -4712,6 +4716,17 @@ $@"- name: StorageType
 
                         await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
                     });
+
+                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-restart",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "wait for oauth2 proxy");
+
+                        var deployment = await k8s.ReadNamespacedDeploymentAsync("neon-sso-oauth2-proxy", KubeNamespaces.NeonSystem);
+                        await deployment.RestartAsync(k8s);
+                    });
+
+                
             }
         }
 
