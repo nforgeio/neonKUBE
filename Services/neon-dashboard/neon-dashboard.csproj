@@ -71,4 +71,8 @@
     <Folder Include="Data\" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared --style compressed --load-path=Styles --update" />
+  </Target>
+
 </Project>
