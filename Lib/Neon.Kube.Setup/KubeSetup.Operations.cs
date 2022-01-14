@@ -546,26 +546,26 @@ mode: {kubeProxyMode}");
                     }
                 });
 
-            //await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
-            //    async () =>
-            //    {
-            //        await NeonHelper.WaitForAsync(
-            //                async () =>
-            //                {
-            //                    try
-            //                    {
-            //                        var pods = await k8s.ListPodForAllNamespacesAsync();
+            await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
+                async () =>
+                {
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    var pods = await k8s.ListPodForAllNamespacesAsync();
 
-            //                        return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
-            //                    }
-            //                    catch
-            //                    {
-            //                        return false;
-            //                    }
-            //                },
-            //                timeout:      TimeSpan.FromMinutes(10),
-            //                pollInterval: TimeSpan.FromMilliseconds(500));
-            //    });
+                                    return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
+                                }
+                                catch
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromMilliseconds(500));
+                });
         }
         
         /// <summary>
