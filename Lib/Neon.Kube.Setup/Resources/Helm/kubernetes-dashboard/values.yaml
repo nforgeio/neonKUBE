@@ -195,10 +195,6 @@ pinnedCRDs:
     displayName: Gateway
     namespaced: true
   - kind: customresourcedefinition
-    name: keycloakusers.keycloak.org
-    displayName: Keycloak User
-    namespaced: true
-  - kind: customresourcedefinition
     name: podmonitors.monitoring.coreos.com
     displayName: Pod Monitor
     namespaced: true

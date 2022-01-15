@@ -4571,11 +4571,15 @@ $@"- name: StorageType
             var values        = new Dictionary<string, object>();
             var secret        = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
             var ldapPassword  = Encoding.UTF8.GetString(secret.Data["LDAP_SECRET"]);
+            var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+            var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
 
             values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
+            values.Add("config.backend.database.user", KubeConst.NeonSystemDbAdminUser);
+            values.Add("config.backend.database.password", dbPassword);
 
             values.Add("users.root.password", cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(20));
             values.Add("users.serviceuser.password", ldapPassword);
@@ -4597,7 +4601,88 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "glauth");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                });
+
+            await master.InvokeIdempotentAsync("setup/glauth-users",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "create", message: "glauth users");
+
+                    controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
+
+                    var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+                    var groups = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespaces.NeonSystem);
+
+                    var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+                    
+                    foreach (var g in groups.Data.Keys)
+                    {
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[g]));
+                        
+
+                        var command = new string[]
+                        {
+                                "/bin/bash",
+                                "-c",
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
+                                        INSERT INTO groups(name,gidnumber)
+                                            VALUES('{group.Name}','{group.GidNumber}');"""
+                        };
+
+                        var result = await k8s.NamespacedPodExecAsync(
+                            name: postgres.Name(),
+                            namespaceParameter: postgres.Namespace(),
+                            container: "postgres",
+                            command: command);
+                    }
+
+                    foreach (var user in users.Data.Keys)
+                    {
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
+                        var name         = userData.Name;
+                        var givenname    = userData.Name;
+                        var mail         = $"{userData.Name}@{cluster.Definition.Domain}";
+                        var uidnumber    = userData.UidNumber;
+                        var primarygroup = userData.PrimaryGroup;
+                        var passsha256   = userData.PassSha256;
+
+                        var command = new string[]
+                        {
+                                "/bin/bash",
+                                "-c",
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
+                                        INSERT INTO users(name,givenname,mail,uidnumber,primarygroup,passsha256)
+                                            VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}');"""
+                        };
+
+                        var result = await k8s.NamespacedPodExecAsync(
+                            name: postgres.Name(),
+                            namespaceParameter: postgres.Namespace(),
+                            container: "postgres",
+                            command: command);
+
+                        if (userData.Capabilities != null)
+                        {
+                            foreach (var c in userData.Capabilities)
+                            {
+                                command = new string[]
+                                {
+                                "/bin/bash",
+                                "-c",
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
+                                        INSERT INTO capabilities(userid,action,object)
+                                            VALUES('{uidnumber}','{c.Action}','{c.Object}');"""
+                                };
+
+                                result = await k8s.NamespacedPodExecAsync(
+                                    name: postgres.Name(),
+                                    namespaceParameter: postgres.Namespace(),
+                                    container: "postgres",
+                                    command: command);
+                            }
+                        }
+                    }
                 });
 
             if (readyToGoMode == ReadyToGoMode.Setup)
@@ -4608,14 +4693,19 @@ $@"- name: StorageType
                         controller.LogProgress(master, verb: "ready-to-go", message: "update glauth config");
 
                         var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
+                        var dbSecret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["config.cfg"];
                         var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
                         var table       = doc.Tables.Where(t => t.Name.Key.ToString() == "backend").First();
                         var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
-                        var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
-
-                        items.First().Value = new StringValueSyntax(baseDN);
+                        var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["username"])} sslmode=disable";
                         
+                        var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
+                        items.First().Value = new StringValueSyntax(baseDN);
+
+                        items = table.Items.Where(i => i.Key.ToString().Trim() == "database");
+                        items.First().Value = new StringValueSyntax(dbString);
+
                         config.Data["config.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
 
                         await k8s.ReplaceNamespacedSecretAsync(config, config.Name(), config.Namespace());
@@ -4627,23 +4717,26 @@ $@"- name: StorageType
                         controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
 
                         var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
-                        var usersConfig = config.Data["users.cfg"];
-                        var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var tableArray  = doc.Tables.Where(t => t.Name.Key.ToString() == "users");
-                        var root        = tableArray.Where(t => t.Items.First().Value.ToString() == "\"root\"").First();
+                        
+                        var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+                        
+                        foreach (var user in users.Data.Keys)
+                        {
+                            var password = CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data[user]));
+                            var command = new string[]
+                            {
+                                "/bin/bash",
+                                "-c",
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} postgres -t -c ""UPDATE users SET passsha256 = '{password}' WHERE name = '{user}';"""
+                            };
 
-                        root.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"root@{cluster.Definition.Domain}");
-                        root.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["root"])));
-
-                        var serviceuser = tableArray.Where(t => t.Items.First().Value.ToString() == "\"serviceuser\"").First();
-
-                        serviceuser.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"serviceuser@{cluster.Definition.Domain}");
-                        serviceuser.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["serviceuser"])));
-
-                        config.Data["users.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
-
-                        await k8s.ReplaceNamespacedSecretAsync(config, config.Name(), config.Namespace());
+                            var result = await k8s.NamespacedPodExecAsync(
+                                name: postgres.Name(),
+                                namespaceParameter: postgres.Namespace(),
+                                container: "postgres",
+                                command: command);
+                        }
+                        
                     });
             }
         }
