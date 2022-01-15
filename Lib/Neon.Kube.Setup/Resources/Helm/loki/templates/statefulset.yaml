@@ -87,6 +87,8 @@ spec:
           securityContext:
             readOnlyRootFilesystem: true
           env:
+            - name: GOGC
+              value: "10"
             {{- if .Values.env }}
               {{- toYaml .Values.env | nindent 12 }}
             {{- end }}

@@ -65,6 +65,8 @@ tempo:
         secretKeyRef:
           name: minio
           key: secretkey
+    - name: GOGC
+      value: "10"
   # -- Volume mounts to add
   extraVolumeMounts: []
   # - name: extra-volume
@@ -86,7 +88,9 @@ tempoQuery:
   ## Additional container arguments
   extraArgs: {}
   # -- Environment variables to add
-  extraEnv: []
+  extraEnv:
+    - name: GOGC
+      value: "10"
   # -- Volume mounts to add
   extraVolumeMounts: []
   # - name: extra-volume
