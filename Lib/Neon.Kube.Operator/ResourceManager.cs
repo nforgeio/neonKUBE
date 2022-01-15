@@ -52,9 +52,9 @@ namespace Neon.Kube.Operator
     /// </para>
     /// <para>
     /// This class makes it easy to manage the current set of custom resources.  Simply call
-    /// <see cref="Reconciled(TCustomResource, Action{IEnumerable{TCustomResource}})"/>, 
-    /// <see cref="Deleted(TCustomResource, Action{IEnumerable{TCustomResource}})"/>, and
-    /// <see cref="StatusModified(TCustomResource, Action{IEnumerable{TCustomResource}})"/> 
+    /// <see cref="Reconciled(TCustomResource, Action{IEnumerable{TCustomResource}}, Action)"/>, 
+    /// <see cref="Deleted(TCustomResource, Action{IEnumerable{TCustomResource}}, Action)"/>, and
+    /// <see cref="StatusModified(TCustomResource, Action{IEnumerable{TCustomResource}}, Action)"/> 
     /// when your operator receives related events from the operator.  These methods return 
     /// <c>true</c> when the collection actually changed and <c>false</c> otherwise.
     /// Your operator can use this to decide when actions are actually required.
@@ -94,12 +94,21 @@ namespace Neon.Kube.Operator
         /// <param name="handler">Optional handler to be called when the resource didn't already 
         /// exist, after the resource was added.
         /// </param>
+        /// <param name="onChange">
+        /// Optionally called before <paramref name="handler"/> when a resource change is detected.  This is
+        /// a good way to log information about the change.
+        /// </param>
         /// <returns>
         /// <c>true</c> when the resource wasn't already in the collection and was added or if
-        /// the resource has been changed.  Operators can use a <c>true</c> result to determine
-        /// when actions need to be taken.
+        /// the resource has been changed and the handler (if any) returned without throwing an
+        /// exception.  Operators can use a <c>true</c> result to determine when additonal
+        /// actions need to be taken.
         /// </returns>
-        public bool Reconciled(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null)
+        /// <remarks>
+        /// Any exceptions thrown by the <paramref name="handler"/> or <paramref name="onChange"/>
+        /// callbacks will be rethrown by this method.
+        /// </remarks>
+        public bool Reconciled(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null, Action onChange = null)
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
@@ -115,6 +124,7 @@ namespace Neon.Kube.Operator
 
                 resources[resource.Metadata.Name] = resource;
 
+                onChange?.Invoke();
                 handler?.Invoke(resources.Values);
             }
 
@@ -137,12 +147,21 @@ namespace Neon.Kube.Operator
         /// <param name="handler">
         /// Optional handler to be called when the resource existed, after it was deleted.
         /// </param>
+        /// <param name="onChange">
+        /// Optionally called before <paramref name="handler"/> when a resource change is detected.  This is
+        /// a good way to log information about the change.
+        /// </param>
         /// <returns>
         /// <c>true</c> when the resource exists in the collection and was deleted, 
-        /// indicating that the collection has changed.
+        /// indicating that the collection has changed and the hander (if any) returned 
+        /// without throwing an exception.
         /// </returns>
         /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
-        public bool Deleted(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null)
+        /// <remarks>
+        /// Any exceptions thrown by the <paramref name="handler"/> or <paramref name="onChange"/>
+        /// callbacks will be rethrown by this method.
+        /// </remarks>
+        public bool Deleted(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null, Action onChange = null)
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
@@ -154,6 +173,8 @@ namespace Neon.Kube.Operator
                 }
 
                 resources.Remove(resource.Metadata.Name);
+
+                onChange?.Invoke();
                 handler?.Invoke(resources.Values);
             }
 
@@ -174,8 +195,16 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handler">Optional handler to be called within the lock when the collection of resourcess changes.</param>
-        /// <returns><c>true</c> when the resource exists.</returns>
-        public bool StatusModified(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null)
+        /// <param name="onChange">
+        /// Optionally called before <paramref name="handler"/> when a resource change is detected.  This is
+        /// a good way to log information about the change.
+        /// </param>
+        /// <returns><c>true</c> when the resource exists and the hander (if any) returned without throwing an exception.</returns>
+        /// <remarks>
+        /// Any exceptions thrown by the <paramref name="handler"/> or <paramref name="onChange"/>
+        /// callbacks will be rethrown by this method.
+        /// </remarks>
+        public bool StatusModified(TCustomResource resource, Action<IEnumerable<TCustomResource>> handler = null, Action onChange = null)
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
@@ -188,6 +217,7 @@ namespace Neon.Kube.Operator
 
                 resources[resource.Metadata.Name] = resource;
 
+                onChange?.Invoke();
                 handler?.Invoke(resources.Values);
             }
 

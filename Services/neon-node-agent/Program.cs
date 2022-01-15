@@ -39,6 +39,11 @@ namespace NeonNodeAgent
         public const string HostMount = "/mnt/host";
 
         /// <summary>
+        /// Returns the program's service implementation.
+        /// </summary>
+        public static Service Service { get; private set; }
+
+        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -53,7 +58,9 @@ namespace NeonNodeAgent
                 return;
             }
 
-            await new Service(KubeService.NeonNodeAgent).RunAsync();
+            Service = new Service(KubeService.NeonNodeAgent);
+
+            await Service.RunAsync();
         }
 
         /// <summary>

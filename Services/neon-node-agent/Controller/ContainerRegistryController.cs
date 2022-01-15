@@ -70,27 +70,52 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger                             log                            = LogManager.Default.GetLogger<ContainerRegistryController>();
-        private static readonly ResourceManager<V1ContainerRegistry>    resourceManager                = new ResourceManager<V1ContainerRegistry>();
-        private static readonly string                                  configMountPath                = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static readonly INeonLogger                             log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
+        private static readonly ResourceManager<V1ContainerRegistry>    resourceManager = new ResourceManager<V1ContainerRegistry>();
+        private static readonly string                                  configMountPath = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
 
-        private static readonly Counter                                 reconciledReceivedCounter      = Metrics.CreateCounter("container_registry_reconciled_received", "Received ContainerRegistry reconcile events.");
-        private static readonly Counter                                 deletedReceivedCounter         = Metrics.CreateCounter("container_registry_deleted_received", "Received ContainerRegistry deleted events.");
-        private static readonly Counter                                 statusModifiedReceivedCounter  = Metrics.CreateCounter("container_registry_statusmodified_received", "Received ContainerRegistry status-modified events.");
+        // Configuration settings
 
-        private static readonly Counter                                 reconciledProcessedCounter     = Metrics.CreateCounter("container_registry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
-        private static readonly Counter                                 deletedProcessedCounter        = Metrics.CreateCounter("container_registry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
-        private static readonly Counter                                 statusModifiedProcessedCounter = Metrics.CreateCounter("container_registry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
+        private static bool         configured = false;
+        private static TimeSpan     reconcileInterval;
+        private static TimeSpan     modifiedInterval;
+        private static TimeSpan     errorDelay;
 
-        private static readonly Counter                                 reconciledErrorCounter         = Metrics.CreateCounter("container_registry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
-        private static readonly Counter                                 deletedErrorCounter            = Metrics.CreateCounter("container_registry_deleted_error", "Failed ContainerRegistry deleted event processing.");
-        private static readonly Counter                                 statusModifiedErrorCounter     = Metrics.CreateCounter("container_registry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
+        // Metrics counters
 
-        private static readonly Counter                                 configUpdateCounter            = Metrics.CreateCounter("container_registry_node_updated", "Number of node config updates.");
-        private static readonly Counter                                 loginErrorCounter              = Metrics.CreateCounter("container_registry_login_error", "Number of failed container registry logins.");
+        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter("container_registry_reconciled_received", "Received ContainerRegistry reconcile events.");
+        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter("container_registry_deleted_received", "Received ContainerRegistry deleted events.");
+        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter("container_registry_statusmodified_received", "Received ContainerRegistry status-modified events.");
+
+        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter("container_registry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
+        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter("container_registry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
+        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter("container_registry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
+
+        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter("container_registry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
+        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter("container_registry_deleted_error", "Failed ContainerRegistry deleted event processing.");
+        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter("container_registry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
+
+        private static readonly Counter configUpdateCounter            = Metrics.CreateCounter("container_registry_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter              = Metrics.CreateCounter("container_registry_login_error", "Number of failed container registry logins.");
 
         //---------------------------------------------------------------------
         // Instance members
+
+        /// <summary>
+        /// Coinstructor.
+        /// </summary>
+        public ContainerRegistryController()
+        {
+            // Load the configuration settings when not already initialized.
+
+            if (!configured)
+            {
+                reconcileInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL", TimeSpan.FromMinutes(5));
+                modifiedInterval  = Program.Service.Environment.Get("CONTAINERREGISTRY_MODIFIED_REQUEUE_INTERVAL", TimeSpan.FromMinutes(5));
+                errorDelay        = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_DELAY", TimeSpan.FromMinutes(1));
+                configured        = true;
+            }
+        }
 
         /// <summary>
         /// Called for each existing custom resource when the controller starts so that the controller
@@ -105,22 +130,24 @@ namespace NeonNodeAgent
             {
                 reconciledReceivedCounter.Inc();
 
-                if (resourceManager.Reconciled(resource, resources => UpdateContainerRegistries(resources)))
+                if (resourceManager.Reconciled(resource, 
+                    onChange: ()        => log.LogInfo($"RECONCILED: {resource.Name()}"),
+                    handler:  resources => UpdateContainerRegistries(resources)))
                 {
-                    log.LogInfo($"RECONCILE: {resource.Name()}");
                     reconciledProcessedCounter.Inc();
 
                     await Task.CompletedTask;
                 }
 
+                return ResourceControllerResult.RequeueEvent(modifiedInterval);
             }
             catch (Exception e)
             {
                 reconciledErrorCounter.Inc();
                 log.LogError(e);
-            }
 
-            return null;
+                return ResourceControllerResult.RequeueEvent(errorDelay);
+            }
         }
 
         /// <summary>
@@ -134,10 +161,11 @@ namespace NeonNodeAgent
             {
                 deletedReceivedCounter.Inc();
 
-                if (resourceManager.Deleted(resource, resources => UpdateContainerRegistries(resources)))
+                if (resourceManager.Deleted(resource,
+                    onChange: ()        => log.LogInfo($"DELETED: {resource.Name()}"),
+                    handler:  resources => UpdateContainerRegistries(resources)))
                 {
-                    log.LogInfo($"DELETED: {resource.Name()}");
-                    deletedReceivedCounter.Inc();
+                    deletedProcessedCounter.Inc();
 
                     await Task.CompletedTask;
                 }
@@ -160,21 +188,23 @@ namespace NeonNodeAgent
             {
                 statusModifiedReceivedCounter.Inc();
 
-                if (resourceManager.StatusModified(resource))
+                if (resourceManager.StatusModified(resource,
+                    onChange: () => log.LogInfo($"STATUS-MODIFIED: {resource.Name()}")))
                 {
-                    log.LogInfo($"MODIFIED: {resource.Name()}");
                     statusModifiedProcessedCounter.Inc();
 
                     await Task.CompletedTask;
                 }
+
+                return ResourceControllerResult.RequeueEvent(modifiedInterval);
             }
             catch (Exception e)
             {
                 statusModifiedErrorCounter.Inc();
                 log.LogError(e);
-            }
 
-            return null;
+                return ResourceControllerResult.RequeueEvent(errorDelay);
+            }
         }
 
         /// <summary>

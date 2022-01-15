@@ -451,20 +451,6 @@ namespace Neon.Service
         private static readonly Counter     runtimeCount    = Metrics.CreateCounter("runtime", "Service runtime in seconds.");
         private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
 
-        /// <summary>
-        /// <para>
-        /// This controls whether any <see cref="NeonService"/> instances will use the global
-        /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
-        /// log manager.  This defaults to <c>true</c> which will be appropriate for most
-        /// production situations.  It may be useful to disable this for some unit tests.
-        /// </para>
-        /// <note>
-        /// This applies only for services that were not passed a <see cref="LogManager"/>
-        /// to their constructor.
-        /// </note>
-        /// </summary>
-        public static bool GlobalLogging = true;
-
         // WARNING:
         //
         // The code below should be manually synchronized with similar code in [KubeHelper]
@@ -1125,20 +1111,10 @@ namespace Neon.Service
 
             // Initialize the log manager, when one isn't already assigned.
 
-            if (LogManager == null)
-            {
-                if (GlobalLogging)
-                {
-                    LogManager = global::Neon.Diagnostics.LogManager.Default;
-                    LogManager.Version = Version;
-                }
-                else
-                {
-                    LogManager = new LogManager(parseLogLevel: false, version: this.Version);
-                }
+            Neon.Diagnostics.LogManager.Default = LogManager = new LogManager(parseLogLevel: false);
 
-                LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
-            }
+            LogManager.Version = Version;
+            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();
 

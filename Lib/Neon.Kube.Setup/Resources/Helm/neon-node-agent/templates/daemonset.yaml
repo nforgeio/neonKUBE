@@ -47,6 +47,12 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL
+          value: 5m
+        - name: CONTAINERREGISTRY_MODIFIED_REQUEUE_INTERVAL
+          value: 5m
+        - name: CONTAINERREGISTRY_ERROR_DELAY
+          value: 1m
         envFrom:
         - configMapRef:
             name: neon-node-agent-webhook

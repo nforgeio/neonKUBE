@@ -50,14 +50,26 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CONTAINER_REGISTRY_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> 
+    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
+    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
+    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b></b></term>
+    ///     <term><b>CONTAINERREGISTRY_MODIFIED_REQUEUE_INTERVAL</b></term>
     ///     <description>
+    ///     <b>timespan:</b> Specifies the interval at which <b>status-modified</b> events will be requeued
+    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
+    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>CONTAINERREGISTRY_ERROR_DELAY</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the interval to wait when an operator event failed.
+    ///     This defaults to <b>1 minute</b>.
     ///     </description>
     /// </item>
     /// </list>
