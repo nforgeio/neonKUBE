@@ -65,8 +65,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="operatorBuilder">The target operator builder.</param>
         internal static void AddResourceAssemblies(IOperatorBuilder operatorBuilder)
-        {                changed?.Invoke(resource);
-
+        {
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 
             operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());

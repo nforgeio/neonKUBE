@@ -106,7 +106,7 @@ namespace NeonNodeAgent
         /// </summary>
         public ContainerRegistryController()
         {
-            // Load the configuration settings when not already initialized.
+            // Load the configuration settings the first time a controller instance is created.
 
             if (!configured)
             {
@@ -126,28 +126,21 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry resource)
         {
-            try
-            {
-                reconciledReceivedCounter.Inc();
+            reconciledReceivedCounter.Inc();
 
-                if (resourceManager.Reconciled(resource, 
-                    onChange: ()        => log.LogInfo($"RECONCILED: {resource.Name()}"),
-                    handler:  resources => UpdateContainerRegistries(resources)))
+            await resourceManager.ReconciledAsync(resource,
+                async (name, resources) =>
                 {
+                    log.LogInfo($"RECONCILED: {name}");
                     reconciledProcessedCounter.Inc();
 
-                    await Task.CompletedTask;
-                }
+                    UpdateContainerRegistries(resources);
 
-                return ResourceControllerResult.RequeueEvent(modifiedInterval);
-            }
-            catch (Exception e)
-            {
-                reconciledErrorCounter.Inc();
-                log.LogError(e);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: reconciledErrorCounter);
 
-                return ResourceControllerResult.RequeueEvent(errorDelay);
-            }
+            return ResourceControllerResult.RequeueEvent(modifiedInterval);
         }
 
         /// <summary>
@@ -157,24 +150,19 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1ContainerRegistry resource)
         {
-            try
-            {
-                deletedReceivedCounter.Inc();
+            deletedReceivedCounter.Inc();
 
-                if (resourceManager.Deleted(resource,
-                    onChange: ()        => log.LogInfo($"DELETED: {resource.Name()}"),
-                    handler:  resources => UpdateContainerRegistries(resources)))
+            await resourceManager.DeletedAsync(resource,
+                async (name, resources) =>
                 {
+                    log.LogInfo($"DELETED: {name}");
                     deletedProcessedCounter.Inc();
 
-                    await Task.CompletedTask;
-                }
-            }
-            catch (Exception e)
-            {
-                deletedErrorCounter.Inc();
-                log.LogError(e);
-            }
+                    UpdateContainerRegistries(resources);
+
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: deletedErrorCounter);
         }
 
         /// <summary>
@@ -184,27 +172,21 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry resource)
         {
-            try
-            {
-                statusModifiedReceivedCounter.Inc();
+            statusModifiedReceivedCounter.Inc();
 
-                if (resourceManager.StatusModified(resource,
-                    onChange: () => log.LogInfo($"STATUS-MODIFIED: {resource.Name()}")))
+            await resourceManager.DeletedAsync(resource,
+                async (name, resources) =>
                 {
+                    log.LogInfo($"DELETED: {name}");
                     statusModifiedProcessedCounter.Inc();
 
-                    await Task.CompletedTask;
-                }
+                    UpdateContainerRegistries(resources);
 
-                return ResourceControllerResult.RequeueEvent(modifiedInterval);
-            }
-            catch (Exception e)
-            {
-                statusModifiedErrorCounter.Inc();
-                log.LogError(e);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: statusModifiedErrorCounter);
 
-                return ResourceControllerResult.RequeueEvent(errorDelay);
-            }
+            return ResourceControllerResult.RequeueEvent(modifiedInterval);
         }
 
         /// <summary>
@@ -212,7 +194,7 @@ namespace NeonNodeAgent
         /// using the container registries passed and then signals CRI-O to reload any changes.
         /// </summary>
         /// <param name="registries">The current registry configurations.</param>
-        private void UpdateContainerRegistries(IEnumerable<V1ContainerRegistry> registries)
+        private void UpdateContainerRegistries(IReadOnlyDictionary<string, V1ContainerRegistry> registries)
         {
             // NOTE: Here's the documentation for the config file we're generating:
             //
@@ -224,7 +206,7 @@ namespace NeonNodeAgent
 
             // Specify any unqualified search registries.
 
-            foreach (var registry in registries
+            foreach (var registry in registries.Values
                 .Where(registry => registry.Spec.SearchOrder >= 0)
                 .OrderBy(registry => registry.Spec.SearchOrder))
             {
@@ -248,7 +230,7 @@ location = ""{KubeConst.LocalClusterRegistry}""
 
             // Specify any custom upstream registries.
 
-            foreach (var registry in registries)
+            foreach (var registry in registries.Values)
             {
                 sbRegistryConfig.Append(
 $@"
@@ -282,7 +264,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
             // via [podman] on the node.  We'll log individual login failures but continue
             // to try logging into any remaining registries.
 
-            foreach (var registry in registries)
+            foreach (var registry in registries.Values)
             {
                 try
                 {

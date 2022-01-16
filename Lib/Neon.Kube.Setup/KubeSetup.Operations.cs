@@ -3892,7 +3892,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     var authSecret = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                    var username   = "root";
+                    var username   = "root";    // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1404
                     var password   = Encoding.UTF8.GetString(authSecret.Data[username]);
                     var sbScript   = new StringBuilder();
                     var sbArgs     = new StringBuilder();
@@ -4035,14 +4035,15 @@ $@"- name: StorageType
 
                     var localRegistries = new List<Registry>();
                     var localRegistry   = new Registry();
+                    var authSecret      = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
 
                     localRegistry.Name     = 
                     localRegistry.Prefix   =
-                    localRegistry.Location = "neon-registry.node.local";
+                    localRegistry.Location = KubeConst.LocalClusterRegistry;
                     localRegistry.Blocked  = false;
                     localRegistry.Insecure = true;
-                    localRegistry.Username = "";
-                    localRegistry.Password = "";
+                    localRegistry.Username = KubeConst.LocalClusterRegistryUser;
+                    localRegistry.Password = Encoding.UTF8.GetString(authSecret.Data[localRegistry.Username]);
 
                     localRegistries.Add(localRegistry);
 

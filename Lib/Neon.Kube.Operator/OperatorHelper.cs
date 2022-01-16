@@ -91,28 +91,45 @@ namespace Neon.Kube.Operator
             LogFilter =
                 logEvent =>
                 {
-                    // KubeOps spams the logs with unnecessary INFO events when events are raised to
-                    // the controller.  We're going to filter these and do our own logging using this
-                    // filter.  The filter returns TRUE for events to be logged and FALSE for events
-                    // to be ignored.
-
-                    if (logEvent.LogLevel == LogLevel.Info && logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                    switch (logEvent.LogLevel)
                     {
-                        if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
-                            logEvent.Message.Contains("Event type \"Modified\"") ||
-                            logEvent.Message.Contains("Event type \"Deleted\""))
-                        {
-                            return false;
-                        }
-                    }
+                        case LogLevel.Info:
 
-                    // Kubernetes client is not handling watches correctly when there are no objects
-                    // to be watched.  I read that the API server is returning a blank body in this
-                    // case but the Kubernetes client is expecting valid JSON, like an empty array.
+                            // KubeOps spams the logs with unnecessary INFO events when events are raised to
+                            // the controller.  We're going to filter these and do our own logging using this
+                            // filter.  The filter returns TRUE for events to be logged and FALSE for events
+                            // to be ignored.
 
-                    if (logEvent.LogLevel == LogLevel.Error && logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher" && logEvent.Module.Contains("The input does not contain any JSON tokens"))
-                    {
-                        return false;
+                            if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                            {
+                                if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
+                                    logEvent.Message.Contains("Event type \"Modified\"") ||
+                                    logEvent.Message.Contains("Event type \"Deleted\""))
+                                {
+                                    return false;
+                                }
+                            }
+
+                            // KubeOps logs INFO events for every event raised on the controller.  I prefer
+                            // doing our own logging for this.
+
+                            if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                            {
+                                return false;
+                            }
+                            break;
+
+                        case LogLevel.Error:
+
+                            // Kubernetes client is not handling watches correctly when there are no objects
+                            // to be watched.  I read that the API server is returning a blank body in this
+                            // case but the Kubernetes client is expecting valid JSON, like an empty array.
+
+                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher" && logEvent.Module.Contains("The input does not contain any JSON tokens"))
+                            {
+                                return false;
+                            }
+                            break;
                     }
 
                     return true;
