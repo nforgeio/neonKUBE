@@ -53,7 +53,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "UidNumber", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "uidNumber", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string UidNumber { get; set; }
+        public int? UidNumber { get; set; }
 
         /// <summary>
         /// User Primary Group
@@ -61,7 +61,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PrimaryGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "primaryGroup", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string PrimaryGroup { get; set; }
+        public int? PrimaryGroup { get; set; }
 
         /// <summary>
         /// Other Groups the user belongs to.
@@ -109,25 +109,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PassSha256", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "passSha256", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string PassSha256
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(PassSha256))
-                {
-                    return PassSha256;
-                }
-                else if (!string.IsNullOrEmpty(Password))
-                {
-                    return CryptoHelper.ComputeSHA256String(Password);
-                }
-                return PassSha256;
-            }
-            set
-            {
-                PassSha256 = value;
-            }
-        }
+        public string PassSha256 { get; set; }
 
         /// <summary>
         /// String password

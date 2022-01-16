@@ -4578,7 +4578,7 @@ $@"- name: StorageType
             values.Add("cluster.domain", cluster.Definition.Domain);
 
             values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
-            values.Add("config.backend.database.user", KubeConst.NeonSystemDbAdminUser);
+            values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
             values.Add("users.root.password", cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(20));
@@ -4627,7 +4627,9 @@ $@"- name: StorageType
                                 "-c",
                                 $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
                                         INSERT INTO groups(name,gidnumber)
-                                            VALUES('{group.Name}','{group.GidNumber}');"""
+                                            VALUES('{group.Name}','{group.GidNumber}') 
+                                                    ON CONFLICT (name) DO UPDATE
+                                                        SET gidnumber = '{group.GidNumber}';"""
                         };
 
                         var result = await k8s.NamespacedPodExecAsync(
@@ -4645,7 +4647,7 @@ $@"- name: StorageType
                         var mail         = $"{userData.Name}@{cluster.Definition.Domain}";
                         var uidnumber    = userData.UidNumber;
                         var primarygroup = userData.PrimaryGroup;
-                        var passsha256   = userData.PassSha256;
+                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
 
                         var command = new string[]
                         {
@@ -4653,7 +4655,14 @@ $@"- name: StorageType
                                 "-c",
                                 $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
                                         INSERT INTO users(name,givenname,mail,uidnumber,primarygroup,passsha256)
-                                            VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}');"""
+                                            VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
+                                                    ON CONFLICT (name) DO UPDATE
+                                                        SET 
+                                                            givenname     = '{givenname}',
+                                                            mail          = '{mail}',
+                                                            uidnumber     = '{uidnumber}',
+                                                            primarygroup  = '{primarygroup}',
+                                                            passsha256    = '{passsha256}';"""
                         };
 
                         var result = await k8s.NamespacedPodExecAsync(
