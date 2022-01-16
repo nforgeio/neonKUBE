@@ -4609,7 +4609,7 @@ $@"- name: StorageType
                         var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["config.cfg"];
                         var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var table       = doc.Tables.Where(t => t.Name.Key.ToString() == "backend").First();
+                        var table       = doc.Tables.Where(table => table.Name.Key.ToString() == "backend").First();
                         var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
                         var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
 
@@ -4629,16 +4629,16 @@ $@"- name: StorageType
                         var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["users.cfg"];
                         var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var tableArray  = doc.Tables.Where(t => t.Name.Key.ToString() == "users");
-                        var root        = tableArray.Where(t => t.Items.First().Value.ToString() == "\"root\"").First();
+                        var tableArray  = doc.Tables.Where(table => table.Name.Key.ToString() == "users");
+                        var root        = tableArray.Where(table => table.Items.First().Value.ToString() == "\"root\"").First();
 
-                        root.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"root@{cluster.Definition.Domain}");
-                        root.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["root"])));
+                        root.Items.Where(key => key.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"root@{cluster.Definition.Domain}");
+                        root.Items.Where(key => key.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["root"])));
 
-                        var serviceuser = tableArray.Where(t => t.Items.First().Value.ToString() == "\"serviceuser\"").First();
+                        var serviceuser = tableArray.Where(table => table.Items.First().Value.ToString() == "\"serviceuser\"").First();
 
-                        serviceuser.Items.Where(k => k.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"serviceuser@{cluster.Definition.Domain}");
-                        serviceuser.Items.Where(k => k.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["serviceuser"])));
+                        serviceuser.Items.Where(key => key.Key.ToString().Trim() == "mail").First().Value = new StringValueSyntax($"serviceuser@{cluster.Definition.Domain}");
+                        serviceuser.Items.Where(key => key.Key.ToString().Trim() == "passsha256").First().Value = new StringValueSyntax(CryptoHelper.ComputeSHA256String(Encoding.UTF8.GetString(users.Data["serviceuser"])));
 
                         config.Data["users.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
 
