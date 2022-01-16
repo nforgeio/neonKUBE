@@ -27,6 +27,10 @@ spec:
       labels:
         app: neon-node-agent
         kubectl.kubernetes.io/default-container: neon-node-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/"
+        prometheus.io/port: "9402"
     spec:
       serviceAccountName: neon-node-agent
       hostPID: true
@@ -86,6 +90,9 @@ spec:
         ports:
         - containerPort: 5000
           name: http
+        - name: http-metrics
+          containerPort: 9762
+          protocol: TCP
         resources:
           limits:
             cpu: {{ .Values.resource.limits.cpu }}
