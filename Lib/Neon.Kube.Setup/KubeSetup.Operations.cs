@@ -4093,7 +4093,7 @@ $@"- name: StorageType
 
                     // Add registries from the cluster definition.
 
-                    foreach (var registry in cluster.Definition.Registry.Registries)
+                    foreach (var registry in cluster.Definition.Container.Registries)
                     {
                         localRegistries.Add(registry);
                     }
@@ -4104,7 +4104,7 @@ $@"- name: StorageType
                     {
                         var clusterRegistry = new V1ContainerRegistry();
 
-                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Registry.SearchRegistries.IndexOf(registry.Location);
+                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Container.SearchRegistries.IndexOf(registry.Location);
                         clusterRegistry.Spec.Prefix      = registry.Prefix;
                         clusterRegistry.Spec.Location    = registry.Location;
                         clusterRegistry.Spec.Blocked     = registry.Blocked;

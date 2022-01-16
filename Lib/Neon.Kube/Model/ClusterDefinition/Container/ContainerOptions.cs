@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegistryOptions.cs
+// FILE:	    ContainerOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -47,7 +47,7 @@ namespace Neon.Kube
     /// nodes as the cluster is provisioned.  See more information: <a href="https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md">here</a>
     /// </note>
     /// </summary>
-    public class RegistryOptions
+    public class ContainerOptions
     {
         //---------------------------------------------------------------------
         // Static members
@@ -146,7 +146,7 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public RegistryOptions()
+        public ContainerOptions()
         {
             SearchRegistries = new List<string>() { defaultRegistry };
         }
@@ -175,7 +175,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(RegistryOptions)}.{nameof(SearchRegistries)}");
+                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(ContainerOptions)}.{nameof(SearchRegistries)}");
             }
 
             // Ensure that any registry customizations are valid.
@@ -187,11 +187,11 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(RegistryOptions)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
+                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
 
                 if (!string.IsNullOrEmpty(registry.Location))
                 {
-                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(RegistryOptions)}.{nameof(Registries)}.{nameof(registry.Location)}");
+                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Location)}");
                 }
             }
         }

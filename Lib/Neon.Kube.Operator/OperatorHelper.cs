@@ -37,7 +37,7 @@ using KubeOps.Operator.Builder;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Useful utilities for the <b>KubeOps</b> operatort SDK.
+    /// Useful utilities for the <b>KubeOps</b> operator SDK.
     /// </summary>
     public static class OperatorHelper
     {
