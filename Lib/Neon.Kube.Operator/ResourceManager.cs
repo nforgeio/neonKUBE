@@ -285,7 +285,7 @@ namespace Neon.Kube.Operator
 
                 using (await mutex.AcquireAsync())
                 {
-                    var name    = resource?.Metadata.Name;
+                    var name    = resource.Metadata.Name;
                     var changed = false;
 
                     if (resources.TryGetValue(resource.Metadata.Name, out var existing))
@@ -307,12 +307,15 @@ namespace Neon.Kube.Operator
                         // Looks like we're tracking all of the known resources now.
 
                         waitForAll = false;
+
+                        log.LogInfo($"ResourceManager: All known resources loaded.");
                     }
 
                     if (waitForAll)
                     {
                         // We're still receiving known resources.
 
+                        log.LogInfo($"ResourceManager: RECONCLIED: {name} (while waiting for known resources)");
                         return null;
                     }
 
@@ -363,12 +366,14 @@ namespace Neon.Kube.Operator
 
                 using (await mutex.AcquireAsync())
                 {
-                    if (!resources.ContainsKey(resource.Metadata.Name))
+                    var name = resource.Metadata.Name;
+
+                    if (!resources.ContainsKey(name))
                     {
                         return null;
                     }
 
-                    resources.Remove(resource.Metadata.Name);
+                    resources.Remove(name);
 
                     if (!waitForAll)
                     {
@@ -380,6 +385,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
+                        log.LogInfo($"ResourceManager: DELETED: {resource.Metadata.Name} (while waiting for known resources)");
                         return null;
                     }
                 }
@@ -411,12 +417,14 @@ namespace Neon.Kube.Operator
 
                 using (await mutex.AcquireAsync())
                 {
-                    if (!resources.ContainsKey(resource.Metadata.Name))
+                    var name = resource.Metadata.Name;
+
+                    if (!resources.ContainsKey(name))
                     {
                         return null;
                     }
 
-                    resources[resource.Metadata.Name] = resource;
+                    resources[name] = resource;
 
                     if (!waitForAll)
                     {
@@ -428,6 +436,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
+                        log.LogInfo($"ResourceManager: STATUS-MODIFIED: {resource.Metadata.Name} (while waiting for known resources)");
                         return null;
                     }
                 }

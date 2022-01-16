@@ -102,20 +102,10 @@ namespace Neon.Kube.Operator
 
                             if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
                             {
-                                if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
-                                    logEvent.Message.Contains("Event type \"Modified\"") ||
-                                    logEvent.Message.Contains("Event type \"Deleted\""))
+                                if (logEvent.Message.Contains("successfully reconciled"))
                                 {
                                     return false;
                                 }
-                            }
-
-                            // KubeOps logs INFO events for every event raised on the controller.  I prefer
-                            // doing our own logging for this.
-
-                            if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
-                            {
-                                return false;
                             }
                             break;
 
@@ -125,9 +115,12 @@ namespace Neon.Kube.Operator
                             // to be watched.  I read that the API server is returning a blank body in this
                             // case but the Kubernetes client is expecting valid JSON, like an empty array.
 
-                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher" && logEvent.Module.Contains("The input does not contain any JSON tokens"))
+                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
-                                return false;
+                                if (logEvent.Message.Contains("The input does not contain any JSON tokens"))
+                                {
+                                    return false;
+                                }
                             }
                             break;
                     }

@@ -131,7 +131,7 @@ namespace NeonNodeAgent
             await resourceManager.ReconciledAsync(resource,
                 async (name, resources) =>
                 {
-                    log.LogInfo($"RECONCILED: {name}");
+                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
 
                     UpdateContainerRegistries(resources);
