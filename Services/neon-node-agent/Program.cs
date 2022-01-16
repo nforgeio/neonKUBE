@@ -93,6 +93,8 @@ namespace NeonNodeAgent
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static ExecuteResponse HostExecuteCapture(string command, params object[] args)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
             var actualArgs = new List<object>();
 
             actualArgs.Add(HostMount);
