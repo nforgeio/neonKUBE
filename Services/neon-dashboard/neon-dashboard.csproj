@@ -71,4 +71,14 @@
     <Folder Include="Data\" />
   </ItemGroup>
 
+  <!--<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  
+    JEFF NOTE: Double dash sequences are not allowed in XML comments so
+	           I added an "X" in the middle of the command line options
+		       below.  You'll need to remove these when you uncomment
+		       this build target.
+  
+    <Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared -X-style compressed -X-load-path=Styles -X-update" />
+  </Target>-->
+
 </Project>

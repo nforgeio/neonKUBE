@@ -8,6 +8,10 @@ metadata:
 spec:
   image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
   containers:
+  - name: grafana-agent
+    env:
+      - name: GOGC
+        value: "10"
   - name: config-reloader 
     image: "{{ .Values.configReloader.image.organization }}/{{ .Values.configReloader.image.repository }}:{{ .Values.configReloader.image.tag }}"
   logLevel: info

@@ -91,7 +91,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(30),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
 
             await NeonHelper.WaitForAsync(
@@ -108,7 +108,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(120),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
@@ -157,7 +157,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(90),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
 
             await NeonHelper.WaitForAsync(
@@ -174,7 +174,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(120),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 

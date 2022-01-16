@@ -531,6 +531,8 @@ mode: {kubeProxyMode}");
             await master.InvokeIdempotentAsync("ready-to-go/restart-pods",
                 async () =>
                 {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "restart pods");
+
                     var pods = await k8s.ListPodForAllNamespacesAsync();
 
                     numPods = pods.Items.Count();
@@ -549,6 +551,8 @@ mode: {kubeProxyMode}");
             await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
                 async () =>
                 {
+                    controller.LogProgress(master, verb: "ready-to-go", message: "restart pods - wait");
+
                     await NeonHelper.WaitForAsync(
                             async () =>
                             {
@@ -1769,18 +1773,57 @@ done
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
 
-                        var cert = await k8s.GetNamespacedCustomObjectAsync<Certificate>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
+                        await k8s.DeleteNamespacedCustomObjectAsync<Certificate>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
+                        await k8s.DeleteNamespacedCustomObjectAsync<CertificateRequest>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
+                        
+                        try
+                        {
+                            await k8s.DeleteNamespacedSecretAsync("neon-cluster-certificate", KubeNamespaces.NeonIngress);
+                        }
+                        catch (HttpOperationException e)
+                        {
+                            if (e.Response.StatusCode != HttpStatusCode.NotFound)
+                            {
+                                throw;
+                            }
+                        }
 
-                        cert.Spec.CommonName = clusterLogin.ClusterDefinition.Domain;
-                        cert.Spec.DnsNames   = new List<string>()
+                        var cert = new Certificate()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "neon-cluster-certificate",
+                                NamespaceProperty = KubeNamespaces.NeonIngress
+                            },
+                            Spec = new CertificateSpec()
+                        };
+
+                        cert.Spec.CommonName  = clusterLogin.ClusterDefinition.Domain;
+                        cert.Spec.RenewBefore = "360h0m0s";
+                        cert.Spec.SecretName  = "neon-cluster-certificate";
+                        cert.Spec.Usages      = new X509Usages[] { X509Usages.ServerAuth, X509Usages.ClientAuth };
+                        cert.Spec.Duration    = "2160h0m0s";
+                        cert.Spec.Duration    = "2160h0m0s";
+                        cert.Spec.DnsNames    = new List<string>()
                         {
                             $"{clusterLogin.ClusterDefinition.Domain}",
                             $"*.{clusterLogin.ClusterDefinition.Domain}"
                         };
+                        cert.Spec.IssuerRef = new IssuerRef()
+                        {
+                            Group = "cert-manager.io",
+                            Kind  = "ClusterIssuer",
+                            Name  = "neon-acme"
+                        };
+                        cert.Spec.PrivateKey = new PrivateKey()
+                        {
+                            Algorithm      = KeyAlgorithm.RSA,
+                            Encoding       = KeyEncoding.PKCS1,
+                            RotationPolicy = RotationPolicy.Always
+                        };
 
-                        await k8s.ReplaceNamespacedCustomObjectAsync<Certificate>(cert, KubeNamespaces.NeonIngress, cert.Name());
-
-            });
+                        await k8s.UpsertNamespacedCustomObjectAsync<Certificate>(cert, KubeNamespaces.NeonIngress, cert.Name());
+                    });
             }
         }
 
@@ -3255,6 +3298,7 @@ $@"- name: StorageType
                         grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
                         grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
 
+                        await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-ingress",
@@ -3916,7 +3960,7 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout:      TimeSpan.FromSeconds(120),
+                            timeout:      TimeSpan.FromSeconds(300),
                             pollInterval: TimeSpan.FromSeconds(1));
                     }
                 });
@@ -4671,6 +4715,17 @@ $@"- name: StorageType
 
                         await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
                     });
+
+                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-restart",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "wait for oauth2 proxy");
+
+                        var deployment = await k8s.ReadNamespacedDeploymentAsync("neon-sso-oauth2-proxy", KubeNamespaces.NeonSystem);
+                        await deployment.RestartAsync(k8s);
+                    });
+
+                
             }
         }
 

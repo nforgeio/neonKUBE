@@ -306,7 +306,7 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager);
+                    return await k8s.CreateNamespacedCustomObjectAsync<T>(body, namespaceParameter, dryRun, fieldManager);
                 }
                 else
                 {
@@ -315,6 +315,58 @@ namespace Neon.Kube
             }
 
             return await k8s.ReplaceNamespacedCustomObjectAsync<T>(body, namespaceParameter, name, dryRun, fieldManager);
+        }
+
+        /// <summary>
+        /// Deletes a namespace scoped custom object of the specified generic type,
+        /// but doesn't throw any exceptions if it doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="dryRun">
+        /// When present, indicates that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="fieldManager">
+        /// fieldManager is a name associated with the actor or entity that is making these
+        /// changes. The value must be less than or 128 characters long, and only contain
+        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated object.</returns>
+        public static async Task DeleteNamespacedCustomObjectAsync<T>(
+            this IKubernetes k8s,
+            string namespaceParameter,
+            string name,
+            string dryRun = null,
+            string fieldManager = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+
+            where T : IKubernetesObject, new()
+        {
+            // We're going to try fetching the resource first.  If it doesn't exist, we'll
+            // create it otherwise we'll replace it.
+
+            try
+            {
+                var typeMetadata = new T().GetKubernetesTypeMetadata();
+                await k8s.DeleteNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name);
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 }
