@@ -184,7 +184,7 @@ namespace Neon.Kube.Operator
             this.log                      = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
             this.waitForAll               = waitForAll;
             this.nextNoChangeReconcileUtc = DateTime.UtcNow;
-            this.reconcileRequeueInterval = TimeSpan.FromMinutes(1);
+            this.reconcileRequeueInterval = TimeSpan.FromMinutes(5);
             this.errorBackoff             = TimeSpan.Zero;
         }
 
@@ -192,20 +192,20 @@ namespace Neon.Kube.Operator
         /// Specifies the amount of time after processing a reconcile event before processing
         /// a new event that does not change any resources.  This defaults to <b>1 minute</b>.
         /// Set <see cref="TimeSpan.Zero"/> to disable reconcile event processing when
-        /// there are no changes.
+        /// there are no changes.  This defaults to <b>5 minutes</b>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// This is useful as a fallback to ensure that current custom resource state actually
         /// matches the corresponding cluster or physical state.  For example, if you have 
         /// custom resources that map to running pods and one of the pods was manually deleted,
-        /// after a minute or so, your operator will receive a no-change reconclied event
-        /// which your handler can take as an oppertunity to ensure that all of the expected
-        /// pods actually exist.
+        /// after <see cref="ReconcileRequeueInterval"/> and up to minute or so more, your 
+        /// operator will receive a no-change reconciled event which your handler can take as
+        /// an oppertunity to ensure that all of the expected pods actually exist.
         /// </para>
         /// <note>
-        /// The actual resolution of this property is <b>1 minute</b> at this time due to
-        /// how the KubeOps SDK works.
+        /// The actual resolution of this property is rougly <b>1 minute</b> at this time due
+        /// to how the KubeOps SDK works.
         /// </note>
         /// </remarks>
         public TimeSpan ReconcileRequeueInterval
@@ -308,14 +308,14 @@ namespace Neon.Kube.Operator
 
                         waitForAll = false;
 
-                        log.LogInfo($"ResourceManager: All known resources loaded.");
+                        log.LogInfo($"All known resources loaded.");
                     }
 
                     if (waitForAll)
                     {
                         // We're still receiving known resources.
 
-                        log.LogInfo($"ResourceManager: RECONCLIED: {name} (while waiting for known resources)");
+                        log.LogInfo($"RECONCILED: {name} (waiting for known resources)");
                         return null;
                     }
 
@@ -323,6 +323,8 @@ namespace Neon.Kube.Operator
 
                     if (!changed && utcNow < nextNoChangeReconcileUtc)
                     {
+                        // It's not time yet for another no-change handler call.
+
                         return null;
                     }
 
@@ -385,7 +387,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"ResourceManager: DELETED: {resource.Metadata.Name} (while waiting for known resources)");
+                        log.LogInfo($"DELETED: {resource.Metadata.Name} (waiting for known resources)");
                         return null;
                     }
                 }
@@ -436,7 +438,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"ResourceManager: STATUS-MODIFIED: {resource.Metadata.Name} (while waiting for known resources)");
+                        log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (waiting for known resources)");
                         return null;
                     }
                 }
