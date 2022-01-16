@@ -967,12 +967,12 @@ namespace Neon.Service
                 if (newStatus == NeonServiceStatus.Unhealthy)
                 {
                     unhealthyCount.Inc();
-                    Log.LogWarn($"[{Name}] health status is now: [{newStatusString}]");
+                    Log.LogWarn($"[{Name}] health status: [{newStatusString}]");
                 }
                 else
                 {
 
-                    Log.LogInfo($"[{Name}] health status is now: [{newStatusString}]");
+                    Log.LogInfo($"[{Name}] health status: [{newStatusString}]");
                 }
 
                 if (healthStatusPath != null)
@@ -1109,9 +1109,9 @@ namespace Neon.Service
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the log manager, when one isn't already assigned.
+            // Initialize the default log manager, when one isn't already assigned.
 
-            Neon.Diagnostics.LogManager.Default = LogManager = new LogManager(parseLogLevel: false);
+            Neon.Diagnostics.LogManager.Default = LogManager;
 
             LogManager.Version = Version;
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
