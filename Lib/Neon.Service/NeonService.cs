@@ -370,8 +370,8 @@ namespace Neon.Service
     /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
     /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
     /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
-    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.NeonPrometheusScrape"/><b>/metrics/</b>.
-    /// We've resistered port <see cref="NetworkPorts.NeonPrometheusScrape"/> with Prometheus as a standard port
+    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.PrometheusMetrics"/><b>/metrics/</b>.
+    /// We've resistered port <see cref="NetworkPorts.PrometheusMetrics"/> with Prometheus as a standard port
     /// to be used for micro services running in Kubernetes or on other container platforms to make it 
     /// easy configure scraping for a cluster.
     /// </para>

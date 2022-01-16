@@ -302,7 +302,7 @@ namespace Neon.Net
         /// The standard Prometheus scraping port exposed by Neon related services,
         /// including custom user services built on <b>Neon.Service</b>.
         /// </summary>
-        public const int NeonPrometheusScrape = 9762;
+        public const int PrometheusMetrics = 9762;
 
         /// <summary>
         /// Default port for the Cortex dashboard.
@@ -431,7 +431,7 @@ namespace Neon.Net
                 new Map("kubernetes-api", KubernetesApiServer),
                 new Map("cassandra", Cassandra),
                 new Map("postgres", Postgres),
-                new Map("neon-prometheusscrape", NeonPrometheusScrape),
+                new Map("neon-prometheusscrape", PrometheusMetrics),
                 new Map("grafana-dashboard", GrafanaDashboard),
                 new Map("cortex-dashboard", CortexDashboard),
                 new Map("prometheus-dashboard", PrometheusDashboard),
