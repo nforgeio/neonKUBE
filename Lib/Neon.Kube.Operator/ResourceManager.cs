@@ -161,9 +161,11 @@ namespace Neon.Kube.Operator
         private Func<TCustomResource, bool>         filter;
         private INeonLogger                         log;
         private bool                                waitForAll;
-        private DateTime                            nextNoChangeReconcileUtc;
-        private TimeSpan                            reconcileRequeueInterval;
-        private TimeSpan                            errorBackoff;
+        private DateTime                            nextNoChangeReconciledUtc;
+        private TimeSpan                            reconciledRequeueInterval;
+        private TimeSpan                            reconciledErrorBackoff;
+        private TimeSpan                            deletedErrorBackoff;
+        private TimeSpan                            statusModifiedErrorBackoff;
 
         /// <summary>
         /// Default constructor.
@@ -194,12 +196,14 @@ namespace Neon.Kube.Operator
         /// </param>
         public ResourceManager(Func<TCustomResource, bool> filter = null, INeonLogger logger = null, bool waitForAll = true)
         {
-            this.filter                   = filter ?? new Func<TCustomResource, bool>(resource => true);
-            this.log                      = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
-            this.waitForAll               = waitForAll;
-            this.nextNoChangeReconcileUtc = DateTime.UtcNow;
-            this.reconcileRequeueInterval = TimeSpan.FromMinutes(5);
-            this.errorBackoff             = TimeSpan.Zero;
+            this.filter                     = filter ?? new Func<TCustomResource, bool>(resource => true);
+            this.log                        = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
+            this.waitForAll                 = waitForAll;
+            this.nextNoChangeReconciledUtc  = DateTime.UtcNow;
+            this.reconciledRequeueInterval  = TimeSpan.FromMinutes(5);
+            this.reconciledErrorBackoff     = TimeSpan.Zero;
+            this.deletedErrorBackoff        = TimeSpan.Zero;
+            this.statusModifiedErrorBackoff = TimeSpan.Zero;
         }
 
         /// <summary>
@@ -224,19 +228,19 @@ namespace Neon.Kube.Operator
         /// </remarks>
         public TimeSpan ReconcileRequeueInterval
         {
-            get => this.reconcileRequeueInterval;
+            get => this.reconciledRequeueInterval;
 
             set
             {
-                this.reconcileRequeueInterval = value;
+                this.reconciledRequeueInterval = value;
 
                 if (value >= TimeSpan.Zero)
                 {
-                    this.nextNoChangeReconcileUtc = DateTime.UtcNow + value;
+                    this.nextNoChangeReconciledUtc = DateTime.UtcNow + value;
                 }
                 else
                 {
-                    this.nextNoChangeReconcileUtc = DateTime.MinValue;
+                    this.nextNoChangeReconciledUtc = DateTime.MinValue;
                 }
             }
         }
@@ -258,18 +262,24 @@ namespace Neon.Kube.Operator
         public TimeSpan ErrorMaxRequeueInterval { get; set; } = TimeSpan.FromMinutes(10);
 
         /// <summary>
-        /// Computes the backoff timeout for exceptions.
+        /// Computes the backoff timeout for exceptions caught by the event handlers.
         /// </summary>
+        /// <param name="errorBackoff">
+        /// Passed as the current error backoff time being tracked for the event.  This
+        /// will be increased honoring in the <see cref="ErrorMinRequeueInterval"/> and
+        /// <see cref="ErrorMaxRequeueInterval"/> constraints and will also be returned
+        /// as the backoff.
+        /// </param>
         /// <returns>The backoff <see cref="TimeSpan"/>.</returns>
-        private TimeSpan ComputeErrorBackoff()
+        private TimeSpan ComputeErrorBackoff(ref TimeSpan errorBackoff)
         {
-            if (errorBackoff <= TimeSpan.Zero)
+            if (reconciledErrorBackoff <= TimeSpan.Zero)
             {
-                return errorBackoff = ErrorMaxRequeueInterval;
+                return errorBackoff = ErrorMinRequeueInterval;
             }
             else
             {
-                return errorBackoff = NeonHelper.Min(TimeSpan.FromTicks(errorBackoff.Ticks * 2), ErrorMaxRequeueInterval);
+                return errorBackoff = NeonHelper.Min(TimeSpan.FromTicks(reconciledErrorBackoff.Ticks * 2), ErrorMaxRequeueInterval);
             }
         }
 
@@ -340,21 +350,21 @@ namespace Neon.Kube.Operator
 
                     var utcNow = DateTime.UtcNow;
 
-                    if (!changed && utcNow < nextNoChangeReconcileUtc)
+                    if (!changed && utcNow < nextNoChangeReconciledUtc)
                     {
                         // It's not time yet for another no-change handler call.
 
                         return null;
                     }
 
-                    if (reconcileRequeueInterval > TimeSpan.Zero)
+                    if (reconciledRequeueInterval > TimeSpan.Zero)
                     {
-                        nextNoChangeReconcileUtc = utcNow + ReconcileRequeueInterval;
+                        nextNoChangeReconciledUtc = utcNow + ReconcileRequeueInterval;
                     }
 
                     var result = await handler(changed ? name : null, resources);
 
-                    errorBackoff = TimeSpan.Zero;   // Reset after a success
+                    reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
                     return result;
                 }
@@ -363,7 +373,7 @@ namespace Neon.Kube.Operator
             {
                 log.LogError(e);
 
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff());
+                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
             }
         }
 
@@ -405,7 +415,7 @@ namespace Neon.Kube.Operator
                     {
                         var result = await handler(resource.Metadata.Name, resources);
 
-                        errorBackoff = TimeSpan.Zero;   // Reset after a success
+                        deletedErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
                         return result;
                     }
@@ -420,7 +430,7 @@ namespace Neon.Kube.Operator
             {
                 log.LogError(e);
 
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff());
+                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref deletedErrorBackoff));
             }
         }
 
@@ -461,7 +471,7 @@ namespace Neon.Kube.Operator
                     {
                         var result = await handler(resource.Metadata.Name, resources);
 
-                        errorBackoff = TimeSpan.Zero;   // Reset after a success
+                        statusModifiedErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
                         return result;
                     }
@@ -476,7 +486,7 @@ namespace Neon.Kube.Operator
             {
                 log.LogError(e);
 
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff());
+                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref statusModifiedErrorBackoff));
             }
         }
 
