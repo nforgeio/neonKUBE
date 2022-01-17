@@ -158,6 +158,7 @@ namespace Neon.Kube.Operator
 
         private AsyncMutex                          mutex     = new AsyncMutex();
         private Dictionary<string, TCustomResource> resources = new Dictionary<string, TCustomResource>(StringComparer.InvariantCultureIgnoreCase);
+        private Func<TCustomResource, bool>         filter;
         private INeonLogger                         log;
         private bool                                waitForAll;
         private DateTime                            nextNoChangeReconcileUtc;
@@ -167,6 +168,18 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Default constructor.
         /// </summary>
+        /// <param name="filter">
+        /// <para>
+        /// Optionally specifies a predicate to be use for filtering the resources to be managed.
+        /// This can be useful for situations where multiple operator instances will partition
+        /// and handle the resources amongst themselves.  A good example is a node based operator
+        /// that handles only the resources associated with the node.
+        /// </para>
+        /// <para>
+        /// Your filter should examine the resource passed and return <c>true</c> when the resource
+        /// should be managed by this resource manager.  The default filter always returns <c>true</c>.
+        /// </para>
+        /// </param>
         /// <param name="logger">Optionally specifies the logger to be used by the instance.</param>
         /// <param name="waitForAll">
         /// <para>
@@ -179,8 +192,9 @@ namespace Neon.Kube.Operator
         /// This defaults to <c>true</c> which will work for most scenarios.
         /// </para>
         /// </param>
-        public ResourceManager(INeonLogger logger = null, bool waitForAll = true)
+        public ResourceManager(Func<TCustomResource, bool> filter = null, INeonLogger logger = null, bool waitForAll = true)
         {
+            this.filter                   = filter ?? new Func<TCustomResource, bool>(resource => true);
             this.log                      = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
             this.waitForAll               = waitForAll;
             this.nextNoChangeReconcileUtc = DateTime.UtcNow;
@@ -278,6 +292,11 @@ namespace Neon.Kube.Operator
         /// </remarks>
         public async Task<ResourceControllerResult> ReconciledAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            if (resource != null && !filter(resource))
+            {
+                return null;
+            }
+
             try
             {
                 Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
@@ -361,6 +380,11 @@ namespace Neon.Kube.Operator
         /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
         public async Task<ResourceControllerResult> DeletedAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            if (resource != null && !filter(resource))
+            {
+                return null;
+            }
+
             try
             {
                 Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
@@ -412,6 +436,11 @@ namespace Neon.Kube.Operator
         /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            if (resource != null && !filter(resource))
+            {
+                return null;
+            }
+
             try
             {
                 Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
