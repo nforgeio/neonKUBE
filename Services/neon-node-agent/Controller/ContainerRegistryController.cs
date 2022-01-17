@@ -4,6 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,19 +19,23 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Resources;
+using Neon.Retry;
 using Neon.Kube.Operator;
 
 using k8s.Models;
+
 using KubeOps.Operator.Controller;
 using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
-using System.Collections.Generic;
+
+using Prometheus;
+using Tomlyn;
 
 namespace NeonNodeAgent
 {
     /// <summary>
-    /// Manages <see cref="V1ContainerRegistry"/> entities on the Kubernetes API Server.
+    /// Manages <see cref="V1ContainerRegistry"/> resources on the Kubernetes API Server.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -67,62 +72,131 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger                             log             = LogManager.Default.GetLogger<ContainerRegistryController>();
-        private static readonly ResourceManager<V1ContainerRegistry>    resourceManager = new ResourceManager<V1ContainerRegistry>();
-        private static readonly string                                  configMountPath = LinuxPath.Combine(Program.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static readonly INeonLogger                     log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
+        private static readonly string                          configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static ResourceManager<V1ContainerRegistry>     resourceManager;
+
+        // Configuration settings
+
+        private static bool         configured = false;
+        private static TimeSpan     reconciledNoChangeInterval;
+        private static TimeSpan     errorMinRequeueInterval;
+        private static TimeSpan     errorMaxRequeueInterval;
+
+        // Metrics counters
+
+        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter("containerregistry_reconciled_received", "Received ContainerRegistry reconcile events.");
+        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter("containerregistry_deleted_received", "Received ContainerRegistry deleted events.");
+        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter("containerregistry_statusmodified_received", "Received ContainerRegistry status-modified events.");
+
+        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter("containerregistry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
+        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter("containerregistry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
+        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter("containerregistry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
+
+        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter("containerregistry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
+        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter("containerregistry_deleted_error", "Failed ContainerRegistry deleted event processing.");
+        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter("containerregistry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
+
+        private static readonly Counter configUpdateCounter            = Metrics.CreateCounter("containerregistry_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter              = Metrics.CreateCounter("containerregistry_login_error", "Number of failed container registry logins.");
 
         //---------------------------------------------------------------------
         // Instance members
+
+        /// <summary>
+        /// Coinstructor.
+        /// </summary>
+        public ContainerRegistryController()
+        {
+            // Load the configuration settings the first time a controller instance is created.
+
+            if (!configured)
+            {
+                reconciledNoChangeInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
+                errorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
+                errorMaxRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
+
+                resourceManager = new ResourceManager<V1ContainerRegistry>()
+                {
+                    ReconcileNoChangeInterval = reconciledNoChangeInterval,
+                    ErrorMinRequeueInterval    = errorMinRequeueInterval,
+                    ErrorMaxRequeueInterval    = errorMaxRequeueInterval
+                };
+
+                configured = true;
+            }
+        }
 
         /// <summary>
         /// Called for each existing custom resource when the controller starts so that the controller
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="resource">The new entity.</param>
+        /// <param name="registry">The new entity.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry registry)
         {
-            if (resourceManager.Reconciled(resource, resources => UpdateContainerRegistries(resources)))
-            {
-                log.LogInfo($"RECONCILE: {resource.Name()}");
+            reconciledReceivedCounter.Inc();
 
-                await Task.CompletedTask;
-            }
+            await resourceManager.ReconciledAsync(registry,
+                async (name, resources) =>
+                {
+                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
+                    reconciledProcessedCounter.Inc();
 
-            return null;
+                    UpdateContainerRegistries(resources);
+
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: reconciledErrorCounter);
+
+            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
         }
 
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="resource">The deleted entity.</param>
+        /// <param name="registry">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1ContainerRegistry resource)
+        public async Task DeletedAsync(V1ContainerRegistry registry)
         {
-            if (resourceManager.Deleted(resource, resources => UpdateContainerRegistries(resources)))
-            {
-                log.LogInfo($"DELETED: {resource.Name()}");
+            deletedReceivedCounter.Inc();
 
-                await Task.CompletedTask;
-            }
+            await resourceManager.DeletedAsync(registry,
+                async (name, resources) =>
+                {
+                    log.LogInfo($"DELETED: {name}");
+                    deletedProcessedCounter.Inc();
+
+                    UpdateContainerRegistries(resources);
+
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: deletedErrorCounter);
         }
 
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="resource">The updated entity.</param>
+        /// <param name="registry">The updated entity.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry resource)
+        public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry registry)
         {
-            if (resourceManager.StatusModified(resource))
-            {
-                log.LogInfo($"MODIFIED: {resource.Name()}");
+            statusModifiedReceivedCounter.Inc();
 
-                await Task.CompletedTask;
-            }
+            await resourceManager.DeletedAsync(registry,
+                async (name, resources) =>
+                {
+                    log.LogInfo($"STATUS-MODIFIED: {name}");
+                    statusModifiedProcessedCounter.Inc();
 
-            return null;
+                    UpdateContainerRegistries(resources);
+
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                },
+                errorCounter: statusModifiedErrorCounter);
+
+            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
         }
 
         /// <summary>
@@ -130,7 +204,7 @@ namespace NeonNodeAgent
         /// using the container registries passed and then signals CRI-O to reload any changes.
         /// </summary>
         /// <param name="registries">The current registry configurations.</param>
-        private void UpdateContainerRegistries(IEnumerable<V1ContainerRegistry> registries)
+        private async void UpdateContainerRegistries(IReadOnlyDictionary<string, V1ContainerRegistry> registries)
         {
             // NOTE: Here's the documentation for the config file we're generating:
             //
@@ -140,9 +214,9 @@ namespace NeonNodeAgent
             var sbRegistryConfig   = new StringBuilder();
             var sbSearchRegistries = new StringBuilder();
 
-            // Specify any unqualified search registries.
+            // Configure any unqualified search registries.
 
-            foreach (var registry in registries
+            foreach (var registry in registries.Values
                 .Where(registry => registry.Spec.SearchOrder >= 0)
                 .OrderBy(registry => registry.Spec.SearchOrder))
             {
@@ -153,20 +227,9 @@ namespace NeonNodeAgent
 $@"unqualified-search-registries = [{sbSearchRegistries}]
 ");
 
-            // Specify the built-in cluster registry.
+            // Configure any container registries include the local cluster.
 
-            sbRegistryConfig.Append(
-$@"
-[[registry]]
-prefix   = ""{KubeConst.LocalClusterRegistry}""
-insecure = true
-blocked  = false
-location = ""{KubeConst.LocalClusterRegistry}""
-");
-
-            // Specify any custom upstream registries.
-
-            foreach (var registry in registries)
+            foreach (var registry in registries.Values)
             {
                 sbRegistryConfig.Append(
 $@"
@@ -182,36 +245,101 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 }
             }
 
+            // Read and parse the current configuration file to create list of the existing
+            // configured upstream registries.  We'll need this so we can logout any registries
+            // that are being deleted.
+
+            var currentConfigText  = File.ReadAllText(configMountPath);
+            var currentConfig      = Toml.Parse(currentConfigText);
+            var existingLocations  = new List<string>();
+
+            foreach (var registryTable in currentConfig.Tables.Where(table => table.Name.Key.GetName() == "registry"))
+            {
+                var location = registryTable.Items.SingleOrDefault(key => key.Key.GetName() == "location")?.Value.GetValue();
+
+                if (!string.IsNullOrWhiteSpace(location))
+                {
+                    existingLocations.Add(location);
+                }
+            }
+
             // Convert the generated config to Linux line endings and then compare the new
             // config against what's already configured on the host node.  We'll rewrite the
             // host file and then signal CRI-O to reload its config when the files differ.
 
-            var newConfig = NeonHelper.ToLinuxLineEndings(sbRegistryConfig.ToString());
+            var newConfigText = NeonHelper.ToLinuxLineEndings(sbRegistryConfig.ToString());
 
-            if (File.ReadAllText(configMountPath) != newConfig)
+            if (currentConfigText != newConfigText)
             {
-                File.WriteAllText(configMountPath, newConfig);
-                Program.HostExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
+                configUpdateCounter.Inc();
+
+                File.WriteAllText(configMountPath, newConfigText);
+                Node.ExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
+
+                // Wait a few seconds to give CRI-O a chance to reload its config.  This will
+                // help mitigate problems when managing logins below due to potential inconsistencies
+                // between CRI-O's currently loaded config and the new config we just saved.
+
+                await Task.Delay(TimeSpan.FromSeconds(15));
             }
 
             // We also need to log into each of the registries that require credentials
-            // via [podman] on the node.
+            // via [podman] on the node.  We also need to logout of registries that don't
+            // specify credentials to handle cases where the registry was originally
+            // logged in, but has no credentials now.
+            //
+            // We'll log individual login failures but will continue trying to log into any
+            // remaining registries.
 
-            foreach (var registry in registries)
+            var retry = new LinearRetryPolicy(e => true, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+            foreach (var registry in registries.Values)
             {
-                if (string.IsNullOrEmpty(registry.Spec.Username))
+                try
                 {
-                    // The registry doesn't have a username so we'll logout to clear any old credentials.
-                    // We're going to ignore any errors here in case we're not currently logged into
-                    // the registry.
+                    if (string.IsNullOrEmpty(registry.Spec.Username))
+                    {
+                        // The registry doesn't have a username so we'll logout to clear any old credentials.
+                        // We're going to ignore any errors here in case we're not currently logged into
+                        // the registry.
 
-                    Program.HostExecuteCapture("podman", "logout", registry.Spec.Location);
+                        log.LogInfo($"podman logout {registry.Spec.Location}");
+                        Node.ExecuteCapture("podman", "logout", registry.Spec.Location);
+                    }
+                    else
+                    {
+                        // The registry has credentials so login using them.
+
+                        // $note(jefflill):
+                        //
+                        // It's possible that CRI-O hasn't reloaded its config yet and we may see errors
+                        // when logging into a new registry we just configured that CRI-O isn't aware of
+                        // yet.  The delay above should mitigate this most of the time, so we're going
+                        // to retry here, just in case.
+
+                        retry.Invoke(
+                            () =>
+                            {
+                                log.LogInfo($"podman login {registry.Spec.Location} --username {registry.Spec.Username} --password REDACTED");
+                                Node.ExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+                            });
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    // The registry has credentials so login using them.
+                    loginErrorCounter.Inc();
+                    log.LogError(e);
+                }
+            }
 
-                    Program.HostExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+            // We also need to log out of registeries that were just removed from the configuration.
+
+            foreach (var location in existingLocations)
+            {
+                if (!registries.Values.Any(registry => location == registry.Spec.Location))
+                {
+                    log.LogInfo($"podman logout {location}");
+                    Node.ExecuteCapture("podman", "logout", location);
                 }
             }
         }

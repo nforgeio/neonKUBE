@@ -93,7 +93,7 @@ namespace TestNeonService
             // Load the configuration environment variables, exiting with a
             // non-zero exit code if they don't exist.
 
-            natsServerUri = GetEnvironmentVariable("NATS_URI");
+            natsServerUri = Environment.Get("NATS_URI", string.Empty);
 
             if (string.IsNullOrEmpty(natsServerUri))
             {

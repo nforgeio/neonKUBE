@@ -133,7 +133,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            RegistryOptions.ValidateRegistryPrefix(Prefix, allowWildcard: true, propertyPath: $"{nameof(RegistryOptions)}.{nameof(RegistryOptions.Registries)}.{nameof(Prefix)}");
+            ContainerOptions.ValidateRegistryPrefix(Prefix, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(ContainerOptions.Registries)}.{nameof(Prefix)}");
 
             try
             {
@@ -146,12 +146,12 @@ namespace Neon.Kube
 
             if (!Prefix.StartsWith("*.") && !string.IsNullOrEmpty(Location))
             {
-                throw new ClusterDefinitionException($"[{nameof(RegistryOptions)}.{nameof(Prefix)}={Prefix}]: [{nameof(Location)}] required when the prefix doesn't include a wildcard like: *.example.com ");
+                throw new ClusterDefinitionException($"[{nameof(ContainerOptions)}.{nameof(Prefix)}={Prefix}]: [{nameof(Location)}] required when the prefix doesn't include a wildcard like: *.example.com ");
             }
 
             if (!string.IsNullOrEmpty(Location))
             {
-                RegistryOptions.ValidateRegistryPrefix(Location, allowWildcard: true, propertyPath: $"{nameof(RegistryOptions)}.{nameof(RegistryOptions.Registries)}.{nameof(Location)}");
+                ContainerOptions.ValidateRegistryPrefix(Location, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(ContainerOptions.Registries)}.{nameof(Location)}");
             }
         }
     }

@@ -28,6 +28,10 @@ spec:
       labels:
         app: neon-cluster-operator
         kubectl.kubernetes.io/default-container: neon-cluster-operator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/"
+        prometheus.io/port: "9762"
     spec:
       serviceAccountName: neon-cluster-operator
       tolerations:
@@ -67,8 +71,11 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 1
         ports:
-        - containerPort: 5000
-          name: http
+        - name: http
+          containerPort: 5000
+        - name: http-metrics
+          containerPort: 9762
+          protocol: TCP
         resources:
           limits:
             cpu: {{ .Values.resource.limits.cpu }}

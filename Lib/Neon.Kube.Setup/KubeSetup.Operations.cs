@@ -622,7 +622,7 @@ mode: {kubeProxyMode}");
                             NeonHelper.WaitFor(
                                 () =>
                                 {
-                                    var socketResponse  = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
+                                    var socketResponse = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
 
                                     return socketResponse.Success && socketResponse.OutputText.Contains(crioSocket);
 
@@ -4093,20 +4093,21 @@ $@"- name: StorageType
 
                     var localRegistries = new List<Registry>();
                     var localRegistry   = new Registry();
+                    var authSecret      = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
 
                     localRegistry.Name     = 
                     localRegistry.Prefix   =
-                    localRegistry.Location = "neon-registry.node.local";
+                    localRegistry.Location = KubeConst.LocalClusterRegistry;
                     localRegistry.Blocked  = false;
                     localRegistry.Insecure = true;
-                    localRegistry.Username = "";
-                    localRegistry.Password = "";
+                    localRegistry.Username = KubeConst.LocalClusterRegistryUser;
+                    localRegistry.Password = Encoding.UTF8.GetString(authSecret.Data[localRegistry.Username]);
 
                     localRegistries.Add(localRegistry);
 
                     // Add registries from the cluster definition.
 
-                    foreach (var registry in cluster.Definition.Registry.Registries)
+                    foreach (var registry in cluster.Definition.Container.Registries)
                     {
                         localRegistries.Add(registry);
                     }
@@ -4117,7 +4118,7 @@ $@"- name: StorageType
                     {
                         var clusterRegistry = new V1ContainerRegistry();
 
-                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Registry.SearchRegistries.IndexOf(registry.Location);
+                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Container.SearchRegistries.IndexOf(registry.Location);
                         clusterRegistry.Spec.Prefix      = registry.Prefix;
                         clusterRegistry.Spec.Location    = registry.Location;
                         clusterRegistry.Spec.Blocked     = registry.Blocked;
@@ -4577,6 +4578,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
@@ -4592,7 +4594,7 @@ $@"- name: StorageType
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
-            values.Add("users.root.password", cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(20));
+            values.Add("users.root.password", clusterLogin.SsoPassword);
             values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(20));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
@@ -4716,7 +4718,7 @@ $@"- name: StorageType
                         var dbSecret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
                         var usersConfig = config.Data["config.cfg"];
                         var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var table       = doc.Tables.Where(t => t.Name.Key.ToString() == "backend").First();
+                        var table       = doc.Tables.Where(table => table.Name.Key.ToString() == "backend").First();
                         var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
                         var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["username"])} sslmode=disable";
                         

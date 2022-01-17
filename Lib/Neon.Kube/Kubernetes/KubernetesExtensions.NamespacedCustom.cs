@@ -293,7 +293,7 @@ namespace Neon.Kube
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.

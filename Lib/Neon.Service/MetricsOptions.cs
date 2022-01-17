@@ -88,7 +88,7 @@ namespace Neon.Service
         /// Specifies the TCP port for the local HTTP listener that exposes metrics
         /// for scraping by Prometheus.
         /// </summary>
-        public int Port { get; set; } = NetworkPorts.NeonPrometheusScrape;
+        public int Port { get; set; } = NetworkPorts.PrometheusMetrics;
 
         /// <summary>
         /// Specifies the URL path for the local HTTP listener that exposes metrics

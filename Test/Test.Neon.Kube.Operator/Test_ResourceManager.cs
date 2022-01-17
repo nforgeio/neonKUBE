@@ -35,6 +35,7 @@ using Xunit;
 
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using KubeOps.Operator.Controller.Results;
 
 namespace TestKube
 {
@@ -64,28 +65,9 @@ namespace TestKube
         // Implementation
 
         [Fact]
-        public void Reconciled()
+        public async Task Reconciled()
         {
-            var resourceManager = new ResourceManager<V1Test>();
-            var resource0       = new V1Test();
-
-            resource0.Metadata.Name = "zero";
-
-            // Verify that we detect new resources.
-
-            Assert.True(resourceManager.Reconciled(resource0));
-            Assert.True(resourceManager.Contains("zero"));
-
-            // Verify that we ignore existing resources.
-
-            Assert.False(resourceManager.Reconciled(resource0));
-            Assert.True(resourceManager.Contains("zero"));
-        }
-
-        [Fact]
-        public void Reconciled_WithHandler()
-        {
-            var resourceManager = new ResourceManager<V1Test>();
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: false);
             var resource0       = new V1Test();
             var handlerCalled   = false;
 
@@ -93,114 +75,191 @@ namespace TestKube
 
             // Verify that we detect new resources.
 
-            Assert.True(resourceManager.Reconciled(resource0,
-                resources =>
+            await resourceManager.ReconciledAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.Contains(resource0, resources);
-                }));
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.True(handlerCalled);
-            Assert.True(resourceManager.Contains("zero"));
+            Assert.True(await resourceManager.ContainsAsync("zero"));
 
             // Verify that we ignore existing resources.
 
             handlerCalled = false;
 
-            Assert.False(resourceManager.Reconciled(resource0,
-                resources =>
+            await resourceManager.ReconciledAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.Contains(resource0, resources);
-                }));
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.False(handlerCalled);
-            Assert.True(resourceManager.Contains("zero"));
+            Assert.True(await resourceManager.ContainsAsync("zero"));
         }
 
+
         [Fact]
-        public void Deleted()
+        public async Task Reconciled_WaitForAll()
         {
-            var resourceManager = new ResourceManager<V1Test>();
+            // Verify that the resource manager will wait until all resources are
+            // loaded before calling the handler.
+
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: true);
             var resource0       = new V1Test();
+            var resource1       = new V1Test();
+            var resource2       = new V1Test();
+            var resource3       = new V1Test();
+            var handlerCalled   = false;
 
             resource0.Metadata.Name = "zero";
+            resource1.Metadata.Name = "one";
+            resource2.Metadata.Name = "two";
+            resource3.Metadata.Name = "three";
 
-            Assert.True(resourceManager.Reconciled(resource0));
+            handlerCalled = false;
+            await resourceManager.ReconciledAsync(resource0,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
-            // Verify that we detect resource deletion.
+            Assert.False(handlerCalled);
+            Assert.True(await resourceManager.ContainsAsync("zero"));
 
-            Assert.True(resourceManager.Deleted(resource0));
-            Assert.False(resourceManager.Contains("zero"));
+            handlerCalled = false;
+            await resourceManager.ReconciledAsync(resource1,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
-            // Verify that we ignore deletion of missing resources.
+            Assert.False(handlerCalled);
+            Assert.True(await resourceManager.ContainsAsync("one"));
 
-            Assert.False(resourceManager.Deleted(resource0));
-            Assert.False(resourceManager.Contains("zero"));
+            // Verify that handlers are not called for deleted events while
+            // we're still waiting for all resources.
+
+            await resourceManager.ReconciledAsync(resource2, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
+
+            handlerCalled = false;
+            await resourceManager.DeletedAsync(resource2,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
+
+            Assert.False(handlerCalled);
+
+            // Verify that handlers are not called for status modified events while
+            // we're still waiting for all resources.
+
+            await resourceManager.ReconciledAsync(resource3, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
+
+            handlerCalled = false;
+            await resourceManager.StatusModifiedAsync(resource3,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
+
+            Assert.False(handlerCalled);
+
+            // Resend an existing resource so that the resource manager will
+            // determine that it has all resources and call the handler with 
+            // a non-null name.
+
+            handlerCalled = false;
+            await resourceManager.ReconciledAsync(resource0,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    Assert.Null(name);
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
+
+            Assert.True(handlerCalled);
+            Assert.True(await resourceManager.ContainsAsync("zero"));
+
+            // Resend an existing resource with an updated generation and
+            // verify that the handler is called.
+
+            var newResource0  = new V1Test();
+            var newGeneration = 100L;
+
+            newResource0.Metadata.Name       = "zero";
+            newResource0.Metadata.Generation = newGeneration;
+
+            handlerCalled = false;
+            await resourceManager.ReconciledAsync(newResource0,
+                async (name, resources) =>
+                {
+                    handlerCalled = true;
+                    Assert.Equal("zero", name);
+                    Assert.Contains(newResource0, resources.Values);
+                    Assert.Equal(newGeneration, resources[name].Metadata.Generation);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
+
+            Assert.True(handlerCalled);
+            Assert.True(await resourceManager.ContainsAsync("zero"));
         }
 
         [Fact]
-        public void Deleted_WithHandler()
+        public async Task Deleted()
         {
-            var resourceManager = new ResourceManager<V1Test>();
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: false);
             var resource0       = new V1Test();
             var handlerCalled   = false;
 
             resource0.Metadata.Name = "zero";
 
-            Assert.True(resourceManager.Reconciled(resource0));
+            await resourceManager.ReconciledAsync(resource0, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
 
             // Verify that we detect resource deletion.
 
-            Assert.True(resourceManager.Deleted(resource0,
-                resources =>
+            await resourceManager.DeletedAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.DoesNotContain(resource0, resources);
-                }));
+                    Assert.DoesNotContain(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.True(handlerCalled);
-            Assert.False(resourceManager.Contains("zero"));
+            Assert.False(await resourceManager.ContainsAsync("zero"));
 
             // Verify that we ignore deletion of missing resources.
 
             handlerCalled = false;
 
-            Assert.False(resourceManager.Deleted(resource0,
-                resources =>
+            await resourceManager.DeletedAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.Contains(resource0, resources);
-                }));
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.False(handlerCalled);
-            Assert.False(resourceManager.Contains("zero"));
+            Assert.False(await resourceManager.ContainsAsync("zero"));
         }
 
         [Fact]
-        public void StatusModified()
+        public async Task StatusModified()
         {
-            var resourceManager = new ResourceManager<V1Test>();
-            var resource0       = new V1Test();
-
-            resource0.Metadata.Name = "zero";
-
-            // Verify that this doesn't blow up when the resource isn't present.
-
-            Assert.False(resourceManager.StatusModified(resource0));
-            Assert.False(resourceManager.Contains("zero"));
-
-            // Verify that this works when the resource is present.
-
-            Assert.True(resourceManager.Reconciled(resource0));
-            Assert.True(resourceManager.StatusModified(resource0));
-            Assert.True(resourceManager.Contains("zero"));
-        }
-
-        [Fact]
-        public void StatusModified_WithHandler()
-        {
-            var resourceManager = new ResourceManager<V1Test>();
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: false);
             var resource0       = new V1Test();
             var handlerCalled   = false;
 
@@ -208,56 +267,61 @@ namespace TestKube
 
             // Verify that this doesn't blow up when the resource isn't present.
 
-            Assert.False(resourceManager.StatusModified(resource0,
-                resources =>
+            await resourceManager.StatusModifiedAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.Contains(resource0, resources);
-                }));
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.False(handlerCalled);
-            Assert.False(resourceManager.Contains("zero"));
+            Assert.False(await resourceManager.ContainsAsync("zero"));
 
             // Verify that this works when the resource is present.
 
             handlerCalled = true;
 
-            Assert.True(resourceManager.Reconciled(resource0));
+            await resourceManager.ReconciledAsync(resource0, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
 
-            Assert.True(resourceManager.StatusModified(resource0,
-                resources =>
+            await resourceManager.StatusModifiedAsync(resource0,
+                async (name, resources) =>
                 {
                     handlerCalled = true;
-                    Assert.Contains(resource0, resources);
-                }));
+                    Assert.Contains(resource0, resources.Values);
+                    return await Task.FromResult<ResourceControllerResult>(null);
+                });
 
             Assert.True(handlerCalled);
-            Assert.True(resourceManager.Contains("zero"));
+            Assert.True(await resourceManager.ContainsAsync("zero"));
         }
 
         [Fact]
-        public void TryGetResource()
+        public async Task TryGetResource()
         {
-            var resourceManager = new ResourceManager<V1Test>();
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: false);
             var resource0       = new V1Test();
 
             resource0.Metadata.Name = "zero";
 
             // Verify when the resource isn't present.
 
-            Assert.False(resourceManager.TryGetResource("zero", out var r));
+            Assert.Null(await resourceManager.GetResourceAsync("zero"));
 
             // Verify when the resource is present.
 
-            Assert.True(resourceManager.Reconciled(resource0));
-            Assert.True(resourceManager.TryGetResource("zero", out r));
-            Assert.Equal("zero", r.Metadata.Name);
+            await resourceManager.ReconciledAsync(resource0, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
+
+            var found = await resourceManager.GetResourceAsync("zero");
+
+            Assert.NotNull(found);
+            Assert.Equal("zero", found.Metadata.Name);
         }
 
         [Fact]
-        public void GetResources()
+        public async Task CloneResources()
         {
-            var resourceManager = new ResourceManager<V1Test>();
+            var resourceManager = new ResourceManager<V1Test>(waitForAll: false);
             var resource0       = new V1Test();
             var resource1       = new V1Test();
 
@@ -266,28 +330,28 @@ namespace TestKube
 
             // Verify with no resources;
 
-            var resources = resourceManager.GetResources();
+            var resources = await resourceManager.CloneResourcesAsync();
 
             Assert.Empty(resources);
 
             // Verify with one resource.
 
-            Assert.True(resourceManager.Reconciled(resource0));
-            
-            resources = resourceManager.GetResources();
+            await resourceManager.ReconciledAsync(resource0, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
+
+            resources = await resourceManager.CloneResourcesAsync();
 
             Assert.Single(resources);
-            Assert.Contains(resources, r => r.Metadata.Name == "zero");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "zero");
 
             // Verify with two resources.
 
-            Assert.True(resourceManager.Reconciled(resource1));
-            
-            resources = resourceManager.GetResources();
+            await resourceManager.ReconciledAsync(resource1, async (name, resources) => await Task.FromResult<ResourceControllerResult>(null));
+
+            resources = await resourceManager.CloneResourcesAsync();
 
             Assert.Equal(2, resources.Count());
-            Assert.Contains(resources, r => r.Metadata.Name == "zero");
-            Assert.Contains(resources, r => r.Metadata.Name == "one");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "zero");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "one");
         }
     }
 }

@@ -60,7 +60,7 @@ namespace Neon.Kube
         public Grafana()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>

@@ -45,7 +45,7 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly Counter LogEventCountByLevel = Prometheus.Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
+        private static readonly Counter LogEventCountByLevel = Metrics.CreateCounter(NeonHelper.NeonMetricsPrefix + "log_events_total", "Number of logged events.", "level");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -53,7 +53,6 @@ namespace Neon.Diagnostics
         private ILogManager             logManager;
         private string                  module;
         private bool                    infoAsDebug;
-        private string                  version;
         private TextWriter              writer;
         private string                  contextId;
         private Func<LogEvent, bool>    logFilter;
@@ -130,7 +129,6 @@ namespace Neon.Diagnostics
         {
             this.logManager       = logManager ?? LogManager.Disabled;
             this.module           = module;
-            this.version          = logManager.Version;
             this.writer           = writer ?? Console.Error;
             this.contextId        = contextId;
             this.logFilter        = logFilter;
@@ -374,9 +372,9 @@ namespace Neon.Diagnostics
 
             var version = string.Empty;
 
-            if (!string.IsNullOrEmpty(this.version))
+            if (!string.IsNullOrEmpty(this.logManager.Version))
             {
-                version = $" [version:{this.version}]";
+                version = $" [version:{this.logManager.Version}]";
             }
 
             var module = string.Empty;

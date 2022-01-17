@@ -294,6 +294,12 @@ namespace Neon.Kube
         public const string LocalClusterRegistry = "neon-registry.node.local";
 
         /// <summary>
+        /// User name used to log CRI-O on the cluster nodes into the local
+        /// Harbor registry via <b>podman.</b>
+        /// </summary>
+        public const string LocalClusterRegistryUser = "root";  // $todo(jefflill): change this to "neon-node-cri" (https://github.com/nforgeio/neonKUBE/issues/1404)
+
+        /// <summary>
         /// Returns the Harbor Project name.
         /// </summary>
         public const string ClusterRegistryProjectName = "neon-internal";

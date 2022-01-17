@@ -370,8 +370,8 @@ namespace Neon.Service
     /// <see cref="NeonService"/> can enable services to publish Prometheus metrics with a
     /// single line of code; simply set <see cref="NeonService.MetricsOptions"/>.<see cref="MetricsOptions.Mode"/> to
     /// <see cref="MetricsMode.Scrape"/> before calling <see cref="RunAsync(bool)"/>.  This configures
-    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.NeonPrometheusScrape"/><b>/metrics/</b>.
-    /// We've resistered port <see cref="NetworkPorts.NeonPrometheusScrape"/> with Prometheus as a standard port
+    /// your service to publish metrics via HTTP via <b>http://0.0.0.0:</b><see cref="NetworkPorts.PrometheusMetrics"/><b>/metrics/</b>.
+    /// We've resistered port <see cref="NetworkPorts.PrometheusMetrics"/> with Prometheus as a standard port
     /// to be used for micro services running in Kubernetes or on other container platforms to make it 
     /// easy configure scraping for a cluster.
     /// </para>
@@ -451,20 +451,6 @@ namespace Neon.Service
         private static readonly Counter     runtimeCount    = Metrics.CreateCounter("runtime", "Service runtime in seconds.");
         private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
 
-        /// <summary>
-        /// <para>
-        /// This controls whether any <see cref="NeonService"/> instances will use the global
-        /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
-        /// log manager.  This defaults to <c>true</c> which will be appropriate for most
-        /// production situations.  It may be useful to disable this for some unit tests.
-        /// </para>
-        /// <note>
-        /// This applies only for services that were not passed a <see cref="LogManager"/>
-        /// to their constructor.
-        /// </note>
-        /// </summary>
-        public static bool GlobalLogging = true;
-
         // WARNING:
         //
         // The code below should be manually synchronized with similar code in [KubeHelper]
@@ -486,7 +472,7 @@ namespace Neon.Service
                     return true;
                 }
 
-                testFolder = Environment.GetEnvironmentVariable(NeonHelper.TestModeFolderVar);
+                testFolder = global::System.Environment.GetEnvironmentVariable(NeonHelper.TestModeFolderVar);
 
                 return testFolder != null;
             }
@@ -514,7 +500,7 @@ namespace Neon.Service
 
             if (NeonHelper.IsWindows)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+                var path = Path.Combine(global::System.Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
 
                 Directory.CreateDirectory(path);
 
@@ -522,7 +508,7 @@ namespace Neon.Service
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+                var path = Path.Combine(global::System.Environment.GetEnvironmentVariable("HOME"), ".neonkube");
 
                 Directory.CreateDirectory(path);
 
@@ -690,7 +676,8 @@ namespace Neon.Service
             this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator(gracefulShutdownTimeout: gracefulShutdownTimeout, minShutdownTime: minShutdownTime);
-            this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(version) ? version : "unknown";
+            this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(Version) ? version : "unknown";
+            this.Environment            = new EnvironmentParser(null, VariableSource);  // Temporarily setting a NULL logger until we create the logger below
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
             this.healthFolder           = healthFolder ?? "/";
@@ -706,6 +693,8 @@ namespace Neon.Service
 
             Log = LogManager.GetLogger();
 
+            Environment.SetLogger(Log);     // $hack(jefflill): set the new logger
+
             // Update the Prometheus metrics port from the service description if present.
 
             if (Description != null)
@@ -715,7 +704,7 @@ namespace Neon.Service
 
             // Initialize the [neon_service_info] gauge.
 
-            infoGauge.WithLabels(version).Set(1);
+            infoGauge.WithLabels(Version).Set(1);
         }
 
         /// <summary>
@@ -804,6 +793,15 @@ namespace Neon.Service
         /// Returns the service version or <b>"unknown"</b>.
         /// </summary>
         public string Version { get; private set; }
+
+        /// <summary>
+        /// Provides support for retrieving environment variables as well as
+        /// parsing common value types as well as custom value parsers.  We
+        /// recommend that services use this rather than <see cref="GetEnvironmentVariable(string, string)"/>
+        /// when possible as a way to standardize on how settings are formatted,
+        /// parsed and validated.
+        /// </summary>
+        public EnvironmentParser Environment { get; private set; }
 
         /// <summary>
         /// Returns the service map (if any).
@@ -969,12 +967,12 @@ namespace Neon.Service
                 if (newStatus == NeonServiceStatus.Unhealthy)
                 {
                     unhealthyCount.Inc();
-                    Log.LogWarn($"[{Name}] health status is now: [{newStatusString}]");
+                    Log.LogWarn($"[{Name}] health status: [{newStatusString}]");
                 }
                 else
                 {
 
-                    Log.LogInfo($"[{Name}] health status is now: [{newStatusString}]");
+                    Log.LogInfo($"[{Name}] health status: [{newStatusString}]");
                 }
 
                 if (healthStatusPath != null)
@@ -1111,22 +1109,12 @@ namespace Neon.Service
                 Terminator.DisableProcessExit = true;
             }
 
-            // Initialize the log manager, when one isn't already assigned.
+            // Initialize the default log manager, when one isn't already assigned.
 
-            if (LogManager == null)
-            {
-                if (GlobalLogging)
-                {
-                    LogManager = global::Neon.Diagnostics.LogManager.Default;
-                    LogManager.Version = Version;
-                }
-                else
-                {
-                    LogManager = new LogManager(parseLogLevel: false, version: this.Version);
-                }
+            Neon.Diagnostics.LogManager.Default = LogManager;
 
-                LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
-            }
+            LogManager.Version = Version;
+            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();
 
@@ -1766,11 +1754,24 @@ namespace Neon.Service
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+            return Environment.Get(name, def);
+        }
+
+        /// <summary>
+        /// Used by the <see cref="EnvironmentParser"/> to retrieve environment variables
+        /// via <see cref="GetEnvironmentVariable(string, string)"/>.
+        /// </summary>
+        /// <param name="name">The variable name.</param>
+        /// <returns>The variable value or <c>null</c>.</returns>
+        private string VariableSource(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
             lock (syncLock)
             {
                 if (InProduction)
                 {
-                    return Environment.GetEnvironmentVariable(name) ?? def;
+                    return global::System.Environment.GetEnvironmentVariable(name) ?? (string)null;
                 }
 
                 if (environmentVariables.TryGetValue(name, out var value))
@@ -1779,7 +1780,7 @@ namespace Neon.Service
                 }
                 else
                 {
-                    return def;
+                    return null;
                 }
             }
         }

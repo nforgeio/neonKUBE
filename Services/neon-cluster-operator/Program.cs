@@ -34,6 +34,11 @@ namespace NeonClusterOperator
     public static class Program
     {
         /// <summary>
+        /// Returns the program's service implementation.
+        /// </summary>
+        public static Service Service { get; private set; }
+
+        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -48,7 +53,9 @@ namespace NeonClusterOperator
                 return;
             }
 
-            await new Service(KubeService.NeonClusterOperator).RunAsync();
+            Service = new Service(KubeService.NeonClusterOperator);
+
+            await Service.RunAsync();
         }
 
         /// <summary>
