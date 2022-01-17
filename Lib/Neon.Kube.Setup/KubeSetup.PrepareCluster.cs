@@ -391,9 +391,7 @@ namespace Neon.Kube
             controller.AddNodeStep("vm image type",
                 (state, node) =>
                 {
-                    // Ensure that the source node image type is supported by the
-                    // current operation and when preparing a ready-to-go image that
-                    // we set the node image types to ready-to-go.
+                    // Ensure that the source node image type is supported by the current ready-to-go mode.
 
                     switch (readyToGoMode)
                     {
