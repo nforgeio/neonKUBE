@@ -4750,7 +4750,7 @@ $@"- name: StorageType
                             {
                                 "/bin/bash",
                                 "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} postgres -t -c ""UPDATE users SET passsha256 = '{password}' WHERE name = '{user}';"""
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""UPDATE users SET passsha256 = '{password}' WHERE name = '{user}';"""
                             };
 
                             var result = await k8s.NamespacedPodExecAsync(
