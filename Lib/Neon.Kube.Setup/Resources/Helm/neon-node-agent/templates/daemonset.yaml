@@ -57,7 +57,7 @@ spec:
           value: 15s
         - name: CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL
           value: 10m
-        - name: NODETASK_RECONCILE_REQUEUE_INTERVAL
+        - name: NODETASK_RECONCILED_NOCHANGE_INTERVAL
           value: 5m
         - name: NODETASK_ERROR_MIN_REQUEUE_INTERVAL
           value: 15s

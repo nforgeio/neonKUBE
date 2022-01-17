@@ -162,7 +162,7 @@ namespace Neon.Kube.Operator
         private INeonLogger                         log;
         private bool                                waitForAll;
         private DateTime                            nextNoChangeReconciledUtc;
-        private TimeSpan                            reconciledRequeueInterval;
+        private TimeSpan                            reconciledNoChangeInterval;
         private TimeSpan                            reconciledErrorBackoff;
         private TimeSpan                            deletedErrorBackoff;
         private TimeSpan                            statusModifiedErrorBackoff;
@@ -200,7 +200,7 @@ namespace Neon.Kube.Operator
             this.log                        = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
             this.waitForAll                 = waitForAll;
             this.nextNoChangeReconciledUtc  = DateTime.UtcNow;
-            this.reconciledRequeueInterval  = TimeSpan.FromMinutes(5);
+            this.reconciledNoChangeInterval = TimeSpan.FromMinutes(5);
             this.reconciledErrorBackoff     = TimeSpan.Zero;
             this.deletedErrorBackoff        = TimeSpan.Zero;
             this.statusModifiedErrorBackoff = TimeSpan.Zero;
@@ -217,7 +217,7 @@ namespace Neon.Kube.Operator
         /// This is useful as a fallback to ensure that current custom resource state actually
         /// matches the corresponding cluster or physical state.  For example, if you have 
         /// custom resources that map to running pods and one of the pods was manually deleted,
-        /// after <see cref="ReconcileRequeueInterval"/> and up to minute or so more, your 
+        /// after <see cref="ReconcileNoChangeInterval"/> and up to minute or so more, your 
         /// operator will receive a no-change reconciled event which your handler can take as
         /// an oppertunity to ensure that all of the expected pods actually exist.
         /// </para>
@@ -226,13 +226,13 @@ namespace Neon.Kube.Operator
         /// to how the KubeOps SDK works.
         /// </note>
         /// </remarks>
-        public TimeSpan ReconcileRequeueInterval
+        public TimeSpan ReconcileNoChangeInterval
         {
-            get => this.reconciledRequeueInterval;
+            get => this.reconciledNoChangeInterval;
 
             set
             {
-                this.reconciledRequeueInterval = value;
+                this.reconciledNoChangeInterval = value;
 
                 if (value >= TimeSpan.Zero)
                 {
@@ -357,9 +357,9 @@ namespace Neon.Kube.Operator
                         return null;
                     }
 
-                    if (reconciledRequeueInterval > TimeSpan.Zero)
+                    if (reconciledNoChangeInterval > TimeSpan.Zero)
                     {
-                        nextNoChangeReconciledUtc = utcNow + ReconcileRequeueInterval;
+                        nextNoChangeReconciledUtc = utcNow + ReconcileNoChangeInterval;
                     }
 
                     var result = await handler(changed ? name : null, resources);

@@ -79,7 +79,7 @@ namespace NeonNodeAgent
         // Configuration settings
 
         private static bool         configured = false;
-        private static TimeSpan     reconcileRequeueInterval;
+        private static TimeSpan     reconciledNoChangeInterval;
         private static TimeSpan     errorMinRequeueInterval;
         private static TimeSpan     errorMaxRequeueInterval;
 
@@ -112,15 +112,15 @@ namespace NeonNodeAgent
 
             if (!configured)
             {
-                reconcileRequeueInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL", TimeSpan.FromMinutes(5));
-                errorMinRequeueInterval  = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
-                errorMaxRequeueInterval  = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
+                reconciledNoChangeInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
+                errorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
+                errorMaxRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
 
                 resourceManager = new ResourceManager<V1ContainerRegistry>()
                 {
-                    ReconcileRequeueInterval = reconcileRequeueInterval,
-                    ErrorMinRequeueInterval  = errorMinRequeueInterval,
-                    ErrorMaxRequeueInterval  = errorMaxRequeueInterval
+                    ReconcileNoChangeInterval = reconciledNoChangeInterval,
+                    ErrorMinRequeueInterval    = errorMinRequeueInterval,
+                    ErrorMaxRequeueInterval    = errorMaxRequeueInterval
                 };
 
                 configured = true;

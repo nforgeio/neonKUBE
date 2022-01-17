@@ -50,7 +50,7 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
     ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
@@ -75,7 +75,7 @@ namespace NeonNodeAgent
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>NODETASK_RECONCILE_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>NODETASK_RECONCILED_NOCHANGE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
     ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
