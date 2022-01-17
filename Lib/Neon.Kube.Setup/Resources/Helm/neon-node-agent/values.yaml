@@ -34,10 +34,10 @@ logLevel: info
 #
 # $debug(): DEBUG related configurations.
 
-image:
-  organization: ghcr.io/neonkube-dev
-  repository: neon-node-agent
-  pullPolicy: Always
-  tag: neonkube-0.3.0-alpha
+#image:
+#  organization: ghcr.io/neonkube-dev
+#  repository: neon-node-agent
+#  pullPolicy: Always
+#  tag: neonkube-0.3.0-alpha
 
-logLevel: debug
+#logLevel: debug
