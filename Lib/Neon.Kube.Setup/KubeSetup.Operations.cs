@@ -331,6 +331,12 @@ spec:
             //       so we need to install that first.
 
             await InstallClusterOperatorAsync(controller, master);
+
+            // $todo(jefflill):
+            //
+            // [neon-node-agent] is not starting for [marcusbooyah].  Commenting
+            // this out for the moment, while we're working on a demo.
+
             //await InstallNodeAgentAsync(controller, master);
             //await InstallContainerRegistryResources(controller, master);
         }

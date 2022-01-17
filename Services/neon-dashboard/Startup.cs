@@ -38,14 +38,14 @@ namespace NeonDashboard
     public class Startup
     {
         public IConfiguration Configuration { get; }
-        public NeonDashboardService NeonDashboardService;
+        public Service NeonDashboardService;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Specifies the service configuration.</param>
         /// <param name="service">Specifies the service.</param>
-        public Startup(IConfiguration configuration, NeonDashboardService service)
+        public Startup(IConfiguration configuration, Service service)
         {
             Configuration             = configuration;
             this.NeonDashboardService = service;

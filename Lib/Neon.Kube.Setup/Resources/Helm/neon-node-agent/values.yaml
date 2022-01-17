@@ -30,7 +30,7 @@ resource:
 logLevel: info
 
 ###############################################################################
-# WARNING: BE SURE TO COMMENT THIS OUT BEFORE CHECING INTO MASTER!
+# WARNING: BE SURE TO COMMENT THIS OUT BEFORE PUSHING TO MASTER!
 #
 # $debug(): DEBUG related configurations.
 

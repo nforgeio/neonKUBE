@@ -48,14 +48,26 @@ namespace NeonNodeAgent
             // Intercept and handle KubeOps [generator] commands executed by the 
             // KubeOps MSBUILD tasks.
 
-            if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+            try
             {
-                return;
+                if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+                {
+                    return;
+                }
+
+                Service = new Service(KubeService.NeonNodeAgent);
+
+                Environment.Exit(await Service.RunAsync());
             }
+            catch (Exception e)
+            {
+                // We really shouldn't see exceptions here but let's log something
+                // just in case.  Note that logging may not be initialized yet so
+                // we'll just output a string.
 
-            Service = new Service(KubeService.NeonNodeAgent);
-
-            await Service.RunAsync();
+                Console.Error.WriteLine(NeonHelper.ExceptionError(e));
+                Environment.Exit(-1);
+            }
         }
 
         /// <summary>
