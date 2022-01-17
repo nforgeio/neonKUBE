@@ -187,7 +187,7 @@ namespace NeonNodeAgent
             await resourceManager.DeletedAsync(registry,
                 async (name, resources) =>
                 {
-                    log.LogInfo($"DELETED: {name}");
+                    log.LogInfo($"STATUS-MODIFIED: {name}");
                     statusModifiedProcessedCounter.Inc();
 
                     UpdateContainerRegistries(resources);

@@ -341,7 +341,7 @@ namespace TestKube
             resources = await resourceManager.CloneResourcesAsync();
 
             Assert.Single(resources);
-            Assert.Contains(resources, r => r.Metadata.Name == "zero");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "zero");
 
             // Verify with two resources.
 
@@ -350,8 +350,8 @@ namespace TestKube
             resources = await resourceManager.CloneResourcesAsync();
 
             Assert.Equal(2, resources.Count());
-            Assert.Contains(resources, r => r.Metadata.Name == "zero");
-            Assert.Contains(resources, r => r.Metadata.Name == "one");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "zero");
+            Assert.Contains(resources.Values, r => r.Metadata.Name == "one");
         }
     }
 }

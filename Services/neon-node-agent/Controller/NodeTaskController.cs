@@ -75,6 +75,8 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Instance members
 
+        private bool    cleanupTaskRunning = false;
+
         /// <summary>
         /// Coinstructor.
         /// </summary>
@@ -128,7 +130,20 @@ namespace NeonNodeAgent
                     log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
 
-                    // $todo(jefflill)
+                    if (name == null)
+                    {
+                        // This is a NO-CHANGE event which is a good time to handle any
+                        // cleanup related to tasks belonging to this node.
+
+                        await CleanupTasksAsync(resources);
+                    }
+                    else
+                    {
+                        // We have a new NodeTask targeting this node that will need
+                        // to be executed.
+
+                        await ExecuteTaskAsync(resources[name]);
+                    }
 
                     return await Task.FromResult<ResourceControllerResult>(null);
                 },
@@ -152,7 +167,7 @@ namespace NeonNodeAgent
                     log.LogInfo($"DELETED: {name}");
                     deletedProcessedCounter.Inc();
 
-                    // $todo(jefflill)
+                    // This is a NOP.
 
                     return await Task.FromResult<ResourceControllerResult>(null);
                 },
@@ -171,16 +186,85 @@ namespace NeonNodeAgent
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
-                    log.LogInfo($"DELETED: {name}");
+                    log.LogInfo($"STATUS-MODIFIED: {name}");
                     statusModifiedProcessedCounter.Inc();
 
-                    // $todo(jefflill)
+                    // This is a NOP.
 
                     return await Task.FromResult<ResourceControllerResult>(null);
                 },
                 errorCounter: statusModifiedErrorCounter);
 
             return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Handles the management of tasks targeting the current cluster node where:
+        /// </para>
+        /// <list type="bullet">
+        /// <item>
+        /// Tasks whose <see cref="V1NodeTask.V1NodeTaskStatus.AgentId"/> doesn't match
+        /// the ID for the current agent will be marked as <see cref="NodeTaskState.Orphaned"/>
+        /// and the finish time will be set to now.  This sets the task up for eventual
+        /// deletion.
+        /// </item>
+        /// <item>
+        /// Tasks whose <see cref="V1NodeTask.V1NodeTaskSpec.StartLimitUtc"/> has been exceeded
+        /// will be marked as <see cref="NodeTaskState.PendingTimeout"/> and the finish time will 
+        /// be set to now.  This sets the task up for eventual deletion.
+        /// </item>
+        /// <item>
+        /// Tasks with a finish time that is older than <see cref="V1NodeTask.V1NodeTaskSpec.RetainSeconds"/>
+        /// will be removed.
+        /// </item>
+        /// </list>
+        /// <note>
+        /// This method starts the cleanup in a separate <see cref="Task"/> and then returns
+        /// immediately.  Only one of these tasks will be allowed to execute at any time,
+        /// so this method will just return when a cleanup task is already running.
+        /// </note>
+        /// </summary>
+        /// <param name="resources">The current known tasks.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NodeTask> resources)
+        {
+            var tasks = resourceManager.CloneResourcesAsync(resources);
+
+            if (cleanupTaskRunning)
+            {
+                await Task.CompletedTask;
+                return;
+            }
+
+            _ = Task.Run(
+                () =>
+                {
+                    try
+                    {
+                        cleanupTaskRunning = true;
+
+
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError(e);
+                    }
+                    finally
+                    {
+                        cleanupTaskRunning = false;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="task"></param>
+        /// <returns></returns>
+        private async Task ExecuteTaskAsync(V1NodeTask task)
+        {
+            throw new NotImplementedException("$todo(jefflill)");
         }
     }
 }

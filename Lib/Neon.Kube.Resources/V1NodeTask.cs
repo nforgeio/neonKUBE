@@ -42,7 +42,7 @@ namespace Neon.Kube.Resources
     /// </para>
     /// <para><b>LIFECYCLE</b></para>
     /// <para>
-    /// Here's the lifecycle for a task:
+    /// Here is the description of a NodeTask lifecycle:
     /// </para>
     /// <list type="number">
     /// <item>
