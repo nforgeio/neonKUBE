@@ -141,6 +141,22 @@ namespace Neon.Kube
         public string SshPassword { get; set; }
 
         /// <summary>
+        /// The root single sign-on (SSO) cluster username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoUsername { get; set; }
+
+        /// <summary>
+        /// The root single sign-on (SSO) cluster password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoPassword { get; set; }
+
+        /// <summary>
         /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to
         /// a cluster node.
         /// </summary>

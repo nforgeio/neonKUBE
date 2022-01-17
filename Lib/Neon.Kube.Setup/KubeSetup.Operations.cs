@@ -4563,6 +4563,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
@@ -4576,7 +4577,7 @@ $@"- name: StorageType
 
             values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
 
-            values.Add("users.root.password", cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(20));
+            values.Add("users.root.password", clusterLogin.SsoPassword);
             values.Add("users.serviceuser.password", ldapPassword);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)

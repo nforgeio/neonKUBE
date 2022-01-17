@@ -566,7 +566,7 @@ namespace Neon.Kube
         public Dictionary<string, string> SetupState { get; set; } = null;
 
         /// <summary>
-        /// The cluster root user password.
+        /// The cluster root single sign-on (SSO) password.
         /// </summary>
         [JsonProperty(PropertyName = "RootPassword", Required = Required.Default)]
         [YamlMember(Alias = "rootPassword", ApplyNamingConventions = false)]
