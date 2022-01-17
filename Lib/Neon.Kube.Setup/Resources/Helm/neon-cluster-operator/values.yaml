@@ -33,8 +33,8 @@ resource:
 
 logLevel: info
 
-#==============================================================================
-# WARNING: BE SURE TO COMMENT THIS OUT FOR PRODUCTION!
+###############################################################################
+# WARNING: BE SURE TO COMMENT THIS OUT BEFORE CHECING INTO MASTER!
 #
 # $debug(): DEBUG related configurations.
 
