@@ -527,29 +527,53 @@ namespace Neon.Kube.Operator
             }
         }
 
-        /// <summary>
-        /// Returns the current set of resources being managed.  This may be use for
-        /// complex that cannot be performed via a handler callback.
-        /// </summary>
-        /// <returns>A copy of the current set of managed resources.</returns>
-        /// <remarks>
+        /// <summary>d
         /// <para>
-        /// You'll need to take care to ensure that any new events raised don't result in
-        /// unexpected resource changes to the handled while you're working with the collection
-        /// returned.  Consider locking the <see cref="ResourceManager{TCustomResource}"/> instance
-        /// while you're processing the collection returned.
+        /// Returns a deep clone the current set of resources being managed or of the dictionary passed.
         /// </para>
         /// <note>
-        /// We recommend that you avoid call this and use handler callbacks whenerver possible
-        /// to keep things safe and simple.
+        /// This can be an expensive operation when you're tracking a lot of resources.
         /// </note>
-        /// </remarks>
-        public async Task<IEnumerable<TCustomResource>> CloneResourcesAsync()
+        /// </summary>
+        /// <param name="resources">Optionally specifies the resource dictionary to be copied.</param>
+        /// <returns>A deep clone of the current set of resources being managed or the dictionary passed..</returns>
+        public async Task<IReadOnlyDictionary<string, TCustomResource>> CloneResourcesAsync(IReadOnlyDictionary<string, TCustomResource> resources = null)
         {
-            using (await mutex.AcquireAsync())
+            if (resources == null)
             {
-                return new List<TCustomResource>(resources.Values);
+                using (await mutex.AcquireAsync())
+                {
+                    return DeepClone(this.resources);
+                }
             }
+            else
+            {
+                return DeepClone(resources);
+            }
+        }
+
+        /// <summary>
+        /// Returns a deep clone of the resource dictionary passed.
+        /// </summary>
+        /// <param name="source">The source dictionary.</param>
+        /// <returns></returns>
+        private IReadOnlyDictionary<string, TCustomResource> DeepClone(IReadOnlyDictionary<string, TCustomResource> source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+
+            var target = new Dictionary<string, TCustomResource>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var item in source)
+            {
+                // $note(jefflill): 
+                //
+                // NeonHelper.JsonClone() is going to serialize and deserialize each 
+                // item value which will be somewhat expensive.
+
+                target.Add(item.Key, NeonHelper.JsonClone(item.Value));
+            }
+
+            return (IReadOnlyDictionary<string, TCustomResource>)target;
         }
     }
 }
