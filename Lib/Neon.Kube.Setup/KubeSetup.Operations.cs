@@ -331,8 +331,8 @@ spec:
             //       so we need to install that first.
 
             await InstallClusterOperatorAsync(controller, master);
-            await InstallNodeAgentAsync(controller, master);
-            await InstallContainerRegistryResources(controller, master);
+            //await InstallNodeAgentAsync(controller, master);
+            //await InstallContainerRegistryResources(controller, master);
         }
 
         /// <summary>
