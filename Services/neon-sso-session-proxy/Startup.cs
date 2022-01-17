@@ -31,14 +31,14 @@ namespace NeonSsoSessionProxy
     public class Startup
     {
         public IConfiguration               Configuration { get; }
-        public NeonSsoSessionProxyService   NeonSsoSessionProxyService;
+        public Service   NeonSsoSessionProxyService;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Specifies the service configuration.</param>
         /// <param name="service">Specifies the service.</param>
-        public Startup(IConfiguration configuration, NeonSsoSessionProxyService service)
+        public Startup(IConfiguration configuration, Service service)
         {
             Configuration                   = configuration;
             this.NeonSsoSessionProxyService = service;

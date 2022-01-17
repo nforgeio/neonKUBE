@@ -29,7 +29,7 @@ namespace NeonDashboard
     /// <summary>
     /// Implements the <b>neon-dashboard</b> service.
     /// </summary>
-    public class NeonDashboardService : NeonService
+    public class Service : NeonService
     {
         // class fields
         private IWebHost webHost;
@@ -54,7 +54,7 @@ namespace NeonDashboard
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        public NeonDashboardService(string name)
+        public Service(string name)
              : base(name, version: KubeVersions.NeonKube)
         {
             
@@ -91,7 +91,7 @@ namespace NeonDashboard
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, port))
-                .ConfigureServices(services => services.AddSingleton(typeof(NeonDashboardService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 

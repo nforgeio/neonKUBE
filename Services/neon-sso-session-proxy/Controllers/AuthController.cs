@@ -29,7 +29,7 @@ namespace NeonSsoSessionProxy.Controllers
     [ApiController]
     public class AuthController : NeonControllerBase
     {
-        private NeonSsoSessionProxyService   NeonSsoSessionProxyService;
+        private Service   NeonSsoSessionProxyService;
         private HttpMessageInvoker           httpClient;
         private IHttpForwarder               forwarder;
         private SessionTransformer           transformer;
@@ -48,7 +48,7 @@ namespace NeonSsoSessionProxy.Controllers
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
         public AuthController(
-            NeonSsoSessionProxyService   NeonSsoSessionProxyService,
+            Service   NeonSsoSessionProxyService,
             HttpMessageInvoker           httpClient,
             IHttpForwarder               forwarder,
             IDistributedCache            cache,
