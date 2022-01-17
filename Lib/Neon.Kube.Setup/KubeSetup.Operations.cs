@@ -334,8 +334,8 @@ spec:
 
             // $todo(jefflill):
             //
-            // Node agent is not starting for marcusbooyah.  Commenting this
-            // out for the moment.
+            // [neon-node-agent] is not starting for [marcusbooyah].  Commenting
+            // this out for the moment, while we're working on a demo.
 
             //await InstallNodeAgentAsync(controller, master);
             //await InstallContainerRegistryResources(controller, master);
