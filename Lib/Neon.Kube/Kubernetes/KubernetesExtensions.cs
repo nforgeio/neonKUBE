@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
@@ -90,7 +91,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(30),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
 
             await NeonHelper.WaitForAsync(
@@ -107,7 +108,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(120),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
@@ -156,7 +157,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(90),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
 
             await NeonHelper.WaitForAsync(
@@ -173,12 +174,91 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(120),
+                timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
         //---------------------------------------------------------------------
-        // Kubernetes client extensions.
+        // IKubernetesObject extensions
+
+        // Used to cache [KubernetesEntityAttribute] values for custom resource types
+        // for better performance (avoiding unnecessary reflection).
+
+        private class CustomResourceMetadata
+        {
+            public CustomResourceMetadata(KubernetesEntityAttribute attr)
+            {
+                this.Group           = attr.Group;
+                this.ApiVersion      = attr.ApiVersion;
+                this.Kind            = attr.Kind;
+                this.GroupApiVersion = $"{attr.Group}/{attr.ApiVersion}";
+            }
+
+            public string Group { get; private set; }
+            public string ApiVersion { get; private set; }
+            public string Kind { get; private set; }
+            public string GroupApiVersion { get; private set; }
+        }
+
+        private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new ();
+
+        /// <summary>
+        /// Initializes a custom Kubernetes object's metadata <b>Group</b>, <b>ApiVersion</b>, and
+        /// <b>Kind</b> properties from the <see cref="KubernetesEntityAttribute"/> attached to the
+        /// object's type.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <exception cref="InvalidDataException">Thrown when the object's type does not have a <see cref="KubernetesEntityAttribute"/>.</exception>
+        /// <remarks>
+        /// <para>
+        /// This should be called in all custom object constructors to ensure that the object's
+        /// metadata is configured and matches what was specified in the attribute.  Here's
+        /// what this will look like:
+        /// </para>
+        /// <code language="C#">
+        /// [KubernetesEntity(Group = "mygroup.io", ApiVersion = "v1", Kind = "my-resource", PluralName = "my-resources")]
+        /// [KubernetesEntityShortNames]
+        /// [EntityScope(EntityScope.Cluster)]
+        /// [Description("My custom resource.")]
+        /// public class V1MyCustomResource : CustomKubernetesEntity&lt;V1ContainerRegistry.V1ContainerRegistryEntitySpec&gt;
+        /// {
+        ///     public V1ContainerRegistry()
+        ///     {
+        ///         ((IKubernetesObject)this).InitializeMetadata();
+        ///     }
+        ///
+        ///     ...
+        /// </code>
+        /// </remarks>
+        public static void SetMetadata(this IKubernetesObject obj)
+        {
+            var objType = obj.GetType();
+
+            CustomResourceMetadata customMetadata;
+
+            lock (typeToKubernetesEntity)
+            {
+                if (!typeToKubernetesEntity.TryGetValue(objType, out customMetadata))
+                {
+                    var entityAttr = objType.GetCustomAttribute<KubernetesEntityAttribute>();
+
+                    if (entityAttr == null)
+                    {
+                        throw new InvalidDataException($"Custom Kubernetes resource type [{objType.FullName}] does not have a [{nameof(KubernetesEntityAttribute)}].");
+                    }
+
+                    customMetadata = new CustomResourceMetadata(entityAttr);
+
+                    typeToKubernetesEntity.Add(objType, customMetadata);
+                }
+            }
+
+            obj.ApiVersion = customMetadata.GroupApiVersion;
+            obj.Kind       = customMetadata.Kind;
+        }
+
+        //---------------------------------------------------------------------
+        // IKubernetes client extensions.
 
         // $note(jefflill):
         //

@@ -32,7 +32,7 @@ namespace NeonDashboard
         /// <summary>
         /// The Neon Dashboard Service.
         /// </summary>
-        public NeonDashboardService NeonDashboardService;
+        public Service NeonDashboardService;
 
         /// <summary>
         /// The Navigation Manager.
@@ -85,7 +85,7 @@ namespace NeonDashboard
         public string CurrentDashboard;
 
         public AppState(
-            NeonDashboardService neonDashboardService,
+            Service neonDashboardService,
             IHttpContextAccessor httpContextAccessor,
             INeonLogger neonLogger,
             IJSRuntime jSRuntime,

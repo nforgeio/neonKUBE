@@ -37,7 +37,7 @@ using KubeOps.Operator.Builder;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Useful utilities for the <b>KubeOps</b> operatort SDK.
+    /// Useful utilities for the <b>KubeOps</b> operator SDK.
     /// </summary>
     public static class OperatorHelper
     {
@@ -88,22 +88,41 @@ namespace Neon.Kube.Operator
         /// </summary>
         static OperatorHelper()
         {
-            // KubeOps spams the logs with unnecessary INFO events when events are raised to
-            // the controller.  We're going to filter these and do our own logging using this
-            // filter.  The filter returns TRUE for events to be logged and FALSE for events
-            // to be ignored.
-
             LogFilter =
                 logEvent =>
                 {
-                    if (logEvent.LogLevel == LogLevel.Info && logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                    switch (logEvent.LogLevel)
                     {
-                        if (logEvent.Message.Contains("Event type \"Reconcile\"") ||
-                            logEvent.Message.Contains("Event type \"Modified\"") ||
-                            logEvent.Message.Contains("Event type \"Deleted\""))
-                        {
-                            return false;
-                        }
+                        case LogLevel.Info:
+
+                            // KubeOps spams the logs with unnecessary INFO events when events are raised to
+                            // the controller.  We're going to filter these and do our own logging using this
+                            // filter.  The filter returns TRUE for events to be logged and FALSE for events
+                            // to be ignored.
+
+                            if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
+                            {
+                                if (logEvent.Message.Contains("successfully reconciled"))
+                                {
+                                    return false;
+                                }
+                            }
+                            break;
+
+                        case LogLevel.Error:
+
+                            // Kubernetes client is not handling watches correctly when there are no objects
+                            // to be watched.  I read that the API server is returning a blank body in this
+                            // case but the Kubernetes client is expecting valid JSON, like an empty array.
+
+                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
+                            {
+                                if (logEvent.Message.Contains("The input does not contain any JSON tokens"))
+                                {
+                                    return false;
+                                }
+                            }
+                            break;
                     }
 
                     return true;
@@ -111,7 +130,8 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps.
+        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps
+        /// and the Kubernetes client.
         /// </summary>
         public static Func<LogEvent, bool> LogFilter { get; private set; }
 

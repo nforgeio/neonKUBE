@@ -55,6 +55,7 @@
 
   <ItemGroup>
     <PackageReference Include="KubeOps" Version="6.2.1" />
+    <PackageReference Include="prometheus-net" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>

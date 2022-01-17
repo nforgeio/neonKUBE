@@ -29,7 +29,7 @@ namespace NeonSsoSessionProxy
     /// <summary>
     /// Implements the <b>neon-sso-session-proxy</b> service.
     /// </summary>
-    public class NeonSsoSessionProxyService : NeonService
+    public class Service : NeonService
     {
         // class fields
         private IWebHost webHost;
@@ -43,7 +43,7 @@ namespace NeonSsoSessionProxy
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        public NeonSsoSessionProxyService(string name)
+        public Service(string name)
              : base(name, version: KubeVersions.NeonKube)
         {
         }
@@ -72,7 +72,7 @@ namespace NeonSsoSessionProxy
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, 80))
-                .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoSessionProxyService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 

@@ -516,12 +516,12 @@ namespace Neon.Kube
         public NetworkOptions Network { get; set; } = new NetworkOptions();
 
         /// <summary>
-        /// Customizes the cluster's container registry configuration.
+        /// Customizes the cluster's container configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "Registry", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "registry", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Container", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "container", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public RegistryOptions Registry { get; set; } = null;
+        public ContainerOptions Container { get; set; } = null;
 
         /// <summary>
         /// Specifies host node options.
@@ -566,7 +566,9 @@ namespace Neon.Kube
         public Dictionary<string, string> SetupState { get; set; } = null;
 
         /// <summary>
-        /// The cluster root user password.
+        /// Optionally specifies the cluster root single sign-on (SSO) password.  A random password
+        /// with of <see cref="SecurityOptions.PasswordLength"/> will be created by default when no
+        /// password is specified here.
         /// </summary>
         [JsonProperty(PropertyName = "RootPassword", Required = Required.Default)]
         [YamlMember(Alias = "rootPassword", ApplyNamingConventions = false)]
@@ -907,7 +909,7 @@ namespace Neon.Kube
             Hosting      = Hosting ?? new HostingOptions();
             NodeOptions  = NodeOptions ?? new NodeOptions();
             Network      = Network ?? new NetworkOptions();
-            Registry     = Registry ?? new RegistryOptions();
+            Container     = Container ?? new ContainerOptions();
 
             if (IsDesktopCluster && Nodes.Count() > 1)
             {
@@ -930,7 +932,7 @@ namespace Neon.Kube
             Hosting.Validate(this);
             NodeOptions.Validate(this);
             Network.Validate(this);
-            Registry.Validate(this);
+            Container.Validate(this);
 
             // Have the hosting manager perform its own validation.
 
@@ -946,7 +948,6 @@ namespace Neon.Kube
             {
                 FeatureGates["EphemeralContainers"] = true;
             }
-
 
             // Validate the NTP time sources.
 

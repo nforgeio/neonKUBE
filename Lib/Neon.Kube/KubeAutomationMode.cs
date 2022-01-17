@@ -21,7 +21,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// Used to enable/disable cluster automation mode to allow multiple deployments
-    /// on a single machine without conflicts.
+    /// to be managed in parallel on a client workstation without conflict.
     /// </summary>
     public enum KubeAutomationMode
     {

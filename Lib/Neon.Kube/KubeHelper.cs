@@ -1409,7 +1409,7 @@ namespace Neon.Kube
 
             using (RSA rsa = RSA.Create(bitCount))
             {
-                var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                var request = new System.Security.Cryptography.X509Certificates.CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                 request.CertificateExtensions.Add(
                     new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment |

@@ -19,8 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using DotnetKubernetesClient.Entities;
+using k8s;
 using k8s.Models;
+
+using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 
@@ -29,7 +31,7 @@ using Neon.Kube;
 namespace Neon.Kube.Resources
 {
     /// <summary>
-    /// Describing an upstream container registry to be configured on each of the cluster nodes.
+    /// Describes an upstream container registry to be configured on each of the cluster nodes.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -41,12 +43,20 @@ namespace Neon.Kube.Resources
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
-    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistryEntitySpec>
+    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistrySpec>
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public V1ContainerRegistry()
+        {
+            ((IKubernetesObject)this).SetMetadata();
+        }
+
         /// <summary>
         /// The container registry specification.
         /// </summary>
-        public class V1ContainerRegistryEntitySpec
+        public class V1ContainerRegistrySpec
         {
             private const string prefixRegex = @"^(\*\.)?([a-zA-Z0-9-_]+\.)*([a-zA-Z0-9-_]+)(/[a-zA-Z0-9-\._~\[\]@\!&'\(\)\*+,;%=\$]+)*$";
 

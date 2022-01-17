@@ -29,7 +29,7 @@ namespace NeonDashboard
     /// <summary>
     /// Implements the <b>neon-dashboard</b> service.
     /// </summary>
-    public class NeonDashboardService : NeonService
+    public class Service : NeonService
     {
         // class fields
         private IWebHost webHost;
@@ -54,7 +54,7 @@ namespace NeonDashboard
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        public NeonDashboardService(string name)
+        public Service(string name)
              : base(name, version: KubeVersions.NeonKube)
         {
             
@@ -78,19 +78,26 @@ namespace NeonDashboard
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
-            
+
+            var port = 80;
+
+            if (NeonHelper.IsDevWorkstation)
+            {
+                port = 11001;
+            }
+
             // Start the web service.
 
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, 80))
-                .ConfigureServices(services => services.AddSingleton(typeof(NeonDashboardService), this))
+                .UseKestrel(options => options.Listen(IPAddress.Any, port))
+                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:80");
+            Log.LogInfo($"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is ready for business.
 

@@ -17,8 +17,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -68,6 +70,22 @@ namespace TestCommon
 
             Environment.SetEnvironmentVariable(Var("EXISTS"), "bad");
             Assert.Equal(77, parser.Get(Var("EXISTS"), 77));
+        }
+
+        [Fact]
+        public void Long()
+        {
+            var parser = new EnvironmentParser();
+
+            Assert.Equal(55000000000L, parser.Get(Var("DOESNT_EXIST"), 55000000000L));
+
+            Assert.Throws<KeyNotFoundException>(() => parser.Get(Var("DOESNT_EXIST"), 55, required: true));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "55000000000L");
+            Assert.Equal(55000000000L, parser.Get(Var("EXISTS"), 55000000000L));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "bad");
+            Assert.Equal(77000000000L, parser.Get(Var("EXISTS"), 77000000000L));
         }
 
         [Fact]
@@ -158,6 +176,60 @@ namespace TestCommon
 
             Environment.SetEnvironmentVariable(Var("EXISTS"), "20.5s");
             Assert.Equal(System.TimeSpan.FromSeconds(20.5), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+        }
+
+        public enum MyEnum
+        {
+            [EnumMember(Value = "ZERO")]
+            Zero,
+            
+            [EnumMember(Value = "ONE")]
+            One,
+
+            [EnumMember(Value = "TWO")]
+            Two,
+
+            [EnumMember(Value = "THREE")]
+            Three,
+        }
+
+        [Fact]
+        public void Enum()
+        {
+            var parser = new EnvironmentParser();
+
+            Assert.Equal(MyEnum.Zero, parser.Get(Var("DOESNT_EXIST"), MyEnum.Zero));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "one");
+            Assert.Equal(MyEnum.One, parser.Get(Var("EXISTS"), MyEnum.Zero));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "TWO");
+            Assert.Equal(MyEnum.Two, parser.Get(Var("EXISTS"), MyEnum.Zero));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "ThrEE");
+            Assert.Equal(MyEnum.Three, parser.Get(Var("EXISTS"), MyEnum.Zero));
+        }
+
+        [Fact]
+        public void CustomSource()
+        {
+            var source = new EnvironmentParser.VariableSource(
+                variable =>
+                {
+                    Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable), nameof(variable));
+
+                    if (variable == "NOT-FOUND")
+                    {
+                        return null;
+                    }
+
+                    return $"{variable}-value";
+                });
+
+            var parser = new EnvironmentParser(source: source);
+
+            Assert.Null(parser.Get("NOT-FOUND", (string)null));
+            Assert.Equal("test-value", parser.Get("test", (string)null));
         }
     }
 }

@@ -80,7 +80,7 @@ namespace NeonSsoSessionProxy
 
             Cookie cookie = null;
 
-            if (httpContext.Request.Cookies.TryGetValue(NeonSsoSessionProxyService.SessionCookieName, out var requestCookieBase64))
+            if (httpContext.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))
             {
                 try
                 {
@@ -117,7 +117,7 @@ namespace NeonSsoSessionProxy
                         cookie.TokenResponse = token;
 
                         httpContext.Response.Cookies.Append(
-                            NeonSsoSessionProxyService.SessionCookieName,
+                            Service.SessionCookieName,
                             cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                             new CookieOptions()
                             {
@@ -164,7 +164,7 @@ namespace NeonSsoSessionProxy
             }
 
             httpContext.Response.Cookies.Append(
-                NeonSsoSessionProxyService.SessionCookieName,
+                Service.SessionCookieName,
                 cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                 new CookieOptions()
                 {

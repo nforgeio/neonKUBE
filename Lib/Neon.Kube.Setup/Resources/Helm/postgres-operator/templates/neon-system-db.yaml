@@ -30,6 +30,7 @@ spec:
     harbor_clair: neon_service
     harbor_notaryserver: neon_service
     harbor_notarysigner: neon_service
+    glauth: neon_service
   postgresql:
     version: "14"
   volume:

@@ -34,9 +34,9 @@ namespace NeonNodeAgent
     public static class Program
     {
         /// <summary>
-        /// The Linux path where the host node's file system is mounted;
+        /// Returns the program's service implementation.
         /// </summary>
-        public const string HostMount = "/mnt/host";
+        public static Service Service { get; private set; }
 
         /// <summary>
         /// The program entry point.
@@ -48,12 +48,26 @@ namespace NeonNodeAgent
             // Intercept and handle KubeOps [generator] commands executed by the 
             // KubeOps MSBUILD tasks.
 
-            if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+            try
             {
-                return;
-            }
+                if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+                {
+                    return;
+                }
 
-            await new Service(KubeService.NeonNodeAgent).RunAsync();
+                Service = new Service(KubeService.NeonNodeAgent);
+
+                Environment.Exit(await Service.RunAsync());
+            }
+            catch (Exception e)
+            {
+                // We really shouldn't see exceptions here but let's log something
+                // just in case.  Note that logging may not be initialized yet so
+                // we'll just output a string.
+
+                Console.Error.WriteLine(NeonHelper.ExceptionError(e));
+                Environment.Exit(-1);
+            }
         }
 
         /// <summary>
@@ -68,35 +82,6 @@ namespace NeonNodeAgent
 
             operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
             operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.Resources.Stub).Assembly);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Executes a command on the host node, setting the file system root to <see cref="HostMount"/>
-        /// where the host's file system is mounted.
-        /// </para>
-        /// <note>
-        /// WARNING! This relies on the pod's environment variables like PATH matching the host
-        /// environment, which is currently the case because the Microsoft .NET container images
-        /// are based on Ubuntu, as are neonKUBE cluster nodes.
-        /// </note>
-        /// </summary>
-        /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
-        /// <param name="args">Optional command arguments.</param>
-        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
-        public static ExecuteResponse HostExecuteCapture(string command, params object[] args)
-        {
-            var actualArgs = new List<object>();
-
-            actualArgs.Add(HostMount);
-            actualArgs.Add(command);
-
-            foreach (var arg in args)
-            {
-                actualArgs.Add(arg);
-            }
-
-            return NeonHelper.ExecuteCapture("chroot", actualArgs.ToArray());
         }
     }
 }

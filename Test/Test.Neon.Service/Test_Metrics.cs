@@ -286,7 +286,7 @@ namespace TestNeonService
             {
                 // We're expecting the metrics scrape request to fail since metrics are disabled.
 
-                await Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.GetAsync($"http://127.0.0.1:{NetworkPorts.NeonPrometheusScrape}/metrics/"));
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.GetAsync($"http://127.0.0.1:{NetworkPorts.PrometheusMetrics}/metrics/"));
             }
 
             // Tell the service it can exit.
@@ -313,7 +313,7 @@ namespace TestNeonService
 
             using (var httpClient = new HttpClient())
             {
-                var scrapedMetrics = await httpClient.GetStringAsync($"http://127.0.0.1:{NetworkPorts.NeonPrometheusScrape}/metrics/");
+                var scrapedMetrics = await httpClient.GetStringAsync($"http://127.0.0.1:{NetworkPorts.PrometheusMetrics}/metrics/");
                 var metrics        = ParseMetrics(scrapedMetrics);
 
                 // Verify the test counter.
@@ -403,7 +403,7 @@ namespace TestNeonService
 
             using (var httpClient = new HttpClient())
             {
-                var scrapedMetrics = await httpClient.GetStringAsync($"http://127.0.0.1:{NetworkPorts.NeonPrometheusScrape}/{metricsPath}");
+                var scrapedMetrics = await httpClient.GetStringAsync($"http://127.0.0.1:{NetworkPorts.PrometheusMetrics}/{metricsPath}");
                 var metrics        = ParseMetrics(scrapedMetrics);
 
                 // Verify the test counter.

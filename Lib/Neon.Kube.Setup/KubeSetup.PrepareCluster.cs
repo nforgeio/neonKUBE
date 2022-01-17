@@ -374,6 +374,15 @@ namespace Neon.Kube
                 });
             }
 
+            // We also need to generate the root SSO password when necessary and add this
+            // to the cluster login.
+
+            clusterLogin.SsoUsername = "root";
+            clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+            clusterLogin.Save();
+
+            // Add the setup steps.
+
             hostingManager.AddProvisioningSteps(controller);
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));

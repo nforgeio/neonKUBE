@@ -30,7 +30,10 @@ using Neon.Common;
 namespace Neon.Common
 {
     /// <summary>
-    /// Handles parsing of environment variables.
+    /// Handles parsing of environment variables by default or optionally variables
+    /// from a custom source.  This has built-in methods for parsing: <c>int</c>,
+    /// <c>long</c>, <c>double</c>, <c>TimeSpan</c>, <c>string</c> and <c>enum</c>
+    /// variables as well as mechanisms to parse custom types.
     /// </summary>
     public class EnvironmentParser
     {
@@ -54,6 +57,21 @@ namespace Neon.Common
         /// <param name="input">The input value.</param>
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
         public delegate bool Validator<T>(T input);
+
+        /// <summary>
+        /// <para>
+        /// Used for custom variable lookup implementation.  This will be passed
+        /// a variable name and should return the value as a string when the variable
+        /// exists or <c>null</c> if it does not.
+        /// </para>
+        /// <para>
+        /// Pass a custom implementation to the <see cref="EnvironmentParser"/> constructor
+        /// when necessary.
+        /// </para>
+        /// </summary>
+        /// <param name="variable">The variable name.</param>
+        /// <returns>The variable's value or <c>null</c>.</returns>
+        public delegate string VariableSource(string variable);
 
         //---------------------------------------------------------------------
         // Built-in parsers.
@@ -91,7 +109,31 @@ namespace Neon.Common
 
             if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
             {
-                error = "Invalid integer.";
+                error = $"Invalid integer: {input}";
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses a <see cref="long"/>.
+        /// </summary>
+        /// <param name="input">The input value.</param>
+        /// <param name="value">Returns as the parsed value.</param>
+        /// <param name="error">Returns as the error message on failure.</param>
+        /// <returns>Returns <c>true</c> if the input value is valid.</returns>
+        private static bool LongParser(string input, out long value, out string error)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
+
+            value = 0L;
+            error = null;
+
+            if (!long.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+            {
+                error = $"Invalid long: {input}";
 
                 return false;
             }
@@ -115,7 +157,7 @@ namespace Neon.Common
 
             if (!double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
             {
-                error = "Invalid double.";
+                error = $"Invalid double: {input}";
 
                 return false;
             }
@@ -158,7 +200,7 @@ namespace Neon.Common
 
                 default:
 
-                    error = "Invalid boolean.";
+                    error = $"Invalid boolean: {input}";
                     return false;
             }
 
@@ -260,21 +302,79 @@ namespace Neon.Common
                 return true;
             }
 
-            return true;
+            error = $"Cannot parse timespan: {input}";
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parses an enumeration.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="input">The input value.</param>
+        /// <param name="value">Returns as the parsed value.</param>
+        /// <param name="error">Returns as the error message on failure.</param>
+        /// <returns>Returns <c>true</c> if the input value is valid.</returns>
+        private static bool EnumParser<TEnum>(string input, out TEnum value, out string error)
+            where TEnum : Enum
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
+
+            value = default(TEnum);
+            error = null;
+
+            if (NeonHelper.TryParseEnum(typeof(TEnum), input, out var objValue))
+            {
+                value = (TEnum)objValue;
+
+                return true;
+            }
+            else
+            {
+                error = $"Cannot parse enum [{typeof(TEnum).FullName}]: {input}";
+
+                return false;
+            }
         }
 
         //---------------------------------------------------------------------
         // Implementation
 
+        private VariableSource  source;
         private INeonLogger     log;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="log">The optional logger.</param>
-        public EnvironmentParser(INeonLogger log = null)
+        /// <param name="log">Optionally specifies the logger where parsing errors will be logged.</param>
+        /// <param name="source">Optionally specifies an alternative variable source.  This defaults to retrieving environment variables.</param>
+        public EnvironmentParser(INeonLogger log = null, VariableSource source = null)
+        {
+            this.log    = log;
+            this.source = source ?? EnvironmentSource;
+        }
+
+        /// <summary>
+        /// Used for (rare) situations where we need to start without a logger because we're
+        /// using the <see cref="EnvironmentParser"/> to read the log settings first, create the
+        /// logger and then initialize the logger parser here.
+        /// </summary>
+        /// <param name="log">The logger or <c>null</c> to disable logging.</param>
+        public void SetLogger(INeonLogger log)
         {
             this.log = log;
+        }
+
+        /// <summary>
+        /// Implements the default environment variable based source.
+        /// </summary>
+        /// <param name="variable">The variable name.</param>
+        /// <returns>The variable value or <c>null</c>.</returns>
+        private string EnvironmentSource(string variable)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable), nameof(variable));
+
+            return Environment.GetEnvironmentVariable(variable);
         }
 
         /// <summary>
@@ -286,20 +386,6 @@ namespace Neon.Common
             if (log != null)
             {
                 log.LogError(() => $"[{variable}] environment variable does not exist.");
-            }
-        }
-
-        /// <summary>
-        /// Reports a non-parsable environment variable.
-        /// </summary>
-        /// <param name="variable">The variable name.</param>
-        /// <param name="value">The invalid variable value.</param>
-        /// <param name="def">The value actually used instead.</param>
-        private void LogUnparsableVariable(string variable, string value, object def)
-        {
-            if (log != null)
-            {
-                log.LogError(() => $"[{variable}={value}] environment variable could not be parsed.  Defaulting to [{def}].");
             }
         }
 
@@ -402,7 +488,7 @@ namespace Neon.Common
 
             // Fetch and parse the environment variable.
 
-            var input = Environment.GetEnvironmentVariable(variable);
+            var input = source(variable);
 
             if (input == null)
             {
@@ -494,6 +580,26 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Attempts to parse an environment variable as a <see cref="long"/>, writting messages
+        /// to the associated logger if one was passed to the constructor.
+        /// </summary>
+        /// <param name="variable">The variable name.</param>
+        /// <param name="defaultInput">The default value.</param>
+        /// <param name="required">Optionally specifies that the variable is required to exist.</param>
+        /// <param name="validator">
+        /// Optional validation function to be called to verify that the parsed variable
+        /// value is valid.  This should return <c>null</c> for valid values and an error
+        /// message for invalid ones.
+        /// </param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
+        /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
+        public long Get(string variable, long defaultInput, bool required = false, Validator<long> validator = null)
+        {
+            return Parse<long>(variable, defaultInput.ToString(CultureInfo.InvariantCulture), LongParser, required, validator);
+        }
+
+        /// <summary>
         /// Attempts to parse an environment variable as an <see cref="double"/>, writting messages
         /// to the associated logger if one was passed to the constructor.
         /// </summary>
@@ -551,6 +657,28 @@ namespace Neon.Common
         public TimeSpan Get(string variable, TimeSpan defaultInput, bool required = false, Validator<TimeSpan> validator = null)
         {
             return Parse<TimeSpan>(variable, defaultInput.TotalSeconds.ToString(CultureInfo.InvariantCulture) + "s", TimeSpanParser, required, validator);
+        }
+
+        /// <summary>
+        /// Attempts to parse an environment variable as an eumeration, writting messages
+        /// to the associated logger if one was passed to the constructor.
+        /// </summary>
+        /// <typeparam name="TEnum">The desired enumeration type.</typeparam>
+        /// <param name="variable">The variable name.</param>
+        /// <param name="defaultInput">The default value.</param>
+        /// <param name="required">Optionally specifies that the variable is required to exist.</param>
+        /// <param name="validator">
+        /// Optional validation function to be called to verify that the parsed variable
+        /// value is valid.  This should return <c>null</c> for valid values and an error
+        /// message for invalid ones.
+        /// </param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
+        /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
+        public TEnum Get<TEnum>(string variable, TEnum defaultInput, bool required = false, Validator<TEnum> validator = null)
+            where TEnum : Enum
+        {
+            return Parse<TEnum>(variable, NeonHelper.EnumToString(defaultInput), EnumParser, required, validator);
         }
     }
 }

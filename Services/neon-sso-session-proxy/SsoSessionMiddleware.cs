@@ -39,14 +39,14 @@ namespace NeonSsoSessionProxy
         /// </summary>
         public async Task InvokeAsync(
             HttpContext context,
-            NeonSsoSessionProxyService NeonSsoSessionProxyService,
+            Service NeonSsoSessionProxyService,
             IDistributedCache cache, 
             AesCipher cipher,
             DistributedCacheEntryOptions cacheOptions)
         {
             try
             {
-                if (context.Request.Cookies.TryGetValue(NeonSsoSessionProxyService.SessionCookieName, out var requestCookieBase64))
+                if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))
                 {
                     var requestCookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
 
