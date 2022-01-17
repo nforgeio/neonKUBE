@@ -58,20 +58,48 @@ namespace NeonNodeAgent
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_MODIFIED_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>status-modified</b> events will be requeued
-    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
+    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
+    ///     exception is thrown when handling ContainerRegistry events.  This
+    ///     value will be doubled when subsequent events also fail until the
+    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
+    ///     This defaults to <b>15 seconds</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum requeue time for ContainerRegistry
+    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_RECONCILE_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
+    ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
     ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_ERROR_DELAY</b></term>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval to wait when an operator event failed.
-    ///     This defaults to <b>1 minute</b>.
+    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
+    ///     exception is thrown when handling NodeTask events.  This
+    ///     value will be doubled when subsequent events also fail until the
+    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
+    ///     This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum requeue time for NodeTask
+    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     </description>
+    /// </item>
+    /// <item>
     /// </list>
     /// </remarks>
     public partial class Service : NeonService

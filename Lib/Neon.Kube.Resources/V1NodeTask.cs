@@ -122,24 +122,24 @@ namespace Neon.Kube.Resources
             public List<string> Command { get; set; }
 
             /// <summary>
-            /// Specifies the time after which the task will be rejected
-            /// by the node agent.  This can be used to ensure that node tasks won't
-            /// remain pending forever.  This defaults to one day in the future from
-            /// the time the task was created.
+            /// Specifies the time after which the task will be rejected by the node agent. 
+            /// This can be used to ensure that node tasks won't remain pending forever.  
+            /// This defaults to one day in the future from the time the task was created.
             /// </summary>
             public DateTime StartLimitUtc { get; set; } = DateTime.UtcNow + TimeSpan.FromDays(1);
 
             /// <summary>
             /// Specifies the maximum time in seconds the command will be allowed to execute.
-            /// This defaults to 1800 seconds or 30 minutes.
+            /// This defaults to 1800 seconds (30 minutes).
             /// </summary>
             public int TimeoutSeconds { get; set; } = 1800;
 
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
-            /// completed, for any reason.  <b>neon-cluster-operator</b> will add
+            /// ended, for any reason.  <b>neon-cluster-operator</b> will add
             /// this to <see cref="V1NodeTaskStatus.FinishedUtc"/> to determine
-            /// when it should delete the task.
+            /// when it should delete the task.  This defaults to 600 seconds
+            /// (10 minutes).
             /// </summary>
             public int RetainSeconds { get; set; } = 600;
         }
@@ -152,8 +152,8 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// The globally unique ID of the <b>neon-node-agent</b> instance that executed
             /// the command.  This is used to detect tasks that started executing but didn't
-            /// finish before node agent crashed or was otherwise terminated providing a way
-            /// for a new node-agent to clean things up.
+            /// finish before node agent crashed or was otherwise terminated, providing a way
+            /// for the next node-agent to clean things up.
             /// </summary>
             public string AgentId { get; set; }
 
