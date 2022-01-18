@@ -2036,13 +2036,10 @@ sleep 10
 # that will be smart enough to update the nodes such that the
 # impact on cluster workloads will be limited.
 
-systemctl stop apt-daily.timer
-systemctl mask apt-daily.timer
+rm -f /etc/systemd/system/apt-daily.timer
+rm -f /etc/systemd/system/apt-daily.service
 
-systemctl stop apt-daily.service
-systemctl mask apt-daily.service
-
-# It may be possible for the auto updater to already be running so we'll
+# It may be possible for the updater to already be running so we'll
 # wait here for it to release any lock files it holds.
 
 while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
