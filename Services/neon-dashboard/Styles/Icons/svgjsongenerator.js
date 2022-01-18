@@ -27,7 +27,7 @@ function fileToJson(
     var files = fs.readdirSync(startPath);
 
     var outObj = {
-        'svgName': []
+        
     }
 
     for (var i = 0; i < files.length; i++) {
@@ -39,8 +39,6 @@ function fileToJson(
             var name = files[i].replace(filter, '')
 
             console.log('-- found:', name)
-
-            outObj.svgName.push(name);
 
             outObj[name] = fs.readFileSync(filename, 'utf8')
         }
