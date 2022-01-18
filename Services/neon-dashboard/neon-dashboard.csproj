@@ -29,39 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\css\bootstrap\bootstrap.min.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\FONT-LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\css\open-iconic-bootstrap.min.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\fonts\open-iconic.eot">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\fonts\open-iconic.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\fonts\open-iconic.svg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\fonts\open-iconic.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\font\fonts\open-iconic.woff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\ICON-LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\open-iconic\README.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\css\site.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Update="wwwroot\favicon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -71,14 +38,14 @@
     <Folder Include="Data\" />
   </ItemGroup>
 
-  <!--<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-  
-    JEFF NOTE: Double dash sequences are not allowed in XML comments so
-	           I added an "X" in the middle of the command line options
-		       below.  You'll need to remove these when you uncomment
-		       this build target.
-  
-    <Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared -X-style compressed -X-load-path=Styles -X-update" />
-  </Target>-->
-
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared --style compressed --load-path=Styles --update" />
+  </Target>
+	
+  <Target Name="SassCheck" BeforeTargets="PreBuild">
+    <Exec Command="sass --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCodeSass" />
+    </Exec>
+    <Error Condition="'$(ErrorCodeSass)' != '0'" Text="dart-sass is required for this project. https://github.com/sass/dart-sass/releases" />
+  </Target>
 </Project>
