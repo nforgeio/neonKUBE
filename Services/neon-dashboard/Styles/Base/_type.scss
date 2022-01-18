@@ -5,6 +5,7 @@
 
 body {
     font-size: var(--base);
+    font-family: sans-serif;
 }
 
 
@@ -32,4 +33,9 @@ h1, h2, h3, h4, p, label {
 
 .f5 {
     font-size: var(--f5);
+}
+
+.noselect {
+    user-select: none;
+    -webkit-user-select: none;
 }
