@@ -65,20 +65,20 @@ namespace Neon.Kube
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonStorage"/> (1000007000)</term>
+    ///     <term><see cref="NeonNetwork"/> (1000007000)</term>
+    ///     <description>
+    ///     Used for neonKUBE database deployments.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="NeonStorage"/> (1000006000)</term>
     ///     <description>
     ///     Used for critical OpenEBS related storage services that back critical
     ///     neonKUBE and user deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonData"/> (1000006000)</term>
-    ///     <description>
-    ///     Used for neonKUBE database deployments.
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><see cref="NeonNetwork"/> (1000005000)</term>
+    ///     <term><see cref="NeonData"/> (1000005000)</term>
     ///     <description>
     ///     Used for neonKUBE database deployments.
     ///     </description>
@@ -193,9 +193,9 @@ namespace Neon.Kube
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
             list.Add(NeonOperator          = new PriorityDef("neon-operator",           1000008000));
-            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000007000));
-            list.Add(NeonData              = new PriorityDef("neon-data",               1000006000));
-            list.Add(NeonNetwork           = new PriorityDef("neon-network",            1000005000));
+            list.Add(NeonNetwork           = new PriorityDef("neon-network",            1000007000));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000006000));
+            list.Add(NeonData              = new PriorityDef("neon-data",               1000005000));
             list.Add(NeonApi               = new PriorityDef("neon-api",                1000004000));
             list.Add(NeonApp               = new PriorityDef("neon-app",                1000003000));
             list.Add(NeonMonitor           = new PriorityDef("neon-monitor",            1000002000));
@@ -224,19 +224,19 @@ namespace Neon.Kube
         public static PriorityDef NeonOperator { get; private set; }
 
         /// <summary>
-        /// Used for OpenEBS related storage deployments. <b>(1000007000)</b>
+        /// Used for neonKUBE database deployments. <b>(1000007000)</b>
+        /// </summary>
+        public static PriorityDef NeonNetwork { get; private set; }
+
+        /// <summary>
+        /// Used for OpenEBS related storage deployments. <b>(1000006000)</b>
         /// </summary>
         public static PriorityDef NeonStorage { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE database deployments. <b>(1000006000)</b>
-        /// </summary>
-        public static PriorityDef NeonData { get; private set; }
-
-        /// <summary>
         /// Used for neonKUBE database deployments. <b>(1000005000)</b>
         /// </summary>
-        public static PriorityDef NeonNetwork { get; private set; }
+        public static PriorityDef NeonData { get; private set; }
 
         /// <summary>
         /// Used for neonKUBE API deployments. <b>(1000004000)</b>
