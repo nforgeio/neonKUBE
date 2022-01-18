@@ -3,17 +3,31 @@
 // CONTRIBUTOR: Marcus Bowyer, Simon Zhang
 // COPYRIGHT: Copyright (c) 2005-2022 by neonFORGE LLC. All rights reserved.*/
 
+
+.mainlayout {
+    margin: 0;
+    height: 100vh;
+    background: var(--c-bg-dark);
+}
+
 .container {
     display: grid;
-    grid-template-rows: auto 5rem;
+    grid-template-rows: 1fr auto;
     height: 100%;
-
 }
 
 .main {
     grid-row: 1;
+    height: 100%;
+    border-radius: var(--f1);
+    background: var(--c-fg);
+    border: 2px solid var(--c-bg-dark);
 }
 
-.bottombar {
+.bottom {
+    padding: 0 var(--f3);
     grid-row: 2;
+    background: var(--c-bg);
+    display: flex;
+    color: var(--c-fg);
 }

@@ -2077,7 +2077,7 @@ subjects:
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("ingress.subdomain", ClusterDomain.Kiali);
-                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(20));
+                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
                     
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
@@ -3301,8 +3301,8 @@ $@"- name: StorageType
 
                         var grafanaAdminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
 
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                        grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(16));
 
                         await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
                     });
@@ -3393,18 +3393,18 @@ $@"- name: StorageType
                                 values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
                             }
                             
-                            var accessKey = NeonHelper.GetCryptoRandomPassword(20);
-                            var secretKey = NeonHelper.GetCryptoRandomPassword(20);
+                            var accessKey = NeonHelper.GetCryptoRandomPassword(16);
+                            var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                             values.Add($"tenants[0].secrets.accessKey", accessKey);
                             values.Add($"clients.aliases.minio.accessKey", accessKey);
                             values.Add($"tenants[0].secrets.secretKey", secretKey);
                             values.Add($"clients.aliases.minio.secretKey", secretKey);
 
-                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(10));
-                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(10));
-                            values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
-                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(20));
+                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(16));
+                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
                             int i = 0;
 
@@ -3503,8 +3503,8 @@ $@"- name: StorageType
 
                         var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
 
-                        secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                        secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                        secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
                         await k8s.ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
 
                         var monitoringSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
@@ -3736,7 +3736,7 @@ $@"- name: StorageType
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
-                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(20);
+                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                         await k8s.UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
                     }
@@ -3890,7 +3890,7 @@ $@"- name: StorageType
                         var harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
 
                         harborSecret.Data["postgresql-password"] = secret.Data["password"];
-                        harborSecret.Data["secret"]              = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        harborSecret.Data["secret"]              = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
                         await k8s.UpsertSecretAsync(harborSecret, harborSecret.Namespace());
 
@@ -4202,7 +4202,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbAdminUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(20);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
@@ -4229,7 +4229,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbServiceUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(20);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
@@ -4290,20 +4290,20 @@ $@"- name: StorageType
                 await master.InvokeIdempotentAsync("setup/system-db-ready-to-go",
                    async () =>
                    {
-                       await ResetPostgresUserAsync(k8s, "postgres", "postgres.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, "standby", "standby.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbAdminUser, KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbServiceUser, KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                       await ResetPostgresUserAsync(k8s, "postgres", "postgres.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem, cluster.Definition.Security.PasswordLength);
+                       await ResetPostgresUserAsync(k8s, "standby", "standby.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem, cluster.Definition.Security.PasswordLength);
+                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbAdminUser, KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem, cluster.Definition.Security.PasswordLength);
+                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbServiceUser, KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem, cluster.Definition.Security.PasswordLength);
 
                        await (await k8s.ReadNamespacedStatefulSetAsync("neon-system-db", KubeNamespaces.NeonSystem)).RestartAsync(k8s);
                    });
              }
         }
 
-        private static async Task ResetPostgresUserAsync(IKubernetes k8s, string username, string secretName, string secretNamespace)
+        private static async Task ResetPostgresUserAsync(IKubernetes k8s, string username, string secretName, string secretNamespace, int passwordLength = 20)
         {
             var secret = await k8s.ReadNamespacedSecretAsync(secretName, secretNamespace);
-            var password = NeonHelper.GetCryptoRandomPassword(20);
+            var password = NeonHelper.GetCryptoRandomPassword(passwordLength);
             secret.Data["password"] = Encoding.UTF8.GetBytes(password);
             await k8s.UpsertSecretAsync(secret, secretNamespace);
 
@@ -4374,10 +4374,10 @@ $@"- name: StorageType
             values.Add("cluster.domain", cluster.Definition.Domain);
             values.Add("ingress.subdomain", ClusterDomain.Sso);
 
-            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.kubernetes", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(32));
+            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.kubernetes", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 
             values.Add("config.issuer", $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
@@ -4417,7 +4417,7 @@ $@"- name: StorageType
 
                        foreach (var key in secret.Data.Keys)
                        {
-                           secret.Data[key] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(32));
+                           secret.Data[key] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
                        }
 
                        await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
@@ -4601,7 +4601,7 @@ $@"- name: StorageType
             values.Add("config.backend.database.password", dbPassword);
 
             values.Add("users.root.password", clusterLogin.SsoPassword);
-            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(20));
+            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -4638,7 +4638,6 @@ $@"- name: StorageType
                     foreach (var g in groups.Data.Keys)
                     {
                         var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[g]));
-                        
 
                         var command = new string[]
                         {
@@ -4726,7 +4725,7 @@ $@"- name: StorageType
                         var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
                         var table       = doc.Tables.Where(table => table.Name.Key.ToString() == "backend").First();
                         var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
-                        var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["username"])} sslmode=disable";
+                        var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["password"])} sslmode=disable";
                         
                         var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
                         items.First().Value = new StringValueSyntax(baseDN);
@@ -4751,7 +4750,14 @@ $@"- name: StorageType
                         foreach (var user in users.Data.Keys)
                         {
                             var userData = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
+
                             var password = CryptoHelper.ComputeSHA256String(userData.Password);
+
+                            if (user == "root")
+                            {
+                                password = CryptoHelper.ComputeSHA256String(clusterLogin.SsoPassword);
+                            }
+
                             var command = new string[]
                             {
                                 "/bin/bash",
@@ -4799,7 +4805,7 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(32)));
+                    values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(20)));
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -4822,7 +4828,7 @@ $@"- name: StorageType
                         controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso oauth2 secret");
 
                         var oauth2Secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoOauth2Proxy, KubeNamespaces.NeonSystem);
-                        oauth2Secret.Data["cookie-secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(32));
+                        oauth2Secret.Data["cookie-secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
 
                         await k8s.ReplaceNamespacedSecretAsync(oauth2Secret, oauth2Secret.Name(), oauth2Secret.Namespace());
                     });

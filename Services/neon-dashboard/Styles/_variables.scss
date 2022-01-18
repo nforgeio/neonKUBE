@@ -1,5 +1,14 @@
 ﻿:root {
-    --bg-color: #232323;
-    --fg-color: #F8F4F2;
-
+    //colors
+    --c-bg: #232323;
+    --c-bg-dark: #333;
+    --c-fg: #eee;
+    //typescale
+    --base: 16px;
+    --f1: 0.625rem;
+    --f2: 0.750rem;
+    --f3: 0.875rem;
+    --f4: 1.062rem;
+    --f5: 1.5rem;
+    --shadow: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.15));
 }

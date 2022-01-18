@@ -1,2 +1,41 @@
-﻿body {
+﻿/*-----------------------------------------------------------------------------
+// FILE: type.scss
+// CONTRIBUTOR: Simon Zhang
+// COPYRIGHT: Copyright (c) 2005-2022 by neonFORGE LLC. All rights reserved.*/
+
+body {
+    font-size: var(--base);
+    font-family: sans-serif;
+}
+
+
+h1, h2, h3, h4, p, label {
+    margin: 0;
+    font-size: var(--f2);
+}
+
+.f1 {
+    font-size: var(--f1);
+}
+
+.f2 {
+    font-size: var(--f2);
+}
+
+.f3 {
+    font-size: var(--f3);
+}
+
+.f4 {
+    font-size: var(--f4);
+}
+
+
+.f5 {
+    font-size: var(--f5);
+}
+
+.noselect {
+    user-select: none;
+    -webkit-user-select: none;
 }

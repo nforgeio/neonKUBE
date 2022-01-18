@@ -2,8 +2,26 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
     <RootNamespace>NeonDashboard</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <AssemblyName>neon-dashboard</AssemblyName>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Shared\Components\DropUp.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Shared\Components\DropUp.razor.css" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazor-Analytics" Version="3.10.0" />
@@ -36,6 +54,7 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Styles\Icons\" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
@@ -46,6 +65,6 @@
     <Exec Command="sass --version" ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="ErrorCodeSass" />
     </Exec>
-    <Error Condition="'$(ErrorCodeSass)' != '0'" Text="Dart-sass is required for this project. Install globally with 'npm i -g sass' " />
+    <Error Condition="'$(ErrorCodeSass)' != '0'" Text="dart-sass is required for this project. https://github.com/sass/dart-sass/releases" />
   </Target>
 </Project>
