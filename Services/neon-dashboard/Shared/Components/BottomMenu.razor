@@ -1,4 +1,25 @@
-﻿<h3>BottomMenu</h3>
+﻿<div class="button">
+	<Icon type="settings" />
+
+</div>
+
+<DropUp Title="Dashboard" Active=@AppState.CurrentDashboard Icon="server" Items=@AppState.Dashboards >
+     <DropList Context="dashboard">
+      <div></div>
+			<div class="">
+				<p>@dashboard.Name</p>
+			</div>
+			@if(dashboard.Name == AppState.CurrentDashboard ) {
+				<Icon type="check" />
+			} else
+			{
+			<div class="placeholder"> </div>
+			}
+    </DropList>
+</DropUp>
+
+
+
 
 @code {
 
