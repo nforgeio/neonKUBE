@@ -5,6 +5,8 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
+	<ServerGarbageCollection>true</ServerGarbageCollection>
+	<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <RootNamespace>TestApiService</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
