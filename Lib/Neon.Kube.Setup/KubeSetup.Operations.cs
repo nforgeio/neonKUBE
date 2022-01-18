@@ -4751,10 +4751,12 @@ $@"- name: StorageType
                         {
                             var userData = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
 
+                            userData.Password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
                             var password = CryptoHelper.ComputeSHA256String(userData.Password);
 
                             if (user == "root")
                             {
+                                userData.Password = clusterLogin.SsoPassword; 
                                 password = CryptoHelper.ComputeSHA256String(clusterLogin.SsoPassword);
                             }
 
@@ -4770,8 +4772,11 @@ $@"- name: StorageType
                                 namespaceParameter: postgres.Namespace(),
                                 container: "postgres",
                                 command: command);
+
+                            users.Data[user] = Encoding.UTF8.GetBytes(NeonHelper.YamlSerialize(userData));
                         }
-                        
+
+                        await k8s.UpsertSecretAsync(users, KubeNamespaces.NeonSystem);
                     });
             }
         }
