@@ -2,9 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>NeonSsoProxy</RootNamespace>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <AssemblyName>neon-sso-proxy</AssemblyName>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
