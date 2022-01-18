@@ -43,7 +43,7 @@ namespace Neon.Kube
     /// <see cref="Values"/> returns the list of all known priorities.
     /// </para>
     /// <para>
-    /// Here are the known priority values, highest priority first.
+    /// Here are the known priority values, in decending order by priority.
     /// </para>
     /// <list type="table">
     /// <item>
@@ -59,44 +59,62 @@ namespace Neon.Kube
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonStorage"/> (1000006000)</term>
+    ///     <term><see cref="NeonOperator"/> (1000008000)</term>
     ///     <description>
-    ///     Used for critical OpenEBS related storage services that will likely back critical
+    ///     Used for critical neonKUBE operators.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="NeonStorage"/> (1000007000)</term>
+    ///     <description>
+    ///     Used for critical OpenEBS related storage services that back critical
     ///     neonKUBE and user deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonDataTier"/> (1000005000)</term>
+    ///     <term><see cref="NeonData"/> (1000006000)</term>
     ///     <description>
     ///     Used for neonKUBE database deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonApiTier"/> (1000004000)</term>
+    ///     <term><see cref="NeonNetwork"/> (1000005000)</term>
+    ///     <description>
+    ///     Used for neonKUBE database deployments.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="NeonApi"/> (1000004000)</term>
     ///     <description>
     ///     Used for neonKUBE API deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonAppTier"/> (1000003000)</term>
+    ///     <term><see cref="NeonApp"/> (1000003000)</term>
     ///     <description>
     ///     Used for neonKUBE application deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserDataTier"/> (1000002000)</term>
+    ///     <term><see cref="NeonMonitor"/> (1000002000)</term>
+    ///     <description>
+    ///     Used for neonKUBE monitoring components.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="UserData"/> (100002000)</term>
     ///     <description>
     ///     Available for user database deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserApiTier"/> (1000001000)</term>
+    ///     <term><see cref="UserApi"/> (100001000)</term>
     ///     <description>
     ///     Available for user API deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserAppTier"/> (1000000000)</term>
+    ///     <term><see cref="UserApp"/> (100000000)</term>
     ///     <description>
     ///     Available for user application deployments.
     ///     </description>
@@ -115,7 +133,7 @@ namespace Neon.Kube
     /// <para>
     /// The user tiers defined here are just a starting point and you're free to add
     /// add additional priorities as required.  We recommend that most user defined
-    /// priorities be lower than <see cref="NeonAppTier"/> (1000003000) to avoid conflicting 
+    /// priorities be lower than <see cref="NeonApp"/> (1000003000) to avoid conflicting 
     /// with critical Kubernetes and neonKUBE deployments.
     /// </para>
     /// <para>
@@ -174,72 +192,81 @@ namespace Neon.Kube
 
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
-            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000006000));
-            list.Add(NeonDataTier          = new PriorityDef("neon-data-tier",          1000005000));
-            list.Add(NeonApiTier           = new PriorityDef("neon-api-tier",           1000004000));
-            list.Add(NeonAppTier           = new PriorityDef("neon-app-tier",           1000003000));
-            list.Add(UserDataTier          = new PriorityDef("user-data-tier",          1000002000));
-            list.Add(UserApiTier           = new PriorityDef("user-api-tier",           1000001000));
-            list.Add(UserAppTier           = new PriorityDef("user-app-tier",           1000000000));
+            list.Add(NeonOperator          = new PriorityDef("neon-operator",           1000008000));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000007000));
+            list.Add(NeonData              = new PriorityDef("neon-data",               1000006000));
+            list.Add(NeonNetwork           = new PriorityDef("neon-network",            1000005000));
+            list.Add(NeonApi               = new PriorityDef("neon-api",                1000004000));
+            list.Add(NeonApp               = new PriorityDef("neon-app",                1000003000));
+            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",            1000002000));
+            list.Add(UserData              = new PriorityDef("user-data",                100002000));
+            list.Add(UserApi               = new PriorityDef("user-api",                 100001000));
+            list.Add(UserApp               = new PriorityDef("user-app",                 100000000));
             
             Values = list;
         }
 
         /// <summary>
         /// Built-in Kubernetes priority used for the most important pods 
-        /// running on a node. (2000001000)
+        /// running on a node. <b>(2000001000)</b>
         /// </summary>
         public static PriorityDef SystemNodeCritical { get; private set; }
 
         /// <summary>
         /// Built-in Kubernetes priority used for the important pods 
-        /// running on a cluster.  This is one step down from 
-        /// <see cref="SystemNodeCritical"/>. (2000000000)
+        /// running on a cluster. <b>(2000000000)</b>
         /// </summary>
         public static PriorityDef SystemClusterCritical { get; private set; }
 
         /// <summary>
-        /// Used for OpenEBS related storage deployments.  This is one step
-        /// down from <see cref="SystemClusterCritical"/>. (1000006000)
-        /// 
+        /// Used for critical neonKUBE operators. <b>(1000008000)</b>
+        /// </summary>
+        public static PriorityDef NeonOperator { get; private set; }
+
+        /// <summary>
+        /// Used for OpenEBS related storage deployments. <b>(1000007000)</b>
         /// </summary>
         public static PriorityDef NeonStorage { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE database deployments (like Harbor storage).
-        /// This is one step down from <see cref="NeonStorage"/>. (1000005000)
+        /// Used for neonKUBE database deployments. <b>(1000006000)</b>
         /// </summary>
-        public static PriorityDef NeonDataTier { get; private set; }
+        public static PriorityDef NeonData { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE API deployments.  This is one step down from
-        /// <see cref="NeonDataTier"/>. (1000004000)
+        /// Used for neonKUBE database deployments. <b>(1000005000)</b>
         /// </summary>
-        public static PriorityDef NeonApiTier { get; private set; }
+        public static PriorityDef NeonNetwork { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE application deployments.  This is one step
-        /// down from <see cref="NeonAppTier"/>. (1000003000)
+        /// Used for neonKUBE API deployments. <b>(1000004000)</b>
         /// </summary>
-        public static PriorityDef NeonAppTier { get; private set; }
+        public static PriorityDef NeonApi { get; private set; }
 
         /// <summary>
-        /// Available for user database deployments.  This is one step down from 
-        /// <see cref="NeonAppTier"/>. (1000002000)
+        /// Used for neonKUBE application deployments.  <b>(1000003000)</b>
         /// </summary>
-        public static PriorityDef UserDataTier { get; private set; }
+        public static PriorityDef NeonApp { get; private set; }
 
         /// <summary>
-        /// Available for user API deployments.  This is one step down from
-        /// <see cref="UserDataTier"/>. (1000001000)
+        /// Available for neonKUBE monitoring related components. <b>(1000002000)</b>
         /// </summary>
-        public static PriorityDef UserApiTier { get; private set; }
+        public static PriorityDef NeonMonitor { get; private set; }
 
         /// <summary>
-        /// Available for user application deployments.  This is one step down
-        /// from <see cref="UserApiTier"/>. (1000000000)
+        /// Available for user database deployments.  <b>(100002000)</b>
         /// </summary>
-        public static PriorityDef UserAppTier { get; private set; }
+        public static PriorityDef UserData { get; private set; }
+
+        /// <summary>
+        /// Available for user API deployments. <b>(100001000)</b>
+        /// </summary>
+        public static PriorityDef UserApi { get; private set; }
+
+        /// <summary>
+        /// Available for user application deployments. <b>(100000000)</b>
+        /// </summary>
+        public static PriorityDef UserApp { get; private set; }
 
         /// <summary>
         /// Returns the list of all known built-in pod priorities.
