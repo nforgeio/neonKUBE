@@ -5,7 +5,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>TemporalService</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<LangVersion>latest</LangVersion>
+	<ServerGarbageCollection>true</ServerGarbageCollection>
+	<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
