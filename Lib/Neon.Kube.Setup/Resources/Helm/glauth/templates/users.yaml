@@ -37,7 +37,11 @@ stringData:
     #################
     # The backend section controls the data store.
     [backend]
+  
       datastore = "{{ .Values.config.backend.datastore }}"
+      plugin = "{{ .Values.config.backend.plugin }}"
+      pluginhandler = "{{ .Values.config.backend.pluginhandler }}"
+      database = "{{ include "glauth.dbConnectionString" . }}"
       baseDN = "{{ .Values.config.backend.baseDN }}"
       nameformat = "{{ .Values.config.backend.nameformat }}"
       groupformat = "{{ .Values.config.backend.groupformat }}"

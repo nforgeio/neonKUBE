@@ -60,3 +60,11 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+
+{{/*
+Define DB connection string
+*/}}
+{{- define "glauth.dbConnectionString" -}}
+{{- printf "host=%s port=%s dbname=%s user=%s password=%s sslmode=disable" .Values.config.backend.database.host .Values.config.backend.database.port .Values.config.backend.database.dbname .Values.config.backend.database.user .Values.config.backend.database.password }}
+{{- end }}

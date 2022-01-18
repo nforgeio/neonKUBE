@@ -235,16 +235,8 @@ env:
       secretKeyRef:
         name: minio
         key: secretkey
-  - name: POSTGRES_USER
-    valueFrom:
-      secretKeyRef:
-        name: citus
-        key: username
-  - name: POSTGRES_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: citus
-        key: password
+  - name: GOGC
+    value: "10"
 
 securityContext: {}
 
