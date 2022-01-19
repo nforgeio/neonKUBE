@@ -110,8 +110,8 @@ Follow the steps below to configure a development or test workstation:
     * Select **Tools/Options...**
     * Navigate to **Text Editor/Plain Text/Tabs**
     * Set:
-      * **Tab Size** = 2
-      * **Indent Size** = 2
+      * **Tab Size** = 4
+      * **Indent Size** = 4
       * Select **Insert Spaces**
 
 14. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
