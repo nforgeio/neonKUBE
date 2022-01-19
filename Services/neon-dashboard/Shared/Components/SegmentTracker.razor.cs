@@ -52,7 +52,22 @@ namespace NeonDashboard.Shared.Components
         private async Task OnLocationChanged(string location)
         {
             var uri = new Uri(location);
-            
+
+            var options = new Segment.Model.Options();
+
+            if (string.IsNullOrEmpty(AppState.UserId))
+            {
+                if (await AppState.LocalStorage.ContainKeyAsync("anonymous_id"))
+                {
+                    AppState.UserId = await AppState.LocalStorage.GetItemAsync<string>("anonymous_id");
+                }
+                else
+                {
+                    AppState.UserId = Guid.NewGuid().ToString();
+                    await AppState.LocalStorage.SetItemAsync("anonymous_id", AppState.UserId);
+                }
+            }
+
             Segment.Analytics.Client.Page(AppState.UserId, Name,
                 new Segment.Model.Properties()
                 {
@@ -60,7 +75,8 @@ namespace NeonDashboard.Shared.Components
                     { "Path", uri.AbsolutePath },
                     { "Title", Name },
                     { "ClusterId", AppState.ClusterId }
-                });
+                },
+                options);
 
             await Task.CompletedTask;
         }

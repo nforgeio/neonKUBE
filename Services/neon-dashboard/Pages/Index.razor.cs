@@ -27,6 +27,7 @@ using NeonDashboard.Shared.Components;
 
 namespace NeonDashboard.Pages
 {
+    [Authorize]
     public partial class Index : PageBase
     {
         /// <summary>
