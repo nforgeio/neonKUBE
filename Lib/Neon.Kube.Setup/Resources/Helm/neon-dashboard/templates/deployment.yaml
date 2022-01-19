@@ -36,6 +36,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "neon-dashboard.fullname" . }}
+          env:
+            - name: SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name:  neon-sso-dex
+                  key: KUBERNETES_CLIENT_SECRET
           ports:
             - name: http-web
               containerPort: {{ .Values.service.port }}
