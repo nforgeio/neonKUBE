@@ -14,7 +14,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: exporter
+  - name: http-exporter
     port: {{ .Values.settings.prometheus_port }}
     protocol: TCP
   selector:

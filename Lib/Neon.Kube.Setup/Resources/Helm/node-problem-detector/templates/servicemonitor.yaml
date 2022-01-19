@@ -20,7 +20,7 @@ spec:
     matchNames:
     - {{ .Release.Namespace }}
   endpoints:
-  - port: exporter
+  - targetPort: 20257
     path: /metrics
     interval: {{ .Values.metrics.serviceMonitor.interval }}
     relabelings:
