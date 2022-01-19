@@ -240,7 +240,7 @@ configLoadBalancer:
 # options to aid debugging of the operator itself
 configDebug:
   # toggles verbose debug logs from the operator
-  debug_logging: true
+  debug_logging: false
   # toggles operator functionality that require access to the postgres database
   enable_database_access: true
 

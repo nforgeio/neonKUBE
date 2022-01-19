@@ -6,6 +6,7 @@
 using System.ComponentModel;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Net;
 
 using Newtonsoft.Json;
@@ -18,17 +19,19 @@ namespace NeonSsoSessionProxy
     {
         public Dictionary<string, BasicAuthenticationHeaderValue> AuthHeaders;
         public Uri BaseAddress => jsonClient.BaseAddress;
+        public INeonLogger Logger { get; set; }
 
         private readonly    JsonClient jsonClient;
         private bool        isDisposed;
         
-        public DexClient(Uri baseAddress)
+        public DexClient(Uri baseAddress, INeonLogger logger = null)
         {
             this.jsonClient = new JsonClient()
             {
                 BaseAddress = baseAddress
             };
             this.AuthHeaders = new Dictionary<string, BasicAuthenticationHeaderValue>();
+            this.Logger = logger;
         }
 
         /// <summary>
@@ -83,6 +86,7 @@ namespace NeonSsoSessionProxy
             }
             else
             {
+                Logger.LogDebug(await response.HttpResponse.Content.ReadAsStringAsync());
                 throw new HttpException(response.HttpResponse);
             }
         }

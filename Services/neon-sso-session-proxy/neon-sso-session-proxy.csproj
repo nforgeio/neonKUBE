@@ -9,7 +9,7 @@
     <RootNamespace>NeonSsoProxy</RootNamespace>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-    <AssemblyName>neon-sso-proxy</AssemblyName>
+    <AssemblyName>neon-sso-session-proxy</AssemblyName>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>

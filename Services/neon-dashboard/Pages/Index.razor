@@ -9,19 +9,11 @@
 <PageBase PageTitle="@PageTitle" />
 <CascadingValue Value="@CurrentDashboard" Name="CurrentDashboard" />
 
-<AuthorizeView>
-    <Authorized>
-        @if (AppState.DashboardFrames != null){
-          <div class="dashboard-container">
-          @foreach (var dashboard in AppState.DashboardFrames)
-          {
-              <Dashboard Id="@dashboard.Id" Name="@dashboard.Name" Uri="@dashboard.Uri" />
-          }
-          </div>
-        }
-    </Authorized>
-    <NotAuthorized>
-         <p>Not Authorized</p>
-    </NotAuthorized>
-</AuthorizeView>
-
+@if (AppState.DashboardFrames != null){
+  <div class="dashboard-container">
+  @foreach (var dashboard in AppState.DashboardFrames)
+  {
+      <Dashboard Id="@dashboard.Id" Name="@dashboard.Name" Uri="@dashboard.Uri" />
+  }
+  </div>
+}

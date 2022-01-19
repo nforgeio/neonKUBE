@@ -26,6 +26,9 @@ using NeonDashboard.Shared.Components;
 using Blazor.Analytics;
 using Blazor.Analytics.Components;
 
+using Blazored.LocalStorage;
+using System.Security.Claims;
+
 namespace NeonDashboard
 {
     public partial class AppState
@@ -71,6 +74,11 @@ namespace NeonDashboard
         public IJSRuntime JSRuntime;
 
         /// <summary>
+        /// Browser Local Storage.
+        /// </summary>
+        public ILocalStorageService LocalStorage;
+
+        /// <summary>
         /// Bool to check whether it's ok to run javascript.
         /// </summary>
         public bool JsEnabled => HttpContextAccessor.HttpContext.WebSockets.IsWebSocketRequest;
@@ -107,8 +115,8 @@ namespace NeonDashboard
             IJSRuntime jSRuntime,
             NavigationManager navigationManager,
             IWebHostEnvironment webHostEnv,
-            IAnalytics analytics
-            )
+            IAnalytics analytics,
+            ILocalStorageService localStorage)
         {
             this.NeonDashboardService = neonDashboardService;
             this.NavigationManager = navigationManager;
@@ -117,6 +125,7 @@ namespace NeonDashboard
             this.HttpContextAccessor = httpContextAccessor;
             this.WebHostEnvironment = webHostEnv;
             this.Analytics = analytics;
+            this.LocalStorage = localStorage;
 
             if (Dashboards == null || Dashboards.Count == 0)
             {
@@ -138,6 +147,30 @@ namespace NeonDashboard
                 }
 
                 DashboardFrames = new List<Dashboard>(); 
+
+                if (string.IsNullOrEmpty(CurrentDashboard))
+                {
+                    CurrentDashboard = "kubernetes";
+                }
+
+                if (string.IsNullOrEmpty(UserId))
+                {
+                    if (HttpContextAccessor.HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
+                    {
+                        UserId = HttpContextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).First().Value;
+
+                        var traits = new Dictionary<string, object>()
+                        {
+                            { "Name", UserId },
+                            { "Email", HttpContextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Email).First().Value }
+                        };
+
+                        if (!HttpContextAccessor.HttpContext.WebSockets.IsWebSocketRequest)
+                        {
+                            Segment.Analytics.Client.Identify(UserId, traits);
+                        }
+                    }
+                }
             }
         }
 

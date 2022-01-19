@@ -84,7 +84,7 @@ spec:
           {{- end }}
           ports:
             - containerPort: {{ .Values.settings.prometheus_port }}
-              name: exporter
+              name: http-exporter
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
       {{- if .Values.extraContainers }}
