@@ -58,6 +58,7 @@ data:
       redirectURIs:
       - 'https://k8s.{{ .Values.cluster.domain }}/oauth2/callback'
       - 'https://kiali.{{ .Values.cluster.domain }}/oauth2/callback'
+      - 'https://{{ .Values.cluster.domain }}/oauth2/callback'
       name: 'Kubernetes'
       secret: "{{- .Values.secrets.kubernetes }}"
       trustedPeers:
