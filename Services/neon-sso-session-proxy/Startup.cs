@@ -78,7 +78,7 @@ namespace NeonSsoSessionProxy
 
             var configFile = NeonSsoSessionProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
             var config     = NeonHelper.YamlDeserialize<dynamic>(File.ReadAllText(configFile));
-            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"));
+            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Log);
             
             // Load in each of the clients from the Dex config into the client.
 
