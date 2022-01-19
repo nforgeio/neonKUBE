@@ -146,6 +146,7 @@ spec:
     ports:
     - name: http-metrics
       containerPort: {{ .Values.metrics.port }}
+      protocol: TCP
     env:
     - name: DATA_SOURCE_URI
       value: localhost/postgres?sslmode=disable
