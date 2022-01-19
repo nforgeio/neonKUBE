@@ -4159,15 +4159,16 @@ $@"- name: StorageType
 
                     var localRegistries = new List<Registry>();
                     var localRegistry   = new Registry();
-                    var authSecret      = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+                    var users           = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+                    var registryUser    = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[KubeConst.LocalClusterRegistryUser]));
 
                     localRegistry.Name     = 
                     localRegistry.Prefix   =
                     localRegistry.Location = KubeConst.LocalClusterRegistry;
                     localRegistry.Blocked  = false;
                     localRegistry.Insecure = true;
-                    localRegistry.Username = KubeConst.LocalClusterRegistryUser;
-                    localRegistry.Password = Encoding.UTF8.GetString(authSecret.Data[localRegistry.Username]);
+                    localRegistry.Username = registryUser.Name;
+                    localRegistry.Password = registryUser.Password;
 
                     localRegistries.Add(localRegistry);
 
