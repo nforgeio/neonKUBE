@@ -3351,11 +3351,11 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
 
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
-                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
+                    var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                     var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonSystem);
-                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
+                    var kialiSecret     = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonSystem);
+                    var kialiPassword   = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
 
                     var cmd = new string[]
                     {
@@ -4991,7 +4991,6 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
             // Perform the Grafana Minio configuration.
-
 
             await master.InvokeIdempotentAsync("setup/minio-loki",
                 async () =>

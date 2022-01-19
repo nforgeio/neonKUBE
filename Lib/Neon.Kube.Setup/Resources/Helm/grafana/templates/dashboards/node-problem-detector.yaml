@@ -1,7 +1,7 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
-  name: 1-node-exporter
+  name: node-problem-detector
   labels:
     app: grafana
 spec:
