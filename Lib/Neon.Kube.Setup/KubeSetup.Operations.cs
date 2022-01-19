@@ -3240,60 +3240,9 @@ $@"- name: StorageType
                         await master.InstallHelmChartAsync(controller, "grafana", releaseName: "grafana", @namespace: KubeNamespaces.NeonMonitor, values: values);
                     });
 
-            await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "grafana");
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            try
-                            {
-                                var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
-
-                                if (configmap.Data == null || configmap.Data.Keys.Count < 3)
-                                {
-                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
-                                    return false;
-                                }
-                            } 
-                            catch
-                            {
-                                return false;
-                            }
-
-                            return true;
-                        }, TimeSpan.FromMinutes(5),
-                        TimeSpan.FromSeconds(60));
-
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                });
-
-            await master.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
-
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
-                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
-                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonSystem);
-                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
-
-                    var cmd = new string[]
-                    {
-                        "/bin/bash",
-                        "-c",
-                        $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
-                    };
-                    var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
-                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
-                });
-
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
+
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-secrets",
                     async () =>
                     {
@@ -3303,13 +3252,31 @@ $@"- name: StorageType
                         var grafanaSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaSecret, KubeNamespaces.NeonMonitor);
 
                         grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
+                        await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
 
                         var grafanaAdminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
 
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(16));
+                        grafanaAdminSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                        await k8s.UpsertSecretAsync(grafanaAdminSecret, KubeNamespaces.NeonMonitor);
+                    });
 
-                        await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
+                await master.InvokeIdempotentAsync("ready-to-go/grafana-clear-users",
+                    async () =>
+                    {
+                        var master = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+
+                        var command = new string[]
+                            {
+                                "/bin/bash",
+                                "-c",
+                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} grafana -t -c ""DELETE FROM public.user;"""
+                            };
+
+                        var result = await k8s.NamespacedPodExecAsync(
+                            name: master.Name(),
+                            namespaceParameter: master.Namespace(),
+                            container: "postgres",
+                            command: command);
                     });
 
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-ingress",
@@ -3343,7 +3310,62 @@ $@"- name: StorageType
 
                         await k8s.ReplaceNamespacedCustomObjectAsync(grafana, KubeNamespaces.NeonMonitor, grafana.Name());
                     });
+
+                var grafana = await k8s.ReadNamespacedDeploymentAsync("grafana-deployment", KubeNamespaces.NeonMonitor);
+                await grafana.RestartAsync(k8s);
             }
+
+            await master.InvokeIdempotentAsync($"{readyToGoMode}/monitoring-grafana-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "grafana");
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            try
+                            {
+                                var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
+
+                                if (configmap.Data == null || configmap.Data.Keys.Count < 3)
+                                {
+                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                    return false;
+                                }
+                            } 
+                            catch
+                            {
+                                return false;
+                            }
+
+                            return true;
+                        }, TimeSpan.FromMinutes(5),
+                        TimeSpan.FromSeconds(60));
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                });
+
+            await master.InvokeIdempotentAsync($"{readyToGoMode}/monitoring-grafana-kiali-user",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
+
+                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
+                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
+                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonSystem);
+                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
+
+                    var cmd = new string[]
+                    {
+                        "/bin/bash",
+                        "-c",
+                        $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
+                    };
+                    var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
+                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
+                });
         }
 
         /// <summary>
@@ -4524,7 +4546,8 @@ $@"- name: StorageType
                                     client.RedirectUris = new List<string>()
                                     {
                                         $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}/oauth2/callback",
-                                        $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}/oauth2/callback"
+                                        $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}/oauth2/callback",
+                                        $"https://{cluster.Definition.Domain}/oauth2/callback"
                                     };
                                     client.TrustedPeers = new List<string>() { "grafana", "harbor", "minio" };
                                     break;

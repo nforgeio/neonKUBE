@@ -54,6 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Helm\grafana\templates\dashboards\node-problem-detector.yaml" />
     <None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
     <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
     <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
