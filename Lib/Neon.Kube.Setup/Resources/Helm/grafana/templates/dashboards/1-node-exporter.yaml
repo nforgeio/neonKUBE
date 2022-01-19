@@ -185,7 +185,7 @@ spec:
               "link": true,
               "linkTargetBlank": false,
               "linkTooltip": "Browse host details",
-              "linkUrl": "d/xfpJB9FGz/node-exporter?orgId=1&var-job=${job}&var-hostname=All&var-node=${__cell}&var-device=All&var-origin_prometheus=$origin_prometheus",
+              "linkUrl": "d/xfpJB9FGz/node-exporter?orgId=1&var-job=${job}&var-hostname=All&var-node=${__cell}&var-device=All&var-cluster=$origin_prometheus",
               "mappingType": 1,
               "pattern": "instance",
               "thresholds": [],
@@ -473,7 +473,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - 0",
+              "expr": "node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\"} - 0",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -481,7 +481,7 @@ spec:
               "refId": "A"
             },
             {
-              "expr": "sum(time() - node_boot_time_seconds{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"})by(instance)",
+              "expr": "sum(time() - node_boot_time_seconds{cluster=~\"$origin_prometheus\",job=~\"$job\"})by(instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -490,7 +490,7 @@ spec:
               "refId": "D"
             },
             {
-              "expr": "node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - 0",
+              "expr": "node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"} - 0",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -499,7 +499,7 @@ spec:
               "refId": "B"
             },
             {
-              "expr": "count(node_cpu_seconds_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",mode='system'}) by (instance)",
+              "expr": "count(node_cpu_seconds_total{cluster=~\"$origin_prometheus\",job=~\"$job\",mode='system'}) by (instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -508,7 +508,7 @@ spec:
               "refId": "C"
             },
             {
-              "expr": "node_load5{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}",
+              "expr": "node_load5{cluster=~\"$origin_prometheus\",job=~\"$job\"}",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -516,7 +516,7 @@ spec:
               "refId": "L"
             },
             {
-              "expr": "(1 - avg(rate(node_cpu_seconds_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",mode=\"idle\"}[$interval])) by (instance)) * 100",
+              "expr": "(1 - avg(rate(node_cpu_seconds_total{cluster=~\"$origin_prometheus\",job=~\"$job\",mode=\"idle\"}[$interval])) by (instance)) * 100",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -525,7 +525,7 @@ spec:
               "refId": "F"
             },
             {
-              "expr": "(1 - (node_memory_MemAvailable_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} / (node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"})))* 100",
+              "expr": "(1 - (node_memory_MemAvailable_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"} / (node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"})))* 100",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -534,7 +534,7 @@ spec:
               "refId": "G"
             },
             {
-              "expr": "max((node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}-node_filesystem_free_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}) *100/(node_filesystem_avail_bytes {origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}+(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}-node_filesystem_free_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"})))by(instance)",
+              "expr": "max((node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}-node_filesystem_free_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}) *100/(node_filesystem_avail_bytes {cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}+(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"}-node_filesystem_free_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"ext.?|xfs\"})))by(instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -543,7 +543,7 @@ spec:
               "refId": "E"
             },
             {
-              "expr": "max(rate(node_disk_read_bytes_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}[$interval])) by (instance)",
+              "expr": "max(rate(node_disk_read_bytes_total{cluster=~\"$origin_prometheus\",job=~\"$job\"}[$interval])) by (instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -552,7 +552,7 @@ spec:
               "refId": "H"
             },
             {
-              "expr": "max(rate(node_disk_written_bytes_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}[$interval])) by (instance)",
+              "expr": "max(rate(node_disk_written_bytes_total{cluster=~\"$origin_prometheus\",job=~\"$job\"}[$interval])) by (instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -561,7 +561,7 @@ spec:
               "refId": "I"
             },
             {
-              "expr": "node_netstat_Tcp_CurrEstab{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - 0",
+              "expr": "node_netstat_Tcp_CurrEstab{cluster=~\"$origin_prometheus\",job=~\"$job\"} - 0",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -570,7 +570,7 @@ spec:
               "refId": "M"
             },
             {
-              "expr": "node_sockstat_TCP_tw{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - 0",
+              "expr": "node_sockstat_TCP_tw{cluster=~\"$origin_prometheus\",job=~\"$job\"} - 0",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -579,7 +579,7 @@ spec:
               "refId": "N"
             },
             {
-              "expr": "max(rate(node_network_receive_bytes_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}[$interval])*8) by (instance)",
+              "expr": "max(rate(node_network_receive_bytes_total{cluster=~\"$origin_prometheus\",job=~\"$job\"}[$interval])*8) by (instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -588,7 +588,7 @@ spec:
               "refId": "J"
             },
             {
-              "expr": "max(rate(node_network_transmit_bytes_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}[$interval])*8) by (instance)",
+              "expr": "max(rate(node_network_transmit_bytes_total{cluster=~\"$origin_prometheus\",job=~\"$job\"}[$interval])*8) by (instance)",
               "format": "table",
               "hide": false,
               "instant": true,
@@ -692,7 +692,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count(node_cpu_seconds_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\", mode='system'})",
+              "expr": "count(node_cpu_seconds_total{cluster=~\"$origin_prometheus\",job=~\"$job\", mode='system'})",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -703,7 +703,7 @@ spec:
               "step": 240
             },
             {
-              "expr": "sum(node_load5{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"})",
+              "expr": "sum(node_load5{cluster=~\"$origin_prometheus\",job=~\"$job\"})",
               "format": "time_series",
               "hide": false,
               "interval": "30m",
@@ -713,7 +713,7 @@ spec:
               "step": 240
             },
             {
-              "expr": "avg(1 - avg(rate(node_cpu_seconds_total{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",mode=\"idle\"}[$interval])) by (instance)) * 100",
+              "expr": "avg(1 - avg(rate(node_cpu_seconds_total{cluster=~\"$origin_prometheus\",job=~\"$job\",mode=\"idle\"}[$interval])) by (instance)) * 100",
               "format": "time_series",
               "hide": false,
               "interval": "30m",
@@ -848,7 +848,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"})",
+              "expr": "sum(node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"})",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -859,7 +859,7 @@ spec:
               "step": 4
             },
             {
-              "expr": "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - node_memory_MemAvailable_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"})",
+              "expr": "sum(node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"} - node_memory_MemAvailable_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"})",
               "format": "time_series",
               "hide": false,
               "interval": "30m",
@@ -869,7 +869,7 @@ spec:
               "step": 4
             },
             {
-              "expr": "(sum(node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"} - node_memory_MemAvailable_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}) / sum(node_memory_MemTotal_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}))*100",
+              "expr": "(sum(node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"} - node_memory_MemAvailable_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"}) / sum(node_memory_MemTotal_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\"}))*100",
               "format": "time_series",
               "hide": false,
               "interval": "30m",
@@ -996,7 +996,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(avg(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))",
+              "expr": "sum(avg(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))",
               "format": "time_series",
               "instant": false,
               "interval": "30m",
@@ -1005,7 +1005,7 @@ spec:
               "refId": "E"
             },
             {
-              "expr": "sum(avg(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))",
+              "expr": "sum(avg(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))",
               "format": "time_series",
               "instant": false,
               "interval": "30m",
@@ -1014,7 +1014,7 @@ spec:
               "refId": "C"
             },
             {
-              "expr": "(sum(avg(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))) *100/(sum(avg(node_filesystem_avail_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))+(sum(avg(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))))",
+              "expr": "(sum(avg(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))) *100/(sum(avg(node_filesystem_avail_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))+(sum(avg(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance)) - sum(avg(node_filesystem_free_bytes{cluster=~\"$origin_prometheus\",job=~\"$job\",fstype=~\"xfs|ext.*\"})by(device,instance))))",
               "format": "time_series",
               "instant": false,
               "interval": "30m",
@@ -3712,14 +3712,14 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\"}, job)",
+            "definition": "label_values(node_uname_info{cluster=~\"$origin_prometheus\"}, job)",
             "hide": 0,
             "includeAll": false,
             "label": "JOB",
             "multi": false,
             "name": "job",
             "options": [],
-            "query": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\"}, job)",
+            "query": "label_values(node_uname_info{cluster=~\"$origin_prometheus\"}, job)",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
@@ -3734,14 +3734,14 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}, nodename)",
+            "definition": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\"}, nodename)",
             "hide": 0,
             "includeAll": true,
             "label": "Host",
             "multi": false,
             "name": "hostname",
             "options": [],
-            "query": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}, nodename)",
+            "query": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\"}, nodename)",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
@@ -3757,7 +3757,7 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",nodename=~\"$hostname\"},instance)",
+            "definition": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\",nodename=~\"$hostname\"},instance)",
             "hide": 0,
             "includeAll": false,
             "label": "Instance",
@@ -3765,7 +3765,7 @@ spec:
             "multiFormat": "regex values",
             "name": "node",
             "options": [],
-            "query": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",nodename=~\"$hostname\"},instance)",
+            "query": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\",nodename=~\"$hostname\"},instance)",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
@@ -3781,7 +3781,7 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(node_network_info{origin_prometheus=~\"$origin_prometheus\",device!~'tap.*|veth.*|br.*|docker.*|virbr.*|lo.*|cni.*'},device)",
+            "definition": "label_values(node_network_info{cluster=~\"$origin_prometheus\",device!~'tap.*|veth.*|br.*|docker.*|virbr.*|lo.*|cni.*'},device)",
             "hide": 0,
             "includeAll": true,
             "label": "NIC",
@@ -3789,7 +3789,7 @@ spec:
             "multiFormat": "regex values",
             "name": "device",
             "options": [],
-            "query": "label_values(node_network_info{origin_prometheus=~\"$origin_prometheus\",device!~'tap.*|veth.*|br.*|docker.*|virbr.*|lo.*|cni.*'},device)",
+            "query": "label_values(node_network_info{cluster=~\"$origin_prometheus\",device!~'tap.*|veth.*|br.*|docker.*|virbr.*|lo.*|cni.*'},device)",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
@@ -3859,14 +3859,14 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "query_result(topk(1,sort_desc (max(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",instance=~'$node',fstype=~\"ext.?|xfs\",mountpoint!~\".*pods.*\"}) by (mountpoint))))",
+            "definition": "query_result(topk(1,sort_desc (max(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",instance=~'$node',fstype=~\"ext.?|xfs\",mountpoint!~\".*pods.*\"}) by (mountpoint))))",
             "hide": 2,
             "includeAll": false,
             "label": "maxmount",
             "multi": false,
             "name": "maxmount",
             "options": [],
-            "query": "query_result(topk(1,sort_desc (max(node_filesystem_size_bytes{origin_prometheus=~\"$origin_prometheus\",instance=~'$node',fstype=~\"ext.?|xfs\",mountpoint!~\".*pods.*\"}) by (mountpoint))))",
+            "query": "query_result(topk(1,sort_desc (max(node_filesystem_size_bytes{cluster=~\"$origin_prometheus\",instance=~'$node',fstype=~\"ext.?|xfs\",mountpoint!~\".*pods.*\"}) by (mountpoint))))",
             "refresh": 2,
             "regex": "/.*\\\"(.*)\\\".*/",
             "skipUrlSync": false,
@@ -3881,14 +3881,14 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",instance=~\"$node\"}, nodename)",
+            "definition": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\",instance=~\"$node\"}, nodename)",
             "hide": 2,
             "includeAll": false,
             "label": "show_hostname",
             "multi": false,
             "name": "show_hostname",
             "options": [],
-            "query": "label_values(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\",instance=~\"$node\"}, nodename)",
+            "query": "label_values(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\",instance=~\"$node\"}, nodename)",
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
@@ -3903,14 +3903,14 @@ spec:
             "allValue": null,
             "current": {},
             "datasource": "${DS_PROMETHEUS}",
-            "definition": "query_result(count(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}))",
+            "definition": "query_result(count(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\"}))",
             "hide": 2,
             "includeAll": false,
             "label": "total_servers",
             "multi": false,
             "name": "total",
             "options": [],
-            "query": "query_result(count(node_uname_info{origin_prometheus=~\"$origin_prometheus\",job=~\"$job\"}))",
+            "query": "query_result(count(node_uname_info{cluster=~\"$origin_prometheus\",job=~\"$job\"}))",
             "refresh": 1,
             "regex": "/{} (.*) .*/",
             "skipUrlSync": false,
