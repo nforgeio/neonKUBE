@@ -29,22 +29,31 @@ namespace NeonDashboard.Pages
 {
     public partial class Index : PageBase
     {
+        /// <summary>
+        /// The id of the current selected dashboard.
+        /// </summary>
         [Parameter]
         public string CurrentDashboard { get; set; }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public Index()
         {
         }
 
+        /// <inheritdoc/>
         protected override void OnInitialized()
         {
             AppState.OnDashboardChange += StateHasChanged;
         }
+
+        /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
-            if (!AppState.DashboardFrames.Any(d => d.Name == CurrentDashboard))
+            if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard))
             {
-                var dashboard = AppState.Dashboards.Where(d => d.Name == CurrentDashboard).FirstOrDefault();
+                var dashboard = AppState.Dashboards.Where(d => d.Id == CurrentDashboard).FirstOrDefault();
                 if (dashboard != null)
                 {
                     AppState.DashboardFrames.Add(dashboard);

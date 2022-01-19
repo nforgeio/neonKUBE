@@ -69,7 +69,7 @@ namespace Neon.Kube
             var clusterAdvice = new KubeClusterAdvice();
 
             clusterAdvice.MetricsEnabled  = true;
-            clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "15m";
+            clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "1m";
             clusterAdvice.MetricsQuota    = cluster.Definition.IsDesktopCluster ? "1Gi" : "10Gi";
             clusterAdvice.LogsQuota       = cluster.Definition.IsDesktopCluster ? "1Gi" : "10Gi";
             clusterAdvice.TracesQuota     = cluster.Definition.IsDesktopCluster ? "1Gi" : "10Gi";
@@ -166,7 +166,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("64Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsInterval  = "1m";
             }
 
             return advice;
@@ -182,7 +182,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsInterval  = "1m";
             }
 
             return advice;
@@ -198,7 +198,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval  = "15m";
+                advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("350Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
             }
@@ -228,7 +228,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsEnabled   = false;
             }
             else
             {
@@ -247,7 +247,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsEnabled   = false;
             }
 
             return advice;
@@ -261,7 +261,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsEnabled   = false;
             }
 
             return advice;
@@ -273,7 +273,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsEnabled = false;
             }
 
             return advice;
@@ -285,7 +285,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;
@@ -389,7 +389,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsEnabled = false;
             }
 
             return advice;
@@ -404,7 +404,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsEnabled = false;
             }
 
             return advice;
@@ -416,7 +416,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsEnabled = false;
             }
 
             return advice;
@@ -433,7 +433,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsEnabled   = false;
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
 
@@ -448,7 +448,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
             
             return advice;
@@ -464,7 +464,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsEnabled   = false;
             }
 
             return advice;
@@ -494,7 +494,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("400Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
-                advice.MetricsInterval  = "15m";
+                advice.MetricsInterval  = "1m";
             }
 
             return advice;
@@ -511,7 +511,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;
@@ -523,7 +523,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;
@@ -535,7 +535,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;
@@ -669,7 +669,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
 
@@ -686,7 +686,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;
@@ -698,7 +698,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsInterval = "15m";
+                advice.MetricsInterval = "1m";
             }
 
             return advice;

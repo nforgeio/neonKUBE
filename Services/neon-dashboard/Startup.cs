@@ -21,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
@@ -28,7 +29,12 @@ using Neon.Web;
 using Blazor.Analytics;
 using Blazor.Analytics.Components;
 
+using k8s;
+
 using Prometheus;
+
+using Segment;
+using System.Text;
 
 namespace NeonDashboard
 {
@@ -39,7 +45,7 @@ namespace NeonDashboard
     {
         public IConfiguration Configuration { get; }
         public Service NeonDashboardService;
-
+        public static Dictionary<string, string> Svgs;
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -55,16 +61,22 @@ namespace NeonDashboard
         /// Configures depdendency injection.
         /// </summary>
         /// <param name="services">The service collection.</param>
-        public void ConfigureServices(IServiceCollection services)
+        public async void ConfigureServices(IServiceCollection services)
         {
-            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")))
-            {
-                NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", Environment.GetEnvironmentVariable("CLUSTER_DOMAIN"));
-            }
+            Analytics.Initialize("nadwV6twqGHRLB451dblyqZVCwulUCFV",
+                new Config()
+                .SetAsync(!NeonHelper.IsDevWorkstation));
 
-            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET")))
+            if (NeonHelper.IsDevWorkstation)
             {
-                NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Environment.GetEnvironmentVariable("SSO_CLIENT_SECRET"));
+                var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+                var k8sClient  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+                var configMap  = await k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
+                var secret     = await k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespaces.NeonSystem);
+
+                NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", configMap.Data["CLUSTER_DOMAIN"]);
+                NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
             }
 
             services.AddServerSideBlazor();
@@ -99,6 +111,7 @@ namespace NeonDashboard
                 .AddHttpClient()
                 .AddSingleton<INeonLogger>(NeonDashboardService.LogManager.GetLogger())
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
+                .AddRouting()
                 .AddScoped<AppState>()
                 .AddMvc();
 
@@ -130,12 +143,12 @@ namespace NeonDashboard
 
             app.UseStaticFiles();
 
-            app.UseRouting();
-            app.UseHttpMetrics();
-            app.UseCookiePolicy();
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseHttpLogging();
+            //app.UseRouting();
+            //app.UseHttpMetrics();
+            //app.UseCookiePolicy();
+            //app.UseAuthentication();
+            //app.UseAuthorization();
+            //app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

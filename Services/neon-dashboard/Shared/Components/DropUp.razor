@@ -1,69 +1,37 @@
-﻿@typeparam TItem
-@using System.Diagnostics.CodeAnalysis
+﻿
 
 <div class="dropup__wrapper relative">
   <div class="dropup button" @onclick="Show">
-	  <Icon type=@Icon />
+	  <Icon content=@Icon />
 	  <div class="noselect name">
 		  <p>@Title</p>
 		  <h3>@Active</h3>
 	  </div>
-	  <Icon type="chevron-up" />
+	  <Icon content=@Icons.ChevronUp />
   </div>
 	
 
   <div class="absolute menu @(HideMenu ? "hide" : "")" @onmouseover="MouseIn" @onmouseout="MouseOut">
 			<div class="menu-header button__icon">
-		  <Icon type=@Icon />
+		  <Icon content=@Icon />
 				<h3>@Title</h3>
 			</div>
 		  @foreach (var item in Items)
         {
             if (DropList is not null)
             {
-                <div class="button button__icon">@DropList(item)</div>
+                <div class="button button__icon" @onclick="@(() => NavigationManager.NavigateTo(item.GetId()))">
+									<h3>@item.GetName()</h3>
+									@if (item.GetId() == AppState.CurrentDashboard)
+									{
+										  <div style="right: 20px;position: absolute;">
+												<Icon content=@Icons.Check />
+											</div>
+									}
+								</div>
+
             }
         }
 				
 		</div>
 </div>
-
-@code {
-	[Parameter]
-	public string Title { get; set; } = "Name";
-
-	[Parameter]
-	public string Active { get; set; } = "Loading";
-
-	[Parameter]
-	public string Icon { get; set; } = "server";
-
-	[Parameter]
-  public RenderFragment<TItem> DropList { get; set; }
-
-  [Parameter, AllowNull]
-  public IReadOnlyList<TItem> Items { get; set; }
-
-
-
-	bool HideMenu = true; 
-
-	void Show()
-	{
-		HideMenu = !HideMenu;
-		
-	}
-
-	void MouseIn()
-	{
-		HideMenu = false;
-	}
-
-  void MouseOut()
-  {
-	 HideMenu= true;
-  }
-}
-
-
-}

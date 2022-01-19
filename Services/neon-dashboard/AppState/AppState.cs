@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Hosting;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 
@@ -48,6 +49,11 @@ namespace NeonDashboard
         /// The Context Accessor.
         /// </summary>
         public IHttpContextAccessor HttpContextAccessor;
+
+        /// <summary>
+        /// The HttpContext for the initial request.
+        /// </summary>
+        public HttpContext HttpContext;
 
         /// <summary>
         /// The Navigation Manager.
@@ -84,6 +90,16 @@ namespace NeonDashboard
         /// </summary>
         public string CurrentDashboard;
 
+        /// <summary>
+        /// Cluster ID.
+        /// </summary>
+        public string ClusterId;
+
+        /// <summary>
+        /// User ID.
+        /// </summary>
+        public string UserId = null;
+
         public AppState(
             Service neonDashboardService,
             IHttpContextAccessor httpContextAccessor,
@@ -104,18 +120,22 @@ namespace NeonDashboard
 
             if (Dashboards == null || Dashboards.Count == 0)
             {
-                var clusterDomain = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
-                Dashboards = new List<Dashboard>()
-                {
-                    //new Dashboard("Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{clusterDomain}"),
-                    //new Dashboard("Grafana", $"https://{ClusterDomain.Grafana}.{clusterDomain}"),
-                    //new Dashboard("Minio", $"https://{ClusterDomain.MinioOperator}.{clusterDomain}"),
-                    //new Dashboard("Kiali", $"https://{ClusterDomain.Kiali}.{clusterDomain}"),
-                    //new Dashboard("Harbor", $"https://{ClusterDomain.HarborRegistry}.{clusterDomain}")
+                ClusterId = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
+                Dashboards = new List<Dashboard>();
 
-                    new Dashboard("loooooopie", $"https://loopielaundry.com/"),
-                    new Dashboard("uwu", $"https://www.dictionary.com/e/slang/uwu"),
-                };
+                if (NeonHelper.IsDevWorkstation)
+                {
+                    Dashboards.Add(new Dashboard("loooooopie", "Loopie", $"https://loopielaundry.com/"));
+                    Dashboards.Add(new Dashboard("uwu", "UWU", $"https://www.dictionary.com/e/slang/uwu"));
+                }
+                else
+                {
+                    Dashboards.Add(new Dashboard("kubernetes", "Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{ClusterId}"));
+                    Dashboards.Add(new Dashboard("grafana", "Grafana", $"https://{ClusterDomain.Grafana}.{ClusterId}"));
+                    Dashboards.Add(new Dashboard("minio", "Minio", $"https://{ClusterDomain.Minio}.{ClusterId}"));
+                    Dashboards.Add(new Dashboard("kiali", "Kiali", $"https://{ClusterDomain.Kiali}.{ClusterId}"));
+                    Dashboards.Add(new Dashboard("harbor", "Harbor", $"https://{ClusterDomain.HarborRegistry}.{ClusterId}"));
+                }
 
                 DashboardFrames = new List<Dashboard>(); 
             }

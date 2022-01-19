@@ -8,32 +8,20 @@
 
 <PageBase PageTitle="@PageTitle" />
 <CascadingValue Value="@CurrentDashboard" Name="CurrentDashboard" />
- 
-@if (AppState.DashboardFrames != null){
-  <div class="dashboard-container">
-  @foreach (var dashboard in AppState.DashboardFrames)
-  {
-      <div class="dashboard-frame">
-          <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
-      </div>
-  }
-  </div>
-}
 
-
-@*<AuthorizeView>
-     <Authorized>
-         <h1>Hello, @context.User.Identity.Name !</h1>
-         <div class="dashboard-container">
-         @foreach (var dashboard in AppState.Dashboards)
-         {
-             <div class="dashboard-frame">
-                 <Dashboard Name="@dashboard.Name" Uri="@dashboard.Uri" />
-             </div>
-         }
-         </div>
-     </Authorized>
-     <NotAuthorized>
+<AuthorizeView>
+    <Authorized>
+        @if (AppState.DashboardFrames != null){
+          <div class="dashboard-container">
+          @foreach (var dashboard in AppState.DashboardFrames)
+          {
+              <Dashboard Id="@dashboard.Id" Name="@dashboard.Name" Uri="@dashboard.Uri" />
+          }
+          </div>
+        }
+    </Authorized>
+    <NotAuthorized>
          <p>Not Authorized</p>
-     </NotAuthorized>
- </AuthorizeView>*@
+    </NotAuthorized>
+</AuthorizeView>
+

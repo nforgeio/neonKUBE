@@ -1,26 +1,12 @@
 ﻿<div class="button">
-	<Icon type="settings" />
-
+		<Icon content=@Icons.Settings />
 </div>
 
-<DropUp Title="Dashboard" Active=@AppState.CurrentDashboard Icon="server" Items=@AppState.Dashboards >
+<DropUp Title="Dashboard" Active=@AppState.CurrentDashboard Icon=@Icons.Server Items=@AppState.Dashboards >
      <DropList Context="dashboard">
       <div></div>
 			<div class="">
-				<p>@dashboard.Name</p>
+				<p>@dashboard.GetName()</p>
 			</div>
-			@if(dashboard.Name == AppState.CurrentDashboard ) {
-				<Icon type="check" />
-			} else
-			{
-			<div class="placeholder"> </div>
-			}
     </DropList>
 </DropUp>
-
-
-
-
-@code {
-
-}

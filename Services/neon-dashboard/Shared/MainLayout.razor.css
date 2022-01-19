@@ -6,14 +6,13 @@
 
 .mainlayout {
     margin: 0;
-    height: 100vh;
     background: var(--c-bg-dark);
 }
 
 .container {
     display: grid;
     grid-template-rows: 1fr auto;
-    height: 100%;
+    overflow: hidden;
 }
 
 .main {
@@ -22,6 +21,7 @@
     border-radius: var(--f1);
     background: var(--c-fg);
     border: 2px solid var(--c-bg-dark);
+    height: 93vh;
 }
 
 .bottom {
@@ -30,4 +30,9 @@
     background: var(--c-bg);
     display: flex;
     color: var(--c-fg);
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    height: 6vh;
+    padding-bottom: 1vh;
 }

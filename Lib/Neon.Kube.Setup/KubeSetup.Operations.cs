@@ -331,6 +331,7 @@ spec:
             //       so we need to install that first.
 
             await InstallClusterOperatorAsync(controller, master);
+            await InstallNeonDashboardAsync(controller, master);
 
             // $todo(jefflill):
             //
@@ -545,7 +546,11 @@ mode: {kubeProxyMode}");
 
                     foreach (var p in pods.Items)
                     {
-                        if (p.Name() == "kube-apiserver-neon-desktop")
+                        // We don't want to restart the apiserver since it have already been restarted.
+                        // Not restaarting pods using the default serviceaccount is an optimization.
+                        if (p.Name() == "kube-apiserver-neon-desktop"
+                                || p.Spec.ServiceAccount == "default"
+                                || p.Spec.ServiceAccountName == "default")
                         {
                             continue;
                         }
@@ -3525,6 +3530,12 @@ $@"- name: StorageType
                         await k8s.DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
                         await k8s.DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
 
+                        // Update configmap containing SSO urls
+                        var configMap = await k8s.ReadNamespacedConfigMapAsync("minio-console", KubeNamespaces.NeonSystem);
+                        configMap.Data["CONSOLE_IDP_URL"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/.well-known/openid-configuration";
+                        configMap.Data["CONSOLE_IDP_CALLBACK"] = $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}/oauth_callback";
+                        await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+
                         // Restart minio components.
 
                         var minioOperator = await k8s.ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
@@ -4020,6 +4031,55 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
                     await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                });
+        }
+
+        /// <summary>
+        /// Installs <b>neon-dashboard</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+
+            await master.InvokeIdempotentAsync("setup/neon-dashboard",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+
+                    await master.InstallHelmChartAsync(controller, "neon-dashboard", releaseName: "neon-dashboard", @namespace: KubeNamespaces.NeonSystem, values: values);
+                });
+
+            if (readyToGoMode == ReadyToGoMode.Setup)
+            {
+                var configMap                    = await k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
+                configMap.Data["CLUSTER_DOMAIN"] = cluster.Definition.Domain;
+
+                await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+            }
+            
+            await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
         }
 
