@@ -16,14 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Shared\Components\DropUp.razor.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Shared\Components\DropUp.razor.css" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Analytics" Version="3.8.0" />
     <PackageReference Include="Blazor-Analytics" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
 	<PackageReference Include="GitInfo" Version="2.2.0">
@@ -50,11 +43,6 @@
     <Content Update="wwwroot\favicon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Styles\Icons\" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
