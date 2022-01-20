@@ -111,7 +111,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
+            : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonnodeagent", logFilter: OperatorHelper.LogFilter)
         {
         }
 
