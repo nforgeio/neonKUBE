@@ -2958,11 +2958,31 @@ TCPKeepAlive yes
         public static void K8sClientConverterInitialize()
         {
             var type = typeof(Kubernetes).Assembly.GetType("k8s.KubernetesJson");
+
             System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
 
-            var member = type.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-            var s = (JsonSerializerOptions)member.GetValue(type);
-            s.Converters.Add(new JsonStringEnumMemberConverter());
+            var member  = type.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+            var options = (JsonSerializerOptions)member.GetValue(type);
+
+            options.Converters.Add(new JsonStringEnumMemberConverter());
+        }
+
+        /// <summary>
+        /// Returns the credentials for a specific cluster user from the Glauth LDAP secret.
+        /// </summary>
+        /// <param name="k8s">The Kubernetes client.</param>
+        /// <param name="username">The desired username.</param>
+        /// <returns>The <see cref="GlauthUser"/> requested user credentials.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when the user doesn't exist.</exception>
+        public static async Task<GlauthUser> GetClusterLdapUserAsync(IKubernetes k8s, string username)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+
+            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+            var user  = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
+
+            return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
         }
     }
 }
