@@ -29,10 +29,11 @@
     grid-row: 2;
     background: var(--c-bg);
     display: flex;
+    justify-content: flex-end;
     color: var(--c-fg);
     position: fixed;
     bottom: 0px;
     width: 100%;
     height: 6vh;
-    padding-bottom: 1vh;
+        
 }
