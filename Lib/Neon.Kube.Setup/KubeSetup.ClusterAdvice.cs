@@ -434,7 +434,7 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopCluster || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.MetricsEnabled   = false;
+                advice.MetricsEnabled   = true;
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
 
