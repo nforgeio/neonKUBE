@@ -42,22 +42,20 @@ namespace NeonDashboard
         /// <summary>
         /// Dashboard view counter.
         /// </summary>
-        public static Counter DashboardViewCounter = Metrics.CreateCounter(
-            "neondashboard_external_dashboard_view", 
-            "External dashboard views.",
-            new CounterConfiguration
-            {
-                LabelNames = new[] { "dashboard" }
-            });
+        public readonly Counter DashboardViewCounter;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersions.NeonKube)
+             : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neondashboard")
         {
-            
+            DashboardViewCounter = Metrics.CreateCounter($"{MetricsPrefix}external_dashboard_view", "External dashboard views.",
+                new CounterConfiguration
+                {
+                    LabelNames = new[] { "dashboard" }
+                });
         }
 
         /// <inheritdoc/>

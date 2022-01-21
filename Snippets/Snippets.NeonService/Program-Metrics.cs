@@ -42,13 +42,20 @@ namespace Service_Metrics
     {
         // Define a custom Prometheus counter.  This value will be able to be
         // tracked on Prometheus related dashboards, alert rules, etc.
-        public static Counter runTimeCounter = Metrics.CreateCounter("run-time", "Service run time in seconds.");
+
+        private readonly Counter myCounter;
 
         public MyService() : base("my-service")
         {
+            // [NeonService.MetricsPrefix]:
+            //
+            // The property returns a metrics name prefix based on the service name by default
+            // or a custom prefix passed as a NeonService cnstructor parameter.  As a convention,
+            // you should use this to prefix all of your metrics counters.
+
+            myCounter = Metrics.CreateCounter($"{MetricsPrefix}mycounter", "Counter that increments once a second.");
         }
 
-        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -62,7 +69,7 @@ namespace Service_Metrics
             while (!Terminator.CancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(TimeSpan.FromSeconds(1));
-                runTimeCounter.Inc();
+                myCounter.Inc();
             }
 
             return 0;

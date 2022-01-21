@@ -88,8 +88,7 @@ namespace Neon.Kube
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
-        private static string               cachedProgramFolder;
-        private static string               cachedProgramDataFolder;
+        private static string               cachedInstallFolder;
         private static string               cachedToolsFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
@@ -144,8 +143,7 @@ namespace Neon.Kube
             cachedDesktopHypervFolder = null;
             cachedClientConfig        = null;
             cachedClusterCertificate  = null;
-            cachedProgramFolder       = null;
-            cachedProgramDataFolder   = null;
+            cachedInstallFolder       = null;
             cachedToolsFolder         = null;
             cachedPwshPath            = null;
             cachedResources           = null;
@@ -1045,72 +1043,52 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neon program folder.
+        /// Returns the path to the neon installation folder.  This is where the either
+        /// <b>neon-cli</b> or <b>neon-desktop</b> are installed.  This is used to determine
+        /// where tools like <b>pwsh</b> and <b>ssh-keygen</b> are located.
         /// </summary>
-        public static string ProgramFolder
+        /// <remarks>
+        /// <para>
+        /// One of <b>neon-cli</b> or <b>neon-desktop</b> are allowed to be installed on
+        /// a user's workstation and the <b>NEON_INSTALL_FOLDER</b> environment variable
+        /// will be set during installation to point to the program installation folder.
+        /// </para>
+        /// <para>
+        /// This folder will be structured like for a <b>neon-cli only</b> installation:
+        /// </para>
+        /// <code>
+        /// C:\Program Files\neonFORGE\neon-cli\
+        ///     neon\               # neon-cli binaries
+        ///     powershell\         # Powershell 7.x
+        ///     ssh\                # SSH related tools
+        /// </code>
+        /// <para>
+        /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
+        /// </para>
+        /// <code>
+        /// C:\Program Files\neonFORGE\neon-desktop\
+        ///     desktop\            # neon-desktop binaries
+        ///     neon\               # neon-cli binaries
+        ///     powershell\         # Powershell 7.x
+        ///     ssh\                # SSH related tools
+        /// </code>
+        /// </remarks>
+        public static string InstallFolder
         {
             get
             {
-                if (cachedProgramFolder != null)
+                if (cachedInstallFolder != null)
                 {
-                    return cachedProgramFolder;
+                    return cachedInstallFolder;
                 }
 
-                cachedProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-
-                if (cachedProgramFolder == null)
-                {
-                    cachedProgramFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonFORGE", "neonDESKTOP");
-
-                    // For some reason, [SpecialFolder.ProgramFiles] is returning: 
-                    //
-                    //      C:\Program Files (x86)
-                    //
-                    // We're going to strip off the " (x86)" part if present.
-
-                    cachedProgramFolder = cachedProgramFolder.Replace(" (x86)", string.Empty);
-                }
-
-                if (!Directory.Exists(cachedProgramFolder))
-                {
-                    Directory.CreateDirectory(cachedProgramFolder);
-                }
-
-                return cachedProgramFolder;
-            }
-        }
-
-        /// <summary>
-        /// Returns the path to the neon program data folder.
-        /// </summary>
-        public static string ProgramDataFolder
-        {
-            get
-            {
-                if (cachedProgramDataFolder != null)
-                {
-                    return cachedProgramDataFolder;
-                }
-
-                cachedProgramDataFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-
-                if (cachedProgramDataFolder == null)
-                {
-                    cachedProgramDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonDESKTOP");
-                }
-
-                if (!Directory.Exists(cachedProgramDataFolder))
-                {
-                    Directory.CreateDirectory(cachedProgramDataFolder);
-                }
-
-                return cachedProgramDataFolder;
+                return cachedInstallFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
             }
         }
 
         /// <summary>
         /// Returns the path to the Powershell Core executable to be used.
-        /// This will first examine the <b>NEONDESKTOP_PROGRAM_FOLDER</b> environment
+        /// This will first examine the <b>NEON_INSTALL_FOLDER</b> environment
         /// variable to see if the installed version of Powershell Core should
         /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
         /// the <b>PATH</b> will be searched.
@@ -1124,9 +1102,9 @@ namespace Neon.Kube
                     return cachedPwshPath;
                 }
 
-                if (!string.IsNullOrEmpty(ProgramFolder))
+                if (!string.IsNullOrEmpty(InstallFolder))
                 {
-                    var pwshPath = Path.Combine(ProgramFolder, "powershell", "pwsh.exe");
+                    var pwshPath = Path.Combine(InstallFolder, "powershell", "pwsh.exe");
 
                     if (File.Exists(pwshPath))
                     {
@@ -1469,7 +1447,7 @@ namespace Neon.Kube
         {
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.Kubernetes);
-            var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
+            var targetPath        = Path.Combine(KubeHelper.InstallFolder);
 
             switch (hostPlatform)
             {
@@ -1610,7 +1588,7 @@ namespace Neon.Kube
         {
             var hostPlatform   = KubeHelper.HostPlatform;
             var cachedHelmPath = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.Helm);
-            var targetPath     = Path.Combine(KubeHelper.ProgramFolder);
+            var targetPath     = Path.Combine(KubeHelper.InstallFolder);
 
             switch (hostPlatform)
             {
@@ -1848,10 +1826,10 @@ public class ISOFile
 
             File.Delete(isoPath);
 
-            // Use the version of Powershell installed along with the neon-cli, if present,
+            // Use the version of Powershell installed along with the neon-cli or desktop, if present,
             // otherwise just launch Powershell from the PATH.
 
-            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
             var powershellPath        = "powershell";
 
             if (neonKubeProgramFolder != null)
@@ -2151,8 +2129,7 @@ exit 0
 
             // Look for the installed version first.
 
-            var desktopProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
+            var path1 = InstallFolder != null ? Path.Combine(InstallFolder, "SSH", "ssh-keygen.exe") : null;
 
             if (path1 != null && File.Exists(path1))
             {

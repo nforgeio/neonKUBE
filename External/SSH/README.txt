@@ -1,4 +1,4 @@
-The [ssh-keygen.exe] file will be included in neonDESKTOP installer for Windows and will be deployed
+The [ssh-keygen.exe] file is included in neon-desktop and neon-cli installer for Windows and will be deployed
 to the app's root directory.  Windows now includes [ssh-keygen.exe] in recent Windows builds by default,
 but that version of the tool does not allow SSH keys to be generated without passphrases when called by
 scripts or other programs.

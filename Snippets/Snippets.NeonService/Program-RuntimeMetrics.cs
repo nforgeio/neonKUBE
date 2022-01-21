@@ -39,7 +39,6 @@ namespace Service_RuntimeMetrics
             //        .Customize()
             //        .WithContentionStats()
             //        .WithJitStats()
-            //        .WithThreadPoolSchedulingStats()
             //        .WithThreadPoolStats()
             //        .WithGcStats()
             //        .WithExceptionStats()
@@ -51,13 +50,19 @@ namespace Service_RuntimeMetrics
 
     public class MyService : NeonService
     {
-        public static Counter demoCounter = Metrics.CreateCounter("demo_counter", "Demo metrics counter.");
+        private static Counter myCounter;
 
         public MyService() : base("my-service")
         {
+            // [NeonService.MetricsPrefix]:
+            //
+            // The property returns a metrics name prefix based on the service name by default
+            // or a custom prefix passed as a NeonService cnstructor parameter.  As a convention,
+            // you should use this to prefix all of your metrics counters.
+
+            myCounter = Metrics.CreateCounter($"{MetricsPrefix}mycounter", "Counter that increments once a second.");
         }
 
-        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -68,7 +73,7 @@ namespace Service_RuntimeMetrics
             while (!Terminator.CancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(TimeSpan.FromSeconds(1));
-                demoCounter.Inc();
+                myCounter.Inc();
             }
 
             return 0;
