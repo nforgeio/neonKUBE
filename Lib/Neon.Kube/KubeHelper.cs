@@ -89,7 +89,6 @@ namespace Neon.Kube
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedProgramFolder;
-        private static string               cachedProgramDataFolder;
         private static string               cachedToolsFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
@@ -145,7 +144,6 @@ namespace Neon.Kube
             cachedClientConfig        = null;
             cachedClusterCertificate  = null;
             cachedProgramFolder       = null;
-            cachedProgramDataFolder   = null;
             cachedToolsFolder         = null;
             cachedPwshPath            = null;
             cachedResources           = null;
@@ -1056,7 +1054,7 @@ namespace Neon.Kube
                     return cachedProgramFolder;
                 }
 
-                cachedProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+                cachedProgramFolder = Environment.GetEnvironmentVariable("NEON_PROGRAM_FOLDER");
 
                 if (cachedProgramFolder == null)
                 {
@@ -1081,36 +1079,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neon program data folder.
-        /// </summary>
-        public static string ProgramDataFolder
-        {
-            get
-            {
-                if (cachedProgramDataFolder != null)
-                {
-                    return cachedProgramDataFolder;
-                }
-
-                cachedProgramDataFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-
-                if (cachedProgramDataFolder == null)
-                {
-                    cachedProgramDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "neonFORGE", "neonDESKTOP");
-                }
-
-                if (!Directory.Exists(cachedProgramDataFolder))
-                {
-                    Directory.CreateDirectory(cachedProgramDataFolder);
-                }
-
-                return cachedProgramDataFolder;
-            }
-        }
-
-        /// <summary>
         /// Returns the path to the Powershell Core executable to be used.
-        /// This will first examine the <b>NEONDESKTOP_PROGRAM_FOLDER</b> environment
+        /// This will first examine the <b>NEON_PROGRAM_FOLDER</b> environment
         /// variable to see if the installed version of Powershell Core should
         /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
         /// the <b>PATH</b> will be searched.
@@ -1848,10 +1818,10 @@ public class ISOFile
 
             File.Delete(isoPath);
 
-            // Use the version of Powershell installed along with the neon-cli, if present,
+            // Use the version of Powershell installed along with the neon-cli or desktop, if present,
             // otherwise just launch Powershell from the PATH.
 
-            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEON_PROGRAM_FOLDER");
             var powershellPath        = "powershell";
 
             if (neonKubeProgramFolder != null)
@@ -2151,8 +2121,8 @@ exit 0
 
             // Look for the installed version first.
 
-            var desktopProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
-            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
+            var desktopProgramFolder = Environment.GetEnvironmentVariable("NEON_PROGRAM_FOLDER");
+            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEON_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
 
             if (path1 != null && File.Exists(path1))
             {
