@@ -108,6 +108,11 @@ namespace NeonDashboard
         /// </summary>
         public string UserId = null;
 
+        /// <summary>
+        /// Option to disable analytics tracking.
+        /// </summary>
+        public bool DoNotTrack = false;
+
         public AppState(
             Service neonDashboardService,
             IHttpContextAccessor httpContextAccessor,
@@ -127,12 +132,21 @@ namespace NeonDashboard
             this.Analytics = analytics;
             this.LocalStorage = localStorage;
 
+            bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
+
+            Segment.Analytics.Client.Config.SetSend(DoNotTrack);
+            if (DoNotTrack)
+            {
+                Analytics.Disable();
+            }
+
             if (Dashboards == null || Dashboards.Count == 0)
             {
                 ClusterId = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
                 Dashboards = new List<Dashboard>();
 
-                if (NeonHelper.IsDevWorkstation)
+                if (string.IsNullOrEmpty(ClusterId) 
+                    || string.IsNullOrEmpty(neonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET")))
                 {
                     Dashboards.Add(new Dashboard("loooooopie", "Loopie", $"https://loopielaundry.com/"));
                     Dashboards.Add(new Dashboard("uwu", "UWU", $"https://www.dictionary.com/e/slang/uwu"));

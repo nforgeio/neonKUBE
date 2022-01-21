@@ -3364,7 +3364,25 @@ $@"- name: StorageType
                         $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
                     };
                     var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
-                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
+
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
+
+                                    return true;
+                                }
+                                catch
+                                {
+                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-deployment", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromMinutes(10),
+                            pollInterval: TimeSpan.FromSeconds(15));
                 });
         }
 
@@ -4087,13 +4105,35 @@ $@"- name: StorageType
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                var configMap                    = await k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
-                configMap.Data["CLUSTER_DOMAIN"] = cluster.Definition.Domain;
+                await master.InvokeIdempotentAsync("setup/neon-dashboard-config",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon-dashboard config");
 
-                await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+                        var configMap = await k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
+                        configMap.Data["CLUSTER_DOMAIN"] = cluster.Definition.Domain;
+
+                        await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+                    });
+
+                await master.InvokeIdempotentAsync("setup/neon-dashboard-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon dashboard ingress");
+
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "neon-dashboard");
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
+                    });
             }
             
-            await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");

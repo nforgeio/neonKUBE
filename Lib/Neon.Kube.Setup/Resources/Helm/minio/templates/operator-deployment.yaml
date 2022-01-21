@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: "minio-operator"
   namespace: {{ .Release.Namespace }}
+  annotations:
+    reloader.stakater.com/auto: "true"
   labels:
     {{- include "minio-operator.labels" . | nindent 4 }}
 spec:
