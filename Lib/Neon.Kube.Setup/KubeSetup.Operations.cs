@@ -4105,13 +4105,35 @@ $@"- name: StorageType
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-                var configMap                    = await k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
-                configMap.Data["CLUSTER_DOMAIN"] = cluster.Definition.Domain;
+                await master.InvokeIdempotentAsync("setup/neon-dashboard-config",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon-dashboard config");
 
-                await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+                        var configMap = await k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespaces.NeonSystem);
+                        configMap.Data["CLUSTER_DOMAIN"] = cluster.Definition.Domain;
+
+                        await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+                    });
+
+                await master.InvokeIdempotentAsync("setup/neon-dashboard-ingress",
+                    async () =>
+                    {
+                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon dashboard ingress");
+
+                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "neon-dashboard");
+
+                        virtualService.Spec.Hosts =
+                            new List<string>()
+                            {
+                                $"{cluster.Definition.Domain}"
+                            };
+
+                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
+                    });
             }
             
-            await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
