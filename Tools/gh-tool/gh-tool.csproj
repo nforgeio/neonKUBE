@@ -32,4 +32,8 @@
     <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
 </Project>

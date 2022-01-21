@@ -33,6 +33,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+	<PublishSingleFile>false</PublishSingleFile>
+	<SelfContained>false</SelfContained>
+	<PublishTrimmed>false</PublishTrimmed>
+	  <TrimMode>copyused</TrimMode>	  
+	<PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
@@ -41,6 +46,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants />
+	<PublishSingleFile>false</PublishSingleFile>
+	<SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+	  <TrimMode>copyused</TrimMode>	  
+	<PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -92,8 +102,13 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
 	
   <Target Name="PubCore" AfterTargets="AfterBuild">
+	<Message Importance="high" Text="Publish: $(ProjectPath)"/>
     <Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
   </Target>
 

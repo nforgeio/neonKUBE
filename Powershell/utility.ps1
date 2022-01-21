@@ -190,7 +190,7 @@ function EscapeDoubleQuotes
 }
 
 #------------------------------------------------------------------------------
-# Executes a program throwing an exception for non-zero exit codes by default.
+# Executes a program, throwing an exception for non-zero exit codes by default.
 #
 # ARGUMENTS:
 #
