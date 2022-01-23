@@ -260,7 +260,7 @@ namespace Neon.Kube
         public static string KubeStateMetrics = "kube-state-metrics";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Kaili</b> service.
+        /// Identifies the neonKUBE cluster's <b>Kiali</b> service.
         /// </summary>
         public static string Kiali = "kiali";
 

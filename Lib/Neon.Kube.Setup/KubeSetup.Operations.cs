@@ -2068,7 +2068,7 @@ subjects:
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "kaili");
+                    controller.LogProgress(master, verb: "setup", message: "kiali");
 
                     var values = new Dictionary<string, object>();
 
@@ -2099,7 +2099,7 @@ subjects:
             await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "kaili");
+                    controller.LogProgress(master, verb: "wait for", message: "kiali");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()

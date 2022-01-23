@@ -1006,7 +1006,7 @@ namespace Neon.Kube
 
                 // $note(jefflill): 
                 //
-                // We need to use the standard image cache folder, even while in automation mode
+                // We need to use the standard image cache folder even while in automation mode,
                 // to avoid re-downloading image files:
                 //
                 //      https://github.com/nforgeio/neonCLOUD/issues/246
