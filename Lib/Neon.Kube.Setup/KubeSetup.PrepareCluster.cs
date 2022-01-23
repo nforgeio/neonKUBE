@@ -541,6 +541,7 @@ namespace Neon.Kube
                         else
                         {
                             var hostAddress = await Dns.GetHostAddressesAsync(clusterIp.Split(':')[0]);
+
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={hostAddress.First()}");
                         }
                         clusterLogin.Save();

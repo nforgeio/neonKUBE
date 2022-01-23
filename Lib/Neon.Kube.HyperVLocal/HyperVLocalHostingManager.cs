@@ -269,7 +269,7 @@ namespace Neon.Kube
             }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
-            controller.AddNodeStep("provision VMs", (controller, node) => ProvisionVM(node));
+            controller.AddNodeStep("provision virtual machines", (controller, node) => ProvisionVM(node));
         }
 
         /// <inheritdoc/>
@@ -464,6 +464,7 @@ namespace Neon.Kube
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
+                var conflictCount    = 0;
 
                 controller.SetGlobalStepStatus("stop: virtual machines");
 
@@ -486,9 +487,13 @@ namespace Neon.Kube
                     }
                 }
 
-                if (!string.IsNullOrEmpty(conflicts))
+                if (conflictCount == 1)
                 {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exists.");
+                    throw new HyperVException($"[{conflicts}] virtual machine already exists.");
+                }
+                else if (conflictCount > 1)
+                {
+                    throw new HyperVException($"[{conflicts}] virtual machines already exist.");
                 }
 
                 controller.SetGlobalStepStatus();
