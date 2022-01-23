@@ -134,6 +134,7 @@ NEON KUBECTL COMMANDS:
 
 NEON CLUSTER MANAGEMENT COMMANDS:
 
+    neon cluster check
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster remove
     neon cluster setup      [CLUSTER-DEF]

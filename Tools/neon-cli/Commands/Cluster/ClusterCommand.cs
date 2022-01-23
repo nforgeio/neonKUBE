@@ -44,8 +44,9 @@ Performs basic cluster provisioning and management.
 
 USAGE:
 
+    neon cluster check      - Performs checks on the current cluster
     neon cluster prepare    - Prepares cluster infrastructure
-    neon cluster setup      - Creates a cluster
+    neon cluster setup      - Creates a cluster on prepared infrastructure
     neon cluster verify     - Verifies a cluster definition
 ";
 

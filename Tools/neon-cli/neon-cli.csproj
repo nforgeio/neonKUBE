@@ -108,7 +108,7 @@
   </ItemGroup>
 	
   <Target Name="PubCore" AfterTargets="AfterBuild">
-	<Message Importance="high" Text="Publish: $(ProjectPath)"/>
+	<Message Importance="high" Text="Publish: $(ProjectPath)" />
     <Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
   </Target>
 
