@@ -1004,7 +1004,14 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(NeonKubeUserFolder, "node-images");
+                // $note(jefflill): 
+                //
+                // We need to use the standard image cache folder, even while in automation mode
+                // to avoid re-downloading image files:
+                //
+                //      https://github.com/nforgeio/neonCLOUD/issues/246
+
+                var path = Path.Combine(StandardNeonKubeFolder, "node-images");
 
                 Directory.CreateDirectory(path);
 
