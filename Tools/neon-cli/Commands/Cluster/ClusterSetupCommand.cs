@@ -101,9 +101,6 @@ OPTIONS:
                           while not disrupting the built-in neonDESKTOP or
                           other normal clusters.
 ";
-        private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
-        private const string        logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
         private KubeConfigContext   kubeContext;
         private ClusterLogin        clusterLogin;
