@@ -202,10 +202,11 @@ namespace NeonCli
                 priorityToName[priorityClass.Value] = priorityClass.Metadata.Name;
             }
 
-            // Build a dictionary that maps container image names to the minimum pod priority
-            // the image is deployed with.
+            // Build a dictionary that maps the owner of a pod to the pod priority.
+            // The owner string indicates whether the pod owned by a daemonset, stateful set,
+            // deployment, is a standalone pod, or is something else along with the owner's name.
 
-            var imageToPriority = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
+            var ownerToPriority = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
             {
@@ -213,43 +214,45 @@ namespace NeonCli
                 {
                     foreach (var container in pod.Spec.Containers)
                     {
-                        var image = container.Image;
+                        var ownerId = await GetOwnerIdAsync(k8s, pod);
 
                         // $note(jefflill):
                         //
-                        // It's possible, but unlikely that we could have multiple pod deployments with different
-                        // priority class values.  We'll use the minimum priority in these cases.
+                        // It's possible, but very unlikely that we could have multiple pod deployments with
+                        // different priority class values.  We'll use the minimum priority in these cases.
 
-                        if (imageToPriority.TryGetValue(image, out var priority))
+                        if (ownerToPriority.TryGetValue(ownerId, out var priority))
                         {
                             var existingPriority = pod.Spec.Priority ?? 0;
 
-                            imageToPriority[image] = Math.Min(priority, existingPriority);
+                            ownerToPriority[ownerId] = Math.Min(priority, existingPriority);
                         }
                         else
                         {
-                            imageToPriority[image] = priority;
+                            ownerToPriority[ownerId] = priority;
                         }
                     }
                 }
             }
 
-            var badPodCount = imageToPriority.Values.Count(priority => priority == 0);
+            var badPodDeploymentCount = ownerToPriority.Values.Count(priority => priority == 0);
 
-            if (badPodCount > 0 || displayAlways)
+            if (badPodDeploymentCount > 0 || displayAlways)
             {
-                if (badPodCount > 0)
+                if (badPodDeploymentCount > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"ERROR: [{badPodCount}] images are deployed for pods with [Priority=0]:");
+                    Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority=0]:");
                     Console.WriteLine();
                 }
 
-                var imageNameWidth = imageToPriority.Keys.Max(imageName => imageName.Length);
+                var ownerIdWidth = ownerToPriority.Keys.Max(imageName => imageName.Length);
 
-                foreach (var item in imageToPriority.OrderByDescending(item => item.Value))
+                foreach (var item in ownerToPriority
+                    .OrderByDescending(item => item.Value)
+                    .ThenBy(item => item.Key))
                 {
-                    var imageFormatted = item.Key + new string(' ', imageNameWidth - item.Key.Length);
+                    var ownerFormatted = item.Key + new string(' ', ownerIdWidth - item.Key.Length);
                     var priorityString = item.Value.ToString("#,##0").Trim();
 
                     if (priorityToName.TryGetValue(item.Value, out var priorityFormatted))
@@ -261,11 +264,71 @@ namespace NeonCli
                         priorityFormatted = $"[NONE] ({priorityString})";
                     }
 
-                    Console.WriteLine($"{imageFormatted}    {priorityFormatted}");
+                    Console.WriteLine($"{ownerFormatted}    {priorityFormatted}");
                 }
             }
 
-            return badPodCount > 0;
+            return badPodDeploymentCount > 0;
+        }
+
+        /// <summary>
+        /// Returns the owner identification for a pod.
+        /// </summary>
+        /// <param name="k8s">The Kubernetes client.</param>
+        /// <param name="pod">The pod.</param>
+        /// <returns>The owner ID./returns>
+        private static async Task<string> GetOwnerIdAsync(IKubernetes k8s, V1Pod pod)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(pod != null, nameof(pod));
+
+            // We're going to favor standard top-level owners, when present.
+
+            string ownerName = null;
+            string ownerKind = null;
+
+            foreach (var owner in pod.OwnerReferences())
+            {
+                switch (owner.Kind)
+                {
+                    case "DaemonSet":
+                    case "Deployment":
+                    case "StatefulSet":
+
+                        ownerName = owner.Name;
+                        ownerKind = owner.Kind;
+                        break;
+
+                    case "ReplicaSet":
+
+                        // Use the replica set's owner when present.
+
+                        var replicaSet      = await k8s.ReadNamespacedReplicaSetAsync(owner.Name, pod.Namespace());
+                        var replicaSetOwner = replicaSet.OwnerReferences().FirstOrDefault();
+
+                        if (replicaSetOwner != null)
+                        {
+                            ownerName = replicaSetOwner.Name;
+                            ownerKind = replicaSetOwner.Kind;
+                        }
+                        else
+                        {
+                            ownerName = owner.Name;
+                            ownerKind = owner.Kind;
+                        }
+
+                        break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(ownerName))
+            {
+                return $"{ownerName} ({ownerKind})";
+            }
+
+            // Default to using the pod name or kind for standalone pods.
+
+            return $"{pod.Name} ({pod.Kind})";
         }
 
         /// <summary>
