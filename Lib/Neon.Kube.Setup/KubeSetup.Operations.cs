@@ -332,14 +332,8 @@ spec:
 
             await InstallClusterOperatorAsync(controller, master);
             await InstallNeonDashboardAsync(controller, master);
-
-            // $todo(jefflill):
-            //
-            // [neon-node-agent] is not starting for [marcusbooyah].  Commenting
-            // this out for the moment, while we're working on a demo.
-
-            //await InstallNodeAgentAsync(controller, master);
-            //await InstallContainerRegistryResources(controller, master);
+            await InstallNodeAgentAsync(controller, master);
+            await InstallContainerRegistryResources(controller, master);
         }
 
         /// <summary>
