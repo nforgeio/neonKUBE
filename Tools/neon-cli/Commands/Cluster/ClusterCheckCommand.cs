@@ -76,13 +76,13 @@ OPTIONS:
                           cluster are included in the cluster manifest
 
     --local-images      - Verifies that all images referenced by running pods
-                          are being pulled by from the local Harbor registry
+                          are being pulled from the local Harbor registry
 
     --priority-class    - Verifies that all running pod templates specify a
                           non-zero PriorityClass.
 
     --list              - Lists information for some of the checks even when
-                          there were no errors.
+                          there are no errors.
 
 REMARKS:
 
