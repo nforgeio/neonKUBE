@@ -334,9 +334,13 @@ namespace NeonCli
                 {
                     foreach (var image in images)
                     {
-                        var status = image.StartsWith(localRegistryPrefix) ? "          " : "ERROR --> ";
+                        var badImage = !image.StartsWith(localRegistryPrefix);
+                        var status   = badImage ? "ERROR --> " :"          ";
 
-                        writer.WriteLine($"{status}{image}");
+                        if (badImage || displayAlways)
+                        {
+                            writer.WriteLine($"{status}{image}");
+                        }
                     }
                 }
             }
