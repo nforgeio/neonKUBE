@@ -137,16 +137,16 @@ namespace NeonCli
 
             if (badImages.Count > 0)
             {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"WARNING!");
-                Console.Error.WriteLine($"========");
-                Console.Error.WriteLine($"[{badImages.Count}] container images are present in cluster without being included");
-                Console.Error.WriteLine($"in the cluster manifest.  These images need to be added to the node image.");
-                Console.Error.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine($"WARNING!");
+                Console.WriteLine($"========");
+                Console.WriteLine($"[{badImages.Count}] container images are present in cluster without being included");
+                Console.WriteLine($"in the cluster manifest.  These images need to be added to the node image.");
+                Console.WriteLine();
 
                 foreach (var badImage in badImages)
                 {
-                    Console.Error.WriteLine(badImage);
+                    Console.WriteLine(badImage);
                 }
             }
 
@@ -238,15 +238,11 @@ namespace NeonCli
 
             if (badPodCount > 0 || displayAlways)
             {
-                var writer = Console.Out;
-
                 if (badPodCount > 0)
                 {
-                    writer = Console.Error;
-
-                    writer.WriteLine();
-                    writer.WriteLine($"ERROR: [{badPodCount}] images are deployed for pods with [Priority=0]:");
-                    writer.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine($"ERROR: [{badPodCount}] images are deployed for pods with [Priority=0]:");
+                    Console.WriteLine();
                 }
 
                 var imageNameWidth = imageToPriority.Keys.Max(imageName => imageName.Length);
@@ -254,17 +250,18 @@ namespace NeonCli
                 foreach (var item in imageToPriority.OrderByDescending(item => item.Value))
                 {
                     var imageFormatted = item.Key + new string(' ', imageNameWidth - item.Key.Length);
+                    var priorityString = item.Value.ToString("#,##0").Trim();
 
                     if (priorityToName.TryGetValue(item.Value, out var priorityFormatted))
                     {
-                        priorityFormatted = $"{priorityFormatted} ({item.Value: #,##0})";
+                        priorityFormatted = $"{priorityFormatted} ({priorityString})";
                     }
                     else
                     {
-                        priorityFormatted = $"[unknown] ({item.Value: #,##0})";
+                        priorityFormatted = $"[NONE] ({priorityString})";
                     }
 
-                    writer.WriteLine($"{imageFormatted}    {priorityFormatted}");
+                    Console.WriteLine($"{imageFormatted}    {priorityFormatted}");
                 }
             }
 
@@ -319,15 +316,11 @@ namespace NeonCli
 
             if (badImageCount > 0 || displayAlways)
             {
-                var writer = Console.Out;
-
                 if (badImageCount > 0)
                 {
-                    writer = Console.Error;
-
-                    writer.WriteLine();
-                    writer.WriteLine($"ERROR: [{badImageCount}] images are being pulled from external registries:");
-                    writer.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine($"ERROR: [{badImageCount}] images are being pulled from external registries:");
+                    Console.WriteLine();
                 }
 
                 if (badImageCount > 0 || displayAlways)
@@ -339,7 +332,7 @@ namespace NeonCli
 
                         if (badImage || displayAlways)
                         {
-                            writer.WriteLine($"{status}{image}");
+                            Console.WriteLine($"{status}{image}");
                         }
                     }
                 }
