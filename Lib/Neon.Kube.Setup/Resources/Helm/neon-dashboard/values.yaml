@@ -5,10 +5,11 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/neonkube-dev/neon-dashboard
-  pullPolicy: Always
+  organization: neon-registry.node.local
+  repository: neon-dashboard
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "neonkube-0.3.0-alpha"
 
 imagePullSecrets: []
 nameOverride: ""
