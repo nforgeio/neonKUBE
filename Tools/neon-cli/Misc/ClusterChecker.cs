@@ -346,6 +346,20 @@ namespace NeonCli
                         ownerKind = owner.Kind;
                         break;
 
+                    case "Node":
+
+                        // We'll see this for static pods.  [owner.Name] is the node name which isn't terribly useful,
+                        // so we'll used the pod name instead, removing the node name part, which will look something
+                        // like:
+                        //
+                        //      kube-scheduler-master-0
+
+                        var nodeNamePos = pod.Metadata.Name.IndexOf(owner.Name) - 1;
+
+                        ownerName = pod.Metadata.Name.Substring(0, nodeNamePos);
+                        ownerKind = owner.Kind;
+                        break;
+
                     case "ReplicaSet":
 
                         // Use the replica set's owner when present.
