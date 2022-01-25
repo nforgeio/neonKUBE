@@ -186,7 +186,12 @@ try
         # We see somewhat random build problems when Visual Studio has the solution open,
         # so have the user close Visual Studio instances first.
 
-        Ensure-VisualStudioNotRunning
+        # $todo(jefflill): 
+        #
+        # I'm not sure if we still need this.  I believe we were running into trouble
+        # building the neonKUBE CodeDoc using SHFB, which we're no longer using.
+
+        # Ensure-VisualStudioNotRunning
 
         # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
         # to be really sure we're doing a clean build.  I've run into 
