@@ -98,6 +98,16 @@ namespace NeonCli
                 error = true;
             }
 
+            if (await CheckPodLocalImagesAsync(k8s))
+            {
+                error = true;
+            }
+
+            if (await CheckPodPrioritiesAsync(k8s))
+            {
+                error = true;
+            }
+
             return error;
         }
 
