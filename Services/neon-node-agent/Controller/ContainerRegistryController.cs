@@ -85,20 +85,20 @@ namespace NeonNodeAgent
 
         // Metrics counters
 
-        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter("containerregistry_reconciled_received", "Received ContainerRegistry reconcile events.");
-        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter("containerregistry_deleted_received", "Received ContainerRegistry deleted events.");
-        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter("containerregistry_statusmodified_received", "Received ContainerRegistry status-modified events.");
+        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_received", "Received ContainerRegistry reconcile events.");
+        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_received", "Received ContainerRegistry deleted events.");
+        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_received", "Received ContainerRegistry status-modified events.");
 
-        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter("containerregistry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
-        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter("containerregistry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
-        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter("containerregistry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
+        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change.");
+        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_changes", "Processed ContainerRegistry deleted events due to change.");
+        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_changes", "Processed ContainerRegistry status-modified events due to change.");
 
-        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter("containerregistry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
-        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter("containerregistry_deleted_error", "Failed ContainerRegistry deleted event processing.");
-        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter("containerregistry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
+        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_error", "Failed ContainerRegistry reconcile event processing.");
+        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_error", "Failed ContainerRegistry deleted event processing.");
+        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_error", "Failed ContainerRegistry status-modified events processing.");
 
-        private static readonly Counter configUpdateCounter            = Metrics.CreateCounter("containerregistry_node_updated", "Number of node config updates.");
-        private static readonly Counter loginErrorCounter              = Metrics.CreateCounter("containerregistry_login_error", "Number of failed container registry logins.");
+        private static readonly Counter configUpdateCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
 
         //---------------------------------------------------------------------
         // Instance members

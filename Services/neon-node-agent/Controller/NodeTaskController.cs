@@ -60,17 +60,17 @@ namespace NeonNodeAgent
 
         // Metrics counters
 
-        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter("nodetask_reconciled_received", "Received NodeTask reconcile events.");
-        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter("nodetask_deleted_received", "Received NodeTask deleted events.");
-        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter("nodetask_statusmodified_received", "Received NodeTask status-modified events.");
+        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_received", "Received NodeTask reconcile events.");
+        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_received", "Received NodeTask deleted events.");
+        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_received", "Received NodeTask status-modified events.");
 
-        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter("nodetask_reconciled_changes", "Processed NodeTask reconcile events due to change.");
-        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter("nodetask_deleted_changes", "Processed NodeTask deleted events due to change.");
-        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter("nodetask_statusmodified_changes", "Processed NodeTask status-modified events due to change.");
+        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_changes", "Processed NodeTask reconcile events due to change.");
+        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_changes", "Processed NodeTask deleted events due to change.");
+        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_changes", "Processed NodeTask status-modified events due to change.");
 
-        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter("nodetask_reconciled_error", "Failed NodeTask reconcile event processing.");
-        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter("nodetask_deleted_error", "Failed NodeTask deleted event processing.");
-        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter("nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.");
+        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing.");
+        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing.");
+        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.");
 
         //---------------------------------------------------------------------
         // Instance members

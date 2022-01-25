@@ -31,49 +31,14 @@ namespace Neon.Kube
     public static class KubeNodePorts
     {
         /// <summary>
-        /// The port exposed by the Kubernetes API servers on the master nodes.
-        /// </summary>
-        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
-
-        /// <summary>
-        /// The first port reserved by Kubernetes for exposing service node ports.
+        /// The first port reserved by Kubernetes for exposing node ports.
         /// </summary>
         public const int KubeFirstNodePort = 30000;
 
         /// <summary>
-        /// The last port reserved by Kubernetes for exposing service node ports.
+        /// The last port reserved by Kubernetes for exposing node ports.
         /// </summary>
         public const int KubeLastNodePort = 32767;
-
-        /// <summary>
-        /// The node port exposed by the Kubernetes dashboard service.
-        /// </summary>
-        public const int KubeDashboard = KubeFirstNodePort;
-
-        /// <summary>
-        /// The node port exposed by the Grafana dashboard service.
-        /// </summary>
-        public const int GrafanaDashboard = 30001;
-
-        /// <summary>
-        /// The node port exposed by the Harbor dashboard service.
-        /// </summary>
-        public const int HarborDashboard = 30002;
-
-        /// <summary>
-        /// The node port exposed by the Harbor dashboard service.
-        /// </summary>
-        public const int KialiDashboard = 30005;
-
-        /// <summary>
-        /// The node port exposed by the Minio dashboard service.
-        /// </summary>
-        public const int MinioDashboard = 30006;
-
-        /// <summary>
-        /// The node port exposed by the Prometheus dashboard service.
-        /// </summary>
-        public const int PrometheusDashboard = 30007;
 
         /// <summary>
         /// The node port exposed by the Istio Ingress HTTP service.
@@ -84,5 +49,10 @@ namespace Neon.Kube
         /// The node port exposed by the Istio Ingress HTTPS service.
         /// </summary>
         public const int IstioIngressHttps = 30443;
+
+        /// <summary>
+        /// The port exposed by the Kubernetes API servers on the master nodes.
+        /// </summary>
+        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
     }
 }

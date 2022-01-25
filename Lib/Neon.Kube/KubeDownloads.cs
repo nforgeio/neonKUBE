@@ -104,8 +104,7 @@ namespace Neon.Kube
                 throw new NotSupportedException($"Only one of [{nameof(readyToGo)}] or [{nameof(setupDebugMode)}] may be passed as TRUE.");
             }
 
-            var imageType     = setupDebugMode ? "base" : "node";
-            var readyToGoPart = readyToGo ? "-readytogo" : string.Empty;
+            var imageType = setupDebugMode ? "base" : "node";
 
             switch (hostingEnvironment)
             {
@@ -133,7 +132,14 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+                        if (readyToGo)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/hyperv/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+                        }
                     }
 
                 case HostingEnvironment.XenServer:
@@ -144,7 +150,14 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
+                        if (readyToGo)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/xenserver/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
+                        }
                     }
 
                 case HostingEnvironment.Wsl2:
@@ -155,7 +168,14 @@ namespace Neon.Kube
                     }
                     else
                     {
-                       return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube{readyToGoPart}-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
+                        if (readyToGo)
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/wsl2/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
+                        }
+                        else
+                        {
+                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
+                        }
                     }
 
                 default:

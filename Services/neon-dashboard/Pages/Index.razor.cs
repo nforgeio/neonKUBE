@@ -65,7 +65,7 @@ namespace NeonDashboard.Pages
 
             if (!string.IsNullOrEmpty(CurrentDashboard))
             {
-                Service.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
+                Program.Service.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
             }
 
             AppState.NotifyDashboardChanged();

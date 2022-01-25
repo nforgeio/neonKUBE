@@ -167,9 +167,9 @@ namespace Neon.Kube
             var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder)
             {
                 MaxParallel     = maxParallel,
-                LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################",
-                LogEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################",
-                LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################"
+                LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE #######################################################",
+                LogEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS #################################################",
+                LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED ##################################################"
             };
 
             // Load the cluster login information if it exists and when it indicates that
@@ -541,6 +541,7 @@ namespace Neon.Kube
                         else
                         {
                             var hostAddress = await Dns.GetHostAddressesAsync(clusterIp.Split(':')[0]);
+
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={hostAddress.First()}");
                         }
                         clusterLogin.Save();

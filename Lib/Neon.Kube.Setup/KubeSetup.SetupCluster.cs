@@ -227,9 +227,9 @@ namespace Neon.Kube
             var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder)
             {
                 MaxParallel     = maxParallel,
-                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################",
-                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################",
-                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################"
+                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
+                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ###################################################",
+                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
             };
 
             // Load the cluster login information if it exists and when it indicates that

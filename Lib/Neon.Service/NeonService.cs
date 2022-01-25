@@ -446,10 +446,8 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly char[]      equalArray      = new char[] { '=' };
-        private static readonly Gauge       infoGauge       = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
-        private static readonly Counter     runtimeCount    = Metrics.CreateCounter("runtime", "Service runtime in seconds.");
-        private static readonly Counter     unhealthyCount  = Metrics.CreateCounter("unhealth_transitions", "Service [unhealthy] transitions.");
+        private static readonly char[]      equalArray = new char[] { '=' };
+        private static readonly Gauge       infoGauge  = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
 
         // WARNING:
         //
@@ -564,8 +562,10 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly object                 syncLock   = new object();
-        private readonly AsyncMutex             asyncMutex = new AsyncMutex();
+        private readonly object                 syncLock       = new object();
+        private readonly AsyncMutex             asyncMutex     = new AsyncMutex();
+        private readonly Counter                runtimeCount;
+        private readonly Counter                unhealthyCount;
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
@@ -581,6 +581,7 @@ namespace Neon.Service
         private IDisposable                     metricCollector;
         private string                          terminationMessagePath;
 
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -593,6 +594,12 @@ namespace Neon.Service
         /// Optionally specifies a filter predicate to be used for filtering log entries.  This examines
         /// the <see cref="LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
         /// when it is to be ignored.  All events will be logged when this is <c>null</c>.
+        /// </param>
+        /// <param name="metricsPrefix">
+        /// Optionally specifies prefix to be used by metrics counters, overridding a prefix based on the
+        /// service name.  This prefix may include only alphanumeric characters and underscores.  By default,
+        /// this will be set to the service name with any non-alphanumeric characters converted to underscores.
+        /// In either case, the class will add a trailing underscore when not already present.
         /// </param>
         /// <param name="healthFolder">
         /// <para>
@@ -645,6 +652,7 @@ namespace Neon.Service
             string                  name, 
             string                  version                 = null,
             Func<LogEvent, bool>    logFilter               = null,
+            string                  metricsPrefix           = null,
             string                  healthFolder            = null,
             ServiceMap              serviceMap              = null,
             string                  terminationMessagePath  = null,
@@ -683,6 +691,36 @@ namespace Neon.Service
             this.healthFolder           = healthFolder ?? "/";
             this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
 
+            // Initialize the metrics prefix and counters.
+
+            var normalizedPrefix = string.Empty;
+
+            if (string.IsNullOrEmpty(metricsPrefix))
+            {
+                metricsPrefix = this.Name;
+            }
+
+            foreach (var ch in metricsPrefix)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '_')
+                {
+                    normalizedPrefix += ch;
+                }
+                else
+                {
+                    normalizedPrefix += '_';
+                }
+            }
+
+            while (normalizedPrefix.Contains("__"))
+            {
+                normalizedPrefix = normalizedPrefix.Replace("__", "_");
+            }
+
+            this.MetricsPrefix  = normalizedPrefix;
+            this.runtimeCount   = Metrics.CreateCounter($"{MetricsPrefix}runtime", "Service runtime in seconds.");
+            this.unhealthyCount = Metrics.CreateCounter($"{MetricsPrefix}unhealthy_transitions", "Service [unhealthy] transitions.");
+
             // Set a default logger so logging calls in the service constructor won't 
             // fail with a [NullReferenceException].  Note that we don't recommend
             // logging from withing the constructor.
@@ -693,7 +731,7 @@ namespace Neon.Service
 
             Log = LogManager.GetLogger();
 
-            Environment.SetLogger(Log);     // $hack(jefflill): set the new logger
+            Environment.SetLogger(Log);
 
             // Update the Prometheus metrics port from the service description if present.
 
@@ -793,6 +831,18 @@ namespace Neon.Service
         /// Returns the service version or <b>"unknown"</b>.
         /// </summary>
         public string Version { get; private set; }
+
+        /// <summary>
+        /// <para>
+        /// Returns the prefix to be used when creating metrics counters for this service.
+        /// This will be set to the prefix passed to the constructor or one derived from
+        /// the service name.
+        /// </para>
+        /// <note>
+        /// The prefix returned includes a trailing underscore.
+        /// </note>
+        /// </summary>
+        public string MetricsPrefix { get; private set; }
 
         /// <summary>
         /// Provides support for retrieving environment variables as well as

@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.10";
+        public const string Version = "2.0";
 
         /// <summary>
         /// Program entrypoint.
@@ -49,20 +49,59 @@ namespace pubcore
         {
             try
             {
-                if (args.Length != 6 && args.Length != 7)
+                Console.WriteLine();
+                Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
+
+                var sbCommandLine = new StringBuilder("pubcore");
+
+                foreach (var arg in args)
+                {
+                    sbCommandLine.Append(' ');
+
+                    if (arg.Contains(' '))
+                    {
+                        sbCommandLine.Append($"\"{arg}\"");
+                    }
+                    else
+                    {
+                        sbCommandLine.Append(arg);
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine(sbCommandLine.ToString());
+                Console.WriteLine();
+
+                // Parse the command line options and then remove any options
+                // from the arguments.
+
+                var noCmd = args.Any(arg => arg == "--no-cmd");
+
+                args = args.Where(arg => !arg.StartsWith("--")).ToArray();
+
+                // Verify the number of non-option arguments.
+
+                if (args.Length != 6)
                 {
                     Console.WriteLine(
 $@"
-.NET Core Publishing Utility: PUBCORE v{Version}
+NEON PUBCORE v{Version}
 
-usage: pubcore [--no-cmd] PROJECT-PATH TARGET-NAME CONFIG OUTPUT-PATH PUBLISH-DIR RUNTIME
+usage: pubcore [OPTIONS] PROJECT-PATH TARGET-NAME CONFIG OUTPUT-PATH PUBLISH-DIR
+
+ARGUMENTS:
 
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
     CONFIG          - Build configuration (like: Debug or Release)
     OUTDIR-PATH     - Project relative path to the output directory
-    PUBLISH-DIR     - Path to the publication folder
-    RUNTIME         - Target dotnet runtime, like: win10-x64
+    PUBLISH-DIR     - Path to the publication output folder
+    RUNTIME         - Target dotnet runtime, like: win10-x64,
+
+OPTIONS:
+
+    --no-cmd        - Do not generate a [PROJECT-NAME.cmd] file in PUBLISH-DIR
+                      that executes the published program.
 
 REMARKS:
 
@@ -104,41 +143,6 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 }
 
                 Environment.SetEnvironmentVariable(recursionVar, "true");
-
-                Console.WriteLine();
-                Console.WriteLine($"===========================================================");
-                Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
-                Console.WriteLine($"===========================================================");
-                Console.WriteLine();
-
-                var sbCommandLine = new StringBuilder("pubcore");
-
-                foreach (var arg in args)
-                {
-                    sbCommandLine.Append(' ');
-
-                    if (arg.Contains(' '))
-                    {
-                        sbCommandLine.Append($"\"{arg}\"");
-                    }
-                    else
-                    {
-                        sbCommandLine.Append(arg);
-                    }
-                }
-
-                Console.WriteLine(sbCommandLine.ToString());
-                Console.WriteLine();
-
-                // Look for the [--no-cmd] option and then remove it from the
-                // arguments when present.
-
-                var noCmd = args.Any(arg => arg == "--no-cmd");
-
-                if (noCmd)
-                {
-                    args = args.Where(arg => arg != "--no-cmd").ToArray();
-                }
 
                 // Parse the arguments.
 
@@ -266,7 +270,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                     }
                 }
 
-                // Copy build binaries to the output folder.  This also seems to
+                // Copy published binaries to the output folder.  This also seems to
                 // experience transient errors, so we'll retry here with delays.
 
                 for (int i = 1; i <= tryCount; i++)
@@ -309,8 +313,6 @@ $@"@echo off
                             Directory.Delete(binFolder, recursive: true);
                         }
 
-                        Directory.CreateDirectory(binFolder);
-
                         CopyRecursive(GetPublishDir(outputDir, runtime), binFolder);
                         break;
                     }
@@ -344,7 +346,7 @@ $@"@echo off
 
                 // Finish up
 
-                Console.WriteLine($"Publish time [{targetName}]: {stopwatch.Elapsed}");
+                Console.WriteLine($"Publish time:   {stopwatch.Elapsed}");
                 Environment.Exit(0);
             }
             catch (Exception e)
@@ -385,6 +387,8 @@ $@"@echo off
         /// <returns>The projects publish directory path.</returns>
         private static string GetPublishDir(string outputDir, string runtime)
         {
+            Console.WriteLine();
+
             // Projects specifying a single runtime identifier like:
             //
             //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
@@ -404,16 +408,19 @@ $@"@echo off
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.
+            //
+            // We also need handle targeting of different versions of .NET.
 
             var probeDir1 = Path.Combine(outputDir, "publish");
 
             if (Directory.Exists(probeDir1))
             {
+                Console.WriteLine($"Publish source: {probeDir1}");
                 return probeDir1;
             }
             else
             {
-                var probeDir2 = Path.Combine(outputDir, "..", runtime, "publish");
+                var probeDir2 = Path.Combine(outputDir, runtime, "publish");
 
                 if (!Directory.Exists(probeDir2))
                 {
@@ -423,6 +430,7 @@ $@"@echo off
                     Environment.Exit(1);
                 }
 
+                Console.WriteLine($"Publish source: {probeDir2}");
                 return probeDir2;
             }
         }

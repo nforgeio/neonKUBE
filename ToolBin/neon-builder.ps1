@@ -259,7 +259,7 @@ try
     {
         # Publish the Windows .NET Core tool binaries to the build folder.
 
-        PublishCore "Tools\neon-cli\neon-cli.csproj"           "neon"
+        PublishCore "Tools\neon-cli\neon-cli.csproj" "neon"
         PublishCore "Tools\neon-modelgen\neon-modelgen.csproj" "neon-modelgen"
      }
 

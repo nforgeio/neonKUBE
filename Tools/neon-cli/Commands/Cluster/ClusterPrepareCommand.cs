@@ -129,9 +129,6 @@ Server Requirements:
     * Known [sysadmin] sudoer user
     * OpenSSH installed
 ";
-        private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
-        private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
-        private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "prepare" };
