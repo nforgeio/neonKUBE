@@ -32,7 +32,7 @@ namespace Neon.Kube
     /// the priority name and value.
     /// </para>
     /// <note>
-    /// Higher priorities have higher values.
+    /// Higher priorities have higher values and non-Kubernetes defined priority values must be less than 1 billion.
     /// </note>
     /// <para>
     /// neonKUBE priority property names are prefixed by <b>"Neon"</b> and built-in Kubernetes priority property 
@@ -59,56 +59,56 @@ namespace Neon.Kube
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonOperator"/> (1000008000)</term>
+    ///     <term><see cref="NeonOperator"/> (900008000)</term>
     ///     <description>
     ///     Used for critical neonKUBE operators.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonNetwork"/> (1000007000)</term>
+    ///     <term><see cref="NeonNetwork"/> (900007000)</term>
     ///     <description>
     ///     Used for neonKUBE database deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonStorage"/> (1000006000)</term>
+    ///     <term><see cref="NeonStorage"/> (900006000)</term>
     ///     <description>
     ///     Used for critical OpenEBS related storage services that back critical
     ///     neonKUBE and user deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonData"/> (1000005000)</term>
+    ///     <term><see cref="NeonData"/> (900005000)</term>
     ///     <description>
     ///     Used for neonKUBE database deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonApi"/> (1000004000)</term>
+    ///     <term><see cref="NeonApi"/> (900004000)</term>
     ///     <description>
     ///     Used for neonKUBE API deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonApp"/> (1000003000)</term>
+    ///     <term><see cref="NeonApp"/> (900003000)</term>
     ///     <description>
     ///     Used for neonKUBE application deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="NeonMonitor"/> (1000002000)</term>
+    ///     <term><see cref="NeonMonitor"/> (900002000)</term>
     ///     <description>
     ///     Used for neonKUBE monitoring components.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserData"/> (100002000)</term>
+    ///     <term><see cref="UserData"/> (1000002000)</term>
     ///     <description>
     ///     Available for user database deployments.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserApi"/> (100001000)</term>
+    ///     <term><see cref="UserApi"/> (1000001000)</term>
     ///     <description>
     ///     Available for user API deployments.
     ///     </description>
@@ -125,8 +125,8 @@ namespace Neon.Kube
     /// can insert additional priorities as required.
     /// </para>
     /// <para>
-    /// We've organized these in tiers so you can deploy data services with priority 
-    /// higher than API services with priority higher than application services, to help 
+    /// We've organized these in tiers so you can deploy data services and those with priority 
+    /// higher than API services with priority higher than application services to help 
     /// ensure that applications will be evicted before API services they depend on with
     /// the API services evicted before the data services the API depends on.
     /// </para>
@@ -156,12 +156,14 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="name">The priority name.</param>
             /// <param name="value">The priority value.</param>
+            /// <param name="description">Optionally specifies the priority description.</param>
             /// <param name="isSystem">Optionally indicates that this is a built-in Kubernetes priority.</param>
-            public PriorityDef(string name, int value, bool isSystem = false)
+            public PriorityDef(string name, int value, string description = null, bool isSystem = false)
             {
-                this.Name     = name;
-                this.Value    = value;
-                this.IsSystem = isSystem;
+                this.Name        = name;
+                this.Value       = value;
+                this.Description = description;
+                this.IsSystem    = isSystem;
             }
 
             /// <summary>
@@ -173,6 +175,11 @@ namespace Neon.Kube
             /// Returns the priority value.
             /// </summary>
             public int Value { get; private set; }
+
+            /// <summary>
+            /// Returns the priority descripton (or <c>null</c>).
+            /// </summary>
+            public string Description { get; private set; }
 
             /// <summary>
             /// Returns <b>true</b> for built-in Kubernetes priorities.
@@ -192,16 +199,16 @@ namespace Neon.Kube
 
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
-            list.Add(NeonOperator          = new PriorityDef("neon-operator",           1000008000));
-            list.Add(NeonNetwork           = new PriorityDef("neon-network",            1000007000));
-            list.Add(NeonStorage           = new PriorityDef("neon-storage",            1000006000));
-            list.Add(NeonData              = new PriorityDef("neon-data",               1000005000));
-            list.Add(NeonApi               = new PriorityDef("neon-api",                1000004000));
-            list.Add(NeonApp               = new PriorityDef("neon-app",                1000003000));
-            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",            1000002000));
-            list.Add(UserData              = new PriorityDef("user-data",                100002000));
-            list.Add(UserApi               = new PriorityDef("user-api",                 100001000));
-            list.Add(UserApp               = new PriorityDef("user-app",                 100000000));
+            list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "critical neonKUBE operators"));
+            list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "critical neonKUBE networking"));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "critical neonKUBE low-level storage"));
+            list.Add(NeonData              = new PriorityDef("neon-data",                900005000, description: "critical neonKUBE databases"));
+            list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "neonKUBE APIs"));
+            list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "neonKUBE applications and dashboards"));
+            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "neonKUBE monitoring infrastructure"));
+            list.Add(UserData              = new PriorityDef("user-data",                100002000, description: "user database tier"));
+            list.Add(UserApi               = new PriorityDef("user-api",                 100001000, description: "user API tier"));
+            list.Add(UserApp               = new PriorityDef("user-app",                 100000000, description: "user application tier"));
             
             Values = list;
         }
@@ -219,12 +226,12 @@ namespace Neon.Kube
         public static PriorityDef SystemClusterCritical { get; private set; }
 
         /// <summary>
-        /// Used for critical neonKUBE operators. <b>(1000008000)</b>
+        /// Used for critical neonKUBE operators. <b>(900008000)</b>
         /// </summary>
         public static PriorityDef NeonOperator { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE database deployments. <b>(1000007000)</b>
+        /// Used for neonKUBE database deployments. <b>(900007000)</b>
         /// </summary>
         public static PriorityDef NeonNetwork { get; private set; }
 
@@ -234,22 +241,22 @@ namespace Neon.Kube
         public static PriorityDef NeonStorage { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE database deployments. <b>(1000005000)</b>
+        /// Used for neonKUBE database deployments. <b>(900005000)</b>
         /// </summary>
         public static PriorityDef NeonData { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE API deployments. <b>(1000004000)</b>
+        /// Used for neonKUBE API deployments. <b>(900004000)</b>
         /// </summary>
         public static PriorityDef NeonApi { get; private set; }
 
         /// <summary>
-        /// Used for neonKUBE application deployments.  <b>(1000003000)</b>
+        /// Used for neonKUBE application deployments.  <b>(900003000)</b>
         /// </summary>
         public static PriorityDef NeonApp { get; private set; }
 
         /// <summary>
-        /// Available for neonKUBE monitoring related components. <b>(1000002000)</b>
+        /// Available for neonKUBE monitoring related components. <b>(900002000)</b>
         /// </summary>
         public static PriorityDef NeonMonitor { get; private set; }
 
@@ -272,6 +279,19 @@ namespace Neon.Kube
         /// Returns the list of all known built-in pod priorities.
         /// </summary>
         public static IReadOnlyList<PriorityDef> Values { get; private set; }
+
+        /// <summary>
+        /// Ensures that a priority class name is a standard neonKUBE priority class.
+        /// </summary>
+        /// <param name="priorityClass">The class name to check or <c>null</c>.</param>
+        /// <exception cref="KeyNotFoundException">Thrown for unknown priority classes.</exception>
+        public static void EnsureKnown(string priorityClass)
+        {
+            if (!string.IsNullOrEmpty(priorityClass) && !Values.Any(priorityDef => priorityDef.Name.Equals(priorityClass, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                throw new KeyNotFoundException($"[{priorityClass}] is not one of the standard neonKUBE priority classes.");
+            }
+        }
 
         /// <summary>
         /// Generates the Kubernetes manifest to be used to initialize the 

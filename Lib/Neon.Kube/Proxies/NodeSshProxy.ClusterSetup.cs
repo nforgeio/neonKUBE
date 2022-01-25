@@ -652,6 +652,16 @@ service kubelet restart
         /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
+        /// <param name="priorityClass">
+        /// <para>
+        /// Optionally specifies the priority class for any pods deployed by the chart.
+        /// When specified, this must map to one of the classes predefined by <see cref="PriorityClass"/>.
+        /// </para>
+        /// <note>
+        /// When specified, this will set the <b>priorityClass</b> value that can be referenced by the
+        /// Helm chart templates.
+        /// </note>
+        /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -666,6 +676,7 @@ service kubelet restart
             string                              chartName,
             string                              releaseName     = null,
             string                              @namespace      = "default",
+            string                              priorityClass   = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null)
         {
@@ -678,6 +689,8 @@ service kubelet restart
             {
                 releaseName = chartName.Replace("_", "-");
             }
+
+            PriorityClass.EnsureKnown(priorityClass);
 
             // Unzip the Helm chart archive if we haven't done so already.
 
@@ -700,6 +713,11 @@ service kubelet restart
                     controller.LogProgress(this, verb: "helm install", message: progressMessage ?? releaseName);
 
                     var valueOverrides = new StringBuilder();
+
+                    if (!string.IsNullOrEmpty(priorityClass))
+                    {
+                        valueOverrides.AppendWithSeparator($"--set priorityClass={priorityClass}");
+                    }
 
                     if (values != null)
                     {

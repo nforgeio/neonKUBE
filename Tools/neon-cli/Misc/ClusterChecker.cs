@@ -55,6 +55,33 @@ namespace NeonCli
     /// </summary>
     internal static class ClusterChecker
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Used to temporarily hold the priority information for a pod.
+        /// </summary>
+        private class PodPriorityInfo
+        {
+            /// <summary>
+            /// Identifies the pod owner.
+            /// </summary>
+            public string Owner;
+
+            /// <summary>
+            /// The priority class value.
+            /// </summary>
+            public int? Priority;
+
+            /// <summary>
+            /// The priority class name.
+            /// </summary>
+            public string PriorityClassName;
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         /// <summary>
         /// Performs development related cluster checks with information on potential
         /// problems being written to STDOUT.
@@ -193,20 +220,24 @@ namespace NeonCli
             // Build a dictionary that maps the priority of all known priority class
             // priority values to the priority class name.  Note that we're assuming
             // here that no single priority value has more than one name (we'll just
-            // choose one of the names in this case).
+            // choose one of the names in this case) and also Build a dictionary that
+            // maps all of the known priority class names to their values.
 
-            var priorityToName = new Dictionary<long, string>();
+            var priorityToName = new Dictionary<int, string>();
+            var nameToPriority = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var priorityClass in (await k8s.ListPriorityClassAsync()).Items)
             {
-                priorityToName[priorityClass.Value] = priorityClass.Metadata.Name;
+                priorityToName[priorityClass.Value]         = priorityClass.Metadata.Name;
+                nameToPriority[priorityClass.Metadata.Name] = priorityClass.Value;
             }
 
-            // Build a dictionary that maps the owner of a pod to the pod priority.
-            // The owner string indicates whether the pod owned by a daemonset, stateful set,
-            // deployment, is a standalone pod, or is something else along with the owner's name.
+            // Build a dictionary that maps the owner of a pod to a [PodPriorityInfo] with the
+            // priority details.  The owner string indicates whether the pod owned by a daemonset,
+            // stateful set, deployment, is a standalone pod, or is something else along with
+            // the owner's name.
 
-            var ownerToPriority = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
+            var ownerToPriorityInfo = new Dictionary<string, PodPriorityInfo>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
             {
@@ -216,26 +247,50 @@ namespace NeonCli
                     {
                         var ownerId = await GetOwnerIdAsync(k8s, pod);
 
-                        // $note(jefflill):
-                        //
-                        // It's possible, but very unlikely that we could have multiple pod deployments with
-                        // different priority class values.  We'll use the minimum priority in these cases.
-
-                        if (ownerToPriority.TryGetValue(ownerId, out var priority))
-                        {
-                            var existingPriority = pod.Spec.Priority ?? 0;
-
-                            ownerToPriority[ownerId] = Math.Min(priority, existingPriority);
-                        }
-                        else
-                        {
-                            ownerToPriority[ownerId] = priority;
-                        }
+                        ownerToPriorityInfo[ownerId] =
+                            new PodPriorityInfo()
+                            {
+                                Owner             = ownerId,
+                                Priority          = pod.Spec.Priority,
+                                PriorityClassName = pod.Spec.PriorityClassName
+                            };
                     }
                 }
             }
 
-            var badPodDeploymentCount = ownerToPriority.Values.Count(priority => priority == 0);
+            // Normalize the priority info for each pod by trying to lookup the priority from
+            // the priority class name or looking up the priority class name from the priority
+            // value.
+
+            foreach (var podPriorityInfo in ownerToPriorityInfo.Values)
+            {
+                if (!podPriorityInfo.Priority.HasValue && !string.IsNullOrEmpty(podPriorityInfo.PriorityClassName))
+                {
+                    if (nameToPriority.TryGetValue(podPriorityInfo.PriorityClassName, out var foundPriority))
+                    {
+                        podPriorityInfo.Priority = foundPriority;
+                    }
+                }
+                else if (podPriorityInfo.Priority.HasValue && string.IsNullOrEmpty(podPriorityInfo.PriorityClassName))
+                {
+                    if (priorityToName.TryGetValue(podPriorityInfo.Priority.Value, out var foundPriorityClass))
+                    {
+                        podPriorityInfo.PriorityClassName = foundPriorityClass;
+                    }
+                }
+
+                if (!podPriorityInfo.Priority.HasValue)
+                {
+                    podPriorityInfo.Priority = 0;
+                }
+
+                if (string.IsNullOrEmpty(podPriorityInfo.PriorityClassName))
+                {
+                    podPriorityInfo.PriorityClassName = "[NONE]";
+                }
+            }
+
+            var badPodDeploymentCount = ownerToPriorityInfo.Values.Count(info => info.Priority == 0);
 
             if (badPodDeploymentCount > 0 || displayAlways)
             {
@@ -246,25 +301,17 @@ namespace NeonCli
                     Console.WriteLine();
                 }
 
-                var ownerIdWidth = ownerToPriority.Keys.Max(imageName => imageName.Length);
+                var ownerIdWidth = ownerToPriorityInfo.Keys.Max(imageName => imageName.Length);
 
-                foreach (var item in ownerToPriority
-                    .OrderByDescending(item => item.Value)
+                foreach (var item in ownerToPriorityInfo
+                    .OrderByDescending(item => item.Value.Priority)
                     .ThenBy(item => item.Key))
                 {
+                    var priorityInfo   = item.Value;
                     var ownerFormatted = item.Key + new string(' ', ownerIdWidth - item.Key.Length);
-                    var priorityString = item.Value.ToString("#,##0").Trim();
+                    var priorityValue  = priorityInfo.Priority.Value.ToString("#,##0").Trim();
 
-                    if (priorityToName.TryGetValue(item.Value, out var priorityFormatted))
-                    {
-                        priorityFormatted = $"{priorityFormatted} ({priorityString})";
-                    }
-                    else
-                    {
-                        priorityFormatted = $"[NONE] ({priorityString})";
-                    }
-
-                    Console.WriteLine($"{ownerFormatted}    {priorityFormatted}");
+                    Console.WriteLine($"{ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
                 }
             }
 
@@ -276,7 +323,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="k8s">The Kubernetes client.</param>
         /// <param name="pod">The pod.</param>
-        /// <returns>The owner ID./returns>
+        /// <returns>The owner ID.</returns>
         private static async Task<string> GetOwnerIdAsync(IKubernetes k8s, V1Pod pod)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));

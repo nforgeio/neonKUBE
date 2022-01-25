@@ -289,6 +289,7 @@ spec:
 
             ConnectCluster(controller);
 
+
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 await ConfigureKubeletAsync(controller, master);
@@ -300,6 +301,7 @@ spec:
             await LabelNodesAsync(controller, master);
             await CreateNamespacesAsync(controller, master);
             await CreateRootUserAsync(controller, master);
+            await ConfigurePriorityClassesAsync(controller, master);
             await InstallCalicoCniAsync(controller, master);
             await InstallMetricsServerAsync(controller, master);
             await InstallIstioAsync(controller, master);
@@ -1323,6 +1325,66 @@ done
                         controller[KubeSetupProperty.K8sClient] = k8sClient;
                     }
                 }));
+        }
+
+        /// <summary>
+        /// Adds the neonKUBE standard priority classes to the cluster.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="master"></param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ConfigurePriorityClassesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = master.Cluster;
+            var k8s     = GetK8sClient(controller);
+
+            master.InvokeIdempotent("setup/priorityclass",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "configure", message: "priority classes");
+
+                    // I couldn't figure out how to specify the priority class name when create them
+                    // via the Kubernetes client, so I'll just use [kubectl] to apply them all at
+                    // once on the master.
+
+                    var sbPriorityClasses = new StringBuilder();
+
+                    foreach (var priorityClassDef in PriorityClass.Values.Where(priorityClass => !priorityClass.IsSystem))
+                    {
+                        if (sbPriorityClasses.Length > 0)
+                        {
+                            sbPriorityClasses.AppendLine("---");
+                        }
+
+                        var definition =
+$@"apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {priorityClassDef.Name}
+value: {priorityClassDef.Value}
+description: ""{priorityClassDef.Description}""
+globalDefault: false
+";
+                        sbPriorityClasses.Append(definition);
+                    }
+
+                    var script =
+@"
+set -euo pipefail
+
+kubectl apply -f priorityclasses.yaml
+";
+                    var bundle = CommandBundle.FromScript(script);
+
+                    bundle.AddFile("priorityclasses.yaml", sbPriorityClasses.ToString());
+
+                    master.SudoCommand(bundle, RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>

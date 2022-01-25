@@ -89,9 +89,6 @@ REMARKS:
 This command returns a non-zero exit code when one or more checks fail.
 ";
 
-        private KubeConfigContext   k8s;
-        private ClusterLogin        clusterLogin;
-
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "check" };
 
@@ -115,22 +112,22 @@ This command returns a non-zero exit code when one or more checks fail.
 
             // Handle the command line options.
 
-            var all = commandLine.HasOption("--all");
+            var all             = commandLine.HasOption("--all");
             var containerImages = commandLine.HasOption("--container-images");
-            var localImages = commandLine.HasOption("--local-images");
-            var priorityClass = commandLine.HasOption("--priority-class");
-            var list = commandLine.HasOption("--list");
+            var localImages     = commandLine.HasOption("--local-images");
+            var priorityClass   = commandLine.HasOption("--priority-class");
+            var list            = commandLine.HasOption("--list");
 
             if (all || (!containerImages && !priorityClass && !localImages))
             {
                 containerImages = true;
-                localImages = true;
-                priorityClass = true;
+                localImages     = true;
+                priorityClass   = true;
             }
 
             // Perform the requested checks.
 
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+            var k8s    = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
             var error = false;
 
             if (containerImages && !await ClusterChecker.CheckContainerImagesAsync(k8s))
