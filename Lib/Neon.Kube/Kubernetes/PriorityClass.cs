@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -102,21 +103,35 @@ namespace Neon.Kube
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserData"/> (1000002000)</term>
+    ///     <term><see cref="UserVeryHigh"/> (5000)</term>
     ///     <description>
-    ///     Available for user database deployments.
+    ///     Available for very-high priority user pods.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserApi"/> (1000001000)</term>
+    ///     <term><see cref="UserHigh"/> (4000)</term>
     ///     <description>
-    ///     Available for user API deployments.
+    ///     Available for high priority user pods.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="UserApp"/> (100000000)</term>
+    ///     <term><see cref="UserMedium"/> (3000)</term>
     ///     <description>
-    ///     Available for user application deployments.
+    ///     Available for medium priority user pods.  Note that this is also configured as
+    ///     the global default priority class.  Pods deployed without a specific priority
+    ///     class will be assigned this one.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="UserLow"/> (2000)</term>
+    ///     <description>
+    ///     Available for user user pods.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="UserVeryLow"/> (1000)</term>
+    ///     <description>
+    ///     Available for very-low priority user pods.
     ///     </description>
     /// </item>
     /// </list>
@@ -125,17 +140,19 @@ namespace Neon.Kube
     /// can insert additional priorities as required.
     /// </para>
     /// <para>
-    /// We've organized these in tiers so you can deploy data services and those with priority 
-    /// higher than API services with priority higher than application services to help 
-    /// ensure that applications will be evicted before API services they depend on with
-    /// the API services evicted before the data services the API depends on.
+    /// The user priorities defined here are just a starting point and you're free to add
+    /// add additional priorities as required or remove or edit the ones you degine.  We
+    /// recommend that most user defined priorities be lower than <see cref="NeonApp"/> 
+    /// to avoid conflicts with critical Kubernetes and neonKUBE pods.
     /// </para>
-    /// <para>
-    /// The user tiers defined here are just a starting point and you're free to add
-    /// add additional priorities as required.  We recommend that most user defined
-    /// priorities be lower than <see cref="NeonApp"/> (1000003000) to avoid conflicting 
-    /// with critical Kubernetes and neonKUBE deployments.
-    /// </para>
+    /// <note>
+    /// <see cref="UserMedium"/> is configured as the global priority class by default.
+    /// This means that any pods you deploy without explicitly specifying a priority class
+    /// will be assigned <b>1000002000</b> rather than <b>0</b>.  This can come in handy 
+    /// when you have an existing cluster and realize you need to run new pods at a lower
+    /// priority than already running pods, and you prefer not to mess the running pod
+    /// priorities.
+    /// </note>
     /// <para>
     /// The <see cref="ToManifest"/> method returns the Kubernetes manifest text that
     /// to be allpied to the cluster to initialize the priority classes.
@@ -158,12 +175,14 @@ namespace Neon.Kube
             /// <param name="value">The priority value.</param>
             /// <param name="description">Optionally specifies the priority description.</param>
             /// <param name="isSystem">Optionally indicates that this is a built-in Kubernetes priority.</param>
-            public PriorityDef(string name, int value, string description = null, bool isSystem = false)
+            /// <param name="isDefault">Optionally indicates that this is the global default priority class.</param>
+            public PriorityDef(string name, int value, string description = null, bool isSystem = false, bool isDefault = false)
             {
                 this.Name        = name;
                 this.Value       = value;
                 this.Description = description;
                 this.IsSystem    = isSystem;
+                this.IsDefault   = isDefault;
             }
 
             /// <summary>
@@ -185,6 +204,11 @@ namespace Neon.Kube
             /// Returns <b>true</b> for built-in Kubernetes priorities.
             /// </summary>
             public bool IsSystem { get; private set; }
+
+            /// <summary>
+            /// Returns <c>true</c> for the global default priority class.
+            /// </summary>
+            public bool IsDefault { get; private set; }
         }
 
         //---------------------------------------------------------------------
@@ -199,6 +223,7 @@ namespace Neon.Kube
 
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
+
             list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "critical neonKUBE operators"));
             list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "critical neonKUBE networking"));
             list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "critical neonKUBE low-level storage"));
@@ -206,11 +231,16 @@ namespace Neon.Kube
             list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "neonKUBE APIs"));
             list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "neonKUBE applications and dashboards"));
             list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "neonKUBE monitoring infrastructure"));
-            list.Add(UserData              = new PriorityDef("user-data",                100002000, description: "user database tier"));
-            list.Add(UserApi               = new PriorityDef("user-api",                 100001000, description: "user API tier"));
-            list.Add(UserApp               = new PriorityDef("user-app",                 100000000, description: "user application tier"));
-            
+
+            list.Add(UserVeryHigh          = new PriorityDef("user-veryhigh",                 5000, description: "very-high priority user pods"));
+            list.Add(UserHigh              = new PriorityDef("user-high",                     4000, description: "high priority user pods"));
+            list.Add(UserMedium            = new PriorityDef("user-medium",                   3000, description: "medium priority user pods", isDefault: true));
+            list.Add(UserLow               = new PriorityDef("user-low",                      2000, description: "low-priority user pods"));
+            list.Add(UserVeryLow           = new PriorityDef("user-verylow",                  1000, description: "very low priority user pods"));
+
             Values = list;
+
+            Covenant.Assert(Values.Count(priorityDef => priorityDef.IsDefault) <= 1, "Only one priority class may be global.");
         }
 
         /// <summary>
@@ -261,19 +291,30 @@ namespace Neon.Kube
         public static PriorityDef NeonMonitor { get; private set; }
 
         /// <summary>
-        /// Available for user database deployments.  <b>(100002000)</b>
+        /// Available for very high priority user pods.  <b>(5000)</b>
         /// </summary>
-        public static PriorityDef UserData { get; private set; }
+        public static PriorityDef UserVeryHigh { get; private set; }
 
         /// <summary>
-        /// Available for user API deployments. <b>(100001000)</b>
+        /// Available for high priority user pods.  <b>(4000)</b>
         /// </summary>
-        public static PriorityDef UserApi { get; private set; }
+        public static PriorityDef UserHigh { get; private set; }
 
         /// <summary>
-        /// Available for user application deployments. <b>(100000000)</b>
+        /// Available for medium priority user pods and is also configured as the global default 
+        /// when a priority isn't explicitly specified. <b>(3000)</b>
         /// </summary>
-        public static PriorityDef UserApp { get; private set; }
+        public static PriorityDef UserMedium { get; private set; }
+
+        /// <summary>
+        /// Available for low priority user pods. <b>(2000)</b>
+        /// </summary>
+        public static PriorityDef UserLow { get; private set; }
+
+        /// <summary>
+        /// Available for very low priority user pods. <b>(1000)</b>
+        /// </summary>
+        public static PriorityDef UserVeryLow { get; private set; }
 
         /// <summary>
         /// Returns the list of all known built-in pod priorities.
@@ -312,6 +353,8 @@ kind: PriorityClass
 metadata:
   name: {priorityClass.Name}
 value: {priorityClass.Value}
+description: {priorityClass.Description}
+globalDefault: {(priorityClass.IsDefault ? "true" : "false")}
 ",
 "---\n");
             }
