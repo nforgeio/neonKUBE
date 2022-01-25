@@ -1786,8 +1786,7 @@ kubectl apply -f priorityclasses.yaml
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "cert-manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
-
+                    await master.InstallHelmChartAsync(controller, "cert-manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, priorityClass: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}", values: values);
                 });
 
 

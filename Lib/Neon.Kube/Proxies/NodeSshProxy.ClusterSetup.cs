@@ -654,13 +654,11 @@ service kubelet restart
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
         /// <param name="priorityClass">
         /// <para>
-        /// Optionally specifies the priority class for any pods deployed by the chart.
-        /// When specified, this must map to one of the classes predefined by <see cref="PriorityClass"/>.
+        /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.
+        /// This needs to be specified as: <b>NAME=PRIORITYCLASSNAME</b>, where <b>NAME</b> specifies the 
+        /// name of the Helm value and <b>PRIORITYCLASSNAME</b> is one of the priority class names defined
+        /// by <see cref="PriorityClass"/>.
         /// </para>
-        /// <note>
-        /// When specified, this will set the <b>priorityClass</b> value that can be referenced by the
-        /// Helm chart templates.
-        /// </note>
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
@@ -716,7 +714,22 @@ service kubelet restart
 
                     if (!string.IsNullOrEmpty(priorityClass))
                     {
-                        valueOverrides.AppendWithSeparator($"--set priorityClass={priorityClass}");
+                        var equalPos = priorityClass.IndexOf('=');
+
+                        if (equalPos == -1)
+                        {
+                            throw new FormatException($"[{priorityClass}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
+                        }
+
+                        var name  = priorityClass.Substring(0, equalPos).Trim();
+                        var value = priorityClass.Substring(equalPos + 1).Trim();
+
+                        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value))
+                        {
+                            throw new FormatException($"[{priorityClass}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
+                        }
+
+                        valueOverrides.AppendWithSeparator($"--set {name}={value}");
                     }
 
                     if (values != null)
