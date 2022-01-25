@@ -64,11 +64,11 @@
 
 # $todo(jefflill):
 #
-# We should update the versioner to manager the entire version, not just
+# We should update the versioner to manage the entire version, not just
 # incrementing the PATCH part of the version.  This would make it easier
 # to recover from emergency use of the [-local-version] switch by simply
 # needing to increment the MINOR component of the versions without needing
-# to coordinate with developers to determine the maximum versions published.
+# to coordinate with developers to determine the maximum version published.
 #
 #   https://app.zenhub.com/workspaces/neonforge-6042ead6ec0efa0012c5facf/issues/nforgeio/neoncloud/173
 
@@ -99,11 +99,6 @@ if (!(Test-Path env:NC_ROOT))
 # This needs to run with elevated privileges.
 
 Request-AdminPermissions
-
-# Retrieve any necessary credentials.
-
-$versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
-$devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"   "group-devops"
 
 # We're going to build the Debug configuration so debugging will be easier.
 
@@ -244,7 +239,12 @@ if (-not $?)
 
 $branch = GitBranch $env:NF_ROOT
 
-if ($local -and $localVersion)
+if ($localVersion)
+{
+    $local = $true
+}
+
+if ($localVersion)
 {
     # EMERGENCY MODE: Use the local counters.
 
@@ -257,6 +257,19 @@ if ($local -and $localVersion)
         Write-Error ""                   -ErrorAction continue
         Write-Error "    $nfVersionPath" -ErrorAction continue
         Write-Error "    $nlVersionPath" -ErrorAction continue
+        Write-Error "" -ErrorAction continue
+        Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
+        Write-Error "by your local neonCLOUD solution:" -ErrorAction continue
+        Write-Error "" -ErrorAction continue
+        Write-Error "The easiest way to do this is to open the [neonCLOUD/Tools/neon-cli/neon-cli.csproj]" -ErrorAction continue
+        Write-Error "file extract the minor version for the package references as described below:" -ErrorAction continue
+        Write-Error "" -ErrorAction continue
+        Write-Error "    neonKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
+        Write-Error "    neonLIBRARY.version.txt: from Neon.Common" -ErrorAction continue
+        Write-Error "" -ErrorAction continue
+        Write-Error "NOTE: These two version numbers are currently the same (Jan 2022), but they" -ErrorAction continue
+        Write-Error "      may diverge at any time and will definitely diverge after we separate " -ErrorAction continue
+        Write-Error "      neonLIBRARY and neonKUBE." -ErrorAction continue
         exit 1
     }
 
@@ -286,6 +299,11 @@ else
     # release, VERSION is automatically incremented for every package published, [master]
     # in this case is the current branch at the time of publishing and [-dev] indicates
     # that this is a non-production release.
+
+    # Retrieve any necessary credentials.
+
+    $versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
+    $devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"   "group-devops"
 
     # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
