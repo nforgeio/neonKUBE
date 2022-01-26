@@ -196,48 +196,10 @@ function Publish
     }
 }
 
-# We need to do a solution build to ensure that any tools or other dependencies 
-# are built before we build and publish the individual packages.
-
 $msbuild     = $env:MSBUILDPATH
 $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
-
-Write-Info ""
-Write-Info "********************************************************************************"
-Write-Info "***                            CLEAN SOLUTION                                ***"
-Write-Info "********************************************************************************"
-Write-Info ""
-
-& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
-
-if (-not $?)
-{
-    throw "ERROR: CLEAN FAILED"
-}
-
-Write-Info ""
-Write-Info "********************************************************************************"
-Write-Info "***                           RESTORE PACKAGES                               ***"
-Write-Info "********************************************************************************"
-Write-Info ""
-
-& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
-
-Write-Info  ""
-Write-Info  "*******************************************************************************"
-Write-Info  "***                           BUILD SOLUTION                                ***"
-Write-Info  "*******************************************************************************"
-Write-Info  ""
-
-& "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
-
-if (-not $?)
-{
-    throw "ERROR: BUILD FAILED"
-}
-
-$branch = GitBranch $env:NF_ROOT
+$branch      = GitBranch $nfRoot
 
 if ($localVersion)
 {
@@ -246,7 +208,7 @@ if ($localVersion)
 
 if ($localVersion)
 {
-    # EMERGENCY MODE: Use the local counters.
+    # EMERGENCY MODE: Use local counters.
 
     $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
     $nlVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonLIBRARY.version.txt")
@@ -317,6 +279,43 @@ else
 
     $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
     $kubeVersion    = "10000.0.$reply-dev-$branch"
+}
+
+# We need to do a solution build to ensure that any tools or other dependencies 
+# are built before we build and publish the individual packages.
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                            CLEAN SOLUTION                                ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: CLEAN FAILED"
+}
+
+Write-Info ""
+Write-Info "********************************************************************************"
+Write-Info "***                           RESTORE PACKAGES                               ***"
+Write-Info "********************************************************************************"
+Write-Info ""
+
+& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+
+Write-Info  ""
+Write-Info  "*******************************************************************************"
+Write-Info  "***                           BUILD SOLUTION                                ***"
+Write-Info  "*******************************************************************************"
+Write-Info  ""
+
+& "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
+
+if (-not $?)
+{
+    throw "ERROR: BUILD FAILED"
 }
 
 # We need to set the version first in all of the project files so that

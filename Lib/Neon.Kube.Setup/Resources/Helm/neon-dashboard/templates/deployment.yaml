@@ -11,6 +11,7 @@ spec:
   selector:
     matchLabels:
       {{- include "neon-dashboard.selectorLabels" . | nindent 6 }}
+  priorityClassName: {{ .Values.priorityClassName }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}

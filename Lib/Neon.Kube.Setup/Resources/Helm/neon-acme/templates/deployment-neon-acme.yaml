@@ -16,6 +16,7 @@ spec:
         app: neon-acme
     spec:
       serviceAccountName: neon-acme
+      priorityClassName: {{ . }
       containers:
         - name: neon-acme
           image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

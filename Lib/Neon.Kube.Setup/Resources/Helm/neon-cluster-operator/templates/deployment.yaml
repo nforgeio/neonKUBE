@@ -32,6 +32,7 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/"
         prometheus.io/port: "9762"
+    priorityClassName: {{ .Values.priorityClassName }}
     spec:
       serviceAccountName: neon-cluster-operator
       tolerations:

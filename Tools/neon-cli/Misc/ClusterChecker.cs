@@ -392,14 +392,16 @@ namespace NeonCli
                 }
             }
 
+            var podNamespace = pod.Namespace();
+
             if (!string.IsNullOrEmpty(ownerName))
             {
-                return $"{ownerName} ({ownerKind})";
+                return $"{podNamespace}/{ownerName} ({ownerKind})";
             }
 
             // Default to using the pod name or kind for standalone pods.
 
-            return $"{pod.Name} ({pod.Kind})";
+            return $"{podNamespace}/{pod.Name} ({pod.Kind})";
         }
 
         /// <summary>

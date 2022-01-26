@@ -652,17 +652,22 @@ service kubelet restart
         /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
-        /// <param name="priorityClass">
+        /// <param name="prioritySpec">
         /// <para>
         /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.
-        /// This needs to be specified as: <b>NAME=PRIORITYCLASSNAME</b>, where <b>NAME</b> specifies the 
-        /// name of the Helm value and <b>PRIORITYCLASSNAME</b> is one of the priority class names defined
-        /// by <see cref="PriorityClass"/>.
+        /// This needs to be specified as: <b>PRIORITYCLASSNAME</b> or <b>VALUENAME=PRIORITYCLASSNAME</b>,
+        /// where <b>VALUENAME</b> optionally specifies the name of the Helm value and <b>PRIORITYCLASSNAME</b>
+        /// is one of the priority class names defined by <see cref="PriorityClass"/>.
         /// </para>
+        /// <note>
+        /// The priority class will saved as the <b>priorityClassName</b> Helm value when no value
+        /// name is specified.
+        /// </note>
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
         /// neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
         /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
@@ -674,7 +679,7 @@ service kubelet restart
             string                              chartName,
             string                              releaseName     = null,
             string                              @namespace      = "default",
-            string                              priorityClass   = null,
+            string                              prioritySpec    = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null)
         {
@@ -688,7 +693,34 @@ service kubelet restart
                 releaseName = chartName.Replace("_", "-");
             }
 
-            PriorityClass.EnsureKnown(priorityClass);
+            // Extract the Helm chart value name and priority class name from [priorityClass]
+            // when passed.
+
+            string priorityClassVariable = null;
+            string priorityClassName     = null;
+
+            if (!string.IsNullOrEmpty(prioritySpec))
+            {
+                var equalPos = prioritySpec.IndexOf('=');
+
+                if (equalPos == -1)
+                {
+                    priorityClassVariable = "priorityClassName";
+                    priorityClassName     = prioritySpec;
+                }
+                else
+                {
+                    priorityClassVariable = prioritySpec.Substring(0, equalPos).Trim();
+                    priorityClassName     = prioritySpec.Substring(equalPos + 1).Trim();
+
+                    if (string.IsNullOrEmpty(priorityClassVariable) || string.IsNullOrEmpty(priorityClassName))
+                    {
+                        throw new FormatException($"[{prioritySpec}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
+                    }
+                }
+
+                PriorityClass.EnsureKnown(priorityClassName);
+            }
 
             // Unzip the Helm chart archive if we haven't done so already.
 
@@ -712,24 +744,9 @@ service kubelet restart
 
                     var valueOverrides = new StringBuilder();
 
-                    if (!string.IsNullOrEmpty(priorityClass))
+                    if (!string.IsNullOrEmpty(priorityClassVariable))
                     {
-                        var equalPos = priorityClass.IndexOf('=');
-
-                        if (equalPos == -1)
-                        {
-                            throw new FormatException($"[{priorityClass}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
-                        }
-
-                        var name  = priorityClass.Substring(0, equalPos).Trim();
-                        var value = priorityClass.Substring(equalPos + 1).Trim();
-
-                        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value))
-                        {
-                            throw new FormatException($"[{priorityClass}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
-                        }
-
-                        valueOverrides.AppendWithSeparator($"--set {name}={value}");
+                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}={priorityClassName}");
                     }
 
                     if (values != null)
