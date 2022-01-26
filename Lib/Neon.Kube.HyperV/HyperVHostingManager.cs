@@ -127,6 +127,9 @@ namespace Neon.Kube
         public override bool RequiresNodeAddressCheck => true;
 
         /// <inheritdoc/>
+        public override bool SupportsFsTrim => true;
+
+        /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
