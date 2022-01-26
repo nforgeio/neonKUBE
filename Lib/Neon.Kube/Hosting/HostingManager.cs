@@ -104,6 +104,9 @@ namespace Neon.Kube
         public virtual bool CanManageRouter => false;
 
         /// <inheritdoc/>
+        public virtual bool SupportsFsTrim => false;
+
+        /// <inheritdoc/>
         public virtual async Task UpdateInternetRoutingAsync()
         {
             await Task.CompletedTask;

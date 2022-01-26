@@ -130,6 +130,12 @@ namespace Neon.Kube
         bool CanManageRouter { get; }
 
         /// <summary>
+        /// Returns <c>true</c> if the hosting environment supports <b>fstrim</b>, used to
+        /// when cleaning a file system.
+        /// </summary>
+        bool SupportsFsTrim { get; }
+
+        /// <summary>
         /// <para>
         /// Updates the cluster's load balancer or router to use the current set of
         /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/> and the
