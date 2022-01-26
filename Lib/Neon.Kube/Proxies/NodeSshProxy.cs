@@ -593,8 +593,18 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             controller.LogProgress(this, verb: "clean", message: "file system");
+
+            var fstrim  = string.Empty;
+
+            if (cluster.HostingManager.SupportsFsTrim)
+            {
+                // Not all hosting enviuronments supports: fstrim
+
+                fstrim = "fstrim /";
+            }
 
             var cleanScript =
 $@"#!/bin/bash
@@ -613,7 +623,7 @@ rm -rf /var/lib/dhcp/*
 
 # Filesystem cleaning
 
-fstrim /
+{fstrim}
 sfill -fllz /
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
