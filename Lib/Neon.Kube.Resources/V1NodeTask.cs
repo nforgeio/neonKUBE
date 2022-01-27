@@ -90,7 +90,7 @@ namespace Neon.Kube.Resources
     /// </item>
     /// </list>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "NodeTask", PluralName = "nodetasks")]
+    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
