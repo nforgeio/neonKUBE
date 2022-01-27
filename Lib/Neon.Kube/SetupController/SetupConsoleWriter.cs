@@ -44,6 +44,10 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
+            // Hide the cursor while updating.
+
+            Console.CursorVisible = false;
+
             lock (syncLock)
             {
                 if (stopped)
@@ -59,10 +63,9 @@ namespace Neon.Kube
 
                 if (previousText == null)
                 {
-                    // This is the first Update() has been called so we need configure
-                    // and clear the console.
+                    // This is the first Update() has been called so we need to
+                    // clear the console.
 
-                    Console.CursorVisible = false;
                     Console.Clear();
                 }
 
