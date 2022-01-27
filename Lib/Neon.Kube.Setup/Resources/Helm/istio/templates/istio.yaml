@@ -48,10 +48,14 @@ spec:
           service: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
         name: neon-sso-service
   components:
+    pilot:
+      k8s:
+        priorityClassName: {{ .Values.priorityClassName }}
     ingressGateways:
     - name: istio-ingressgateway
       enabled: true
       k8s:
+        priorityClassName: {{ .Values.priorityClassName }}
         overlays:
           - apiVersion: apps/v1
             kind: Deployment

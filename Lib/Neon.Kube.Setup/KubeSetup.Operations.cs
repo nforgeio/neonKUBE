@@ -2891,11 +2891,14 @@ $@"- name: StorageType
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
-
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "grafana-agent", releaseName: "grafana-agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "grafana-agent",
+                        releaseName:  "grafana-agent", 
+                        @namespace:   KubeNamespaces.NeonMonitor, 
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
                 });
         }
 
@@ -3282,78 +3285,77 @@ $@"- name: StorageType
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Grafana);
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "setup", message: "neon-grafana");
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-grafana");
 
-                        var values = new Dictionary<string, object>();
+                    var values = new Dictionary<string, object>();
 
-                        values.Add("cluster.name", cluster.Definition.Name);
-                        values.Add("cluster.domain", cluster.Definition.Domain);
-                        values.Add("ingress.subdomain", ClusterDomain.Grafana);
-                        values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                        values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("ingress.subdomain", ClusterDomain.Grafana);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                        await master.InvokeIdempotentAsync("setup/db-credentials-grafana",
-                            async () =>
+                    await master.InvokeIdempotentAsync("setup/db-credentials-grafana",
+                        async () =>
+                        {
+                            var secret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                            var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
+
+                            var monitorSecret = new V1Secret()
                             {
-                                var secret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                                var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
-
-                                var monitorSecret = new V1Secret()
+                                Metadata = new V1ObjectMeta()
                                 {
-                                    Metadata = new V1ObjectMeta()
+                                    Name        = KubeConst.GrafanaSecret,
+                                    Annotations = new Dictionary<string, string>()
                                     {
-                                        Name        = KubeConst.GrafanaSecret,
-                                        Annotations = new Dictionary<string, string>()
-                                        {
-                                            {  "reloader.stakater.com/match", "true" }
-                                        }
-                                    },
-                                    Type = "Opaque",
-                                    Data = new Dictionary<string, byte[]>()
-                                    {
-                                        { "DATABASE_PASSWORD", secret.Data["password"] },
-                                        { "CLIENT_ID", Encoding.UTF8.GetBytes("grafana") },
-                                        { "CLIENT_SECRET", dexSecret.Data["GRAFANA_CLIENT_SECRET"] },
+                                        {  "reloader.stakater.com/match", "true" }
                                     }
-                                };
+                                },
+                                Type = "Opaque",
+                                Data = new Dictionary<string, byte[]>()
+                                {
+                                    { "DATABASE_PASSWORD", secret.Data["password"] },
+                                    { "CLIENT_ID", Encoding.UTF8.GetBytes("grafana") },
+                                    { "CLIENT_SECRET", dexSecret.Data["GRAFANA_CLIENT_SECRET"] },
+                                }
+                            };
 
-                                await k8s.CreateNamespacedSecretAsync(monitorSecret, KubeNamespaces.NeonMonitor);
-                            });
+                            await k8s.CreateNamespacedSecretAsync(monitorSecret, KubeNamespaces.NeonMonitor);
+                        });
 
-                        int i = 0;
+                    int i = 0;
 
-                        foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
-                        {
-                            values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                            values.Add($"tolerations[{i}].effect", taint.Effect);
-                            values.Add($"tolerations[{i}].operator", "Exists");
-                            i++;
-                        }
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
 
-                        if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
-                        {
-                            values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                            values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-                        }
+                    if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    }
 
-                        await master.InstallHelmChartAsync(controller, "grafana", 
-                            releaseName:  "grafana",
-                            @namespace:   KubeNamespaces.NeonMonitor, 
-                            prioritySpec: PriorityClass.NeonMonitor.Name, 
-                            values:       values);
-                    });
+                    await master.InstallHelmChartAsync(controller, "grafana", 
+                        releaseName:  "grafana",
+                        @namespace:   KubeNamespaces.NeonMonitor, 
+                        prioritySpec: PriorityClass.NeonMonitor.Name, 
+                        values:       values);
+                });
 
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
-
                 await master.InvokeIdempotentAsync("ready-to-go/grafana-secrets",
                     async () =>
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "renew grafana secrets");
 
-                        var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                        var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
                         var grafanaSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaSecret, KubeNamespaces.NeonMonitor);
 
                         grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
@@ -3407,8 +3409,8 @@ $@"- name: StorageType
 
                         var grafana = await k8s.GetNamespacedCustomObjectAsync<Grafana>(KubeNamespaces.NeonMonitor, "grafana");
 
-                        grafana.Spec["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
-                        grafana.Spec["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
+                        grafana.Spec["config"]["auth.generic_oauth"]["api_url"]   = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
+                        grafana.Spec["config"]["auth.generic_oauth"]["auth_url"]  = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
                         grafana.Spec["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
 
                         grafana.Spec["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
@@ -3468,26 +3470,27 @@ $@"- name: StorageType
                         "-c",
                         $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
                     };
+
                     var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
 
                     await NeonHelper.WaitForAsync(
-                            async () =>
+                        async () =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
+                                (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
 
-                                    return true;
-                                }
-                                catch
-                                {
-                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-deployment", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
-                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
-                                    return false;
-                                }
-                            },
-                            timeout: TimeSpan.FromMinutes(10),
-                            pollInterval: TimeSpan.FromSeconds(15));
+                                return true;
+                            }
+                            catch
+                            {
+                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-deployment", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
+                                return false;
+                            }
+                        },
+                        timeout:      TimeSpan.FromMinutes(10),
+                        pollInterval: TimeSpan.FromSeconds(15));
                 });
         }
 
@@ -3573,6 +3576,8 @@ $@"- name: StorageType
                                 values.Add($"operator.tolerations[{i}].operator", "Exists");
                                 i++;
                             }
+
+                            values.Add("tenants[0].priorityClassName", PriorityClass.NeonStorage.Name);
 
                             await master.InstallHelmChartAsync(controller, "minio", 
                                 releaseName:  "minio", 
@@ -3952,6 +3957,17 @@ $@"- name: StorageType
                             values.Add($"tolerations[{j}].operator", "Exists");
                             j++;
                         }
+
+                        values.Add("nginx.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("portal.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("core.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("jobservice.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("registry.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("chartmuseum.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("clair.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("notary.server.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("notary.signer.priorityClassName", PriorityClass.NeonData.Name);
+                        values.Add("trivy.priorityClassName", PriorityClass.NeonData.Name);
 
                         await master.InstallHelmChartAsync(controller, "harbor",
                             releaseName:  "registry-harbor",
@@ -4888,7 +4904,11 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/glauth-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "glauth", releaseName: "glauth", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "glauth");
+                    await master.InstallHelmChartAsync(controller, "glauth", 
+                        releaseName:  "glauth", 
+                        @namespace:   KubeNamespaces.NeonSystem,
+                        prioritySpec: PriorityClass.NeonApp.Name,
+                        values:       values);
                 });
 
             await master.InvokeIdempotentAsync("setup/glauth-ready",

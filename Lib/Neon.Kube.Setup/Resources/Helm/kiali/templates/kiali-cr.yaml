@@ -32,6 +32,7 @@ spec:
     image_version: {{ .Values.image.kiali.tag }}
     image_pull_policy: {{ .Values.image.kiali.pullPolicy }}
     pullPolicy: {{ .Values.image.kiali.pullSecrets }}
+    priority_class_name: {{ .Values.priorityClassName }}
     accessible_namespaces:
     - '**'
     service_type: "ClusterIP"
