@@ -79,6 +79,22 @@ namespace NeonCli
             public string PriorityClassName;
         }
 
+        /// <summary>
+        /// Used to hold local status for container imnages.
+        /// </summary>
+        private class ImageStatus
+        {
+            /// <summary>
+            /// The container image names.
+            /// </summary>
+            public string ImageNames;
+
+            /// <summary>
+            /// Set to <c>true</c> when the image isn't specified in the cluster manifest.
+            /// </summary>
+            public bool NotInManifest;
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
@@ -86,24 +102,22 @@ namespace NeonCli
         /// Performs development related cluster checks with information on potential
         /// problems being written to STDOUT.
         /// </summary>
+        /// <param name="clusterLogin">Specifies the target cluster login.</param>
+        /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        public static async Task<bool> CheckAsync(IKubernetes k8s)
+        public static async Task<bool> CheckAsync(ClusterLogin clusterLogin, IKubernetes k8s)
         {
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             var error = false;
 
-            if (await CheckContainerImagesAsync(k8s))
+            if (await CheckNodeContainerImagesAsync(clusterLogin, k8s))
             {
                 error = true;
             }
 
-            if (await CheckPodLocalImagesAsync(k8s))
-            {
-                error = true;
-            }
-
-            if (await CheckPodPrioritiesAsync(k8s))
+            if (await CheckPodPrioritiesAsync(clusterLogin,k8s))
             {
                 error = true;
             }
@@ -113,35 +127,45 @@ namespace NeonCli
 
         /// <summary>
         /// <para>
-        /// Verifies that all of the container images running as cluster pods are specified in the
-        /// container manifest.  Any images that aren't in the manifest need to be preloaded
-        /// into the node image.  This is used to ensure that pods started by third-party operators
-        /// are also included in the cluster manifest, ensuing tht our node images are self-contained
-        /// for a better setup experience as well as air-gapped clusters.
+        /// Verifies that all of the container images currently loaded on nodes are specified in the
+        /// container manifest.  Any images that aren't in the manifest need to be preloaded info the 
+        /// node image.  This is used to ensure that pods started by third-party operators are also 
+        /// included in the cluster manifest, ensuing that our node images are self-contained for a 
+        /// better setup experience as well as air-gapped clusters.
         /// </para>
         /// <para>
         /// Details about any issues will be written to STDOUT.
         /// </para>
         /// </summary>
+        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
+        /// <param name="listAll">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        public static async Task<bool> CheckContainerImagesAsync(IKubernetes k8s)
+        /// <remarks>
+        /// <para>
+        /// neonKUBE clusters deploy all required images to CRI-O running on all cluster
+        /// nodes as well as the local Harbor registry.  This not only improves the cluster
+        /// setup experience but also makes air gapped cluster possible.
+        /// </para>
+        /// </remarks>
+        public static async Task<bool> CheckNodeContainerImagesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool listAll = false)
         {
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
-            Console.WriteLine("* Checking container images");
+            Console.WriteLine("* Checking local container images...");
 
-            var installedImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var manifestImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var image in KubeSetup.ClusterManifest.ContainerImages)
             {
-                installedImages.Add(image.SourceRef);
+                manifestImages.Add(image.SourceRef);
             }
 
-            var nodes      = await k8s.ListNodeAsync();
-            var badImages  = new List<string>();
-            var sbBadImage = new StringBuilder();
+            var nodes        = await k8s.ListNodeAsync();
+            var images       = new Dictionary<string, ImageStatus>(StringComparer.InvariantCultureIgnoreCase);
+            var sbImageNames = new StringBuilder();
 
             foreach (var node in nodes.Items)
             {
@@ -151,55 +175,72 @@ namespace NeonCli
 
                     foreach (var name in image.Names)
                     {
-                        if (installedImages.Contains(name))
+                        if (manifestImages.Contains(name))
                         {
                             found = true;
                             break;
                         }
                     }
 
-                    if (!found)
+                    sbImageNames.Clear();
+
+                    foreach (var name in image.Names.OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase))
                     {
-                        sbBadImage.Clear();
+                        sbImageNames.AppendWithSeparator(name, ", ");
+                    }
 
-                        foreach (var name in image.Names.OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase))
+                    var imageNames  = sbImageNames.ToString();
+                    var imageStatus = new ImageStatus() { ImageNames = imageNames, NotInManifest = !found };
+
+                    images.Add(imageStatus.ImageNames, imageStatus);
+                }
+            }
+
+            var badImageCount = images.Values.Count(image => image.NotInManifest);
+
+            if (badImageCount > 0 || listAll)
+            {
+                if (badImageCount > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"ERROR: [{badImageCount}] images are being pulled from external registries:");
+                    Console.WriteLine();
+                }
+
+                if (badImageCount > 0 || listAll)
+                {
+                    foreach (var image in images.Values.OrderBy(image => image.ImageNames))
+                    {
+                        var badImage = image.NotInManifest;
+                        var status   = badImage ? "ERROR --> " : "          ";
+
+                        if (badImage || listAll)
                         {
-                            sbBadImage.AppendWithSeparator(name, ", ");
+                            Console.WriteLine($"{status}{image}");
                         }
-
-                        badImages.Add(sbBadImage.ToString());
                     }
                 }
             }
-
-            if (badImages.Count > 0)
+            else
             {
                 Console.WriteLine();
-                Console.WriteLine($"WARNING!");
-                Console.WriteLine($"========");
-                Console.WriteLine($"[{badImages.Count}] container images are present in cluster without being included");
-                Console.WriteLine($"in the cluster manifest.  These images need to be added to the node image.");
-                Console.WriteLine();
-
-                foreach (var badImage in badImages)
-                {
-                    Console.WriteLine(badImage);
-                }
+                Console.WriteLine($"OK: All container images are present in the cluster registry.");
             }
 
-            return badImages.Count == 0;
+            return badImageCount == 0;
         }
 
         /// <summary>
         /// <para>
-        /// Verifies that all pods running in the cluster are assigned a non-zero PriorityClass.
+        /// Verifies that all pods running in the cluster are assigned a non-zero priority.
         /// </para>
         /// <para>
         /// Details about any issues will be written to STDOUT.
         /// </para>
         /// </summary>
+        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
-        /// <param name="displayAlways">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
+        /// <param name="listAll">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         /// <remarks>
         /// <para>
@@ -220,12 +261,13 @@ namespace NeonCli
         /// and also that we've done the same for pods created by third-party operators.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckPodPrioritiesAsync(IKubernetes k8s, bool displayAlways = false)
+        public static async Task<bool> CheckPodPrioritiesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool listAll = false)
         {
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
-            Console.WriteLine("* Checking pod priorities");
+            Console.WriteLine("* Checking pod priorities...");
 
             // Build a dictionary that maps the priority of all known priority class
             // priority values to the priority class name.  Note that we're assuming
@@ -302,7 +344,7 @@ namespace NeonCli
 
             var badPodDeploymentCount = ownerToPriorityInfo.Values.Count(info => info.Priority == 0);
 
-            if (badPodDeploymentCount > 0 || displayAlways)
+            if (badPodDeploymentCount > 0 || listAll)
             {
                 if (badPodDeploymentCount > 0)
                 {
@@ -323,6 +365,11 @@ namespace NeonCli
 
                     Console.WriteLine($"{ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
                 }
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine($"OK: All pod priorities are set.");
             }
 
             return badPodDeploymentCount > 0;
@@ -402,79 +449,6 @@ namespace NeonCli
             // Default to using the pod name or kind for standalone pods.
 
             return $"{podNamespace}/{pod.Name} ({pod.Kind})";
-        }
-
-        /// <summary>
-        /// <para>
-        /// Verifies that all pods running in the cluster reference local container images.
-        /// </para>
-        /// <para>
-        /// Details about any issues will be written to STDOUT.
-        /// </para>
-        /// </summary>
-        /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
-        /// <param name="displayAlways">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
-        /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        /// <remarks>
-        /// <para>
-        /// neonKUBE clusters deploy all required images to CRI-O running on all cluster
-        /// nodes as well as the local Harbor registry.  This not only improves the cluster
-        /// setup experience but also makes air gapped cluster possible.
-        /// </para>
-        /// </remarks>
-        public static async Task<bool> CheckPodLocalImagesAsync(IKubernetes k8s, bool displayAlways = false)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            Console.WriteLine();
-            Console.WriteLine("* Checking pod local images");
-
-            // Build list of images referenced by running pods.
-
-            var images = new HashSet<string>();
-
-            foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
-            {
-                foreach (var pod in (await k8s.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
-                {
-                    foreach (var container in pod.Spec.Containers)
-                    {
-                        if (!images.Contains(container.Image))
-                        {
-                            images.Add(container.Image);
-                        }
-                    }
-                }
-            }
-
-            var localRegistryPrefix = $"{KubeConst.LocalClusterRegistry}/";
-            var badImageCount       = images.Count(image => !image.StartsWith(localRegistryPrefix));
-
-            if (badImageCount > 0 || displayAlways)
-            {
-                if (badImageCount > 0)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"ERROR: [{badImageCount}] images are being pulled from external registries:");
-                    Console.WriteLine();
-                }
-
-                if (badImageCount > 0 || displayAlways)
-                {
-                    foreach (var image in images)
-                    {
-                        var badImage = !image.StartsWith(localRegistryPrefix);
-                        var status   = badImage ? "ERROR --> " :"          ";
-
-                        if (badImage || displayAlways)
-                        {
-                            Console.WriteLine($"{status}{image}");
-                        }
-                    }
-                }
-            }
-
-            return badImageCount > 0;
         }
     }
 }

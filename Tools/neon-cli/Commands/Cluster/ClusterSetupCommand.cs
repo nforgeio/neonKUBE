@@ -242,7 +242,7 @@ OPTIONS:
                     {
                         var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
 
-                        if (!await ClusterChecker.CheckAsync(k8s))
+                        if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
                         {
                             Program.Exit(1);
                         }
