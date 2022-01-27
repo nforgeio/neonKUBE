@@ -31,6 +31,7 @@ spec:
         openebs.io/version: {{ .Values.release.version }}
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-localpv-provisioner
         image: "{{ .Values.localprovisioner.image.organization }}/{{ .Values.localprovisioner.image.repository }}:{{ .Values.localprovisioner.image.tag }}"

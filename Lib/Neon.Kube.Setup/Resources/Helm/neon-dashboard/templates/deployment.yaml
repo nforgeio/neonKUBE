@@ -11,7 +11,6 @@ spec:
   selector:
     matchLabels:
       {{- include "neon-dashboard.selectorLabels" . | nindent 6 }}
-  priorityClassName: {{ .Values.priorityClassName }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -28,6 +27,7 @@ spec:
       serviceAccountName: {{ include "neon-dashboard.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

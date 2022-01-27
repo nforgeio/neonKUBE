@@ -1333,11 +1333,11 @@ rm {HostFolders.Home(Username)}/askpass
             EnsureScpConnection();
 
             //-----------------------------------------------------------------
-            // Ensure that the minimum set of user folders required by [LinuxSshProxy] exist
+            // Ensure that the minimum set of node folders required by [LinuxSshProxy] exist
             // for the current user.  These are all located in the user's home folder
             // so SUDO is not required to create them.
 
-            Status = "prepare: user folders";
+            Status = "prepare: node folders";
 
             // [~/.neon]
 

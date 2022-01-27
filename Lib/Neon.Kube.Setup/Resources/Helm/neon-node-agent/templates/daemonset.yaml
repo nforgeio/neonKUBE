@@ -42,6 +42,7 @@ spec:
         hostPath:
           path: /
           type: Directory
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: neon-node-agent
         env:

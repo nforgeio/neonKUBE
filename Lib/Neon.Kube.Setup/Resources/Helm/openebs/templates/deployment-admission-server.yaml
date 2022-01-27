@@ -44,6 +44,7 @@ spec:
 {{ toYaml .Values.webhook.affinity | indent 8 }}
 {{- end }}
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: admission-webhook
           image: "{{ .Values.webhook.image.organization }}/{{ .Values.webhook.image.repository }}:{{ .Values.webhook.image.tag }}"
