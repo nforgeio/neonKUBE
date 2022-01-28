@@ -293,12 +293,27 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The cluster domain. This will be used for accessing dashboards.
+        /// The cluster DNS domain. neonKUBE will generate a domain like <b>GUID.neoncluster.io</b>
+        /// for your cluster by default when this is not set.
         /// </para>
         /// <note>
-        /// The domain 
+        /// Setting this to a specific domain that you've already registered is not supported at
+        /// this time and will be ignored.
         /// </note>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The idea here is that neonKUBE will be use the generated domain to deploy a fully
+        /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
+        /// This works even for clusters deployed behind a firewall or neonDESKTOP built-in
+        /// clusters running on a workstation or laptop.
+        /// </para>
+        /// <para>
+        /// In the future, we plan to support custom DNS domains where these are pre-registered
+        /// by the customer or we manage the DNS hosts on behalf of the customer via a domain
+        /// registar API.
+        /// </para>
+        /// </remarks>
         [JsonProperty(PropertyName = "Domain", Required = Required.Always)]
         [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
         public string Domain { get; set; }
