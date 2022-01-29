@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubeOps" Version="6.2.1" />
+    <PackageReference Include="KubeOps" Version="6.2.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -532,7 +532,7 @@ namespace Neon.Kube
                     
                     using (var jsonClient = new JsonClient())
                     {
-                        jsonClient.BaseAddress                = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                        jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
 
                         if (IPAddress.TryParse(clusterIp, out var ip))
                         {

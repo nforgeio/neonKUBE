@@ -485,9 +485,10 @@ mode: {kubeProxyMode}");
                 {
                     controller.LogProgress(master, verb: "ready-to-go", message: "configure kube-apiserver");
 
-                    var k8s = GetK8sClient(controller);
-                    var configMap = await k8s.ReadNamespacedConfigMapAsync("kubeadm-config", KubeNamespaces.KubeSystem);
+                    var k8s           = GetK8sClient(controller);
+                    var configMap     = await k8s.ReadNamespacedConfigMapAsync("kubeadm-config", KubeNamespaces.KubeSystem);
                     var clusterConfig = configMap.Data["ClusterConfiguration"];
+
                     clusterConfig = Regex.Replace(clusterConfig, @"oidc-issuer-url.*", $"oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
                     configMap.Data["ClusterConfiguration"] = clusterConfig;
 
@@ -5023,10 +5024,10 @@ $@"- name: StorageType
                         var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
                         var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["password"])} sslmode=disable";
                         
-                        var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
+                        var items           = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
                         items.First().Value = new StringValueSyntax(baseDN);
 
-                        items = table.Items.Where(i => i.Key.ToString().Trim() == "database");
+                        items               = table.Items.Where(i => i.Key.ToString().Trim() == "database");
                         items.First().Value = new StringValueSyntax(dbString);
 
                         config.Data["config.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
@@ -5039,8 +5040,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
 
-                        var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        
+                        var users    = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
                         var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
                         
                         foreach (var user in users.Data.Keys)
@@ -5135,6 +5135,7 @@ $@"- name: StorageType
                         controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso oauth2 secret");
 
                         var oauth2Secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoOauth2Proxy, KubeNamespaces.NeonSystem);
+
                         oauth2Secret.Data["cookie-secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(24));
 
                         await k8s.ReplaceNamespacedSecretAsync(oauth2Secret, oauth2Secret.Name(), oauth2Secret.Namespace());
@@ -5146,7 +5147,8 @@ $@"- name: StorageType
                         controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso oauth2 config");
 
                         var configMap = await k8s.ReadNamespacedConfigMapAsync(KubeConst.NeonSsoOauth2Proxy, KubeNamespaces.NeonSystem);
-                        configMap.Data["loginUrl"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
+
+                        configMap.Data["loginUrl"]  = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
                         configMap.Data["issuerUrl"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
 
                         await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
