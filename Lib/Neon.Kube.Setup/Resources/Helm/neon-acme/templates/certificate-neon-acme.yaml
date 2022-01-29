@@ -13,7 +13,6 @@ spec:
   commonName: "ca.neon-acme.neon-ingress"
   isCA: true
 ---
-# Finally, generate a serving certificate for the webhook to use
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
