@@ -4538,15 +4538,7 @@ $@"- name: StorageType
                     // We're going to set the pod priority class to the same value as 
                     // the postgres operator.
 
-                    // $todo(jefflill):
-                    //
-                    // Commenting this out temporarily.  It appears that the Posgres operator
-                    // is trying to create this priority?  This doesn't happen every time and
-                    // this might also be a Helm chart issue:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1414
-
-                    //values.Add("podPriorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("podPriorityClassName", PriorityClass.NeonData.Name);
 
                     await master.InstallHelmChartAsync(controller, "postgres-operator", 
                         releaseName:     "neon-system-db", 
