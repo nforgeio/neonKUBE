@@ -275,7 +275,6 @@ spec:
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var master        = cluster.FirstMaster;
             var debugMode     = controller.Get<bool>(KubeSetupProperty.DebugMode);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
@@ -351,7 +350,6 @@ spec:
 
             var hostingEnvironment   = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin         = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var readyToGoMode        = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var controlPlaneEndpoint = $"kubernetes-masters:6442";
             var sbCertSANs           = new StringBuilder();
@@ -477,7 +475,6 @@ mode: {kubeProxyMode}");
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s                = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("ready-to-go/kube-apiserver-running-config",
@@ -527,7 +524,6 @@ mode: {kubeProxyMode}");
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var k8s                = GetK8sClient(controller);
             var numPods            = 0;
@@ -1024,15 +1020,14 @@ done
                             new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
                         };
 
+                        foreach (var file in files)
+                        {
+                            var text = master.DownloadText(file.Path);
 
-                    foreach (var file in files)
-                    {
-                        var text = master.DownloadText(file.Path);
+                            clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                        }
 
-                        clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                    }
-
-                    clusterLogin.Save();
+                        clusterLogin.Save();
                     }
                 });
             }
@@ -1761,7 +1756,6 @@ kubectl apply -f priorityclasses.yaml
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s                = GetK8sClient(controller);
             var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
@@ -1818,14 +1812,16 @@ kubectl apply -f priorityclasses.yaml
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
                     
-                    var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
                     var values        = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", clusterLogin.ClusterDefinition.Name);
-                    values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("certficateDuration", cluster.Definition.Network.CertificateDuration);
+                    values.Add("certificateRenewBefore", cluster.Definition.Network.CertificateRenewBefore);
 
                     int i = 0;
 
@@ -1876,7 +1872,7 @@ kubectl apply -f priorityclasses.yaml
                             Spec = new CertificateSpec()
                         };
 
-                        cert.Spec.CommonName  = clusterLogin.ClusterDefinition.Domain;
+                        cert.Spec.CommonName  = cluster.Definition.Domain;
                         cert.Spec.RenewBefore = "360h0m0s";
                         cert.Spec.SecretName  = "neon-cluster-certificate";
                         cert.Spec.Usages      = new X509Usages[] { X509Usages.ServerAuth, X509Usages.ClientAuth };
@@ -1884,8 +1880,8 @@ kubectl apply -f priorityclasses.yaml
                         cert.Spec.Duration    = "2160h0m0s";
                         cert.Spec.DnsNames    = new List<string>()
                         {
-                            $"{clusterLogin.ClusterDefinition.Domain}",
-                            $"*.{clusterLogin.ClusterDefinition.Domain}"
+                            $"{cluster.Definition.Domain}",
+                            $"*.{cluster.Definition.Domain}"
                         };
                         cert.Spec.IssuerRef = new IssuerRef()
                         {
@@ -1961,8 +1957,7 @@ subjects:
         /// <returns>The generated certificate.</returns>
         public static TlsCertificate GenerateDashboardCert(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             // We're going to tie the custom certificate to the IP addresses
             // of the master nodes only.  This means that only these nodes
@@ -2005,7 +2000,6 @@ subjects:
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
@@ -3763,7 +3757,6 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
