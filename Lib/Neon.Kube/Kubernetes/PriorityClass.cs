@@ -224,19 +224,19 @@ namespace Neon.Kube
             list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
 
-            list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "critical neonKUBE operators"));
-            list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "critical neonKUBE networking"));
-            list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "critical neonKUBE low-level storage"));
-            list.Add(NeonData              = new PriorityDef("neon-data",                900005000, description: "critical neonKUBE databases"));
-            list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "neonKUBE APIs"));
-            list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "neonKUBE applications and dashboards"));
-            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "neonKUBE monitoring infrastructure"));
+            list.Add(NeonOperator          = new PriorityDef("neon-operator",            900008000, description: "Used for critical neonKUBE operator pods"));
+            list.Add(NeonNetwork           = new PriorityDef("neon-network",             900007000, description: "Used for critical neonKUBE networking pods"));
+            list.Add(NeonStorage           = new PriorityDef("neon-storage",             900006000, description: "Used for critical neonKUBE low-level storage pods"));
+            list.Add(NeonData              = new PriorityDef("neon-data",                900005000, description: "Used for critical neonKUBE databases pods"));
+            list.Add(NeonApi               = new PriorityDef("neon-api",                 900004000, description: "Used for neonKUBE API pods"));
+            list.Add(NeonApp               = new PriorityDef("neon-app",                 900003000, description: "Used for neonKUBE application and dashboard pods"));
+            list.Add(NeonMonitor           = new PriorityDef("neon-monitor",             900002000, description: "Used for neonKUBE monitoring infrastructure pods"));
 
-            list.Add(UserVeryHigh          = new PriorityDef("user-veryhigh",                 5000, description: "very-high priority user pods"));
-            list.Add(UserHigh              = new PriorityDef("user-high",                     4000, description: "high priority user pods"));
-            list.Add(UserMedium            = new PriorityDef("user-medium",                   3000, description: "medium priority user pods", isDefault: true));
-            list.Add(UserLow               = new PriorityDef("user-low",                      2000, description: "low-priority user pods"));
-            list.Add(UserVeryLow           = new PriorityDef("user-verylow",                  1000, description: "very low priority user pods"));
+            list.Add(UserVeryHigh          = new PriorityDef("user-veryhigh",                 5000, description: "Used for very-high priority user pods"));
+            list.Add(UserHigh              = new PriorityDef("user-high",                     4000, description: "Used for high priority user pods"));
+            list.Add(UserMedium            = new PriorityDef("user-medium",                   3000, description: "Used for medium priority user pods", isDefault: true));
+            list.Add(UserLow               = new PriorityDef("user-low",                      2000, description: "Used for low-priority user pods"));
+            list.Add(UserVeryLow           = new PriorityDef("user-verylow",                  1000, description: "Used for very low priority user pods"));
 
             Values = list;
 
