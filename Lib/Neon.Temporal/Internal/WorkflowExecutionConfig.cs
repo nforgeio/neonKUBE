@@ -38,21 +38,21 @@ namespace Neon.Temporal.Internal
         /// Maximum time the entire workflow may take to complete end-to-end.
         /// </summary>
         [JsonProperty(PropertyName = "workflow_execution_timeout")]
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowExecutionTimeout { get; set; }
 
         /// <summary>
         /// Maximum time a single workflow run may take to complete.
         /// </summary>
         [JsonProperty(PropertyName = "workflow_run_timeout")]
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
         /// Maximum time a workflow task/decision may take to complete.
         /// </summary>
         [JsonProperty(PropertyName = "default_workflow_task_timeout")]
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan DefaultWorkflowTaskTimeout { get; set; }
     }
 }

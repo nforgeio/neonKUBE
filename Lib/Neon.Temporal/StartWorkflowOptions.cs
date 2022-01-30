@@ -220,7 +220,7 @@ namespace Neon.Temporal
         /// Optionally specifies The timeout for duration of a single workflow run.
         /// The resolution is seconds.  This defaults to <see cref="WorkflowExecutionTimeout"/>
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace Neon.Temporal
         /// point method.
         /// </note>
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowExecutionTimeout { get; set; }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace Neon.Temporal
         /// as specified by the retry policy.   This defaults to <b>10 seconds</b> when not specified.
         /// The maximum timeout is <b>60 seconds</b>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>

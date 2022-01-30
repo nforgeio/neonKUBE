@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GoTimeSpanJsonConverter.cs
+// FILE:	    GoDurationJsonConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Temporal
     /// is not suitable for this serializer.
     /// </para>
     /// </summary>
-    public class GoTimeSpanJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
+    public class GoDurationJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
     {
         private string format = "c";
 
@@ -57,7 +57,7 @@ namespace Neon.Temporal
         /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
         {
-            writer.WriteValue(GoTimeSpan.FromTimeSpan(value).Ticks);
+            writer.WriteValue(GoDuration.FromTimeSpan(value).Ticks);
         }
 
         /// <inheritdoc/>

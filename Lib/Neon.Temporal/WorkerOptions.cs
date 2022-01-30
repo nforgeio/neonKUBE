@@ -137,7 +137,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally sets the sticky schedule to start timeout.  Defaults to <b>5 seconds</b>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan StickyScheduleToStartTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally sets the graceful shutdown timeout.  Defaults to zero.  Time is represented in nanoseconds.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
     }
 }
