@@ -1369,7 +1369,7 @@ metadata:
   name: {priorityClassDef.Name}
 value: {priorityClassDef.Value}
 description: ""{priorityClassDef.Description}""
-globalDefault: false
+globalDefault: {NeonHelper.ToBoolString(priorityClassDef.IsDefault)}
 ";
                         sbPriorityClasses.Append(definition);
                     }
@@ -4538,7 +4538,15 @@ $@"- name: StorageType
                     // We're going to set the pod priority class to the same value as 
                     // the postgres operator.
 
-                    values.Add("podPriorityClassName", PriorityClass.NeonData.Name);
+                    // $todo(jefflill):
+                    //
+                    // Commenting this out temporarily.  It appears that the Posgres operator
+                    // is trying to create this priority?  This doesn't happen every time and
+                    // this might also be a Helm chart issue:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1414
+
+                    //values.Add("podPriorityClassName", PriorityClass.NeonData.Name);
 
                     await master.InstallHelmChartAsync(controller, "postgres-operator", 
                         releaseName:     "neon-system-db", 
