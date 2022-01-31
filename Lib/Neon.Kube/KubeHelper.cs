@@ -1406,33 +1406,8 @@ namespace Neon.Kube
 
                 request.CertificateExtensions.Add(sanBuilder.Build());
 
-                var certificate          = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
-                certificate.FriendlyName = friendlyName;
-
-                return certificate;
+                return request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(validDays)));
             }
-        }
-
-        /// <summary>
-        /// Looks for a certificate with a friendly name.
-        /// </summary>
-        /// <param name="store">The certificate store.</param>
-        /// <param name="friendlyName">The case insensitive friendly name.</param>
-        /// <returns>The certificate or <c>null</c> if one doesn't exist by the name.</returns>
-        private static X509Certificate2 FindCertificateByFriendlyName(X509Store store, string friendlyName)
-        {
-            Covenant.Requires<ArgumentNullException>(store != null, nameof(store));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(friendlyName), nameof(friendlyName));
-
-            foreach (var certificate in store.Certificates)
-            {
-                if (friendlyName.Equals(certificate.FriendlyName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return certificate;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>

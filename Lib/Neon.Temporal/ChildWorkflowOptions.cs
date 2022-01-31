@@ -199,7 +199,7 @@ namespace Neon.Temporal
         /// Specifies the maximum time the child workflow may execute from start
         /// to finish.  This defaults to <see cref="TemporalSettings.WorkflowExecutionTimeoutSeconds"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowExecutionTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
@@ -208,14 +208,14 @@ namespace Neon.Temporal
         /// is willing to wait for the child completion.
         /// Defaults to WorkflowExecutionTimeout
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowRunTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
         /// This defaults to <see cref="TemporalSettings.WorkflowTaskTimeout"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan WorkflowTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>

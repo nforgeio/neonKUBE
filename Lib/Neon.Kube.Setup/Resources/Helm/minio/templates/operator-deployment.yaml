@@ -43,6 +43,7 @@ spec:
           secret:
             secretName: minio-client
             defaultMode: 420
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"

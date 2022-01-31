@@ -22,6 +22,7 @@ spec:
       labels:
         control-plane: harbor-operator
     spec:
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - args:
         - --enable-leader-election

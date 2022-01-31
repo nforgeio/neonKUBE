@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GoTimeSpan.cs
+// FILE:	    GoDuration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,20 +29,20 @@ namespace Neon.Time
     /// <remarks>
     /// <note>
     /// <para>
-    /// <see cref="GoTimeSpan"/> measures time down 1 nanosecond resolution whereas
+    /// <see cref="GoDuration"/> measures time down 1 nanosecond resolution whereas
     /// <see cref="TimeSpan"/>'s resolution is 100ns and both implementations use
     /// a signed 64-bit integer as the underlying representation.  This means that
-    /// <see cref="GoTimeSpan"/> can represent of maximum duration of about 290
+    /// <see cref="GoDuration"/> can represent of maximum duration of about 290
     /// years (positive and negative) where <see cref="TimeSpan"/> can handle 
     /// about 29,000 years.
     /// </para>
     /// <para>
     /// This class will throw a <see cref="ArgumentOutOfRangeException"/> when converting
-    /// a <see cref="TimeSpan"/> that is beyound the capability of a <see cref="GoTimeSpan"/>.
+    /// a <see cref="TimeSpan"/> that is beyound the capability of a <see cref="GoDuration"/>.
     /// </para>
     /// </note>
     /// </remarks>
-    public struct GoTimeSpan
+    public struct GoDuration
     {
         //---------------------------------------------------------------------
         // Static members
@@ -73,19 +73,19 @@ namespace Neon.Time
         public const long TicksPerHour = TicksPerMinute * 60;
 
         /// <summary>
-        /// Returns a zero <see cref="GoTimeSpan"/> .
+        /// Returns a zero <see cref="GoDuration"/> .
         /// </summary>
-        public static GoTimeSpan Zero { get; private set; } = GoTimeSpan.FromNanoseconds(0);
+        public static GoDuration Zero { get; private set; } = GoDuration.FromNanoseconds(0);
 
         /// <summary>
-        /// Returns the minimum possible <see cref="GoTimeSpan"/>.
+        /// Returns the minimum possible <see cref="GoDuration"/>.
         /// </summary>
-        public static GoTimeSpan MinValue { get; private set; } = GoTimeSpan.FromNanoseconds(long.MinValue);
+        public static GoDuration MinValue { get; private set; } = GoDuration.FromNanoseconds(long.MinValue);
 
         /// <summary>
-        /// Returns the maximum possible <see cref="GoTimeSpan"/>.
+        /// Returns the maximum possible <see cref="GoDuration"/>.
         /// </summary>
-        public static GoTimeSpan MaxValue { get; private set; } = GoTimeSpan.FromNanoseconds(long.MaxValue);
+        public static GoDuration MaxValue { get; private set; } = GoDuration.FromNanoseconds(long.MaxValue);
 
         /// <summary>
         /// The minimum value serialized to a string (computed by hand to avoid 64-bit wrap around issues.
@@ -93,23 +93,23 @@ namespace Neon.Time
         private const string MinValueString = "-2562047h47m16s854ms775us808ns";
 
         /// <summary>
-        /// Implicitly converts a <see cref="GoTimeSpan"/> into a <see cref="TimeSpan"/>.
+        /// Implicitly converts a <see cref="GoDuration"/> into a <see cref="TimeSpan"/>.
         /// </summary>
-        /// <param name="goTimeSpan">The input <see cref="GoTimeSpan"/>.</param>
+        /// <param name="goTimeSpan">The input <see cref="GoDuration"/>.</param>
         /// <returns>The equivalent <see cref="TimeSpan"/>.</returns>
-        public static implicit operator TimeSpan(GoTimeSpan goTimeSpan)
+        public static implicit operator TimeSpan(GoDuration goTimeSpan)
         {
             return goTimeSpan.TimeSpan;
         }
 
         /// <summary>
-        /// Implicitly converts a <see cref="TimeSpan"/> into a <see cref="GoTimeSpan"/>.
+        /// Implicitly converts a <see cref="TimeSpan"/> into a <see cref="GoDuration"/>.
         /// </summary>
         /// <param name="timespan">The input <see cref="TimeSpan"/>.</param>
-        /// <returns>The equivalent <see cref="GoTimeSpan"/>.</returns>
-        public static implicit operator GoTimeSpan(TimeSpan timespan)
+        /// <returns>The equivalent <see cref="GoDuration"/>.</returns>
+        public static implicit operator GoDuration(TimeSpan timespan)
         {
-            return new GoTimeSpan(timespan);
+            return new GoDuration(timespan);
         }
 
         /// <summary>
@@ -129,9 +129,9 @@ namespace Neon.Time
         /// nanoseconds that can be represented in a signed 64-bit integer).
         /// </note>
         /// </remarks>
-        public static bool TryParse(string input, out GoTimeSpan goTimeSpan)
+        public static bool TryParse(string input, out GoDuration goTimeSpan)
         {
-            goTimeSpan = new GoTimeSpan();
+            goTimeSpan = new GoDuration();
 
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -277,105 +277,116 @@ namespace Neon.Time
         }
 
         /// <summary>
-        /// Parses a <see cref="GoTimeSpan"/> from a string.
+        /// Parses a <see cref="GoDuration"/> from a string.
         /// </summary>
         /// <param name="input">The input string.</param>
-        /// <returns>The parsed <see cref="GoTimeSpan"/>.</returns>
+        /// <returns>The parsed <see cref="GoDuration"/>.</returns>
         /// <exception cref="FormatException">Thrown if the input is not valid.</exception>
-        public static GoTimeSpan Parse(string input)
+        /// <remarks>
+        /// <para>
+        /// The input is a possibly signed sequence of decimal numbers, each with 
+        /// optional fraction and a unit suffix, such as "300ms", "-1.5h" or 
+        /// "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". 
+        /// </para>
+        /// <note>
+        /// GO timespans are limited to about 290 years (the maximum number of
+        /// nanoseconds that can be represented in a signed 64-bit integer).
+        /// </note>
+        /// </remarks>
+        public static GoDuration Parse(string input)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             if (!TryParse(input, out var goTimeSpan))
             {
-                throw new FormatException($"Cannot parse [{nameof(GoTimeSpan)}] string: [{input}]");
+                throw new FormatException($"Cannot parse [{nameof(GoDuration)}] string: [{input}]");
             }
 
             return goTimeSpan;
         }
 
         /// <summary>
-        /// Creates a <see cref="GoTimeSpan"/> from a <see cref="TimeSpan"/>.
+        /// Creates a <see cref="GoDuration"/> from a <see cref="TimeSpan"/>.
         /// </summary>
         /// <param name="timespan">The input time span.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        public static GoTimeSpan FromTimeSpan(TimeSpan timespan)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        public static GoDuration FromTimeSpan(TimeSpan timespan)
         {
-            return new GoTimeSpan(timespan);
+            return new GoDuration(timespan);
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from nanoseconds.
+        /// Returns a <see cref="GoDuration"/> from nanoseconds.
         /// </summary>
         /// <param name="nanoseconds">The duration in nanoseconds.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        public static GoTimeSpan FromNanoseconds(long nanoseconds)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        public static GoDuration FromNanoseconds(long nanoseconds)
         {
-            return new GoTimeSpan(nanoseconds);
+            return new GoDuration(nanoseconds);
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from microseconds.
+        /// Returns a <see cref="GoDuration"/> from microseconds.
         /// </summary>
         /// <param name="milliseconds">The duration in microseconds.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public static GoTimeSpan FromMicroseconds(double milliseconds)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public static GoDuration FromMicroseconds(double milliseconds)
         {
-            return new GoTimeSpan(ToTicks((decimal) milliseconds * TicksPerMicrosecond));
+            return new GoDuration(ToTicks((decimal) milliseconds * TicksPerMicrosecond));
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from milliseconds.
+        /// Returns a <see cref="GoDuration"/> from milliseconds.
         /// </summary>
         /// <param name="milliseconds">The duration in milliseconds.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public static GoTimeSpan FromMilliseconds(double milliseconds)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public static GoDuration FromMilliseconds(double milliseconds)
         {
-            return new GoTimeSpan(ToTicks((decimal) milliseconds * TicksPerMillisecond));
+            return new GoDuration(ToTicks((decimal) milliseconds * TicksPerMillisecond));
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from seconds.
+        /// Returns a <see cref="GoDuration"/> from seconds.
         /// </summary>
         /// <param name="seconds">The duration in seconds.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public static GoTimeSpan FromSeconds(double seconds)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public static GoDuration FromSeconds(double seconds)
         {
-            return new GoTimeSpan(ToTicks((decimal) seconds * TicksPerSecond));
+            return new GoDuration(ToTicks((decimal) seconds * TicksPerSecond));
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from minutes.
+        /// Returns a <see cref="GoDuration"/> from minutes.
         /// </summary>
         /// <param name="minutes">The duration in minutes.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public static GoTimeSpan FromMinutes(double minutes)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public static GoDuration FromMinutes(double minutes)
         {
-            return new GoTimeSpan(ToTicks((decimal) minutes * TicksPerMinute));
+            return new GoDuration(ToTicks((decimal) minutes * TicksPerMinute));
         }
 
         /// <summary>
-        /// Returns a <see cref="GoTimeSpan"/> from hours.
+        /// Returns a <see cref="GoDuration"/> from hours.
         /// </summary>
         /// <param name="hours">The duration in hours.</param>
-        /// <returns>The new <see cref="GoTimeSpan"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public static GoTimeSpan FromHours(double hours)
+        /// <returns>The new <see cref="GoDuration"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public static GoDuration FromHours(double hours)
         {
-            return new GoTimeSpan(ToTicks((decimal) hours * TicksPerHour));
+            return new GoDuration(ToTicks((decimal) hours * TicksPerHour));
         }
 
         /// <summary>
         /// Converts a <c>double</c> nanosecond count to a <c>long</c>, ensuring that the
-        /// result can be represented as a <see cref="GoTimeSpan"/>.
+        /// result can be represented as a <see cref="GoDuration"/>.
         /// </summary>
         /// <param name="nanoseconds">The input <c>douuble</c>.</param>
         /// <returns>The output <c>long</c>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
         private static long ToTicks(decimal nanoseconds)
         {
             if (long.MinValue <= nanoseconds && nanoseconds <= long.MaxValue)
@@ -383,17 +394,17 @@ namespace Neon.Time
                 return (long)nanoseconds;
             }
 
-            throw new ArgumentOutOfRangeException($"Value is outside the range of a [{nameof(GoTimeSpan)}].");
+            throw new ArgumentOutOfRangeException($"Value is outside the range of a [{nameof(GoDuration)}].");
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         /// <summary>
-        /// Constructs a <see cref="GoTimeSpan"/> from nanoseconds.
+        /// Constructs a <see cref="GoDuration"/> from nanoseconds.
         /// </summary>
         /// <param name="nanoseconds">The duration in nanoseconds.</param>
-        public GoTimeSpan(long nanoseconds)
+        public GoDuration(long nanoseconds)
         {
             this.Ticks = nanoseconds;
         }
@@ -402,8 +413,8 @@ namespace Neon.Time
         /// Constructs an instance from a <see cref="TimeSpan"/>.
         /// </summary>
         /// <param name="timespan">The time span.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        public GoTimeSpan(TimeSpan timespan)
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoDuration"/>.</exception>
+        public GoDuration(TimeSpan timespan)
         {
             this.Ticks = ToTicks(timespan.Ticks * 100.0m);
         }
@@ -537,7 +548,7 @@ namespace Neon.Time
             }
 
             string      output = string.Empty;
-            GoTimeSpan  absolute;
+            GoDuration  absolute;
 
             if (Ticks < 0)
             {

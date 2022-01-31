@@ -75,9 +75,6 @@ OPTIONS:
     --container-images  - Verifies that all container images running on the
                           cluster are included in the cluster manifest
 
-    --local-images      - Verifies that all images referenced by running pods
-                          are being pulled from the local Harbor registry
-
     --priority-class    - Verifies that all running pod templates specify a
                           non-zero PriorityClass.
 
@@ -89,14 +86,11 @@ REMARKS:
 This command returns a non-zero exit code when one or more checks fail.
 ";
 
-        private KubeConfigContext   k8s;
-        private ClusterLogin        clusterLogin;
-
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "check" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--local-images", "--priority-class", "--list" };
+        public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--priority-class", "--list" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -113,37 +107,46 @@ This command returns a non-zero exit code when one or more checks fail.
                 Program.Exit(1);
             }
 
+            var contextName = KubernetesClientConfiguration.BuildDefaultConfig().CurrentContext;
+
+            if (string.IsNullOrEmpty(contextName))
+            {
+                Console.Error.WriteLine($"*** ERROR: There is no current cluster.");
+                Program.Exit(1);
+            }
+
+            var clusterLogin = KubeHelper.GetClusterLogin(KubeContextName.Parse(contextName));
+
+            if (clusterLogin == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: There is no current cluster or the current cluster is not a neonKUBE cluster.");
+                Program.Exit(1);
+            }
+
             // Handle the command line options.
 
-            var all = commandLine.HasOption("--all");
+            var all             = commandLine.HasOption("--all");
             var containerImages = commandLine.HasOption("--container-images");
-            var localImages = commandLine.HasOption("--local-images");
-            var priorityClass = commandLine.HasOption("--priority-class");
-            var list = commandLine.HasOption("--list");
+            var priorityClass   = commandLine.HasOption("--priority-class");
+            var listAll         = commandLine.HasOption("--list");
 
-            if (all || (!containerImages && !priorityClass && !localImages))
+            if (all || (!containerImages && !priorityClass))
             {
                 containerImages = true;
-                localImages = true;
-                priorityClass = true;
+                priorityClass   = true;
             }
 
             // Perform the requested checks.
 
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+            var k8s    = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
             var error = false;
 
-            if (containerImages && !await ClusterChecker.CheckContainerImagesAsync(k8s))
+            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, listAll: listAll))
             {
                 error = true;
             }
 
-            if (localImages && !await ClusterChecker.CheckPodLocalImagesAsync(k8s, displayAlways: list))
-            {
-                error = true;
-            }
-
-            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(k8s, displayAlways: list))
+            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(clusterLogin, k8s, listAll: listAll))
             {
                 error = true;
             }

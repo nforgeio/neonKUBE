@@ -22,6 +22,7 @@ spec:
       labels:
         {{- include "glauth.selectorLabels" . | nindent 8 }}
     spec:
+      priorityClassName: {{ .Values.priorityClassName }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -29,6 +30,7 @@ spec:
       serviceAccountName: {{ include "glauth.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

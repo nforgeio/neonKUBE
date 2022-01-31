@@ -39,28 +39,28 @@ namespace Neon.Temporal
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's timeout for the restarted
         /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's decision task timeout for 
         /// the restarted workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan TaskStartToCloseTimeout { get; set; }
 
         /// <summary>

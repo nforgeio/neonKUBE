@@ -35,6 +35,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Time;
 
 namespace Neon.Kube
 {
@@ -82,6 +83,8 @@ namespace Neon.Kube
         private const int       defaultReservedIngressStartPort = 64000;
         private const int       defaultReservedIngressEndPort   = 64999;
         private const int       additionalReservedPorts         = 100;
+        private const string    defaultCertificateDuration      = "504h";
+        private const string    defaultCertificateRenewBefore   = "336h";
 
         /// <summary>
         /// Default constructor.
@@ -285,6 +288,26 @@ namespace Neon.Kube
         internal int LastExternalSshPort => ReservedIngressEndPort;
 
         /// <summary>
+        /// Specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
+        /// This defaults to <b>504h</b> (21 days).  See <see cref="GoDuration.Parse(string)"/> for details 
+        /// about the timespan format.
+        /// </summary>
+        [JsonProperty(PropertyName = "CertificateDuration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "certificateDuration", ApplyNamingConventions = false)]
+        [DefaultValue(defaultCertificateDuration)]
+        public string CertificateDuration { get; set; } = defaultCertificateDuration;
+
+        /// <summary>
+        /// Specifies the time to wait before attempting to renew for internal cluster TLS certificates.
+        /// This must be less than <see cref="CertificateDuration"/> and defaults to <b>336h</b> (14 days).
+        /// See <see cref="GoDuration.Parse(string)"/> for details about the timespan format.
+        /// </summary>
+        [JsonProperty(PropertyName = "CertificateRenewBefore", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "certificateRenewBefore", ApplyNamingConventions = false)]
+        [DefaultValue(defaultCertificateRenewBefore)]
+        public string CertificateRenewBefore { get; set; } = defaultCertificateRenewBefore;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -394,19 +417,19 @@ namespace Neon.Kube
                 {
                     new IngressRule()
                     {
-                        Name = "http2",
-                        Protocol = IngressProtocol.Tcp,
+                        Name         = "http2",
+                        Protocol     = IngressProtocol.Tcp,
                         ExternalPort = 80,
-                        TargetPort = 8080,
-                        NodePort = KubeNodePorts.IstioIngressHttp
+                        TargetPort   = 8080,
+                        NodePort     = KubeNodePorts.IstioIngressHttp
                     },
                     new IngressRule()
                     {
-                        Name = "https",
-                        Protocol = IngressProtocol.Tcp,
+                        Name         = "https",
+                        Protocol     = IngressProtocol.Tcp,
                         ExternalPort = 443,
-                        TargetPort = 8443,
-                        NodePort = KubeNodePorts.IstioIngressHttps
+                        TargetPort   = 8443,
+                        NodePort     = KubeNodePorts.IstioIngressHttps
                     }
                 };
             }
@@ -419,7 +442,7 @@ namespace Neon.Kube
 
                 if (ingressRuleNames.Contains(rule.Name))
                 {
-                    throw new ClusterDefinitionException($"Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
                 }
 
                 ingressRuleNames.Add(rule.Name);
@@ -447,18 +470,48 @@ namespace Neon.Kube
             // include common reserved ports.
 
             var reservedPorts = new int[]
-                {
-                    NetworkPorts.HTTP,
-                    NetworkPorts.HTTPS,
-                    NetworkPorts.KubernetesApiServer
-                };
+            {
+                NetworkPorts.HTTP,
+                NetworkPorts.HTTPS,
+                NetworkPorts.KubernetesApiServer
+            };
 
             foreach (int reservedPort in reservedPorts)
             {
                 if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
                 {
-                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
                 }
+            }
+
+            // Validate the certificate durations.
+
+            CertificateDuration    ??= defaultCertificateDuration;
+            CertificateRenewBefore ??= defaultCertificateRenewBefore;
+
+            if (!GoDuration.TryParse(CertificateDuration, out var duration))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
+            }
+
+            if (!GoDuration.TryParse(CertificateRenewBefore, out var renewBefore))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
+            }
+
+            if (duration.TimeSpan < TimeSpan.FromSeconds(1))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
+            }
+
+            if (renewBefore.TimeSpan < TimeSpan.FromSeconds(1))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
+            }
+
+            if (duration.TimeSpan < renewBefore.TimeSpan)
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
             }
         }
 

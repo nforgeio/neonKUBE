@@ -31,6 +31,7 @@ spec:
         openebs.io/component-name: openebs-snapshot-operator
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-snapshot-controller
         image: "{{ .Values.snapshotOperator.controller.image.organization }}/{{ .Values.snapshotOperator.controller.image.repository }}:{{ .Values.snapshotOperator.controller.image.tag }}"

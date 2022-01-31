@@ -39,7 +39,7 @@ namespace Neon.Kube.Resources
     /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]

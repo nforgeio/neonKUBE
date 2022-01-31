@@ -33,6 +33,7 @@ spec:
         openebs.io/version: {{ .Values.release.version }}
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.fullname" . }}-ndm-operator
         image: "{{ .Values.ndmOperator.image.organization }}/{{ .Values.ndmOperator.image.repository }}:{{ .Values.ndmOperator.image.tag }}"

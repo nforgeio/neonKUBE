@@ -17,6 +17,7 @@ spec:
       tolerations:
         - operator: "Exists"
           effect: "NoSchedule"
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: istio-operator
           image: {{.Values.images.organization}}/{{.Values.images.operator.repository}}:{{.Values.images.operator.tag}}

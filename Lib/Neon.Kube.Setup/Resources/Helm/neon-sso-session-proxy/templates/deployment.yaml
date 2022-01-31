@@ -29,6 +29,7 @@ spec:
       serviceAccountName: {{ include "neon-sso-session-proxy.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

@@ -70,7 +70,7 @@ Follow the steps below to configure a development or test workstation:
     dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
     ```
 
-    * Execute these Powershell commands to install Ubuntu-20.04 on WSL2:
+    * Execute these Powershell commands in **pwsh** to install Ubuntu-20.04 on WSL2:
     ```
     Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
     wsl --import Ubuntu-20.04 $env:USERPROFILE ubuntu.tar

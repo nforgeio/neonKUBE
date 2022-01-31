@@ -35,7 +35,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The workflow history retention Ttl.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         [JsonProperty(PropertyName = "workflow_execution_retention_ttl")]
         public TimeSpan? WorkflowExecutionRetentionTtl { get; set; }
 

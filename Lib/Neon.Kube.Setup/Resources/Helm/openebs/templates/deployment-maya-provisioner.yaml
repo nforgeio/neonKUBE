@@ -32,6 +32,7 @@ spec:
         openebs.io/version: {{ .Values.release.version }}
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-provisioner
         image: "{{ .Values.provisioner.image.organization }}/{{ .Values.provisioner.image.repository }}:{{ .Values.provisioner.image.tag }}"

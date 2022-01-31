@@ -36,6 +36,7 @@ spec:
       serviceAccountName: neon-cluster-operator
       tolerations:
       - operator: Exists
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: neon-cluster-operator
         env:

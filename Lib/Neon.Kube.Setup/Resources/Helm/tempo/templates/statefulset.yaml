@@ -28,6 +28,7 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ include "tempo.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - args:
         - -config.file=/conf/tempo.yaml
