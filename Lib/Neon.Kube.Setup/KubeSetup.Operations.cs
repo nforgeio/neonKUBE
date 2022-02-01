@@ -1363,7 +1363,7 @@ metadata:
   name: {priorityClassDef.Name}
 value: {priorityClassDef.Value}
 description: ""{priorityClassDef.Description}""
-premptionPolicy: PreemptLowerPriority
+preemptionPolicy: PreemptLowerPriority
 globalDefault: {NeonHelper.ToBoolString(priorityClassDef.IsDefault)}
 ";
                         sbPriorityClasses.Append(definition);
