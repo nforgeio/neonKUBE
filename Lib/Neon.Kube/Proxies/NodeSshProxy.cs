@@ -593,13 +593,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var hostingManager     = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
             var fstrim  = string.Empty;
 
-            if (hostingManager.SupportsFsTrim)
+            if (HostingManager.SupportsFsTrim(hostingEnvironment))
             {
                 // Not all hosting enviuronments supports: fstrim
 

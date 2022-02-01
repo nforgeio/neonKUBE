@@ -46,6 +46,22 @@ namespace Neon.Kube
     /// </summary>
     public abstract class HostingManager : IHostingManager
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Determines whether the hosting environment supports <b>fstrim</b>.
+        /// </summary>
+        /// <param name="environment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
+        public static bool SupportsFsTrim(HostingEnvironment environment)
+        {
+            return environment != HostingEnvironment.XenServer;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Finalizer.
         /// </summary>
@@ -102,9 +118,6 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public virtual bool CanManageRouter => false;
-
-        /// <inheritdoc/>
-        public virtual bool SupportsFsTrim => false;
 
         /// <inheritdoc/>
         public virtual async Task UpdateInternetRoutingAsync()
