@@ -87,7 +87,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />

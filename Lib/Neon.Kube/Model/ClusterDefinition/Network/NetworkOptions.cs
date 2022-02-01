@@ -95,7 +95,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
+        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperV"/> and
         /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments and
         /// ignored for other environments which specify network subnets in their related hosting
         /// options.

@@ -93,23 +93,12 @@ namespace Neon.Kube
         public GoogleHostingOptions Google { get; set; } = null;
 
         /// <summary>
-        /// Specifies the Hyper-V settings when hosting on remote Hyper-V servers.  
-        /// This is typically used for production.
+        /// Specifies the Hyper-V settings.
         /// </summary>
-        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hyperV", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hyperv", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hyperv", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HyperVHostingOptions HyperV { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the Hyper-V settings when hosting on the local workstation using the 
-        /// Microsoft Hyper-V hypervisor.  This is typically used for development or
-        /// test purposes.
-        /// </summary>
-        [JsonProperty(PropertyName = "HyperVLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hypervLocal", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public LocalHyperVHostingOptions HyperVLocal { get; set; } = null;
 
         /// <summary>
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
@@ -136,7 +125,7 @@ namespace Neon.Kube
         public XenServerHostingOptions XenServer { get; set; } = null;
 
         /// <summary>
-        /// Specifies common hosting settings for hypervisor based environments such as Hyper-V and XenServer.
+        /// Specifies common hosting settings for hosted hypervisor environments such as Hyper-V and XenServer.
         /// </summary>
         [JsonProperty(PropertyName = "VM", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vm", ApplyNamingConventions = false)]
@@ -161,27 +150,39 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by a hypervisor provider
-        /// that supports remote hosts.
+        /// Returns <c>true</c> if the cluster will be hosted on non-cloud hypervisors 
+        /// like XenServer or Hyper-V.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsRemoteHypervisorProvider
+        public bool IsHostedHypervisor
         {
             get
             {
                 switch (Environment)
                 {
-                    case HostingEnvironment.HyperV:
                     case HostingEnvironment.XenServer:
 
                         return true;
+
+                    case HostingEnvironment.HyperV:
+
+                        // $todo(jefflill):
+                        //
+                        // We should return [true] here but it will take some additional
+                        // changes to continue support for provisioning on the local workstation
+                        // vs. a remote Hyper-V host.
+                        //
+                        // We'll revisit this when we implement remote Hyper-C support:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/1447
+
+                        return false;
 
                     case HostingEnvironment.Aws:
                     case HostingEnvironment.Azure:
                     case HostingEnvironment.BareMetal:
                     case HostingEnvironment.Google:
-                    case HostingEnvironment.HyperVLocal:
                     case HostingEnvironment.Wsl2:
 
                         return false;
@@ -256,18 +257,6 @@ namespace Neon.Kube
                     HyperV = HyperV ?? new HyperVHostingOptions();
                     HyperV.Validate(clusterDefinition);
 
-                    Cloud = Cloud ?? new CloudOptions();
-                    Cloud.Validate(clusterDefinition);
-
-                    Vm = Vm ?? new VmHostingOptions();
-                    Vm.Validate(clusterDefinition);
-                    break;
-
-                case HostingEnvironment.HyperVLocal:
-
-                    HyperVLocal = HyperVLocal ?? new LocalHyperVHostingOptions();
-                    HyperVLocal.Validate(clusterDefinition);
-
                     Vm = Vm ?? new VmHostingOptions();
                     Vm.Validate(clusterDefinition);
                     break;
@@ -308,7 +297,6 @@ namespace Neon.Kube
             clusterDefinition.Hosting.Azure?.ClearSecrets();
             clusterDefinition.Hosting.Google?.ClearSecrets();
             clusterDefinition.Hosting.HyperV?.ClearSecrets();
-            clusterDefinition.Hosting.HyperVLocal?.ClearSecrets();
             clusterDefinition.Hosting.Machine?.ClearSecrets();
             clusterDefinition.Hosting.Vm?.ClearSecrets();
             clusterDefinition.Hosting.XenServer?.ClearSecrets();

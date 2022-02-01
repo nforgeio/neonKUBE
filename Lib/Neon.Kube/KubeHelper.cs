@@ -406,7 +406,6 @@ namespace Neon.Kube
 
                 case HostingEnvironment.BareMetal:
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
                 case HostingEnvironment.Wsl2:
 
@@ -428,11 +427,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Determines whether a cluster hosting environment is available only for neonFORGE
-        /// enterprise (closed-source) related projects.
+        /// premium (closed-source) related projects.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
         /// <returns><c>true</c> for enteprise/closed-source related projects.</returns>
-        public static bool IsEnterpriseEnvironment(HostingEnvironment hostingEnvironment)
+        public static bool IsPremiumEnvironment(HostingEnvironment hostingEnvironment)
         {
             switch (hostingEnvironment)
             {
@@ -471,7 +470,7 @@ namespace Neon.Kube
         public static bool IsOnPremiseHypervisorEnvironment(HostingEnvironment hostingEnvironment)
         {
             return hostingEnvironment == HostingEnvironment.HyperV ||
-                   hostingEnvironment == HostingEnvironment.HyperVLocal ||
+                   hostingEnvironment == HostingEnvironment.HyperV ||
                    hostingEnvironment == HostingEnvironment.XenServer;
         }
 

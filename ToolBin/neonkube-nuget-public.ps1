@@ -185,7 +185,6 @@ SetVersion Neon.YugaByte            $libraryVersion
 # SetVersion Neon.Kube.Google         $kubeVersion
 # SetVersion Neon.Kube.Hosting        $kubeVersion
 # SetVersion Neon.Kube.HyperV         $kubeVersion
-# SetVersion Neon.Kube.HyperVLocal    $kubeVersion
 # SetVersion Neon.Kube.Models         $kubeVersion
 # SetVersion Neon.Kube.Operator       $kubeVersion
 # SetVersion Neon.Kube.Resources      $kubeVersion
@@ -229,7 +228,6 @@ Publish Neon.YugaByte               $libraryVersion
 # Publish Neon.Kube.Google            $kubeVersion
 # Publish Neon.Kube.Hosting           $kubeVersion
 # Publish Neon.Kube.HyperV            $kubeVersion
-# Publish Neon.Kube.HyperVLocal       $kubeVersion
 # Publish Neon.Kube.Models            $kubeVersion
 # Publish Neon.Kube.Operator          $kubeVersion
 # Publish Neon.Kube.Resources         $kubeVersion

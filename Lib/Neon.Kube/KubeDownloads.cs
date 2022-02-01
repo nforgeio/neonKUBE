@@ -124,7 +124,6 @@ namespace Neon.Kube
                     throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment yet.");
 
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
 
                     if (setupDebugMode)
                     {

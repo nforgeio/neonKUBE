@@ -207,7 +207,7 @@ OPTIONS:
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
-#if ENTERPRISE
+#if PREMIUM
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.Wsl2)
             {
                 var distro = new Wsl2ExtendedProxy(KubeConst.NeonDesktopWsl2BuiltInDistroName, KubeConst.SysAdminUser);

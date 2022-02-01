@@ -256,9 +256,9 @@ namespace Neon.Kube
             {
                 switch (Hosting.Environment)
                 {
-                    case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.HyperV:
 
-                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltIn;
+                        return Hosting.HyperV != null && Hosting.HyperV.NeonDesktopBuiltIn;
 
                     case HostingEnvironment.Wsl2:
 

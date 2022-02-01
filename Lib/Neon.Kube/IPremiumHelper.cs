@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IEnterpriseHelper.cs
+// FILE:	    IPremiumHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,31 +34,31 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Defines neonKUBE Enterprise related helper methods that will be available
-    /// for enterprise releases of neonDESKTOP and <b>neon-cli</b> via dependency
-    /// injection by registering an <see cref="IEnterpriseHelper"/> implementation
+    /// Defines neonKUBE premium related helper methods that will be available
+    /// for premium releases of neonDESKTOP and <b>neon-cli</b> via dependency
+    /// injection by registering an <see cref="IPremiumHelper"/> implementation
     /// via the <see cref="NeonHelper.ServiceContainer"/>.
     /// </para>
     /// <para>
-    /// Any code that requires or can be enhanced by enterprise capabilities can
+    /// Any code that requires or can be enhanced by premium capabilities can
     /// check whether an implementation for this interface is registered with
     /// <see cref="NeonHelper.ServiceContainer"/> to gain access to enhanced
     /// methods as necessary.
     /// </para>
     /// </summary>
-    public interface IEnterpriseHelper
+    public interface IPremiumHelper
     {
         /// <summary>
-        /// Loads the enterprise hosting managers.
+        /// Loads the premium hosting managers.
         /// </summary>
         void LoadHostingManagers();
 
         /// <summary>
-        /// Returns the enterprise hosting manager for a specific hosting environment.
+        /// Returns the premium hosting manager for a specific hosting environment.
         /// </summary>
         /// <param name="environment">Specifies the hosting environment.</param>
         /// <returns>The hosting manager for the environment.</returns>
-        /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
+        /// <exception cref="KubeException">Thrown if the environment is not implemented by a premium hosting manager.</exception>
         HostingManager GetHostingManager(HostingEnvironment environment);
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Neon.Kube
         HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
 
         /// <summary>
-        /// Returns the enterprise <see cref="HostingManager"/> for provisioning a cluster by
+        /// Returns the premium <see cref="HostingManager"/> for provisioning a cluster by
         /// downloading a node image from a URI that references a single image 
         /// file or a multi-part <see cref="DownloadManifest"/> image.
         /// </summary>
@@ -91,18 +91,18 @@ namespace Neon.Kube
         /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
         /// <returns>The hosting manager for the environment.</returns>
-        /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
+        /// <exception cref="KubeException">Thrown if the environment is not implemented by a premium hosting manager.</exception>
         HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
 
         /// <summary>
-        /// Returns the enterprise <see cref="HostingManager"/> for provisioning a cluster from
+        /// Returns the premium <see cref="HostingManager"/> for provisioning a cluster from
         /// an already downloaded image file already downloaded.
         /// </summary>
         /// <param name="cluster">The cluster proxy,</param>
         /// <param name="nodeImagePath">Specifies the path to the local node image file.</param>
         /// <param name="logFolder">Optionally specifies the log folder where the hosting manager will log progress.</param>
         /// <returns>The hosting manager for the environment.</returns>
-        /// <exception cref="KubeException">Thrown if the environment is not implemented by an enterprise hosting manager.</exception>
+        /// <exception cref="KubeException">Thrown if the environment is not implemented by a premium hosting manager.</exception>
         HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null);
 
         /// <summary>

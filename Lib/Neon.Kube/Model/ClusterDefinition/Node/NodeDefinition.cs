@@ -334,7 +334,6 @@ namespace Neon.Kube
                     break;
 
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
                 case HostingEnvironment.Wsl2:
 

@@ -101,16 +101,15 @@ namespace Neon.Kube
                 BareMetalHostingManager.Load();
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
-                HyperVLocalHostingManager.Load();
                 XenServerHostingManager.Load();
 
-                // For enterprise releases, load any additional enterprise-only hosting managers.
+                // For premium releases, load any additional premium-only hosting managers.
 
-                var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+                var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
 
-                if (enterpriseHelper != null)
+                if (premiumHelper != null)
                 {
-                    enterpriseHelper.LoadHostingManagers();
+                    premiumHelper.LoadHostingManagers();
                 }
 
                 // We're going to reflect all loaded assemblies for classes that implement
@@ -170,14 +169,14 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
 
-            if (enterpriseHelper == null)
+            if (premiumHelper == null)
             {
                 return null;
             }
 
-            return enterpriseHelper.GetHostingManager(environment);
+            return premiumHelper.GetHostingManager(environment);
         }
 
         /// <inheritdoc/>
@@ -191,14 +190,14 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, (string)null, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
 
-            if (enterpriseHelper == null)
+            if (premiumHelper == null)
             {
                 return null;
             }
 
-            return enterpriseHelper.GetManager(cluster, logFolder);
+            return premiumHelper.GetManager(cluster, logFolder);
         }
 
         /// <inheritdoc/>
@@ -212,14 +211,14 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, nodeImageUri, (string)null, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
 
-            if (enterpriseHelper == null)
+            if (premiumHelper == null)
             {
                 return null;
             }
 
-            return enterpriseHelper.GetManagerWithNodeImageUri(cluster, nodeImageUri, logFolder);
+            return premiumHelper.GetManagerWithNodeImageUri(cluster, nodeImageUri, logFolder);
         }
 
         /// <inheritdoc/>
@@ -234,14 +233,14 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, nodeImagePath, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
+            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
 
-            if (enterpriseHelper == null)
+            if (premiumHelper == null)
             {
                 return null;
             }
 
-            return enterpriseHelper.GetManagerWithNodeImageFile(cluster, nodeImagePath, logFolder);
+            return premiumHelper.GetManagerWithNodeImageFile(cluster, nodeImagePath, logFolder);
         }
     }
 }

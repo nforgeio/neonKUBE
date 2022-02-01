@@ -77,7 +77,6 @@ namespace Neon.Kube
             switch (hostEnvironment)
             {
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
 
                     resourceName += "neon-desktop.hyperv.cluster.yaml";
                     break;

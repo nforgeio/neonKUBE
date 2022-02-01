@@ -162,7 +162,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperVLocal"/>,
+        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperV"/>,
         /// and <see cref="HostingEnvironment.XenServer"/> environments.  This is used to avoid
         /// VM naming conflicts between different clusters.
         /// </para>
@@ -238,7 +238,7 @@ namespace Neon.Kube
 
             if (Cores <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(HyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
             }
 
             Memory = Memory ?? DefaultMemory;
@@ -274,7 +274,7 @@ namespace Neon.Kube
             // Ensure that some hypervisor hosts have been specified if we're deploying to remote
             // hypervisors and also that each node definition specifies a host hypervisor.
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
+            if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
                 if (clusterDefinition.Hosting.Vm.Hosts.Count == 0)
                 {

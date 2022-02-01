@@ -55,21 +55,21 @@ namespace NeonCli
         /// The program version.
         /// </summary>
         public const string Version =
-#if ENTERPRISE
+#if PREMIUM
             Neon.Cloud.Build.NeonDesktopVersion;
 #else
             Neon.Kube.KubeVersions.Kubernetes;
 #endif
 
         /// <summary>
-        /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.
+        /// Returns <c>true</c> if this is the premium <b>neon-cli</b> build.
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// neonKUBE and neonCLOUD (enterprise) GitHub repositories.
+        /// neonKUBE and neonCLOUD (premium) GitHub repositories.
         /// </remarks>
-        public const bool IsEnterprise =
-#if ENTERPRISE
+        public const bool IsPremium =
+#if PREMIUM
             true;
 #else
             false;
@@ -77,11 +77,11 @@ namespace NeonCli
 
         /// <summary>
         /// Returns the program name for printing help.  This will be <b>"neon"</b> for the community
-        /// version and <b>"neon enterprise"</b> for the enterprise version.
+        /// version and <b>"neon (premium)"</b> for the premium version.
         /// </summary>
         public const string Name =
-#if ENTERPRISE
-            "neon enterprise";
+#if PREMIUM
+            "neon (premium)";
 #else
             "neon";
 #endif
@@ -176,16 +176,16 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             PowerShell.PwshPath = KubeHelper.PwshPath;
 
-            // Ensure that all of the non-enterprise cluster hosting manager 
+            // Ensure that all of the non-premium cluster hosting manager 
             // implementations are loaded.
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
 
-#if ENTERPRISE
-            // Configure the enterprise service depedencies.
+#if PREMIUM
+            // Configure the premium service depedencies.
 
-            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHostingLoader>(new EnterpriseHostingLoader());
-            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHelper>(new EnterpriseHelper());
+            NeonHelper.ServiceContainer.AddSingleton<IPremiumHostingLoader>(new PremiumHostingLoader());
+            NeonHelper.ServiceContainer.AddSingleton<IPremiumHelper>(new PremiumHelper());
 #endif
 
             // Register a [ProfileClient] so commands will be able to pick
