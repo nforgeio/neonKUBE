@@ -113,8 +113,10 @@ namespace Neon.Kube
                     }
                     break;
 
-                default:
                 case OpenEbsEngine.Jiva:
+                    break;
+
+                default:
                 case OpenEbsEngine.Mayastor:
 
                     throw new ClusterDefinitionException($"Support for the [{Engine}] storage engine is not implemented yet.");

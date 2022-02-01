@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  organization: docker.io/glauth
-  repository: glauth-plugins
+  organization: neon-registry.node.local
+  repository: glauth-glauth
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v2.1.0-rc1"

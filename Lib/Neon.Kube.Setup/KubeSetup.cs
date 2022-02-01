@@ -274,5 +274,24 @@ namespace Neon.Kube
                 controller.Add(KubeSetupProperty.K8sClient, k8s);
             }
         }
+
+        /// <summary>
+        /// Returns step string based on whether currently in ready to go, or normal setup mode.
+        /// </summary>
+        /// <param name="readyToGoMode"></param>
+        /// <param name="stepString"></param>
+        /// <returns></returns>
+        public static string GetStepString(ReadyToGoMode readyToGoMode, string stepString)
+        {
+            switch (readyToGoMode)
+            {
+                case ReadyToGoMode.Prepare:
+                    return $"prepare/{stepString}";
+                case ReadyToGoMode.Setup:
+                    return $"ready-to-go/{stepString}";
+                default:
+                    return $"setup/{stepString}";
+            }
+        }
     }
 }
