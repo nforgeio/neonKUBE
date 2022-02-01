@@ -1,121 +1,121 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Neon.Kube</RootNamespace>
-    <Authors>neonFORGE Team</Authors>
-    <Version>2.10.0-preview</Version>
-    <Company>neonFORGE LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
-    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <AssemblyVersion>0.0.0.0</AssemblyVersion>
-    <FileVersion>0.0.0.0</FileVersion>
-    <LangVersion>latest</LangVersion>
-    <IsPackable>true</IsPackable>
-    <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube/README.md</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIcon>nuget-icon.png</PackageIcon>
-    <PackageTags>kubernetes</PackageTags>
-    <NoDefaultExcludes>true</NoDefaultExcludes>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube</RootNamespace>
+		<Authors>neonFORGE Team</Authors>
+		<Version>2.10.0-preview</Version>
+		<Company>neonFORGE LLC</Company>
+		<Product>neonKUBE</Product>
+		<Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<AssemblyVersion>0.0.0.0</AssemblyVersion>
+		<FileVersion>0.0.0.0</FileVersion>
+		<LangVersion>latest</LangVersion>
+		<IsPackable>true</IsPackable>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+		<NoDefaultExcludes>true</NoDefaultExcludes>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors>NU1605</WarningsAsErrors>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;DEBUG</DefineConstants>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<WarningsAsErrors>NU1605</WarningsAsErrors>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants></DefineConstants>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors>NU1605</WarningsAsErrors>
-    <NoWarn></NoWarn>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants></DefineConstants>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<WarningsAsErrors>NU1605</WarningsAsErrors>
+		<NoWarn></NoWarn>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors>NU1605</WarningsAsErrors>
-    <NoWarn></NoWarn>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<WarningsAsErrors>NU1605</WarningsAsErrors>
+		<NoWarn></NoWarn>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Properties\**" />
-    <EmbeddedResource Remove="Properties\**" />
-    <None Remove="Properties\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Properties\**" />
+		<EmbeddedResource Remove="Properties\**" />
+		<None Remove="Properties\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
-    <None Remove="Resources\Tools\safe-apt-get.sh" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
+		<None Remove="Resources\Tools\safe-apt-get.sh" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
-    <EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
+		<EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DNS" Version="7.0.0" />
-    <PackageReference Include="GitInfo" Version="2.2.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="KubernetesClient" Version="7.0.8" />
-    <PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-    <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" />
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Npgsql" Version="6.0.2" />
-    <PackageReference Include="SharpCompress" Version="0.30.1" />
-    <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
-    <PackageReference Include="SSH.NET" Version="2020.0.1" />
-    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-    <PackageReference Include="System.Net.Ping" Version="4.3.0" />
-    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-    <PackageReference Include="YamlDotNet" Version="11.2.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="DNS" Version="7.0.0" />
+		<PackageReference Include="GitInfo" Version="2.2.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="KubernetesClient" Version="7.0.8" />
+		<PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.2.3" />
+		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="Npgsql" Version="6.0.2" />
+		<PackageReference Include="SharpCompress" Version="0.30.1" />
+		<PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
+		<PackageReference Include="SSH.NET" Version="2020.0.1" />
+		<PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+		<PackageReference Include="System.Net.Ping" Version="4.3.0" />
+		<PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+		<PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+		<PackageReference Include="YamlDotNet" Version="11.2.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-    <ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
-    <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
-    <ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
+		<ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
+		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
+		<ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
-  </ItemGroup>
-  
-  <!--
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+	</ItemGroup>
+
+	<!--
   Generates the [KubernetesWithRetry.cs] file.
   -->
 
-  <Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
-    <Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
-  </Target>
+	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
+		<Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
+	</Target>
 
 </Project>

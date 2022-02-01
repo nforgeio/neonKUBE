@@ -1,110 +1,110 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<TargetFramework>net6.0</TargetFramework>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Neon.Kube</RootNamespace>
-    <Authors>neonFORGE Team</Authors>
-    <Version>2.10.0-preview</Version>
-    <Company>neonFORGE LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
-    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <AssemblyVersion>0.0.0.0</AssemblyVersion>
-    <FileVersion>0.0.0.0</FileVersion>
-    <LangVersion>latest</LangVersion>
-    <IsPackable>true</IsPackable>
-    <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIcon>nuget-icon.png</PackageIcon>
-    <PackageTags>kubernetes</PackageTags>
-    <NoDefaultExcludes>true</NoDefaultExcludes>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube</RootNamespace>
+		<Authors>neonFORGE Team</Authors>
+		<Version>2.10.0-preview</Version>
+		<Company>neonFORGE LLC</Company>
+		<Product>neonKUBE</Product>
+		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<AssemblyVersion>0.0.0.0</AssemblyVersion>
+		<FileVersion>0.0.0.0</FileVersion>
+		<LangVersion>latest</LangVersion>
+		<IsPackable>true</IsPackable>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+		<NoDefaultExcludes>true</NoDefaultExcludes>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
 
-  <PropertyGroup>
-	<!-- 
+	<PropertyGroup>
+		<!-- 
     We need to prevent the KubeOps build targets from trying to call the non-existent
     program entrypoint (due to this assembly being a Library) to generate the CRDs
     and other installation related files.
     -->
-    <KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-    <KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-    <KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-    <KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-    <KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-  </PropertyGroup>
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
-    <EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
-    <EmbeddedResource Include="Resources/**/*" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
+		<EmbeddedResource Include="Resources/**/*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Resources\Helm\grafana\templates\dashboards\node-problem-detector.yaml" />
-    <None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
-    <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
-    <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
-    <None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
-    <None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
-    <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
-    <None Remove="Resources\Helm\neon-dashboard\templates\config-env.yaml" />
-    <None Remove="Resources\Helm\neon-node-agent\.helmignore" />
-    <None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
-    <None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
-    <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
-    <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
-    <None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
-    <None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
-    <None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Resources\Helm\grafana\templates\dashboards\node-problem-detector.yaml" />
+		<None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
+		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
+		<None Remove="Resources\Helm\neon-dashboard\templates\config-env.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\.helmignore" />
+		<None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
+		<None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
+		<None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-    <None Include="..\nuget-icon.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\nuget-icon.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Helm" Version="0.1.35" />
-    <PackageReference Include="Minio" Version="3.1.13" />
-    <PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
-    <PackageReference Include="Tomlyn" Version="0.1.2" />
-    <PackageReference Include="Npgsql" Version="6.0.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Helm" Version="0.1.35" />
+		<PackageReference Include="Minio" Version="3.1.13" />
+		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
+		<PackageReference Include="Tomlyn" Version="0.1.2" />
+		<PackageReference Include="Npgsql" Version="6.0.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
+	</ItemGroup>
 
-  <!--
+	<!--
   The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
   download the cluster manifest JSON file for the current cluster version.  The manifest
   will be generated during image builds in neonCLOUD and uploaded to S3.
@@ -122,8 +122,8 @@
   manifest file which is checked into git and won't change very often.
   -->
 
-  <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
-  </Target>
+	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
+		<Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+	</Target>
 
 </Project>
