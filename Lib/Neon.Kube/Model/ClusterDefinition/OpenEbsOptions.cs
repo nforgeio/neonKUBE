@@ -79,6 +79,28 @@ namespace Neon.Kube
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
+            // Clusters require that at least one node has [OpenEbsStorage=true].  We'll set
+            // this automatically when the user hasn't already done this.  All workers will be
+            // set to true when there are workers, otherwise we'll set this to true for all masters.
+
+            if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
+            {
+                if (clusterDefinition.Workers.Count() > 0)
+                {
+                    foreach (var worker in clusterDefinition.Workers)
+                    {
+                        worker.OpenEbsStorage = true;
+                    }
+                }
+                else
+                {
+                    foreach (var master in clusterDefinition.Masters)
+                    {
+                        master.OpenEbsStorage = true;
+                    }
+                }
+            }
+
             switch (Engine)
             {
                 case OpenEbsEngine.Default:
@@ -90,10 +112,6 @@ namespace Neon.Kube
                     else if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) > 0)
                     {
                         Engine = OpenEbsEngine.cStor;
-                    }
-                    else
-                    {
-                        throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] for multi-node clusters when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.Default)}].");
                     }
                     break;
 
@@ -107,14 +125,11 @@ namespace Neon.Kube
 
                 case OpenEbsEngine.cStor:
 
-                    if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) == 0)
-                    {
-                        throw new ClusterDefinitionException($"One or more nodes must have [{nameof(NodeDefinition.OpenEbsStorage)}=true] when [{nameof(OpenEbsOptions.Engine)}={nameof(OpenEbsEngine.cStor)}].");
-                    }
-                    break;
+                    break; // NOP
 
                 case OpenEbsEngine.Jiva:
-                    break;
+
+                    break; // NOP
 
                 default:
                 case OpenEbsEngine.Mayastor:
