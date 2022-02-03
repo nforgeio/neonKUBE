@@ -921,6 +921,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         });
                 });
 
+            cluster.ClearNodeStatus();
+
             if (readyToGoMode == ReadyToGoMode.Setup)
             {
                 master.InvokeIdempotent("ready-to-go/renew-certs",
