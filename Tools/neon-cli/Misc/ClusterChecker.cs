@@ -11,7 +11,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.priority=
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -351,7 +351,7 @@ namespace NeonCli
                 if (badPodDeploymentCount > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority=0]:");
+                    Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority<{PriorityClass.NeonMin.Value}]:");
                     Console.WriteLine();
                 }
 
@@ -364,8 +364,11 @@ namespace NeonCli
                     var priorityInfo   = item.Value;
                     var ownerFormatted = item.Key + new string(' ', ownerIdWidth - item.Key.Length);
                     var priorityValue  = priorityInfo.Priority.Value.ToString("#,##0").Trim();
+                    var errorMarker    = priorityInfo.Priority.Value < PriorityClass.NeonMin.Value
+                                             ? "ERROR -->"
+                                             : "         ";
 
-                    Console.WriteLine($"{ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
+                    Console.WriteLine($"{errorMarker} {ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
                 }
             }
             else
