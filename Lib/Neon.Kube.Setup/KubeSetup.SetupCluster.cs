@@ -175,16 +175,6 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.Normal}] when [{nameof(debugMode)}=TRUE].");
             }
 
-            // Do some quick checks to ensure that component versions look reasonable.
-
-            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
-            var crioVersion       = new Version(KubeVersions.Crio);
-
-            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
-            {
-                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
-            }
-
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 
@@ -193,6 +183,26 @@ namespace Neon.Kube
             if (!string.IsNullOrEmpty(automationFolder))
             {
                 logFolder = Path.Combine(automationFolder, logFolder);
+            }
+
+            // Ensure that the [prepare-ok] file in the log folder exists, indicating that
+            // the last prepare operation succeeded.
+
+            var prepareOkPath = Path.Combine(logFolder, "prepare-ok");
+
+            if (!File.Exists(prepareOkPath))
+            {
+                throw new KubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
+            }
+
+            // Do some quick checks to ensure that component versions look reasonable.
+
+            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
+            var crioVersion       = new Version(KubeVersions.Crio);
+
+            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
+            {
+                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
             }
 
             // Initialize the cluster proxy.

@@ -120,6 +120,13 @@ namespace Neon.Kube
                 logFolder = Path.Combine(automationFolder, logFolder);
             }
 
+            // Remove any log files left over from a previous prepare/setup operation.
+
+            foreach (var file in Directory.GetFiles(logFolder, "*.*", SearchOption.AllDirectories))
+            {
+                File.Delete(file);
+            }
+
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(
@@ -529,7 +536,6 @@ namespace Neon.Kube
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                     var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
 
-                    
                     using (var jsonClient = new JsonClient())
                     {
                         jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
@@ -552,6 +558,16 @@ namespace Neon.Kube
             // the cluster has been otherwise prepared.
 
             hostingManager.AddPostProvisioningSteps(controller);
+
+            // Indicate that cluster prepare succeeded by creating [prepare-ok] file to
+            // the log folder.  Cluster setup will eerify that this file exists beforre
+            // proceeding.
+
+            controller.AddGlobalStep("create [prepare-ok] file",
+                controller =>
+                {
+                    File.Create(Path.Combine(logFolder, "prepare-ok"));
+                });
 
             // We need to dispose this after the setup controller runs.
 

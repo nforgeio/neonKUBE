@@ -279,7 +279,7 @@ spec:
             var debugMode     = controller.Get<bool>(KubeSetupProperty.DebugMode);
             var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
 
-            cluster.ClearStatus();
+            cluster.ClearNodeStatus();
 
             KubeHelper.K8sClientConverterInitialize();
 
@@ -825,6 +825,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                         controller.LogProgress(master, verb: "joined", message: "to cluster");
                     }
+
+                    cluster.ClearNodeStatus();
 
                     // Configure [kube-apiserver] on all the masters
 

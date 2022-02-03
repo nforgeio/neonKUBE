@@ -432,7 +432,7 @@ namespace Neon.Kube
         /// <summary>
         /// Clears the status for the all of the cluster nodes.
         /// </summary>
-        public void ClearStatus()
+        public void ClearNodeStatus()
         {
             foreach (var node in Nodes)
             {
