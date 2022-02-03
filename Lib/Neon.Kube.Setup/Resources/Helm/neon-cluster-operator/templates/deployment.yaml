@@ -1,23 +1,11 @@
-﻿apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: neon-cluster-operator
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    operator-element: operator-instance
-  name: neon-cluster-operator-webhook
-data:
-  KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
----
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: neon-cluster-operator
   name: neon-cluster-operator
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
