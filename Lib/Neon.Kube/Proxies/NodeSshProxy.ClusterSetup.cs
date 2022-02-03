@@ -611,9 +611,15 @@ EOF
         }
 
         /// <summary>
-        /// Configures the the <b>kublet</b> service.
+        /// Configures the <b>kublet</b> service.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <remarks>
+        /// <note>
+        /// Kubelet is installed in <see cref="NodeSshProxy{TMetadata}.NodeInstallKubernetes"/> when configuring
+        /// the node image and is then configured for the cluster here.
+        /// </note>
+        /// </remarks>
         public void SetupKublet(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -623,11 +629,92 @@ EOF
                 {
                     controller.LogProgress(this, verb: "setup", message: "kublet");
 
+                    // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
+                    // OS disk for most nodes and customize this at 93/95% for clusters with OS disks
+                    // less than 64GB.  We want higher thesholds for smaller disks to leave more space
+                    // for user images and local volumes, especially for the neonDESKTOP built-in cluster.
+                    //
+                    // We're going to use this command to retrieve the node's disk information:
+                    //
+                    //       fdisk --list -o Device,Size,Type | grep ^/dev
+                    //
+                    // which will produce output like:
+                    //
+                    //      /dev/sda1     1M BIOS boot
+                    //      /dev/sda2   128G Linux filesystem
+                    //
+                    // We're going to look for the line with "Linux filesystem" and and then extract and
+                    // parse the size in the second column to decide which GC thresholds to use.
+                    //
+                    // $note(jefflill):
+                    //
+                    // This assumes that there's only one Linux filesystem for each cluster node which is 
+                    // currently the case for all neonKUBE clusters.  The cStor disks are managed by OpenEBS
+                    // and will not be reported as a file system.  I'll add an assert to verify this to
+                    // make this easier diagnose in the future if we decide to allow multiple file systems.
+                    //
+                    // $todo(jefflill):
+                    //
+                    // We're hardcoding this now based on the current node disk size but eventually it
+                    // might make sense to add settings to the cluster definition so user can override
+                    // this, perhaps customizing specfic nodes.
+
+                    var imageLowGcThreshold  = 80;
+                    var imageHighGcThreshold = 85;
+                    var diskSize             = 0L;
+                    var result               = SudoCommand(CommandBundle.FromScript("fdisk --list -o Device,Size,Type | grep ^/dev")).EnsureSuccess();
+
+                    using (var reader = new StringReader(result.OutputText))
+                    {
+                        var filesystemCount = 0;
+
+                        foreach (var line in reader.Lines())
+                        {
+                            if (!line.Contains("Linux filesystem"))
+                            {
+                                continue;
+                            }
+
+                            filesystemCount++;
+
+                            var fields    = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            var sizeField = fields[1];
+                            var sizeUnit  = sizeField.Last();
+                            var rawSize   = long.Parse(sizeField.Substring(0, sizeField.Length - 1));
+
+                            switch (sizeUnit)
+                            {
+                                case 'G':
+
+                                    diskSize = rawSize * (long)ByteUnits.GibiBytes;
+                                    break;
+
+                                case 'T':
+
+                                    diskSize = rawSize * (long)ByteUnits.GibiBytes;
+                                    break;
+
+                                default:
+
+                                    Covenant.Assert(false, $"Expecting partition size unit to be [G] or [T], not [{sizeUnit}].");
+                                    break;
+                            }
+                        }
+
+                        Covenant.Assert(filesystemCount == 1, $"Expected exactly [1] Linux file system but are seeing [{filesystemCount}].");
+                    }
+
+                    if (diskSize < 64 * ByteUnits.GibiBytes)
+                    {
+                        imageLowGcThreshold  = 93;
+                        imageHighGcThreshold = 95;
+                    }
+
                     var script =
-@"
+$@"
 set -euo pipefail
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --cni-conf-dir=/etc/cni/net.d --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --cni-conf-dir=/etc/cni/net.d --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf --image-gc-low-threshold={imageLowGcThreshold} --image-gc-high-threshold={imageHighGcThreshold} > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 ";
