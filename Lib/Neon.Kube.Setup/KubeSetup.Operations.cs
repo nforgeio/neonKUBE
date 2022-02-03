@@ -284,7 +284,7 @@ spec:
             KubeHelper.K8sClientConverterInitialize();
 
             ConfigureKubernetes(controller, master);
-            ConfigureFeatureGates(controller, cluster.Masters);
+            ConfigureKubelet(controller, cluster.Masters);
             ConfigureWorkstation(controller, master);
 
             ConnectCluster(controller);
@@ -412,7 +412,7 @@ apiServer:
     default-unreachable-toleration-seconds: ""30"" #default  300
     allow-privileged: ""true""
     api-audiences: api
-    service-account-issuer: kubernetes.default.svc
+    service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
     oidc-issuer-url: https://sso.{cluster.Definition.Domain}
@@ -1030,14 +1030,14 @@ done
         /// <summary>
         /// Configures the Kubernetes feature gates specified by the <see cref="ClusterDefinition.FeatureGates"/> dictionary.
         /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
-        /// on the master nodes as required.
+        /// on the master nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="masterNodes">The target master nodes.</param>
         /// <remarks>
         /// This operation doesn't do anything when we're preparing a ready-to-go node image.
         /// </remarks>
-        public static void ConfigureFeatureGates(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> masterNodes)
+        public static void ConfigureKubelet(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> masterNodes)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(masterNodes != null, nameof(masterNodes));
@@ -1053,13 +1053,15 @@ done
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterDefinition = cluster.Definition;
 
-            if (clusterDefinition.FeatureGates.Count() == 0)
-            {
-                return;
-            }
-
             // We need to generate a "--feature-gates=..." command line option and add it to the end
             // of the command arguments in the API server static pod manifest at: 
+            //
+            //      /etc/kubernetes/manifests/kube-apiserver.yaml
+            //
+            // and while we're at it, we need to modify the [--service-account-issuer] option to
+            // pass the Kubernetes compliance tests.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1385
             //
             // Here's what the static pod manifest looks like:
             //
@@ -1111,13 +1113,13 @@ done
             //      - --requestheader-group-headers=X-Remote-Group
             //      - --requestheader-username-headers=X-Remote-User
             //      - --secure-port=6443
-            //      - --service-account-issuer=kubernetes.default.svc
+            //      - --service-account-issuer=https://kubernetes.default.svc                   <--- WE NEED TO REPLACE THE ORIGINAL SETTING WITH THIS TO PASS KUBERNETES COMPLIANCE TESTS
             //      - --service-account-key-file=/etc/kubernetes/pki/sa.key
             //      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
             //      - --service-cluster-ip-range=10.253.0.0/16
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
-            //      - --feature-gates=EphemeralContainers=true,...                        <<--- WE'RE INSERTING SOMETHING LIKE THIS!
+            //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
             //      image: neon-registry.node.local/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
@@ -1183,6 +1185,19 @@ done
                         else
                         {
                             command.Add(featureGateOption);
+                        }
+
+                        // Update the [---service-account-issuer] command option as well.
+
+                        for (int i = 0; i < command.Count; i++)
+                        {
+                            var arg = (string)command[i];
+
+                            if (arg.StartsWith("--service-account-issuer="))
+                            {
+                                command[i] = "--service-account-issuer=https://kubernetes.default.svc";
+                                break;
+                            }
                         }
 
                         manifestText = NeonHelper.YamlSerialize(manifest);
