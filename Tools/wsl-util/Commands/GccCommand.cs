@@ -102,7 +102,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var distro = new Wsl2Proxy(Wsl2Proxy.GetDefault());
+            var distro = new Wsl2Proxy(defaultDistro);
 
             if (!distro.IsDebian)
             {
