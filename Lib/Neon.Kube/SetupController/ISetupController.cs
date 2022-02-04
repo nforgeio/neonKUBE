@@ -110,7 +110,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the console updater used internally to write the setup status to the
-        /// <see cref="Console"/> without flickering.
+        /// <see cref="Console"/> without flickering.  This will be <c>null</c> for non-console
+        /// applications.
         /// </summary>
         SetupConsoleWriter ConsoleWriter { get; }
 

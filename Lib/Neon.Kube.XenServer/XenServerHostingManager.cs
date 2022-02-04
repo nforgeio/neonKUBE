@@ -250,7 +250,7 @@ namespace Neon.Kube
 
             // We're going to provision the XenServer hosts in parallel to
             // speed up cluster setup.  This works because each XenServer
-            // is essentially independent from the others.
+            // host is essentially independent from the others.
 
             xenController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
             {

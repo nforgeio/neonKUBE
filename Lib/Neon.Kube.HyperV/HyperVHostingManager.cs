@@ -266,6 +266,13 @@ namespace Neon.Kube
                         }
                     });
             }
+            else
+            {
+                Covenant.Assert(!string.IsNullOrEmpty(nodeImagePath), $"[{nameof(nodeImagePath)}] must be specified when node image download is disabled.");
+                Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+
+                driveTemplatePath = nodeImagePath;
+            }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
             controller.AddNodeStep("provision virtual machines", (controller, node) => ProvisionVM(node));

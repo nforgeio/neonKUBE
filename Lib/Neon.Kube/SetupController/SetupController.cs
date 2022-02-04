@@ -104,8 +104,12 @@ namespace Neon.Kube
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
         /// <param name="logFolder">Specifies the path to the log folder.</param>
-        public SetupController(string operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder)
-            : this(new string[] { operationTitle }, nodes, logFolder)
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
+        public SetupController(string operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder, bool disableConsoleOutput = false)
+            : this(new string[] { operationTitle }, nodes, logFolder, disableConsoleOutput: disableConsoleOutput)
         {
         }
 
@@ -115,7 +119,11 @@ namespace Neon.Kube
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
         /// <param name="logFolder">Specifies the path to the log folder.</param>
-        public SetupController(string[] operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder)
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
+        public SetupController(string[] operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder, bool disableConsoleOutput = false)
         {
             Covenant.Requires<ArgumentNullException>(operationTitle != null, nameof(operationTitle));
             Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
@@ -138,6 +146,11 @@ namespace Neon.Kube
             this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
             this.clusterLogPath = Path.Combine(logFolder, KubeConst.ClusterLogName);
+
+            if (!disableConsoleOutput)
+            {
+                ConsoleWriter = new SetupConsoleWriter();
+            }
         }
 
         /// <inheritdoc/>
@@ -998,7 +1011,7 @@ namespace Neon.Kube
                     {
                         lock (syncLock)
                         {
-                            StatusChangedEvent?.Invoke(status.Clone());
+                            StatusChangedEvent?.Invoke(status);
                         }
 
                         lastJson = newJson;
@@ -1069,7 +1082,7 @@ namespace Neon.Kube
         public event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <inheritdoc/>
-        public SetupConsoleWriter ConsoleWriter { get; private set; } = new SetupConsoleWriter();
+        public SetupConsoleWriter ConsoleWriter { get; private set; }
 
         /// <inheritdoc/>
         public event SetupProgressDelegate ProgressEvent;
@@ -1382,7 +1395,7 @@ namespace Neon.Kube
                                 LogGlobal();
                                 LogGlobal(LogFailedMarker);
                                 cluster?.LogLine(LogFailedMarker);
-                                ConsoleWriter.Stop();
+                                ConsoleWriter?.Stop();
 
                                 Cleanup();
                                 tcs.SetResult(SetupDisposition.Cancelled);
@@ -1446,7 +1459,7 @@ namespace Neon.Kube
                             LogGlobal();
                             LogGlobal(LogFailedMarker);
                             cluster?.LogLine(LogFailedMarker);
-                            ConsoleWriter.Stop();
+                            ConsoleWriter?.Stop();
 
                             Cleanup();
                             tcs.SetResult(SetupDisposition.Failed);
@@ -1474,7 +1487,7 @@ namespace Neon.Kube
                         LogGlobal();
                         LogGlobal(LogEndMarker);
                         cluster?.LogLine(LogEndMarker);
-                        ConsoleWriter.Stop();
+                        ConsoleWriter?.Stop();
 
                         Cleanup();
                         tcs.SetResult(SetupDisposition.Succeeded);
@@ -1493,7 +1506,7 @@ namespace Neon.Kube
                             }
                         }
 
-                        ConsoleWriter.Stop();
+                        ConsoleWriter?.Stop();
                         Cleanup();
                         tcs.SetException(e);
                     }

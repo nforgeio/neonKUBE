@@ -80,10 +80,11 @@ namespace Neon.Kube
         /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
-        /// <param name="disableImageDownload">
-        /// Optionally indicate that the node image is already present locally and does not need to be downloaded.
-        /// </param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
@@ -97,13 +98,21 @@ namespace Neon.Kube
             string                      baseImageName         = null,
             string                      automationFolder      = null,
             string                      headendUri            = "https://headend.neoncloud.io",
-            bool                        disableImageDownload  = false,
-            bool                        removeExisting        = false)
+            bool                        removeExisting        = false,
+            bool                        disableConsoleOutput  = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
+
+            if (!string.IsNullOrEmpty(nodeImagePath))
+            {
+                if (!File.Exists(nodeImagePath))
+                {
+                    throw new KubeException($"No node image file exists at: {nodeImagePath}");
+                }
+            }
 
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
@@ -166,7 +175,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder)
+            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE #######################################################",
@@ -213,7 +222,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
-            controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
+            controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
@@ -434,11 +443,12 @@ namespace Neon.Kube
             // the log folder.  Cluster setup will eerify that this file exists beforre
             // proceeding.
 
-            controller.AddGlobalStep("create [prepare-ok] file",
+            controller.AddGlobalStep("create file: prepare-ok",
                 controller =>
                 {
                     File.Create(Path.Combine(logFolder, "prepare-ok"));
-                });
+                },
+                quiet: true);
 
             // We need to dispose this after the setup controller runs.
 

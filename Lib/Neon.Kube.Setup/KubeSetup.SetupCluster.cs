@@ -133,16 +133,21 @@ namespace Neon.Kube
         /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
         /// <param name="headendUri">Optionally override the headend service URI</param>
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
-            int                 maxParallel      = 500,
-            bool                unredacted       = false,
-            bool                debugMode        = false,
-            bool                uploadCharts     = false,
-            string              automationFolder = null,
-            string              headendUri       = "https://headend.neoncloud.io")
+            int                 maxParallel          = 500,
+            bool                unredacted           = false,
+            bool                debugMode            = false,
+            bool                uploadCharts         = false,
+            string              automationFolder     = null,
+            string              headendUri           = "https://headend.neoncloud.io",
+            bool                disableConsoleOutput = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
@@ -205,7 +210,7 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
             {
                 MaxParallel     = maxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
