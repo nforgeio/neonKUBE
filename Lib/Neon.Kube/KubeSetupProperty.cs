@@ -144,14 +144,6 @@ namespace Neon.Kube
         public const string ClusterIp = "cluster-ip";
 
         /// <summary>
-        /// Property name for the <see cref="ReadyToGoMode"/> controlling whether cluster setup will 
-        /// configure a ready-to-go image that nearly completes cluster setup, completes setup for
-        /// a ready-to-go cluster node or just performs a normal setup.  This property is optional
-        /// and should default to <see cref="ReadyToGoMode.Normal"/>.
-        /// </summary>
-        public const string ReadyToGoMode = "readytogo-mode";
-
-        /// <summary>
         /// Property name for a boolean indicating whether secrets should be redacted when logging
         /// during cluster setup.  This should be generally set to <c>true</c> for production
         /// deployments.

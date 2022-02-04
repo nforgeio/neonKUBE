@@ -95,21 +95,11 @@ namespace Neon.Kube
         /// <para>
         /// Configures a node's host public SSH key during node provisioning.
         /// </para>
-        /// <note>
-        /// This does nothing when we're preparing a ready-to-go image.
-        /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void ConfigureSshKey(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
-
-            if (readyToGoMode == ReadyToGoMode.Prepare)
-            {
-                return;
-            }
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
@@ -1006,7 +996,7 @@ set -euo pipefail
             // We used to perform the configuration operation below as an
             // idempotent operation but we need to relax that so that we
             // can apply configuration changes on new nodes created from
-            // the node or ready-to-go images.
+            // the node image.
 
             if (!reconfigureOnly)
             {

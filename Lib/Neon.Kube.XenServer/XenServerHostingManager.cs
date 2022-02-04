@@ -301,7 +301,7 @@ namespace Neon.Kube
             // operation acquire a lock on the XenClient for the node's host before proceeding.
 
             setupController.AddNodeStep("openebs",
-                (state, node) =>
+                (controller, node) =>
                 {
                     var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
 
@@ -335,7 +335,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                (state, node) => node.Metadata.OpenEbsStorage);
+                (controller, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>

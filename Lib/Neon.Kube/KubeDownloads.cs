@@ -80,31 +80,18 @@ namespace Neon.Kube
         /// for the current neonKUBE cluster version.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="readyToGo">Optionally indicates that we'll be provisioning a single node cluster using a ready-to-go image.</param>
         /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
         /// <param name="baseImageName">
         /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
         /// For example: <b>ubuntu-20.04.1.hyperv.amd64.vhdx.gz.manifest</b>
         /// </param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        /// <remarks>
-        /// <note>
-        /// Only one of <paramref name="readyToGo"/> or <paramref name="setupDebugMode"/> may be passed as true.
-        /// </note>
-        /// </remarks>
-        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool readyToGo = false, bool setupDebugMode = false, string baseImageName = null)
+        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null)
         {
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
             }
-
-            if (readyToGo && setupDebugMode)
-            {
-                throw new NotSupportedException($"Only one of [{nameof(readyToGo)}] or [{nameof(setupDebugMode)}] may be passed as TRUE.");
-            }
-
-            var imageType = setupDebugMode ? "base" : "node";
 
             switch (hostingEnvironment)
             {
@@ -131,14 +118,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        if (readyToGo)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/hyperv/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
-                        }
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
                     }
 
                 case HostingEnvironment.XenServer:
@@ -149,14 +129,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        if (readyToGo)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/xenserver/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
-                        }
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
                     }
 
                 default:

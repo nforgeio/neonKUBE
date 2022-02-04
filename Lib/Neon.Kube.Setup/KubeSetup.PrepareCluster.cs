@@ -84,10 +84,6 @@ namespace Neon.Kube
         /// Optionally indicate that the node image is already present locally and does not need to be downloaded.
         /// </param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
-        /// <param name="readyToGoMode">
-        /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
-        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>.
-        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="KubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
@@ -102,8 +98,7 @@ namespace Neon.Kube
             string                      automationFolder      = null,
             string                      headendUri            = "https://headend.neoncloud.io",
             bool                        disableImageDownload  = false,
-            bool                        removeExisting        = false,
-            ReadyToGoMode               readyToGoMode         = ReadyToGoMode.Normal)
+            bool                        removeExisting        = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
@@ -220,7 +215,6 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HeadendUri, headendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, disableImageDownload);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
-            controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the cluster preparation steps.
@@ -258,120 +252,108 @@ namespace Neon.Kube
                     });
             }
 
-            // We don't want to set a secure SSH password when preparing a ready-to-go
-            // node image because the partial setup operation that follows as well as
-            // actual end user cluster setup assumes the default password.
+            controller.AddGlobalStep("generate ssh credentials",
+                controller =>
+                {
+                    // We're going to generate a secure random password and we're going to append
+                    // an extra 4-character string to ensure that the password meets Azure (and probably
+                    // other cloud) minimum requirements:
+                    //
+                    // The supplied password must be between 6-72 characters long and must 
+                    // satisfy at least 3 of password complexity requirements from the following: 
+                    //
+                    //      1. Contains an uppercase character
+                    //      2. Contains a lowercase character
+                    //      3. Contains a numeric digit
+                    //      4. Contains a special character
+                    //      5. Control characters are not allowed
+                    //
+                    // We're going to use the cloud API to configure this secure password
+                    // when creating the VMs.  For on-premise hypervisor environments such
+                    // as Hyper-V and XenServer, we're going use the [neon-init]
+                    // service to mount a virtual DVD that will change the password before
+                    // configuring the network on first boot.
+                    //
+                    // For bare metal, we're going to leave the password along and just use
+                    // whatever the user specified when the nodes were built out.
 
-            if (readyToGoMode == ReadyToGoMode.Prepare)
-            {
-                clusterLogin.SshPassword = KubeConst.SysAdminPassword;
-                clusterLogin.Save();
-            }
-            else
-            {
-                controller.AddGlobalStep("generate ssh credentials",
-                    controller =>
+                    var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
+                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+                    if (!hostingManager.GenerateSecurePassword)
                     {
-                        // We're going to generate a secure random password and we're going to append
-                        // an extra 4-character string to ensure that the password meets Azure (and probably
-                        // other cloud) minimum requirements:
-                        //
-                        // The supplied password must be between 6-72 characters long and must 
-                        // satisfy at least 3 of password complexity requirements from the following: 
-                        //
-                        //      1. Contains an uppercase character
-                        //      2. Contains a lowercase character
-                        //      3. Contains a numeric digit
-                        //      4. Contains a special character
-                        //      5. Control characters are not allowed
-                        //
-                        // We're going to use the cloud API to configure this secure password
-                        // when creating the VMs.  For on-premise hypervisor environments such
-                        // as Hyper-V and XenServer, we're going use the [neon-init]
-                        // service to mount a virtual DVD that will change the password before
-                        // configuring the network on first boot.
-                        //
-                        // For bare metal, we're going to leave the password along and just use
-                        // whatever the user specified when the nodes were built out.
+                        clusterLogin.SshPassword = KubeConst.SysAdminPassword;
+                        clusterLogin.Save();
+                    }
+                    else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
+                    {
+                        controller.SetGlobalStepStatus("generate: SSH password");
 
-                        var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-                        var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                        clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
-                        if (!hostingManager.GenerateSecurePassword)
+                        // Append a string that guarantees that the generated password meets
+                        // minimum cloud requirements.
+
+                        clusterLogin.SshPassword += ".Aa0";
+                        clusterLogin.Save();
+                    }
+
+                    // We're also going to generate the server's SSH key here and pass that to the hosting
+                    // manager's provisioner.  We need to do this up front because some hosting environments
+                    // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
+                    // to initialize the nodes after they've been provisioned for those environments.
+
+                    if (clusterLogin.SshKey == null)
+                    {
+                        // Generate a 2048 bit SSH key pair.
+
+                        controller.SetGlobalStepStatus("generate: SSH key pair");
+
+                        clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
+
+                        // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
+                        // to the PPK format PuTTY/WinSCP requires.
+
+                        if (NeonHelper.IsWindows)
                         {
-                            clusterLogin.SshPassword = KubeConst.SysAdminPassword;
-                            clusterLogin.Save();
-                        }
-                        else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
-                        {
-                            controller.SetGlobalStepStatus("generate: SSH password");
+                            var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                            var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
 
-                            clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-
-                            // Append a string that guarantees that the generated password meets
-                            // minimum cloud requirements.
-
-                            clusterLogin.SshPassword += ".Aa0";
-                            clusterLogin.Save();
-                        }
-
-                        // We're also going to generate the server's SSH key here and pass that to the hosting
-                        // manager's provisioner.  We need to do this up front because some hosting environments
-                        // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
-                        // to initialize the nodes after they've been provisioned for those environments.
-
-                        if (clusterLogin.SshKey == null)
-                        {
-                            // Generate a 2048 bit SSH key pair.
-
-                            controller.SetGlobalStepStatus("generate: SSH key pair");
-
-                            clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
-
-                            // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
-                            // to the PPK format PuTTY/WinSCP requires.
-
-                            if (NeonHelper.IsWindows)
+                            try
                             {
-                                var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-                                var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                                File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
+
+                                ExecuteResponse result;
 
                                 try
                                 {
-                                    File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
-
-                                    ExecuteResponse result;
-
-                                    try
-                                    {
-                                        result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
-                                    }
-                                    catch (Win32Exception)
-                                    {
-                                        return; // Tolerate when WinSCP isn't installed.
+                                    result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
                                 }
-
-                                if (result.ExitCode != 0)
+                                catch (Win32Exception)
                                 {
-                                    controller.LogProgressError(result.AllText);
-                                    return;
-                                }
-
-                                clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
-
-                                // Persist the SSH key.
-
-                                clusterLogin.Save();
+                                    return; // Tolerate when WinSCP isn't installed.
                             }
-                            finally
+
+                            if (result.ExitCode != 0)
                             {
-                                NeonHelper.DeleteFile(pemKeyPath);
-                                NeonHelper.DeleteFile(ppkKeyPath);
+                                controller.LogProgressError(result.AllText);
+                                return;
                             }
+
+                            clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+
+                            // Persist the SSH key.
+
+                            clusterLogin.Save();
+                        }
+                        finally
+                        {
+                            NeonHelper.DeleteFile(pemKeyPath);
+                            NeonHelper.DeleteFile(ppkKeyPath);
                         }
                     }
-                });
-            }
+                }
+            });
 
             // We also need to generate the root SSO password when necessary and add this
             // to the cluster login.
@@ -385,90 +367,10 @@ namespace Neon.Kube
             hostingManager.AddProvisioningSteps(controller);
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            controller.AddNodeStep("check node OS", (state, node) => node.VerifyNodeOS());
-
-            controller.AddNodeStep("vm image type",
-                (state, node) =>
-                {
-                    // Ensure that the source node image type is supported by the current ready-to-go mode.
-
-                    switch (readyToGoMode)
-                    {
-                        case ReadyToGoMode.Normal:
-
-                            switch (node.ImageType)
-                            {
-                                case KubeImageType.Node:
-
-                                    // This is expected.
-
-                                    break;
-
-                                case KubeImageType.ReadyToGo:
-                                case KubeImageType.Base:
-                                default:
-
-                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
-                            }
-                            break;
-
-                        case ReadyToGoMode.Prepare:
-
-                            switch (node.ImageType)
-                            {
-                                case KubeImageType.Node:
-
-                                    // This is expected.
-
-                                    node.ImageType = KubeImageType.ReadyToGo;
-                                    break;
-
-                                case KubeImageType.ReadyToGo:
-                                case KubeImageType.Base:
-                                default:
-
-                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
-                            }
-                            break;
-
-                        case ReadyToGoMode.Setup:
-
-                            switch (node.ImageType)
-                            {
-                                case KubeImageType.ReadyToGo:
-
-                                    // This is expected.
-
-                                    break;
-
-                                case KubeImageType.Node:
-                                case KubeImageType.Base:
-                                default:
-
-                                    throw new Exception($"Unexpected source VM image type [{node.ImageType}].");
-                            }
-                            break;
-
-                        default:
-
-                            throw new NotImplementedException();
-                    }
-
-                    var imageVersion = node.ImageVersion;
-
-                    if (imageVersion == null)
-                    {
-                        throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
-                    }
-
-                    if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKube))
-                    {
-                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
-                    }
-                });
+            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
             controller.AddNodeStep("check image version",
-                (state, node) =>
+                (controller, node) =>
                 {
                     // Ensure that the node image version matches the current neonKUBE version.
 
@@ -486,38 +388,15 @@ namespace Neon.Kube
                 });
 
             controller.AddNodeStep("node credentials",
-                (state, node) =>
+                (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
                 });
 
             controller.AddNodeStep("prepare nodes",
-                (state, node) =>
+                (controller, node) =>
                 {
-                    // Mark the node as ready-to-go if we're creating a ready-to-go image.
-
-                    if (readyToGoMode == ReadyToGoMode.Prepare)
-                    {
-                        node.ImageType = KubeImageType.ReadyToGo;
-                    }
-
-                    // Prepare the node.
-
                     node.PrepareNode(controller);
-
-                    // When preparing a ready-to-go image, we need to re-enable the [neon-init]
-                    // service so we'll be able to mount an ISO with our special script to configure
-                    // the SSH password and network when preparing user clusters using this prepared
-                    // image.
-                    //
-                    // Note that we're passing [keepNetworkSettings=true] so that the VM will boot
-                    // using the current static IP.  This really only makes sense for ready-to-go
-                    // mode.
-
-                    if (readyToGoMode == ReadyToGoMode.Prepare)
-                    {
-                        node.SetNeonInitStatus(false, keepNetworkSettings: false);
-                    }
                 });
 
             controller.AddGlobalStep("create neoncluster.io domain",

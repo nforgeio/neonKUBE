@@ -294,14 +294,10 @@ namespace Neon.Kube
         /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
         /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
         /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer.
+        /// XenServer).
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
-        /// </note>
-        /// <note>
-        /// This method is currently intended for internal use to support generating special ready-to-go node
-        /// images and does not support nodes that have more than just an OS drive, such as cStor drives.
         /// </note>
         /// </summary>
         /// <param name="nodeName">Identifies the node being captured.</param>

@@ -283,7 +283,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
             controller.AddNodeStep("openebs",
-                (state, node) =>
+                (controller, node) =>
                 {
                     using (var hyperv = new HyperVClient())
                     {
@@ -313,7 +313,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                (state, node) => node.Metadata.OpenEbsStorage);
+                (controller, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>
