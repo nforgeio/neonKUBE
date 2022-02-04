@@ -354,13 +354,6 @@ spec:
             var controlPlaneEndpoint = $"kubernetes-masters:6442";
             var sbCertSANs           = new StringBuilder();
 
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                // Tweak the API server endpoint for WSL2.
-
-                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
-            }
-
             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
             {
                 controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
@@ -384,17 +377,7 @@ spec:
             }
 
             var kubeletFailSwapOnLine = string.Empty;
-
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                // SWAP will be enabled by the default Microsoft WSL2 kernel which
-                // will cause Kubernetes to complain because this isn't a supported
-                // configuration.  We need to disable these error checks.
-
-                kubeletFailSwapOnLine = "failSwapOn: false";
-            }
-
-            var clusterConfig = new StringBuilder();
+            var clusterConfig         = new StringBuilder();
 
             clusterConfig.AppendLine(
 $@"
@@ -1426,13 +1409,6 @@ kubectl apply -f priorityclasses.yaml
                     var values = new Dictionary<string, object>();
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
-
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        values.Add($"neonDesktop", $"true");
-                        values.Add($"kubernetes.service.host", $"neon-desktop");
-                        values.Add($"kubernetes.service.port", KubeNodePorts.KubeApiServer);
-                    }
 
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespaces.KubeSystem, values: values);
 
@@ -5373,30 +5349,6 @@ $@"- name: StorageType
             }
 
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-        }
-
-        /// <summary>
-        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
-        /// </summary>
-        /// <returns>The cluster definition text.</returns>
-        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
-        {
-            var yaml =
-@"
-name: neon-desktop
-datacenter: wsl2
-environment: development
-timeSources:
-- pool.ntp.org
-kubernetes:
-  allowPodsOnMasters: true
-hosting:
-  environment: wsl2
-nodes:
-  master:
-    role: master
-";
-            return ClusterDefinition.FromYaml(yaml);
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Returns the cluster definition required to prepare a ready-to-go cluster for 
+        /// Returns the cluster definition required to prepare a neonDESKTOP built-in cluster for 
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// </param>
         /// <returns>The cluster definition.</returns>
         /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
-        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
+        public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
             // $todo(jefflill):
             //
@@ -81,11 +81,6 @@ namespace Neon.Kube
                     resourceName += "neon-desktop.hyperv.cluster.yaml";
                     break;
 
-                case HostingEnvironment.Wsl2:
-
-                    resourceName += "neon-desktop.wsl2.cluster.yaml";
-                    break;
-
                 case HostingEnvironment.Aws:
                 case HostingEnvironment.Azure:
                 case HostingEnvironment.BareMetal:
@@ -94,7 +89,7 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotSupportedException($"Ready-To-Go is not yet supported for [{hostEnvironment}].");
+                    throw new NotSupportedException($"[{nameof(hostEnvironment)}={hostEnvironment}].");
             }
 
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
@@ -104,7 +99,7 @@ namespace Neon.Kube
                     var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
 
                     clusterDefinition.Validate();
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Built-in cluster definitions must include exactly one node.");
 
                     if (!string.IsNullOrEmpty(deploymentPrefix))
                     {

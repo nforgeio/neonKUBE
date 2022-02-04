@@ -57,15 +57,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Resources\Scripts\wsl2-cgroup-setup.sh" />
 		<None Remove="Resources\Tools\safe-apt-get.sh" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<EmbeddedResource Include="Resources\Scripts\wsl2-cgroup-setup.sh" />
-		<EmbeddedResource Include="Resources\Tools\safe-apt-get.sh">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>

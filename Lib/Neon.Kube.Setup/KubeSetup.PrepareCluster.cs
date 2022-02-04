@@ -293,14 +293,6 @@ namespace Neon.Kube
                         //
                         // For bare metal, we're going to leave the password along and just use
                         // whatever the user specified when the nodes were built out.
-                        //
-                        // WSL2 NOTE:
-                        //
-                        // We're going to leave the default password in place for WSL2 distribution
-                        // so that they'll be easy for the user to manage.  This isn't a security
-                        // gap because WSL2 distros are configured such that OpenSSH server can
-                        // only be reached from the host workstation via the internal [172.x.x.x]
-                        // address and not from the external network.
 
                         var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                         var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);

@@ -249,7 +249,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     //
                     //      https://github.com/jirka-h/haveged/blob/master/README.md
 
-                    if (this.KernelVersion < new Version(5, 6, 0) && controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) != HostingEnvironment.Wsl2)
+                    if (this.KernelVersion < new Version(5, 6, 0))
                     {
                         SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                     }
@@ -396,11 +396,6 @@ update-initramfs -u
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                return;
-            }
-
             InvokeIdempotent("base/dhcp",
                 () =>
                 {
@@ -492,11 +487,6 @@ touch /etc/cloud/cloud-init.disabled
         public void BaseRemoveSnap(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            // NOTE:
-            //
-            // The "base/remove-snap" action ID string below must match the string
-            // used within [Wsl2Proxy.StartAsync()]
 
             InvokeIdempotent("base/remove-snap",
                 () =>
@@ -657,22 +647,10 @@ EOF
         /// The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
         /// for debugging purposes.
         /// </note>
-        /// <note>
-        /// This is not required or installed for WSL2 clusters.
-        /// </note>
         /// </remarks>
         public void BaseInstallNeonInit(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            // We don't control the distro IP address for WSL2 and there really
-            // isn't a way to mount a DVD either, so we're not going to install
-            // the [neon-init] service for this environment.
-
-            if (controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) == HostingEnvironment.Wsl2)
-            {
-                return;
-            }
 
             InvokeIdempotent("base/neon-init",
                 () =>

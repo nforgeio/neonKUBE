@@ -68,12 +68,6 @@ namespace Neon.Kube
         /// for production purposes).
         /// </summary>
         [EnumMember(Value = "xenserver")]
-        XenServer,
-
-        /// <summary>
-        /// <b>NOT SUPPORTED YET:</b> Windows Subsystem for Linux.
-        /// </summary>
-        [EnumMember(Value = "wsl2")]
-        Wsl2
+        XenServer
     }
 }

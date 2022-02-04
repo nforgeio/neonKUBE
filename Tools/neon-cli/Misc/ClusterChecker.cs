@@ -212,7 +212,7 @@ namespace NeonCli
                     foreach (var image in images.Values.OrderBy(image => image.ImageNames))
                     {
                         var badImage = image.NotInManifest;
-                        var status   = badImage ? "ERROR --> " : "          ";
+                        var status   = badImage ? "--> " : "    ";
 
                         if (badImage || listAll)
                         {
@@ -364,9 +364,7 @@ namespace NeonCli
                     var priorityInfo   = item.Value;
                     var ownerFormatted = item.Key + new string(' ', ownerIdWidth - item.Key.Length);
                     var priorityValue  = priorityInfo.Priority.Value.ToString("#,##0").Trim();
-                    var errorMarker    = priorityInfo.Priority.Value < PriorityClass.NeonMin.Value
-                                             ? "ERROR -->"
-                                             : "         ";
+                    var errorMarker    = priorityInfo.Priority.Value < PriorityClass.NeonMin.Value ? "-->" : "   ";
 
                     Console.WriteLine($"{errorMarker} {ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
                 }
@@ -374,7 +372,7 @@ namespace NeonCli
             else
             {
                 Console.WriteLine();
-                Console.WriteLine($"OK: All pod priorities are set.");
+                Console.WriteLine($"OK: Pod priorities are set correctly.");
             }
 
             return badPodDeploymentCount > 0;

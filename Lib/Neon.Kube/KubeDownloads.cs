@@ -159,24 +159,6 @@ namespace Neon.Kube
                         }
                     }
 
-                case HostingEnvironment.Wsl2:
-
-                    if (setupDebugMode)
-                    {
-                        return $"{NeonPublicBucketUri}/vm-images/wsl2/base/{baseImageName}";
-                    }
-                    else
-                    {
-                        if (readyToGo)
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/wsl2/ready-to-go/neonkube-readytogo-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
-                        }
-                        else
-                        {
-                            return $"{NeonPublicBucketUri}/vm-images/wsl2/node/neonkube-{KubeVersions.NeonKube}.wsl2.amd64.tar.gz.manifest";
-                        }
-                    }
-
                 default:
 
                     throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");

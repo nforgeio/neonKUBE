@@ -49,7 +49,6 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
-		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.wsl2.cluster.yaml" />
 		<EmbeddedResource Include="Resources/**/*" />
 	</ItemGroup>
 

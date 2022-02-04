@@ -218,19 +218,9 @@ Server Requirements:
             var clusterDefPath    = commandLine.Arguments[0];
             var clusterDefinition = (ClusterDefinition)null;            
 
-            if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // This special-case argument indicates that we should use the built-in 
-                // WSL2 cluster definition.
+            ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
-                clusterDefinition = KubeSetup.GetReadyToGoClusterDefinition(HostingEnvironment.Wsl2);
-            }
-            else
-            {
-                ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
-
-                clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
-            }
+            clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
             // Use the default node image for the hosting environment unless [--node-image-uri]
             // or [--node-image-path] was specified.

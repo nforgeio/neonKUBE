@@ -103,15 +103,6 @@ namespace Neon.Kube
                 HyperVHostingManager.Load();
                 XenServerHostingManager.Load();
 
-                // For premium releases, load any additional premium-only hosting managers.
-
-                var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
-
-                if (premiumHelper != null)
-                {
-                    premiumHelper.LoadHostingManagers();
-                }
-
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
                 // end then use the environment specified in the attributes to determine
@@ -169,14 +160,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType);
             }
 
-            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
-
-            if (premiumHelper == null)
-            {
-                return null;
-            }
-
-            return premiumHelper.GetHostingManager(environment);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={environment}]");
         }
 
         /// <inheritdoc/>
@@ -190,14 +174,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, (string)null, logFolder);
             }
 
-            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
-
-            if (premiumHelper == null)
-            {
-                return null;
-            }
-
-            return premiumHelper.GetManager(cluster, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -211,14 +188,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, nodeImageUri, (string)null, logFolder);
             }
 
-            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
-
-            if (premiumHelper == null)
-            {
-                return null;
-            }
-
-            return premiumHelper.GetManagerWithNodeImageUri(cluster, nodeImageUri, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -233,14 +203,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, nodeImagePath, logFolder);
             }
 
-            var premiumHelper = NeonHelper.ServiceContainer.GetService<IPremiumHelper>();
-
-            if (premiumHelper == null)
-            {
-                return null;
-            }
-
-            return premiumHelper.GetManagerWithNodeImageFile(cluster, nodeImagePath, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
     }
 }
