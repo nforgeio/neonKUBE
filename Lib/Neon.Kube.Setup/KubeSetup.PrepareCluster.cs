@@ -408,7 +408,7 @@ namespace Neon.Kube
                     node.PrepareNode(controller);
                 });
 
-            controller.AddGlobalStep("create neoncluster.io domain",
+            controller.AddGlobalStep("neoncluster.io domain",
                 async (controller) =>
                 {
                     controller.SetGlobalStepStatus("create: neoncluster.io subdomain for TLS");

@@ -574,13 +574,13 @@ namespace Neon.Kube
                     switchName:     switchName);
 
                 // Create a temporary ISO with the [neon-init.sh] script, mount it
-                // to the VM and then boot the VM for the first time.  The script on the
-                // ISO will be executed automatically by the [neon-init] service
-                // preinstalled on the VM image and the script will configure the secure 
-                // SSH password and then the network.
+                // to the VM and then boot the VM for the first time.  The script on
+                // the ISO will be executed automatically by the [neon-init] service
+                // preinstalled on the VM image and the script will configure the
+                // secure SSH password and then the network.
                 //
-                // This ensures that SSH is not exposed to the network before the secure
-                // password has been set.
+                // This ensures that SSH is not exposed to the network before the
+                // secure password has been set.
 
                 var tempIso = (TempFile)null;
 
