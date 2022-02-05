@@ -181,13 +181,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
 
-#if PREMIUM
-            // Configure the premium service depedencies.
-
-            NeonHelper.ServiceContainer.AddSingleton<IPremiumHostingLoader>(new PremiumHostingLoader());
-            NeonHelper.ServiceContainer.AddSingleton<IPremiumHelper>(new PremiumHelper());
-#endif
-
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
