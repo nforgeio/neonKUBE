@@ -2848,7 +2848,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "neon-grafana");
+                    controller.LogProgress(master, verb: "setup", message: "grafana");
 
                     var values = new Dictionary<string, object>();
 
@@ -2912,7 +2912,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "neon-grafana");
+                    controller.LogProgress(master, verb: "wait for", message: "grafana");
 
                     await NeonHelper.WaitForAsync(
                         async () =>
