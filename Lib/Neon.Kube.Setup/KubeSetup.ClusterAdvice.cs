@@ -205,8 +205,9 @@ namespace Neon.Kube
             }
             else
             {
-                advice.PodMemoryLimit = ByteUnits.Parse("768Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("768Mi");
+                advice.MetricsEnabled   = true;
+                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
             }
 
             return advice;
@@ -235,6 +236,7 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+                advice.MetricsEnabled   = true;
             }
 
             return advice;
@@ -250,6 +252,12 @@ namespace Neon.Kube
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
                 advice.MetricsEnabled   = false;
             }
+            else
+            {
+                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.MetricsEnabled   = true;
+            }
 
             return advice;
         }
@@ -263,6 +271,12 @@ namespace Neon.Kube
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
                 advice.MetricsEnabled   = false;
+            }
+            else
+            {
+                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.MetricsEnabled   = true;
             }
 
             return advice;
@@ -467,6 +481,12 @@ namespace Neon.Kube
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
                 advice.MetricsEnabled   = false;
             }
+            else
+            {
+                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
+                advice.MetricsEnabled   = true;
+            }
 
             return advice;
         }
@@ -495,6 +515,12 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+                advice.MetricsInterval  = "1m";
+            }
+            else
+            {
+                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
                 advice.MetricsInterval  = "1m";
             }
 
@@ -701,7 +727,13 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsInterval = "1m";
+                advice.MetricsInterval  = "1m";
+            }
+            else
+            {
+                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.MetricsInterval  = "1m";
             }
 
             return advice;

@@ -305,16 +305,12 @@ spec:
             await InstallMetricsServerAsync(controller, master);
             await InstallIstioAsync(controller, master);
 
-            if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
-            {
-                await InstallEtcdAsync(controller, master);
-            }
-
             await InstallPrometheusAsync(controller, master);
             await InstallCertManagerAsync(controller, master);
             await InstallKubeDashboardAsync(controller, master);
             await InstallNodeProblemDetectorAsync(controller, master);
             await InstallOpenEbsAsync(controller, master);
+            await InstallEtcdAsync(controller, master);
             await InstallReloaderAsync(controller, master);
             await InstallSystemDbAsync(controller, master);
             await InstallRedisAsync(controller, master);
@@ -2810,6 +2806,7 @@ $@"- name: StorageType
                     values.Add($"replicas", advice.ReplicaCount);
 
                     values.Add($"volumeClaimTemplate.resources.requests.storage", "1Gi");
+                    values.Add($"priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     int i = 0;
 
@@ -2821,7 +2818,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "etcd-cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "etcd", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
                 });
 
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
@@ -2829,7 +2826,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "etc (monitoring)");
 
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "neon-system-etcd", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "neon-etcd", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
                 });
 
             await Task.CompletedTask;
@@ -2955,29 +2952,20 @@ $@"- name: StorageType
                     var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cortex);
                     var values        = new Dictionary<string, object>();
 
+                    values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"ingress.alertmanager.subdomain", ClusterDomain.AlertManager);
                     values.Add($"ingress.ruler.subdomain", ClusterDomain.CortexRuler);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
+                    if (cluster.Definition.Masters.Count() >= 3)
                     {
                         values.Add($"cortexConfig.distributor.ha_tracker.enable_ha_tracker", true);
-                        values.Add($"cortexConfig.distributor.ha_tracker.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.distributor.ring.kvstore.store", "etcd");
 
-                        values.Add($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd");
                         values.Add($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3);
 
-                        values.Add($"cortexConfig.ruler.ring.kvstore.store", "etcd");
-
-                        values.Add($"cortexConfig.alertmanager.sharding_enabled", true);
-                        values.Add($"cortexConfig.alertmanager.sharding_ring.kvstore.store", "etcd");
                         values.Add($"cortexConfig.alertmanager.sharding_ring.replication_factor", 3);
 
-                        values.Add($"cortexConfig.compactor.sharding_enabled", true);
-                        values.Add($"cortexConfig.compactor.sharding_ring.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.compactor.sharding_ring.kvstore.replication_factor", 3);
                     }
 
                     if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
@@ -3087,8 +3075,7 @@ $@"- name: StorageType
                     
                     if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
                     {
-                        values.Add($"config.common.ring.kvstore.store", "etcd");
-                        values.Add($"config.common.ring.kvstore.replication_factor", 3);
+                        values.Add($"config.common.replication_factor", 3);
 
                     }
 
