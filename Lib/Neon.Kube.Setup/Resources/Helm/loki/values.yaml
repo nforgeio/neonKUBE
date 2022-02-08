@@ -55,10 +55,11 @@ config:
     replication_factor: 1
     ring:
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/loki/collectors/
         etcd:
           endpoints:
-            - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
   ingester:
     chunk_encoding: snappy
     chunk_idle_period: 3m
@@ -75,7 +76,7 @@ config:
   server:
     http_listen_port: 3100
   ruler:
-    enable_sharding: false
+    enable_sharding: true
     alertmanager_url: "cortex:9009/api/prom/alertmanager"
     enable_alertmanager_v2: true
     storage:
@@ -126,6 +127,14 @@ livenessProbe:
     path: /ready
     port: http-metrics
   initialDelaySeconds: 45
+  
+startupProbe:
+  failureThreshold: 60
+  initialDelaySeconds: 120
+  periodSeconds: 30
+  httpGet:
+    path: /ready
+    port: http-metrics
 
 ## ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 networkPolicy:
@@ -136,7 +145,8 @@ client: {}
   # name:
 
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/monitor.logs-internal: 'true'
 
 ## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 ## If you set enabled as "True", you need :
@@ -161,6 +171,8 @@ podLabels: {}
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "http-metrics"
+  traffic.sidecar.istio.io/excludeInboundPorts: '2379'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '2379'
 
 podManagementPolicy: OrderedReady
 
