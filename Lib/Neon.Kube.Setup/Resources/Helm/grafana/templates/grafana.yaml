@@ -60,6 +60,8 @@ spec:
         port: 3001
         targetPort: grafana-http
   deployment:
+    labels:
+      app: grafana
     annotations:
       reloader.stakater.com/search: "true"
     envFrom:
@@ -70,6 +72,15 @@ spec:
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
     priorityClassName: {{ .Values.priorityClassName }}
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: grafana
+              topologyKey: kubernetes.io/hostname
   dashboardLabelSelector:
     - matchExpressions:
         - { key: app, operator: In, values: [ grafana ] }
