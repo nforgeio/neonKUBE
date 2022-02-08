@@ -132,9 +132,9 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcGetVmDrivesReply"/>.</returns>
+        /// <returns>A <see cref="GrpGetVmDrivesReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default);
+        Task<GrpGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default);
 
         /// <summary>
         /// Adds a drive to a virtual machine.

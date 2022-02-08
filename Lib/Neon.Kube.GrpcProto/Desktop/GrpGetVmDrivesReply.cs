@@ -33,13 +33,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     /// Holds information about a virtual machines attached drives.
     /// </summary>
     [DataContract]
-    public class GrpcGetVmDrivesReply
+    public class GrpGetVmDrivesReply
     {
         /// <summary>
         /// Error constructor.
         /// </summary>
         /// <param name="e">The exception.</param>
-        public GrpcGetVmDrivesReply(Exception e)
+        public GrpGetVmDrivesReply(Exception e)
         {
             this.Error = new GrpcError(e);
         }
@@ -48,7 +48,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="drivePaths">The drive paths.</param>
-        public GrpcGetVmDrivesReply(List<string> drivePaths)
+        public GrpGetVmDrivesReply(List<string> drivePaths)
         {
             this.DrivePaths = drivePaths;
         }
