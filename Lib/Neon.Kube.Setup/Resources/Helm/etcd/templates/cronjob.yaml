@@ -1,0 +1,106 @@
+{{- if .Values.snapshot.backup.enabled }}
+{{- $etcdPeerProtocol := include "etcd.peerProtocol" . }}
+{{- $etcdClientProtocol := include "etcd.clientProtocol" . }}
+{{- $etcdAuthOptions := include "etcd.authOptions" . }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ printf "%s-snapshotter" ( include "etcd.fullname" .) }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  concurrencyPolicy: Forbid
+  schedule: {{ .Values.snapshot.backup.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.snapshot.backup.historyLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "etcd.snapshotter.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "etcd.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: etcd-snapshotter
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  AUTH_OPTIONS="{{ $etcdAuthOptions }}"
+
+                  for i in $(seq 0 $((${CLUSTER_SIZE} - 1))); do
+                      endpoint="{{ $etcdPeerProtocol }}://${SET_NAME}-${i}.${SET_NAME}:2379"
+                      echo "Using endpoint ${endpoint}"
+                      if etcdctl endpoint health --endpoints=${endpoint}; then
+                          echo "Snapshotting the keyspace"
+                          current_time="$(date -u "+%Y-%m-%d_%H-%M")"
+                          etcdctl $AUTH_OPTIONS snapshot save "/snapshots/db-${current_time}" --endpoints=${endpoint}
+                          find /snapshots/ -maxdepth 1 -type f -name 'db-*' \! -name "db-${current_time}" \
+                              | sort -r \
+                              | tail -n+$((1 + ETCD_SNAPSHOT_HISTORY_LIMIT)) \
+                              | xargs rm -f
+                          exit 0
+                      else
+                          echo "etcd endpoint $endpoint not healthy. Trying a different endpoint"
+                      fi
+                  done
+                  echo "all etcd endpoints are unhealthy!"
+                  exit 1
+              env:
+                - name: ETCDCTL_API
+                  value: "3"
+                - name: ETCD_LOGGER
+                  value: "zap"
+                - name: SET_NAME
+                  value: {{ template "etcd.fullname" . }}
+                - name: CLUSTER_SIZE
+                  value: {{ .Values.replicas | quote }}
+                - name: ETCD_SNAPSHOT_HISTORY_LIMIT
+                  value: {{ .Values.snapshot.backup.snapshotHistoryLimit | quote }}
+                {{- if .Values.auth.client.secureTransport }}
+                - name: ETCD_CERT_FILE
+                  value: "/opt/etcd/certs/client/cert.pem"
+                - name: ETCD_KEY_FILE
+                  value: "/opt/etcd/certs/client/key.pem"
+                {{- if .Values.auth.client.enableAuthentication }}
+                - name: ETCD_CLIENT_CERT_AUTH
+                  value: "true"
+                - name: ETCD_TRUSTED_CA_FILE
+                  value: "/opt/etcd/certs/client/ca.crt"
+                {{- end }}
+                {{- end }}
+              {{- if .Values.snapshot.backup.resources }}
+              resources:
+                {{- toYaml .Values.snapshot.backup.resources | nindent 16 }}
+              {{- end }}
+              volumeMounts:
+                - name: snapshots
+                  mountPath: /snapshots
+                {{- if or .Values.auth.client.enableAuthentication (and .Values.auth.client.secureTransport ) }}
+                - name: etcd-client-certs
+                  mountPath: /opt/etcd/certs/client/
+                  readOnly: true
+                {{- end }}
+          volumes:
+            - name: snapshots
+              persistentVolumeClaim:
+                 {{- if .Values.snapshot.backup.claimName }}
+                 claimName: {{ .Values.snapshot.backup.claimName }}
+                 {{- else }}
+                 claimName: {{ template "etcd.fullname" . }}-snapshots
+                 {{- end }}
+            {{- if or .Values.auth.client.enableAuthentication (and .Values.auth.client.secureTransport ) }}
+            - name: etcd-client-certs
+              secret:
+                secretName: {{ required "A secret containinig the client certificates is required" .Values.auth.client.existingSecret }}
+                defaultMode: 256
+            {{- end }}
+{{- end }}
+

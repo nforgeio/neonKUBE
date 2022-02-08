@@ -1,0 +1,11 @@
+apiVersion: v2
+name: etcd
+home: https://github.com/coreos/etcd
+version: 0.1.2
+appVersion: v3.4.15
+description: Distributed reliable key-value store for the most critical data of a
+  distributed system.
+icon: https://raw.githubusercontent.com/coreos/etcd/master/logos/etcd-horizontal-color.png
+sources:
+- https://github.com/coreos/etcd
+- https://github.com/helm/charts/tree/master/incubator/etcd

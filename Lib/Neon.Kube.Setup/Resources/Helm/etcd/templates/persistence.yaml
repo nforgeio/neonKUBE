@@ -1,0 +1,15 @@
+{{- if and .Values.snapshot.backup.enabled (not .Values.snapshot.backup.claimName) -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "etcd.fullname" . }}-snapshots
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.snapshot.backup.size | quote }}
+  storageClassName: {{ .Values.snapshot.backup.storageClassName | quote }}
+{{- end -}}

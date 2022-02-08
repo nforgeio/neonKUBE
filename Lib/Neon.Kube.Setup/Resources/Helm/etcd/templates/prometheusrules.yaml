@@ -1,0 +1,13 @@
+{{- if .Values.prometheusRules.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: {{ include "etcd.fullname" . }}
+      rules:
+        {{- toYaml .Values.prometheusRules.rules | nindent 8 }} 
+{{- end }} 

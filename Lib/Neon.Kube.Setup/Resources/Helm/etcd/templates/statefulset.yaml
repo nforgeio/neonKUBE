@@ -1,0 +1,338 @@
+{{- $etcdPeerProtocol := include "etcd.peerProtocol" . }}
+{{- $etcdClientProtocol := include "etcd.clientProtocol" . }}
+{{- $etcdAuthOptions := include "etcd.authOptions" . }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "etcd.server.selectorLabels" . | nindent 6 }}
+  serviceName: {{ template "etcd.fullname" . }}
+  template:
+    metadata:
+      name: {{ template "etcd.fullname" . }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "etcd.server.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "etcd.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+{{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+{{- end }}
+      containers:
+      - name: {{ template "etcd.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        ports:
+        - containerPort: {{ .Values.peerPort }}
+          name: peer
+        - containerPort: {{ .Values.clientPort }}
+          name: client
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env:
+        - name: ETCDCTL_API
+          value: "3"
+        - name: ETCD_LOGGER
+          value: "zap"
+        - name: INITIAL_CLUSTER_SIZE
+          value: {{ .Values.replicas | quote }}
+        - name: SET_NAME
+          value: {{ template "etcd.fullname" . }}
+        - name: HELM_INSTALL
+          value: {{ default (ternary "true" "false" .Release.IsInstall) | quote }}
+        {{- if .Values.snapshot.restore.enabled }}
+        - name: SNAPSHOT_PATH
+          value: {{ printf "/snapshots/%s" (.Values.snapshot.restore.fileName) }}
+        {{- end }}
+        {{- if and .Values.auth.peer.secureTransport .Values.auth.peer.useAutoTLS }}
+        - name: ETCD_PEER_AUTO_TLS
+          value: "true"
+        {{- end }}
+        {{- if .Values.auth.client.secureTransport }}
+        - name: ETCD_CERT_FILE
+          value: "/opt/etcd/certs/client/cert.pem"
+        - name: ETCD_KEY_FILE
+          value: "/opt/etcd/certs/client/key.pem"
+        {{- if .Values.auth.client.enableAuthentication }}
+        - name: ETCD_CLIENT_CERT_AUTH
+          value: "true"
+        - name: ETCD_TRUSTED_CA_FILE
+          value: "/opt/etcd/certs/client/ca.crt"
+        {{- end }}
+        {{- end }}
+{{- if .Values.extraEnv }}
+{{ toYaml .Values.extraEnv | indent 8 }}
+{{- end }}
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/etcd
+        {{- if or .Values.auth.client.enableAuthentication (and .Values.auth.client.secureTransport ) }}
+        - name: etcd-client-certs
+          mountPath: /opt/etcd/certs/client/
+          readOnly: true
+        {{- end }}
+        {{- if .Values.snapshot.restore.enabled }}
+        - name: snapshots
+          mountPath: /snapshots
+        {{- end }}
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  EPS=""
+                  for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
+                      EPS="${EPS}${EPS:+,}{{ $etcdPeerProtocol }}://${SET_NAME}-${i}.${SET_NAME}:2379"
+                  done
+
+                  HOSTNAME=$(hostname)
+                  AUTH_OPTIONS="{{ $etcdAuthOptions }}"                  
+
+                  member_hash() {
+                      etcdctl $AUTH_OPTIONS member list | grep {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | cut -d ',' -f1
+                  }
+
+                  # store member id into PVC for later member replacement
+                  store_member_id() {
+                      while ! etcdctl $AUTH_OPTIONS member list > /dev/null 2>&1; do sleep 1; done
+                      etcdctl $AUTH_OPTIONS member list | grep {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | cut -d ',' -f1 > /var/run/etcd/member_id
+                      exit 0
+                  }
+
+                  if [ ! -e /var/run/etcd/member_id ]; then
+                    store_member_id &
+                  fi
+
+                  SET_ID=${HOSTNAME##*[^0-9]}
+
+                  if [ "${SET_ID}" -ge ${INITIAL_CLUSTER_SIZE} ]; then
+                      echo "Removing ${HOSTNAME} from etcd cluster"
+                      ETCDCTL_ENDPOINTS=${EPS} etcdctl $AUTH_OPTIONS member remove $(member_hash)
+                      if [ $? -eq 0 ]; then
+                          # Remove everything otherwise the cluster will no longer scale-up
+                          rm -rf /var/run/etcd/*
+                      fi
+                  fi
+        command:
+          - "/bin/sh"
+          - "-ec"
+          - |
+            HOSTNAME=$(hostname)
+            AUTH_OPTIONS="{{ $etcdAuthOptions }}"
+            SET_ID=${HOSTNAME##*[^0-9]}
+
+            # store member id into PVC for later member replacement
+            store_member_id() {
+                while ! etcdctl $AUTH_OPTIONS member list > /dev/null 2>&1; do sleep 1; done
+                etcdctl $AUTH_OPTIONS member list | grep {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | cut -d ',' -f1 > /var/run/etcd/member_id
+                exit 0
+            }
+
+            endpoints() {
+                EPS=""
+                for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
+                    EPS="${EPS}${EPS:+,}{{ $etcdPeerProtocol }}://${SET_NAME}-${i}.${SET_NAME}:2379"
+                done
+                echo ${EPS}
+            }
+
+            peers() {
+                PEERS=""
+                for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
+                    PEERS="${PEERS}${PEERS:+,}${SET_NAME}-${i}={{ $etcdPeerProtocol }}://${SET_NAME}-${i}.${SET_NAME}:2380"
+                done
+                echo ${PEERS}
+            }
+
+            export ETCDCTL_ENDPOINTS=$(endpoints)
+
+            member_hash() {
+                etcdctl $AUTH_OPTIONS member list | grep {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | cut -d ',' -f1
+            }
+
+            #############################################
+            # Data exists, crash / restart, re-join as-is
+            #############################################
+            if [ -e /var/run/etcd/default.etcd ] && [ -e /var/run/etcd/member_id ]; then
+                MEMBER_ID=$(cat /var/run/etcd/member_id)
+                echo "Re-joining etcd member: $MEMBER_ID"
+                # Update member configuration and start back up
+                etcdctl $AUTH_OPTIONS member update ${MEMBER_ID} --peer-urls={{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | true
+                exec etcd --name ${HOSTNAME} \
+                    --listen-peer-urls {{ $etcdPeerProtocol }}://0.0.0.0:2380 \
+                    --listen-client-urls {{ $etcdClientProtocol }}://0.0.0.0:2379\
+                    --advertise-client-urls {{ $etcdClientProtocol }}://${HOSTNAME}.${SET_NAME}:2379 \
+                    --data-dir /var/run/etcd/default.etcd
+                    
+            fi
+
+            ###########################################
+            # Data does NOT exist, need to create stuff
+            ###########################################
+            if [ $HELM_INSTALL = "false" ]; then
+                #######################
+                # Join existing cluster
+                #######################
+
+                # Wait pod to resolve dns
+                sleep 10s
+
+                # Remove old member if already added
+                MEMBER_HASH=$(member_hash)
+                echo "Member hash: $MEMBER_HASH"
+                if [ -n "${MEMBER_HASH}" ]; then
+                    # the member hash exists but for some reason etcd failed
+                    # as the datadir has not be created, we can remove the member
+                    # and retrieve new hash
+                    etcdctl $AUTH_OPTIONS member remove ${MEMBER_HASH}
+                fi
+
+                # Add new member to existing cluster
+                echo "Adding new member: $HOSTNAME"
+                etcdctl $AUTH_OPTIONS member add ${HOSTNAME} --peer-urls={{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 | grep "^ETCD_" > /var/run/etcd/new_member_envs
+
+                if [ $? -ne 0 ]; then
+                    echo "ERROR: Adding new member: exiting..."
+                    rm -f /var/run/etcd/new_member_envs
+                    exit 1
+                fi
+
+                cat /var/run/etcd/new_member_envs
+                . /var/run/etcd/new_member_envs
+
+                # Persist member_id to pvc
+                store_member_id &
+
+                # Start etcd and join existing cluster
+                echo "Starting new member: $HOSTNAME"
+                exec etcd --name ${HOSTNAME} \
+                    --listen-peer-urls {{ $etcdPeerProtocol }}://0.0.0.0:2380 \
+                    --listen-client-urls {{ $etcdClientProtocol }}://0.0.0.0:2379 \
+                    --advertise-client-urls {{ $etcdClientProtocol }}://${HOSTNAME}.${SET_NAME}:2379 \
+                    --data-dir /var/run/etcd/default.etcd \
+                    --initial-advertise-peer-urls {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 \
+                    --initial-cluster ${ETCD_INITIAL_CLUSTER} \
+                    --initial-cluster-state ${ETCD_INITIAL_CLUSTER_STATE}
+                    
+            else
+                ##################
+                # Join new cluster
+                ##################
+
+                # Wait for other pods to ping before creating cluster
+                for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
+                    while true; do
+                        echo "Waiting for ${SET_NAME}-${i}.${SET_NAME} to come up"
+                        ping -W 1 -c 1 ${SET_NAME}-${i}.${SET_NAME} > /dev/null && break
+                        sleep 1s
+                    done
+                done
+
+                if [ ! -z $SNAPSHOT_PATH ] && [ -e $SNAPSHOT_PATH ]; then
+                    # Restore from a snapshot
+                    echo "Restoring snapshot: $SNAPSHOT_PATH"
+                    etcdctl snapshot restore $SNAPSHOT_PATH --name ${HOSTNAME} \
+                        --data-dir /var/run/etcd/default.etcd \
+                        --initial-advertise-peer-urls {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 \
+                        --initial-cluster $(peers) \
+                        --initial-cluster-token {{ .Release.Name }}
+                    echo "Starting restored cluster: $HOSTNAME"
+                    exec etcd --name ${HOSTNAME} \
+                        --listen-peer-urls {{ $etcdPeerProtocol }}://0.0.0.0:2380 \
+                        --listen-client-urls {{ $etcdClientProtocol }}://0.0.0.0:2379 \
+                        --advertise-client-urls {{ $etcdClientProtocol }}://${HOSTNAME}.${SET_NAME}:2379 \
+                        --data-dir /var/run/etcd/default.etcd
+                else
+                    # Create a new empty cluster
+                    echo "Creating new cluster: $HOSTNAME"
+                    exec etcd --name ${HOSTNAME} \
+                        --listen-peer-urls {{ $etcdPeerProtocol }}://0.0.0.0:2380 \
+                        --listen-client-urls {{ $etcdClientProtocol }}://0.0.0.0:2379 \
+                        --advertise-client-urls {{ $etcdClientProtocol }}://${HOSTNAME}.${SET_NAME}:2379 \
+                        --data-dir /var/run/etcd/default.etcd \
+                        --initial-advertise-peer-urls {{ $etcdPeerProtocol }}://${HOSTNAME}.${SET_NAME}:2380 \
+                        --initial-cluster $(peers) \
+                        --initial-cluster-state new \
+                        --initial-cluster-token {{ .Release.Name }}
+                fi
+            fi
+            if [ ! -e /var/run/etcd/member_id ]; then
+                # Persist member_id to pvc
+                store_member_id
+            fi
+
+        {{- if .Release.IsUpgrade }}
+        readinessProbe:
+          tcpSocket:
+            port: 2380
+          successThreshold: 3
+        {{- end }}
+      volumes:
+      {{- if or .Values.auth.client.enableAuthentication (and .Values.auth.client.secureTransport ) }}
+      - name: etcd-client-certs
+        secret:
+          secretName: {{ required "A secret containinig the client certificates is required" .Values.auth.client.existingSecret }}
+          defaultMode: 256
+      {{- end }}      
+      {{- if .Values.snapshot.restore.enabled }}
+       - name: snapshots
+         persistentVolumeClaim:
+           {{- if .Values.snapshot.restore.claimName }}
+           claimName: {{ .Values.snapshot.restore.claimName }}
+           {{- else if .Values.snapshot.backup.claimName }}
+           claimName: {{ .Values.snapshot.backup.claimName }}
+           {{- else }}
+           claimName: {{ template "etcd.fullname" . }}-snapshots
+           {{- end }}
+       {{- end }}
+  {{- if .Values.persistentVolume.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          # upstream recommended max is 700M
+          storage: "{{ .Values.persistentVolume.storage }}"
+    {{- if .Values.persistentVolume.storageClass }}
+    {{- if (eq "-" .Values.persistentVolume.storageClass) }}
+      storageClassName: ""
+    {{- else }}
+      storageClassName: "{{ .Values.persistentVolume.storageClass }}"
+    {{- end }}
+    {{- end }}
+  {{- else }}
+      - name: datadir
+      {{- if .Values.memoryMode }}
+        emptyDir:
+          medium: Memory
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+  {{- end }}

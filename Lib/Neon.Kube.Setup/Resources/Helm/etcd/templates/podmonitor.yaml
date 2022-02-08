@@ -1,0 +1,24 @@
+{{- if .Values.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "etcd.fullname" . }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+    - path: /metrics
+      port: client
+      interval: {{ .Values.podMonitor.interval }}
+      scrapeTimeout: {{ .Values.podMonitor.scrapeTimeout }}
+      scheme: {{ .Values.podMonitor.scheme }}
+      tlsConfig: 
+        {{- toYaml .Values.podMonitor.tlsConfig | nindent 8 }}
+      metricRelabelings:
+        {{- toYaml .Values.podMonitor.metricRelabelings | nindent 8 }}
+      relabelings:
+        {{- toYaml .Values.podMonitor.relabelings | nindent 8 }}
+  selector:
+    matchLabels:
+      {{- include "etcd.server.selectorLabels" . | nindent 6 }}
+{{- end }}
