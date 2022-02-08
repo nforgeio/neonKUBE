@@ -224,13 +224,14 @@ namespace Neon.Kube
         {
             if (this.isClone)
             {
-                throw new NotSupportedException("Cannot clone a cloned instance.");
+                 throw new NotSupportedException("Cannot clone a cloned instance.");
             }
 
             return new SetupNodeStatus()
             {
                 isClone   = true,
                 Name      = this.Name,
+                Role      = this.Role,
                 Status    = this.status,
                 StepState = this.StepState,
                 Metadata  = this.Metadata

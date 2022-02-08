@@ -11,7 +11,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.priority=
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -192,7 +192,7 @@ namespace NeonCli
                     var imageNames  = sbImageNames.ToString();
                     var imageStatus = new ImageStatus() { ImageNames = imageNames, NotInManifest = !found };
 
-                    images.Add(imageStatus.ImageNames, imageStatus);
+                    images[imageStatus.ImageNames] = imageStatus;
                 }
             }
 
@@ -212,7 +212,7 @@ namespace NeonCli
                     foreach (var image in images.Values.OrderBy(image => image.ImageNames))
                     {
                         var badImage = image.NotInManifest;
-                        var status   = badImage ? "ERROR --> " : "          ";
+                        var status   = badImage ? "--> " : "    ";
 
                         if (badImage || listAll)
                         {
@@ -232,7 +232,9 @@ namespace NeonCli
 
         /// <summary>
         /// <para>
-        /// Verifies that all pods running in the cluster are assigned a non-zero priority.
+        /// Verifies that all pods running in the cluster are assigned a PriorityClass greater than
+        /// or equal to <see cref="PriorityClass.NeonMin"/>, ensuring that our pods will not be evicted
+        /// before user pods which could cause serious problems, especially on smalkl single node clusters.
         /// </para>
         /// <para>
         /// Details about any issues will be written to STDOUT.
@@ -244,10 +246,10 @@ namespace NeonCli
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         /// <remarks>
         /// <para>
-        /// Verifies that all pods running in the cluster are assigned a non-zero PriorityClass.
-        /// PriorityClass is used by the Kubernetes scheduler and Kublet to decide which pods
-        /// to evict when a node encounters resource pressure.  Pods with lower priority classes
-        /// will tend to be evicted first.
+        /// Verifies that all pods running in the cluster are assigned a PriorityClass greater than
+        /// or equal to <see cref="PriorityClass.NeonMin"/>.  PriorityClass is used by the Kubernetes 
+        /// scheduler and Kublet to decide which pods to evict when a node encounters resource pressure.  
+        /// Pods with lower priority classes will tend to be evicted first.
         /// </para>
         /// <para>
         /// By default, pods will be created with <b>PriorityClass=0</b>.  Kubernetes ensures that
@@ -342,14 +344,14 @@ namespace NeonCli
                 }
             }
 
-            var badPodDeploymentCount = ownerToPriorityInfo.Values.Count(info => info.Priority == 0);
+            var badPodDeploymentCount = ownerToPriorityInfo.Values.Count(info => info.Priority < PriorityClass.NeonMin.Value);
 
             if (badPodDeploymentCount > 0 || listAll)
             {
                 if (badPodDeploymentCount > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority=0]:");
+                    Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority<{PriorityClass.NeonMin.Value}]:");
                     Console.WriteLine();
                 }
 
@@ -362,14 +364,15 @@ namespace NeonCli
                     var priorityInfo   = item.Value;
                     var ownerFormatted = item.Key + new string(' ', ownerIdWidth - item.Key.Length);
                     var priorityValue  = priorityInfo.Priority.Value.ToString("#,##0").Trim();
+                    var errorMarker    = priorityInfo.Priority.Value < PriorityClass.NeonMin.Value ? "-->" : "   ";
 
-                    Console.WriteLine($"{ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
+                    Console.WriteLine($"{errorMarker} {ownerFormatted}    - {priorityInfo.PriorityClassName} ({priorityValue})");
                 }
             }
             else
             {
                 Console.WriteLine();
-                Console.WriteLine($"OK: All pod priorities are set.");
+                Console.WriteLine($"OK: Pod priorities are set correctly.");
             }
 
             return badPodDeploymentCount > 0;

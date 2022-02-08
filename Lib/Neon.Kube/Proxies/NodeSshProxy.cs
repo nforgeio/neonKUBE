@@ -475,32 +475,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that the provisioned node image is actually a ready-to-go node image.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns><c>true</c> if the operation system is supported.</returns>
-        public void VerifyImageIsReadyToGo(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-
-            if (readyToGoMode != ReadyToGoMode.Setup)
-            {
-                return;
-            }
-
-            controller.LogProgress(this, verb: "check", message: "ready-to-go image");
-
-            var imageType = ImageType;
-
-            if (imageType != KubeImageType.ReadyToGo)
-            {
-                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadyToGo}].");
-            }
-        }
-
-        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the node proxy on failure.
         /// </summary>
@@ -593,13 +567,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var hostingManager     = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
             var fstrim  = string.Empty;
 
-            if (hostingManager.SupportsFsTrim)
+            if (HostingManager.SupportsFsTrim(hostingEnvironment))
             {
                 // Not all hosting enviuronments supports: fstrim
 

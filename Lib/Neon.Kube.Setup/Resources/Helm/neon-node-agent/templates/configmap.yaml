@@ -1,0 +1,8 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    operator-element: operator-instance
+  name: neon-node-agent-webhook
+data:
+  KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000

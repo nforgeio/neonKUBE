@@ -256,13 +256,9 @@ namespace Neon.Kube
             {
                 switch (Hosting.Environment)
                 {
-                    case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.HyperV:
 
-                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltIn;
-
-                    case HostingEnvironment.Wsl2:
-
-                        return true;
+                        return Hosting.HyperV != null && Hosting.HyperV.NeonDesktopBuiltIn;
                 }
 
                 return false;
@@ -845,14 +841,6 @@ namespace Neon.Kube
         [Pure]
         public void ValidatePrivateNodeAddresses()
         {
-            if (Hosting.Environment == HostingEnvironment.Wsl2)
-            {
-                // WSL2 nodes have dynamic IP addresses that change everytime the host
-                // machine reboots so this check makes no sense for this environment.
-
-                return;
-            }
-
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
             foreach (var node in SortedNodes.OrderBy(n => n.Name))

@@ -60,11 +60,11 @@ namespace Neon.Kube
     /// <para>
     /// The basic idea here is that an early setup step will be executed that constructs a
     /// <see cref="KubeClusterAdvice"/> instance, determines resource and other limitations
-    /// holistically based on the cluster hosting environment (e.g. WSL2) as well as the
-    /// total resources available to the cluster, potentially priortizing resource assignments
-    /// to some services over others.  The step will persist the <see cref="KubeClusterAdvice"/>
-    /// to the setup controller state as the <see cref="KubeSetupProperty.ClusterAdvice"/>
-    /// peoperty so this information will be available to all other deployment steps.
+    /// holistically based on the cluster hosting environment as well as the total resources 
+    /// available to the cluster, potentially priortizing resource assignments to some services
+    /// over others.  The step will persist the <see cref="KubeClusterAdvice"/> to the setup
+    /// controller state as the <see cref="KubeSetupProperty.ClusterAdvice"/> property so this 
+    /// information will be available to all other deployment steps.
     /// </para>
     /// <para>
     /// <see cref="KubeServiceAdvice"/> inherits from <see cref="ObjectDictionary"/> and can

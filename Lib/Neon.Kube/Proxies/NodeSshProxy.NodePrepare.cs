@@ -95,21 +95,11 @@ namespace Neon.Kube
         /// <para>
         /// Configures a node's host public SSH key during node provisioning.
         /// </para>
-        /// <note>
-        /// This does nothing when we're preparing a ready-to-go image.
-        /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void ConfigureSshKey(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
-
-            if (readyToGoMode == ReadyToGoMode.Prepare)
-            {
-                return;
-            }
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
@@ -319,14 +309,12 @@ systemctl restart rsyslog.service
 
             var hostEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-            if (hostEnvironment != HostingEnvironment.Wsl2)
-            {
-                InvokeIdempotent("base/blacklist-floppy",
-                    () =>
-                    {
-                        controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
+            InvokeIdempotent("base/blacklist-floppy",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
 
-                        var floppyScript =
+                    var floppyScript =
 @"
 set -euo pipefail
 
@@ -337,15 +325,15 @@ rmmod floppy
 echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
 dpkg-reconfigure initramfs-tools
 ";
-                        SudoCommand(CommandBundle.FromScript(floppyScript));
-                    });
+                    SudoCommand(CommandBundle.FromScript(floppyScript));
+                });
 
-                InvokeIdempotent("base/sysstat",
-                    () =>
-                    {
-                        controller.LogProgress(this, verb: "enable", message: "sysstat");
+            InvokeIdempotent("base/sysstat",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "enable", message: "sysstat");
 
-                        var statScript =
+                    var statScript =
 @"
 set -euo pipefail
 
@@ -353,9 +341,8 @@ set -euo pipefail
 
 sed -i '/^ENABLED=""false""/c\ENABLED=""true""' /etc/default/sysstat
 ";
-                        SudoCommand(CommandBundle.FromScript(statScript));
-                    });
-            }
+                    SudoCommand(CommandBundle.FromScript(statScript));
+                });
 
             var script =
 $@"
@@ -1009,13 +996,10 @@ set -euo pipefail
             // We used to perform the configuration operation below as an
             // idempotent operation but we need to relax that so that we
             // can apply configuration changes on new nodes created from
-            // the node or ready-to-go images.
+            // the node image.
 
-            if (hostEnvironment != HostingEnvironment.Wsl2 && !reconfigureOnly)
+            if (!reconfigureOnly)
             {
-                // This doesn't work with WSL2 because the Microsoft Linux kernel doesn't
-                // include these modules.  We'll set them up for the other environments.
-
                 var moduleScript =
 @"
 set -euo pipefail
@@ -1859,35 +1843,6 @@ rm  install-kustomize.sh
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-                    // We need some custom configuration on WSL2 inspired by the 
-                    // Kubernetes-IN-Docker (KIND) project:
-                    //
-                    //      https://d2iq.com/blog/running-kind-inside-a-kubernetes-cluster-for-continuous-integration
-
-                    if (hostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        // We need to disable IPv6 on WSL2.  We're going to accomplish this by
-                        // writing a config file to be included last by [/etc/sysctl.conf].
-
-                        var confScript =
-@"
-set -euo pipefail
-
-cat <<EOF > /etc/sysctl.d/990-wsl2-no-ipv6
-# neonKUBE needs to disable IPv6 when hosted on WSL2.
-
-net.ipv6.conf.all.disable_ipv6=1
-net.ipv6.conf.default.disable_ipv6=1
-net.ipv6.conf.lo.disable_ipv6=1
-EOF
-
-chmod 744 /etc/sysctl.d/990-wsl2-no-ipv6
-
-sysctl -p /etc/sysctl.d/990-wsl2-no-ipv6
-";
-                        SudoCommand(CommandBundle.FromScript(confScript), RunOptions.FaultOnError);
-                    }
-
                     // Perform the install.
 
                     var mainScript =
@@ -1930,15 +1885,6 @@ systemctl disable kubelet
                     controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
                     SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
-
-                    // Additional special configuration for WSL2.
-
-                    if (hostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        var script = KubeHelper.Resources.GetFile("/Scripts/wsl2-cgroup-setup.sh").ReadAllText();
-
-                        SudoCommand(CommandBundle.FromScript(script));
-                    }
                 });
         }
     }

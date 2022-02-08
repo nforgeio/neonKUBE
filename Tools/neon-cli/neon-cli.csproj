@@ -1,115 +1,114 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>NeonCli</RootNamespace>
-    <AssemblyName>neon</AssemblyName>
-    <LangVersion>latest</LangVersion>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
-    <Authors>neonFORGE Team</Authors>
-    <Company>neonFORGE LLC</Company>
-    <Description>Manage neonKUBE clusters from the command line</Description>
-    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>NeonCli</RootNamespace>
+		<AssemblyName>neon</AssemblyName>
+		<LangVersion>latest</LangVersion>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<Authors>neonFORGE Team</Authors>
+		<Company>neonFORGE LLC</Company>
+		<Description>Manage neonKUBE clusters from the command line</Description>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
-	<SelfContained>true</SelfContained>
+		<PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
 
-	<!-- 
+		<!-- 
     We need to prevent the KubeOps build targets from trying to call the program
     entrypoint to generate the CRDs and other installation related files.
     -->
-	  
-	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-	<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-	<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-	<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-  </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-	<PublishSingleFile>false</PublishSingleFile>
-	<SelfContained>false</SelfContained>
-	<PublishTrimmed>false</PublishTrimmed>
-	  <TrimMode>copyused</TrimMode>	  
-	<PublishReadyToRun>false</PublishReadyToRun>
-  </PropertyGroup>
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>false</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+		<TrimMode>copyused</TrimMode>
+		<PublishReadyToRun>false</PublishReadyToRun>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants />
-	<PublishSingleFile>false</PublishSingleFile>
-	<SelfContained>true</SelfContained>
-    <PublishTrimmed>false</PublishTrimmed>
-	  <TrimMode>copyused</TrimMode>	  
-	<PublishReadyToRun>true</PublishReadyToRun>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+		<DefineConstants />
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="app.ico" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants />
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+		<TrimMode>copyused</TrimMode>
+		<PublishReadyToRun>true</PublishReadyToRun>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="app.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="app.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.2.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="KubernetesClient" Version="7.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-    <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="11.2.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="app.ico">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.WinTTY\Neon.WinTTY.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="GitInfo" Version="2.2.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="KubernetesClient" Version="7.0.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
+		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
+		<PackageReference Include="System.Runtime" Version="4.3.1" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+		<PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="YamlDotNet" Version="11.2.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.WinTTY\Neon.WinTTY.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
-  </ItemGroup>
-	
-  <Target Name="PubCore" AfterTargets="AfterBuild">
-	<Message Importance="high" Text="Publish: $(ProjectPath)" />
-    <Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
-  </Target>
+	<ItemGroup>
+		<None Include="..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Properties\PublishProfiles\" />
+	</ItemGroup>
+
+	<Target Name="PubCore" AfterTargets="AfterBuild">
+		<Message Importance="high" Text="Publish: $(ProjectPath)" />
+		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+	</Target>
 
 </Project>

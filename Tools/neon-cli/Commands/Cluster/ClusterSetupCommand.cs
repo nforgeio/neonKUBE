@@ -207,15 +207,6 @@ OPTIONS:
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
-#if ENTERPRISE
-            if (clusterDefinition.Hosting.Environment == HostingEnvironment.Wsl2)
-            {
-                var distro = new Wsl2ExtendedProxy(KubeConst.NeonDesktopWsl2BuiltInDistroName, KubeConst.SysAdminUser);
-
-                clusterDefinition.Masters.FirstOrDefault().Address = distro.Address;
-            }
-#endif
-
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
                 maxParallel:        maxParallel,

@@ -874,9 +874,6 @@ namespace Neon.Kube
         public override bool RequiresNodeAddressCheck => false;
 
         /// <inheritdoc/>
-        public override bool SupportsFsTrim => true;
-
-        /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -968,7 +965,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("credentials",
-                (state, node) =>
+                (controller, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
@@ -992,7 +989,7 @@ namespace Neon.Kube
             // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
             controller.AddNodeStep("openebs",
-                (state, node) =>
+                (controller, node) =>
                 {
                     var azureNode          = nameToVm[node.Name];
                     var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
@@ -1010,7 +1007,7 @@ namespace Neon.Kube
                             .Apply();
                     }
                 },
-                (state, node) => node.Metadata.OpenEbsStorage);
+                (controller, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>

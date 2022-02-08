@@ -1,23 +1,11 @@
-﻿apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: neon-node-agent
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    operator-element: operator-instance
-  name: neon-node-agent-webhook
-data:
-  KESTREL__ENDPOINTS__HTTP__URL: http://0.0.0.0:5000
----
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
     app: neon-node-agent
   name: neon-node-agent
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   selector:
     matchLabels:

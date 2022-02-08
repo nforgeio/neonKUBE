@@ -1,0 +1,7 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    operator-element: operator-instance
+  name: neon-cluster-operator-webhook
+data:

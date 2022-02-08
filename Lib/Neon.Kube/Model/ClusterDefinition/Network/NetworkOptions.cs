@@ -95,7 +95,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
+        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperV"/> and
         /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments and
         /// ignored for other environments which specify network subnets in their related hosting
         /// options.
@@ -340,10 +340,10 @@ namespace Neon.Kube
                 }
             }
 
-            // Note that we don't need to check the network settings for cloud environments or
-            // WSL2 deployments because we'll just use ambient settings in these cases.
+            // Note that we don't need to check the network settings for cloud environments
+            // because we'll just use ambient settings in these cases.
 
-            if (!isCloud && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
+            if (!isCloud)
             {
                 // Verify [PremiseSubnet].
 

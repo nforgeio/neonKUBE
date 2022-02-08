@@ -412,21 +412,16 @@ namespace Neon.Kube
         public const string ClusterImagesLastChecked = "cluster-images-last-checked";
 
         /// <summary>
-        /// The name used by the <see cref="HostingEnvironment.HyperVLocal"/> hosting manager
+        /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
         /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
-        /// as well as internal user-defined clusters will be attached.
+        /// as well as user-defined internal clusters will be attached.
         /// </summary>
-        public const string HyperVLocalInternalSwitchName = "neonkube";
-
-        /// <summary>
-        /// Identifies the WSL2 distro used to host the neonDESKTOP built-in cluster.
-        /// </summary>
-        public const string NeonDesktopWsl2BuiltInDistroName = "neon-desktop";
+        public const string HyperVInternalSwitchName = "neonkube";
 
         /// <summary>
         /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.
         /// </summary>
-        public const string NeonDesktopHyperVBuiltInVmName = NeonDesktopWsl2BuiltInDistroName;
+        public const string NeonDesktopHyperVBuiltInVmName = "neon-desktop";
 
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.

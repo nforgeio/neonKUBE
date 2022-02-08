@@ -84,7 +84,6 @@ namespace Neon.Kube
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
-        private static string               cachedDesktopWsl2Folder;
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
@@ -139,7 +138,6 @@ namespace Neon.Kube
             cachedPasswordsFolder     = null;
             cachedCacheFolder         = null;
             cachedDesktopFolder       = null;
-            cachedDesktopWsl2Folder   = null;
             cachedDesktopHypervFolder = null;
             cachedClientConfig        = null;
             cachedClusterCertificate  = null;
@@ -406,9 +404,7 @@ namespace Neon.Kube
 
                 case HostingEnvironment.BareMetal:
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
-                case HostingEnvironment.Wsl2:
 
                     return false;
 
@@ -428,18 +424,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// Determines whether a cluster hosting environment is available only for neonFORGE
-        /// enterprise (closed-source) related projects.
+        /// premium (closed-source) related projects.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
         /// <returns><c>true</c> for enteprise/closed-source related projects.</returns>
-        public static bool IsEnterpriseEnvironment(HostingEnvironment hostingEnvironment)
+        public static bool IsPremiumEnvironment(HostingEnvironment hostingEnvironment)
         {
             switch (hostingEnvironment)
             {
-                case HostingEnvironment.Wsl2:
-
-                    return true;
-
                 default:
 
                     return false;
@@ -461,17 +453,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
         /// <returns><c>true</c> for on-premise environments.</returns>
-        /// <remarks>
-        /// <note>
-        /// Although <see cref="HostingEnvironment.Wsl2"/> is technically hosted on the Windows
-        /// Hyper-V platform, we're not going to consider it to be hosted by a hypervisor because
-        /// it's a special case.
-        /// </note>
-        /// </remarks>
         public static bool IsOnPremiseHypervisorEnvironment(HostingEnvironment hostingEnvironment)
         {
             return hostingEnvironment == HostingEnvironment.HyperV ||
-                   hostingEnvironment == HostingEnvironment.HyperVLocal ||
                    hostingEnvironment == HostingEnvironment.XenServer;
         }
 
@@ -822,28 +806,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP WSL2 state folder.
-        /// </summary>
-        /// <returns>The folder path.</returns>
-        public static string DesktopWsl2Folder
-        {
-            get
-            {
-                if (cachedDesktopWsl2Folder != null)
-                {
-                    return cachedDesktopWsl2Folder;
-                }
-
-                var path = Path.Combine(NeonKubeUserFolder, "desktop", "wsl2");
-
-                Directory.CreateDirectory(path);
-
-                return cachedDesktopWsl2Folder = path;
-            }
-        }
-
-        /// <summary>
-        /// Returns path to the neonDESKTOP WSL2 state folder.
+        /// Returns path to the neonDESKTOP Hyper-V state folder.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string DesktopHypervFolder

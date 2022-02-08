@@ -250,7 +250,7 @@ namespace Neon.Kube
 
             // We're going to provision the XenServer hosts in parallel to
             // speed up cluster setup.  This works because each XenServer
-            // is essentially independent from the others.
+            // host is essentially independent from the others.
 
             xenController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
             {
@@ -301,7 +301,7 @@ namespace Neon.Kube
             // operation acquire a lock on the XenClient for the node's host before proceeding.
 
             setupController.AddNodeStep("openebs",
-                (state, node) =>
+                (controller, node) =>
                 {
                     var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
 
@@ -335,7 +335,7 @@ namespace Neon.Kube
                         }
                     }
                 },
-                (state, node) => node.Metadata.OpenEbsStorage);
+                (controller, node) => node.Metadata.OpenEbsStorage);
         }
 
         /// <inheritdoc/>

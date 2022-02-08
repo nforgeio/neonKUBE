@@ -42,14 +42,6 @@ namespace Neon.Kube
         /// single or multi-node clusters.
         /// </summary>
         [EnumMember(Value = "node")]
-        Node,
-
-        /// <summary>
-        /// Identifies a specialized nearly configured (ready-to-go) image that 
-        /// used for specialized single-node clusters such as a neonDESKTOP
-        /// built-in cluster.
-        /// </summary>
-        [EnumMember(Value = "ready-to-go")]
-        ReadyToGo
+        Node
     }
 }

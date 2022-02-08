@@ -432,7 +432,7 @@ namespace Neon.Kube
         /// <summary>
         /// Clears the status for the all of the cluster nodes.
         /// </summary>
-        public void ClearStatus()
+        public void ClearNodeStatus()
         {
             foreach (var node in Nodes)
             {
@@ -641,7 +641,7 @@ namespace Neon.Kube
         /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
         /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
         /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer or <b>.tar</b> for WSL2.
+        /// XenServer.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.

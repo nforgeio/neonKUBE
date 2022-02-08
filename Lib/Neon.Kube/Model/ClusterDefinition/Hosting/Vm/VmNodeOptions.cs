@@ -197,7 +197,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
+            if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
                 if (string.IsNullOrEmpty(Host))
                 {

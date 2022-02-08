@@ -6,8 +6,8 @@ timeSources:
 kubernetes:
   allowPodsOnMasters: true
 hosting:
-  environment: hyperv-local
-  hypervLocal:
+  environment: hyperv
+  hyperv:
     neonDesktopBuiltIn: true
     useInternalSwitch: true
   vm:

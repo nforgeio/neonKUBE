@@ -79,8 +79,8 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <para>
     /// <b>To deploy a temporary neonKUBE cluster</b>, you'll need to call one of
-    /// the <see cref="DeployAsync(ClusterDefinition, string, bool, bool, bool, int, string)"/>, <see cref="DeployAsync(FileInfo, string, bool, bool, bool, int, string)"/>,
-    /// or <see cref="DeployAsync(string, string, bool, bool, bool, int, string)"/> methods within the constructor to provision
+    /// the <see cref="DeployAsync(ClusterDefinition, string, bool, bool, int, string)"/>, <see cref="DeployAsync(FileInfo, string, bool, bool, int, string)"/>,
+    /// or <see cref="DeployAsync(string, string, bool, bool, int, string)"/> methods within the constructor to provision
     /// and setup the cluster using the specified cluster definition.  The <see cref="ClusterDefinition"/>
     /// property will be set in this case.
     /// </para>
@@ -298,11 +298,6 @@ namespace Neon.Kube.Xunit
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeVersions.NeonKube"/>.
         /// </param>
-        /// <param name="readyToGo">
-        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
-        /// image when <paramref name="imageUriOrPath"/> is not specified.  Note that only
-        /// single node clusters are supported for ready-to-go mode.
-        /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -351,7 +346,6 @@ namespace Neon.Kube.Xunit
         public async Task<TestFixtureStatus> DeployAsync(
             ClusterDefinition   clusterDefinition,
             string              imageUriOrPath        = null,
-            bool                readyToGo             = false,
             bool                removeOrphansByPrefix = false, 
             bool                unredacted            = false,
             int                 maxParallel           = 500,
@@ -373,13 +367,6 @@ namespace Neon.Kube.Xunit
                     }
 
                     return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
-                }
-
-                // Ensure that ready-to-mode is used only for single node clusters.
-
-                if (readyToGo && clusterDefinition.NodeDefinitions.Count > 1)
-                {
-                    throw new NotSupportedException("Ready-to-go mode supports only single node clusters.");
                 }
 
                 // Set the automation mode, using any previously downloaded node image unless
@@ -407,7 +394,7 @@ namespace Neon.Kube.Xunit
 
                 if (string.IsNullOrEmpty(imageUriOrPath))
                 {
-                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
+                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
                 }
 
                 if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
@@ -518,11 +505,6 @@ namespace Neon.Kube.Xunit
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeVersions.NeonKube"/>.
         /// </param>
-        /// <param name="readyToGo">
-        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
-        /// image when <paramref name="clusterDefinitionYaml"/> is not specified.  Note that only
-        /// single node clusters are supported for ready-to-go mode.
-        /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -558,7 +540,6 @@ namespace Neon.Kube.Xunit
         public async Task<TestFixtureStatus> DeployAsync(
             string  clusterDefinitionYaml, 
             string  imageUriOrPath        = null, 
-            bool    readyToGo             = false,
             bool    removeOrphansByPrefix = false, 
             bool    unredacted            = false,
             int     maxParallel           = 500,
@@ -570,7 +551,6 @@ namespace Neon.Kube.Xunit
             return await DeployAsync(
                 clusterDefinition:      ClusterDefinition.FromYaml(clusterDefinitionYaml),
                 imageUriOrPath:         imageUriOrPath, 
-                readyToGo:              readyToGo,
                 removeOrphansByPrefix:  removeOrphansByPrefix,
                 unredacted:             unredacted,
                 maxParallel:            maxParallel,
@@ -590,11 +570,6 @@ namespace Neon.Kube.Xunit
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
         /// release as specified by <see cref="KubeVersions.NeonKube"/>.
-        /// </param>
-        /// <param name="readyToGo">
-        /// Optionally specifies that the cluster will be deployed with a <b>ready-to-go</b>
-        /// image when <paramref name="imageUriOrPath"/> is not specified.  Note that only
-        /// single node clusters are supported for ready-to-go mode.
         /// </param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
@@ -631,7 +606,6 @@ namespace Neon.Kube.Xunit
         public async Task<TestFixtureStatus> DeployAsync(
             FileInfo    clusterDefinitionFile,
             string      imageUriOrPath        = null,
-            bool        readyToGo             = false,
             bool        removeOrphansByPrefix = false,
             bool        unredacted            = false, 
             int         maxParallel           = 500,
@@ -643,7 +617,6 @@ namespace Neon.Kube.Xunit
             return await DeployAsync(
                 clusterDefinition:      ClusterDefinition.FromFile(clusterDefinitionFile.FullName),
                 imageUriOrPath:         imageUriOrPath, 
-                readyToGo:              readyToGo,
                 removeOrphansByPrefix:  removeOrphansByPrefix,
                 unredacted:             unredacted,
                 maxParallel:            maxParallel,

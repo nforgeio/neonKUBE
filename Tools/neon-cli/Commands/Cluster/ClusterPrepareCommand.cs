@@ -71,10 +71,6 @@ OPTIONS:
                                   downloading the node image from GitHub Releases.  This
                                   is useful for debugging node image changes.
 
-    --ready-to-go               - Optionally indicates that the default ready-to-go image
-                                  should be used when [--node-image-uri] and [--node-image-path]
-                                  aren't specified.  This is not compatible with [--debug].
-
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
                                   Specify multiple servers by separating the endpoints 
@@ -134,7 +130,7 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--ready-to-go",  "--package-caches", "--unredacted", "--max-parallel", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--package-caches", "--unredacted", "--max-parallel", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -174,7 +170,6 @@ Server Requirements:
            
             var nodeImageUri      = commandLine.GetOption("--node-image-uri");
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
-            var readyToGo         = commandLine.HasOption("--ready-to-go");
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var automationFolder  = commandLine.GetOption("--automation-folder");
@@ -190,12 +185,6 @@ Server Requirements:
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
                 Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
-                Program.Exit(1);
-            }
-
-            if (debug && readyToGo)
-            {
-                Console.Error.WriteLine($"*** ERROR: [--ready-to-go] is not compatible with [--debug] mode.");
                 Program.Exit(1);
             }
 
@@ -218,34 +207,16 @@ Server Requirements:
             var clusterDefPath    = commandLine.Arguments[0];
             var clusterDefinition = (ClusterDefinition)null;            
 
-            if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // This special-case argument indicates that we should use the built-in 
-                // WSL2 cluster definition.
+            ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
-                clusterDefinition = KubeSetup.GetReadyToGoClusterDefinition(HostingEnvironment.Wsl2);
-            }
-            else
-            {
-                ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
-
-                clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
-            }
+            clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
             // Use the default node image for the hosting environment unless [--node-image-uri]
             // or [--node-image-path] was specified.
 
             if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
             {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
-            }
-
-            // Ensure that the cluster only has a single node for ready-to-go mode.
-
-            if (readyToGo && clusterDefinition.NodeDefinitions.Count > 1)
-            {
-                Console.Error.WriteLine("*** ERROR: Only single node clusters can be deployed for [--ready-to-go] mode.");
-                Program.Exit(1);
+                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
             }
 
             // Parse any specified package cache endpoints.
@@ -279,8 +250,7 @@ Server Requirements:
                 debugMode:              debug,
                 baseImageName:          baseImageName,
                 automationFolder:       automationFolder,
-                headendUri:             headendUri,
-                readyToGoMode:          readyToGo ? ReadyToGoMode.Setup : ReadyToGoMode.Normal);
+                headendUri:             headendUri);
 
             controller.StatusChangedEvent +=
                 status =>
