@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcGetVmReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,51 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Holds information about a specific virtual machine.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcGetVmReply
     {
         /// <summary>
-        /// The machine name.
+        /// Error constructor.
         /// </summary>
-        public string Name { get; set; }
+        /// <param name="e">The exception.</param>
+        public GrpcGetVmReply(Exception e)
+        {
+            this.Error = new GrpcError(e);
+        }
+
+        /// <summary>Constructor constructor.
+        /// </summary>
+        /// <param name="machine">The machine information.</param>
+        public GrpcGetVmReply(GrpcVirtualMachine machine)
+        {
+            this.Machine = machine;
+        }
 
         /// <summary>
-        /// The current machine state.
+        /// Set to a non-null value when the request failed.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        [DataMember(Order = 1)]
+        public GrpcError? Error { get; set; }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
+        /// Information about the virtual machine or <c>null</c> when the machine doesn't exist.
         /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
-        /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public GrpcVirtualMachine? Machine { get; set; }
     }
 }

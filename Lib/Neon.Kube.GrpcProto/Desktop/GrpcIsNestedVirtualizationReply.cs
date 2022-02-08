@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcIsNestedVirtualizationReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,52 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Indicates whether Windows is running with nested virtualization.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcIsNestedVirtualizationReply
     {
         /// <summary>
-        /// The machine name.
+        /// Error constructor.
         /// </summary>
-        public string Name { get; set; }
+        /// <param name="e">The exception.</param>
+        public GrpcIsNestedVirtualizationReply(Exception e)
+        {
+            this.Error = new GrpcError(e);
+        }
 
         /// <summary>
-        /// The current machine state.
+        /// Reply constructor.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        /// <param name="isNested">Indicates whether Windows is running as nested virtualization.</param>
+        public GrpcIsNestedVirtualizationReply(bool isNested)
+        {
+            this.IsNested = isNested;
+        }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
+        /// Set to a non-null value when the request failed.
         /// </summary>
-        public string SwitchName { get; set; }
+        [DataMember(Order = 1)]
+        public GrpcError? Error { get; set; }
 
         /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
+        /// <c>true</c> for nested virtualization.
         /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public bool IsNested { get; set; }
     }
 }

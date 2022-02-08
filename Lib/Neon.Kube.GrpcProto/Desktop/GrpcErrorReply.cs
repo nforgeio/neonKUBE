@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcErrorReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,44 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Used for operations that just need to return an indication of success or failure.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcErrorReply
     {
         /// <summary>
-        /// The machine name.
+        /// Success constructor.
         /// </summary>
-        public string Name { get; set; }
+        public GrpcErrorReply()
+        {
+        }
 
         /// <summary>
-        /// The current machine state.
+        /// Error constructor.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        /// <param name="e">The exception.</param>
+        public GrpcErrorReply(Exception e)
+        {
+            this.Error = new GrpcError(e);
+        }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
+        /// Set to a non-null value when the request failed.
         /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
-        /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 1)]
+        public GrpcError? Error { get; set; }
     }
 }

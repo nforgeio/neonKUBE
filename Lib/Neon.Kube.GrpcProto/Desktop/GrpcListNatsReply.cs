@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcListNatsReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,52 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Lists the information about the Hyper-V virtual NATs.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcListNatsReply
     {
         /// <summary>
-        /// The machine name.
+        /// Error constructor.
         /// </summary>
-        public string Name { get; set; }
+        /// <param name="e">The exception.</param>
+        public GrpcListNatsReply(Exception e)
+        {
+            this.Error = new GrpcError(e);
+        }
 
         /// <summary>
-        /// The current machine state.
+        /// Constructor.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        /// <param name="nats">The virtual NATs.</param>
+        public GrpcListNatsReply(List<GrpcVirtualNat> nats)
+        {
+            this.NATs = nats;
+        }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
+        /// Set to a non-null value when the request failed.
         /// </summary>
-        public string SwitchName { get; set; }
+        [DataMember(Order = 1)]
+        public GrpcError? Error { get; set; }
 
         /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
+        /// Information about the virtual NATs.
         /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public List<GrpcVirtualNat>? NATs { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcVirtualMachine.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,61 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// Describes the state of a Hyper-V virtual machine.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcVirtualMachine
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name">Specifies the machine name.</param>
+        /// <param name="state">Specifies the machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].</param>
+        /// <param name="switchname">Optionally identifies the attached switch.</param>
+        /// <param name="interfaceName">Optionall identifies the attached network adaptor.</param>
+        public GrpcVirtualMachine(string name, string state, string? switchname, string? interfaceName)
+        {
+            this.Name          = name;
+            this.State         = state;
+            this.SwitchName    = switchname;
+            this.InterfaceName = interfaceName;
+        }
+
         /// <summary>
         /// The machine name.
         /// </summary>
+        [DataMember(Order = 1)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// The current machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        [DataMember(Order = 2)]
+        public string State { get; set; }
 
         /// <summary>
         /// Identifies the virtual switch to which this virtual machine is attached (or null).
         /// </summary>
-        public string SwitchName { get; set; }
+        [DataMember(Order = 3)]
+        public string? SwitchName { get; set; }
 
         /// <summary>
         /// Identifies the network interface or switch to which the address is assigned (or null).
         /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 4)]
+        public string? InterfaceName { get; set; }
     }
 }

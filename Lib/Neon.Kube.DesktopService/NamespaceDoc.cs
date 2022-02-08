@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualNAT.cs
+// FILE:	    NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -10,37 +10,31 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
+// distributed under the License is distributed on an "AS IS" BASIS
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.HyperV
+namespace Neon.Kube.DesktopService
 {
     /// <summary>
-    /// Describes a virtual NAT.
+    /// <para>
+    /// <b>INTERNAL USE ONLY:</b> Defines internal GRPC protobuf messages and services used by neonKUBE applications.
+    /// </para>
+    /// <note>
+    /// This is only supported for .NET 6.0 applications.
+    /// </note>
     /// </summary>
-    public class VirtualNat
+    [System.Runtime.CompilerServices.CompilerGenerated]
+    class NamespaceDoc
     {
-        /// <summary>
-        /// The NAT's name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The NAT source subnet.
-        /// </summary>
-        public string Subnet { get; set; }
     }
 }

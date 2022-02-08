@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcNewExternalSwitchRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,46 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Creates a new external Hyper-V switch. This returns a <see cref="GrpcErrorReply"/>.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcNewExternalSwitchRequest
     {
         /// <summary>
-        /// The machine name.
+        /// Constructor.
         /// </summary>
-        public string Name { get; set; }
+        /// <param name="switchName">The new switch name.</param>
+        /// <param name="gateway">Address of the LAN gateway, used to identify the connected network interface.</param>
+        public GrpcNewExternalSwitchRequest(string switchName, IPAddress gateway)
+        {
+            this.SwitchName = switchName;
+            this.Gateway    = gateway.ToString();
+        }
 
         /// <summary>
-        /// The current machine state.
+        /// Identifies the desired switch.
         /// </summary>
-        public VirtualMachineState State { get; set; }
-
-        /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
-        /// </summary>
+        [DataMember(Order = 1)]
         public string SwitchName { get; set; }
 
         /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
+        /// Address of the LAN gateway.
         /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public string Gateway { get; set; }
     }
 }

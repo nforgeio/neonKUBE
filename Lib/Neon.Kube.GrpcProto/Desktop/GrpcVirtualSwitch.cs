@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcVirtualSwitch.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Describes a virtual switch.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcVirtualSwitch
     {
         /// <summary>
-        /// The machine name.
+        /// Constructor.
         /// </summary>
+        /// <param name="name">The switch name.</param>
+        /// <param name="type">The switch type (corresponds to the [VirtualSwitchType] enum.</param>
+        public GrpcVirtualSwitch(string name, string type)
+        {
+            this.Name = name;
+            this.Type = type;
+        }
+
+        /// <summary>
+        /// The switch name.
+        /// </summary>
+        [DataMember(Order = 1)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// The switch type (corresponds to the [VirtualSwitchType] enum.
         /// </summary>
-        public VirtualMachineState State { get; set; }
-
-        /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
-        /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
-        /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public string Type { get; set; }
     }
 }

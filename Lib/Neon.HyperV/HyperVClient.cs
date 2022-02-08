@@ -529,7 +529,7 @@ namespace Neon.HyperV
         /// Optionally just turns the VM off without performing a graceful shutdown first.
         /// </para>
         /// <note>
-        /// <b>WARNING!</b> This could result in the loss of unsaved data.
+        /// <b>WARNING!</b> This could result in corruption or the the loss of unsaved data.
         /// </note>
         /// </param>
         public void StopVm(string machineName, bool turnOff = false)
@@ -644,7 +644,7 @@ namespace Neon.HyperV
 
         /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any
-        /// existing disc first.
+        /// existing disc.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <param name="isoPath">Path to the ISO file.</param>
@@ -667,33 +667,6 @@ namespace Neon.HyperV
             CheckDisposed();
 
             powershell.Execute($"Remove-VMDvdDrive -VMName '{machineName}' -ControllerNumber 1 -ControllerLocation 0");
-        }
-
-        /// <summary>
-        /// Inserts an VFD file as the floppy for a virtual machine, ejecting any
-        /// existing disc first.
-        /// </summary>
-        /// <param name="machineName">The machine name.</param>
-        /// <param name="vfdPath">Path to the VFD file.</param>
-        public void InsertVmFloppy(string machineName, string vfdPath)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
-            CheckDisposed();
-
-            EjectVmFloppy(machineName);
-            powershell.Execute($"Set-VMFloppyDiskDrive -VMName '{machineName}' -Path '{vfdPath}'");
-        }
-
-        /// <summary>
-        /// Ejects any floppy that's currently inserted into a virtual machine.
-        /// </summary>
-        /// <param name="machineName">The machine name.</param>
-        public void EjectVmFloppy(string machineName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
-            CheckDisposed();
-
-            powershell.Execute($"Set-VMFloppyDiskDrive -VMName '{machineName}' -Path $null");
         }
 
         /// <summary>
@@ -752,7 +725,7 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Looks for a Hyper-V switch by name.
+        /// Returns information for a Hyper-V switch by name.
         /// </summary>
         /// <param name="switchName">The switch name.</param>
         /// <returns>The <see cref="VirtualSwitch"/> when present or <c>null</c>.</returns>
@@ -768,7 +741,7 @@ namespace Neon.HyperV
         /// Adds a virtual Hyper-V switch that has external connectivity.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
-        /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
+        /// <param name="gateway">Address of the LAN gateway, used to identify the connected network interface.</param>
         public void NewExternalSwitch(string switchName, IPAddress gateway)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
@@ -854,8 +827,8 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
         /// <param name="subnet">Specifies the internal subnet.</param>
-        /// <param name="addNAT">Optionally configure an NAT to support external routing.</param>
-        public void NewInternalSwitch(string switchName, NetworkCidr subnet, bool addNAT = false)
+        /// <param name="addNat">Optionally configure a NAT to support external routing.</param>
+        public void NewInternalSwitch(string switchName, NetworkCidr subnet, bool addNat = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
             Covenant.Requires<ArgumentNullException>(subnet != null, nameof(subnet));
@@ -866,7 +839,7 @@ namespace Neon.HyperV
             powershell.Execute($"{HyperVNamespace}New-VMSwitch -Name '{switchName}' -SwitchType Internal");
             powershell.Execute($"{NetTcpIpNamespace}New-NetIPAddress -IPAddress {subnet.FirstUsableAddress} -PrefixLength {subnet.PrefixLength} -InterfaceAlias 'vEthernet ({switchName})'");
 
-            if (addNAT)
+            if (addNat)
             {
                 powershell.Execute($"{NetNatNamespace}New-NetNAT -Name '{switchName}' -InternalIPInterfaceAddressPrefix {subnet}");
             }
@@ -891,9 +864,9 @@ namespace Neon.HyperV
         /// Returns the virtual network adapters attached to the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <param name="waitForAddresses">Optionally waits until at least one adapter has been able to acquire at least one IPv4 address.</param>
+        /// <param name="waitForAddresses">Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.</param>
         /// <returns>The list of network adapters.</returns>
-        public List<VirtualNetworkAdapter> ListVmNetworkAdapters(string machineName, bool waitForAddresses = false)
+        public List<VirtualNetworkAdapter> GetVmNetworkAdapters(string machineName, bool waitForAddresses = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -1062,14 +1035,14 @@ namespace Neon.HyperV
         /// <summary>
         /// Lists the virtual NATs.
         /// </summary>
-        /// <returns>A list of <see cref="VirtualNAT"/>.</returns>
-        public List<VirtualNAT> ListNATs()
+        /// <returns>A list of <see cref="VirtualNat"/>.</returns>
+        public List<VirtualNat> ListNats()
         {
             CheckDisposed();
 
             try
             {
-                var nats    = new List<VirtualNAT>();
+                var nats    = new List<VirtualNat>();
                 var rawNats = powershell.ExecuteJson($"{NetNatNamespace}Get-NetNAT");
 
                 foreach (dynamic rawNat in rawNats)
@@ -1098,7 +1071,7 @@ namespace Neon.HyperV
                         }
                     }
 
-                    var nat = new VirtualNAT()
+                    var nat = new VirtualNat()
                     {
                         Name   = name,
                         Subnet = subnet
@@ -1119,24 +1092,24 @@ namespace Neon.HyperV
         /// Looks for a virtual NAT by name.
         /// </summary>
         /// <param name="name">The desired NAT name.</param>
-        /// <returns>The <see cref="VirtualNAT"/> or <c>null</c> if the NAT doesn't exist.</returns>
-        public VirtualNAT GetNATByName(string name)
+        /// <returns>The <see cref="VirtualNat"/> or <c>null</c> if the NAT doesn't exist.</returns>
+        public VirtualNat GetNatByName(string name)
         {
             CheckDisposed();
 
-            return ListNATs().FirstOrDefault(nat => nat.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            return ListNats().FirstOrDefault(nat => nat.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
         }
 
         /// <summary>
         /// Looks for a virtual NAT by subnet.
         /// </summary>
         /// <param name="subnet">The desired NAT subnet.</param>
-        /// <returns>The <see cref="VirtualNAT"/> or <c>null</c> if the NAT doesn't exist.</returns>
-        public VirtualNAT GetNATBySubnet(string subnet)
+        /// <returns>The <see cref="VirtualNat"/> or <c>null</c> if the NAT doesn't exist.</returns>
+        public VirtualNat GetNatBySubnet(string subnet)
         {
             CheckDisposed();
 
-            return ListNATs().FirstOrDefault(nat => nat.Subnet == subnet);
+            return ListNats().FirstOrDefault(nat => nat.Subnet == subnet);
         }
     }
 }

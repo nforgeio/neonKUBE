@@ -1,0 +1,256 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    IGrpcDesktopService.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Net;
+
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
+{
+    /// <summary>
+    /// Defines the Neon Desktop Service contract.  This is used by <b>neon-desktop</b> and <b>neon-cli</b>
+    /// to perform privileged operations.
+    /// </summary>
+    [ServiceContract]
+    public interface IGrpcDesktopService
+    {
+        /// <summary>
+        /// Returns a dictionary mapping Windows features to their current status.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetWindowsCapabilitiesReply"/> holding the feature information.</returns>
+        /// <exception cref="DesktopServiceException">Thrown on errors.</exception>
+        [OperationContract]
+        Task<GrpcGetWindowsCapabilitiesReply> GetWindowsCapabilitiesAsync(GrpcGetWindowsCapabilitiesRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns an indication as to whether Windows is running with nested virtialization.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcIsNestedVirtualizationReply"/> holding the feature information.</returns>
+        /// <exception cref="DesktopServiceException">Thrown on errors.</exception>
+        [OperationContract]
+        Task<GrpcIsNestedVirtualizationReply> IsNestedVirtualizationAsync(GrpcIsNestedVirtualizationRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Creates a virtual machine. 
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        [OperationContract]
+        Task<GrpcErrorReply> AddVmAsync(GrpcAddVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Removes a named virtual machine and all of its drives (by default).
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/> indicating success or failure.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> RemoveVmAsync(GrpcRemoveVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Lists the Hyper-V virtual machines.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcListVmsReply"/> with the results.</returns>
+        [OperationContract]
+        Task<GrpcListVmsReply> ListVmsAsync(GrpcListVmsRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns information about a specific virtial machine if it exists.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetVmReply"/> with the results.</returns>
+        [OperationContract]
+        Task<GrpcGetVmReply> GetVmAsync(GrpcGetVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Determines whether a virtual machine exists.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcVmExistsReply"/> with the result.</returns>
+        [OperationContract]
+        Task<GrpcVmExistsReply> VmExistsAsync(GrpcVmExistsRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Starts a virtual machine.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> StartVmAsync(GrpcStartVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Stops a virtual machine.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> StopVmAsync(GrpcStopVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Saves a virtual machine (AKA puts it to sleep).
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> SaveVmAsync(GrpcSaveVmRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns information about a virtual machine's attached drives.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetVmDrivesReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Adds a drive to a virtual machine.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> AddVmDriveAsync(GrpcAddVmDriveRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Compacts a virtual disk.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> CompactDriveRequestAsync(GrpCompactDriveRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any existing disc.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> InsertVmDvdAsync(GrpcInsertVmDvdRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Ejects any DVD/CD that's currently inserted into a virtual machine.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> EjectVmDvdAsync(GrpcEjectVmDvdRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Lists the Hyper-V virtual switches.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcListSwitchesReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcListSwitchesReply> ListSwitchesAsync(GrpcListSwitchesRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns information about a specific Hyper-V virtual switch.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetSwitchReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcListSwitchesReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Creates a new external Hyper-V virtual switch.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> NewExternalSwitchAsync(GrpcNewExternalSwitchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Creates a new internal Hyper-V virtual switch.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> NewInternalSwitchAsync(GrpcNewInternalSwitchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Removes a Hyper-V virtual switch.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcErrorReply> RemoveSwitchAsync(GrpcRemoveSwitchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns information about the network adaptors attached to a virtual machine.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetVmNetworkAdaptersReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcRemoveSwitchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Lists the virtual Hyper-V NATs.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcListNatsReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcListNatsReply> ListNatsAsync(GrpcListNatsRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Looks up a virtual Hyper-V NAT by name.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetNatReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcGetNatReply> GetNatByName(GrpcGetNatByNameRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Looks up a virtual Hyper-V NAT by subnet.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetNatReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcGetNatReply> GetNatByNameSubnet(GrpcGetNatBySubnetRequest request, CallContext context = default);
+    }
+}

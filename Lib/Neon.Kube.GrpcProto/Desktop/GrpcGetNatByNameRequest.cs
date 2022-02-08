@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcGetNatByNameRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,37 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Returns information about a virtual Hyper-V NAT by name.  This returns a <see cref="GrpcGetNatReply"/>.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcGetNatByNameRequest
     {
         /// <summary>
-        /// The machine name.
+        /// Constructor.
         /// </summary>
+        /// <param name="name">Specifies the desired NAT name.</param>
+        public GrpcGetNatByNameRequest(string name)
+        {
+            this.Name = name;
+        }
+
+        /// <summary>
+        /// Identifies the NAT by name.
+        /// </summary>
+        [DataMember(Order = 1)]
         public string Name { get; set; }
-
-        /// <summary>
-        /// The current machine state.
-        /// </summary>
-        public VirtualMachineState State { get; set; }
-
-        /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
-        /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
-        /// </summary>
-        public string InterfaceName { get; set; }
     }
 }

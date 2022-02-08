@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WindowsFeatureStatus.cs
+// FILE:	    GrpcGetNatBySubnetRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,35 +18,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
-namespace Neon.Common
+using Neon.Common;
+using Neon.Net;
+
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Enumerates the possible states of an optional Windows feature.
+    /// Returns information about a virtual Hyper-V NAT by subnet.  This returns a <see cref="GrpcGetNatReply"/>.
     /// </summary>
-    public enum WindowsFeatureStatus
+    [DataContract]
+    public class GrpcGetNatBySubnetRequest
     {
         /// <summary>
-        /// The feature status couldn't be determined.
+        /// Constructor.
         /// </summary>
-        Unknown = 0,
+        /// <param name="subnet">Specifies the NAT subnet.</param>
+        public GrpcGetNatBySubnetRequest(string subnet)
+        {
+            this.Subnet = subnet;
+        }
 
         /// <summary>
-        /// The feature is disabled.
+        /// Identifies the target NAT by subnet.
         /// </summary>
-        Disabled,
-
-        /// <summary>
-        /// The feature is enabled.
-        /// </summary>
-        Enabled,
-
-        /// <summary>
-        /// The feature is currently partially installed and will be enabled after
-        /// Windows is restarted.
-        /// </summary>
-        EnabledPending
+        [DataMember(Order = 1)]
+        public string Subnet { get; set; }
     }
 }

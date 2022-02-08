@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualDrive.cs
+// FILE:	    GrpcVirtualDrive.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,37 +17,58 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Specifies virtual drive creation parameters.
+    /// Specifies a virtual drive.
     /// </summary>
-    public class VirtualDrive
+    [DataContract]
+    public class GrpcVirtualDrive
     {
         /// <summary>
-        /// Specifies the path where the drive is located.  The drive format
+        /// Constructor.
+        /// </summary>
+        /// <param name="path">Specifies the path where the drive is located.</param>
+        /// <param name="size">The drive size in bytes.</param>
+        /// <param name="isDynamic">
+        /// Indicates whether a dynamic drive will be created as opposed to a
+        /// pre-allocated fixed drive.
+        /// </param>
+        public GrpcVirtualDrive(string path, decimal size, bool isDynamic)
+        {
+            this.Path      = path;
+            this.Size      = (long)size;
+            this.IsDynamic = isDynamic;
+        }
+
+        /// <summary>
+        /// Specifies the path where the drive will be located.  The drive format
         /// is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
         /// </summary>
+        [DataMember(Order = 1)]
         public string Path { get; set; }
 
         /// <summary>
         /// The drive size in bytes.
         /// </summary>
-        public decimal Size { get; set; }
+        [DataMember(Order = 2)]
+        public long Size { get; set; }
 
         /// <summary>
         /// Indicates whether a dynamic drive will be created as opposed to a
         /// pre-allocated fixed drive.  This defaults to <b>true</b>.
         /// </summary>
+        [DataMember(Order = 3)]
         public bool IsDynamic { get; set; } = true;
     }
 }

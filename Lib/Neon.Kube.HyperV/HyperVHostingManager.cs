@@ -207,7 +207,7 @@ namespace Neon.Kube
                             var localHyperVOptions = cluster.Definition.Hosting.HyperV;
                             var @switch            = hyperv.GetSwitch(KubeConst.HyperVInternalSwitchName);
                             var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
-                            var nat                = hyperv.GetNATByName(KubeConst.HyperVInternalSwitchName);
+                            var nat                = hyperv.GetNatByName(KubeConst.HyperVInternalSwitchName);
 
                             if (@switch != null)
                             {
@@ -437,7 +437,7 @@ namespace Neon.Kube
                         // this switch requires a virtual NAT.
 
                         controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
-                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
+                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNat: true);
                         controller.SetGlobalStepStatus();
                     }
 

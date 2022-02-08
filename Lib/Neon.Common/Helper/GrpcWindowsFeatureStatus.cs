@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    WindowsFeatureStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Common;
-
-namespace Neon.HyperV
+namespace Neon.Common
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Enumerates the possible states of an optional Windows feature.
     /// </summary>
-    public class VirtualMachine
+    public enum GrpcWindowsFeatureStatus
     {
         /// <summary>
-        /// The machine name.
+        /// The feature status couldn't be determined.
         /// </summary>
-        public string Name { get; set; }
+        Unknown = 0,
 
         /// <summary>
-        /// The current machine state.
+        /// The feature is disabled.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        Disabled,
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
+        /// The feature is enabled.
         /// </summary>
-        public string SwitchName { get; set; }
+        Enabled,
 
         /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
+        /// The feature is currently partially installed and will be enabled after
+        /// Windows is restarted.
         /// </summary>
-        public string InterfaceName { get; set; }
+        EnabledPending
     }
 }

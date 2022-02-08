@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    GrpcRemoveVmRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,46 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.HyperV
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the state of a Hyper-V virtual machine.
+    /// Removes a virtual machine.  This request returns a <see cref="GrpcErrorReply"/>.
     /// </summary>
-    public class VirtualMachine
+    [DataContract]
+    public class GrpcRemoveVmRequest
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="machineName">Specifies the machine name.</param>
+        /// <param name="keepDrives">Optionally retains the VM disk files.</param>
+        public GrpcRemoveVmRequest(string machineName, bool keepDrives = false)
+        {
+            this.MachineName = machineName;
+            this.KeepDrives  = keepDrives;
+        }
+
         /// <summary>
         /// The machine name.
         /// </summary>
-        public string Name { get; set; }
+        [DataMember(Order = 1)]
+        public string MachineName { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// Indicates whether the virtual machine drives should be retained after 
+        /// removing the machine.
         /// </summary>
-        public VirtualMachineState State { get; set; }
-
-        /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached (or null).
-        /// </summary>
-        public string SwitchName { get; set; }
-
-        /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned (or null).
-        /// </summary>
-        public string InterfaceName { get; set; }
+        [DataMember(Order = 2)]
+        public bool KeepDrives { get; set; }
     }
 }
