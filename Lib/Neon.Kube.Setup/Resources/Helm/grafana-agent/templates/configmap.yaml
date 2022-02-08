@@ -31,6 +31,8 @@ data:
             headers: 
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
+            queue_config:
+              max_backoff: 60s
         external_labels:
           cluster: {{ .Values.cluster.name }}
           node: ${HOSTNAME}
@@ -120,6 +122,10 @@ data:
         - clients:
             - url: http://loki:3100/loki/api/v1/push
               tenant_id: {{ .Values.cluster.name | default "neonkube" }}
+              backoff_config:
+                min_period: 500ms
+                max_period: 5m
+                max_retries: 3
           name: default
           scrape_configs:
             - job_name: journal
@@ -135,6 +141,17 @@ data:
                 - source_labels:
                     - '__journal__hostname'
                   target_label: 'hostname'
+            - job_name: syslog
+              syslog:
+                listen_address: 0.0.0.0:5140
+                idle_timeout: 120s
+                label_structured_data: yes
+                use_incoming_timestamp: true
+                labels:
+                  job: "syslog"
+              relabel_configs:
+                - source_labels: ['__syslog_message_hostname']
+                  target_label: 'host'
             - job_name: kubernetes-pods
               kubernetes_sd_configs:
                 - role: pod

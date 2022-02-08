@@ -39,5 +39,9 @@ spec:
     port: 55678
     protocol: TCP
     targetPort: 55678
+  - name: agent-syslog
+    port: 5140
+    protocol: TCP
+    targetPort: 5140
   selector:
     name: grafana-agent-node
