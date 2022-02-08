@@ -37,22 +37,26 @@ cortexConfig:
     grpc_server_min_time_between_pings: 10s
     grpc_server_ping_without_stream_allowed: true
   distributor:
-    shard_by_all_labels: false
+    shard_by_all_labels: true
     pool:
       health_check_ingesters: true
     ha_tracker:
       enable_ha_tracker: false
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/cortex/ha-tracker/
         etcd:
           endpoints:
-            - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
     ring:
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/cortex/collectors/
         etcd:
           endpoints:
-          - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
+    instance_limits:
+      max_ingestion_rate: 25000
   ingester_client:
     grpc_client_config:
       # Configure the client to allow messages up to 100MB.
@@ -101,6 +105,7 @@ cortexConfig:
       # looking up address on eth0 or en0; can be specified if this fails.
       address: 0.0.0.0
       min_ready_duration: 20s
+      #readiness_check_ring_health: false
       # We want to start immediately and flush on shutdown.
       join_after: 0
       final_sleep: 0s
@@ -110,10 +115,13 @@ cortexConfig:
       ring:
         replication_factor: 1
         kvstore:
-          store: inmemory
+          store: etcd
+          prefix: neonkube.io/cortex/collectors/
           etcd:
             endpoints:
-              - etcd.neon-system:2379
+              - neon-etcd.neon-system.svc.cluster.local:2379
+    instance_limits:
+      max_ingestion_rate: 25000
   frontend_worker:
     match_max_concurrent: true
     frontend_address: 0.0.0.0:9095
@@ -123,14 +131,15 @@ cortexConfig:
       listen_address: 0.0.0.0:9094
     enable_api: true
     external_url: /api/prom/alertmanager
-    sharding_enabled: false
+    sharding_enabled: true
     sharding_ring:
       replication_factor: 1
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/cortex/alertmanagers/
         etcd:
           endpoints:
-            - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
   alertmanager_storage:
     backend: s3
     s3:
@@ -144,13 +153,14 @@ cortexConfig:
     external_url: /api/prom/ruler
     enable_alertmanager_v2: true
     enable_api: true
-    enable_sharding: false
+    enable_sharding: true
     ring:
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/cortex/rulers/
         etcd:
           endpoints:
-            - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
     rule_path: /tmp/cortex/rules
   ruler_storage:
     backend: s3
@@ -171,13 +181,14 @@ cortexConfig:
     deletion_delay: 1h
     tenant_cleanup_delay: 1h
     data_dir: /tmp/cortex/compactor
-    sharding_enabled: false
+    sharding_enabled: true
     sharding_ring:
       kvstore:
-        store: inmemory
+        store: etcd
+        prefix: neonkube.io/cortex/collectors/
         etcd:
           endpoints:
-            - etcd.neon-system:2379
+            - neon-etcd.neon-system.svc.cluster.local:2379
   purger:
     enable: true
     delete_request_cancel_period: 5m
@@ -185,6 +196,15 @@ cortexConfig:
   table_manager:
     retention_deletes_enabled: true
     retention_period: 6h
+  store_gateway:
+    sharding_enabled: true
+    sharding_ring:
+      kvstore:
+        store: etcd
+        prefix: neonkube/cortex/collectors/
+        etcd:
+          endpoints:
+            - neon-etcd.neon-system.svc.cluster.local:2379
 
 strategy:
   type: RollingUpdate
@@ -213,6 +233,8 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "http-metrics"
   readiness.status.sidecar.istio.io/applicationPorts: '9009,9095'
+  traffic.sidecar.istio.io/excludeInboundPorts: '2379'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '2379'
 
 podLabels: {}
 
@@ -243,25 +265,26 @@ securityContext: {}
 initContainers: []
 
 livenessProbe:
-  exec:
-    command:
-    - "wget"
-    - "-q"
-    - "--spider"
-    - "http://localhost:9009/ready"
+  httpGet:
+    path: /ready
+    port: http-metrics
   initialDelaySeconds: 60
   failureThreshold: 10
   periodSeconds: 10
 readinessProbe:
-  exec:
-    command:
-    - "wget"
-    - "-q"
-    - "--spider"
-    - "http://localhost:9009/ready"
+  httpGet:
+    path: /ready
+    port: http-metrics
   initialDelaySeconds: 60
   failureThreshold: 10
   periodSeconds: 10
+startupProbe:
+  httpGet:
+    path: /ready
+    port: http-metrics
+  failureThreshold: 60
+  initialDelaySeconds: 120
+  periodSeconds: 30
 
 serviceMonitor:
   enabled: true

@@ -66,7 +66,9 @@ spec:
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}{{- if .Values.nodeSelector }}
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
           {{- if .Values.resources }}
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
@@ -75,6 +77,7 @@ spec:
           env:
           {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
+      {{- if .Values.nodeSelector }}
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
       {{- end }}
@@ -86,6 +89,15 @@ spec:
       tolerations:
       {{- toYaml .Values.tolerations | nindent 8 }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: {{ template "cortex.name" . }}
+                topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       volumes:
         - name: config
