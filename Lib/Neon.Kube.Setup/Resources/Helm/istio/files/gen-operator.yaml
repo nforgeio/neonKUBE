@@ -183,8 +183,8 @@ spec:
               - ALL
             privileged: false
             readOnlyRootFilesystem: true
-            runAsGroup: 1337
-            runAsUser: 1337
+            runAsGroup: 1000
+            runAsUser: 1000
             runAsNonRoot: true
           imagePullPolicy: IfNotPresent
           resources:

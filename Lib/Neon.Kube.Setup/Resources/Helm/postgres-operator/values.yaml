@@ -163,9 +163,9 @@ configKubernetes:
   secret_name_template: "{username}.{cluster}.credentials.{tprkind}"
   # set user and group for the spilo container (required to run Spilo as non-root process)
   spilo_runasuser: 101
-  spilo_runasgroup: 1337
+  spilo_runasgroup: 1000
   # group ID with write-access to volumes (required to run Spilo as non-root process)
-  spilo_fsgroup: 1337
+  spilo_fsgroup: 1000
 
   # whether the Spilo container should run in privileged mode
   spilo_privileged: false
