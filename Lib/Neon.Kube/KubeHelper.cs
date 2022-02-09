@@ -2659,7 +2659,7 @@ TCPKeepAlive yes
 
             using (var httpClient = new HttpClient())
             {
-                var response = httpClient.GetSafeAsync(toolUri).Result;
+                var response = httpClient.GetSafeAsync(toolUri, completionOption: HttpCompletionOption.ResponseHeadersRead).Result;
 
                 using (var download = response.Content.ReadAsStreamAsync().Result)
                 {

@@ -270,7 +270,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = EnsureSuccess(await client.SendAsync(request));
+            var response = EnsureSuccess(await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead));
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -311,7 +311,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = EnsureSuccess(await client.SendAsync(request));
+            var response = EnsureSuccess(await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead));
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -456,7 +456,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = EnsureSuccess(await client.SendAsync(request));
+            var response = EnsureSuccess(await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead));
 
             using (var download = await response.Content.ReadAsStreamAsync())
             {
