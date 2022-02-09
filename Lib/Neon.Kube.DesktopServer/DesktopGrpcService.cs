@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -52,10 +53,14 @@ namespace Neon.Kube.DesktopServer
         /// This service is currently exposed as HTTP, not HTTPS.
         /// </note>
         /// </summary>
-        /// <param name="socketPath">Path to the Unix domain socket path.</param>
-        public DesktopGrpcService(string socketPath)
+        /// <param name="socketPath">
+        /// Optionally overrides the path to the Unix domain socket path.  This defaults to 
+        /// <see cref="KubeHelper.WinDesktopServiceSocketPath"/> where <b>neon-desktop</b> 
+        /// and <b>neon-cli</b> expect it.
+        /// </param>
+        public DesktopGrpcService(string socketPath = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(socketPath), nameof(socketPath));
+            socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
 
             var builder = WebApplication.CreateBuilder();
 
