@@ -87,6 +87,11 @@ namespace NeonDashboard
             // Start the web service.
 
             webHost = new WebHostBuilder()
+                .ConfigureAppConfiguration(
+                    (hostingcontext, config) =>
+                    {
+                        config.Sources.Clear();
+                    })
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, port))
                 .ConfigureServices(services => services.AddSingleton(typeof(Service), this))

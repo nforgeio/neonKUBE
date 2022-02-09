@@ -70,6 +70,11 @@ namespace NeonSsoSessionProxy
             // Start the web service.
 
             webHost = new WebHostBuilder()
+                .ConfigureAppConfiguration(
+                    (hostingcontext, config) =>
+                    {
+                        config.Sources.Clear();
+                    })
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, 80))
                 .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
