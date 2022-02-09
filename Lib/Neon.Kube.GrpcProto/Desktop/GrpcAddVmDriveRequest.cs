@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Requests information about a virtual machine's drives.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Requests information about a virtual machine's drives.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcAddVmDriveRequest
@@ -39,18 +39,11 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
-        /// <param name="path">
-        /// Specifies the path where the drive is located.  The drive format
-        /// is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
-        /// </param>
-        /// <param name="size">The drive size in bytes.</param>
-        /// <param name="isDynamic">Controls whether the drive is fixed or dynamically sizable (defaults to <c>true</c> or <b>dynamic</b>).</param>
-        public GrpcAddVmDriveRequest(string machineName, string path, decimal size, bool isDynamic = true)
+        /// <param name="drive">The new drive information.</param>
+        public GrpcAddVmDriveRequest(string machineName, GrpcVirtualDrive drive)
         {
             this.MachineName = machineName;
-            this.Path        = path;
-            this.Size        = (long)size;
-            this.IsDynamic   = isDynamic;
+            this.Drive       = drive;
         }
 
         /// <summary>
@@ -60,23 +53,9 @@ namespace Neon.Kube.GrpcProto.Desktop
         public string MachineName { get; set; }
 
         /// <summary>
-        /// Specifies the path where the drive is located.  The drive format
-        /// is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
+        /// Specifies the new drive information.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Path { get; set; }
-
-        /// <summary>
-        /// The drive size in bytes.
-        /// </summary>
-        [DataMember(Order = 3)]
-        public long Size { get; set; }
-
-        /// <summary>
-        /// Indicates whether a dynamic drive will be created as opposed to a
-        /// pre-allocated fixed drive.
-        /// </summary>
-        [DataMember(Order = 4)]
-        public bool IsDynamic { get; set; }
+        public GrpcVirtualDrive Drive { get; set; }
     }
 }

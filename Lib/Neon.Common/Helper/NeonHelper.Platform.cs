@@ -21,6 +21,8 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -45,6 +47,7 @@ namespace Neon.Common
         private static bool             isARM;
         private static bool?            isDevWorkstation;
         private static bool?            isKubernetes;
+        private static bool?            isAdmin;
 
         /// <summary>
         /// Detects the current operating system.
@@ -442,7 +445,7 @@ namespace Neon.Common
 
         /// <summary>
         /// <para>
-        /// Returns a dictionary mapping optional Windows feature names to a <see cref="GrpcWindowsFeatureStatus"/>
+        /// Returns a dictionary mapping optional Windows feature names to a <see cref="WindowsFeatureStatus"/>
         /// indicating feature installation status.
         /// </para>
         /// <note>
@@ -457,7 +460,7 @@ namespace Neon.Common
         /// The feature names are in English and the lookup is case-insensitive.
         /// </note>
         /// </remarks>
-        public static Dictionary<string, GrpcWindowsFeatureStatus> GetWindowsOptionalFeatures()
+        public static Dictionary<string, WindowsFeatureStatus> GetWindowsOptionalFeatures()
         {
             EnsureWindows();
 
@@ -499,14 +502,14 @@ namespace Neon.Common
 
             response.EnsureSuccess();
 
-            var featureMap = new Dictionary<string, GrpcWindowsFeatureStatus>(StringComparer.InvariantCultureIgnoreCase);
+            var featureMap = new Dictionary<string, WindowsFeatureStatus>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var line in response.OutputText.ToLines())
             {
                 if (!line.StartsWith("----") && line.Contains('|'))
                 {
                     var fields = line.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-                    var status = GrpcWindowsFeatureStatus.Unknown;
+                    var status = WindowsFeatureStatus.Unknown;
 
                     fields[0] = fields[0].Trim();
                     fields[1] = fields[1].Trim();
@@ -520,17 +523,17 @@ namespace Neon.Common
                     {
                         case "disabled":
 
-                            status = GrpcWindowsFeatureStatus.Disabled;
+                            status = WindowsFeatureStatus.Disabled;
                             break;
 
                         case "enabled":
 
-                            status = GrpcWindowsFeatureStatus.Enabled;
+                            status = WindowsFeatureStatus.Enabled;
                             break;
 
                         case "enable pending":
 
-                            status = GrpcWindowsFeatureStatus.EnabledPending;
+                            status = WindowsFeatureStatus.EnabledPending;
                             break;
                     }
 
@@ -545,7 +548,7 @@ namespace Neon.Common
         /// Returns the installation status for the named feature.
         /// </summary>
         /// <param name="feature">Specifies the <b>English</b> name for the feature.</param>
-        /// <returns>The <see cref="GrpcWindowsFeatureStatus"/> for the feature.</returns>
+        /// <returns>The <see cref="WindowsFeatureStatus"/> for the feature.</returns>
         /// <remarks>
         /// <para>
         /// You'll need to pass the feature name in English.  You can list possible feature
@@ -555,10 +558,10 @@ namespace Neon.Common
         /// dism /Online /English /Get-Features /Format:table
         /// </example>
         /// <note>
-        /// <see cref="GrpcWindowsFeatureStatus.Unknown"/> will be returned for unknown features.
+        /// <see cref="WindowsFeatureStatus.Unknown"/> will be returned for unknown features.
         /// </note>
         /// </remarks>
-        public static GrpcWindowsFeatureStatus GetWindowsOptionalFeatureStatus(string feature)
+        public static WindowsFeatureStatus GetWindowsOptionalFeatureStatus(string feature)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(feature), nameof(feature));
 
@@ -568,7 +571,7 @@ namespace Neon.Common
             }
             else
             {
-                return GrpcWindowsFeatureStatus.Unknown;
+                return WindowsFeatureStatus.Unknown;
             }
         }
 
@@ -588,11 +591,11 @@ namespace Neon.Common
 
             switch (GetWindowsOptionalFeatureStatus(feature))
             {
-                case GrpcWindowsFeatureStatus.Unknown:
+                case WindowsFeatureStatus.Unknown:
 
                     throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
 
-                case GrpcWindowsFeatureStatus.Enabled:
+                case WindowsFeatureStatus.Enabled:
 
                     var response = NeonHelper.ExecuteCapture("dism.exe",
                         new object[]
@@ -605,13 +608,13 @@ namespace Neon.Common
 
                     response.EnsureSuccess();
 
-                    return GetWindowsOptionalFeatureStatus(feature) == GrpcWindowsFeatureStatus.EnabledPending;
+                    return GetWindowsOptionalFeatureStatus(feature) == WindowsFeatureStatus.EnabledPending;
 
-                case GrpcWindowsFeatureStatus.EnabledPending:
+                case WindowsFeatureStatus.EnabledPending:
 
                     return true;
 
-                case GrpcWindowsFeatureStatus.Disabled:
+                case WindowsFeatureStatus.Disabled:
 
                     return false;
 
@@ -636,11 +639,11 @@ namespace Neon.Common
 
             switch (GetWindowsOptionalFeatureStatus(feature))
             {
-                case GrpcWindowsFeatureStatus.Unknown:
+                case WindowsFeatureStatus.Unknown:
 
                     throw new InvalidOperationException($"Unknown Windows Feature: {feature}");
 
-                case GrpcWindowsFeatureStatus.Enabled:
+                case WindowsFeatureStatus.Enabled:
 
                     var response = NeonHelper.ExecuteCapture("dism.exe",
                         new object[]
@@ -654,17 +657,68 @@ namespace Neon.Common
                     response.EnsureSuccess();
                     break;
 
-                case GrpcWindowsFeatureStatus.EnabledPending:
+                case WindowsFeatureStatus.EnabledPending:
 
                     throw new InvalidOperationException($"Windows Feature install is pending: {feature}");
 
-                case GrpcWindowsFeatureStatus.Disabled:
+                case WindowsFeatureStatus.Disabled:
 
                     return;
 
                 default:
 
                     throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the current process is running with elevated permissions.  This
+        /// corresponds to running with administrator privileges for Windows or as the <b>root</b>
+        /// user for Linux and OS/X.
+        /// </summary>
+        /// <exception cref="PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        public static bool HasElevatedPermissions
+        {
+            get
+            {
+                if (isAdmin.HasValue)
+                {
+                    return isAdmin.Value;
+                }
+
+                if (IsWindows)
+                {
+#pragma warning disable CA1416
+                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                    isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+
+                    return isAdmin.Value;
+#pragma warning restore CA1416
+                }
+                else if (isLinux || isOSX)
+                {
+                    isAdmin = Environment.UserName == "root";
+
+                    return isAdmin.Value;
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the current process has elevated permissions.  See <see cref="HasElevatedPermissions"/>.
+        /// </summary>
+        /// <exception cref="SecurityException">Thrown when the process does not have elevated permissions.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        public static void EnsureElevatedPermissions()
+        {
+            if (!HasElevatedPermissions)
+            {
+                throw new SecurityException("The current process does not have elevated permissions.");
             }
         }
     }

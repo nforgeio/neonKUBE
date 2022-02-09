@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Removes a Hyper-V switch.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Removes a Hyper-V switch.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcRemoveSwitchRequest

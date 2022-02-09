@@ -363,9 +363,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => true;
-
-        /// <inheritdoc/>
         public override string GetDataDisk(LinuxSshProxy node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
@@ -568,7 +565,7 @@ namespace Neon.Kube
                 hyperv.AddVm(
                     vmName,
                     processorCount: processors,
-                    diskSize:       osDiskBytes.ToString(),
+                    driveSize:       osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
                     switchName:     switchName);

@@ -232,7 +232,7 @@ namespace Neon.HyperV
         /// <param name="processorCount">
         /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.
         /// </param>
-        /// <param name="diskSize">
+        /// <param name="driveSize">
         /// A string specifying the primary disk size.  This can be a long byte count or a
         /// byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
         /// or <b>1TiB</b>.  Pass <c>null</c> to leave the disk alone.  This defaults to <c>null</c>.
@@ -266,7 +266,7 @@ namespace Neon.HyperV
             string                      machineName, 
             string                      memorySize        = "2GiB", 
             int                         processorCount    = 4,
-            string                      diskSize          = null,
+            string                      driveSize         = null,
             string                      drivePath         = null,
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 
@@ -278,9 +278,9 @@ namespace Neon.HyperV
 
             memorySize = ByteUnits.Parse(memorySize).ToString();
 
-            if (diskSize != null)
+            if (driveSize != null)
             {
-                diskSize = ByteUnits.Parse(diskSize).ToString();
+                driveSize = ByteUnits.Parse(driveSize).ToString();
             }
 
             var driveFolder = DefaultDriveFolder;
@@ -308,9 +308,9 @@ namespace Neon.HyperV
 
             // Resize the VHDX if requested.
 
-            if (diskSize != null)
+            if (driveSize != null)
             {
-                powershell.Execute($"{HyperVNamespace}Resize-VHD -Path '{drivePath}' -SizeBytes {diskSize}");
+                powershell.Execute($"{HyperVNamespace}Resize-VHD -Path '{drivePath}' -SizeBytes {driveSize}");
             }
 
             // Create the virtual machine.

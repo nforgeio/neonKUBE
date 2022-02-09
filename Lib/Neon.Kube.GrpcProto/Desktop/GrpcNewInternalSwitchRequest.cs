@@ -31,7 +31,7 @@ namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// Adds an internal Hyper-V switch configured for the specified subnet and gateway as well
-    /// as an optional NAT enabling external connectivity.  This requ3est returns a <see cref="GrpcErrorReply"/>.
+    /// as an optional NAT enabling external connectivity.  This requ3est returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcNewInternalSwitchRequest

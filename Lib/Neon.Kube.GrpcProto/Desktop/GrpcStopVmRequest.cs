@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Stops a virtual machine.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Stops a virtual machine.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcStopVmRequest

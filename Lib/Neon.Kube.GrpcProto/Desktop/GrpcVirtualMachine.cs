@@ -40,13 +40,13 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="name">Specifies the machine name.</param>
         /// <param name="state">Specifies the machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].</param>
-        /// <param name="switchname">Optionally identifies the attached switch.</param>
+        /// <param name="switchName">Optionally identifies the attached switch.</param>
         /// <param name="interfaceName">Optionall identifies the attached network adaptor.</param>
-        public GrpcVirtualMachine(string name, string state, string? switchname, string? interfaceName)
+        public GrpcVirtualMachine(string name, string state, string? switchName, string? interfaceName)
         {
             this.Name          = name;
             this.State         = state;
-            this.SwitchName    = switchname;
+            this.SwitchName    = switchName;
             this.InterfaceName = interfaceName;
         }
 

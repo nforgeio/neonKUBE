@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Ejects any DVD/CD inserted into a virtual machine.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Ejects any DVD/CD inserted into a virtual machine.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcEjectVmDvdRequest
@@ -39,7 +39,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
-
         public GrpcEjectVmDvdRequest(string machineName)
         {
             this.MachineName = machineName;

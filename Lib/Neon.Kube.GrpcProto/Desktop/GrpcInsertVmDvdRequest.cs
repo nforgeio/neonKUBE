@@ -31,7 +31,7 @@ namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any existing disc first.
-    /// This request returns a <see cref="GrpcErrorReply"/>.
+    /// This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcInsertVmDvdRequest

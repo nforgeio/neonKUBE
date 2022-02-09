@@ -43,6 +43,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         {
             this.ExceptionType = e.GetType().FullName ?? "unknown";
             this.Message       = e.Message;
+            this.StackTrace    = e.StackTrace?.ToString();
         }
 
         /// <summary>
@@ -56,6 +57,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         [DataMember(Order = 2)]
         public string Message { get; set; }
+
+        /// <summary>
+        /// The stack trace where the exception was thrown or <c>null</c> when not available.
+        /// </summary>
+        [DataMember(Order = 3)]
+        public string? StackTrace { get; set; }
     }
 
     /// <summary>

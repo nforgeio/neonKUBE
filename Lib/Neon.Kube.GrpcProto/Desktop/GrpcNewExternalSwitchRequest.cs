@@ -31,7 +31,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Creates a new external Hyper-V switch. This returns a <see cref="GrpcErrorReply"/>.
+    /// Creates a new external Hyper-V switch. This returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcNewExternalSwitchRequest

@@ -62,16 +62,16 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         [OperationContract]
-        Task<GrpcErrorReply> AddVmAsync(GrpcAddVmRequest request, CallContext context = default);
+        Task<GrpcBaseReply> AddVmAsync(GrpcAddVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Removes a named virtual machine and all of its drives (by default).
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/> indicating success or failure.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/> indicating success or failure.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> RemoveVmAsync(GrpcRemoveVmRequest request, CallContext context = default);
+        Task<GrpcBaseReply> RemoveVmAsync(GrpcRemoveVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Lists the Hyper-V virtual machines.
@@ -105,27 +105,27 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> StartVmAsync(GrpcStartVmRequest request, CallContext context = default);
+        Task<GrpcBaseReply> StartVmAsync(GrpcStartVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Stops a virtual machine.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> StopVmAsync(GrpcStopVmRequest request, CallContext context = default);
+        Task<GrpcBaseReply> StopVmAsync(GrpcStopVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Saves a virtual machine (AKA puts it to sleep).
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> SaveVmAsync(GrpcSaveVmRequest request, CallContext context = default);
+        Task<GrpcBaseReply> SaveVmAsync(GrpcSaveVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Returns information about a virtual machine's attached drives.
@@ -141,36 +141,36 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> AddVmDriveAsync(GrpcAddVmDriveRequest request, CallContext context = default);
+        Task<GrpcBaseReply> AddVmDriveAsync(GrpcAddVmDriveRequest request, CallContext context = default);
 
         /// <summary>
         /// Compacts a virtual disk.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> CompactDriveRequestAsync(GrpCompactDriveRequest request, CallContext context = default);
+        Task<GrpcBaseReply> CompactDriveRequestAsync(GrpCompactDriveRequest request, CallContext context = default);
 
         /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any existing disc.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> InsertVmDvdAsync(GrpcInsertVmDvdRequest request, CallContext context = default);
+        Task<GrpcBaseReply> InsertVmDvdAsync(GrpcInsertVmDvdRequest request, CallContext context = default);
 
         /// <summary>
         /// Ejects any DVD/CD that's currently inserted into a virtual machine.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> EjectVmDvdAsync(GrpcEjectVmDvdRequest request, CallContext context = default);
+        Task<GrpcBaseReply> EjectVmDvdAsync(GrpcEjectVmDvdRequest request, CallContext context = default);
 
         /// <summary>
         /// Lists the Hyper-V virtual switches.
@@ -188,34 +188,34 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetSwitchReply"/>.</returns>
         [OperationContract]
-        Task<GrpcListSwitchesReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default);
+        Task<GrpcGetSwitchReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default);
 
         /// <summary>
         /// Creates a new external Hyper-V virtual switch.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> NewExternalSwitchAsync(GrpcNewExternalSwitchRequest request, CallContext context = default);
+        Task<GrpcBaseReply> NewExternalSwitchAsync(GrpcNewExternalSwitchRequest request, CallContext context = default);
 
         /// <summary>
         /// Creates a new internal Hyper-V virtual switch.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> NewInternalSwitchAsync(GrpcNewInternalSwitchRequest request, CallContext context = default);
+        Task<GrpcBaseReply> NewInternalSwitchAsync(GrpcNewInternalSwitchRequest request, CallContext context = default);
 
         /// <summary>
         /// Removes a Hyper-V virtual switch.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcErrorReply"/>.</returns>
+        /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcErrorReply> RemoveSwitchAsync(GrpcRemoveSwitchRequest request, CallContext context = default);
+        Task<GrpcBaseReply> RemoveSwitchAsync(GrpcRemoveSwitchRequest request, CallContext context = default);
 
         /// <summary>
         /// Returns information about the network adaptors attached to a virtual machine.
@@ -224,7 +224,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetVmNetworkAdaptersReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcRemoveSwitchRequest request, CallContext context = default);
+        Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default);
 
         /// <summary>
         /// Lists the virtual Hyper-V NATs.

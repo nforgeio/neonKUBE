@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Starts a specfic virtual machine exists.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Starts a specfic virtual machine exists.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcStartVmRequest

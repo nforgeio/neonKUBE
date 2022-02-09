@@ -48,7 +48,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Reply constructor.
         /// </summary>
         /// <param name="capabilities"></param>
-        public GrpcGetWindowsCapabilitiesReply(Dictionary<string, GrpcWindowsFeatureStatus> capabilities)
+        public GrpcGetWindowsCapabilitiesReply(Dictionary<string, WindowsFeatureStatus> capabilities)
         {
             this.Capabilities = capabilities;
         }
@@ -63,7 +63,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// A dictionary mapping Windows feature names to their current status.
         /// </summary>
         [DataMember(Order = 2)]
-        public Dictionary<string, GrpcWindowsFeatureStatus>? Capabilities { get; set; }
+        public Dictionary<string, WindowsFeatureStatus>? Capabilities { get; set; }
     }
 
 }

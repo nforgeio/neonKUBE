@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcErrorReply.cs
+// FILE:	    WindowsFeatureStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,43 +18,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.ServiceModel;
+using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Net;
-
-using ProtoBuf.Grpc;
-
-namespace Neon.Kube.GrpcProto.Desktop
+namespace Neon.Common
 {
     /// <summary>
-    /// Used for operations that just need to return an indication of success or failure.
+    /// Enumerates the possible states of an optional Windows feature.
     /// </summary>
-    [DataContract]
-    public class GrpcErrorReply
+    public enum WindowsFeatureStatus
     {
         /// <summary>
-        /// Success constructor.
+        /// The feature status couldn't be determined.
         /// </summary>
-        public GrpcErrorReply()
-        {
-        }
+        Unknown = 0,
 
         /// <summary>
-        /// Error constructor.
+        /// The feature is disabled.
         /// </summary>
-        /// <param name="e">The exception.</param>
-        public GrpcErrorReply(Exception e)
-        {
-            this.Error = new GrpcError(e);
-        }
+        Disabled,
 
         /// <summary>
-        /// Set to a non-null value when the request failed.
+        /// The feature is enabled.
         /// </summary>
-        [DataMember(Order = 1)]
-        public GrpcError? Error { get; set; }
+        Enabled,
+
+        /// <summary>
+        /// The feature is currently partially installed and will be enabled after
+        /// Windows is restarted.
+        /// </summary>
+        EnabledPending
     }
 }

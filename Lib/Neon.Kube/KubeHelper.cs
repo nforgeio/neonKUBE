@@ -2491,63 +2491,6 @@ TCPKeepAlive yes
 ";
 
         /// <summary>
-        /// Verifies that the current user has administrator privileges.
-        /// </summary>
-        /// <param name="message">Optional message.</param>
-        /// <exception cref="SecurityException">Thrown when the user does not have administrator privileges.</exception>
-        public static void VerifyAdminPrivileges(string message = null)
-        {
-            if (NeonHelper.IsWindows)
-            {
-#pragma warning disable CA1416
-                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    throw new SecurityException(message ?? "Admin privileges are required.");
-                }
-#pragma warning restore CA1416
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                throw new NotImplementedException();
-            }
-            else if (NeonHelper.IsLinux)
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// Ensures that the current process has enhanced admin privileges.
-        /// </summary>
-        /// <exception cref="KubeException">Thrown when enhanced privileges are not available.</exception>
-        public static void EnsureAdminPrivileges()
-        {
-            if (NeonHelper.IsWindows)
-            {
-#pragma warning disable CA1416
-                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    throw new KubeException("Enhanced admin privileges are required but are not assigned.");
-                }
-#pragma warning restore CA1416
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                // $todo(jefflill): Implement this?
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Downloads a multi-part node image to a local folder.
         /// </summary>
         /// <param name="imageUri">The node image multi-part download information URI.</param>

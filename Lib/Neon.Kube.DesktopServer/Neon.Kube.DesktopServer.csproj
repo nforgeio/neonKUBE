@@ -22,14 +22,20 @@
 	  <Configurations>Debug;Release;CodeDoc</Configurations>
 	  <PackageIcon>nuget-icon.png</PackageIcon>
 	  <PackageTags>kubernetes</PackageTags>
-	  <RootNamespace>Neon.Kube.DesktopService</RootNamespace>
+	  <RootNamespace>Neon.Kube.DesktopServer</RootNamespace>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.HyperV\Neon.HyperV.csproj" />
+    <ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
   </ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

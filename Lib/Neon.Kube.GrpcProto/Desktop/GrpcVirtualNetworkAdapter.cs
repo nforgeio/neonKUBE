@@ -39,7 +39,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="name">The adapter name.</param>
-        /// <param name="isManagemwentOs"><c>true</c> if this adapter is attached to the management operating system.</param>
+        /// <param name="isManagementOs"><c>true</c> if this adapter is attached to the management operating system.</param>
         /// <param name="vmName">The name of the attached virtual machine.</param>
         /// <param name="switchName">TThe adapter's MAC address.he attached switch name.</param>
         /// <param name="macAddress">The adapter's MAC address.</param>
@@ -47,7 +47,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="addresses">The IP addresses assigned to the adapter.</param>
         public GrpcVirtualNetworkAdapter(
             string          name,
-            bool            isManagemwentOs,
+            bool            isManagementOs,
             string          vmName,
             string          switchName,
             string          macAddress,
@@ -55,7 +55,7 @@ namespace Neon.Kube.GrpcProto.Desktop
             List<string>    addresses)
         {
             this.Name           = name;
-            this.IsManagementOs = isManagemwentOs;
+            this.IsManagementOs = isManagementOs;
             this.VMName         = vmName;
             this.SwitchName     = switchName;
             this.MacAddress     = macAddress;

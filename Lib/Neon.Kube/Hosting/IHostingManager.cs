@@ -71,12 +71,6 @@ namespace Neon.Kube
         void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
-        /// Returns <c>true</c> if provisoning requires that the user have
-        /// administrator privileges.
-        /// </summary>
-        bool RequiresAdminPrivileges { get; }
-
-        /// <summary>
         /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned
         /// for devices assigned IP addresses that may conflict with node addresses.  This
         /// is typically required only for clusters deployed on-premise because cloud

@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Compacts a virtual disk.  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Compacts a virtual disk.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpCompactDriveRequest
@@ -38,16 +38,16 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="machineName">Specifies the machine name.</param>
-        public GrpCompactDriveRequest(string machineName)
+        /// <param name="drivePath">Specifies the path to the virtual drive.</param>
+        public GrpCompactDriveRequest(string drivePath)
         {
-            this.MachineName = machineName;
+            this.DrivePath = drivePath;
         }
 
         /// <summary>
-        /// Identifies the desired virtual machine.
+        /// Specifies the path to the virtual drive.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string DrivePath { get; set; }
     }
 }

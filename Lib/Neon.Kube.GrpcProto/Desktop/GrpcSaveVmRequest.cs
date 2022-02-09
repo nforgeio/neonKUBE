@@ -30,7 +30,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Saves a virtual machine (AKA puts it to sleep).  This request returns a <see cref="GrpcErrorReply"/>.
+    /// Saves a virtual machine (AKA puts it to sleep).  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
     [DataContract]
     public class GrpcSaveVmRequest

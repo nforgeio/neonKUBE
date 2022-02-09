@@ -233,19 +233,6 @@ namespace Neon.Kube
                 {
                     controller.SetGlobalStepStatus("configure: hosting manager");
 
-                    if (hostingManager.RequiresAdminPrivileges)
-                    {
-                        try
-                        {
-                            KubeHelper.VerifyAdminPrivileges();
-                        }
-                        catch (Exception e)
-                        {
-                            controller.LogProgressError(NeonHelper.ExceptionError(e));
-                            return;
-                        }
-                    }
-
                     hostingManager.MaxParallel = maxParallel;
                     hostingManager.WaitSeconds = 60;
                 });

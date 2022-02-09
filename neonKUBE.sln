@@ -431,9 +431,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wsl-util", "Tools\wsl-util\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube.Operator", "Test\Test.Neon.Kube.Operator\Test.Neon.Kube.Operator.csproj", "{D3B67365-D439-463A-BADE-A98F84A8BC29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.GrpcProto", "Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj", "{EE73B97C-84AB-478A-ADEA-2808285871DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.GrpcProto", "Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj", "{EE73B97C-84AB-478A-ADEA-2808285871DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.DesktopService", "Lib\Neon.Kube.DesktopService\Neon.Kube.DesktopService.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopServer", "Lib\Neon.Kube.DesktopServer\Neon.Kube.DesktopServer.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
