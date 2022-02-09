@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DesktopServiceException.cs
+// FILE:	    GrpcCompactDriveRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,17 +30,24 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Thrown by <see cref="GrpcErrorExtensions.EnsureSuccess(GrpcError)"/> for non-null errors.
+    /// Compacts a virtual disk.  This request returns a <see cref="GrpcBaseReply"/>.
     /// </summary>
-    public class DesktopServiceException : Exception
+    [DataContract]
+    public class GrpcCompactDriveRequest
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message"></param>
-        public DesktopServiceException(string message)
-            : base(message)
+        /// <param name="drivePath">Specifies the path to the virtual drive.</param>
+        public GrpcCompactDriveRequest(string drivePath)
         {
+            this.DrivePath = drivePath;
         }
+
+        /// <summary>
+        /// Specifies the path to the virtual drive.
+        /// </summary>
+        [DataMember(Order = 1)]
+        public string DrivePath { get; set; }
     }
 }

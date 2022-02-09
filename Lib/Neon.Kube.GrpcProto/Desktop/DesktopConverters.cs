@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProtoConverters.cs
+// FILE:	    DesktopConverters.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -22,23 +22,17 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-
-using ProtoBuf.Grpc;
-using ProtoBuf.Grpc.Server;
-
 using Neon.Common;
 using Neon.HyperV;
 using Neon.Kube.GrpcProto.Desktop;
+using Neon.Net;
 
-namespace Neon.Kube.DesktopServer
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// Conversions between gRPC proto and local types.
     /// </summary>
-    internal static class ProtoConverters
+    public static class DesktopConverters
     {
         //---------------------------------------------------------------------
         // VirtualDrive
@@ -48,7 +42,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="grpcVirtualDrive">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualDrive ToLocal(this GrpcVirtualDrive grpcVirtualDrive)
+        public static VirtualDrive? ToLocal(this GrpcVirtualDrive grpcVirtualDrive)
         {
             if (grpcVirtualDrive == null)
             {
@@ -68,7 +62,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="virtualDrive">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualDrive ToProto(this VirtualDrive virtualDrive)
+        public static GrpcVirtualDrive? ToProto(this VirtualDrive virtualDrive)
         {
             if (virtualDrive == null)
             {
@@ -89,7 +83,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="grpcVirtualNat">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualNat ToLocal(this GrpcVirtualNat grpcVirtualNat)
+        public static VirtualNat? ToLocal(this GrpcVirtualNat grpcVirtualNat)
         {
             if (grpcVirtualNat == null)
             {
@@ -108,7 +102,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="virtualNat">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualNat ToProto(this VirtualNat virtualNat)
+        public static GrpcVirtualNat? ToProto(this VirtualNat virtualNat)
         {
             if (virtualNat == null)
             {
@@ -126,7 +120,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="grpcVirtualSwitch">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualSwitch ToLocal(this GrpcVirtualSwitch grpcVirtualSwitch)
+        public static VirtualSwitch? ToLocal(this GrpcVirtualSwitch grpcVirtualSwitch)
         {
             if (grpcVirtualSwitch == null)
             {
@@ -145,7 +139,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="virtualSwitch">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualSwitch ToProto(this VirtualSwitch virtualSwitch)
+        public static GrpcVirtualSwitch? ToProto(this VirtualSwitch virtualSwitch)
         {
             if (virtualSwitch == null)
             {
@@ -165,7 +159,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="grpcVirtualMachine">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualMachine ToLocal(this GrpcVirtualMachine grpcVirtualMachine)
+        public static VirtualMachine? ToLocal(this GrpcVirtualMachine grpcVirtualMachine)
         {
             if (grpcVirtualMachine == null)
             {
@@ -186,7 +180,7 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="virtualMachine">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualMachine ToProto(this VirtualMachine virtualMachine)
+        public static GrpcVirtualMachine? ToProto(this VirtualMachine virtualMachine)
         {
             if (virtualMachine == null)
             {
@@ -208,8 +202,13 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="grpcVirtualNetworkAdapter">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualNetworkAdapter ToLocal(this GrpcVirtualNetworkAdapter grpcVirtualNetworkAdapter)
+        public static VirtualNetworkAdapter? ToLocal(this GrpcVirtualNetworkAdapter grpcVirtualNetworkAdapter)
         {
+            if (grpcVirtualNetworkAdapter == null)
+            {
+                return null;
+            }
+
             return new VirtualNetworkAdapter()
             {
                 Name           = grpcVirtualNetworkAdapter.Name,
@@ -227,8 +226,13 @@ namespace Neon.Kube.DesktopServer
         /// </summary>
         /// <param name="virtualNat">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualNetworkAdapter ToProto(this VirtualNetworkAdapter virtualNat)
+        public static GrpcVirtualNetworkAdapter? ToProto(this VirtualNetworkAdapter virtualNat)
         {
+            if (virtualNat == null)
+            {
+                return null;
+            }
+
             return new GrpcVirtualNetworkAdapter(
                 name:           virtualNat.Name,
                 switchName:     virtualNat.SwitchName,
@@ -237,6 +241,47 @@ namespace Neon.Kube.DesktopServer
                 addresses:      virtualNat.Addresses.Select(address => address.ToString()).ToList(),
                 status:         virtualNat.Status,
                 vmName:         virtualNat.VMName);
+        }
+
+        //---------------------------------------------------------------------
+        // VirtualIPAddress
+
+        /// <summary>
+        /// Converts a <see cref="GrpcVirtualIPAddress"/> into a <see cref="VirtualIPAddress"/>.
+        /// </summary>
+        /// <param name="grpcVirtualIPAddress">The input.</param>
+        /// <returns>The output.</returns>
+        public static VirtualIPAddress? ToLocal(this GrpcVirtualIPAddress grpcVirtualIPAddress)
+        {
+            if (grpcVirtualIPAddress == null)
+            {
+                return null;
+            }
+
+            return new VirtualIPAddress()
+            {
+                Address       = grpcVirtualIPAddress.Address,
+                Subnet        = NetworkCidr.Parse(grpcVirtualIPAddress.Subnet),
+                InterfaceName = grpcVirtualIPAddress.InterfaceName
+            };
+        }
+
+        /// <summary>
+        /// Converts a <see cref="VirtualIPAddress"/> into a <see cref="GrpcVirtualIPAddress"/>.
+        /// </summary>
+        /// <param name="virtualIPAddress">The input</param>
+        /// <returns>The output.</returns>
+        public static GrpcVirtualIPAddress? ToProto(this VirtualIPAddress virtualIPAddress)
+        {
+            if (virtualIPAddress == null)
+            {
+                return null;
+            }
+
+            return new GrpcVirtualIPAddress(
+                address:       virtualIPAddress.Address,
+                subnet:        virtualIPAddress.Subnet,
+                interfaceName: virtualIPAddress.InterfaceName);
         }
     }
 }

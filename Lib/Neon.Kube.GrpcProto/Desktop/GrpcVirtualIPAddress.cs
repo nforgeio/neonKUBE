@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetWindowsCapabilitiesReply.cs
+// FILE:	    GrpcVirtualIPAddress.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,40 +30,44 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes the current Windows capabilities.
+    /// Describes a virtual Hyper-V IP address.
     /// </summary>
     [DataContract]
-    public class GrpcGetWindowsCapabilitiesReply
+    public class GrpcVirtualIPAddress
     {
         /// <summary>
-        /// Error constructor.
+        /// Constructor.
         /// </summary>
-        /// <param name="e">The exception.</param>
-        public GrpcGetWindowsCapabilitiesReply(Exception e)
+        /// <param name="address">The associated IP address.</param>
+        /// <param name="subnet">The network subnet.</param>
+        /// <param name="interfaceName">
+        /// Identifies the network interface or switch to which this address
+        /// is connected.
+        /// </param>
+        public GrpcVirtualIPAddress(string address, NetworkCidr subnet, string interfaceName)
         {
-            this.Error = new GrpcError(e);
+            this.Address       = address;
+            this.Subnet        = subnet.ToString();
+            this.InterfaceName = interfaceName;
         }
 
         /// <summary>
-        /// Reply constructor.
-        /// </summary>
-        /// <param name="capabilities"></param>
-        public GrpcGetWindowsCapabilitiesReply(Dictionary<string, WindowsFeatureStatus> capabilities)
-        {
-            this.Capabilities = capabilities;
-        }
-
-        /// <summary>
-        /// Set to a non-null value when the request failed.
+        /// The associated IP address.
         /// </summary>
         [DataMember(Order = 1)]
-        public GrpcError? Error { get; set; }
+        public string Address { get; set; }
 
         /// <summary>
-        /// A dictionary mapping Windows feature names to their current status.
+        /// The network subnet.
         /// </summary>
         [DataMember(Order = 2)]
-        public Dictionary<string, WindowsFeatureStatus>? Capabilities { get; set; }
-    }
+        public string Subnet { get; set; }
 
+        /// <summary>
+        /// Identifies the network interface or switch to which this address
+        /// is connected.
+        /// </summary>
+        [DataMember(Order = 3)]
+        public string InterfaceName { get; set; }
+    }
 }

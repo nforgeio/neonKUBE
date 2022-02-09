@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcListNatsReply.cs
+// FILE:	    GrpcGetWindowsOptionalFeaturesRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,39 +30,10 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Lists the information about the Hyper-V virtual NATs.
+    /// Determines whether Windows is running under nested virtualization.  This request returns a <see cref="GrpcGetWindowsOptionalFeaturesReply"/>.
     /// </summary>
     [DataContract]
-    public class GrpcListNatsReply
+    public class GrpcGetWindowsOptionalFeaturesRequest
     {
-        /// <summary>
-        /// Error constructor.
-        /// </summary>
-        /// <param name="e">The exception.</param>
-        public GrpcListNatsReply(Exception e)
-        {
-            this.Error = new GrpcError(e);
-        }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="nats">The virtual NATs.</param>
-        public GrpcListNatsReply(List<GrpcVirtualNat> nats)
-        {
-            this.Nats = nats;
-        }
-
-        /// <summary>
-        /// Set to a non-null value when the request failed.
-        /// </summary>
-        [DataMember(Order = 1)]
-        public GrpcError? Error { get; set; }
-
-        /// <summary>
-        /// Information about the virtual NATs.
-        /// </summary>
-        [DataMember(Order = 2)]
-        public List<GrpcVirtualNat>? Nats { get; set; }
     }
 }

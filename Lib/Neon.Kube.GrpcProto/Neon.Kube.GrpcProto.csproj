@@ -34,11 +34,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client" Version="2.42.0" />
 		<PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\Neon.HyperV\Neon.HyperV.csproj" />
+		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcListNatsReply.cs
+// FILE:	    GrpcGetIPAddressReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,16 +30,16 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Lists the information about the Hyper-V virtual NATs.
+    /// Returns information about a virtual IP address.
     /// </summary>
     [DataContract]
-    public class GrpcListNatsReply
+    public class GrpcGetIPAddressReply
     {
         /// <summary>
         /// Error constructor.
         /// </summary>
         /// <param name="e">The exception.</param>
-        public GrpcListNatsReply(Exception e)
+        public GrpcGetIPAddressReply(Exception e)
         {
             this.Error = new GrpcError(e);
         }
@@ -47,10 +47,10 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="nats">The virtual NATs.</param>
-        public GrpcListNatsReply(List<GrpcVirtualNat> nats)
+        /// <param name="address">The virtual IP address.</param>
+        public GrpcGetIPAddressReply(GrpcVirtualIPAddress? address)
         {
-            this.Nats = nats;
+            this.Address = address;
         }
 
         /// <summary>
@@ -60,9 +60,9 @@ namespace Neon.Kube.GrpcProto.Desktop
         public GrpcError? Error { get; set; }
 
         /// <summary>
-        /// Information about the virtual NATs.
+        /// Describes the switch or <c>null</c> when the switch doesn't exist.
         /// </summary>
         [DataMember(Order = 2)]
-        public List<GrpcVirtualNat>? Nats { get; set; }
+        public GrpcVirtualIPAddress? Address { get; set; }
     }
 }

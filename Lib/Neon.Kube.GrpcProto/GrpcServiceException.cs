@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcListNatsReply.cs
+// FILE:	    GrpcServiceException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -27,42 +27,20 @@ using Neon.Net;
 
 using ProtoBuf.Grpc;
 
-namespace Neon.Kube.GrpcProto.Desktop
+namespace Neon.Kube.GrpcProto
 {
     /// <summary>
-    /// Lists the information about the Hyper-V virtual NATs.
+    /// Thrown by <see cref="GrpcErrorExtensions.EnsureSuccess(GrpcError)"/> for non-null errors.
     /// </summary>
-    [DataContract]
-    public class GrpcListNatsReply
+    public class GrpcServiceException : Exception
     {
-        /// <summary>
-        /// Error constructor.
-        /// </summary>
-        /// <param name="e">The exception.</param>
-        public GrpcListNatsReply(Exception e)
-        {
-            this.Error = new GrpcError(e);
-        }
-
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="nats">The virtual NATs.</param>
-        public GrpcListNatsReply(List<GrpcVirtualNat> nats)
+        /// <param name="message"></param>
+        public GrpcServiceException(string message)
+            : base(message)
         {
-            this.Nats = nats;
         }
-
-        /// <summary>
-        /// Set to a non-null value when the request failed.
-        /// </summary>
-        [DataMember(Order = 1)]
-        public GrpcError? Error { get; set; }
-
-        /// <summary>
-        /// Information about the virtual NATs.
-        /// </summary>
-        [DataMember(Order = 2)]
-        public List<GrpcVirtualNat>? Nats { get; set; }
     }
 }

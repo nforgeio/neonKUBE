@@ -50,7 +50,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="nat">The NAT details.</param>
         public GrpcGetNatReply(GrpcVirtualNat nat)
         {
-            this.NAT = nat;
+            this.Nat = nat;
         }
 
         /// <summary>
@@ -63,6 +63,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The NAT details or <c>null</c> if the NAT doesn't exist.
         /// </summary>
         [DataMember(Order = 2)]
-        public GrpcVirtualNat? NAT { get; set; }
+        public GrpcVirtualNat? Nat { get; set; }
     }
 }

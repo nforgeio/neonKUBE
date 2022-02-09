@@ -107,7 +107,7 @@ namespace Neon.Kube.DesktopServer
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcBaseReply> CompactDriveRequestAsync(GrpCompactDriveRequest request, CallContext context = default)
+        public async Task<GrpcBaseReply> CompactDriveRequestAsync(GrpcCompactDriveRequest request, CallContext context = default)
         {
             await Task.CompletedTask;
 
@@ -233,17 +233,17 @@ namespace Neon.Kube.DesktopServer
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetWindowsCapabilitiesReply> GetWindowsCapabilitiesAsync(GrpcGetWindowsCapabilitiesRequest request, CallContext context = default)
+        public async Task<GrpcGetWindowsOptionalFeaturesReply> GetWindowsOptionalFeaturesAsync(GrpcGetWindowsOptionalFeaturesRequest request, CallContext context = default)
         {
             await Task.CompletedTask;
 
             try
             {
-                return new GrpcGetWindowsCapabilitiesReply(NeonHelper.GetWindowsOptionalFeatures());
+                return new GrpcGetWindowsOptionalFeaturesReply(NeonHelper.GetWindowsOptionalFeatures());
             }
             catch (Exception e)
             {
-                return new GrpcGetWindowsCapabilitiesReply(e);
+                return new GrpcGetWindowsOptionalFeaturesReply(e);
             }
         }
 
@@ -458,6 +458,21 @@ namespace Neon.Kube.DesktopServer
             catch (Exception e)
             {
                 return new GrpcVmExistsReply(e);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<GrpcGetIPAddressReply> GetIPAddress(GrpcGetIPAddressRequest request, CallContext context = default)
+        {
+            await Task.CompletedTask;
+
+            try
+            {
+                return new GrpcGetIPAddressReply(hyperv.GetIPAddress(request.Address).ToProto());
+            }
+            catch (Exception e)
+            {
+                return new GrpcGetIPAddressReply(e);
             }
         }
     }

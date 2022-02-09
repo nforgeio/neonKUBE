@@ -41,10 +41,10 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcGetWindowsCapabilitiesReply"/> holding the feature information.</returns>
-        /// <exception cref="DesktopServiceException">Thrown on errors.</exception>
+        /// <returns>A <see cref="GrpcGetWindowsOptionalFeaturesReply"/> holding the feature information.</returns>
+        /// <exception cref="GrpcServiceException">Thrown on errors.</exception>
         [OperationContract]
-        Task<GrpcGetWindowsCapabilitiesReply> GetWindowsCapabilitiesAsync(GrpcGetWindowsCapabilitiesRequest request, CallContext context = default);
+        Task<GrpcGetWindowsOptionalFeaturesReply> GetWindowsOptionalFeaturesAsync(GrpcGetWindowsOptionalFeaturesRequest request, CallContext context = default);
 
         /// <summary>
         /// Returns an indication as to whether Windows is running with nested virtialization.
@@ -52,7 +52,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcIsNestedVirtualizationReply"/> holding the feature information.</returns>
-        /// <exception cref="DesktopServiceException">Thrown on errors.</exception>
+        /// <exception cref="GrpcServiceException">Thrown on errors.</exception>
         [OperationContract]
         Task<GrpcIsNestedVirtualizationReply> IsNestedVirtualizationAsync(GrpcIsNestedVirtualizationRequest request, CallContext context = default);
 
@@ -152,7 +152,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcBaseReply"/>.</returns>
         [OperationContract]
-        Task<GrpcBaseReply> CompactDriveRequestAsync(GrpCompactDriveRequest request, CallContext context = default);
+        Task<GrpcBaseReply> CompactDriveRequestAsync(GrpcCompactDriveRequest request, CallContext context = default);
 
         /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any existing disc.
@@ -252,5 +252,14 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <returns>A <see cref="GrpcGetNatReply"/>.</returns>
         [OperationContract]
         Task<GrpcGetNatReply> GetNatByNameSubnet(GrpcGetNatBySubnetRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Returns information about a virtual IP address.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>A <see cref="GrpcGetIPAddressReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcGetIPAddressReply> GetIPAddress(GrpcGetIPAddressRequest request, CallContext context = default);
     }
 }

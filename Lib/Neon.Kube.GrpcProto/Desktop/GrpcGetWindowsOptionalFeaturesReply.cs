@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpCompactDriveRequest.cs
+// FILE:	    GrpcGetWindowsOptionalFeaturesReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,24 +30,40 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Compacts a virtual disk.  This request returns a <see cref="GrpcBaseReply"/>.
+    /// Describes the current Windows capabilities.
     /// </summary>
     [DataContract]
-    public class GrpCompactDriveRequest
+    public class GrpcGetWindowsOptionalFeaturesReply
     {
         /// <summary>
-        /// Constructor.
+        /// Error constructor.
         /// </summary>
-        /// <param name="drivePath">Specifies the path to the virtual drive.</param>
-        public GrpCompactDriveRequest(string drivePath)
+        /// <param name="e">The exception.</param>
+        public GrpcGetWindowsOptionalFeaturesReply(Exception e)
         {
-            this.DrivePath = drivePath;
+            this.Error = new GrpcError(e);
         }
 
         /// <summary>
-        /// Specifies the path to the virtual drive.
+        /// Reply constructor.
+        /// </summary>
+        /// <param name="capabilities"></param>
+        public GrpcGetWindowsOptionalFeaturesReply(Dictionary<string, WindowsFeatureStatus> capabilities)
+        {
+            this.Capabilities = capabilities;
+        }
+
+        /// <summary>
+        /// Set to a non-null value when the request failed.
         /// </summary>
         [DataMember(Order = 1)]
-        public string DrivePath { get; set; }
+        public GrpcError? Error { get; set; }
+
+        /// <summary>
+        /// A dictionary mapping Windows feature names to their current status.
+        /// </summary>
+        [DataMember(Order = 2)]
+        public Dictionary<string, WindowsFeatureStatus>? Capabilities { get; set; }
     }
+
 }

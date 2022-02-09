@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetWindowsCapabilitiesRequest.cs
+// FILE:	    GrpcGetIPAddressRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,10 +30,24 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Determines whether Windows is running under nested virtualization.  This request returns a <see cref="GrpcGetWindowsCapabilitiesReply"/>.
+    /// Returns information about a virtual IP address.
     /// </summary>
     [DataContract]
-    public class GrpcGetWindowsCapabilitiesRequest
+    public class GrpcGetIPAddressRequest
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="address">The desired IP address.</param>
+        public GrpcGetIPAddressRequest(string address)
+        {
+            this.Address = address;
+        }
+
+        /// <summary>
+        /// The desired IP addess.
+        /// </summary>
+        [DataMember(Order = 1)]
+        public string Address { get; set; }
     }
 }

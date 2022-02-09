@@ -27,7 +27,7 @@ using Neon.Net;
 
 using ProtoBuf.Grpc;
 
-namespace Neon.Kube.GrpcProto.Desktop
+namespace Neon.Kube.GrpcProto
 {
     /// <summary>
     /// Holds information about an exception caught by the neon desktop service.
@@ -71,14 +71,14 @@ namespace Neon.Kube.GrpcProto.Desktop
     public static class GrpcErrorExtensions
     {
         /// <summary>
-        /// Throws a <see cref="DesktopServiceException"/> when the <see cref="GrpcError"/> is not <c>null</c>.
+        /// Throws a <see cref="GrpcServiceException"/> when the <see cref="GrpcError"/> is not <c>null</c>.
         /// </summary>
         /// <param name="error">The error.</param>
         public static void EnsureSuccess(this GrpcError error)
         {
             if (error != null)
             {
-                throw new DesktopServiceException($"[{error.ExceptionType}]: {error.Message}");
+                throw new GrpcServiceException($"[{error.ExceptionType}]: {error.Message}");
             }
         }
     }

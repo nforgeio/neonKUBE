@@ -1020,7 +1020,7 @@ namespace Neon.HyperV
         }
 
         /// <summary>
-        /// Looks for the specified IP address.
+        /// Returns information about a virtual IP address.
         /// </summary>
         /// <param name="address">The desired IP address.</param>
         /// <returns>The <see cref="VirtualIPAddress"/> or <c>null</c> when it doesn't exist.</returns>
