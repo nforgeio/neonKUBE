@@ -4,6 +4,7 @@
 	  <TargetFramework>net6.0</TargetFramework>
 	  <OutputType>Library</OutputType>
 	  <LangVersion>latest</LangVersion>
+	  <IsPackable>true</IsPackable>
 	  <Version>2.10.0-internal</Version>
 	  <Company>neonFORGE LLC</Company>
 	  <Product>neonKUBE</Product>
@@ -30,7 +31,7 @@
 
   <ItemGroup>
 	  <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-	  <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+	  <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>

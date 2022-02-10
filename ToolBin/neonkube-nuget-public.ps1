@@ -182,6 +182,7 @@ SetVersion Neon.YugaByte            $libraryVersion
 # SetVersion Neon.Kube.Aws            $kubeVersion
 # SetVersion Neon.Kube.Azure          $kubeVersion
 # SetVersion Neon.Kube.BareMetal      $kubeVersion
+# SetVersion Neon.Kube.DesktopServer  $kubeVersion
 # SetVersion Neon.Kube.Google         $kubeVersion
 # SetVersion Neon.Kube.GrpcProto      $kubeVersion
 # SetVersion Neon.Kube.Hosting        $kubeVersion
@@ -226,6 +227,7 @@ Publish Neon.YugaByte               $libraryVersion
 # Publish Neon.Kube.Aws               $kubeVersion
 # Publish Neon.Kube.Azure             $kubeVersion
 # Publish Neon.Kube.BareMetal         $kubeVersion
+# Publish Neon.Kube.DesktopServer     $kubeVersion
 # Publish Neon.Kube.Google            $kubeVersion
 # Publish Neon.Kube.GrpcProto         $kubeVersion
 # Publish Neon.Kube.Hosting           $kubeVersion
