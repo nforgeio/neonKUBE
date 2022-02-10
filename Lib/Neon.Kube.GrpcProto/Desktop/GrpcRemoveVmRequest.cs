@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcRemoveVmRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcRemoveVmRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -50,7 +57,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The machine name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Indicates whether the virtual machine drives should be retained after 

@@ -36,7 +36,7 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcBaseReply
     {
         /// <summary>
-        /// Success constructor.
+        /// Success/default constructor.
         /// </summary>
         public GrpcBaseReply()
         {
@@ -52,7 +52,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         }
 
         /// <summary>
-        /// Set to a non-null value when the request failed.
+        /// Set to a non-null error when the request failed.
         /// </summary>
         [DataMember(Order = 1)]
         public GrpcError? Error { get; set; }

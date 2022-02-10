@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetIPAddressRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetIPAddressRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="address">The desired IP address.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The desired IP addess.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Address { get; set; }
+        public string? Address { get; set; }
     }
 }

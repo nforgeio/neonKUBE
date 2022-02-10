@@ -37,6 +37,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcInsertVmDvdRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcInsertVmDvdRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -51,12 +58,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired virtual machine.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Path to the ISO file
         /// </summary>
         [DataMember(Order = 2)]
-        public string IsoPath { get; set; }
+        public string? IsoPath { get; set; }
     }
 }

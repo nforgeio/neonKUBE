@@ -37,6 +37,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcNewExternalSwitchRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcNewExternalSwitchRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>

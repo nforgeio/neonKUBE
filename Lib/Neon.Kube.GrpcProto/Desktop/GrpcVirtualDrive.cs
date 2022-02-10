@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualDrive
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualDrive()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="path">Specifies the path where the drive is located.</param>
@@ -56,7 +63,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Path { get; set; }
+        public string? Path { get; set; }
 
         /// <summary>
         /// The drive size in bytes.

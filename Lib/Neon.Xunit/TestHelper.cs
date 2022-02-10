@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -719,6 +721,67 @@ namespace Neon.Xunit
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the path to the neonFORGE project test assets folder.  This folder is
+        /// used to hold various assets required by some neonFORGE unit tests.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Thrown when the development environment is not fully configured.</exception>
+        public static string NeonForgeTestAssetsFolder
+        {
+            get
+            {
+                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".neonkube-dev");
+
+                Directory.CreateDirectory(folder);
+
+                return folder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the Ubuntu VHDX file suitable for basic unit testing.  This
+        /// will be located in the <see cref="NeonForgeTestAssetsFolder"/> and will be
+        /// downloaded from S3 if it's not already present.
+        /// </summary>
+        /// <returns>Path to the VHDX file.</returns>
+        public static string GetUbuntuTestVhdxPath()
+        {
+            var vhdxPath         = Path.Combine(NeonForgeTestAssetsFolder, "unit-test.vhdx");
+            var testAssetsBucket = "https://neon-public.s3.us-west-2.amazonaws.com/test-assets";
+            var testVhdxUri      = $"{testAssetsBucket}/unit-test.vhdx";
+            var testVhdxSizeUri  = $"{testAssetsBucket}/unit-test.vhdx.size";
+
+            // $todo(jefflill):
+            //
+            // We should probably change this to downloading a multi-part file so we
+            // can recover from partially downloaded or corrupted files.  We're going
+            // to hack this for the time being by checking the size of the file against
+            // the size from the [unit-test.vhdx.size] blob on S3 next to the VHDX.
+
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip
+            };
+
+            using (var httpClient = new HttpClient(handler, disposeHandler: true))
+            {
+                var expectedSize = long.Parse(httpClient.GetStringSafeAsync(testVhdxSizeUri).Result.Trim());
+
+                if (!File.Exists(vhdxPath) || new FileInfo(vhdxPath).Length != expectedSize)
+                {
+                    NeonHelper.DeleteFile(vhdxPath);
+                    httpClient.GetToFileSafeAsync(testVhdxUri, vhdxPath).Wait();
+
+                    if (new FileInfo(vhdxPath).Length != expectedSize)
+                    {
+                        throw new InvalidDataException($"Size of [{testVhdxUri}] does not match the size at [{testVhdxSizeUri}].  Please update the size on S3.");
+                    }
+                }
+            }
+
+            return vhdxPath;
         }
     }
 }

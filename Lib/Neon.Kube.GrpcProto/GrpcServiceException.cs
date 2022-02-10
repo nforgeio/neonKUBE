@@ -37,9 +37,10 @@ namespace Neon.Kube.GrpcProto
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message"></param>
-        public GrpcServiceException(string message)
-            : base(message)
+        /// <param name="message">The exception message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public GrpcServiceException(string message, Exception? innerException = null)
+            : base(message, innerException)
         {
         }
     }

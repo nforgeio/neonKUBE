@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualNetworkAdapter
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualNetworkAdapter()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The adapter name.</param>
@@ -67,7 +74,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The adapter name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// <c>true</c> if this adapter is attached to the management operating system.
@@ -79,13 +86,13 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The name of the attached virtual machine.
         /// </summary>
         [DataMember(Order = 3)]
-        public string VMName { get; set; }
+        public string? VMName { get; set; }
 
         /// <summary>
         /// The attached switch name.
         /// </summary>
         [DataMember(Order = 14)]
-        public string SwitchName { get; set; }
+        public string? SwitchName { get; set; }
 
         /// <summary>
         /// The adapter's MAC address.
@@ -97,12 +104,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The adapter status.
         /// </summary>
         [DataMember(Order = 6)]
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         /// <summary>
         /// The IP addresses assigned to the adapter.
         /// </summary>
         [DataMember(Order = 7)]
-        public List<string> Addresses { get; set; }
+        public List<string>? Addresses { get; set; }
     }
 }

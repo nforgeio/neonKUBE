@@ -28,6 +28,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 using ProtoBuf.Grpc.Server;
+using System.IO;
+using Neon.Kube.GrpcProto;
 
 namespace Neon.Kube.DesktopServer
 {
@@ -56,11 +58,28 @@ namespace Neon.Kube.DesktopServer
         /// <param name="socketPath">
         /// Optionally overrides the path to the Unix domain socket path.  This defaults to 
         /// <see cref="KubeHelper.WinDesktopServiceSocketPath"/> where <b>neon-desktop</b> 
-        /// and <b>neon-cli</b> expect it.
+        /// and <b>neon-cli</b> expect it to be.
         /// </param>
+        /// <exception cref="GrpcServiceException">Thrown when the service could not be started.</exception>
         public DesktopGrpcService(string socketPath = null)
         {
             socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
+
+            // Try to remove any existing socket file and if that fails we're
+            // going to assume that another service is already running on the
+            // socket.
+
+            try
+            {
+                if (File.Exists(socketPath))
+                {
+                    File.Delete(socketPath);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new GrpcServiceException($"Cannot start service using Unix socket at: {socketPath}", e);
+            }
 
             var builder = WebApplication.CreateBuilder();
 

@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualMachine
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualMachine()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">Specifies the machine name.</param>
@@ -54,13 +61,13 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The machine name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The current machine state.  This corresponds to [VirtualMachineState] defined in [Neon.HyperV].
         /// </summary>
         [DataMember(Order = 2)]
-        public string State { get; set; }
+        public string? State { get; set; }
 
         /// <summary>
         /// Identifies the virtual switch to which this virtual machine is attached (or null).

@@ -43,20 +43,29 @@ namespace Neon.Kube.GrpcProto
         /// <summary>
         /// Creates a gRPC channel that can be used to access the Neon Desktop Service.
         /// </summary>
+        /// <param name="socketPath">
+        /// Optionally specifies an alternative path to the desktop services Unix domain socket
+        /// for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
+        /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
+        /// </param>
         /// <returns>A <see cref="IGrpcDesktopService"/>.</returns>
-        public static GrpcChannel CreateDesktopServiceChannel()
+        public static GrpcChannel CreateDesktopServiceChannel(string? socketPath = null)
         {
-            var socketPath = KubeHelper.WinDesktopServiceSocketPath;
+            socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
 
             if (!File.Exists(socketPath))
             {
                 throw new FileNotFoundException($"The Neon Desktop Service is not running: no socket file at: {socketPath}");
             }
 
+            // $todo(jefflill):
+            //
             // We need to enable support for gRPC on plain HTTP because we have not
             // configured the desktop service with a certificate:
             //
             //      https://github.com/nforgeio/neonCLOUD/issues/254
+            //
+            // It's not really clear if this is necessary though.
 
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 

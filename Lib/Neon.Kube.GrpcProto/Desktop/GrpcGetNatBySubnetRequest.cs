@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetNatBySubnetRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetNatBySubnetRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="subnet">Specifies the NAT subnet.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the target NAT by subnet.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Subnet { get; set; }
+        public string? Subnet { get; set; }
     }
 }

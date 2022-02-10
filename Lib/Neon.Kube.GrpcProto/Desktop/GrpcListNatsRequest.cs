@@ -35,5 +35,11 @@ namespace Neon.Kube.GrpcProto.Desktop
     [DataContract]
     public class GrpcListNatsRequest
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcListNatsRequest()
+        {
+        }
     }
 }

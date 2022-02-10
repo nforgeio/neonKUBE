@@ -37,6 +37,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcNewInternalSwitchRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcNewInternalSwitchRequest()
+        {
+        }
+
+        /// <summary>
         /// Adds an internal Hyper-V switch configured for the specified subnet and gateway as well
         /// as an optional NAT enabling external connectivity.
         /// </summary>
@@ -54,13 +61,13 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The new switch name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string SwitchName { get; set; }
+        public string? SwitchName { get; set; }
 
         /// <summary>
         /// Specifies the internal subnet (as a <see cref="NetworkCidr"/> string.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Subnet { get; set; }
+        public string? Subnet { get; set; }
 
         /// <summary>
         /// Configure a NAT to support external routing.

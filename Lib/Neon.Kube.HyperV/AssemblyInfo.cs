@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetWindowsOptionalFeaturesRequest.cs
+// FILE:	    AssemblyInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,29 +17,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ServiceModel;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
-using Neon.Common;
-using Neon.Net;
+[assembly: InternalsVisibleTo("Test.Neon.Grpc")]
 
-using ProtoBuf.Grpc;
-
-namespace Neon.Kube.GrpcProto.Desktop
-{
-    /// <summary>
-    /// Determines whether Windows is running under nested virtualization.  This request returns a <see cref="GrpcGetWindowsOptionalFeaturesReply"/>.
-    /// </summary>
-    [DataContract]
-    public class GrpcGetWindowsOptionalFeaturesRequest
-    {
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public GrpcGetWindowsOptionalFeaturesRequest()
-        {
-        }
-    }
-}

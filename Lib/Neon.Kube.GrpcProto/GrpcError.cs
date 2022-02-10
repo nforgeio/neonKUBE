@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto
     public class GrpcError
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcError()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="e">The exception being wrapped.</param>
@@ -50,13 +57,13 @@ namespace Neon.Kube.GrpcProto
         /// The fully qualified type name of the exception.
         /// </summary>
         [DataMember(Order = 1)]
-        public string ExceptionType { get; set; }
+        public string? ExceptionType { get; set; }
 
         /// <summary>
         /// The exception message.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         /// The stack trace where the exception was thrown or <c>null</c> when not available.

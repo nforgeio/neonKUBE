@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcAddVmDriveRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcAddVmDriveRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -50,12 +57,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired virtual machine.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Specifies the new drive information.
         /// </summary>
         [DataMember(Order = 2)]
-        public GrpcVirtualDrive Drive { get; set; }
+        public GrpcVirtualDrive? Drive { get; set; }
     }
 }

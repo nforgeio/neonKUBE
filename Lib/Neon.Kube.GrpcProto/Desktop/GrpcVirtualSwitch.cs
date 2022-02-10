@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualSwitch
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualSwitch()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The switch name.</param>
@@ -50,12 +57,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The switch name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The switch type (corresponds to the [VirtualSwitchType] enum.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Type { get; set; }
+        public string? Type { get; set; }
     }
 }

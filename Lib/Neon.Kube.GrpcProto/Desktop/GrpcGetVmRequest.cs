@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetVmRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetVmRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired virtual machine.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
     }
 }

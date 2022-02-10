@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcCompactDriveRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcCompactDriveRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="drivePath">Specifies the path to the virtual drive.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Specifies the path to the virtual drive.
         /// </summary>
         [DataMember(Order = 1)]
-        public string DrivePath { get; set; }
+        public string? DrivePath { get; set; }
     }
 }

@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetNatByNameRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetNatByNameRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">Specifies the desired NAT name.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the NAT by name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }

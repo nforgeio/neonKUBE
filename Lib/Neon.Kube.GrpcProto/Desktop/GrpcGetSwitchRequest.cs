@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetSwitchRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetSwitchRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="switchName">Specifies the switch name.</param>
@@ -48,6 +55,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired switch.
         /// </summary>
         [DataMember(Order = 1)]
-        public string SwitchName { get; set; }
+        public string? SwitchName { get; set; }
     }
 }

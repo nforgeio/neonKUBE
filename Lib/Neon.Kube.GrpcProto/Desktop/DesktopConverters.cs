@@ -215,7 +215,7 @@ namespace Neon.Kube.GrpcProto.Desktop
                 SwitchName     = grpcVirtualNetworkAdapter.SwitchName,
                 IsManagementOs = grpcVirtualNetworkAdapter.IsManagementOs,
                 MacAddress     = grpcVirtualNetworkAdapter.MacAddress,
-                Addresses      = grpcVirtualNetworkAdapter.Addresses.Select(address => IPAddress.Parse(address)).ToList(),
+                Addresses      = grpcVirtualNetworkAdapter.Addresses?.Select(address => IPAddress.Parse(address)).ToList(),
                 Status         = grpcVirtualNetworkAdapter.Status,
                 VMName         = grpcVirtualNetworkAdapter.VMName
             };
@@ -238,7 +238,7 @@ namespace Neon.Kube.GrpcProto.Desktop
                 switchName:     virtualNat.SwitchName,
                 isManagementOs: virtualNat.IsManagementOs,
                 macAddress:     virtualNat.MacAddress,
-                addresses:      virtualNat.Addresses.Select(address => address.ToString()).ToList(),
+                addresses:      virtualNat.Addresses?.Select(address => address.ToString()).ToList(),
                 status:         virtualNat.Status,
                 vmName:         virtualNat.VMName);
         }

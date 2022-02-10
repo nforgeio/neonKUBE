@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcStopVmRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcStopVmRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -57,7 +64,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired virtual machine.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Indicates that the virtual machine should be turned of as opposed to be

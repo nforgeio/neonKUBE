@@ -119,5 +119,10 @@ namespace Neon.Xunit
         /// Identifies <b>Neon.WSL</b> tests.
         /// </summary>
         public const string NeonWSL = "Neon.WSL";
+
+        /// <summary>
+        /// Identifies gRPC service related tests.
+        /// </summary>
+        public const string NeonGrpc = "Neon.Grpc";
     }
 }

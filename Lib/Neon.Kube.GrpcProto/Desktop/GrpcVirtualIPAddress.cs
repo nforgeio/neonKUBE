@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualIPAddress
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualIPAddress()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="address">The associated IP address.</param>
@@ -55,19 +62,19 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The associated IP address.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         /// <summary>
         /// The network subnet.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Subnet { get; set; }
+        public string? Subnet { get; set; }
 
         /// <summary>
         /// Identifies the network interface or switch to which this address
         /// is connected.
         /// </summary>
         [DataMember(Order = 3)]
-        public string InterfaceName { get; set; }
+        public string? InterfaceName { get; set; }
     }
 }

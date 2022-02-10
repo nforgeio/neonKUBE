@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcVirtualNat
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcVirtualNat()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The NAT's name.</param>
@@ -50,12 +57,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The NAT's name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The NAT source subnet.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Subnet { get; set; }
+        public string? Subnet { get; set; }
     }
 }

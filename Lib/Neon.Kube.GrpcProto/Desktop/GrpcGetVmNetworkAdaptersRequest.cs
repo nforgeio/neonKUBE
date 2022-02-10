@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcGetVmNetworkAdaptersRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcGetVmNetworkAdaptersRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
@@ -50,7 +57,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired virtual machine.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.

@@ -36,6 +36,13 @@ namespace Neon.Kube.GrpcProto.Desktop
     public class GrpcAddVmRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcAddVmRequest()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Sperifies the machine name.</param>
@@ -103,7 +110,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Specifies the machine name.
         /// </summary>
         [DataMember(Order = 1)]
-        public string MachineName { get; set; }
+        public string? MachineName { get; set; }
 
         /// <summary>
         /// Optionally specifies the memory size.  This can be a long byte count or a

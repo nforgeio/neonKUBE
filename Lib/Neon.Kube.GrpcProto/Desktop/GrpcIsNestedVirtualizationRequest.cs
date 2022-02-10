@@ -35,5 +35,11 @@ namespace Neon.Kube.GrpcProto.Desktop
     [DataContract]
     public class GrpcIsNestedVirtualizationRequest
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public GrpcIsNestedVirtualizationRequest()
+        {
+        }
     }
 }

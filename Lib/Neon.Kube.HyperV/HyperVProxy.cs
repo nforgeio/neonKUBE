@@ -74,18 +74,33 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        public HyperVProxy()
+        /// <param name="isAdminOverride">
+        /// Optionally overrides detection of elevated permissions enabled for the 
+        /// current process.  This is used for testing.
+        /// </param>
+        /// <param name="socketPath">
+        /// Optionally overrides the default desktop service unix socket path.  This
+        /// is used for testing purposes.
+        /// </param>
+        public HyperVProxy(bool? isAdminOverride = null, string socketPath = null)
         {
-            isAdmin = NeonHelper.HasElevatedPermissions;
-
-            if (isAdmin)
+            if (isAdminOverride.HasValue)
             {
-                grpcChannel    = NeonGrpcServices.CreateDesktopServiceChannel();
-                desktopService = grpcChannel.CreateGrpcService<IGrpcDesktopService>();
+                isAdmin = isAdminOverride.Value;
             }
             else
             {
+                isAdmin = NeonHelper.HasElevatedPermissions;
+            }
+
+            if (isAdmin)
+            {
                 hypervClient = new HyperVClient();
+            }
+            else
+            {
+                grpcChannel    = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
+                desktopService = grpcChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
 
@@ -244,7 +259,7 @@ namespace Neon.Kube
                     checkpointDrives:  checkpointDrives,
                     templateDrivePath: templateDrivePath,
                     switchName:        switchName,
-                    extraDrives:       extraDrives.Select(drive => drive.ToProto()));
+                    extraDrives:       extraDrives?.Select(drive => drive.ToProto()));
 
                 desktopService.AddVmAsync(request).Result.Error.EnsureSuccess();
             }
