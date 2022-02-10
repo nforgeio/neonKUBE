@@ -58,12 +58,12 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Identifies the desired switch.
         /// </summary>
         [DataMember(Order = 1)]
-        public string SwitchName { get; set; }
+        public string? SwitchName { get; set; }
 
         /// <summary>
         /// Address of the LAN gateway.
         /// </summary>
         [DataMember(Order = 2)]
-        public string Gateway { get; set; }
+        public string? Gateway { get; set; }
     }
 }

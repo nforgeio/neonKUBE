@@ -238,7 +238,7 @@ namespace Neon.Kube.GrpcProto.Desktop
                 switchName:     virtualNat.SwitchName,
                 isManagementOs: virtualNat.IsManagementOs,
                 macAddress:     virtualNat.MacAddress,
-                addresses:      virtualNat.Addresses?.Select(address => address.ToString()).ToList(),
+                addresses:      virtualNat.Addresses.Select(address => address.ToString()).ToList(),
                 status:         virtualNat.Status,
                 vmName:         virtualNat.VMName);
         }

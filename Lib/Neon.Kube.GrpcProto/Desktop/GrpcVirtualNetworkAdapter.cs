@@ -98,7 +98,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// The adapter's MAC address.
         /// </summary>
         [DataMember(Order = 5)]
-        public string MacAddress { get; set; }
+        public string? MacAddress { get; set; }
 
         /// <summary>
         /// The adapter status.
