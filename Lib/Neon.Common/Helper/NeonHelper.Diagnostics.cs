@@ -87,7 +87,9 @@ namespace Neon.Common
 
         /// <summary>
         /// Appends a line of text to the file at <see cref="DebugLogPath"/>.  This is intended for
-        /// low-level debugging when normal logging via <see cref="LogManager"/> isn't suitable.
+        /// low-level debugging when normal logging via <see cref="LogManager"/> isn't suitable (i.e.
+        /// when debugging logging code or application initialization code running before normal 
+        /// logging is configured.
         /// </summary>
         /// <param name="line">Optionally specifies the line of text.</param>
         public static void LogDebug(string line = null)

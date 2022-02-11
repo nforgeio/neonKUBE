@@ -70,6 +70,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Information about the virtual NATs.
         /// </summary>
         [DataMember(Order = 2)]
-        public List<GrpcVirtualNat>? Nats { get; set; }
+        public List<GrpcVirtualNat>? Nats { get; set; } = new List<GrpcVirtualNat>();
     }
 }

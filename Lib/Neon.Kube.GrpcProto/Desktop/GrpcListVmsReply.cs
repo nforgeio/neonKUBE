@@ -67,9 +67,9 @@ namespace Neon.Kube.GrpcProto.Desktop
         public GrpcError? Error { get; set; }
 
         /// <summary>
-        /// Lists the virtial machines.
+        /// Lists the virtual machines.
         /// </summary>
         [DataMember(Order = 2)]
-        public List<GrpcVirtualMachine>? VirtualMachines { get; set; }
+        public List<GrpcVirtualMachine>? VirtualMachines { get; set; } = new List<GrpcVirtualMachine>();
     }
 }

@@ -275,7 +275,7 @@ namespace Neon.Kube
             }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
-            controller.AddNodeStep("provision virtual machines", (controller, node) => ProvisionVM(node));
+            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(node));
         }
 
         /// <inheritdoc/>
@@ -292,7 +292,7 @@ namespace Neon.Kube
             controller.AddNodeStep("openebs",
                 (controller, node) =>
                 {
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName   = GetVmName(node.Metadata);
                         var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
@@ -334,7 +334,7 @@ namespace Neon.Kube
                 {
                     node.Status = "turning off";
 
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName = GetVmName(node.Metadata);
 
@@ -347,7 +347,7 @@ namespace Neon.Kube
                 {
                     node.Status = "removing";
 
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName = GetVmName(node.Metadata);
 
@@ -412,7 +412,7 @@ namespace Neon.Kube
         {
             // Handle any necessary Hyper-V initialization.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 // Manage the Hyper-V virtual switch.  This will be an internal switch
                 // when [UseInternalSwitch=TRUE] otherwise this will be external.
@@ -511,7 +511,7 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
         {
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(node.Metadata);
 
@@ -652,7 +652,7 @@ namespace Neon.Kube
 
             // We just need to start any cluster VMs that aren't already running.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
@@ -700,7 +700,7 @@ namespace Neon.Kube
 
             // We just need to stop any running cluster VMs.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
@@ -757,7 +757,7 @@ namespace Neon.Kube
 
             await StopClusterAsync(stopMode: StopMode.TurnOff);
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 // Remove all of the cluster VMs.
 
@@ -807,7 +807,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);
@@ -863,7 +863,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);
@@ -899,7 +899,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);

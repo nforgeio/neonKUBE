@@ -462,7 +462,7 @@ namespace Neon.Kube
                    hostingEnvironment == HostingEnvironment.XenServer;
         }
 
-        /// <summary>
+        /// <summary>k
         /// <para>
         /// Returns the path to the Windows Desktop Service Unix domain socket.
         /// </para>

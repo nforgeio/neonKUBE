@@ -107,7 +107,7 @@ namespace TestGrpc
         }
 
         /// <summary>
-        /// Creates and returns a <see cref="DesktopGrpcService"/> when not running in admin mode
+        /// Creates and returns a <see cref="DesktopService"/> when not running in admin mode
         /// to verify that <see cref="HyperVProxy"/> is able to successfully submit requests to 
         /// that service.  This returns a <see cref="DoNothingDisposable"/> for non-admin mode
         /// to verify that <see cref="HyperVProxy"/> can call <see cref="HyperVClient"/> directly.
@@ -122,7 +122,7 @@ namespace TestGrpc
             }
             else
             {
-                return new DesktopGrpcService(socketPath);
+                return new DesktopService(socketPath);
             }
         }
 
@@ -166,6 +166,11 @@ namespace TestGrpc
                 using (CreateService(isAdmin))
                 {
                     var hyperVProxy = new HyperVProxy(isAdmin, socketPath);
+
+                    // List VMs before we create any below.  We had an issue once where we'd see
+                    // a [NullReferenceException] when there were no VMs.
+
+                    var vms = hyperVProxy.ListVms();
 
                     // Create a VM and verify.
                 

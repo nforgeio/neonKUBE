@@ -47,7 +47,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         Task<GrpcGetWindowsOptionalFeaturesReply> GetWindowsOptionalFeaturesAsync(GrpcGetWindowsOptionalFeaturesRequest request, CallContext context = default);
 
         /// <summary>
-        /// Returns an indication as to whether Windows is running with nested virtialization.
+        /// Returns an indication as to whether Windows is running with nested virtualization.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
@@ -83,7 +83,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         Task<GrpcListVmsReply> ListVmsAsync(GrpcListVmsRequest request, CallContext context = default);
 
         /// <summary>
-        /// Returns information about a specific virtial machine if it exists.
+        /// Returns information about a specific virtual machine if it exists.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>

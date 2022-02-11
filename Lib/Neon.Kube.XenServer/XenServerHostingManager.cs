@@ -273,7 +273,7 @@ namespace Neon.Kube
                 xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
             }
 
-            xenController.AddNodeStep("provision virtual machines", (controller, hostProxy) => ProvisionVM(hostProxy));
+            xenController.AddNodeStep("provision virtual machine(s)", (controller, hostProxy) => ProvisionVM(hostProxy));
             xenController.AddNodeStep("clear host status", (controller, hostProxy) => hostProxy.Status = string.Empty, quiet: true);
 
             controller.AddControllerStep(xenController);

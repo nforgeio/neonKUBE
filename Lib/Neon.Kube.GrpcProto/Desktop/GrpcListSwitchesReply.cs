@@ -70,6 +70,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Lists the swirch information.
         /// </summary>
         [DataMember(Order = 2)]
-        public List<GrpcVirtualSwitch>? Switches { get; set; }
+        public List<GrpcVirtualSwitch>? Switches { get; set; } = new List<GrpcVirtualSwitch>();
     }
 }

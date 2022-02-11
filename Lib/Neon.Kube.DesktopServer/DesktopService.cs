@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DesktopGrpcServer.cs
+// FILE:	    DesktopService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -40,9 +40,10 @@ namespace Neon.Kube.DesktopServer
     /// behalf of the neon-desktop or neon-cli applications that do not have these
     /// rights.
     /// </summary>
-    public sealed class DesktopGrpcService : IDisposable
+    public sealed class DesktopService : IDisposable
     {
         private bool                        isDisposed = false;
+        private string                      socketPath;
         private Task                        task;
         private CancellationTokenSource     cts;
 
@@ -61,9 +62,9 @@ namespace Neon.Kube.DesktopServer
         /// and <b>neon-cli</b> expect it to be.
         /// </param>
         /// <exception cref="GrpcServiceException">Thrown when the service could not be started.</exception>
-        public DesktopGrpcService(string socketPath = null)
+        public DesktopService(string socketPath = null)
         {
-            socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
+            this.socketPath = socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
 
             // Try to remove any existing socket file and if that fails we're
             // going to assume that another service is already running on the
@@ -113,6 +114,7 @@ namespace Neon.Kube.DesktopServer
 
             cts.Cancel();
             task.Wait();
+            NeonHelper.DeleteFile(socketPath);
         }
     }
 }
