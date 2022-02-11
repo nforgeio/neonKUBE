@@ -21,6 +21,8 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -45,6 +47,7 @@ namespace Neon.Common
         private static bool             isARM;
         private static bool?            isDevWorkstation;
         private static bool?            isKubernetes;
+        private static bool?            isAdmin;
 
         /// <summary>
         /// Detects the current operating system.
@@ -441,11 +444,17 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// <para>
         /// Returns a dictionary mapping optional Windows feature names to a <see cref="WindowsFeatureStatus"/>
         /// indicating feature installation status.
+        /// </para>
+        /// <note>
+        /// This method requires elevated permissions.
+        /// </note>
         /// </summary>
         /// <returns>The feature dictionary.</returns>
         /// <exception cref="InvalidOperationException">Thrown when not running on Windows.</exception>
+        /// <exception cref="ExecuteException">Thrown when the current process doesn't have elevated permissions.</exception>
         /// <remarks>
         /// <note>
         /// The feature names are in English and the lookup is case-insensitive.
@@ -659,6 +668,57 @@ namespace Neon.Common
                 default:
 
                     throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the current process is running with elevated permissions.  This
+        /// corresponds to running with administrator privileges for Windows or as the <b>root</b>
+        /// user for Linux and OS/X.
+        /// </summary>
+        /// <exception cref="PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        public static bool HasElevatedPermissions
+        {
+            get
+            {
+                if (isAdmin.HasValue)
+                {
+                    return isAdmin.Value;
+                }
+
+                if (IsWindows)
+                {
+#pragma warning disable CA1416
+                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                    isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+
+                    return isAdmin.Value;
+#pragma warning restore CA1416
+                }
+                else if (isLinux || isOSX)
+                {
+                    isAdmin = Environment.UserName == "root";
+
+                    return isAdmin.Value;
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the current process has elevated permissions.  See <see cref="HasElevatedPermissions"/>.
+        /// </summary>
+        /// <exception cref="SecurityException">Thrown when the process does not have elevated permissions.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        public static void EnsureElevatedPermissions()
+        {
+            if (!HasElevatedPermissions)
+            {
+                throw new SecurityException("The current process does not have elevated permissions.");
             }
         }
     }

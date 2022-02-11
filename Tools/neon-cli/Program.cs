@@ -233,7 +233,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 // Short-circuit the help command.
 
-                if (CommandLine.Arguments[0] == "help")
+                if (CommandLine.Arguments.ElementAtOrDefault(0) == "help")
                 {
                     CommandLine = CommandLine.Shift(1);
                     command     = GetCommand(CommandLine, commands);
@@ -258,7 +258,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 command = GetCommand(CommandLine, commands);
 
-                if (CommandLine.Arguments[0] == "tool" && command == null)
+                if (CommandLine.Arguments.ElementAtOrDefault(0) == "tool" && command == null)
                 {
                     // Special case invalid command detection for [tool] commands.
 

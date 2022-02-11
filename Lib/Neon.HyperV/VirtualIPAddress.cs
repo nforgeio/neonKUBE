@@ -30,7 +30,7 @@ using Neon.Net;
 namespace Neon.HyperV
 {
     /// <summary>
-    /// Describes a IP address.
+    /// Describes a virtual Hyper-V IP address.
     /// </summary>
     public class VirtualIPAddress
     {
@@ -40,7 +40,7 @@ namespace Neon.HyperV
         public string Address { get; set; }
 
         /// <summary>
-        /// The IP address subnet.
+        /// The network subnet.
         /// </summary>
         public NetworkCidr Subnet { get; set; }
 

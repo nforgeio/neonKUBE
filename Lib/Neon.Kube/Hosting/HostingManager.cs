@@ -97,9 +97,6 @@ namespace Neon.Kube
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
-        public virtual bool RequiresAdminPrivileges => true;
-
-        /// <inheritdoc/>
         public virtual bool RequiresNodeAddressCheck => false;
 
         /// <inheritdoc/>
