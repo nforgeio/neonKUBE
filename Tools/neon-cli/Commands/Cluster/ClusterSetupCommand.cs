@@ -73,8 +73,12 @@ OPTIONS:
                           for debugging cluster setup  issues.  Do not
                           use for production clusters.
 
-    --max-parallel=#            - Specifies the maximum number of node related operations
-                                  to perform in parallel.  This defaults to [6].
+    --max-parallel=#    - Specifies the maximum number of node related operations
+                          to perform in parallel.  This defaults to [6].
+
+    --disable-pending   - Disable parallization of setup tasks across steps.
+                          This is generally intended for use while debugging
+                          cluster setup and may slow down setup substantially.
 
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
@@ -112,7 +116,16 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--max-parallel", "--force", "--upload-charts", "--debug", "--check", "--automation-folder" };
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--unredacted",
+            "--max-parallel",
+            "--disable-pending",
+            "--force",
+            "--upload-charts",
+            "--debug",
+            "--check",
+            "--automation-folder" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -143,6 +156,7 @@ OPTIONS:
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
             var automationFolder  = commandLine.GetOption("--automation-folder");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var disablePending    = commandLine.HasOption("--disable-pending");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -215,6 +229,8 @@ OPTIONS:
                 uploadCharts:       uploadCharts,
                 automationFolder:   automationFolder);
 
+            controller.DisablePendingTasks = disablePending;
+
             controller.StatusChangedEvent +=
                 status =>
                 {
@@ -224,6 +240,21 @@ OPTIONS:
             switch (await controller.RunAsync())
             {
                 case SetupDisposition.Succeeded:
+
+                    var pendingGroups = controller.GetPendingGroups();
+
+                    if (pendingGroups.Count > 0)
+                    {
+                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.WriteLine();
+
+                        foreach (var groupName in pendingGroups)
+                        {
+                            Console.WriteLine($"   {groupName}");
+                        }
+
+                        Program.Exit(1);
+                    }
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");

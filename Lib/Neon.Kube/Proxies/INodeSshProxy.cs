@@ -48,7 +48,7 @@ namespace Neon.Kube
     /// <summary>
     /// Used to reference node proxy common properties.
     /// </summary>
-    public interface INodeSshProxy : ILinuxSshProxy
+    public interface INodeSshProxy : SSH.ILinuxSshProxy
     {
         /// <summary>
         /// Returns the node role, one of the <see cref="NodeRole"/> identifying what the node does.
