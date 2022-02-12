@@ -248,7 +248,7 @@ namespace TestCryptography
 
             var decryptedBytes = new byte[32 * 1024];
             var encryptedBytes = (byte[])null;
-            var key            = String.Empty;
+            var key            = string.Empty;
 
             // Encrypt some bytes.
 
