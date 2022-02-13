@@ -590,7 +590,10 @@ namespace NeonCli
                     var error       = containers.Any(container => container.Error);
                     var errorMarker = error ? "-->" : "   ";
 
-                    Console.WriteLine($"{errorMarker} {item.Key}");
+                    if (error || details)
+                    {
+                        Console.WriteLine($"{errorMarker} {item.Key}");
+                    }
 
                     foreach (var container in containers)
                     {
