@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeException.cs
+// FILE:	    NeonKubeException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,12 +35,12 @@ namespace Neon.Kube
     /// <summary>
     /// Describes a cluster related related error.
     /// </summary>
-    public class KubeException : Exception
+    public class NeonKubeException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeException()
+        public NeonKubeException()
         {
         }
 
@@ -49,7 +49,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">The optional inner exception.</param>
-        public KubeException(string message, Exception innerException = null)
+        public NeonKubeException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

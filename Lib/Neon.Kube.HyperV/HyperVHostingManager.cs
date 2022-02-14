@@ -213,17 +213,17 @@ namespace Neon.Kube
                             {
                                 if (@switch.Type != VirtualSwitchType.Internal)
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
                                 }
 
                                 if (address != null && !address.InterfaceName.Equals(@switch.Name))
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
                                 }
 
                                 if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
                                 }
                             }
                         }

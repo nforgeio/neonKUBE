@@ -725,7 +725,7 @@ namespace Neon.Kube
 
             if (name.Length > 32)
             {
-                throw new KubeException($"Generated ELB related resource name [{name}] exceeds the 32 character AWS limit.");
+                throw new NeonKubeException($"Generated ELB related resource name [{name}] exceeds the 32 character AWS limit.");
             }
 
             return name;
@@ -1312,7 +1312,7 @@ namespace Neon.Kube
 
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {
-                throw new KubeException($"Node [{nodeName}] does not exist.");
+                throw new NeonKubeException($"Node [{nodeName}] does not exist.");
             }
 
             Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
@@ -1376,7 +1376,7 @@ namespace Neon.Kube
 
                 if (awsRegion == null)
                 {
-                    throw new KubeException($"AWS region [{region}] does not exist or is not available to your AWS account.");
+                    throw new NeonKubeException($"AWS region [{region}] does not exist or is not available to your AWS account.");
                 }
             }
 
@@ -1784,7 +1784,7 @@ namespace Neon.Kube
 
             if (!regionsResponse.Regions.Any(region => region.RegionName.Equals(regionName, StringComparison.InvariantCultureIgnoreCase)))
             {
-                throw new KubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
+                throw new NeonKubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
             }
 
             // Verify that the instance types required by the cluster are available in the region.
@@ -1803,12 +1803,12 @@ namespace Neon.Kube
 
                 if (!nameToInstanceTypeInfo.TryGetValue(instanceType, out var instanceTypeInfo))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}].  This is not available in the [{regionName}] AWS region.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}].  This is not available in the [{regionName}] AWS region.");
                 }
 
                 if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported.  neonKUBE requires an x86_64 CPU.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported.  neonKUBE requires an x86_64 CPU.");
                 }
 
                 switch (node.Metadata.Role)
@@ -1817,12 +1817,12 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinMasterCores)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinMasterRamMiB)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
                         }
                         break;
 
@@ -1830,12 +1830,12 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerCores)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerRamMiB)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
                         }
                         break;
 
@@ -1923,7 +1923,7 @@ namespace Neon.Kube
 
             if (image == null)
             {
-                throw new KubeException($"Cannot locate the base Ubuntu [{ubuntuImage.UbuntuBuild}] AMI for the [{region}] region.");
+                throw new NeonKubeException($"Cannot locate the base Ubuntu [{ubuntuImage.UbuntuBuild}] AMI for the [{region}] region.");
             }
 
             ami = image.ImageId;
@@ -1938,13 +1938,13 @@ namespace Neon.Kube
         /// Ensures that the resource group query was created exclusively for cluster.
         /// </summary>
         /// <param name="groupQuery">The resource group Query.</param>
-        /// <exception cref="KubeException">Thrown if the resource group is not valid.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the resource group is not valid.</exception>
         private void ValidateResourceGroupQuery(GroupQuery groupQuery)
         {
             if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
                 groupQuery.ResourceQuery.Query != ResourceGroupQuery)
             {
-                throw new KubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
+                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
             }
         }
 
@@ -2511,7 +2511,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        throw new KubeException($"Unexpected NAT Gateway state: [{natGateway.State}].");
+                        throw new NeonKubeException($"Unexpected NAT Gateway state: [{natGateway.State}].");
                     }
                 },
                 timeout:      operationTimeout,
@@ -2651,7 +2651,7 @@ namespace Neon.Kube
 
                     // Report unexpected target health states.
 
-                    throw new KubeException($"Unexpected target group health state: [{targetHealthState}]");
+                    throw new NeonKubeException($"Unexpected target group health state: [{targetHealthState}]");
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
@@ -2935,7 +2935,7 @@ groupmod -n sysadmin ubuntu
 
                     if (invalidStates.Contains(state))
                     {
-                        throw new KubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
+                        throw new NeonKubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                     }
 
                     if (state == InstanceStatusCodes.Running)

@@ -1043,7 +1043,7 @@ namespace Neon.Kube
         {
             if (isFaulted)
             {
-                throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new NeonKubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
         }
 

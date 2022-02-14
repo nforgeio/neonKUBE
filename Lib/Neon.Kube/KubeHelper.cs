@@ -1548,7 +1548,7 @@ namespace Neon.Kube
 
                         if (pStart == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         pStart += pattern.Length;
@@ -1557,14 +1557,14 @@ namespace Neon.Kube
 
                         if (pEnd == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
 
                         if (!Version.TryParse(currentVersionString, out var currentVersion))
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         if (Version.Parse(KubeVersions.Kubernetes) > currentVersion)
@@ -1631,7 +1631,7 @@ namespace Neon.Kube
 
                         if (pStart == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         pStart += pattern.Length;
@@ -1640,14 +1640,14 @@ namespace Neon.Kube
 
                         if (pEnd == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
 
                         if (!Version.TryParse(currentVersionString, out var currentVersion))
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
                     }
                     break;
@@ -2195,7 +2195,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
                 var publicPUB = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
@@ -2214,7 +2214,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
                 }
 
                 var publicOpenSSH = result.OutputText;
@@ -2231,7 +2231,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
                 }
 
                 var publicSSH2 = result.OutputText;
@@ -2270,7 +2270,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
                 }
 
                 var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
@@ -2288,7 +2288,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
                 var fingerprintMd5 = result.OutputText.Trim();
@@ -2306,7 +2306,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
                 var fingerprintSha2565 = result.OutputText.Trim();
@@ -2536,7 +2536,7 @@ TCPKeepAlive yes
 
                 if (!string.Equals(contentType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new KubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadManifestContentType}] is expected.");
+                    throw new NeonKubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadManifestContentType}] is expected.");
                 }
 
                 var jsonText = await response.Content.ReadAsStringAsync();

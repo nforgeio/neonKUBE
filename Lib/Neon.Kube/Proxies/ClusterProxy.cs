@@ -395,7 +395,7 @@ namespace Neon.Kube
 
             if (hostingManager == null)
             {
-                throw new KubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
             }
 
             return hostingManager;
@@ -445,7 +445,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
         /// <returns>The reachable master node or <c>null</c>.</returns>
-        /// <exception cref="KubeException">
+        /// <exception cref="NeonKubeException">
         /// Thrown if no masters are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
@@ -474,7 +474,7 @@ namespace Neon.Kube
         /// <param name="predicate">Predicate used to select the candidate nodes.</param>
         /// <param name="failureMode">Specifies what should happen when there are no reachable nodes.</param>
         /// <returns>The reachable node or <c>null</c>.</returns>
-        /// <exception cref="KubeException">
+        /// <exception cref="NeonKubeException">
         /// Thrown if no nodes matching the predicate are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>

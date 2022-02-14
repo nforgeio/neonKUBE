@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// enabled for non-console applications.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
-        /// <exception cref="KubeException">Thrown when there's a problem.</exception>
+        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition,
             string                      nodeImageUri          = null,
@@ -110,7 +110,7 @@ namespace Neon.Kube
             {
                 if (!File.Exists(nodeImagePath))
                 {
-                    throw new KubeException($"No node image file exists at: {nodeImagePath}");
+                    throw new NeonKubeException($"No node image file exists at: {nodeImagePath}");
                 }
             }
 

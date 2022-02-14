@@ -437,7 +437,7 @@ namespace Neon.Kube.Xunit
 
                         case SetupDisposition.Failed:
 
-                            throw new KubeException("Cluster prepare failed.");
+                            throw new NeonKubeException("Cluster prepare failed.");
 
                         case SetupDisposition.Cancelled:
                         default:
@@ -467,7 +467,7 @@ namespace Neon.Kube.Xunit
 
                         case SetupDisposition.Failed:
 
-                            throw new KubeException("Cluster setup failed.");
+                            throw new NeonKubeException("Cluster setup failed.");
 
                         case SetupDisposition.Cancelled:
                         default:
