@@ -14,7 +14,7 @@ hosting:
     namePrefix: ""
     cores: 4
     memory: 12 GiB
-    osDisk: 32 GiB
+    osDisk: 40 GiB
 network:
   premiseSubnet: 100.64.0.0/24
   gateway: 100.64.0.1
