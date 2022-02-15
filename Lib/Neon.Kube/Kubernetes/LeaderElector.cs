@@ -134,6 +134,9 @@ namespace Neon.Kube
         private DateTime                    localRenewTimeUtc;      // Renew time relative to the local clock
         private Counter                     promotedCount;          // Counts instance leader promotions
         private Counter                     demotedCount;           // Counts instance leader demotions
+        private Counter                     renewalSuccessCount;    // Counts successful leader renewals
+        private Counter                     renewalFailCount;       // Counts failed leader renewals
+        private Counter                     requestFailCount;       // Counts unexpected failed API server requests
 
         /// <summary>
         /// Constructor.
@@ -145,15 +148,18 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
-            this.k8s                = k8s;
-            this.settings           = settings;
-            this.logPrefix          = $"LeaderElector[lease={settings.Namespace}/{settings.LeaseName} identity={settings.Identity}]";
-            this.cts                = new CancellationTokenSource();
-            this.State              = LeaderState.Unknown;
-            this.remoteRenewTimeUtc = DateTime.MinValue;
-            this.localRenewTimeUtc  = DateTime.MinValue;
-            this.promotedCount      = Metrics.CreateCounter("promoted", "Number of times this instance has been promoted to leader.", "lease");
-            this.demotedCount       = Metrics.CreateCounter("demoted", "Number of times this instance has been demoted from leader.", "lease");
+            this.k8s                 = k8s;
+            this.settings            = settings;
+            this.logPrefix           = $"LeaderElector[lease={settings.Namespace}/{settings.LeaseName} identity={settings.Identity}]";
+            this.cts                 = new CancellationTokenSource();
+            this.State               = LeaderState.Unknown;
+            this.remoteRenewTimeUtc  = DateTime.MinValue;
+            this.localRenewTimeUtc   = DateTime.MinValue;
+            this.promotedCount       = Metrics.CreateCounter("promoted", "Number of times this instance has been promoted to leader.", "lease");
+            this.demotedCount        = Metrics.CreateCounter("demoted", "Number of times this instance has been demoted from leader.", "lease");
+            this.renewalSuccessCount = Metrics.CreateCounter("renewal_success", "Number of lease has been renewed.", "lease");
+            this.renewalFailCount    = Metrics.CreateCounter("renewal_fail", "Number of failed lease renewals.", "lease");
+            this.requestFailCount    = Metrics.CreateCounter("request_fail", "Number of unexpected API server request failures.", "lease");
         }
 
         /// <summary>
@@ -284,10 +290,11 @@ namespace Neon.Kube
             catch (Exception e)
             {
                 log.LogInfo($"{logPrefix}: Cannot retrieve lease.", e);
+                requestFailCount.WithLabels(settings.LeaseRef).Inc();
                 return false;
             }
 
-            // When there's no lease on the API server, we'll try creating and acquiring a new one.
+            // When there's no lease on the API server, we'll try creating a new one.
 
             if (remoteLease == null)
             {
@@ -357,6 +364,7 @@ namespace Neon.Kube
                 catch (Exception e)
                 {
                     log.LogInfo($"{logPrefix}: Cannot create lease.", e);
+                    requestFailCount.WithLabels(settings.LeaseRef).Inc();
                     return false;
                 }
             }
@@ -392,9 +400,13 @@ namespace Neon.Kube
                                 cachedLease        = await k8s.ReadNamespacedLeaseAsync(settings.LeaseName, settings.Namespace, cancellationToken: cts.Token);
                                 remoteRenewTimeUtc = cachedLease.Spec.RenewTime.Value;
                                 localRenewTimeUtc  = DateTime.UtcNow;
+
+                                renewalSuccessCount.WithLabels(settings.LeaseRef).Inc();
                             }
                             catch (KubernetesException e2)
                             {
+                                renewalFailCount.WithLabels(settings.LeaseRef).Inc();
+
                                 switch ((HttpStatusCode)e.Status.Code)
                                 {
                                     case HttpStatusCode.NotFound:
@@ -419,6 +431,7 @@ namespace Neon.Kube
                         case HttpStatusCode.NotFound:
 
                             log.LogWarn(() => $"{logPrefix}: Lease deleted out from under us.");
+                            renewalFailCount.WithLabels(settings.LeaseRef).Inc();
                             cachedLease = null;
                             return false;
 
@@ -430,6 +443,8 @@ namespace Neon.Kube
                 catch (Exception e)
                 {
                     log.LogInfo($"{logPrefix}: Cannot renew lease.", e);
+                    requestFailCount.WithLabels(settings.LeaseRef).Inc();
+                    renewalFailCount.WithLabels(settings.LeaseRef).Inc();
                     cachedLease = null;
                     return false;
                 }
@@ -470,6 +485,8 @@ namespace Neon.Kube
                     cachedLease        = await k8s.ReplaceNamespacedLeaseAsync(clonedLease, settings.LeaseName, settings.Namespace, cancellationToken: cts.Token);
                     remoteRenewTimeUtc = 
                     localRenewTimeUtc  = clonedLease.Spec.RenewTime.Value;
+
+                    renewalSuccessCount.WithLabels(settings.LeaseRef).Inc();
                     return true;
                 }
                 catch (KubernetesException e)
@@ -497,6 +514,7 @@ namespace Neon.Kube
                     // We couldn't acquire the lease.
 
                     log.LogInfo($"{logPrefix}: Cannot acquire lease.", e);
+                    requestFailCount.WithLabels(settings.LeaseRef).Inc();
                     return false;
                 }
             }
