@@ -67,7 +67,7 @@ namespace Neon.Kube
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
-            /// <see cref="RemoveAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// <see cref="RemoveAsync(bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -599,6 +599,13 @@ namespace Neon.Kube
             if (context != null)
             {
                 KubeHelper.Config.RemoveContext(context);
+            }
+
+            var login = KubeHelper.GetClusterLogin(contextName);
+
+            if (login != null)
+            {
+                login.Delete();
             }
         }
 
