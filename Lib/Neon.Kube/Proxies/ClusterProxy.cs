@@ -578,10 +578,6 @@ namespace Neon.Kube
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
         /// </param>
-        /// <param name="noRemoveLogins">
-        /// Optionally specifies that any cluster login file and KubeConfig records related to to the 
-        /// cluster definition <b>will not be removed</b>.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
@@ -591,11 +587,19 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix, noRemoveLogins);
+            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
+
+            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
+            var context     = KubeHelper.Config.GetContext(contextName);
+
+            if (context != null)
+            {
+                KubeHelper.Config.RemoveContext(context);
+            }
         }
 
         /// <summary>
