@@ -281,15 +281,19 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddNodeStep("openebs",
+            if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // prepared.  We need to do this here because if we created the data and OpenEBS disks
+                // at the same time when the VM is initially created, the disk setup scripts executed
+                // during prepare won't be able to distinguish between the two disks.
+                //
+                // At this point, the data disk should be partitioned, formatted, and mounted so
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+                controller.AddNodeStep("openebs",
                 (controller, node) =>
                 {
                     using (var hyperv = new HyperVProxy())
@@ -302,7 +306,7 @@ namespace Neon.Kube
 
                         if (hyperv.GetVmDrives(vmName).Count < 2)
                         {
-                            // The disk doesn't already exist.
+                            // The cStor disk doesn't already exist.
 
                             node.Status = "openebs: stop VM";
                             hyperv.StopVm(vmName);
@@ -311,8 +315,9 @@ namespace Neon.Kube
                             hyperv.AddVmDrive(vmName,
                                 new VirtualDrive()
                                 {
-                                    Path = diskPath,
-                                    Size = diskSize
+                                    Path      = diskPath,
+                                    Size      = diskSize,
+                                    IsDynamic = false
                                 });
 
                             node.Status = "openebs: restart VM";
@@ -321,6 +326,7 @@ namespace Neon.Kube
                     }
                 },
                 (controller, node) => node.Metadata.OpenEbsStorage);
+            }
         }
 
         /// <inheritdoc/>

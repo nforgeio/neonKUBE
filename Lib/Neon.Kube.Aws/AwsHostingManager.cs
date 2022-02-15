@@ -1138,17 +1138,19 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
         {
-            // Add a step to perform low-level node initialization.
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+            if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // prepared.  We need to do this here because if we created the data and OpenEBS disks
+                // when the VM is initially created, the disk setup scripts executed during prepare
+                // won't be able to distinguish between the two disks.
+                //
+                // At this point, the data disk should be partitioned, formatted, and mounted so
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("openebs",
+                setupController.AddNodeStep("openebs",
                 async (controller, node) =>
                 {
                     node.Status = "openebs: checking";
@@ -1251,6 +1253,7 @@ namespace Neon.Kube
                         });
                 },
                 (controller, node) => node.Metadata.OpenEbsStorage);
+            }
         }
 
         /// <inheritdoc/>

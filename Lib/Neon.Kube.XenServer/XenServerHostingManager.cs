@@ -280,62 +280,67 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            // IMPLEMENTATION NOTE:
-            // --------------------
-            // This is a bit tricky.  The essential problem is that the setup controller passed
-            // is intended for parallel operations on nodes, not XenServer hosts (like we did
-            // above for provisioning).  We still have those XenServer host clients in the [xenClients]
-            // list field.  Note that XenClients are not thread-safe.
-            // 
-            // We're going to perform these operations in parallel, but require that each node
-            // operation acquire a lock on the XenClient for the node's host before proceeding.
+            if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // prepared.  We need to do this here because if we created the data and OpenEBS disks
+                // when the VM is initially created, the disk setup scripts executed during prepare
+                // won't be able to distinguish between the two disks.
+                //
+                // At this point, the data disk should be partitioned, formatted, and mounted so
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("openebs",
-                (controller, node) =>
-                {
-                    var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
+                // IMPLEMENTATION NOTE:
+                // --------------------
+                // This is a bit tricky.  The essential problem is that the setup controller passed
+                // is intended for parallel operations on nodes, not XenServer hosts (like we did
+                // above for provisioning).  We still have those XenServer host clients in the [xenClients]
+                // list field.  Note that XenClients are not thread-safe.
+                // 
+                // We're going to perform these operations in parallel, but require that each node
+                // operation acquire a lock on the XenClient for the node's host before proceeding.
 
-                    node.Status = "openebs: waiting for host...";
-
-                    lock (xenClient)
+                controller.AddNodeStep("openebs",
+                    (controller, node) =>
                     {
-                        var vm = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
+                        var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
 
-                        if (xenClient.Machine.DiskCount(vm) < 2)
+                        node.Status = "openebs: waiting for host...";
+
+                        lock (xenClient)
                         {
-                            // We haven't created the cStor disk yet.
+                            var vm = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
 
-                            var disk = new XenVirtualDisk()
+                            if (xenClient.Machine.DiskCount(vm) < 2)
                             {
-                                Name        = $"{GetVmName(node)}: openebs",
-                                Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
-                                Description = "OpenEBS cStor"
-                            };
+                                // We haven't created the cStor disk yet.
 
-                            node.Status = "openebs: stop VM";
-                            xenClient.Machine.Shutdown(vm);
+                                var disk = new XenVirtualDisk()
+                                {
+                                    Name        = $"{GetVmName(node)}: openebs",
+                                    Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
+                                    Description = "OpenEBS cStor"
+                                };
 
-                            node.Status = "openebs: add cStor disk";
-                            xenClient.Machine.AddDisk(vm, disk);
+                                node.Status = "openebs: stop VM";
+                                xenClient.Machine.Shutdown(vm);
 
-                            node.Status = "openebs: restart VM";
-                            xenClient.Machine.Start(vm);
+                                node.Status = "openebs: add cStor disk";
+                                xenClient.Machine.AddDisk(vm, disk);
 
-                            node.Status = string.Empty;
+                                node.Status = "openebs: restart VM";
+                                xenClient.Machine.Start(vm);
+
+                                node.Status = string.Empty;
+                            }
                         }
-                    }
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
+            }
         }
 
         /// <inheritdoc/>
