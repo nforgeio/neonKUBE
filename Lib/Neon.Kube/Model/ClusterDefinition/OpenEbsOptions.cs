@@ -112,7 +112,7 @@ namespace Neon.Kube
                     }
                     else if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) > 0)
                     {
-                        Engine = OpenEbsEngine.cStor;
+                        Engine = OpenEbsEngine.Jiva;
                     }
                     break;
 
