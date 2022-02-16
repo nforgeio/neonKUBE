@@ -24,7 +24,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-
+using k8s.Models;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
@@ -43,7 +43,7 @@ namespace TestKube
         {
 
         }
-        
+
         [Fact]
         public void SerializeEnum()
         {
@@ -52,6 +52,37 @@ namespace TestKube
             serializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
             var t = DataRaidGroupType.Stripe;
             string jsonString = JsonSerializer.Serialize(t, serializerOptions);
+        }
+
+        [Fact]
+        public void SerializeCstorPoolCluster()
+        {
+            var serializerOptions = new JsonSerializerOptions();
+
+            serializerOptions.Converters.Add(new V1ResourceConverter());
+            var cStorPoolCluster = new V1CStorPoolCluster()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "cspc-stripe",
+                    NamespaceProperty = KubeNamespaces.NeonStorage
+                },
+                Spec = new V1CStorPoolClusterSpec()
+                {
+                    Pools = new List<V1CStorPoolSpec>(),
+                    Resources = new V1ResourceRequirements()
+                    {
+                        Limits = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity("1Gi") } },
+                        Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity("1Gi") } },
+                    },
+                    AuxResources = new V1ResourceRequirements()
+                    {
+                        Limits = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity("1Gi") } },
+                        Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity("1Gi") } },
+                    }
+                }
+            };
+            string jsonString = JsonSerializer.Serialize(cStorPoolCluster, serializerOptions);
         }
     }
 }

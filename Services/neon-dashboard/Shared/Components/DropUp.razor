@@ -12,7 +12,7 @@
 	
 
   <div class="absolute menu @(HideMenu ? "hide" : "")" @onmouseover="MouseIn" @onmouseout="MouseOut">
-			<div class="menu-header button__icon">
+			<div class="menu-header button__icon" @onmouseout:stopPropagation>
 		  <Icon content=@Icon />
 				<h3>@Title</h3>
 			</div>
@@ -20,7 +20,7 @@
         {
             if (DropList is not null)
             {
-                <div class="button button__icon" @onclick="@(() => NavigationManager.NavigateTo(item.GetId()))">
+                <div class="button button__icon" @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(item.GetId()))">
 									<h3>@item.GetName()</h3>
 									@if (item.GetId() == AppState.CurrentDashboard)
 									{

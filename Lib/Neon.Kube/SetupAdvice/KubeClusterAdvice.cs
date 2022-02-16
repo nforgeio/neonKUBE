@@ -370,6 +370,16 @@ namespace Neon.Kube
         public static string OpenEbsWebhook = "openebs-webhook";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Cstor Pool</b> containers.
+        /// </summary>
+        public static string OpenEbsCstorPool = "openebs-cstor-pool";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Cstor Pool</b> sidecar containers.
+        /// </summary>
+        public static string OpenEbsCstorPoolAux = "openebs-cstor-pool-aux";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Prometheus</b> service.
         /// </summary>
         public static string Prometheus = "prometheus";

@@ -52,6 +52,11 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
+            if (string.IsNullOrEmpty(CurrentDashboard))
+            {
+                NavigationManager.NavigateTo("kubernetes", true);
+            }
+
             if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard))
             {
                 var dashboard = AppState.Dashboards.Where(d => d.Id == CurrentDashboard).FirstOrDefault();

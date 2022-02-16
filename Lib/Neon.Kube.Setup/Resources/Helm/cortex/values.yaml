@@ -269,22 +269,15 @@ livenessProbe:
     path: /ready
     port: http-metrics
   initialDelaySeconds: 60
-  failureThreshold: 10
-  periodSeconds: 10
+  failureThreshold: 100
+  periodSeconds: 30
 readinessProbe:
   httpGet:
     path: /ready
     port: http-metrics
   initialDelaySeconds: 60
-  failureThreshold: 10
-  periodSeconds: 10
-startupProbe:
-  httpGet:
-    path: /ready
-    port: http-metrics
   failureThreshold: 60
-  initialDelaySeconds: 120
-  periodSeconds: 30
+  periodSeconds: 10
 
 serviceMonitor:
   enabled: true

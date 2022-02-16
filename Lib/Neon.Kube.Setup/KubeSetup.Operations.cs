@@ -1931,8 +1931,11 @@ subjects:
         {
             await SyncContext.ClearAsync;
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var k8s                = GetK8sClient(controller);
+            var cstorPoolAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPool);
+            var cstorPoolAuxAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPoolAux);
 
             await master.InvokeIdempotentAsync("setup/openebs-cstor",
                 async () =>
@@ -1983,7 +1986,17 @@ subjects:
                         },
                         Spec = new V1CStorPoolClusterSpec()
                         {
-                            Pools = new List<V1CStorPoolSpec>()
+                            Pools = new List<V1CStorPoolSpec>(),
+                            Resources = new V1ResourceRequirements()
+                            {
+                                Limits = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryRequest)) } },
+                            },
+                            AuxResources = new V1ResourceRequirements()
+                            {
+                                Limits = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryRequest)) } },
+                            }
                         }
                     };
 
@@ -2364,13 +2377,15 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "setup", message: "etcd");
 
-                    await CreateStorageClass(controller, master, "neon-internal-etcd");
+                    await CreateHostPathStorageClass(controller, master, "neon-internal-etcd");
 
                     var values = new Dictionary<string, object>();
 
                     values.Add($"replicas", advice.ReplicaCount);
 
-                    values.Add($"volumeClaimTemplate.resources.requests.storage", "1Gi");
+                    values.Add($"volumeClaimTemplate.resources.requests.storage", "5Gi");
+                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
+                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
                     values.Add($"priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     int i = 0;

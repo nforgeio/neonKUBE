@@ -162,11 +162,6 @@ namespace NeonDashboard
 
                 DashboardFrames = new List<Dashboard>(); 
 
-                if (string.IsNullOrEmpty(CurrentDashboard))
-                {
-                    CurrentDashboard = "kubernetes";
-                }
-
                 if (string.IsNullOrEmpty(UserId))
                 {
                     if (HttpContextAccessor.HttpContext.User.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
