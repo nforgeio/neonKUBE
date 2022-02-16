@@ -533,7 +533,9 @@ namespace Neon.Common
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested || await predicate())
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (await predicate())
                 {
                     return;
                 }

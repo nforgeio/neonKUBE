@@ -4035,11 +4035,11 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Dex);
-            var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
+            var serviceUser   = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
 
             var values = new Dictionary<string, object>();
 
@@ -4074,10 +4074,10 @@ $@"- name: StorageType
                 async () =>
                 {
                     await master.InstallHelmChartAsync(controller, "dex",
-                        releaseName: "dex",
-                        @namespace: KubeNamespaces.NeonSystem,
-                        prioritySpec: PriorityClass.NeonApi.Name,
-                        values: values,
+                        releaseName:     "dex",
+                        @namespace:      KubeNamespaces.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonApi.Name,
+                        values:          values,
                         progressMessage: "dex");
                 });
 
