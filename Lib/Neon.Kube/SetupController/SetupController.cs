@@ -88,6 +88,7 @@ namespace Neon.Kube
         private ISetupController                        parent        = null;
         private bool                                    isRunning     = false;
         private Dictionary<string, SetupPendingTasks>   pendingGroups = new Dictionary<string, SetupPendingTasks>(StringComparer.InvariantCultureIgnoreCase);
+        private CancellationTokenSource                 cts           = new CancellationTokenSource();
         private int                                     maxStackSize;
         private string                                  globalStatus;
         private List<NodeSshProxy<NodeMetadata>>        nodes;
@@ -95,7 +96,6 @@ namespace Neon.Kube
         private List<Step>                              steps;
         private Step                                    currentStep;
         private bool                                    isFaulted;
-        private bool                                    cancelPending;
         private string                                  clusterLogPath;
         private TextWriter                              clusterLogWriter;
 
@@ -851,6 +851,12 @@ namespace Neon.Kube
                             Parallel.ForEach(stepNodes, parallelOptions,
                                 node =>
                                 {
+                                    if (IsCancelPending)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
+                                        return;
+                                    }
+
                                     try
                                     {
                                         node.IsConfiguring = true;
@@ -876,6 +882,12 @@ namespace Neon.Kube
                             Parallel.ForEach(stepNodes, parallelOptions,
                                 node =>
                                 {
+                                    if (IsCancelPending)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
+                                        return;
+                                    }
+
                                     try
                                     {
                                         var nodeDefinition = node.Metadata as NodeDefinition;
@@ -902,7 +914,7 @@ namespace Neon.Kube
                                             e = aggregateException.InnerExceptions.Single();
                                         }
 
-                                        stepDisposition = SetupStepState.Done;
+                                        stepDisposition = SetupStepState.Failed;
 
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
@@ -911,6 +923,12 @@ namespace Neon.Kube
                         }
                         else if (step.SyncGlobalAction != null)
                         {
+                            if (IsCancelPending)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+                                return;
+                            }
+
                             try
                             {
                                 step.SyncGlobalAction(this);
@@ -933,6 +951,12 @@ namespace Neon.Kube
                         }
                         else if (step.AsyncGlobalAction != null)
                         {
+                            if (IsCancelPending)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+                                return;
+                            }
+
                             try
                             {
                                 var runTask = Task.Run(
@@ -991,8 +1015,8 @@ namespace Neon.Kube
                     },
                     maxStackSize: maxStackSize);
 
-                // The setup step is executing above in a thread and we're going to loop here
-                // to raise [StatusChangedEvent] when we detect a status change giving any UI
+                // While the setup step is executing above in a thread, we're going to loop here
+                // and raise [StatusChangedEvent] when we detect a status change giving any UI
                 // a chance to update.
                 //
                 // Note that we're going to loop here until the step execution thread above
@@ -1106,7 +1130,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1129,7 +1153,7 @@ namespace Neon.Kube
                         {
                             Verb          = verb,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1152,7 +1176,7 @@ namespace Neon.Kube
                         {
                             Node          = node,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1177,7 +1201,7 @@ namespace Neon.Kube
                             Node          = node,
                             Verb          = verb,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1203,7 +1227,7 @@ namespace Neon.Kube
                         {
                             Text          = message,
                             IsError       = true,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1228,7 +1252,7 @@ namespace Neon.Kube
                             Node          = node,
                             Text          = message,
                             IsError       = true,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1371,7 +1395,7 @@ namespace Neon.Kube
                         LogGlobal(LogBeginMarker);
                         cluster?.LogLine(LogBeginMarker);
 
-                        // Number the steps.  Note that quiet steps don't get their own step number.
+                        // Number the steps.  Note that [quiet] steps aren't assigned a step number.
 
                         var position = 1;
 
@@ -1391,8 +1415,10 @@ namespace Neon.Kube
 
                         foreach (var step in steps)
                         {
-                            if (cancelPending)
+                            if (IsCancelPending)
                             {
+                                step.State = SetupStepState.Cancelled;
+
                                 LogGlobal();
                                 LogGlobal(LogFailedMarker);
                                 cluster?.LogLine(LogFailedMarker);
@@ -1400,7 +1426,6 @@ namespace Neon.Kube
 
                                 Cleanup();
                                 tcs.SetResult(SetupDisposition.Cancelled);
-                                return;
                             }
 
                             if (!ExecuteStep(step))
@@ -1419,7 +1444,7 @@ namespace Neon.Kube
                                 LogGlobal("FAULTED HOSTS:");
                                 LogGlobal();
 
-                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var maxNodeName = nodes.Max(node => node.Name.Length);
                                 var nameColumnWidth = maxNodeName + 4;
 
                                 foreach (var host in hosts
@@ -1441,7 +1466,7 @@ namespace Neon.Kube
                                 LogGlobal("FAULTED NODES:");
                                 LogGlobal();
 
-                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var maxNodeName = nodes.Max(node => node.Name.Length);
                                 var nameColumnWidth = maxNodeName + 4;
 
                                 foreach (var node in nodes
@@ -1469,7 +1494,7 @@ namespace Neon.Kube
 
                         foreach (var node in nodes)
                         {
-                            node.Status = "[x] READY";
+                            node.Status = IsCancelPending ? "[x] CANCELLED" : "[x] READY";
                         }
 
                         // Raise one more status changed and then stop the console writer
@@ -1491,14 +1516,56 @@ namespace Neon.Kube
                         ConsoleWriter?.Stop();
 
                         Cleanup();
-                        tcs.SetResult(SetupDisposition.Succeeded);
+                        tcs.SetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
                         return;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        if (StatusChangedEvent != null)
+                        {
+                            lock (syncLock)
+                            {
+                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                            }
+                        }
+
+                        ConsoleWriter?.Stop();
+                        Cleanup();
+                        tcs.SetResult(SetupDisposition.Cancelled);
+                    }
+                    catch (AggregateException e)
+                    {
+                        if (e.Contains<OperationCanceledException>())
+                        {
+                            if (StatusChangedEvent != null)
+                            {
+                                lock (syncLock)
+                                {
+                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                }
+                            }
+
+                            ConsoleWriter?.Stop();
+                            Cleanup();
+                            tcs.SetResult(SetupDisposition.Cancelled);
+                        }
+                        else
+                        {
+                            if (StatusChangedEvent != null)
+                            {
+                                lock (syncLock)
+                                {
+                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                }
+                            }
+
+                            ConsoleWriter?.Stop();
+                            Cleanup();
+                            tcs.SetException(e);
+                        }
                     }
                     catch (Exception e)
                     {
-                        // Raise one more status changed and then stop the console
-                        // writer so the console will be configure to write normally.
-
                         if (StatusChangedEvent != null)
                         {
                             lock (syncLock)
@@ -1546,18 +1613,25 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool CancelPending
+        public void Cancel()
         {
-            get => cancelPending;
-
-            set
+            if (!cts.IsCancellationRequested)
             {
-                if (value == true)
-                {
-                    cancelPending = true;
-                }
+                cts.Cancel();
             }
         }
+
+        /// <inheritdoc/>
+        public void ThrowIfCancelled()
+        {
+            cts.Token.ThrowIfCancellationRequested();
+        }
+
+        /// <inheritdoc/>
+        public CancellationToken CancellationToken => cts.Token;
+
+        /// <inheritdoc/>
+        public bool IsCancelPending => cts.IsCancellationRequested;
 
         /// <inheritdoc/>
         public IEnumerable<SetupNodeStatus> GetHostStatus()

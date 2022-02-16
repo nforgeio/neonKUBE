@@ -296,6 +296,7 @@ namespace Neon.Kube
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">OPtionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -304,11 +305,12 @@ namespace Neon.Kube
         public static async Task WaitForDeploymentAsync(
             this IKubernetes    k8s, 
             string              namespaceParameter, 
-            string              name          = null, 
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null, 
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
@@ -355,8 +357,9 @@ namespace Neon.Kube
                     }
                             
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -369,6 +372,7 @@ namespace Neon.Kube
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -377,11 +381,12 @@ namespace Neon.Kube
         public static async Task WaitForStatefulSetAsync(
             this IKubernetes    k8s,
             string              namespaceParameter,
-            string              name          = null,
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null,
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
@@ -427,8 +432,9 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -441,6 +447,7 @@ namespace Neon.Kube
         /// <param name="fieldSelector">The optional field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -450,11 +457,12 @@ namespace Neon.Kube
 
             this IKubernetes    k8s,
             string              namespaceParameter,
-            string              name          = null,
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null,
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
@@ -499,8 +507,9 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>

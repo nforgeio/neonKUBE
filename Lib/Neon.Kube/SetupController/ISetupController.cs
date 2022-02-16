@@ -323,11 +323,26 @@ namespace Neon.Kube
         void SetGlobalStepStatus(string status = null);
 
         /// <summary>
-        /// Indicates that setup should be cancelled.  Setting this will request
-        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
-        /// <c>false</c> assignments will be ignored.
+        /// Attempts to cancel the setup operation.  This will cause <see cref="IsCancelPending"/> 
+        /// to return <c>true</c> and calls to <see cref="ThrowIfCancelled()"/> to throw a
+        /// <see cref="OperationCanceledException"/>.
         /// </summary>
-        bool CancelPending { get; set; }
+        void Cancel();
+
+        /// <summary>
+        /// Throws a <see cref="OperationCanceledException"/> after <see cref="Cancel()"/> has been called.
+        /// </summary>
+        void ThrowIfCancelled();
+
+        /// <summary>
+        /// Returns the <see cref="CancellationToken"/> that will be signalled when setup is cancelled.
+        /// </summary>
+        CancellationToken CancellationToken { get; }
+
+        /// <summary>
+        /// Indicates that setup is being cancelled.
+        /// </summary>
+        bool IsCancelPending { get; }
 
         /// <summary>
         /// This controls whether <see cref="AddPendingTaskAsync(string, Task, string, string, INodeSshProxy)"/> actually

@@ -254,7 +254,7 @@ namespace Neon.Kube
                                 {
                                     controller.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: VHDX [{progress}%] [{driveTemplateName}]");
 
-                                    return !controller.CancelPending;
+                                    return !controller.IsCancelPending;
                                 });
                         }
                         else
