@@ -38,6 +38,11 @@ namespace Neon.Kube
         Running,
 
         /// <summary>
+        /// The step was cancelled.
+        /// </summary>
+        Cancelled,
+
+        /// <summary>
         /// The step has completed successfully.
         /// </summary>
         Done,

@@ -136,6 +136,11 @@ namespace Neon.Kube
                     controller.LogProgress(verb: pendingTask.Verb, message: pendingTask.Message);
                 }
 
+                if (controller.IsCancelPending)
+                {
+                    return;
+                }
+
                 await pendingTask.Task;
 
                 if (pendingTask.Node != null)

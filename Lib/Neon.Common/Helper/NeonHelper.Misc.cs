@@ -509,13 +509,18 @@ namespace Neon.Common
         /// <param name="timeout">Optionally specifies the maximum time to wait.</param>
         /// <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
         /// <param name="timeoutMessage">Optionally overrides the <see cref="TimeoutException"/> message.</param>
+        /// <param name="cancellationToken">Optionally specifies a <see cref="CancellationToken"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
         /// <remarks>
         /// This method periodically calls <paramref name="predicate"/> until it
         /// returns <c>true</c> or <pararef name="timeout"/> exceeded.
         /// </remarks>
-        public static async Task WaitForAsync(Func<Task<bool>> predicate, TimeSpan timeout, TimeSpan? pollInterval = null, string timeoutMessage = null)
+        public static async Task WaitForAsync(
+            Func<Task<bool>>    predicate, 
+            TimeSpan timeout,   TimeSpan? pollInterval = null, 
+            string              timeoutMessage         = null, 
+            CancellationToken   cancellationToken      = default)
         {
             await SyncContext.ClearAsync;
 
@@ -528,7 +533,7 @@ namespace Neon.Common
 
             while (true)
             {
-                if (await predicate())
+                if (cancellationToken.IsCancellationRequested || await predicate())
                 {
                     return;
                 }

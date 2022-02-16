@@ -460,7 +460,7 @@ namespace Neon.Kube
                             {
                                 xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: XVA [{progress}%] [{driveTemplateName}]");
 
-                                return !xenController.CancelPending;
+                                return !xenController.IsCancelPending;
                             });
                     }
                     else
