@@ -724,8 +724,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                             }
 
                                             controller.ThrowIfCancelled();
-                                            master.SudoCommand("docker kill neon-etcd-proxy");
-                                            master.SudoCommand("docker rm neon-etcd-proxy");
+                                            master.SudoCommand("podman kill neon-etcd-proxy");
+                                            master.SudoCommand("podman rm neon-etcd-proxy");
                                         });
                                 });
                         }
@@ -825,8 +825,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         }
 
                                         controller.ThrowIfCancelled();
-                                        worker.SudoCommand("docker kill neon-etcd-proxy");
-                                        worker.SudoCommand("docker rm neon-etcd-proxy");
+                                        worker.SudoCommand("podman kill neon-etcd-proxy");
+                                        worker.SudoCommand("podman rm neon-etcd-proxy");
                                     });
                             }
                             catch (Exception e)

@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.WinTTY</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>2.18.2</Version>
+		<Version>10000.0.1650-dev-jeff</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonLIBRARY</Product>
 		<Description>Windows WinTTY support for .NET</Description>
