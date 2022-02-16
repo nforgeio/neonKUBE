@@ -84,6 +84,10 @@ OPTIONS:
     --max-parallel=#            - Specifies the maximum number of node related operations
                                   to perform in parallel.  This defaults to [6].
 
+    --disable-pending           - Disable parallization of setup tasks across steps.
+                                  This is generally intended for use while debugging
+                                  cluster setup and may slow down setup substantially.
+
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 
                                   cluster.  You can use this to ensure that 
@@ -130,7 +134,19 @@ Server Requirements:
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--package-caches", "--unredacted", "--max-parallel", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] 
+        { 
+            "--node-image-uri", 
+            "--node-image-path",
+            "--package-caches",
+            "--unredacted", 
+            "--max-parallel", 
+            "--disable-pending", 
+            "--remove-templates", 
+            "--debug",
+            "--base-image-name",
+            "--automation-folder", 
+            "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -175,6 +191,7 @@ Server Requirements:
             var automationFolder  = commandLine.GetOption("--automation-folder");
             var headendUri        = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var disablePending    = commandLine.HasOption("--disable-pending");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -252,6 +269,8 @@ Server Requirements:
                 automationFolder:       automationFolder,
                 headendUri:             headendUri);
 
+            controller.DisablePendingTasks = disablePending;
+
             controller.StatusChangedEvent +=
                 status =>
                 {
@@ -261,6 +280,21 @@ Server Requirements:
             switch (await controller.RunAsync())
             {
                 case SetupDisposition.Succeeded:
+
+                    var pendingGroups = controller.GetPendingGroups();
+
+                    if (pendingGroups.Count > 0)
+                    {
+                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.WriteLine();
+
+                        foreach (var groupName in pendingGroups)
+                        {
+                            Console.WriteLine($"   {groupName}");
+                        }
+
+                        Program.Exit(1);
+                    }
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");

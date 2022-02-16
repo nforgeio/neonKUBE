@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// current neonDESKTOP state will not be impacted.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
-        /// <exception cref="KubeException">Thrown when there's a problem.</exception>
+        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterRemoveController(
             ClusterLogin        clusterLogin,
             int                 maxParallel = 500,
@@ -121,7 +121,7 @@ namespace Neon.Kube
 
             if (hostingManager == null)
             {
-                throw new KubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
             }
 
             // Configure the setup controller state.

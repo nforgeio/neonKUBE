@@ -95,6 +95,42 @@ namespace NeonCli
             public bool NotInManifest;
         }
 
+        /// <summary>
+        /// Used to hold information about container resource requests and limits.
+        /// </summary>
+        private class ContainerResources
+        {
+            /// <summary>
+            /// Identifies the associated container image.
+            /// </summary>
+            public string ContainerImage { get; set; }
+
+            /// <summary>
+            /// Specifies the CPU request quantity or <c>null</c> when not set.
+            /// </summary>
+            public ResourceQuantity RequestCpu;
+
+            /// <summary>
+            /// Specifies the RAM request quantity or <c>null</c> when not set.
+            /// </summary>
+            public ResourceQuantity RequestMemory;
+
+            /// <summary>
+            /// Specifies the CPU limit quantity or <c>null</c> when not set.
+            /// </summary>
+            public ResourceQuantity LimitCpu;
+
+            /// <summary>
+            /// Specifies the RAM request quantity or <c>null</c> when not set.
+            /// </summary>
+            public ResourceQuantity LimitMemory;
+
+            /// <summary>
+            /// Returns <c>true</c> when any of the resource values are <c>null</c>.
+            /// </summary>
+            public bool Error => RequestCpu == null || RequestMemory == null || LimitCpu == null || LimitMemory == null;
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
@@ -112,12 +148,17 @@ namespace NeonCli
 
             var error = false;
 
-            if (await CheckNodeContainerImagesAsync(clusterLogin, k8s))
+            if (!await CheckNodeContainerImagesAsync(clusterLogin, k8s))
             {
                 error = true;
             }
 
-            if (await CheckPodPrioritiesAsync(clusterLogin,k8s))
+            if (!await CheckPodPrioritiesAsync(clusterLogin, k8s))
+            {
+                error = true;
+            }
+
+            if (!await CheckResourcesAsync(clusterLogin, k8s))
             {
                 error = true;
             }
@@ -139,7 +180,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
-        /// <param name="listAll">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
+        /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         /// <remarks>
         /// <para>
@@ -148,13 +189,14 @@ namespace NeonCli
         /// setup experience but also makes air gapped cluster possible.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckNodeContainerImagesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool listAll = false)
+        public static async Task<bool> CheckNodeContainerImagesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
-            Console.WriteLine("* Checking local container images...");
+            Console.WriteLine("===============================================================================");
+            Console.WriteLine("Checking local container images...");
 
             var manifestImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -198,7 +240,7 @@ namespace NeonCli
 
             var badImageCount = images.Values.Count(image => image.NotInManifest);
 
-            if (badImageCount > 0 || listAll)
+            if (badImageCount > 0 || details)
             {
                 if (badImageCount > 0)
                 {
@@ -206,17 +248,21 @@ namespace NeonCli
                     Console.WriteLine($"ERROR: [{badImageCount}] images are being pulled from external registries:");
                     Console.WriteLine();
                 }
+                else
+                {
+                    Console.WriteLine();
+                }
 
-                if (badImageCount > 0 || listAll)
+                if (badImageCount > 0 || details)
                 {
                     foreach (var image in images.Values.OrderBy(image => image.ImageNames))
                     {
                         var badImage = image.NotInManifest;
                         var status   = badImage ? "--> " : "    ";
 
-                        if (badImage || listAll)
+                        if (badImage || details)
                         {
-                            Console.WriteLine($"{status}{image}");
+                            Console.WriteLine($"{status}{image.ImageNames}");
                         }
                     }
                 }
@@ -242,7 +288,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
-        /// <param name="listAll">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
+        /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
         /// <remarks>
         /// <para>
@@ -263,13 +309,14 @@ namespace NeonCli
         /// and also that we've done the same for pods created by third-party operators.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckPodPrioritiesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool listAll = false)
+        public static async Task<bool> CheckPodPrioritiesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
-            Console.WriteLine("* Checking pod priorities...");
+            Console.WriteLine("===============================================================================");
+            Console.WriteLine("Checking pod priorities...");
 
             // Build a dictionary that maps the priority of all known priority class
             // priority values to the priority class name.  Note that we're assuming
@@ -346,12 +393,16 @@ namespace NeonCli
 
             var badPodDeploymentCount = ownerToPriorityInfo.Values.Count(info => info.Priority < PriorityClass.NeonMin.Value);
 
-            if (badPodDeploymentCount > 0 || listAll)
+            if (badPodDeploymentCount > 0 || details)
             {
                 if (badPodDeploymentCount > 0)
                 {
                     Console.WriteLine();
                     Console.WriteLine($"ERROR: [{badPodDeploymentCount}] pod deployments are deployed with [Priority<{PriorityClass.NeonMin.Value}]:");
+                    Console.WriteLine();
+                }
+                else
+                {
                     Console.WriteLine();
                 }
 
@@ -452,6 +503,139 @@ namespace NeonCli
             // Default to using the pod name or kind for standalone pods.
 
             return $"{podNamespace}/{pod.Name} ({pod.Kind})";
+        }
+
+        /// <summary>
+        /// Verifies that all pod container specifications include resource requests and limits.
+        /// </summary>
+        /// <param name="clusterLogin">Specifies the target cluster login.</param>
+        /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
+        /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
+        /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
+        /// <returns></returns>
+        public static async Task<bool> CheckResourcesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            Console.WriteLine();
+            Console.WriteLine("===============================================================================");
+            Console.WriteLine("Checking container resources...");
+
+            // Build a dictionary that maps the a pod reference [namespace/pod-owner-name]
+            // to a list of resource information for each container in the pod.
+
+            var podRefToContainerResources = new Dictionary<string, List<ContainerResources>>(StringComparer.InvariantCulture);
+
+            foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
+            {
+                foreach (var pod in (await k8s.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
+                {
+                    var podRef     = await GetOwnerIdAsync(k8s, pod);
+                    var containers = new List<ContainerResources>();
+
+                    foreach (var containerSpec in pod.Spec.Containers)
+                    {
+                        var containerResources = new ContainerResources() { ContainerImage = containerSpec.Image };
+
+                        if (containerSpec.Resources != null)
+                        {
+                            if (containerSpec.Resources.Requests != null)
+                            {
+                                containerResources.RequestCpu = GetResourceQuantity("cpu", containerSpec.Resources.Requests);
+                            }
+
+                            if (containerSpec.Resources.Requests != null)
+                            {
+                                containerResources.RequestMemory = GetResourceQuantity("memory", containerSpec.Resources.Requests);
+                            }
+
+                            if (containerSpec.Resources.Limits != null)
+                            {
+                                containerResources.LimitCpu = GetResourceQuantity("cpu", containerSpec.Resources.Requests);
+                            }
+
+                            if (containerSpec.Resources.Limits != null)
+                            {
+                                containerResources.LimitMemory = GetResourceQuantity("memory", containerSpec.Resources.Requests);
+                            }
+                        }
+
+                        containers.Add(containerResources);
+                    }
+
+                    podRefToContainerResources[podRef] =  containers;
+                }
+            }
+
+            var badPodSpecCount = podRefToContainerResources.Values.Count(containers => containers.Any(resources => resources.Error));
+
+            if (badPodSpecCount > 0 || details)
+            {
+                if (badPodSpecCount > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"ERROR: [{badPodSpecCount}] pod deployments have containers without resource requests and/or limits.");
+                    Console.WriteLine();
+                }
+                else
+                {
+                    Console.WriteLine();
+                }
+
+                foreach (var item in podRefToContainerResources
+                    .OrderBy(item => item.Key))
+                {
+                    var containers  = item.Value;
+                    var error       = containers.Any(container => container.Error);
+                    var errorMarker = error ? "-->" : "   ";
+
+                    if (error || details)
+                    {
+                        Console.WriteLine($"{errorMarker} {item.Key}");
+                    }
+
+                    foreach (var container in containers)
+                    {
+                        var requestCpu           = container.RequestCpu != null    ? container.RequestCpu.ToString()    : "NULL";
+                        var requestMemory        = container.RequestMemory != null ? container.RequestMemory.ToString() : "NULL";
+                        var limitCpu             = container.LimitCpu != null      ? container.LimitCpu.ToString()      : "NULL";
+                        var limitMemory          = container.LimitMemory != null   ? container.LimitMemory.ToString()   : "NULL";
+                        var containerError       = container.RequestCpu == null || container.RequestMemory == null || container.LimitCpu == null || container.LimitMemory == null;
+                        var errorContainerMarker = containerError ? "-->" : "   ";
+
+                        if (containerError || details)
+                        {
+                            Console.WriteLine($"    {errorContainerMarker} {container.ContainerImage} [request-cpu={requestCpu}] [request-memory={requestMemory}] [limit-cpu={limitCpu}] [limit-memory={limitMemory}]");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine($"OK: Container resources are set correctly.");
+            }
+
+            return badPodSpecCount > 0;
+        }
+
+        /// <summary>
+        /// Retrieves the named resource quantity from the resource dictionary passed.
+        /// </summary>
+        /// <param name="key">Identifies the resource quantity.</param>
+        /// <param name="resources">The resource dictionary.</param>
+        /// <returns>The <see cref="ResourceQuantity"/> of present or <c>null</c>.</returns>
+        private static ResourceQuantity GetResourceQuantity(string key, IDictionary<string, ResourceQuantity> resources)
+        {
+            if (resources.TryGetValue(key, out var quantity))
+            {
+                return quantity;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

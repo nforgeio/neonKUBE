@@ -79,10 +79,11 @@ wwwroot/
 #
 # NOTE: This assumes that we'll never want to commit folders named: [bin] or [obj]
 
-/Build/**
-/Build-Cache/**
 **/bin/**
 **/obj/**
+
+/Build/**
+/Build-Cache/**
 *.mg.cs
 GeneratedEntities.cs
 GeneratedTypes.cs

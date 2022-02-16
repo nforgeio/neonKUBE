@@ -67,7 +67,7 @@ namespace Neon.Kube
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
-            /// <see cref="RemoveAsync(bool, bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// <see cref="RemoveAsync(bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -395,7 +395,7 @@ namespace Neon.Kube
 
             if (hostingManager == null)
             {
-                throw new KubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
             }
 
             return hostingManager;
@@ -445,7 +445,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
         /// <returns>The reachable master node or <c>null</c>.</returns>
-        /// <exception cref="KubeException">
+        /// <exception cref="NeonKubeException">
         /// Thrown if no masters are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
@@ -474,7 +474,7 @@ namespace Neon.Kube
         /// <param name="predicate">Predicate used to select the candidate nodes.</param>
         /// <param name="failureMode">Specifies what should happen when there are no reachable nodes.</param>
         /// <returns>The reachable node or <c>null</c>.</returns>
-        /// <exception cref="KubeException">
+        /// <exception cref="NeonKubeException">
         /// Thrown if no nodes matching the predicate are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
@@ -578,10 +578,6 @@ namespace Neon.Kube
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
         /// </param>
-        /// <param name="noRemoveLogins">
-        /// Optionally specifies that any cluster login file and KubeConfig records related to to the 
-        /// cluster definition <b>will not be removed</b>.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
@@ -591,11 +587,26 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false, bool noRemoveLogins = false)
+        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix, noRemoveLogins);
+            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
+
+            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
+            var context     = KubeHelper.Config.GetContext(contextName);
+
+            if (context != null)
+            {
+                KubeHelper.Config.RemoveContext(context);
+            }
+
+            var login = KubeHelper.GetClusterLogin(contextName);
+
+            if (login != null)
+            {
+                login.Delete();
+            }
         }
 
         /// <summary>

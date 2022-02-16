@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
         /// could be located for the specified cluster environment.
         /// </returns>
-        /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
         HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
         /// could be located for the specified cluster environment.
         /// </returns>
-        /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
         HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Neon.Kube
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
         /// could be located for the specified cluster environment.
         /// </returns>
-        /// <exception cref="KubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
         HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath = null, string logFolder = null);
 
         /// <summary>

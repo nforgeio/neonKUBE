@@ -217,5 +217,13 @@ namespace Neon.Kube
                 File.WriteAllText(path, NeonHelper.YamlSerialize(this));
             }
         }
+
+        /// <summary>
+        /// Deletes the login.
+        /// </summary>
+        public void Delete()
+        {
+            NeonHelper.DeleteFile(path);
+        }
     }
 }

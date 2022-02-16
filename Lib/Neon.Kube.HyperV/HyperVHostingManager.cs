@@ -200,30 +200,30 @@ namespace Neon.Kube
 
                     if (cluster.Definition.Hosting.HyperV.UseInternalSwitch)
                     {
-                        using (var hyperv = new HyperVClient())
+                        using (var hyperv = new HyperVProxy())
                         {
                             controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVInternalSwitchName}] virtual switch");
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperV;
                             var @switch            = hyperv.GetSwitch(KubeConst.HyperVInternalSwitchName);
                             var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
-                            var nat                = hyperv.GetNATByName(KubeConst.HyperVInternalSwitchName);
+                            var nat                = hyperv.GetNatByName(KubeConst.HyperVInternalSwitchName);
 
                             if (@switch != null)
                             {
                                 if (@switch.Type != VirtualSwitchType.Internal)
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  It's type must be [internal].");
                                 }
 
                                 if (address != null && !address.InterfaceName.Equals(@switch.Name))
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
                                 }
 
                                 if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
                                 {
-                                    throw new KubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
                                 }
                             }
                         }
@@ -275,24 +275,28 @@ namespace Neon.Kube
             }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
-            controller.AddNodeStep("provision virtual machines", (controller, node) => ProvisionVM(node));
+            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(node));
         }
 
         /// <inheritdoc/>
         public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddNodeStep("openebs",
+            if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // prepared.  We need to do this here because if we created the data and OpenEBS disks
+                // at the same time when the VM is initially created, the disk setup scripts executed
+                // during prepare won't be able to distinguish between the two disks.
+                //
+                // At this point, the data disk should be partitioned, formatted, and mounted so
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+                controller.AddNodeStep("openebs",
                 (controller, node) =>
                 {
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName   = GetVmName(node.Metadata);
                         var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
@@ -302,7 +306,7 @@ namespace Neon.Kube
 
                         if (hyperv.GetVmDrives(vmName).Count < 2)
                         {
-                            // The disk doesn't already exist.
+                            // The cStor disk doesn't already exist.
 
                             node.Status = "openebs: stop VM";
                             hyperv.StopVm(vmName);
@@ -311,8 +315,9 @@ namespace Neon.Kube
                             hyperv.AddVmDrive(vmName,
                                 new VirtualDrive()
                                 {
-                                    Path = diskPath,
-                                    Size = diskSize
+                                    Path      = diskPath,
+                                    Size      = diskSize,
+                                    IsDynamic = false
                                 });
 
                             node.Status = "openebs: restart VM";
@@ -321,6 +326,7 @@ namespace Neon.Kube
                     }
                 },
                 (controller, node) => node.Metadata.OpenEbsStorage);
+            }
         }
 
         /// <inheritdoc/>
@@ -334,7 +340,7 @@ namespace Neon.Kube
                 {
                     node.Status = "turning off";
 
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName = GetVmName(node.Metadata);
 
@@ -347,7 +353,7 @@ namespace Neon.Kube
                 {
                     node.Status = "removing";
 
-                    using (var hyperv = new HyperVClient())
+                    using (var hyperv = new HyperVProxy())
                     {
                         var vmName = GetVmName(node.Metadata);
 
@@ -361,9 +367,6 @@ namespace Neon.Kube
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
-
-        /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
         public override string GetDataDisk(LinuxSshProxy node)
@@ -415,7 +418,7 @@ namespace Neon.Kube
         {
             // Handle any necessary Hyper-V initialization.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 // Manage the Hyper-V virtual switch.  This will be an internal switch
                 // when [UseInternalSwitch=TRUE] otherwise this will be external.
@@ -437,7 +440,7 @@ namespace Neon.Kube
                         // this switch requires a virtual NAT.
 
                         controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
-                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNAT: true);
+                        hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNat: true);
                         controller.SetGlobalStepStatus();
                     }
 
@@ -514,7 +517,7 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
         {
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(node.Metadata);
 
@@ -568,7 +571,7 @@ namespace Neon.Kube
                 hyperv.AddVm(
                     vmName,
                     processorCount: processors,
-                    diskSize:       osDiskBytes.ToString(),
+                    driveSize:       osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
                     switchName:     switchName);
@@ -655,7 +658,7 @@ namespace Neon.Kube
 
             // We just need to start any cluster VMs that aren't already running.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
@@ -703,7 +706,7 @@ namespace Neon.Kube
 
             // We just need to stop any running cluster VMs.
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 Parallel.ForEach(cluster.Definition.Nodes,
                     nodeDefinition =>
@@ -760,7 +763,7 @@ namespace Neon.Kube
 
             await StopClusterAsync(stopMode: StopMode.TurnOff);
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 // Remove all of the cluster VMs.
 
@@ -810,7 +813,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);
@@ -866,7 +869,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);
@@ -902,7 +905,7 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
             }
 
-            using (var hyperv = new HyperVClient())
+            using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(nodeDefinition);
                 var vm     = hyperv.GetVm(vmName);

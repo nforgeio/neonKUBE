@@ -526,7 +526,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                 master.LogLine("END: [kubeadm init ...] response ==============================================");
 
-                                throw new KubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
+                                throw new NeonKubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
                             }
 
                             var pEnd = output.Length;

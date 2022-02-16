@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeException.cs
+// FILE:	    GrpcGetWindowsOptionalFeaturesRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,40 +17,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 using Neon.Common;
+using Neon.Net;
 
-namespace Neon.Kube
+using ProtoBuf.Grpc;
+
+namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Describes a cluster related related error.
+    /// Determines whether Windows is running under nested virtualization.  This request returns a <see cref="GrpcGetWindowsOptionalFeaturesReply"/>.
     /// </summary>
-    public class KubeException : Exception
+    [DataContract]
+    public class GrpcGetWindowsOptionalFeaturesRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeException()
-        {
-        }
-
-        /// <summary>
-        /// Constructs and instance with a message and an optional inner exception.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <param name="innerException">The optional inner exception.</param>
-        public KubeException(string message, Exception innerException = null)
-            : base(message, innerException)
+        public GrpcGetWindowsOptionalFeaturesRequest()
         {
         }
     }

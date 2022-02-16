@@ -78,8 +78,11 @@ OPTIONS:
     --priority-class    - Verifies that all running pod templates specify a
                           non-zero PriorityClass.
 
-    --list              - Lists information for some of the checks even when
-                          there are no errors.
+    --resources         - Verifies that all pod containers specifiy resource
+                          request and limits
+
+    --details           - Includes additional information for some of the 
+                          checks even when there are no errors
 
 REMARKS:
 
@@ -90,7 +93,7 @@ This command returns a non-zero exit code when one or more checks fail.
         public override string[] Words => new string[] { "cluster", "check" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--priority-class", "--list" };
+        public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--priority-class", "--resources", "--details" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -128,12 +131,14 @@ This command returns a non-zero exit code when one or more checks fail.
             var all             = commandLine.HasOption("--all");
             var containerImages = commandLine.HasOption("--container-images");
             var priorityClass   = commandLine.HasOption("--priority-class");
-            var listAll         = commandLine.HasOption("--list");
+            var resources       = commandLine.HasOption("--resources");
+            var details         = commandLine.HasOption("--details");
 
-            if (all || (!containerImages && !priorityClass))
+            if (all || (!containerImages && !priorityClass && !resources))
             {
                 containerImages = true;
                 priorityClass   = true;
+                resources       = true;
             }
 
             // Perform the requested checks.
@@ -141,19 +146,25 @@ This command returns a non-zero exit code when one or more checks fail.
             var k8s    = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
             var error = false;
 
-            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, listAll: listAll))
+            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, details: details))
             {
                 error = true;
             }
 
-            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(clusterLogin, k8s, listAll: listAll))
+            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(clusterLogin, k8s, details: details))
+            {
+                error = true;
+            }
+
+            if (resources && !await ClusterChecker.CheckResourcesAsync(clusterLogin, k8s, details: details))
             {
                 error = true;
             }
 
             if (error)
             {
-                Console.Error.Write("*** ERROR: Cluster check failed with one or more errors.");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("*** ERROR: Cluster check failed with one or more errors.");
                 Program.Exit(1);
             }
 

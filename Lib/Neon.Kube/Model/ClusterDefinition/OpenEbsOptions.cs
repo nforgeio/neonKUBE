@@ -80,8 +80,9 @@ namespace Neon.Kube
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
 
             // Clusters require that at least one node has [OpenEbsStorage=true].  We'll set
-            // this automatically when the user hasn't already done this.  All workers will be
-            // set to true when there are workers, otherwise we'll set this to true for all masters.
+            // this automatically when the user hasn't already done this.  All workers will have
+            // this set to true when there are workers, otherwise we'll set this to true for all
+            // masters.
 
             if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
             {
@@ -111,7 +112,7 @@ namespace Neon.Kube
                     }
                     else if (clusterDefinition.Nodes.Count(n => n.OpenEbsStorage) > 0)
                     {
-                        Engine = OpenEbsEngine.cStor;
+                        Engine = OpenEbsEngine.Jiva;
                     }
                     break;
 

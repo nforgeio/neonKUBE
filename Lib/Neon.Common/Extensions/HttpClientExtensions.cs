@@ -234,7 +234,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -271,7 +271,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             return await response.Content.ReadAsStreamAsync();
         }

@@ -30,6 +30,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
@@ -92,7 +93,8 @@ namespace Neon.Kube
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
-        private static string               cacheDashboardStateFolder;
+        private static string               cachedDashboardStateFolder;
+        private static string               cachedDesktopDataFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -127,26 +129,27 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig              = null;
-            cachedContext             = null;
-            cachedKubeConfigPath      = null;
-            cachedNeonKubeUserFolder  = null;
-            cachedRunFolder           = null;
-            cachedLogFolder           = null;
-            cachedTempFolder          = null;
-            cachedLoginsFolder        = null;
-            cachedPasswordsFolder     = null;
-            cachedCacheFolder         = null;
-            cachedDesktopFolder       = null;
-            cachedDesktopHypervFolder = null;
-            cachedClientConfig        = null;
-            cachedClusterCertificate  = null;
-            cachedInstallFolder       = null;
-            cachedToolsFolder         = null;
-            cachedPwshPath            = null;
-            cachedResources           = null;
-            cachedNodeImageFolder     = null;
-            cacheDashboardStateFolder = null;
+            cachedConfig               = null;
+            cachedContext              = null;
+            cachedKubeConfigPath       = null;
+            cachedNeonKubeUserFolder   = null;
+            cachedRunFolder            = null;
+            cachedLogFolder            = null;
+            cachedTempFolder           = null;
+            cachedLoginsFolder         = null;
+            cachedPasswordsFolder      = null;
+            cachedCacheFolder          = null;
+            cachedDesktopFolder        = null;
+            cachedDesktopHypervFolder  = null;
+            cachedClientConfig         = null;
+            cachedClusterCertificate   = null;
+            cachedInstallFolder        = null;
+            cachedToolsFolder          = null;
+            cachedPwshPath             = null;
+            cachedResources            = null;
+            cachedNodeImageFolder      = null;
+            cachedDashboardStateFolder = null;
+            cachedDesktopDataFolder    = null;
         }
 
         /// <summary>
@@ -458,6 +461,17 @@ namespace Neon.Kube
             return hostingEnvironment == HostingEnvironment.HyperV ||
                    hostingEnvironment == HostingEnvironment.XenServer;
         }
+
+        /// <summary>k
+        /// <para>
+        /// Returns the path to the Windows Desktop Service Unix domain socket.
+        /// </para>
+        /// <note>
+        /// The Neon Windows Desktop Service runs in the background for all users so
+        /// the socket will be located within the Windows program data folder.
+        /// </note>
+        /// </summary>
+        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopDataFolder, "desktop-service.sock");
 
         /// <summary>
         /// Returns the current <see cref="KubeAutomationMode"/>.
@@ -886,6 +900,63 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
+        /// Returns the path to the global neonDESKTOP program data folder.  This is used for information
+        /// to be shared across all users as well as between the user programs and the Neon Desktop Service.
+        /// </para>
+        /// <note>
+        /// All users will have read/write access to files in this folder.
+        /// </note>
+        /// </summary>
+        public static string DesktopDataFolder
+        {
+            get
+            {
+                if (cachedDesktopDataFolder != null)
+                {
+                    return cachedDesktopDataFolder;
+                }
+
+                cachedDesktopDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
+
+                if (OperatingSystem.IsWindowsVersionAtLeast(10))
+                {
+                    if (!Directory.Exists(cachedDesktopDataFolder))
+                    {
+                        Directory.CreateDirectory(cachedDesktopDataFolder);
+
+                        // Grant all users access to this folder.  The simple approach would be to allow "Users"
+                        // but apparently that only works for English Windows installations.  We'll need to look up
+                        // the everyone account and use its actual name.
+                        //
+                        // We also need to remove any inherited ACLs first so this is a bit more complex than you'd
+                        // think.  This includes some hints about how this works:
+                        //
+                        //      https://stackoverflow.com/questions/51277338/remove-users-group-permission-for-folder-inside-programdata
+
+                        var builtUnsersSid    = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+                        var directoryInfo     = new DirectoryInfo(cachedDesktopDataFolder);
+                        var directorySecurity = directoryInfo.GetAccessControl();
+
+                        // Disable inherited ACLs.
+
+                        directorySecurity.SetAccessRuleProtection(false, false);
+                        directoryInfo.SetAccessControl(directorySecurity);
+
+                        // Fetch the updated ACLs and add the new ACL.
+
+                        directorySecurity = directoryInfo.GetAccessControl();
+
+                        directorySecurity.AddAccessRule(new FileSystemAccessRule(builtUnsersSid, FileSystemRights.FullControl, AccessControlType.Allow));
+                        directoryInfo.SetAccessControl(directorySecurity);
+                    }
+                }
+
+                return cachedDesktopDataFolder;
+            }
+        }
+
+        /// <summary>
         /// Returns the path to the cached file for a specific named component with optional version.
         /// </summary>
         /// <param name="platform">Identifies the platform.</param>
@@ -991,16 +1062,16 @@ namespace Neon.Kube
         {
             get
             {
-                if (cacheDashboardStateFolder != null)
+                if (cachedDashboardStateFolder != null)
                 {
-                    return cacheDashboardStateFolder;
+                    return cachedDashboardStateFolder;
                 }
 
-                cacheDashboardStateFolder = Path.Combine(NeonKubeUserFolder, "dashboards");
+                cachedDashboardStateFolder = Path.Combine(NeonKubeUserFolder, "dashboards");
 
-                Directory.CreateDirectory(cacheDashboardStateFolder);
+                Directory.CreateDirectory(cachedDashboardStateFolder);
 
-                return cacheDashboardStateFolder;
+                return cachedDashboardStateFolder;
             }
         }
 
@@ -1009,7 +1080,7 @@ namespace Neon.Kube
         /// </summary>
         public static void ClearDashboardStateFolder()
         {
-            NeonHelper.DeleteFolderContents(cacheDashboardStateFolder);
+            NeonHelper.DeleteFolderContents(cachedDashboardStateFolder);
         }
 
         /// <summary>
@@ -1477,7 +1548,7 @@ namespace Neon.Kube
 
                         if (pStart == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         pStart += pattern.Length;
@@ -1486,14 +1557,14 @@ namespace Neon.Kube
 
                         if (pEnd == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
 
                         if (!Version.TryParse(currentVersionString, out var currentVersion))
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         if (Version.Parse(KubeVersions.Kubernetes) > currentVersion)
@@ -1560,7 +1631,7 @@ namespace Neon.Kube
 
                         if (pStart == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         pStart += pattern.Length;
@@ -1569,14 +1640,14 @@ namespace Neon.Kube
 
                         if (pEnd == -1)
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
 
                         var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
 
                         if (!Version.TryParse(currentVersionString, out var currentVersion))
                         {
-                            throw new KubeException(error);
+                            throw new NeonKubeException(error);
                         }
                     }
                     break;
@@ -2124,7 +2195,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
                 var publicPUB = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
@@ -2143,7 +2214,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
                 }
 
                 var publicOpenSSH = result.OutputText;
@@ -2160,7 +2231,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
                 }
 
                 var publicSSH2 = result.OutputText;
@@ -2199,7 +2270,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
                 }
 
                 var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
@@ -2217,7 +2288,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
                 var fingerprintMd5 = result.OutputText.Trim();
@@ -2235,7 +2306,7 @@ exit 0
 
                 if (result.ExitCode != 0)
                 {
-                    throw new KubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
+                    throw new NeonKubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
                 var fingerprintSha2565 = result.OutputText.Trim();
@@ -2420,63 +2491,6 @@ TCPKeepAlive yes
 ";
 
         /// <summary>
-        /// Verifies that the current user has administrator privileges.
-        /// </summary>
-        /// <param name="message">Optional message.</param>
-        /// <exception cref="SecurityException">Thrown when the user does not have administrator privileges.</exception>
-        public static void VerifyAdminPrivileges(string message = null)
-        {
-            if (NeonHelper.IsWindows)
-            {
-#pragma warning disable CA1416
-                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    throw new SecurityException(message ?? "Admin privileges are required.");
-                }
-#pragma warning restore CA1416
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                throw new NotImplementedException();
-            }
-            else if (NeonHelper.IsLinux)
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// Ensures that the current process has enhanced admin privileges.
-        /// </summary>
-        /// <exception cref="KubeException">Thrown when enhanced privileges are not available.</exception>
-        public static void EnsureAdminPrivileges()
-        {
-            if (NeonHelper.IsWindows)
-            {
-#pragma warning disable CA1416
-                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    throw new KubeException("Enhanced admin privileges are required but are not assigned.");
-                }
-#pragma warning restore CA1416
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                // $todo(jefflill): Implement this?
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
         /// Downloads a multi-part node image to a local folder.
         /// </summary>
         /// <param name="imageUri">The node image multi-part download information URI.</param>
@@ -2522,7 +2536,7 @@ TCPKeepAlive yes
 
                 if (!string.Equals(contentType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new KubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadManifestContentType}] is expected.");
+                    throw new NeonKubeException($"[{imageUri}] has unsupported [Content-Type={contentType}].  [{DeploymentHelper.DownloadManifestContentType}] is expected.");
                 }
 
                 var jsonText = await response.Content.ReadAsStringAsync();
@@ -2645,7 +2659,7 @@ TCPKeepAlive yes
 
             using (var httpClient = new HttpClient())
             {
-                var response = httpClient.GetSafeAsync(toolUri).Result;
+                var response = httpClient.GetSafeAsync(toolUri, completionOption: HttpCompletionOption.ResponseHeadersRead).Result;
 
                 using (var download = response.Content.ReadAsStreamAsync().Result)
                 {

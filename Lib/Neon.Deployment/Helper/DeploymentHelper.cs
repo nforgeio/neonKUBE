@@ -269,7 +269,7 @@ namespace Neon.Deployment
                                 {
                                     output.Position = pos;
 
-                                    var response = await httpClient.GetAsync(part.Uri, cancellationToken);
+                                    var response = await httpClient.GetAsync(part.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                                     response.EnsureSuccessStatusCode();
 

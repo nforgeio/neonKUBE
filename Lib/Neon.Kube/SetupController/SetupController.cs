@@ -83,20 +83,21 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private object                              syncLock    = new object();
-        private List<IDisposable>                   disposables = new List<IDisposable>();
-        private ISetupController                    parent      = null;
-        private bool                                isRunning   = false;
-        private int                                 maxStackSize;
-        private string                              globalStatus;
-        private List<NodeSshProxy<NodeMetadata>>    nodes;
-        private List<INodeSshProxy>                 hosts;
-        private List<Step>                          steps;
-        private Step                                currentStep;
-        private bool                                isFaulted;
-        private bool                                cancelPending;
-        private string                              clusterLogPath;
-        private TextWriter                          clusterLogWriter;
+        private object                                  syncLock      = new object();
+        private List<IDisposable>                       disposables   = new List<IDisposable>();
+        private ISetupController                        parent        = null;
+        private bool                                    isRunning     = false;
+        private Dictionary<string, SetupPendingTasks>   pendingGroups = new Dictionary<string, SetupPendingTasks>(StringComparer.InvariantCultureIgnoreCase);
+        private int                                     maxStackSize;
+        private string                                  globalStatus;
+        private List<NodeSshProxy<NodeMetadata>>        nodes;
+        private List<INodeSshProxy>                     hosts;
+        private List<Step>                              steps;
+        private Step                                    currentStep;
+        private bool                                    isFaulted;
+        private bool                                    cancelPending;
+        private string                                  clusterLogPath;
+        private TextWriter                              clusterLogWriter;
 
         /// <summary>
         /// Constructor.
@@ -1042,7 +1043,7 @@ namespace Neon.Kube
         {
             if (isFaulted)
             {
-                throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new NeonKubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
         }
 
@@ -1135,7 +1136,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(ILinuxSshProxy node, string message)
+        public void LogProgress(SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1158,7 +1159,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgress(ILinuxSshProxy node, string verb, string message)
+        public void LogProgress(SSH.ILinuxSshProxy node, string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1209,7 +1210,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void LogProgressError(ILinuxSshProxy node, string message)
+        public void LogProgressError(SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1559,15 +1560,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public IEnumerable<SetupNodeStatus> GetNodeStatus()
-        {
-            return nodes
-                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
-                .Select(node => new SetupNodeStatus(node, node.Metadata))
-                .ToArray();
-        }
-
-        /// <inheritdoc/>
         public IEnumerable<SetupNodeStatus> GetHostStatus()
         {
             var currentStep = this.currentStep;
@@ -1578,6 +1570,97 @@ namespace Neon.Kube
             }
 
             return currentStep.SubController.GetNodeStatus();
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupNodeStatus> GetNodeStatus()
+        {
+            return nodes
+                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(node => new SetupNodeStatus(node, node.Metadata))
+                .ToArray();
+        }
+
+        /// <inheritdoc/>
+        public bool DisablePendingTasks { get; set; } = false;
+
+        /// <inheritdoc/>
+        public async Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(groupName), nameof(groupName));
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            if (DisablePendingTasks)
+            {
+                lock (syncLock)
+                {
+                    if (!pendingGroups.TryGetValue(groupName, out var group))
+                    {
+                        pendingGroups.Add(groupName, new SetupPendingTasks());
+                    }
+
+                    if (node != null)
+                    {
+                        LogProgress(node, verb: verb, message: message);
+                    }
+                    else
+                    {
+                        LogProgress(verb: verb, message: message);
+                    }
+                }
+
+                await task;
+
+                if (node != null)
+                {
+                    LogProgress(node, verb: string.Empty, message: string.Empty);
+                }
+                else
+                {
+                    LogProgress(verb: string.Empty, message: string.Empty);
+                }
+            }
+            else
+            {
+                lock (syncLock)
+                {
+                    if (!pendingGroups.TryGetValue(groupName, out var group))
+                    {
+                        group = new SetupPendingTasks();
+
+                        pendingGroups.Add(groupName, group);
+                    }
+
+                    group.Add(task, verb, message, node);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task WaitForPendingTasksAsync(string groupName)
+        {
+            SetupPendingTasks group;
+
+            lock (syncLock)
+            {
+                group = pendingGroups[groupName];
+            }
+
+            await group.WaitAsync(this);
+        }
+
+        /// <inheritdoc/>
+        public List<string> GetPendingGroups()
+        {
+            lock (syncLock)
+            {
+                return pendingGroups
+                    .Where(item => !item.Value.IsComplete)
+                    .Select(item => item.Key)
+                    .ToList();
+            }
         }
     }
 }

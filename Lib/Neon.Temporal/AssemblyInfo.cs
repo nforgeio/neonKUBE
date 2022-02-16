@@ -21,4 +21,3 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Neon.Xunit.Temporal")]
 [assembly: InternalsVisibleTo("Test.Neon.Temporal")]
-[assembly: InternalsVisibleTo("Test.Neon.Temporal.net")]

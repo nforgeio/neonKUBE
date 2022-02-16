@@ -138,7 +138,7 @@ namespace Neon.Kube
         /// enabled for non-console applications.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
-        /// <exception cref="KubeException">Thrown when there's a problem.</exception>
+        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
             int                 maxParallel          = 500,
@@ -169,7 +169,7 @@ namespace Neon.Kube
 
             if (!File.Exists(prepareOkPath))
             {
-                throw new KubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
+                throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
             }
 
             // Do some quick checks to ensure that component versions look reasonable.
@@ -179,7 +179,7 @@ namespace Neon.Kube
 
             if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
             {
-                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+                throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
             }
 
             // Initialize the cluster proxy.

@@ -29,7 +29,7 @@ using Neon.Common;
 namespace Neon.HyperV
 {
     /// <summary>
-    /// Describes the state of a Hyper-V based virtual machine.
+    /// Describes the state of a Hyper-V virtual machine.
     /// </summary>
     public class VirtualMachine
     {
@@ -44,12 +44,12 @@ namespace Neon.HyperV
         public VirtualMachineState State { get; set; }
 
         /// <summary>
-        /// Identifies the virtual switch to which this virtual machine is attached. 
+        /// Identifies the virtual switch to which this virtual machine is attached (or null).
         /// </summary>
         public string SwitchName { get; set; }
 
         /// <summary>
-        /// Identifies the network interface or switch to which the address is assigned.
+        /// Identifies the network interface or switch to which the address is assigned (or null).
         /// </summary>
         public string InterfaceName { get; set; }
     }
