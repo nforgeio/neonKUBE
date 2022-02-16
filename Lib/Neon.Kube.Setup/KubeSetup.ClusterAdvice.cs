@@ -509,7 +509,10 @@ namespace Neon.Kube
 
             if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() >= 3)
             {
-                advice.ReplicaCount = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() / 4));
+                advice.ReplicaCount     = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() / 4));
+                advice.PodMemoryLimit   = ByteUnits.Parse("4Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("4Gi");
+                advice.MetricsInterval  = "1m";
             }
             else
             {
@@ -520,12 +523,6 @@ namespace Neon.Kube
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
-                advice.MetricsInterval  = "1m";
-            }
-            else
-            {
-                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
                 advice.MetricsInterval  = "1m";
             }
 
