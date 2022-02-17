@@ -4453,6 +4453,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.ThrowIfCancelled();
+
                     await k8s.NamespacedPodExecAsync(
                         KubeNamespaces.NeonSystem,
                         minioPod.Name(),
@@ -4462,21 +4463,26 @@ $@"- name: StorageType
                             "-c",
                             $"/mc mb minio/{name}"
                         });
+                });
 
-                    if (!string.IsNullOrEmpty(quota))
-                    {
-                        controller.ThrowIfCancelled();
-                        await k8s.NamespacedPodExecAsync(
-                            KubeNamespaces.NeonSystem,
-                            minioPod.Name(),
-                            "minio-operator",
-                            new string[] {
+            if (!string.IsNullOrEmpty(quota))
+            {
+                await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
+                async () =>
+                {
+                    controller.ThrowIfCancelled();
+
+                    await k8s.NamespacedPodExecAsync(
+                        KubeNamespaces.NeonSystem,
+                        minioPod.Name(),
+                        "minio-operator",
+                        new string[] {
                             "/bin/bash",
                             "-c",
-                            $"/mc admin bucket quota minio/{name} --fifo {quota}"
-                        });
-                    }
+                            $"/mc admin bucket quota minio/{name} --hard {quota}"
+                    });
                 });
+            }
         }
 
         /// <summary>
