@@ -20,9 +20,9 @@
 		<SelfContained>true</SelfContained>
 
 		<!-- 
-    We need to prevent the KubeOps build targets from trying to call the program
-    entrypoint to generate the CRDs and other installation related files.
-    -->
+        We need to prevent the KubeOps build targets from trying to call the program
+        entrypoint to generate the CRDs and other installation related files.
+        -->
 
 		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
 		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>

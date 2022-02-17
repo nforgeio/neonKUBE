@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.CSharp</RootNamespace>
-		<Version>2.18.2</Version>
+		<Version>10000.0.1650-dev-jeff</Version>
 		<Company>neonFORGE LLC</Company>
 		<Authors>neonFORGE Team</Authors>
 		<Description>C# dynamic compilation support utilities.</Description>

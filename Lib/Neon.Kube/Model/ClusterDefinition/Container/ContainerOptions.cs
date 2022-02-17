@@ -161,7 +161,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            SearchRegistries = SearchRegistries ?? new List<string>();
+            SearchRegistries = SearchRegistries ?? new List<string>() { "docker.io" };
             Registries       = Registries ?? new List<Registry>();
 
             // Ensure that [SearchRegistries] references are formatted correctly.

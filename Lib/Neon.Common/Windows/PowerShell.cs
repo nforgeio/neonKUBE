@@ -47,7 +47,8 @@ namespace Neon.Windows
         //---------------------------------------------------------------------
         // Static members
 
-        private const int PowershellBufferWidth = 16192;
+        private const int               PowershellBufferWidth = 16192;
+        private static readonly Regex   ttyColorRegex         = new Regex(@"\u001b\[.*?m", RegexOptions.ExplicitCapture);     // Matches TTY color commands
 
         /// <summary>
         /// Optional path to the Powershell Core <b>pwsh</b> executable.  The <b>PATH</b>
@@ -193,7 +194,14 @@ catch [Exception] {{
                     throw new PowerShellException(result.AllText);
                 }
 
-                return result.AllText;
+                // Powershell includes TTY color commands in its output and we need
+                // to strip these out of the the result:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1259
+
+                var match = ttyColorRegex.Match(result.AllText);
+
+                return ttyColorRegex.Replace(result.AllText, string.Empty);
             }
         }
 
