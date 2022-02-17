@@ -43,7 +43,6 @@ Pop-Location | Out-Null
 if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
 {
   Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
-  Load-Assembly "$env:NEON_ASSISTANT_HOME\Newtonsoft.Json.dll"
   Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
   Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 }
