@@ -2483,7 +2483,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/monitoring-etcd",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "etcd");
+                    controller.LogProgress(master, verb: "setup", message: "etcd (monitoring)");
 
                     await CreateHostPathStorageClass(controller, master, "neon-internal-etcd");
 
@@ -2513,7 +2513,7 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "etc (monitoring)");
+                    controller.LogProgress(master, verb: "wait for", message: "etcd (monitoring)");
 
                     await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "neon-etcd", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
