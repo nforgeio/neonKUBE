@@ -1340,6 +1340,12 @@ namespace Neon.Kube
             return unpartitonedDisks.Single();
         }
 
+        /// <inheritdoc/>
+        public override List<HostingResourceAvailability> GetResourceAvailability()
+        {
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
         /// <summary>
         /// <para>
         /// Establishes the necessary client connection to AWS and validates the credentials,

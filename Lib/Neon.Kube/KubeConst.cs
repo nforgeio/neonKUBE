@@ -85,58 +85,6 @@ namespace Neon.Kube
         /// </summary>
         public const string RootUser = "root";
 
-        //---------------------------------------------------------------------
-        // The following constants define the default network endpoints exposed
-        // by the neonDESKTOP application.  These can be customized by
-        // editing the [KubeClientConfig] file persisted on the client
-        // workstation.  I tried to select ports that would be unlikely
-        // to conflict with important registrations:
-        //
-        //      https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
-
-        /// <summary>
-        /// The default local network port for the neonDESKTOP API
-        /// used by the <b>neon-cli</b> tool for communicating with
-        /// the neonDESKTOP.
-        /// </summary>
-        public const int DesktopServicePort = 1058;
-
-        /// <summary>
-        /// The default local network port where <b>kubectl proxy</b> will 
-        /// listen and forward traffic to the Kubernetes API server.
-        /// </summary>
-        public const int KubectlProxyPort = 1059;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kubernetes dashboard for the current cluster.
-        /// </summary>
-        public const int KubeDashboardProxyPort = 1060;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kibana dashboard for the current cluster.
-        /// </summary>
-        public const int KibanaDashboardProxyPort = 5601;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Prometheus dashboard for the current cluster.
-        /// </summary>
-        public const int PrometheusDashboardProxyPort = 9090;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kiali dashboard for the current cluster.
-        /// </summary>
-        public const int KialiDashboardProxyPort = 20001;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Grafana dashboard for the current cluster.
-        /// </summary>
-        public const int GrafanaDashboardProxyPort = 3000;
-
         /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
@@ -417,6 +365,11 @@ namespace Neon.Kube
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
         public const string HyperVInternalSwitchName = "neonkube";
+
+        /// <summary>
+        /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
+        /// </summary>
+        public const string NeonDesktopContextName = $"{RootUser}@neon-desktop";
 
         /// <summary>
         /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.

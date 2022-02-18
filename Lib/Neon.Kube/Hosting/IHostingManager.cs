@@ -199,6 +199,12 @@ namespace Neon.Kube
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
+        /// <summary>
+        /// Returns availability information for resources required to deploy a cluster.
+        /// </summary>
+        /// <returns></returns>
+        List<HostingResourceAvailability> GetResourceAvailability();
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods
 

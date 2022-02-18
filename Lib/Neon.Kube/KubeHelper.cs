@@ -1298,6 +1298,11 @@ namespace Neon.Kube
         public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
 
         /// <summary>
+        /// Returns <c>true</c> if the current cluster is the neon-desktop built-in cluster.
+        /// </summary>
+        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKubeContext && CurrentContext.Name == KubeConst.NeonDesktopContextName;
+
+        /// <summary>
         /// Returns the Kuberneties API service certificate for the current
         /// cluster context or <c>null</c> if we're not connected to a cluster.
         /// </summary>

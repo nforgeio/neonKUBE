@@ -140,6 +140,9 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public abstract string GetDataDisk(LinuxSshProxy node);
 
+        /// <inheritdoc/>
+        public abstract List<HostingResourceAvailability> GetResourceAvailability();
+
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the
         /// node address assignments and/or to automatically assign these addresses.
