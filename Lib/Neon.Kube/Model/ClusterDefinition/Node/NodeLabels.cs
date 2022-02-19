@@ -450,6 +450,34 @@ namespace Neon.Kube
         [DefaultValue(false)]
         public bool NeonSystemRegistry { get; set; } = false;
 
+        /// <summary>
+        /// <b>neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates the user has specified
+        /// that Minio should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Minio", Required = Required.Default)]
+        [YamlMember(Alias = "minio", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Minio { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates that Minio
+        /// will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MinioInternal", Required = Required.Default)]
+        [YamlMember(Alias = "minioInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool MinioInternal { get; set; } = false;
+
+        /// <summary>
+        /// Reserved label name for <see cref="Minio"/>.
+        /// </summary>
+        public const string LabelMinio = ClusterDefinition.ReservedLabelPrefix + "system.minio";
+
+        /// <summary>
+        /// Reserved label name for <see cref="MinioInternal"/>.
+        /// </summary>
+        public const string LabelMinioInternal = ClusterDefinition.ReservedLabelPrefix + "system.minio-internal";
+
         //---------------------------------------------------------------------
         // Define the logging related labels.
 
@@ -587,6 +615,9 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
                 list.Add(new KeyValuePair<string, object>(LabelMetricsInternal,             NeonHelper.ToBoolString(MetricsInternal)));
+
+                list.Add(new KeyValuePair<string, object>(LabelMinio,                       NeonHelper.ToBoolString(Minio)));
+                list.Add(new KeyValuePair<string, object>(LabelMinioInternal,               NeonHelper.ToBoolString(MinioInternal)));
 
                 return list;
             }
