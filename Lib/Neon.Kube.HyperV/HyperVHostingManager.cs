@@ -378,6 +378,12 @@ namespace Neon.Kube
             return "PRIMARY";
         }
 
+        /// <inheritdoc/>
+        public override List<HostingResourceAvailability> GetResourceAvailability()
+        {
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
         /// </summary>

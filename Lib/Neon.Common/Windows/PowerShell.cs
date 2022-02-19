@@ -181,7 +181,15 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
+                var result  = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
+                var allText = result.AllText;
+
+                // Powershell includes TTY color commands in its output and we need
+                // to strip these out of the the result:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1259
+
+                allText = ttyColorRegex.Replace(allText, string.Empty);
 
                 // $hack(jefflill):
                 //
@@ -191,7 +199,7 @@ catch [Exception] {{
 
                 if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
-                    throw new PowerShellException(result.AllText);
+                    throw new PowerShellException(allText);
                 }
 
                 // Powershell includes TTY color commands in its output and we need
@@ -199,9 +207,7 @@ catch [Exception] {{
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/1259
 
-                var match = ttyColorRegex.Match(result.AllText);
-
-                return ttyColorRegex.Replace(result.AllText, string.Empty);
+                return allText;
             }
         }
 

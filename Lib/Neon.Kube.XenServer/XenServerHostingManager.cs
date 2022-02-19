@@ -635,5 +635,11 @@ namespace Neon.Kube
 
             return "PRIMARY";
         }
+
+        /// <inheritdoc/>
+        public override List<HostingResourceAvailability> GetResourceAvailability()
+        {
+            throw new NotImplementedException("$todo(jefflill)");
+        }
     }
 }
