@@ -98,7 +98,7 @@ tenants:
         ## indicated key-value pairs as labels.
         ## Read more here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
         nodeSelector:
-          neonkube.io/monitor.metrics-internal: 'true'
+          neonkube.io/system.minio-internal: 'true'
         ## Affinity settings for MinIO pods. Read more about affinity
         ## here: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity.
         affinity:
