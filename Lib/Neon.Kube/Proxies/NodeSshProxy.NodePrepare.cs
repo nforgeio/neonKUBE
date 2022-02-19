@@ -560,7 +560,7 @@ cat <<EOF > /etc/sysctl.conf
 # entire system.  This looks like it defaults to [1048576] for
 # Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
-fs.file-max = 1048576
+fs.file-max = 4194303
 
 # We'll allow processes to open the same number of file handles.
 fs.nr_open = 1048576
@@ -581,15 +581,45 @@ vm.swappiness = 0
 # Allow processes to lock up to 64GB worth of 4K pages into RAM.
 vm.max_map_count = 16777216
 
-# Set the network packet receive queue.
-net.core.netdev_max_backlog = 2000
+# prioritize application RAM against disk/swap cache
+vm.vfs_cache_pressure = 50
+
+# minimum free memory
+vm.min_free_kbytes = 1000000
+
+# increase the maximum length of processor input queues
+net.core.netdev_max_backlog = 250000
+
+# increase the TCP maximum and default buffer sizes using setsockopt()
+net.core.rmem_max = 4194304
+net.core.wmem_max = 4194304
+net.core.rmem_default = 4194304
+net.core.wmem_default = 4194304
+net.core.optmem_max = 4194304
+
+# maximum number of incoming connections
+net.core.somaxconn = 65535
 
 # Specify the range of TCP ports that can be used by client sockets.
 net.ipv4.ip_local_port_range = 9000 65535
 
-# Set the pending TCP connection backlog.
-net.core.somaxconn = 25000
-net.ipv4.tcp_max_syn_backlog = 25000
+# queue length of completely established sockets waiting for accept
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# disable the TCP timestamps option for better CPU utilization
+net.ipv4.tcp_timestamps = 0
+
+# MTU discovery, only enable when ICMP blackhole detected
+net.ipv4.tcp_mtu_probing = 1
+
+# time to wait (seconds) for FIN packet
+net.ipv4.tcp_fin_timeout = 15
+
+# enable low latency mode for TCP:
+net.ipv4.tcp_low_latency = 1
+
+# enable the TCP selective acks option for better throughput
+net.ipv4.tcp_sack = 1
 
 ###################################################################
 # Set the IPv4 and IPv6 packet TTL to 255 to try to ensure that packets
@@ -1016,7 +1046,7 @@ EOF
 modprobe overlay
 modprobe br_netfilter
 
-sysctl --system
+sysctl --quiet --load /etc/sysctl.conf
 ";          
                 SudoCommand(CommandBundle.FromScript(moduleScript));
             }

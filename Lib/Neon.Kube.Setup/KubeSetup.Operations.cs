@@ -3158,6 +3158,16 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
+
+                            if (serviceAdvice.ReplicaCount == 1)
+                            {
+                                values.Add($"tenants[0].pools[0].volumesPerServer", 4);
+                            }
+                            else
+                            {
+                                values.Add($"tenants[0].pools[0].volumesPerServer", 1);
+                            }
+
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
                             if (serviceAdvice.ReplicaCount > 1)
