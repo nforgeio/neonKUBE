@@ -841,22 +841,51 @@ namespace Neon.HyperV
 
             if (addNat)
             {
-                powershell.Execute($"{NetNatNamespace}New-NetNAT -Name '{switchName}' -InternalIPInterfaceAddressPrefix {subnet}");
+                if (GetNatByName(switchName) == null)
+                {
+                    powershell.Execute($"{NetNatNamespace}New-NetNAT -Name '{switchName}' -InternalIPInterfaceAddressPrefix {subnet}");
+                }
             }
         }
 
         /// <summary>
-        /// Removes a named virtual switch, it it exists.
+        /// Removes a named virtual switch, it it exists as well as any associated NAT (with the same name).
         /// </summary>
         /// <param name="switchName">The target switch name.</param>
-        public void RemoveSwitch(string switchName)
+        /// <param name="ignoreMissing">Optionally ignore missing items.</param>
+        public void RemoveSwitch(string switchName, bool ignoreMissing = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
             CheckDisposed();
 
             if (ListSwitches().Any(@switch => @switch.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
             {
-                powershell.Execute($"{HyperVNamespace}Remove-VMSwitch -Name '{switchName}' -Force");
+                try
+                {
+                    powershell.Execute($"{HyperVNamespace}Remove-VMSwitch -Name '{switchName}' -Force");
+                }
+                catch
+                {
+                    if (!ignoreMissing)
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            if (ListNats().Any(nat => nat.Name.Equals(switchName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                try
+                {
+                    powershell.Execute($"{HyperVNamespace}Remove-NetNat -Name '{switchName}' -Force");
+                }
+                catch
+                {
+                    if (!ignoreMissing)
+                    {
+                        throw;
+                    }
+                }
             }
         }
 

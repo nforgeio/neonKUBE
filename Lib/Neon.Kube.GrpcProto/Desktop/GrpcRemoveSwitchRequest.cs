@@ -46,9 +46,11 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="switchName">Specifies the switch name.</param>
-        public GrpcRemoveSwitchRequest(string switchName)
+        /// <param name="ignoreMissing">Optionally specifies that missing items should be ignored.</param>
+        public GrpcRemoveSwitchRequest(string switchName, bool ignoreMissing = false)
         {
-            this.SwitchName = switchName;
+            this.SwitchName    = switchName;
+            this.IgnoreMissing = ignoreMissing;
         }
 
         /// <summary>
@@ -56,5 +58,10 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         [DataMember(Order = 1)]
         public string? SwitchName { get; set; }
+
+        /// <summary>
+        /// Indicates that missing items should be ignored.
+        /// </summary>
+        public bool? IgnoreMissing { get; set; }
     }
 }

@@ -368,7 +368,7 @@ namespace Neon.Kube.DesktopServer
 
             try
             {
-                hyperv.RemoveSwitch(switchName: request.SwitchName);
+                hyperv.RemoveSwitch(switchName: request.SwitchName, ignoreMissing: request.IgnoreMissing ?? false);
 
                 return new GrpcBaseReply();
             }
