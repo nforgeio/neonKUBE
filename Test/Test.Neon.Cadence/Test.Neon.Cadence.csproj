@@ -10,6 +10,7 @@
 		<Configurations>Debug;Release;CodeDoc</Configurations>
 		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -204,7 +204,7 @@ namespace Neon.Kube
             // or neonKUBE.
 
             var nodeSubnetInfo = clusterDefinition.NodeSubnet;
-            var nodeSubnet = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
+            var nodeSubnet     = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
 
             if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - nodeSubnetInfo.ReservedAddresses)
             {
@@ -289,6 +289,14 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Cluster life cycle methods
+
+        /// <summary>
+        /// The default timeout for <see cref="GetStatusAsync(TimeSpan)"/> implementations.
+        /// </summary>
+        protected readonly TimeSpan DefaultStatusTimeout = TimeSpan.FromSeconds(15);
+
+        /// <inheritdoc/>
+        public abstract Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default);
 
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync(bool noWait = false)

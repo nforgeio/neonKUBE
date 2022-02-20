@@ -8,6 +8,7 @@
 		<RootNamespace>TestWSL</RootNamespace>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

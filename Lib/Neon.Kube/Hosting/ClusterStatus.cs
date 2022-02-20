@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StopMode.cs
+// FILE:	    ClusterStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,34 +20,48 @@ using System;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used to control how cluster nodes are shutdown.
+    /// Enumerates the possible states for a cluster.
     /// </summary>
-    public enum StopMode
+    public enum ClusterStatus
     {
         /// <summary>
-        /// Performs a graceful shutdown of the nodes such that all services
-        /// have a chance to persist their state before the node stops.
+        /// Status could not be determined. 
         /// </summary>
-        Graceful,
+        Unknown = 0,
 
         /// <summary>
-        /// <para>
-        /// Puts the nodes to sleep when supported by the hosting environment.  This
-        /// quickly persists the node state to disk such that it can be restarted
-        /// relatively quickly where it left off.
-        /// </para>
-        /// <note>
-        /// This is not supported by some hosting environments.  Those environments
-        /// will treat this as <see cref="Graceful"/>.
-        /// </note>
+        /// Cluster not found.
         /// </summary>
-        Sleep,
+        NotFound,
 
         /// <summary>
-        /// Immediately turns the the nodes off without shutting them down gracefully.
-        /// This is equivalent to pulling the power plug on a physical machine and
-        /// may result in data loss.
+        /// Cluster provisioning is incomplete.
         /// </summary>
-        TurnOff
+        Provisoning,
+
+        /// <summary>
+        /// Cluster has been provisioned but not configured.
+        /// </summary>
+        Provisioned,
+
+        /// <summary>
+        /// Cluster configuration is incomplete.
+        /// </summary>
+        Configuring,
+
+        /// <summary>
+        /// Cluster is configured.
+        /// </summary>
+        Configured,
+
+        /// <summary>
+        /// Cluster is configured but not healthy.
+        /// </summary>
+        Unhealthy,
+
+        /// <summary>
+        /// Cluster is configured and healthy.
+        /// </summary>
+        Healthy
     }
 }

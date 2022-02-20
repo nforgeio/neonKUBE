@@ -641,5 +641,19 @@ namespace Neon.Kube
         {
             throw new NotImplementedException("$todo(jefflill)");
         }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default)
+        {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
+            throw new NotImplementedException("$todo(jefflill)");
+        }
     }
 }

@@ -209,6 +209,13 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <summary>
+        /// Determines the status of a cluster.
+        /// </summary>
+        /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default);
+
+        /// <summary>
         /// <para>
         /// Starts a cluster if it's not already running.
         /// </para>

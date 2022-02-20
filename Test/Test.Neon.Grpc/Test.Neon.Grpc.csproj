@@ -2,7 +2,16 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
+		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 		<IsPackable>false</IsPackable>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>TestDeployment</RootNamespace>
+		<AssemblyName>Test.Neon.Grpc</AssemblyName>
+		<IsPackable>false</IsPackable>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>

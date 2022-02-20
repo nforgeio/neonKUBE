@@ -673,7 +673,18 @@ namespace Neon.Kube
         }
 
         //---------------------------------------------------------------------
-        // Cluster life cycle methods
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default)
+        {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
+            throw new NotImplementedException("$todo(jefflill)");
+        }
 
         /// <inheritdoc/>
         public override async Task StartClusterAsync(bool noWait = false)
