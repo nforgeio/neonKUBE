@@ -29,6 +29,19 @@
 		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
 		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+		<!--- 
+		$todo(jefflill): 
+		
+		We're seeing CS8032 warnings without disabling this.  We started seeing this
+		after we upgraded to VS 2022 v17.1.0 and we see these warning for only a
+		handful of projects.  Hopefully, a future VS release will correct this.
+		
+			https://github.com/nforgeio/neonKUBE/issues/1472
+		-->
+		<NoWarn>CS8032</NoWarn>
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
