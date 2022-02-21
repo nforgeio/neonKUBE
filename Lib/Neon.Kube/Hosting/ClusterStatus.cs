@@ -16,52 +16,34 @@
 // limitations under the License.
 
 using System;
+using System.ComponentModel;
+using System.Runtime.Serialization;
+
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the possible states for a cluster.
+    /// Holds details about a cluster's state.
     /// </summary>
-    public enum ClusterStatus
+    public class ClusterStatus
     {
         /// <summary>
-        /// Status could not be determined. 
+        /// Constructor.
         /// </summary>
-        Unknown = 0,
+        /// <param name="state">The overall state of the cluster.</param>
+        public ClusterStatus(ClusterState state)
+        {
+            this.State = state;
+        }
 
         /// <summary>
-        /// Cluster not found.
+        /// Describes the overall state of a cluster.
         /// </summary>
-        NotFound,
-
-        /// <summary>
-        /// Cluster provisioning is incomplete.
-        /// </summary>
-        Provisoning,
-
-        /// <summary>
-        /// Cluster has been provisioned but not configured.
-        /// </summary>
-        Provisioned,
-
-        /// <summary>
-        /// Cluster configuration is incomplete.
-        /// </summary>
-        Configuring,
-
-        /// <summary>
-        /// Cluster is configured.
-        /// </summary>
-        Configured,
-
-        /// <summary>
-        /// Cluster is configured but not healthy.
-        /// </summary>
-        Unhealthy,
-
-        /// <summary>
-        /// Cluster is configured and healthy.
-        /// </summary>
-        Healthy
+        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "status", ApplyNamingConventions = false)]
+        [DefaultValue(ClusterState.Unknown)]
+        public ClusterState State { get; set; }
     }
 }

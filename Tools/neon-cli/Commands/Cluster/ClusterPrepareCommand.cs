@@ -47,8 +47,11 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Configures cloud platform virtual machines so that they are prepared 
-to host a Kubernetes cluster.
+Provisions local and/or cloud infrastructure required to host a neonKUBE cluster.
+This includes provisioning networks, load balancers, virtual machines, etc.  Once
+the infrastructure is ready, you'll use the [neon cluster setup ...] command to
+actually configure the cluster.
+
 
 USAGE:
 
@@ -227,6 +230,36 @@ Server Requirements:
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
             clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
+
+            // Do a quick sanity check to ensure that the hosting environment has enough
+            // resources (memory and disk) to actually host the cluster.
+
+            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
+            {
+                var status = cluster.HostingManager.CheckResourceAvailability();
+
+                if (!status.CanBeDeployed)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"*** ERROR: Insufficent resources available to deploy cluster.");
+                    Console.Error.WriteLine();
+
+                    foreach (var entity in status.Constraints.Keys
+                        .OrderBy(key => key, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"{entity}:");
+
+                        foreach (var constraint in status.Constraints[entity])
+                        {
+                            Console.Error.WriteLine($"    {constraint.ResourceType.ToString().ToUpperInvariant()}: {constraint.Details}");
+                        }
+                    }
+
+                    Console.Error.WriteLine();
+                    Program.Exit(1);
+                }
+            }
 
             // Use the default node image for the hosting environment unless [--node-image-uri]
             // or [--node-image-path] was specified.

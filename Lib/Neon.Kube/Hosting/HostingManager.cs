@@ -141,7 +141,7 @@ namespace Neon.Kube
         public abstract string GetDataDisk(LinuxSshProxy node);
 
         /// <inheritdoc/>
-        public abstract List<HostingResourceAvailability> GetResourceAvailability();
+        public abstract HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

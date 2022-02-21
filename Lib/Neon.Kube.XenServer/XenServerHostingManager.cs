@@ -637,9 +637,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostingResourceAvailability> GetResourceAvailability()
+        public override HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0)
         {
-            throw new NotImplementedException("$todo(jefflill)");
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+
+            // $todo(jefflill): Really implement this.
+
+            return new HostingResourceStatus() { CanBeDeployed = true };
         }
 
         //---------------------------------------------------------------------

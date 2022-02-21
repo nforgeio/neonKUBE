@@ -70,6 +70,6 @@ namespace Neon.Windows
         /// <param name="lpBuffer">Returns as a <see cref="MEMORYSTATUSEX"/> with the infirmation.</param>
         /// <returns><c>true</c> on success.</returns>
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, EntryPoint = "GlobalMemoryStatusEx", SetLastError = true)]
-        public static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+        public static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
     }
 }

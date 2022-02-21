@@ -199,14 +199,31 @@ namespace Neon.Kube
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
+        //---------------------------------------------------------------------
+        // Cluster life cycle methods
+
         /// <summary>
         /// Returns availability information for resources required to deploy a cluster.
         /// </summary>
-        /// <returns></returns>
-        List<HostingResourceAvailability> GetResourceAvailability();
-
-        //---------------------------------------------------------------------
-        // Cluster life cycle methods
+        /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
+        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <returns>Details about whether cluster deployment can proceed.</returns>
+        /// <remarks>
+        /// <para>
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
+        /// manager implementations are free to ignore this when they don't really makse sense.
+        /// </para>
+        /// <para>
+        /// This is currently used for Hyper-V based clusters running on a user workstation or laptop to ensure
+        /// that deployed clusters don't adverserly impact the host machine too badly.
+        /// </para>
+        /// <para>
+        /// These parameters don't really make sense for cloud or dedicated hypervisor hosting environments because
+        /// those environemnts will still work well when all available resources are consumed.
+        /// </para>
+        /// </remarks>
+        HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <summary>
         /// Determines the status of a cluster.

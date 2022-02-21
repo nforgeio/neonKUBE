@@ -27,6 +27,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,6 +45,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Windows;
 
 namespace Neon.Kube
 {
@@ -381,9 +383,169 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostingResourceAvailability> GetResourceAvailability()
+        public override HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0)
         {
-            throw new NotImplementedException("$todo(jefflill)");
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+
+            var hostMachineName = Environment.MachineName;
+            var allNodeNames    = cluster.Definition.NodeDefinitions.Keys.ToList();
+            var deploymentCheck = new HostingResourceStatus();
+
+            // We're going to allow CPUs to be oversubscribed but not RAM or disk.
+            // Hyper-V does have some limits on the number of virtual machines that
+            // can be deployed but that number is in the 100s, so we're not going
+            // to worry about that.
+            //
+            // We will honor the memory and disk reservations for Hyper-V.
+
+            //-----------------------------------------------------------------
+            // Check disk capacity:
+
+            // Total the disk space required for all of the cluster nodes.
+
+            var requiredDisk = 0L;
+
+            foreach (var node in cluster.Definition.NodeDefinitions.Values)
+            {
+                requiredDisk += node.Vm.GetOsDisk(cluster.Definition);
+
+                if (node.OpenEbsStorage)
+                {
+                    switch (cluster.Definition.OpenEbs.Engine)
+                    {
+                        case OpenEbsEngine.cStor:
+                        case OpenEbsEngine.Mayastor:
+
+                            requiredDisk += node.Vm.GetOpenEbsDisk(cluster.Definition);
+                            break;
+
+                        default:
+
+                            break;  // The other engines don't provision an extra drive.
+                    }
+                }
+            }
+
+            // Determine the free disk space on the drive where the cluster node
+            // VHDX files will be deployed.
+
+            var diskLocation = cluster.Definition.Hosting.Vm.DiskLocation;
+
+            if (string.IsNullOrEmpty(diskLocation))
+            {
+                // $hack(jefflill):
+                //
+                // neon-desktop installs node VHDX within the [%USERPROFILE%\.neonkube\Desktop] directory
+                // by default and this should be on the same drive where Hyper-V deploys disk images by
+                // default as well, so we'll check disk constraints on this drive by default.
+
+                diskLocation = KubeHelper.DesktopFolder;
+            }
+
+            var availableDisk = new DriveInfo(diskLocation).AvailableFreeSpace;
+
+            // Verify that we have enough disk, taking the reservation into account.
+
+            if (availableDisk - reserveDisk < requiredDisk)
+            {
+                if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
+                {
+                    hostContraintList = new List<HostingResourceConstraint>();
+
+                    deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
+                }
+
+                var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true, spaceBeforeUnit: true);
+                var humanReservedDisk  = ByteUnits.Humanize(reserveDisk, powerOfTwo: true, spaceBeforeUnit: true);
+                var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true, spaceBeforeUnit: true);
+
+                hostContraintList.Add(
+                    new HostingResourceConstraint()
+                    {
+                         ResourceType = HostingConstrainedResourceType.Disk,
+                         Nodes        = allNodeNames,
+                         Details      = $"[{humanRequiredDisk}] disk is required but only [{humanAvailableDisk}] is available after reserving [{humanReservedDisk}]."
+                    });
+            }
+
+            //-----------------------------------------------------------------
+            // Check disk capacity:
+
+            // Total the physical memory required for all of the cluster nodes.
+
+            var requiredMemory = 0L;
+
+            foreach (var node in cluster.Definition.NodeDefinitions.Values)
+            {
+                var vmMemory = node.Vm.Memory;
+
+                if (string.IsNullOrEmpty(vmMemory))
+                {
+                    vmMemory = cluster.Definition.Hosting.Vm.Memory;
+                }
+
+                requiredMemory += (long)ByteUnits.Parse(vmMemory);
+            }
+
+            // Determine the free physical memory available on the current machine.
+
+            var memoryStatus = new MEMORYSTATUSEX();
+
+            if (!Win32.GlobalMemoryStatusEx(memoryStatus))
+            {
+                var error = Marshal.GetLastWin32Error();
+
+                if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
+                {
+                    hostContraintList = new List<HostingResourceConstraint>();
+
+                    deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
+                }
+
+                hostContraintList.Add(
+                    new HostingResourceConstraint()
+                    {
+                        ResourceType = HostingConstrainedResourceType.Memory,
+                        Nodes        = allNodeNames,
+                        Details      = "Windows memory details are not available."
+                    });
+            }
+            else
+            {
+                // Verify that we have enough memory, taking the reservation into account.
+
+                var availableMemory = (long)memoryStatus.ullAvailPhys;
+
+                if (availableMemory - reserveMemory < requiredMemory)
+                {
+                    if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
+                    {
+                        hostContraintList = new List<HostingResourceConstraint>();
+
+                        deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
+                    }
+
+                    var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true, spaceBeforeUnit: true);
+                    var humanReservedMemory  = ByteUnits.Humanize(reserveMemory, powerOfTwo: true, spaceBeforeUnit: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true, spaceBeforeUnit: true);
+
+                    hostContraintList.Add(
+                        new HostingResourceConstraint()
+                        {
+                             ResourceType = HostingConstrainedResourceType.Memory,
+                             Nodes        = allNodeNames,
+                             Details      = $"[{humanRequiredMemory}] Physical memory is required but only [{humanAvailableMemory}] is available after reserving [{humanReservedMemory}]."
+                        });
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Deployment can't happen when any constraints have been detected.
+
+            deploymentCheck.CanBeDeployed = deploymentCheck.Constraints.Count == 0;
+
+            return deploymentCheck;
         }
 
         /// <summary>

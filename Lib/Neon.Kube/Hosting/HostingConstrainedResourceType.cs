@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingResourceAvailability.cs
+// FILE:	    HostingConstrainedResourceType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,26 +17,47 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the types of resources required by a <see cref="IHostingManager"/>
+    /// Enumerates the types of <see cref="HostingResourceConstraint"/> instances,
+    /// indicating the type of resource could not be accommodated by a hosting environment
     /// to deploy a cluster.
     /// </summary>
-    public enum HostingResourceType
+    public enum HostingConstrainedResourceType
     {
         /// <summary>
-        /// RAM
+        /// The resource type cannot be determined.
         /// </summary>
+        [EnumMember(Value = "unknown")]
+        Unknown,
+
+        /// <summary>
+        /// Memory/RAM.
+        /// </summary>
+        [EnumMember(Value = "memory")]
         Memory,
 
         /// <summary>
-        /// Disk
+        /// Disk space.
         /// </summary>
+        [EnumMember(Value = "disk")]
         Disk,
+
+        /// <summary>
+        /// CPU cores.
+        /// </summary>
+        [EnumMember(Value = "cpu")]
+        Cpu,
+
+        /// <summary>
+        /// Virtual machine instances.
+        /// </summary>
+        [EnumMember(Value = "virtual-machine")]
+        VirtualMachine
     }
 }
