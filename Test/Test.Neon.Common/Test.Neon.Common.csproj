@@ -10,6 +10,7 @@
 		<Configurations>Debug;Release;CodeDoc</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

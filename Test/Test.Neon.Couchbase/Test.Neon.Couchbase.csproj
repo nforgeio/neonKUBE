@@ -10,6 +10,8 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

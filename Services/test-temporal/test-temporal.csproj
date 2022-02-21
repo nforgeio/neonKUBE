@@ -10,6 +10,7 @@
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
