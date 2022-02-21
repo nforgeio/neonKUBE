@@ -37,7 +37,7 @@ namespace Neon.Common
 {
     /// <summary>
     /// <para>
-    /// Converts a byte count string with optional units into a count.
+    /// Converts a size string with optional units into a count.
     /// </para>
     /// <list type="table">
     /// <item>
@@ -268,7 +268,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Parses a byte count and returns a <c>decimal</c>.
+        /// Parses a size and returns a <c>decimal</c>.
         /// </summary>
         /// <param name="text">The value being parsed.</param>
         /// <returns>The parsed value.</returns>
@@ -284,7 +284,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using byte units.
+        /// Converts a size to a string using byte units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in bytes.</returns>
@@ -313,7 +313,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>KB</b> units.
+        /// Converts a size to a string using <b>KB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in KB.</returns>
@@ -323,7 +323,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>KiB</b> units.
+        /// Converts a size to a string using <b>KiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in KiB.</returns>
@@ -333,7 +333,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>MB</b> units.
+        /// Converts a size to a string using <b>MB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in MB.</returns>
@@ -343,7 +343,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>MiB</b> units.
+        /// Converts a size to a string using <b>MiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in MiB.</returns>
@@ -353,7 +353,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>GB</b> units.
+        /// Converts a size to a string using <b>GB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in GB.</returns>
@@ -363,7 +363,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>GiB</b> units.
+        /// Converts a size to a string using <b>GiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in GiB.</returns>
@@ -373,7 +373,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>TB</b> units.
+        /// Converts a size to a string using <b>TB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in TB.</returns>
@@ -383,7 +383,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>TiB</b> units.
+        /// Converts a size to a string using <b>TiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in TiB.</returns>
@@ -393,7 +393,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>PB</b> units.
+        /// Converts a size to a string using <b>PB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in PB.</returns>
@@ -403,7 +403,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>PiB</b> units.
+        /// Converts a size to a string using <b>PiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in PiB.</returns>
@@ -413,7 +413,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>EB</b> units.
+        /// Converts a size to a string using <b>EB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in EB.</returns>
@@ -423,13 +423,133 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>EiB</b> units.
+        /// Converts a size to a string using <b>EiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Ei.</returns>
+        /// <returns>The size in EiB.</returns>
         public static string ToEiB(decimal size)
         {
             return $"{ToDoubleString(size, ExbiBytes)}EiB";
+        }
+
+        /// <summary>
+        /// Humanizes the size passed into a string using appropriate units.
+        /// This uses power-of-10 based unites by default but you can switch
+        /// to power-of-2 units by passing <paramref name="powerOfTwo"/> as
+        /// <c>true</c>.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <param name="powerOfTwo">Optionally returns a power-of-2 based unit.</param>
+        /// <param name="spaceBeforeUnit">Optionally includes a space between the value and unit.</param>
+        /// <param name="removeByteUnit">
+        /// Optionally strip any trailing "B" from the unit string.  For example when this
+        /// is set, a decimal value of 1000 will return <b>1K</b> instead of <b>1KB</b>.
+        /// </param>
+        /// <returns>The converted string.</returns>
+        public static string Humanize(decimal size, bool powerOfTwo = false, bool spaceBeforeUnit = false, bool removeByteUnit = false)
+        {
+            Covenant.Requires<ArgumentException>(size >= 0, nameof(size));
+
+            if (size == 0)
+            {
+                return "0";
+            }
+
+            string valueString;
+            string unitString;
+
+            if (powerOfTwo)
+            {
+                // Power-of-2:
+
+                if (size >= ExbiBytes)
+                {
+                    valueString = ToDoubleString(size, ExbiBytes);
+                    unitString  = "EiB";
+                }
+                else if (size >= PebiBytes)
+                {
+                    valueString = ToDoubleString(size, PebiBytes);
+                    unitString  = "PiB";
+                }
+                else if (size >= TebiBytes)
+                {
+                    valueString = ToDoubleString(size, TebiBytes);
+                    unitString = "TiB";
+                }
+                else if (size >= GibiBytes)
+                {
+                    valueString = ToDoubleString(size, GibiBytes);
+                    unitString = "GiB";
+                }
+                else if (size >= MebiBytes)
+                {
+                    valueString = ToDoubleString(size, MebiBytes);
+                    unitString  = "MiB";
+                }
+                else if (size >= KibiBytes)
+                {
+                    valueString = ToDoubleString(size, KibiBytes);
+                    unitString  = "KiB";
+                }
+                else
+                {
+                    return ToDoubleString(size, 1);
+                }
+            }
+            else
+            {
+                // Power-of-10:
+
+                if (size >= ExaBytes)
+                {
+                    valueString = ToDoubleString(size, ExaBytes);
+                    unitString  = "EB";
+                }
+                else if (size >= PetaBytes)
+                {
+                    valueString = ToDoubleString(size, PetaBytes);
+                    unitString  = "PB";
+                }
+                else if (size >= TeraBytes)
+                {
+                    valueString = ToDoubleString(size, TeraBytes);
+                    unitString = "TB";
+                }
+                else if (size >= GigaBytes)
+                {
+                    valueString = ToDoubleString(size, GigaBytes);
+                    unitString = "GB";
+                }
+                else if (size >= MegaBytes)
+                {
+                    valueString = ToDoubleString(size, MegaBytes);
+                    unitString  = "MB";
+                }
+                else if (size >= KiloBytes)
+                {
+                    valueString = ToDoubleString(size, KiloBytes);
+                    unitString  = "KB";
+                }
+                else
+                {
+                    return ToDoubleString(size, 1);
+                }
+            }
+
+            if (removeByteUnit && unitString.Last() == 'B')
+            {
+                unitString = unitString.Substring(0, unitString.Length - 1);
+            }
+
+            if (spaceBeforeUnit)
+            {
+                return $"{valueString} {unitString}";
+            }
+            else
+            {
+                return $"{valueString}{unitString}";
+            }
         }
     }
 }
