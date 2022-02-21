@@ -44,7 +44,7 @@ namespace Neon.Windows
         /// <returns><c>true</c> on success.</returns>
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
+        public static extern bool GetPhysicallyInstalledSystemMemory(out ulong TotalMemoryInKilobytes);
 
         /// <summary>
         /// Has Windows encrypt a file or folder at rest.
@@ -63,5 +63,13 @@ namespace Neon.Windows
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool DecryptFile(string path);
+
+        /// <summary>
+        /// Obtains information about memory utilization on the current Windows machine.
+        /// </summary>
+        /// <param name="lpBuffer">Returns as a <see cref="MEMORYSTATUSEX"/> with the infirmation.</param>
+        /// <returns><c>true</c> on success.</returns>
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, EntryPoint = "GlobalMemoryStatusEx", SetLastError = true)]
+        public static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
     }
 }
