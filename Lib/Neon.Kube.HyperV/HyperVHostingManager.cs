@@ -549,35 +549,50 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the name to use for naming the virtual machine hosting the node.
+        /// Returns the name to use for naming the virtual machine that will host the node.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeDefinition node)
         {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
             return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
 
         /// <summary>
-        /// Attempts to extract the cluster node name from a virtual machine name.
+        /// Converts a virtual machine name to the matching node definition.
         /// </summary>
-        /// <param name="machineName">The virtual machine name.</param>
-        /// <returns>
-        /// The extracted node name if the virtual machine belongs to this 
-        /// cluster or else the empty string.
-        /// </returns>
-        private string ExtractNodeName(string machineName)
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The matching node definition, or <c>null</c>.</returns>
+        private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
-            var clusterPrefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
 
-            if (machineName.StartsWith(clusterPrefix))
+            // Special case the built-in neon-desktop cluster.
+
+            if (cluster.Definition.IsDesktopCluster && 
+                vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase) &&
+                cluster.Definition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
             {
-                return machineName.Substring(clusterPrefix.Length);
+                return nodeDefinition;
             }
-            else
+
+            var prefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
             {
-                return string.Empty;
+                return null;
             }
+
+            var nodeName = vmName.Substring(prefix.Length);
+
+            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out nodeDefinition))
+            {
+                return nodeDefinition;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -654,21 +669,25 @@ namespace Neon.Kube
 
                 foreach (var machine in existingMachines)
                 {
-                    var nodeName    = ExtractNodeName(machine.Name);
+                    var nodeDefinition = VmNameToNodeDefinition(machine.Name);
+
+                    if (nodeDefinition == null)
+                    {
+                        continue;
+                    }
+
+                    var nodeName    = nodeDefinition.Name;
                     var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
                     var isClusterVM = cluster.FindNode(nodeName) != null;
 
-                    if (isClusterVM)
+                    // We're going to report errors when one or more cluster VMs already exist.
+
+                    if (conflicts.Length > 0)
                     {
-                        // We're going to report errors when one or more machines already exist.
-
-                        if (conflicts.Length > 0)
-                        {
-                            conflicts += ", ";
-                        }
-
-                        conflicts += nodeName;
+                        conflicts += ", ";
                     }
+
+                    conflicts += nodeName;
                 }
 
                 if (conflictCount == 1)
@@ -838,14 +857,156 @@ namespace Neon.Kube
         // Cluster life-cycle methods
 
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            if (timeout <= TimeSpan.Zero)
+            using (var hyperV = new HyperVProxy())
             {
-                timeout = DefaultStatusTimeout;
-            }
+                if (timeout <= TimeSpan.Zero)
+                {
+                    timeout = DefaultStatusTimeout;
+                }
 
-            throw new NotImplementedException("$todo(jefflill)");
+                // We're going to infer the cluster provisiong status by examining the
+                // cluster login and the state of the VMs deployed in the local Hyper-V.
+
+                var contextName  = $"root@{cluster.Definition.Name}";
+                var context      = KubeHelper.Config.GetContext(contextName);
+                var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)context.Name);
+
+                // Create a hashset with the names of nodes that have existing virtual machines.
+                // Note that the node names will strip off any cluster prefix from the virtual
+                // machine name.
+
+                var existingNodes    = new HashSet<string>();
+                var existingMachines = new Dictionary<string, VirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (var machine in hyperV.ListVms())
+                {
+                    var nodeDefinition = VmNameToNodeDefinition(machine.Name);
+
+                    if (nodeDefinition != null)
+                    {
+                        existingNodes.Add(nodeDefinition.Name);
+                    }
+
+                    existingMachines.Add(machine.Name, machine);
+                }
+
+                // The Kubernetes context for this cluster doesn't exist, so we know that any
+                // virtual machines with names matching the virtual machines that would be
+                // provisioned for the cluster definition are conflicting.
+
+                if (context == null || clusterLogin == null)
+                {
+                    var clusterStatus = new ClusterStatus()
+                    {
+                        State   = ClusterState.NotFound,
+                        Summary = "Cluster does not exist"
+                    };
+
+                    foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                    {
+                        clusterStatus.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                    }
+
+                    return clusterStatus;
+                }
+                else
+                {
+                    var clusterStatus = new ClusterStatus()
+                    {
+                        State   = clusterLogin.SetupDetails.SetupPending ? ClusterState.Configuring : ClusterState.Configured,
+                        Summary = "Cluster is not configured"
+                    };
+
+                    // We're going to assume that all virtual machines that match cluster node names
+                    // (after stripping off any cluster prefix) belong to the cluster.
+
+                    foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                    {
+                        var nodeState = ClusterNodeState.NotProvisioned;
+
+                        if (existingNodes.Contains(node.Name))
+                        {
+                            var vmName  = GetVmName(node);
+
+                            if (existingMachines.TryGetValue(vmName, out var machine))
+                            {
+                                switch (machine.State)
+                                {
+                                    case VirtualMachineState.Unknown:
+
+                                        nodeState = ClusterNodeState.Unknown;
+                                        break;
+
+                                    case VirtualMachineState.Off:
+
+                                        nodeState = ClusterNodeState.Off;
+                                        break;
+
+                                    case VirtualMachineState.Starting:
+
+                                        nodeState = ClusterNodeState.Starting;
+                                        break;
+
+                                    case VirtualMachineState.Running:
+
+                                        nodeState = ClusterNodeState.Running;
+                                        break;
+
+                                    case VirtualMachineState.Paused:
+
+                                        nodeState = ClusterNodeState.Unknown;
+                                        break;
+
+                                    case VirtualMachineState.Saved:
+
+                                        nodeState = ClusterNodeState.Sleeping;
+                                        break;
+
+                                    default:
+
+                                        throw new NotImplementedException();
+                                }
+                            }
+                        }
+
+                        clusterStatus.Nodes.Add(node.Name, nodeState);
+                    }
+
+                    // When it looks like the cluster is configured from Hyper-V's perspective,
+                    // we're going to check from the Kubernetes perspective to determing whether
+                    // the cluster itself appears to be healthy or not.
+
+                    if (clusterStatus.State == ClusterState.Configured)
+                    {
+                        var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
+
+                        switch (kubeClusterStatus.State)
+                        {
+                            case KubeClusterState.Unknown:
+                            case KubeClusterState.Unhealthy:
+
+                                clusterStatus.State   = ClusterState.Unhealthy;
+                                clusterStatus.Summary = "Cluster is unhealthy";
+                                break;
+
+                            case KubeClusterState.Transitioning:
+                            case KubeClusterState.Healthy:
+
+                                clusterStatus.State   = ClusterState.Healthy;
+                                clusterStatus.Summary = "Cluster is healthy";
+                                break;
+
+                            default:
+
+                                throw new NotImplementedException();
+                        }
+                    }
+
+                    return clusterStatus;
+                }
+            }
         }
 
         /// <inheritdoc/>

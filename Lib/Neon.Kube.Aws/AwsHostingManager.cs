@@ -3567,7 +3567,7 @@ groupmod -n sysadmin ubuntu
         // Cluster life-cycle methods
 
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default)
+        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             if (timeout <= TimeSpan.Zero)
             {

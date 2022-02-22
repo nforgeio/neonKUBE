@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterState.cs
+// FILE:	    ClusterNodeState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -21,63 +21,59 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the possible overall states for a cluster.
+    /// Enumerates the possible states of a cluster node from the
+    /// hosting manager's perspective.
     /// </summary>
-    public enum ClusterState
+    public enum ClusterNodeState
     {
         /// <summary>
-        /// Status could not be determined. 
+        /// The node state is not known.
         /// </summary>
         [EnumMember(Value = "unknown")]
         Unknown = 0,
 
         /// <summary>
-        /// Cluster not found.
-        /// </summary>
-        [EnumMember(Value = "not-found")]
-        NotFound,
+        /// The node is not provisioned.
+        [EnumMember(Value = "not-provisioned")]
+        NotProvisioned,
 
         /// <summary>
-        /// One or more virtual machines exist with names conflicting
-        /// with the nodes defined for the cluster being checked.
+        /// The node conflicts with an existing virtual machine that was
+        /// not deployed with the cluster.
         /// </summary>
-        [EnumMember(Value = "node-conflict")]
-        NodeConflict,
+        [EnumMember(Value = "conflict")]
+        Conflict,
 
         /// <summary>
-        /// Cluster provisioning is incomplete.
+        /// The node is provisioned but turned off.
         /// </summary>
-        [EnumMember(Value = "provisioning")]
-        Provisoning,
+        [EnumMember(Value = "off")]
+        Off,
 
         /// <summary>
-        /// Cluster has been provisioned but not configured.
+        /// The node is starting.
         /// </summary>
-        [EnumMember(Value = "provisioned")]
-        Provisioned,
+        [EnumMember(Value = "starting")]
+        Starting,
 
         /// <summary>
-        /// Cluster configuration is incomplete.
+        /// The node is running.
         /// </summary>
-        [EnumMember(Value = "configuring")]
-        Configuring,
+        [EnumMember(Value = "running")]
+        Running,
 
         /// <summary>
-        /// Cluster is configured.
+        /// The node is paused.  This can happen for Hyper-V instances
+        /// running on Windows server due to the low available disk space:
+        /// <a href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/virtualization/virtual-machines-enter-paused-state-low-disk-free">More Info</a>
         /// </summary>
-        [EnumMember(Value = "configured")]
-        Configured,
+        [EnumMember(Value = "paused")]
+        Paused,
 
         /// <summary>
-        /// Cluster is configured but not healthy.
+        /// The node is sleeping.
         /// </summary>
-        [EnumMember(Value = "unhealthy")]
-        Unhealthy,
-
-        /// <summary>
-        /// Cluster is configured and healthy.
-        /// </summary>
-        [EnumMember(Value = "healthy")]
-        Healthy
+        [EnumMember(Value = "sleeping")]
+        Sleeping
     }
 }

@@ -291,12 +291,12 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <summary>
-        /// The default timeout for <see cref="GetStatusAsync(TimeSpan)"/> implementations.
+        /// The default timeout for <see cref="GetClusterStatusAsync(TimeSpan)"/> implementations.
         /// </summary>
         protected readonly TimeSpan DefaultStatusTimeout = TimeSpan.FromSeconds(15);
 
         /// <inheritdoc/>
-        public abstract Task<ClusterStatus> GetStatusAsync(TimeSpan timeout = default);
+        public abstract Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync(bool noWait = false)

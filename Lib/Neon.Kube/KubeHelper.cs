@@ -2925,5 +2925,68 @@ TCPKeepAlive yes
 
             return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
         }
+
+        /// <summary>
+        /// Determines the health of a cluster by querying the API server.
+        /// </summary>
+        /// <param name="context">The cluster context.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns>A <see cref="KubeClusterHealth"/> instance.</returns>
+        public static async Task<KubeClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+
+            // $todo(jefflill):
+            //
+            // We're just going to ping the server with a small request to verify
+            // that it's able to respond.  For the time being, we're going to report
+            // that the cluster is healthy when it responds.
+            //
+            // In the future, we should retrieve a custom resource that holds the
+            // summarized cluster state.  This resource should probably be managed
+            // by the neon-cluster-operator.
+
+            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+            
+            using (var k8s = new Kubernetes(config))
+            {
+                // We're going to read a config with a name that probably won't exist
+                // to keep the response small.  We're expecting this to return NULL
+                // because the name is GUID but this will still work if it does.
+                //
+                // We're going to consider the cluster to be healthy as long as the
+                // call doesn't throw an exception.
+
+                try
+                {
+                    await k8s.ReadNamespacedConfigMapAsync(
+                        name:               "b2f4eb3a-9927-40de-ac4f-25ca9802012e",
+                        namespaceParameter: "default",
+                        cancellationToken:   cancellationToken);
+
+                    return new KubeClusterHealth()
+                    {
+                        State   = KubeClusterState.Healthy,
+                        Summary = "Cluster is healthy"
+                    };
+                }
+                catch (OperationCanceledException)
+                {
+                    return new KubeClusterHealth()
+                    {
+                        State    = KubeClusterState.Unknown,
+                        Summary = "Timeout checking cluster health"
+                    };
+                }
+                catch (Exception e)
+                {
+                    return new KubeClusterHealth()
+                    {
+                        State   = KubeClusterState.Unknown,
+                        Summary = e.Message
+                    };
+                }
+            }
+        }
     }
 }

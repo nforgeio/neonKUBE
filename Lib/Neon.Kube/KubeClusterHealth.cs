@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterStatus.cs
+// FILE:	    KubeClusterHealth.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,43 +18,62 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.Serialization;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Dynamic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Microsoft.Rest;
+using Microsoft.Win32;
+using SharpCompress.Readers;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
+using Neon.Common;
+
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds details about a cluster's state.
+    /// Describes the health of a cluster.
     /// </summary>
-    public class ClusterStatus
+    public class KubeClusterHealth
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ClusterStatus()
+        public KubeClusterHealth()
         {
         }
 
         /// <summary>
-        /// Describes the overall state of a cluster.
+        /// The cluster health state.
         /// </summary>
-        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "status", ApplyNamingConventions = false)]
-        [DefaultValue(ClusterState.Unknown)]
-        public ClusterState State { get; set; }
+        [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "state", ApplyNamingConventions = false)]
+        [DefaultValue(KubeClusterState.Unknown)]
+        public KubeClusterState State { get; set; }
 
         /// <summary>
-        /// Maps node names to their provisioning states.
-        /// </summary>
-        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "nodes", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public Dictionary<string, ClusterNodeState> Nodes { get; set; } = new Dictionary<string, ClusterNodeState>(StringComparer.InvariantCultureIgnoreCase);
-
-        /// <summary>
-        /// Human readable string that summarizes the cluster state.
+        /// Human readable text summarizing the cluster health state.
         /// </summary>
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "summary", ApplyNamingConventions = false)]
