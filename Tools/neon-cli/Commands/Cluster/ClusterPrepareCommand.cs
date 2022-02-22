@@ -236,7 +236,7 @@ Server Requirements:
 
             using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
             {
-                var status = cluster.HostingManager.CheckResourceAvailability();
+                var status = await cluster.GetResourceAvailabilityAsync();
 
                 if (!status.CanBeDeployed)
                 {

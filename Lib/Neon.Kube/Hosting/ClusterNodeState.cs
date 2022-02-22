@@ -34,6 +34,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The node is not provisioned.
+        /// </summary>
         [EnumMember(Value = "not-provisioned")]
         NotProvisioned,
 

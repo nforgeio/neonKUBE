@@ -140,9 +140,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public abstract string GetDataDisk(LinuxSshProxy node);
 
-        /// <inheritdoc/>
-        public abstract HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0);
-
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the
         /// node address assignments and/or to automatically assign these addresses.
@@ -294,6 +291,9 @@ namespace Neon.Kube
         /// The default timeout for <see cref="GetClusterStatusAsync(TimeSpan)"/> implementations.
         /// </summary>
         protected readonly TimeSpan DefaultStatusTimeout = TimeSpan.FromSeconds(15);
+
+        /// <inheritdoc/>
+        public abstract Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <inheritdoc/>
         public abstract Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);

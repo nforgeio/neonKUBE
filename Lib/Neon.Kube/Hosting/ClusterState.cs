@@ -69,6 +69,19 @@ namespace Neon.Kube
         Configured,
 
         /// <summary>
+        /// Cluster is configured but is turned off.
+        /// </summary>
+        [EnumMember(Value = "off")]
+        Off,
+
+        /// <summary>
+        /// Cluster is configured but transitoning between sleeping, starting,
+        /// or being turned off.
+        /// </summary>
+        [EnumMember(Value = "transitoning")]
+        Transitioning,
+
+        /// <summary>
         /// Cluster is configured but not healthy.
         /// </summary>
         [EnumMember(Value = "unhealthy")]
@@ -78,6 +91,12 @@ namespace Neon.Kube
         /// Cluster is configured and healthy.
         /// </summary>
         [EnumMember(Value = "healthy")]
-        Healthy
+        Healthy,
+
+        /// <summary>
+        /// Cluster is configured and sleeping.
+        /// </summary>
+        [EnumMember(Value = "sleeping")]
+        Sleeping
     }
 }

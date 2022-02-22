@@ -47,6 +47,12 @@ namespace Neon.Kube
         /// The cluster is healthy and stable.
         /// </summary>
         [EnumMember(Value = "healthy")]
-        Healthy
+        Healthy,
+
+        /// <summary>
+        /// The cluster is sleeping.
+        /// </summary>
+        [EnumMember(Value = "sleeping")]
+        Sleeping
     }
 }

@@ -203,7 +203,7 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <summary>
-        /// Returns availability information for resources required to deploy a cluster.
+        /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
         /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
@@ -223,7 +223,7 @@ namespace Neon.Kube
         /// those environemnts will still work well when all available resources are consumed.
         /// </para>
         /// </remarks>
-        HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0);
+        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <summary>
         /// Determines the status of a cluster.

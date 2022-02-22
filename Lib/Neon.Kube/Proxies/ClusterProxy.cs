@@ -525,6 +525,46 @@ namespace Neon.Kube
         // Cluster life cycle methods.
 
         /// <summary>
+        /// Returns the availability of resources required to deploy a cluster.
+        /// </summary>
+        /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
+        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <returns>Details about whether cluster deployment can proceed.</returns>
+        /// <remarks>
+        /// <para>
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
+        /// manager implementations are free to ignore this when they don't really makse sense.
+        /// </para>
+        /// <para>
+        /// This is currently used for Hyper-V based clusters running on a user workstation or laptop to ensure
+        /// that deployed clusters don't adverserly impact the host machine too badly.
+        /// </para>
+        /// <para>
+        /// These parameters don't really make sense for cloud or dedicated hypervisor hosting environments because
+        /// those environemnts will still work well when all available resources are consumed.
+        /// </para>
+        /// </remarks>
+        public async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            Covenant.Assert(HostingManager != null);
+
+            return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
+        }
+
+        /// <summary>
+        /// Determines the status of a cluster.
+        /// </summary>
+        /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            Covenant.Assert(HostingManager != null);
+
+            return await HostingManager.GetClusterStatusAsync(timeout);
+        }
+
+        /// <summary>
         /// <para>
         /// Starts a cluster if it's not already running.
         /// </para>

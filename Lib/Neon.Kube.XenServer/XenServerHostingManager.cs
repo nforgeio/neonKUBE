@@ -637,14 +637,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
             // $todo(jefflill): Really implement this.
 
-            return new HostingResourceStatus() { CanBeDeployed = true };
+            await Task.CompletedTask;
+            return new HostingResourceAvailability() { CanBeDeployed = true };
         }
 
         //---------------------------------------------------------------------

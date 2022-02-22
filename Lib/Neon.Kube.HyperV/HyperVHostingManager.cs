@@ -383,14 +383,16 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
+            await Task.CompletedTask;
+
             var hostMachineName = Environment.MachineName;
             var allNodeNames    = cluster.Definition.NodeDefinitions.Keys.ToList();
-            var deploymentCheck = new HostingResourceStatus();
+            var deploymentCheck = new HostingResourceAvailability();
 
             // We're going to allow CPUs to be oversubscribed but not RAM or disk.
             // Hyper-V does have some limits on the number of virtual machines that
@@ -974,8 +976,42 @@ namespace Neon.Kube
                         clusterStatus.Nodes.Add(node.Name, nodeState);
                     }
 
+                    // We're going to examine the node states from the Hyper-V perspective and
+                    // short-circuit the Kubernetes level cluster health check when the cluster
+                    // is sleeping or appears to be transitioning between starting, stopping,
+                    // waking, or sleeping.
+
+                    if (clusterStatus.Nodes.Values.All(status => status == ClusterNodeState.Sleeping))
+                    {
+                        clusterStatus.State   = ClusterState.Sleeping;
+                        clusterStatus.Summary = "Cluster is sleeping";
+
+                        return clusterStatus;
+                    }
+                    else if (clusterStatus.Nodes.Values.All(status => status == ClusterNodeState.Off))
+                    {
+                        clusterStatus.State   = ClusterState.Off;
+                        clusterStatus.Summary = "Cluster is turned off";
+
+                        return clusterStatus;
+                    }
+
+                    var commonNodeState = clusterStatus.Nodes.Values.First();
+
+                    foreach (var nodeState in clusterStatus.Nodes.Values)
+                    {
+                        if (nodeState != commonNodeState)
+                        {
+                            // Nodes have differning states so we're going to consider the cluster
+                            // to be transitioning.
+
+                            clusterStatus.State   = ClusterState.Transitioning;
+                            clusterStatus.Summary = "Cluster is transitioning";
+                        }
+                    }
+
                     // When it looks like the cluster is configured from Hyper-V's perspective,
-                    // we're going to check from the Kubernetes perspective to determing whether
+                    // we're going to check from the Kubernetes perspective to determining whether
                     // the cluster itself appears to be healthy or not.
 
                     if (clusterStatus.State == ClusterState.Configured)
@@ -996,6 +1032,12 @@ namespace Neon.Kube
 
                                 clusterStatus.State   = ClusterState.Healthy;
                                 clusterStatus.Summary = "Cluster is healthy";
+                                break;
+
+                            case KubeClusterState.Sleeping:
+
+                                clusterStatus.State   = ClusterState.Sleeping;
+                                clusterStatus.Summary = "Cluster is sleeping";
                                 break;
 
                             default:

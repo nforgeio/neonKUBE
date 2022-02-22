@@ -199,11 +199,12 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override HostingResourceStatus CheckResourceAvailability(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
-
+            
+            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill)");
         }
 

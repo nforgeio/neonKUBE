@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingResourceStatus.cs
+// FILE:	    HostingResourceAvailability.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Returned by <see cref="IHostingManager.CheckResourceAvailability(long, long)"/> indicating whether a hosting
+    /// Returned by <see cref="IHostingManager.GetResourceAvailabilityAsync(long, long)"/> indicating whether a hosting
     /// environment has sufficient resources available to deploy a cluster.
     /// </summary>
     /// <remarks>
@@ -50,7 +50,7 @@ namespace Neon.Kube
     /// resources to deploy the cluster.
     /// </para>
     /// </remarks>
-    public class HostingResourceStatus
+    public class HostingResourceAvailability
     {
         /// <summary>
         /// Returns <c>true</c> when the cluster can be deployed.
