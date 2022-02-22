@@ -94,7 +94,7 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
-        private static string               cachedDesktopDataFolder;
+        private static string               cachedDesktopCommonFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -149,7 +149,7 @@ namespace Neon.Kube
             cachedResources            = null;
             cachedNodeImageFolder      = null;
             cachedDashboardStateFolder = null;
-            cachedDesktopDataFolder    = null;
+            cachedDesktopCommonFolder  = null;
         }
 
         /// <summary>
@@ -471,7 +471,7 @@ namespace Neon.Kube
         /// the socket will be located within the Windows program data folder.
         /// </note>
         /// </summary>
-        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopDataFolder, "desktop-service.sock");
+        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
 
         /// <summary>
         /// Returns the current <see cref="KubeAutomationMode"/>.
@@ -908,22 +908,22 @@ namespace Neon.Kube
         /// All users will have read/write access to files in this folder.
         /// </note>
         /// </summary>
-        public static string DesktopDataFolder
+        public static string DesktopCommonFolder
         {
             get
             {
-                if (cachedDesktopDataFolder != null)
+                if (cachedDesktopCommonFolder != null)
                 {
-                    return cachedDesktopDataFolder;
+                    return cachedDesktopCommonFolder;
                 }
 
-                cachedDesktopDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
+                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
 
                 if (OperatingSystem.IsWindowsVersionAtLeast(10))
                 {
-                    if (!Directory.Exists(cachedDesktopDataFolder))
+                    if (!Directory.Exists(cachedDesktopCommonFolder))
                     {
-                        Directory.CreateDirectory(cachedDesktopDataFolder);
+                        Directory.CreateDirectory(cachedDesktopCommonFolder);
 
                         // Grant all users access to this folder.  The simple approach would be to allow "Users"
                         // but apparently that only works for English Windows installations.  We'll need to look up
@@ -935,7 +935,7 @@ namespace Neon.Kube
                         //      https://stackoverflow.com/questions/51277338/remove-users-group-permission-for-folder-inside-programdata
 
                         var builtUnsersSid    = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
-                        var directoryInfo     = new DirectoryInfo(cachedDesktopDataFolder);
+                        var directoryInfo     = new DirectoryInfo(cachedDesktopCommonFolder);
                         var directorySecurity = directoryInfo.GetAccessControl();
 
                         // Disable inherited ACLs.
@@ -952,7 +952,7 @@ namespace Neon.Kube
                     }
                 }
 
-                return cachedDesktopDataFolder;
+                return cachedDesktopCommonFolder;
             }
         }
 
