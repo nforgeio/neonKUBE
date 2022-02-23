@@ -103,6 +103,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\pubcore.exe = ToolBin\pubcore.exe
 		ToolBin\text.cmd = ToolBin\text.cmd
 		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
+		ToolBin\wsl-util.cmd = ToolBin\wsl-util.cmd
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-layers\core-layers.csproj", "{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}"
@@ -435,7 +436,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.GrpcProto", "Lib\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopServer", "Lib\Neon.Kube.DesktopServer\Neon.Kube.DesktopServer.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Grpc", "Test\Test.Neon.Grpc\Test.Neon.Grpc.csproj", "{073E7438-F2C6-4E59-9488-F4D3B9993BBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Grpc", "Test\Test.Neon.Grpc\Test.Neon.Grpc.csproj", "{073E7438-F2C6-4E59-9488-F4D3B9993BBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

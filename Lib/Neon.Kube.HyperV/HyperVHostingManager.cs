@@ -274,8 +274,10 @@ namespace Neon.Kube
                 driveTemplatePath = nodeImagePath;
             }
 
-            controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync());
-            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(node));
+            var typedController = (SetupController<NodeDefinition>)controller;
+
+            controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync(typedController));
+            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(typedController, node));
         }
 
         /// <inheritdoc/>
@@ -419,9 +421,12 @@ namespace Neon.Kube
         /// <summary>
         /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
         /// </summary>
+        /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task PrepareHyperVAsync()
+        private async Task PrepareHyperVAsync(SetupController<NodeDefinition> controller)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
             // Handle any necessary Hyper-V initialization.
 
             using (var hyperv = new HyperVProxy())
@@ -470,6 +475,8 @@ namespace Neon.Kube
                         switchName = externalSwitch.Name;
                     }
                 }
+
+                controller.ThrowIfCancelled();
 
                 // Ensure that the cluster virtual machines exist and are stopped,
                 // taking care to issue a warning if any machines already exist 
@@ -520,9 +527,12 @@ namespace Neon.Kube
         /// <summary>
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
+        /// <param name="controller">The setup controller.</param>
         /// <param name="node">The target node.</param>
-        private void ProvisionVM(NodeSshProxy<NodeDefinition> node)
+        private void ProvisionVM(SetupController<NodeDefinition> controller, NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
             using (var hyperv = new HyperVProxy())
             {
                 var vmName = GetVmName(node.Metadata);
@@ -545,6 +555,8 @@ namespace Neon.Kube
 
                             while (true)
                             {
+                                controller.ThrowIfCancelled();
+
                                 cb     = decompressor.Read(buffer, 0, buffer.Length);
                                 cbRead = input.Position;
 
@@ -598,6 +610,8 @@ namespace Neon.Kube
                     // Create a temporary ISO with the prep script and mount it
                     // to the node VM.
 
+                    controller.ThrowIfCancelled();
+
                     node.Status = $"mount: neon-init iso";
                     tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
 
@@ -606,13 +620,17 @@ namespace Neon.Kube
                     // Start the VM for the first time with the mounted ISO.  The network
                     // configuration will happen automatically by the time we can connect.
 
+                    controller.ThrowIfCancelled();
+
                     node.Status = $"start: virtual machine";
                     hyperv.StartVm(vmName);
 
                     // Update the node credentials to use the secure password and then wait for the node to boot.
 
+                    controller.ThrowIfCancelled();
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                     node.WaitForBoot();
+                    controller.ThrowIfCancelled();
 
                     // Extend the primary partition and file system to fill 
                     // the virtual drive.  Note that we're not going to do
@@ -782,9 +800,15 @@ namespace Neon.Kube
                         if (vm == null)
                         {
                             // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs or when the cluster doesn't mexist.  We're
-                            // just going to ignore this situation.
+                            // deployed cluster VMs or when the cluster doesn't exist or when
+                            // the cluster deployment is in progress and this node VM hasn't.
+                            // been created yet.
+                            //
+                            // It's possible that the VHDX files could exist though, so we'll
+                            // go ahead and delete them, if present.
 
+                            NeonHelper.DeleteFile(Path.Combine(vmDriveFolder, $"{vmName}.vhdx"));
+                            NeonHelper.DeleteFile(Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"));
                             return;
                         }
 
@@ -805,6 +829,13 @@ namespace Neon.Kube
                                 hyperv.RemoveVm(vm.Name);
                             }
                         });
+                }
+
+                // Remove the internal switch and NAT when deployed.
+
+                if (cluster.Definition.Hosting.HyperV.UseInternalSwitch)
+                {
+                    hyperv.RemoveSwitch(KubeConst.HyperVInternalSwitchName, ignoreMissing: true);
                 }
             }
         }

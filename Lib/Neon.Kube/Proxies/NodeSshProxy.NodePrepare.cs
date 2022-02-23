@@ -289,12 +289,25 @@ systemctl restart rsyslog.service
                 {
                     controller.LogProgress(this, verb: "prepare", message: "node");
 
+                    controller.ThrowIfCancelled();
                     RemoveSwapFile(controller);
+
+                    controller.ThrowIfCancelled();
                     NodeInstallTools(controller);
+
+                    controller.ThrowIfCancelled();
                     BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
+
+                    controller.ThrowIfCancelled();
                     BaseConfigureOpenSsh(controller);
+
+                    controller.ThrowIfCancelled();
                     DisableSnap(controller);
+
+                    controller.ThrowIfCancelled();
                     ConfigureJournald(controller);
+
+                    controller.ThrowIfCancelled();
                     ConfigureNFS(controller);
                 });
         }

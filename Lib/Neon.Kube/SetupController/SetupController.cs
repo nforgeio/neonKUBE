@@ -863,8 +863,12 @@ namespace Neon.Kube
 
                                         step.SyncNodeAction(this, node);
 
-                                        node.Status  = "[x] DONE";
+                                        node.Status = "[x] DONE";
                                         node.IsReady = true;
+                                    }
+                                    catch (OperationCanceledException)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
                                     }
                                     catch (Exception e)
                                     {
@@ -940,6 +944,12 @@ namespace Neon.Kube
 
                                 SetGlobalStepStatus();
                             }
+                            catch (OperationCanceledException)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+
+                                SetGlobalStepStatus($"*** CANCELLED");
+                            }
                             catch (Exception e)
                             {
                                 isFaulted       = true;
@@ -974,15 +984,31 @@ namespace Neon.Kube
 
                                 SetGlobalStepStatus();
                             }
+                            catch (OperationCanceledException)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+
+                                SetGlobalStepStatus($"*** CANCELLED");
+                            }
+                            catch (AggregateException e)
+                            {
+                                if (e.Contains<OperationCanceledException>())
+                                {
+                                    stepDisposition = SetupStepState.Cancelled;
+
+                                    SetGlobalStepStatus($"*** CANCELLED");
+                                }
+                                else
+                                {
+                                    isFaulted       = true;
+                                    stepDisposition = SetupStepState.Failed;
+
+                                    SetGlobalStepStatus($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                                    LogGlobalException(e);
+                                }
+                            }
                             catch (Exception e)
                             {
-                                var aggregateException = e as AggregateException;
-
-                                if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
-                                {
-                                    e = aggregateException.InnerExceptions.Single();
-                                }
-
                                 isFaulted       = true;
                                 stepDisposition = SetupStepState.Failed;
 
@@ -1561,7 +1587,7 @@ namespace Neon.Kube
 
                             ConsoleWriter?.Stop();
                             Cleanup();
-                            tcs.SetException(e);
+                            tcs.TrySetException(e);
                         }
                     }
                     catch (Exception e)
@@ -1576,7 +1602,7 @@ namespace Neon.Kube
 
                         ConsoleWriter?.Stop();
                         Cleanup();
-                        tcs.SetException(e);
+                        tcs.TrySetException(e);
                     }
                     finally
                     {

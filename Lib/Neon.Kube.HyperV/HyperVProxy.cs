@@ -608,18 +608,19 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes a named virtual switch, it it exists.
+        /// Removes a named virtual switch, it it exists as well as any associated NAT (with the same name).
         /// </summary>
         /// <param name="switchName">The target switch name.</param>
-        public void RemoveSwitch(string switchName)
+        /// <param name="ignoreMissing">Optionally ignore missing items.</param>
+        public void RemoveSwitch(string switchName, bool ignoreMissing = false)
         {
             if (isAdmin)
             {
-                hypervClient.RemoveSwitch(switchName: switchName);
+                hypervClient.RemoveSwitch(switchName: switchName, ignoreMissing: ignoreMissing);
             }
             else
             {
-                var request = new GrpcRemoveSwitchRequest(switchName: switchName);
+                var request = new GrpcRemoveSwitchRequest(switchName: switchName, ignoreMissing: ignoreMissing);
                 var reply   = desktopService.RemoveSwitchAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
