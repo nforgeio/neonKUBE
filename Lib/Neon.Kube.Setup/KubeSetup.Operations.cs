@@ -15,16 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s;
-using k8s.Models;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Kube.Resources;
-using Neon.Net;
-using Neon.SSH;
-using Neon.Tasks;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -35,6 +25,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
+using Newtonsoft.Json;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Kube.Resources;
+using Neon.Net;
+using Neon.SSH;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -3184,7 +3186,7 @@ $@"- name: StorageType
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add($"tenants[0].pools[0].volumesPerServer", 4);
-                            values.Add($"tenants[0].pools[0].size", );
+                            //values.Add($"tenants[0].pools[0].size", );
 
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
