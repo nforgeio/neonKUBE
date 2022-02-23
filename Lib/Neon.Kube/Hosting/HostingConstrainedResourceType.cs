@@ -55,9 +55,9 @@ namespace Neon.Kube
         Cpu,
 
         /// <summary>
-        /// Virtual machine instances.
+        /// Virtual machine host specific issue.
         /// </summary>
-        [EnumMember(Value = "virtual-machine")]
-        VirtualMachine
+        [EnumMember(Value = "vm-host")]
+        VmHost
     }
 }
