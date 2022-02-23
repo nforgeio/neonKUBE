@@ -98,7 +98,8 @@ containerSecurityContext: {}
 
 ## Node labels for pod assignment
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/monitor.metrics-internal: 'true'
 
 ## Affinity settings for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -114,7 +115,13 @@ affinity:
 
 ## Tolerations for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-tolerations: []
+tolerations:
+  - key: "neonkube.io/metrics"
+    operator: Exists
+    effect: NoSchedule
+  - key: "neonkube.io/metrics-internal"
+    operator: Exists
+    effect: NoSchedule
 
 # Annotations to be added to the pod
 podAnnotations: {}

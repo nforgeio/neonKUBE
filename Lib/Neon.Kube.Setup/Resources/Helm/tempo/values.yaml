@@ -144,13 +144,13 @@ podAnnotations:
 extraVolumes: []
 
 nodeSelector:
-  neonkube.io/monitor.metrics-internal: 'true'
+  neonkube.io/monitor.logs-internal: 'true'
 
 tolerations:
-  - key: "neonkube.io/metrics"
+  - key: "neonkube.io/logs"
     operator: Exists
     effect: NoSchedule
-  - key: "neonkube.io/metrics-internal"
+  - key: "neonkube.io/logs-internal"
     operator: Exists
     effect: NoSchedule
 

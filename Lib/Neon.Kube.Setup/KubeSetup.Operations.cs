@@ -2493,11 +2493,11 @@ $@"- name: StorageType
 
                     if (cluster.Definition.IsDesktopCluster)
                     {
-                        values.Add($"volumeClaimTemplate.resources.requests.storage", "5Gi");
+                        values.Add($"persistentVolume.storage", "5Gi");
                     }
                     else
                     {
-                        values.Add($"volumeClaimTemplate.resources.requests.storage", "10Gi");
+                        values.Add($"persistentVolume.storage", "10Gi");
                     }
 
                     values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
@@ -3184,6 +3184,7 @@ $@"- name: StorageType
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add($"tenants[0].pools[0].volumesPerServer", 4);
+                            values.Add($"tenants[0].pools[0].size", );
 
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
