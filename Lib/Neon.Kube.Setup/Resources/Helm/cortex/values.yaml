@@ -36,6 +36,12 @@ cortexConfig:
     grpc_server_max_concurrent_streams: 1000
     grpc_server_min_time_between_pings: 10s
     grpc_server_ping_without_stream_allowed: true
+  memberlist:
+    # defaults to hostname
+    bind_port: 7946
+    join_members:
+      - cortex:7946
+    abort_if_cluster_join_fails: false
   distributor:
     shard_by_all_labels: true
     pool:
@@ -50,13 +56,8 @@ cortexConfig:
             - neon-etcd.neon-system.svc.cluster.local:2379
     ring:
       kvstore:
-        store: etcd
+        store: memberlist
         prefix: neonkube.io/cortex/collectors/
-        etcd:
-          endpoints:
-            - neon-etcd.neon-system.svc.cluster.local:2379
-    instance_limits:
-      max_ingestion_rate: 25000
   ingester_client:
     grpc_client_config:
       # Configure the client to allow messages up to 100MB.
@@ -70,8 +71,6 @@ cortexConfig:
     reject_old_samples: true
     reject_old_samples_max_age: 1h
     max_query_lookback: 0s
-    ingestion_rate: 100000
-    ingestion_burst_size: 250000
     max_series_per_metric: 0
     max_series_per_user: 0
     max_metadata_per_user: 0
@@ -83,14 +82,13 @@ cortexConfig:
       dir: /tmp/cortex/tsdb
       block_ranges_period:
         - 5m
-      retention_period: 30m
+      retention_period: 15m
       stripe_size: 4096
       head_chunks_write_buffer_size_bytes: 1048576
     bucket_store:
       sync_dir: /tmp/cortex/tsdb-sync
       block_sync_concurrency: 5
       meta_sync_concurrency: 5
-      bucket_index:
       index_cache:
         backend: inmemory
         inmemory:
@@ -112,21 +110,15 @@ cortexConfig:
       # We want to start immediately and flush on shutdown.
       join_after: 5s
       final_sleep: 30s
-      num_tokens: 512
+      num_tokens: 128
 
       # Use an in memory ring store, so we don't need to launch a Consul.
       ring:
         replication_factor: 1
         kvstore:
-          store: etcd
+          store: memberlist
           prefix: neonkube.io/cortex/collectors/
-          etcd:
-            endpoints:
-              - neon-etcd.neon-system.svc.cluster.local:2379
-    instance_limits:
-      max_ingestion_rate: 25000
   frontend_worker:
-    match_max_concurrent: true
     frontend_address: ${MY_POD_IP}:9095
   alertmanager:
     fallback_config_file: /etc/cortex/alertmanager.yaml
@@ -208,7 +200,7 @@ cortexConfig:
     object_store_type: s3
   table_manager:
     retention_deletes_enabled: true
-    retention_period: 6h
+    retention_period: 24h
   store_gateway:
     sharding_enabled: true
     sharding_ring:

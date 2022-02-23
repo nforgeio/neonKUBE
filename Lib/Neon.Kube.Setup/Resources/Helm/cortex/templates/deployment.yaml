@@ -53,7 +53,7 @@ spec:
           args:
             - "-config.file=/etc/cortex/cortex.yaml"
             - "-config.expand-env"
-            - "-log.level=info"
+            - "-log.level=error"
             - "-log.format=json"
             - "-validation.max-label-names-per-series=100"
           volumeMounts:
@@ -62,6 +62,9 @@ spec:
           ports:
             - name: http-metrics
               containerPort: {{ .Values.cortexConfig.server.http_listen_port }}
+              protocol: TCP
+            - name: tcp-memberlist
+              containerPort: {{ .Values.cortexConfig.memberlist.bind_port }}
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
