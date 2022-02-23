@@ -510,9 +510,17 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Minio);
 
-            if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() >= 3)
+            if (cluster.Definition.Nodes.Where(node => node.Labels.MinioInternal).Count() >= 3)
             {
-                advice.ReplicaCount     = Math.Min(4, Math.Max(4, cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() / 4));
+                if (cluster.Definition.Nodes.Where(node => node.Labels.MinioInternal).Count() >= 4)
+                {
+                    advice.ReplicaCount = cluster.Definition.Nodes.Where(node => node.Labels.MinioInternal).Count();
+                }
+                else
+                {
+                    advice.ReplicaCount = 1;
+                }
+
                 advice.PodMemoryLimit   = ByteUnits.Parse("4Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("4Gi");
                 advice.MetricsInterval  = "1m";

@@ -2491,7 +2491,15 @@ $@"- name: StorageType
 
                     values.Add($"replicas", advice.ReplicaCount);
 
-                    values.Add($"volumeClaimTemplate.resources.requests.storage", "5Gi");
+                    if (cluster.Definition.IsDesktopCluster)
+                    {
+                        values.Add($"volumeClaimTemplate.resources.requests.storage", "5Gi");
+                    }
+                    else
+                    {
+                        values.Add($"volumeClaimTemplate.resources.requests.storage", "10Gi");
+                    }
+
                     values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
                     values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
                     values.Add($"priorityClassName", PriorityClass.NeonMonitor.Name);
@@ -2638,7 +2646,8 @@ $@"- name: StorageType
                     var k8s = GetK8sClient(controller);
                     var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
                     var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cortex);
-                    var values = new Dictionary<string, object>();
+                    var etcdAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
+                    var values        = new Dictionary<string, object>();
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"ingress.alertmanager.subdomain", ClusterDomain.AlertManager);
@@ -2649,11 +2658,27 @@ $@"- name: StorageType
                     if (cluster.Definition.Masters.Count() >= 3)
                     {
                         values.Add($"cortexConfig.distributor.ha_tracker.enable_ha_tracker", true);
-
-                        values.Add($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3);
-
                         values.Add($"cortexConfig.alertmanager.sharding_ring.replication_factor", 3);
 
+                        values.Add($"cortexConfig.blocks_storage.tsdb.block_ranges_period[0]", "2h0m0s");
+                        values.Add($"cortexConfig.blocks_storage.tsdb.retention_period", "6h");
+
+                        values.Add($"cortexConfig.compactor.block_ranges[0]", "2h0m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[1]", "12h0m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[2]", "24h0m0s");
+
+                        values.Add($"cortexConfig.blocks_storage.bucket_store.index_cache.inmemory.max_size_bytes", 
+                            Math.Min(1073741824, serviceAdvice.PodMemoryRequest.Value / 4));
+
+                    }
+
+                    for (int i = 0; i < etcdAdvice.ReplicaCount; i++)
+                    {
+                        values.Add($"cortexConfig.distributor.ha_tracker.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
+                        values.Add($"cortexConfig.alertmanager.sharding_ring.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
+                        values.Add($"cortexConfig.compactor.sharding_ring.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
+                        values.Add($"cortexConfig.store_gateway.sharding_ring.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
+                        values.Add($"cortexConfig.ruler.ring.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
                     }
 
                     if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
@@ -3158,15 +3183,7 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
-
-                            if (serviceAdvice.ReplicaCount == 1)
-                            {
-                                values.Add($"tenants[0].pools[0].volumesPerServer", 4);
-                            }
-                            else
-                            {
-                                values.Add($"tenants[0].pools[0].volumesPerServer", 1);
-                            }
+                            values.Add($"tenants[0].pools[0].volumesPerServer", 4);
 
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
