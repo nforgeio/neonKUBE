@@ -357,21 +357,14 @@ spec:
             // NOTE: The neonKUBE CRDs are installed with [neon-cluster-operator]
             //       so we need to install that first.
 
-            // $todo(jefflill): 
-            //
-            // I'm temporarily commenting these out until I have a chance to
-            // have a look at why neon-node-agent is failing on larger clusters.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1464
+            controller.ThrowIfCancelled();
+            await InstallClusterOperatorAsync(controller, master);
 
-            //controller.ThrowIfCancelled();
-            //await InstallClusterOperatorAsync(controller, master);
+            controller.ThrowIfCancelled();
+            await InstallNodeAgentAsync(controller, master);
 
-            //controller.ThrowIfCancelled();
-            //await InstallNodeAgentAsync(controller, master);
-
-            //controller.ThrowIfCancelled();
-            //await InstallContainerRegistryResources(controller, master);
+            controller.ThrowIfCancelled();
+            await InstallContainerRegistryResources(controller, master);
         }
 
         /// <summary>
@@ -385,10 +378,10 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var hostingEnvironment   = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+            var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var controlPlaneEndpoint = $"kubernetes-masters:6442";
-            var sbCertSANs = new StringBuilder();
+            var sbCertSANs           = new StringBuilder();
 
             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
             {
