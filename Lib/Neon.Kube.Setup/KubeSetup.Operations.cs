@@ -349,22 +349,29 @@ spec:
             controller.ThrowIfCancelled();
             await InstallMonitoringAsync(controller);
 
+            controller.ThrowIfCancelled();
+            await InstallNeonDashboardAsync(controller, master);
+
             // Install the cluster operators and any required custom resources.
             //
             // NOTE: The neonKUBE CRDs are installed with [neon-cluster-operator]
             //       so we need to install that first.
 
-            controller.ThrowIfCancelled();
-            await InstallClusterOperatorAsync(controller, master);
+            // $todo(jefflill): 
+            //
+            // I'm temporarily commenting these out until I have a chance to
+            // have a look at why neon-node-agent is failing on larger clusters.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1464
 
-            controller.ThrowIfCancelled();
-            await InstallNeonDashboardAsync(controller, master);
+            //controller.ThrowIfCancelled();
+            //await InstallClusterOperatorAsync(controller, master);
 
-            controller.ThrowIfCancelled();
-            await InstallNodeAgentAsync(controller, master);
+            //controller.ThrowIfCancelled();
+            //await InstallNodeAgentAsync(controller, master);
 
-            controller.ThrowIfCancelled();
-            await InstallContainerRegistryResources(controller, master);
+            //controller.ThrowIfCancelled();
+            //await InstallContainerRegistryResources(controller, master);
         }
 
         /// <summary>
