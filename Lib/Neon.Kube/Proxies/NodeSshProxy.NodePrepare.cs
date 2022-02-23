@@ -585,7 +585,7 @@ vm.max_map_count = 16777216
 vm.vfs_cache_pressure = 50
 
 # minimum free memory
-vm.min_free_kbytes = 1000000
+vm.min_free_kbytes = 67584
 
 # increase the maximum length of processor input queues
 net.core.netdev_max_backlog = 250000
