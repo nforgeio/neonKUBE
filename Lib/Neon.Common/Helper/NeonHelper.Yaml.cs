@@ -223,7 +223,7 @@ namespace Neon.Common
         /// <exception cref="ArgumentException">Thrown if <paramref name="jsonText"/> does not specify a value, array, or object.</exception>
         /// <remarks>
         /// <note>
-        /// Property names are always converted to lower case when converting to YAML.
+        /// Property names are always converted to lowercase when converting to YAML.
         /// </note>
         /// </remarks>
         public static string JsonToYaml(string jsonText)

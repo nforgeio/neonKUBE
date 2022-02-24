@@ -641,7 +641,7 @@ namespace Neon.IO
         /// <param name="value">The option value.</param>
         /// <remarks>
         /// <note>
-        /// The value set will be lower case <b>true</b> or <b>false</b>.
+        /// The value set will be lowercase <b>true</b> or <b>false</b>.
         /// </note>
         /// </remarks>
         public void Set(string name, bool value)

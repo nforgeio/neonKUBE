@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <note>
         /// The name may include only letters, numbers, periods, dashes, and underscores and
-        /// also that all names will be converted to lower case.
+        /// also that all names will be converted to lowercase.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
