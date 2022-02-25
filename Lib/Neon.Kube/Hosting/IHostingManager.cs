@@ -203,6 +203,11 @@ namespace Neon.Kube
         // Cluster life cycle methods
 
         /// <summary>
+        /// Returns flags describing any optional capabilities supported by the hosting manager.
+        /// </summary>
+        HostingCapabilities Capabilities { get; }
+
+        /// <summary>
         /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
@@ -258,6 +263,32 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Pauses a cluster if it's running, by putting all cluster nodes to sleep.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task PauseClusterAsync(bool noWait = false);
+
+        /// <summary>
+        /// <para>
+        /// Resumes a paused cluster, by waking all cluster nodes.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task ResumeClusterAsync(bool noWait = false);
 
         /// <summary>
         /// <para>

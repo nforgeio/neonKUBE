@@ -64,6 +64,19 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
     /// </remarks>
     [HostingProvider(HostingEnvironment.Azure)]
     public class AzureHostingManager : HostingManager
@@ -2219,6 +2232,9 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable;
 
         /// <inheritdoc/>
         public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)

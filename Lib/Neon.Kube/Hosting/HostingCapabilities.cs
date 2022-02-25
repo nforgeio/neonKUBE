@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeClusterState.cs
+// FILE:	    HostingCapabilities.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -21,38 +21,25 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the health states for a Kubernetes cluster.
+    /// Flags that describe any optional capabilities of a <see cref="IHostingManager"/> implementation.
     /// </summary>
-    public enum KubeClusterState
+    [Flags]
+    public enum HostingCapabilities
     {
         /// <summary>
-        /// The health status is not known.
+        /// The cluster has no special capabilities.
         /// </summary>
-        [EnumMember(Value = "unknown")]
-        Unknown = 0,
+        None = 0,
 
         /// <summary>
-        /// The cluster is not healthy.
+        /// The cluster can be stopped and restarted.
         /// </summary>
-        [EnumMember(Value = "unhealthy")]
-        Unhealthy,
-
+        Stoppable = 0x00000001,
+        
         /// <summary>
-        /// The cluster is healthy but in the process of adding or removing nodes.
+        /// The cluster can be paused and resumed, saving and restoring memory such that
+        /// the cluster restarts exactly where it left off.
         /// </summary>
-        [EnumMember(Value = "transitioning")]
-        Transitioning,
-
-        /// <summary>
-        /// The cluster is healthy and stable.
-        /// </summary>
-        [EnumMember(Value = "healthy")]
-        Healthy,
-
-        /// <summary>
-        /// The cluster is paused.
-        /// </summary>
-        [EnumMember(Value = "paused")]
-        Paused
+        Pausable = 0x00000002
     }
 }

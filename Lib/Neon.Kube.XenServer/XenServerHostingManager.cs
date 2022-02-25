@@ -43,6 +43,21 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.XenServer)]
     public partial class XenServerHostingManager : HostingManager
     {
@@ -650,6 +665,9 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable;
 
         /// <inheritdoc/>
         public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)

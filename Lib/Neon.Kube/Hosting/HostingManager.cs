@@ -293,6 +293,9 @@ namespace Neon.Kube
         protected readonly TimeSpan DefaultStatusTimeout = TimeSpan.FromSeconds(15);
 
         /// <inheritdoc/>
+        public abstract HostingCapabilities Capabilities { get; }
+
+        /// <inheritdoc/>
         public abstract Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <inheritdoc/>
@@ -307,6 +310,20 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task PauseClusterAsync(bool noWait = false)
+        {
+            await Task.CompletedTask;
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task ResumeClusterAsync(bool noWait = false)
         {
             await Task.CompletedTask;
             throw new NotSupportedException();

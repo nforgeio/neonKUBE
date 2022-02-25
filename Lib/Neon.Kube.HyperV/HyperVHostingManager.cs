@@ -52,6 +52,21 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning using Microsoft Hyper-V virtual machines.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.HyperV)]
     public class HyperVHostingManager : HostingManager
     {
@@ -859,6 +874,9 @@ namespace Neon.Kube
         // Cluster life-cycle methods
 
         /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable;
+
+        /// <inheritdoc/>
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             using (var hyperV = new HyperVProxy())
@@ -983,8 +1001,8 @@ namespace Neon.Kube
 
                     if (clusterStatus.Nodes.Values.All(status => status == ClusterNodeState.Sleeping))
                     {
-                        clusterStatus.State   = ClusterState.Sleeping;
-                        clusterStatus.Summary = "Cluster is sleeping";
+                        clusterStatus.State   = ClusterState.Paused;
+                        clusterStatus.Summary = "Cluster is paused";
 
                         return clusterStatus;
                     }
@@ -1002,7 +1020,7 @@ namespace Neon.Kube
                     {
                         if (nodeState != commonNodeState)
                         {
-                            // Nodes have differning states so we're going to consider the cluster
+                            // Nodes have differing states so we're going to consider the cluster
                             // to be transitioning.
 
                             clusterStatus.State   = ClusterState.Transitioning;
@@ -1034,10 +1052,10 @@ namespace Neon.Kube
                                 clusterStatus.Summary = "Cluster is healthy";
                                 break;
 
-                            case KubeClusterState.Sleeping:
+                            case KubeClusterState.Paused:
 
-                                clusterStatus.State   = ClusterState.Sleeping;
-                                clusterStatus.Summary = "Cluster is sleeping";
+                                clusterStatus.State   = ClusterState.Paused;
+                                clusterStatus.Summary = "Cluster is paused";
                                 break;
 
                             default:

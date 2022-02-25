@@ -41,8 +41,8 @@ namespace Neon.Kube
         /// One or more virtual machines exist with names conflicting
         /// with the nodes defined for the cluster being checked.
         /// </summary>
-        [EnumMember(Value = "node-conflict")]
-        NodeConflict,
+        [EnumMember(Value = "conflict")]
+        Conflict,
 
         /// <summary>
         /// Cluster provisioning is incomplete.
@@ -94,9 +94,9 @@ namespace Neon.Kube
         Healthy,
 
         /// <summary>
-        /// Cluster is configured and sleeping.
+        /// Cluster is configured but is paused.
         /// </summary>
-        [EnumMember(Value = "sleeping")]
-        Sleeping
+        [EnumMember(Value = "paused")]
+        Paused
     }
 }

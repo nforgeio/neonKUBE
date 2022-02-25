@@ -51,6 +51,21 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.BareMetal)]
     public partial class BareMetalHostingManager : HostingManager
     {
@@ -272,6 +287,9 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.None;
 
         /// <inheritdoc/>
         public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
