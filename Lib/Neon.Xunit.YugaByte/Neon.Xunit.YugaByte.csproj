@@ -40,22 +40,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\LICENSE" Link="LICENSE">
-			<PackagePath></PackagePath>
-			<Pack>True</Pack>
-		</None>
-		<None Include="..\..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-		<None Include="..\nuget-icon.png" Link="nuget-icon.png">
-			<PackagePath></PackagePath>
-			<Pack>true</Pack>
-		</None>
-		<None Include="..\nuget-icon.png">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>
