@@ -891,7 +891,7 @@ namespace Neon.Kube
 
                 var contextName  = $"root@{cluster.Definition.Name}";
                 var context      = KubeHelper.Config.GetContext(contextName);
-                var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)context.Name);
+                var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
 
                 // Create a hashset with the names of nodes that have existing virtual machines.
                 // Note that the node names will strip off any cluster prefix from the virtual
@@ -916,7 +916,7 @@ namespace Neon.Kube
                 // virtual machines with names matching the virtual machines that would be
                 // provisioned for the cluster definition are conflicting.
 
-                if (context == null || clusterLogin == null)
+                if (context == null && clusterLogin == null)
                 {
                     var clusterStatus = new ClusterStatus()
                     {
@@ -996,23 +996,8 @@ namespace Neon.Kube
 
                     // We're going to examine the node states from the Hyper-V perspective and
                     // short-circuit the Kubernetes level cluster health check when the cluster
-                    // is sleeping or appears to be transitioning between starting, stopping,
-                    // waking, or sleeping.
-
-                    if (clusterStatus.Nodes.Values.All(status => status == ClusterNodeState.Sleeping))
-                    {
-                        clusterStatus.State   = ClusterState.Paused;
-                        clusterStatus.Summary = "Cluster is paused";
-
-                        return clusterStatus;
-                    }
-                    else if (clusterStatus.Nodes.Values.All(status => status == ClusterNodeState.Off))
-                    {
-                        clusterStatus.State   = ClusterState.Off;
-                        clusterStatus.Summary = "Cluster is turned off";
-
-                        return clusterStatus;
-                    }
+                    // nodes are not provisioned, are sleeping or appears to be transitioning
+                    // between starting, stopping, waking, or sleeping states.
 
                     var commonNodeState = clusterStatus.Nodes.Values.First();
 
@@ -1025,6 +1010,52 @@ namespace Neon.Kube
 
                             clusterStatus.State   = ClusterState.Transitioning;
                             clusterStatus.Summary = "Cluster is transitioning";
+                            break;
+                        }
+                    }
+
+                    if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                    {
+                        clusterStatus.State   = ClusterState.Configuring;
+                        clusterStatus.Summary = "Cluster is partially configured.";
+                    }
+                    else if (clusterStatus.State != ClusterState.Transitioning)
+                    {
+                        // If we get here then all of the nodes have the state so we'll
+                        // use that command state to set the overall cluster state.
+
+                        switch (commonNodeState)
+                        {
+                            case ClusterNodeState.Sleeping:
+
+                                clusterStatus.State   = ClusterState.Paused;
+                                clusterStatus.Summary = "Cluster is paused.";
+                                break;
+
+                            case ClusterNodeState.Starting:
+
+                                clusterStatus.State   = ClusterState.Unhealthy;
+                                clusterStatus.Summary = "Cluster is starting.";
+                                break;
+
+                            case ClusterNodeState.Running:
+
+                                clusterStatus.State   = ClusterState.Configured;
+                                clusterStatus.Summary = "Cluster is configured.";
+                                break;
+
+                            case ClusterNodeState.Off:
+
+                                clusterStatus.State   = ClusterState.Off;
+                                clusterStatus.Summary = "Cluster is turned off.";
+                                break;
+
+                            case ClusterNodeState.Unknown:
+                            default:
+
+                                clusterStatus.State   = ClusterState.Unknown;
+                                clusterStatus.Summary = "Cluster not found.";
+                                break;
                         }
                     }
 
@@ -1032,7 +1063,7 @@ namespace Neon.Kube
                     // we're going to check from the Kubernetes perspective to determining whether
                     // the cluster itself appears to be healthy or not.
 
-                    if (clusterStatus.State == ClusterState.Configured)
+                    if (clusterStatus.State == ClusterState.Configured && context != null)
                     {
                         var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
 
