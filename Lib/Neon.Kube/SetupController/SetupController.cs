@@ -1451,7 +1451,7 @@ namespace Neon.Kube
                                 ConsoleWriter?.Stop();
 
                                 Cleanup();
-                                tcs.SetResult(SetupDisposition.Cancelled);
+                                tcs.TrySetResult(SetupDisposition.Cancelled);
                             }
 
                             if (!ExecuteStep(step))
@@ -1514,7 +1514,7 @@ namespace Neon.Kube
                             ConsoleWriter?.Stop();
 
                             Cleanup();
-                            tcs.SetResult(SetupDisposition.Failed);
+                            tcs.TrySetResult(SetupDisposition.Failed);
                             return;
                         }
 
@@ -1542,7 +1542,8 @@ namespace Neon.Kube
                         ConsoleWriter?.Stop();
 
                         Cleanup();
-                        tcs.SetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
+
+                        tcs.TrySetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
                         return;
                     }
                     catch (OperationCanceledException)
@@ -1557,7 +1558,7 @@ namespace Neon.Kube
 
                         ConsoleWriter?.Stop();
                         Cleanup();
-                        tcs.SetResult(SetupDisposition.Cancelled);
+                        tcs.TrySetResult(SetupDisposition.Cancelled);
                     }
                     catch (AggregateException e)
                     {
@@ -1573,7 +1574,7 @@ namespace Neon.Kube
 
                             ConsoleWriter?.Stop();
                             Cleanup();
-                            tcs.SetResult(SetupDisposition.Cancelled);
+                            tcs.TrySetResult(SetupDisposition.Cancelled);
                         }
                         else
                         {
