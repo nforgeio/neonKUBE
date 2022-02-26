@@ -1181,10 +1181,10 @@ namespace Neon.Kube
 
                                 throw new NotSupportedException($"Cannot shutdown the saved (hibernating) virtual machine: {vmName}");
 
-                            case VirtualMachineState.Running:
+                            case VirtualMachineState.Running: 
                             case VirtualMachineState.Starting:
 
-                                hyperv.StopVm(vmName);
+                                hyperv.StopVm(vmName, turnOff: stopMode == StopMode.TurnOff);
                                 break;
 
                             default:
