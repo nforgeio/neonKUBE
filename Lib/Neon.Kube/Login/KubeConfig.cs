@@ -55,7 +55,7 @@ namespace Neon.Kube
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns the current KubeConfig.
+        /// Reads and returns information loaded from the current <b>~/.kube/config</b> file.
         /// </summary>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
