@@ -39,7 +39,7 @@ namespace Neon.Tasks
     /// <para>
     /// This class is pretty easy to use.  Simply use the <see cref="AsyncTimer(Func{Task})"/>
     /// constructor to create an instance, passing the async callback to be called when the 
-    /// timer fires and then call <see cref="Start(TimeSpan, bool)"/> to start the timer, passing
+    /// timer fires and then call <see cref="Start(TimeSpan, bool, Func{Task})"/> to start the timer, passing
     /// the timer interval.
     /// </para>
     /// <para>
@@ -73,7 +73,7 @@ namespace Neon.Tasks
         // Instance members
 
         private object                  syncLock = new object();
-        private Func<Task>              callbackAsync;
+        private Func<Task>              callback;
         private TimeSpan                interval;
         private bool                    delayFirstTick;
         private Task                    timerTask;
@@ -83,12 +83,10 @@ namespace Neon.Tasks
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="tickCallbackAsync">The <see cref="Action"/> to be called when the timer fires.</param>
-        public AsyncTimer(Func<Task> tickCallbackAsync)
+        /// <param name="callback">Optionally specifies the callback.</param>
+        public AsyncTimer(Func<Task> callback = null)
         {
-            Covenant.Requires<ArgumentNullException>(tickCallbackAsync != null, nameof(tickCallbackAsync));
-
-            this.callbackAsync = tickCallbackAsync;
+            this.callback = callback;
         }
 
         /// <summary>
@@ -154,7 +152,7 @@ namespace Neon.Tasks
         /// <para>
         /// The <paramref name="interval"/> must be specified as a positive interval when
         /// the timer is first started but this is optional thereafter, defaulting to
-        /// value from the original <see cref="Start(TimeSpan, bool)"/> call.
+        /// value from the original <see cref="Start(TimeSpan, bool, Func{Task})"/> call.
         /// </para>
         /// </summary>
         /// <param name="interval">Optionally specifies the timer interval.</param>
@@ -162,14 +160,34 @@ namespace Neon.Tasks
         /// The callback is called immediately by default.  You can delay this until
         /// the interval has passed by passing this as <c>true</c>.
         /// </param>
+        /// <param name="callback">
+        /// <para>
+        /// Optionally specifies the timer callback.
+        /// </para>
+        /// <note>
+        /// This must be specified if no callback was passed to the constructor or a previous
+        /// call to <see cref="Start(TimeSpan, bool, Func{Task})"/>.
+        /// </note>
+        /// </param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if this is the first time <see cref="Start(TimeSpan, bool)"/> is called for the
-        /// instance and <paramref name="interval"/> is not passed.
+        /// Thrown if this is the first time <see cref="Start(TimeSpan, bool, Func{Task})"/> is called for the
+        /// instance and <paramref name="interval"/> is not passed or when <paramref name="callback"/> is
+        /// <c>null</c> and no callback was specified in constructor or a previous call to 
+        /// <see cref="Start(TimeSpan, bool, Func{Task})"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">Thrown then the instance is disposed.</exception>
-        public void Start(TimeSpan interval = default, bool delayFirstTick = false)
+        public void Start(TimeSpan interval = default, bool delayFirstTick = false, Func<Task> callback = null)
         {
             Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
+
+            if (callback == null && this.callback == null)
+            {
+                throw new InvalidOperationException($"[{nameof(callback)}] must be non-null when no callback was passed to the constructor or a previous call to [{nameof(Start)}()].");
+            }
+            else if (callback != null)
+            {
+                this.callback = callback;
+            }
 
             lock (syncLock)
             {
@@ -263,7 +281,7 @@ namespace Neon.Tasks
 
                     try
                     {
-                        await callbackAsync();
+                        await callback();
                     }
                     catch (Exception e)
                     {

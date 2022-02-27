@@ -46,7 +46,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                 }))
             {
@@ -78,7 +77,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                 }))
             {
@@ -109,7 +107,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                 }))
             {
@@ -139,6 +136,52 @@ namespace TestCommon
         }
 
         [Fact]
+        public async Task Restart_DifferentCallback()
+        {
+            // Verify that we can restart a timer using the original interval
+            // and a different callback.
+
+            var ticks0 = 0;
+            var ticks1 = 0;
+
+            using (var timer = new AsyncTimer(
+                async () =>
+                {
+                    ticks0++;
+                    await Task.CompletedTask;
+                }))
+            {
+                Assert.False(timer.IsRunning);
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                Assert.False(timer.IsRunning);
+                Assert.Equal(0, ticks0);
+
+                timer.Start(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromSeconds(4.5));
+                Assert.True(ticks0 == 5);
+
+                timer.Stop();
+                ticks0 = 0;
+                await Task.Delay(TimeSpan.FromSeconds(4.5));
+                Assert.True(ticks0 == 0);
+
+                timer.Start(
+                    callback: async () =>
+                    {
+                        ticks1++;
+                        await Task.CompletedTask;
+                    });
+                await Task.Delay(TimeSpan.FromSeconds(4.5));
+                Assert.True(ticks1 == 5);
+
+                timer.Stop();
+                ticks1 = 0;
+                await Task.Delay(TimeSpan.FromSeconds(4.5));
+                Assert.True(ticks1 == 0);
+            }
+        }
+
+        [Fact]
         public async Task Restart_DifferentInterval()
         {
             // Verify that we can restart a timer using a different interval
@@ -150,7 +193,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                 }))
             {
@@ -190,7 +232,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                 });
 
@@ -221,7 +262,6 @@ namespace TestCommon
                 async () =>
                 {
                     ticks++;
-
                     await Task.CompletedTask;
                     throw new Exception();
                 }))
@@ -237,8 +277,6 @@ namespace TestCommon
         {
             // Check error detection.
 
-            Assert.Throws<ArgumentNullException>(() => new AsyncTimer(null));
-
             var timer = new AsyncTimer(async () => await Task.CompletedTask);
 
             Assert.Throws<ArgumentException>(() => timer.Start(TimeSpan.FromSeconds(-1)));
@@ -248,6 +286,11 @@ namespace TestCommon
 
             Assert.Throws<ObjectDisposedException>(() => timer.Start(TimeSpan.FromSeconds(1)));
             Assert.Throws<ObjectDisposedException>(() => timer.Stop());
+
+            timer = new AsyncTimer();
+
+            Assert.Throws<InvalidOperationException>(() => timer.Start(TimeSpan.FromSeconds(1)));
+            timer.Dispose();
         }
     }
 }
