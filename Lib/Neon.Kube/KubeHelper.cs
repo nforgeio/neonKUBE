@@ -1171,8 +1171,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="Config"/>.</returns>
         public static KubeConfig LoadConfig()
         {
-            cachedConfig = null;
-            return Config;
+            return cachedConfig = KubeConfig.Load();
         }
 
         /// <summary>
@@ -1187,14 +1186,7 @@ namespace Neon.Kube
                     return cachedConfig;
                 }
 
-                var configPath = KubeConfigPath;
-
-                if (File.Exists(configPath))
-                {
-                    return cachedConfig = NeonHelper.YamlDeserialize<KubeConfig>(ReadFileTextWithRetry(configPath));
-                }
-
-                return cachedConfig = new KubeConfig();
+                return cachedConfig = KubeConfig.Load();
             }
         }
 
@@ -2974,9 +2966,30 @@ TCPKeepAlive yes
                 {
                     return new KubeClusterHealth()
                     {
-                        State    = KubeClusterState.Unknown,
+                        State   = KubeClusterState.Unknown,
                         Summary = "Timeout checking cluster health"
                     };
+                }
+                catch (HttpOperationException e)
+                {
+                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        // We're expecting this.
+
+                        return new KubeClusterHealth()
+                        {
+                            State   = KubeClusterState.Healthy,
+                            Summary = "Cluster is healthy"
+                        };
+                    }
+                    else
+                    {
+                        return new KubeClusterHealth()
+                        {
+                            State   = KubeClusterState.Unknown,
+                            Summary = e.Message
+                        };
+                    }
                 }
                 catch (Exception e)
                 {

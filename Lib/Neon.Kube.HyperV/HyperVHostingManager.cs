@@ -933,11 +933,7 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    var clusterStatus = new ClusterStatus()
-                    {
-                        State   = clusterLogin.SetupDetails.SetupPending ? ClusterState.Configuring : ClusterState.Configured,
-                        Summary = "Cluster is not configured"
-                    };
+                    var clusterStatus = new ClusterStatus();
 
                     // We're going to assume that all virtual machines that match cluster node names
                     // (after stripping off any cluster prefix) belong to the cluster.
@@ -1017,7 +1013,7 @@ namespace Neon.Kube
                     if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
                     {
                         clusterStatus.State   = ClusterState.Configuring;
-                        clusterStatus.Summary = "Cluster is partially configured.";
+                        clusterStatus.Summary = "Cluster is partially configured";
                     }
                     else if (clusterStatus.State != ClusterState.Transitioning)
                     {
@@ -1029,32 +1025,32 @@ namespace Neon.Kube
                             case ClusterNodeState.Sleeping:
 
                                 clusterStatus.State   = ClusterState.Paused;
-                                clusterStatus.Summary = "Cluster is paused.";
+                                clusterStatus.Summary = "Cluster is paused";
                                 break;
 
                             case ClusterNodeState.Starting:
 
                                 clusterStatus.State   = ClusterState.Unhealthy;
-                                clusterStatus.Summary = "Cluster is starting.";
+                                clusterStatus.Summary = "Cluster is starting";
                                 break;
 
                             case ClusterNodeState.Running:
 
                                 clusterStatus.State   = ClusterState.Configured;
-                                clusterStatus.Summary = "Cluster is configured.";
+                                clusterStatus.Summary = "Cluster is configured";
                                 break;
 
                             case ClusterNodeState.Off:
 
                                 clusterStatus.State   = ClusterState.Off;
-                                clusterStatus.Summary = "Cluster is turned off.";
+                                clusterStatus.Summary = "Cluster is turned off";
                                 break;
 
                             case ClusterNodeState.Unknown:
                             default:
 
                                 clusterStatus.State   = ClusterState.Unknown;
-                                clusterStatus.Summary = "Cluster not found.";
+                                clusterStatus.Summary = "Cluster not found";
                                 break;
                         }
                     }
