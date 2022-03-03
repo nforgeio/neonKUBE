@@ -644,17 +644,16 @@ namespace Neon.Kube
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
-
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
             var context     = KubeHelper.Config.GetContext(contextName);
+            var login       = KubeHelper.GetClusterLogin(contextName);
+
+            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
 
             if (context != null)
             {
                 KubeHelper.Config.RemoveContext(context);
             }
-
-            var login = KubeHelper.GetClusterLogin(contextName);
 
             if (login != null)
             {
