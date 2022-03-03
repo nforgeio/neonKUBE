@@ -729,6 +729,8 @@ namespace Neon.Common
 
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var isCompleted = true;
 
                 foreach (var task in tasks)
@@ -744,13 +746,6 @@ namespace Neon.Common
                 {
                     return;
                 }
-
-                // $todo(jefflill):
-                //
-                // We should probably signal the sub-tasks to cancel here too
-                // if that's possible.
-
-                cancellationToken.ThrowIfCancellationRequested();
 
                 if (stopwatch.Elapsed >= timeout)
                 {
