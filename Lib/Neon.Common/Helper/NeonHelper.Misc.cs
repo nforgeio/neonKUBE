@@ -687,7 +687,7 @@ namespace Neon.Common
         /// when <paramref name="threads"/> is <c>null</c> or empty.  Also and <c>null</c>
         /// threads passed will be ignored.
         /// </summary>
-        /// <param name="threads">The threads.</param>
+        /// <param name="threads">The threads being waited on.</param>
         public static void WaitAll(IEnumerable<Thread> threads)
         {
             if (threads == null)
@@ -707,16 +707,22 @@ namespace Neon.Common
         /// <summary>
         /// Asynchronously waits for all of the <see cref="Task"/>s passed to complete.
         /// </summary>
-        /// <param name="tasks">The tasks being performed.</param>
-        /// <param name="timeout">The optional timeout.</param>
-        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <param name="tasks">Specifies the tasks being waited on..</param>
+        /// <param name="timeout">Optionally specifies a timeout.</param>
+        /// <param name="cancellationToken">Optionally a cancellation token.</param>
+        /// <param name="timeoutMessage">
+        /// Optionally specifies a message to be included in any <see cref="TimeoutException"/>
+        /// thrown to help the what failed.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        public static async Task WaitAllAsync(
+            IEnumerable<Task>   tasks, 
+            TimeSpan?           timeout           = null, 
+            string              timeoutMessage    = null,
+            CancellationToken   cancellationToken = default)
         {
             await SyncContext.ClearAsync;
-
-            // There isn't a super clean way to implement this other than polling.
 
             if (!timeout.HasValue)
             {
@@ -749,7 +755,7 @@ namespace Neon.Common
 
                 if (stopwatch.Elapsed >= timeout)
                 {
-                    throw new TimeoutException();
+                    throw new TimeoutException(timeoutMessage);
                 }
 
                 await Task.Delay(250);

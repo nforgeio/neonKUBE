@@ -1497,6 +1497,7 @@ kubectl apply -f priorityclasses.yaml
                             k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDaemonsetAsync(KubeNamespaces.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
+                        timeoutMessage:    "setup/ingress-ready",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -1564,6 +1565,7 @@ kubectl apply -f priorityclasses.yaml
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
+                        timeoutMessage:    "setup/cert-manager-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1859,6 +1861,7 @@ subjects:
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
+                        timeoutMessage:    "setup/kiali-ready",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -2156,6 +2159,7 @@ subjects:
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-cstor-cvc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-cstor-cspc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
+                        timeoutMessage:    "setup/openebs-cstor-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -2201,6 +2205,7 @@ subjects:
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-snapshot-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
+                        timeoutMessage:    "setup/openebs-ready",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -2613,6 +2618,7 @@ $@"- name: StorageType
                             k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonMonitor, "grafana-agent-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "grafana-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
+                        timeoutMessage:    "setup/monitoring-grafana-agent-ready",
                         cancellationToken: controller.CancellationToken);
                 });
         }
@@ -3259,6 +3265,7 @@ $@"- name: StorageType
                                     k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "minio-console", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                     k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "minio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                 },
+                                timeoutMessage:    "setup/minio-ready",
                                 cancellationToken: controller.CancellationToken);
                         });
 
@@ -3305,8 +3312,8 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var master = cluster.FirstMaster;
-            var tasks = new List<Task>();
+            var master  = cluster.FirstMaster;
+            var tasks   = new List<Task>();
 
             controller.LogProgress(master, verb: "setup", message: "cluster metrics");
 
@@ -3317,7 +3324,9 @@ $@"- name: StorageType
             tasks.Add(InstallTempoAsync(controller, master));
             tasks.Add(InstallGrafanaAsync(controller, master));
 
-            await NeonHelper.WaitAllAsync(tasks, cancellationToken: controller.CancellationToken);
+            await NeonHelper.WaitAllAsync(tasks,
+                timeoutMessage:    "install-monitoring",
+                cancellationToken: controller.CancellationToken);
         }
 
         /// <summary>
@@ -3544,14 +3553,14 @@ $@"- name: StorageType
                     values.Add("trivy.priorityClassName", PriorityClass.NeonData.Name);
 
                     await master.InstallHelmChartAsync(controller, "harbor",
-                        releaseName: "registry-harbor",
-                        @namespace: KubeNamespaces.NeonSystem,
+                        releaseName:  "registry-harbor",
+                        @namespace:   KubeNamespaces.NeonSystem,
                         prioritySpec: PriorityClass.NeonData.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("/setup/harbor-ready",
+            await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "harbor");
@@ -3569,6 +3578,7 @@ $@"- name: StorageType
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-registryctl", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-trivy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
                         },
+                        timeoutMessage:    "setup/harbor-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
