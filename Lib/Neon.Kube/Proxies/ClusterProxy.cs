@@ -525,6 +525,19 @@ namespace Neon.Kube
         // Cluster life cycle methods.
 
         /// <summary>
+        /// Returns flags describing any optional capabilities supported by the cluster's hosting manager.
+        /// </summary>
+        public HostingCapabilities Capabilities
+        {
+            get
+            {
+                Covenant.Assert(HostingManager != null);
+
+                return HostingManager.Capabilities;
+            }
+        }
+
+        /// <summary>
         /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>

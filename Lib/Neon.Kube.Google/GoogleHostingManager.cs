@@ -227,7 +227,7 @@ namespace Neon.Kube
         // Cluster life-cycle methods
 
         /// <inheritdoc/>
-        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable;
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
         public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)

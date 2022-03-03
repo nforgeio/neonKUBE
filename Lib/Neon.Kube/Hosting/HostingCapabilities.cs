@@ -40,6 +40,11 @@ namespace Neon.Kube
         /// The cluster can be paused and resumed, saving and restoring memory such that
         /// the cluster restarts exactly where it left off.
         /// </summary>
-        Pausable = 0x00000002
+        Pausable = 0x00000002,
+
+        /// <summary>
+        /// The cluster can be removed.
+        /// </summary>
+        Removable = 0x00000004
     }
 }
