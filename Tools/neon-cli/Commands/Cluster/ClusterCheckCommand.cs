@@ -56,9 +56,6 @@ namespace NeonCli
     [Command]
     public class ClusterCheckCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const string usage = @"
 Performs various checks on the current cluster.  These checks are targeted at 
 neonKUBE maintainers to verify that cluster setup worked correctly.  This does

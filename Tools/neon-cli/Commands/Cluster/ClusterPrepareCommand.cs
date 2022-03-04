@@ -52,7 +52,6 @@ This includes provisioning networks, load balancers, virtual machines, etc.  Onc
 the infrastructure is ready, you'll use the [neon cluster setup ...] command to
 actually configure the cluster.
 
-
 USAGE:
 
     neon cluster prepare [OPTIONS] CLUSTER-DEF
@@ -125,12 +124,6 @@ OPTIONS:
 
     --headend-uri               - Set the URI for the headend service.
 
-Server Requirements:
---------------------
-
-    * Ubuntu 20.04.x (server)
-    * Known [sysadmin] sudoer user
-    * OpenSSH installed
 ";
 
         /// <inheritdoc/>

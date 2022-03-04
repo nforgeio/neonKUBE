@@ -1180,7 +1180,26 @@ namespace Neon.Kube
                             case VirtualMachineState.Running: 
                             case VirtualMachineState.Starting:
 
-                                hyperv.StopVm(vmName, turnOff: stopMode == StopMode.TurnOff);
+                                switch (stopMode)
+                                {
+                                    case StopMode.Sleep:
+
+                                        hyperv.SaveVm(vmName);
+                                        break;
+
+                                    case StopMode.Graceful:
+
+                                        // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1281
+
+                                        throw new NotImplementedException("Graceful cluster Stop is not implemented yet.");
+                                        hyperv.StopVm(vmName);
+                                        break;
+
+                                    case StopMode.TurnOff:
+
+                                        hyperv.StopVm(vmName, turnOff: true);
+                                        break;
+                                }
                                 break;
 
                             default:

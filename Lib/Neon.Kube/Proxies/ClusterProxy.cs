@@ -615,6 +615,20 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Resets the cluster to factory defaults by removing all non <b>neon-*</b> namespaces including
+        /// <b>default</b> (which will be recreated to be empty) as well as restoring custom resources
+        /// as required.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ResetAsync()
+        {
+            Covenant.Assert(HostingManager != null);
+
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <summary>
         /// <para>
         /// Removes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
