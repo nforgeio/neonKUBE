@@ -776,7 +776,7 @@ namespace Neon.Kube
                 }
 
                 // NOTE: We're not going to notify the UX for quiet/hidden steps but
-                //       we will report this in the logs.
+                //       we will report these in the logs.
 
                 if (!step.IsQuiet)
                 {
@@ -1215,7 +1215,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
+            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb} {message}";
 
             if (ProgressEvent != null)
             {

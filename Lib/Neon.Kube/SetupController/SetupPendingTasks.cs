@@ -46,10 +46,10 @@ namespace Neon.Kube
         /// </summary>
         private struct PendingTask
         {
-            public Task Task { get; set; }
-            public string Verb { get; set; }
-            public string Message { get; set; }
-            public INodeSshProxy Node { get; set;}
+            public Task             Task { get; set; }
+            public string           Verb { get; set; }
+            public string           Message { get; set; }
+            public INodeSshProxy    Node { get; set;}
         }
 
         //---------------------------------------------------------------------

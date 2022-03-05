@@ -42,7 +42,7 @@ namespace Neon.Kube
         public object Node { get; set; }
 
         /// <summary>
-        /// Returns the verb assiciated with this message, if any.
+        /// Returns the verb associated with this message, if any.
         /// </summary>
         public string Verb { get; set; }
 
