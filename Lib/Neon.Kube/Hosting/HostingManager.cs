@@ -302,35 +302,35 @@ namespace Neon.Kube
         public abstract Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <inheritdoc/>
-        public virtual async Task StartClusterAsync(bool noWait = false)
+        public virtual async Task StartClusterAsync()
         {
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task PauseClusterAsync(bool noWait = false)
+        public virtual async Task PauseClusterAsync()
         {
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task ResumeClusterAsync(bool noWait = false)
+        public virtual async Task ResumeClusterAsync()
         {
             await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public virtual async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
         {
             await Task.CompletedTask;
             throw new NotSupportedException();

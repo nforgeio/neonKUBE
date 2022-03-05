@@ -66,8 +66,8 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
-            /// <see cref="RemoveAsync(bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
+            /// <see cref="RemoveAsync(bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -585,14 +585,13 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StartAsync(bool noWait = false)
+        public async Task StartAsync()
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StartClusterAsync(noWait);
+            await HostingManager.StartClusterAsync();
         }
 
         /// <summary>
@@ -604,14 +603,13 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StopAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StopClusterAsync(stopMode, noWait);
+            await HostingManager.StopClusterAsync(stopMode);
         }
 
         /// <summary>
@@ -640,7 +638,6 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -654,7 +651,7 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public async Task RemoveAsync(bool removeOrphansByPrefix = false)
         {
             Covenant.Assert(HostingManager != null);
 
@@ -662,7 +659,7 @@ namespace Neon.Kube
             var context     = KubeHelper.Config.GetContext(contextName);
             var login       = KubeHelper.GetClusterLogin(contextName);
 
-            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
+            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix);
 
             if (context != null)
             {

@@ -1097,7 +1097,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task StartClusterAsync(bool noWait = false)
+        public override async Task StartClusterAsync()
         {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
@@ -1145,7 +1145,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
@@ -1191,7 +1191,7 @@ namespace Neon.Kube
 
                                         // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1281
 
-                                        throw new NotImplementedException("Graceful cluster Stop is not implemented yet.");
+                                        throw new NotImplementedException("Graceful cluster stop is not implemented yet.");
                                         hyperv.StopVm(vmName);
                                         break;
 
@@ -1215,7 +1215,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public override async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
         {
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
