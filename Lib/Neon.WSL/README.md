@@ -29,19 +29,19 @@ SUDO password prompting disabled.
    a. Start Bash in the distro:
 
       ```
-      wsl ----distribution Ubuntu-20.04 -user sysadmin
+      wsl --distribution Ubuntu-20.04 --user sysadmin
       ``
 
    b. At the Bash prompt, execute this command (you'll need to enter **sysadmin0000**
       as the password):
 
       ```
-      echo "%${USER} ALL=(ALL) NOPASSWD:ALL" | sudo EDITOR='tee ' visudo --quiet --file=/etc/sudoers.d/passwordless-sudo
+      echo "sysadmin ALL=(ALL) NOPASSWD:ALL" | sudo EDITOR='tee ' visudo --quiet --file=/etc/sudoers.d/passwordless-sudo
       ```
 
     c. Exit Bash: `exit`
 
-4. Export the WSL2 image as a TAR file, gzip it, and then upload to S3:
+4. Export the WSL2 image as a TAR file, gzip it, and then upload to S3 (in a Windows command window):
 
     ```
     mkdir C:\Temp
