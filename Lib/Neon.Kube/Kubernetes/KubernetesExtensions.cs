@@ -194,10 +194,10 @@ namespace Neon.Kube
                 this.GroupApiVersion = $"{attr.Group}/{attr.ApiVersion}";
             }
 
-            public string Group { get; private set; }
-            public string ApiVersion { get; private set; }
-            public string Kind { get; private set; }
-            public string GroupApiVersion { get; private set; }
+            public string Group             { get; private set; }
+            public string ApiVersion        { get; private set; }
+            public string Kind              { get; private set; }
+            public string GroupApiVersion   { get; private set; }
         }
 
         private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new ();

@@ -2928,17 +2928,20 @@ TCPKeepAlive yes
         {
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
-            // $todo(jefflill):
-            //
-            // We're just going to ping the server with a small request to verify
-            // that it's able to respond.  For the time being, we're going to report
-            // that the cluster is healthy when it responds.
-            //
-            // In the future, we should retrieve a custom resource that holds the
-            // summarized cluster state.  This resource should probably be managed
-            // by the neon-cluster-operator.
+            // We're going to retrieve the special [neon-status/cluster-status] config map
+            // and return the status from there.  This config map is created initially by
+            // cluster setup and then is updated by neon-cluster-operator.
 
             var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+
+            if (config == null)
+            {
+                return new KubeClusterHealth()
+                {
+                     State   = KubeClusterState.Unknown,
+                     Summary = $"kubecontext for [{context.Name}] not found."
+                };
+            }
             
             using (var k8s = new Kubernetes(config))
             {
@@ -2951,16 +2954,14 @@ TCPKeepAlive yes
 
                 try
                 {
-                    await k8s.ReadNamespacedConfigMapAsync(
-                        name:               "b2f4eb3a-9927-40de-ac4f-25ca9802012e",
-                        namespaceParameter: "default",
-                        cancellationToken:   cancellationToken);
+                    var configMap = await k8s.ReadNamespacedConfigMapAsync(
+                        name:               KubeConst.ClusterStatusConfigMapName,
+                        namespaceParameter: KubeNamespaces.NeonStatus,
+                        cancellationToken:  cancellationToken);
 
-                    return new KubeClusterHealth()
-                    {
-                        State   = KubeClusterState.Healthy,
-                        Summary = "Cluster is healthy"
-                    };
+                    var statusConfigMap = KubeClusterStatusConfig.From(configMap);
+
+                    return statusConfigMap.ToKubeClusterHealth();
                 }
                 catch (OperationCanceledException)
                 {
@@ -3000,6 +3001,75 @@ TCPKeepAlive yes
                     };
                 }
             }
+        }
+
+        /// <summary>
+        /// Constructs an <b>initialized</b> Kubernetes object of a specific type.
+        /// </summary>
+        /// <typeparam name="T">The Kubernetes object type.</typeparam>
+        /// <param name="name">Specifies the object name.</param>
+        /// <returns>The new <typeparamref name="T"/>.</returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when <typeparamref name="T"/> does not define define string <b>KubeGroup</b>, 
+        /// <b>KubeApiVersion</b> and <b>KubeKind</b> constants.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Unfortunately, the default constructors for objects like <see cref="V1ConfigMap"/> do not
+        /// initialize the <see cref="IKubernetesObject.ApiVersion"/> and <see cref="IKubernetesObject.Kind"/>
+        /// and properties even though these values will be the same for all instances of each object type.
+        /// (I assume that Microsoft doesn't do this as an optimization that avoids initializing these
+        /// properties and then doing that again when deserializing responses from the API server.
+        /// </para>
+        /// <para>
+        /// This method constructs the request object and then configures its <see cref="IKubernetesObject.ApiVersion"/>
+        /// and <see cref="IKubernetesObject.Kind"/> properties by reflecting <typeparamref name="T"/> and using
+        /// the constant <b>KubeGroup</b>, <b>KubeApiVersion</b> and <b>KubeKind</b> values.  This is very convenient 
+        /// but will be somwehat slower than setting these values explicitly but is probably worth the cost in most
+        /// situations because Kubernetes objects are typically read much more often than created.
+        /// </para>
+        /// <note>
+        /// This method requires that <typeparamref name="T"/> define string <b>KubeGroup</b> <b>KubeApiVersion</b> 
+        /// and <b>KubeKind</b> constants that return the correct values for the type.
+        /// </note>
+        /// </remarks>
+        public static T CreateKubeObject<T>(string name)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>, new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var type            = typeof(T);
+            var groupConst      = type.GetField("KubeGroup", BindingFlags.Public | BindingFlags.Static);
+            var apiVersionConst = type.GetField("KubeApiVersion", BindingFlags.Public | BindingFlags.Static);
+            var kindConst       = type.GetField("KubeKind", BindingFlags.Public | BindingFlags.Static);
+
+            if (groupConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeGroup] constant.");
+            }
+
+            var group = (string)groupConst.GetValue(null);
+
+            if (apiVersionConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeApiVersion] constant.");
+            }
+
+            var apiVersion = (string)apiVersionConst.GetValue(null);
+
+            if (kindConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeKind] constant.");
+            }
+
+            var kind = (string)kindConst.GetValue(null);
+            var obj  = new T();
+
+            obj.ApiVersion = String.IsNullOrEmpty(group) ? apiVersion : $"{group}/{apiVersion}";
+            obj.Kind       = kind;
+            obj.Metadata   = new V1ObjectMeta() { Name = name };
+
+            return obj;
         }
     }
 }

@@ -1063,13 +1063,15 @@ namespace Neon.Kube
                     {
                         var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
 
+                        clusterStatus.Summary = kubeClusterStatus.Summary;
+
                         switch (kubeClusterStatus.State)
                         {
                             case KubeClusterState.Unknown:
                             case KubeClusterState.Unhealthy:
 
                                 clusterStatus.State   = ClusterState.Unhealthy;
-                                clusterStatus.Summary = "Cluster is unhealthy";
+                                clusterStatus.Summary = kubeClusterStatus.Summary;
                                 break;
 
                             case KubeClusterState.Transitioning:

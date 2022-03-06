@@ -390,5 +390,13 @@ namespace Neon.Kube
         /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
         /// </summary>
         public const string NeonResourceGroup = "neonkube.io";
+
+        /// <summary>
+        /// Identifes a special configmap used to report cluster status.  This configmap is
+        /// located in the <see cref="KubeNamespaces.NeonStatus"/> namespace and is initially
+        /// created during cluster setup and is maintained by the neon-cluster-operator
+        /// thereafter.
+        /// </summary>
+        public const string ClusterStatusConfigMapName = "cluster-status";
     }
 }
