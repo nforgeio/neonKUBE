@@ -30,6 +30,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -1688,6 +1689,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(groupName), nameof(groupName));
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1742,6 +1744,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task WaitForPendingTasksAsync(string groupName)
         {
+            await SyncContext.ClearAsync;
+
             SetupPendingTasks group;
 
             lock (syncLock)

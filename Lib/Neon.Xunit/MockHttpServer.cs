@@ -92,6 +92,8 @@ namespace Neon.Xunit
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RequestProcessor()
         {
+            await SyncContext.ClearAsync;
+
             while (true)
             {
                 try
@@ -213,7 +215,6 @@ namespace Neon.Xunit
         public static async Task WritAsynce(this Response response, byte[] bytes)
         {
             await SyncContext.ClearAsync;
-
             await response.Body.WriteAsync(bytes, 0, bytes.Length);
         }
 
@@ -228,7 +229,6 @@ namespace Neon.Xunit
         public static async Task WriteAsync(this Response response, byte[] bytes, int offset, int count)
         {
             await SyncContext.ClearAsync;
-
             await response.Body.WriteAsync(bytes, offset, count);
         }
 

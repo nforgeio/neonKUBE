@@ -121,6 +121,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task CheckNodeImagesAsync()
         {
+            await SyncContext.ClearAsync;
+
             // check busybox doesn't already exist
 
             var pods = await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem);
@@ -261,6 +263,8 @@ namespace NeonClusterOperator
             string      containerName = null,
             bool        retry         = false)
         {
+            await SyncContext.ClearAsync;
+
             var podCommand = new string[]
             {
                 "chroot",

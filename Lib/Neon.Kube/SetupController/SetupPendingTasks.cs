@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -118,6 +119,7 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if <see cref="WaitAsync"/> has already been called.</exception>
         public async Task WaitAsync(ISetupController controller)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             if (waitAsyncCalled)

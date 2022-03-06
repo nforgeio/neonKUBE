@@ -182,6 +182,7 @@ namespace Neon.Temporal
         /// <exception cref="ObjectDisposedException">Thrown if the worker is disposed.</exception>
         public async Task StartAsync()
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
             if (isRunning)

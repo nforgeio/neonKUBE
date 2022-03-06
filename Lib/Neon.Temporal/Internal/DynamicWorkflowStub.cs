@@ -35,6 +35,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Temporal.Internal
 {
@@ -230,6 +231,8 @@ namespace Neon.Temporal.Internal
         /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
         public async Task<WorkflowStub> ToUntypedAsync()
         {
+            await SyncContext.ClearAsync;
+
             return await (Task<WorkflowStub>)toUntypedAsync.Invoke(this, Array.Empty<object>());
         }
     }

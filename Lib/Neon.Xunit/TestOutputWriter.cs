@@ -27,6 +27,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Xunit;
@@ -98,7 +99,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task FlushAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
         }
 
         /// <inheritdoc/>
@@ -332,29 +333,33 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task WriteLineAsync()
         {
+            await SyncContext.ClearAsync;
+
             outputHelper.WriteLine(string.Empty);
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public override async Task WriteLineAsync(char value)
         {
+            await SyncContext.ClearAsync;
+
             outputHelper.WriteLine(value.ToString());
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public override async Task WriteLineAsync(char[] buffer, int index, int count)
         {
+            await SyncContext.ClearAsync;
+
             outputHelper.WriteLine(new string(buffer, index, count));
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public override async Task WriteLineAsync(string value)
         {
+            await SyncContext.ClearAsync;
+
             outputHelper.WriteLine(value.ToString());
-            await Task.CompletedTask;
         }
     }
 }

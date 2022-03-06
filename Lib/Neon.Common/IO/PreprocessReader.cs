@@ -29,6 +29,7 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
 using Neon.Deployment;
+using Neon.Tasks;
 
 namespace Neon.IO
 {
@@ -715,6 +716,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadLineAsync()
         {
+            await SyncContext.ClearAsync;
+
             string line;
 
             while (true)
@@ -806,6 +809,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadToEndAsync()
         {
+            await SyncContext.ClearAsync;
+
             var sb = new StringBuilder(1024);
 
             for (var line = await ReadLineAsync(); line != null; line = await ReadLineAsync())

@@ -44,6 +44,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
             var domainRegisterRequest =

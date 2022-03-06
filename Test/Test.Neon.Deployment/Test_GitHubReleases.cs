@@ -45,6 +45,18 @@ namespace TestDeployment
     {
         const string repo = "neon-test/github-automation";
 
+        public Test_GitHubReleases()
+        {
+            // Remove any existing GitHub releases.
+
+            var releaseList = GitHub.Release.List(repo);
+
+            foreach (var release in releaseList)
+            {
+                GitHub.Release.Remove(repo, release);
+            }
+        }
+
         [Fact]
         public void EndToEnd_WithFileAsset()
         {
@@ -102,7 +114,7 @@ namespace TestDeployment
 
                 var releaseList = GitHub.Release.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the new release:
 
@@ -124,7 +136,7 @@ namespace TestDeployment
 
                 releaseList = GitHub.Release.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
@@ -192,7 +204,7 @@ namespace TestDeployment
 
                 var releaseList = GitHub.Release.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the new release:
 
@@ -214,7 +226,7 @@ namespace TestDeployment
 
                 releaseList = GitHub.Release.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
@@ -248,7 +260,7 @@ namespace TestDeployment
 
                 var releaseList = GitHub.Release.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Adding an asset for published releases should fail:
 
@@ -284,7 +296,7 @@ namespace TestDeployment
 
                 releaseList = GitHub.Release.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
@@ -295,7 +307,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        public void Delete_Draft()
+        public async void Delete_Draft()
         {
             // Verify that we can list and delete draft releases.
 
@@ -317,7 +329,7 @@ namespace TestDeployment
 
                 var releaseList = GitHub.Release.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Also confirm that we can fetch the draft release.
 
@@ -328,12 +340,13 @@ namespace TestDeployment
                 // Delete the draft release.
 
                 GitHub.Release.Remove(repo, release);
+                await Task.Delay(10);   // GitHub takes a few seconds to actually delete a release
 
                 // Confirm that the release is gone.
 
                 releaseList = GitHub.Release.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
                 Assert.Null(GitHub.Release.Get(repo, release.TagName));
             }
         }
@@ -375,13 +388,13 @@ namespace TestDeployment
 
                 Assert.Empty(GitHub.Release.Find(repo, release => release.Name == null));
 
-                var match = GitHub.Release.Find(repo, release => release.Draft).SingleOrDefault(release => release.TagName == tagName1);
+                var match = GitHub.Release.Find(repo, release => release.Draft).FirstOrDefault(release => release.TagName == tagName1);
 
                 Assert.NotNull(match);
                 Assert.Equal(tagName1, match.TagName);
                 Assert.True(match.Draft);
 
-                match = GitHub.Release.Find(repo, release => !release.Draft).SingleOrDefault(release => release.TagName == tagName2);
+                match = GitHub.Release.Find(repo, release => !release.Draft).FirstOrDefault(release => release.TagName == tagName2);
 
                 Assert.NotNull(match);
                 Assert.Equal(tagName2, match.TagName);
@@ -504,8 +517,8 @@ namespace TestDeployment
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
 
-                    // Set the file size to zero and verify that downloading it again downloads
-                    // all of the parts.
+                    // Set the file size to zero and verify that downloading it again 
+                    // actually results in the entire file being downloaded..
                     //
                     // Note that we're using the progress action to count how many parts were downloaded.
 

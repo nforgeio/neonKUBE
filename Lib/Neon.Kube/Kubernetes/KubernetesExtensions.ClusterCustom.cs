@@ -36,6 +36,7 @@ using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Models;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -143,6 +144,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = new T().GetKubernetesTypeMetadata();
 
             var result = await k8s.ListClusterCustomObjectAsync(
@@ -190,6 +193,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
 
@@ -211,6 +216,8 @@ namespace Neon.Kube
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = new T().GetKubernetesTypeMetadata();
             var result       = await k8s.GetClusterCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, cancellationToken);
 
@@ -247,6 +254,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
 
@@ -284,6 +293,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
 

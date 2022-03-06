@@ -274,6 +274,8 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
+            await SyncContext.ClearAsync;
+
             var debugMode = Client.Settings.Debug;
             
             if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
@@ -2297,6 +2299,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
@@ -2376,6 +2379,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args, LocalActivityOptions options)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
@@ -2415,7 +2419,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ForceReplayAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
 
             throw new ForceReplayException();
         }

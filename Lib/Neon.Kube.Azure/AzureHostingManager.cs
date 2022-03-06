@@ -52,6 +52,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
@@ -1059,6 +1060,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
+            await SyncContext.ClearAsync;
+
             ConnectAzure();
             UpdateNetwork(NetworkOperations.EnableSsh);
             await Task.CompletedTask;
@@ -1067,6 +1070,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
+            await SyncContext.ClearAsync;
+
             ConnectAzure();
             UpdateNetwork(NetworkOperations.DisableSsh);
             await Task.CompletedTask;
@@ -1110,6 +1115,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
             

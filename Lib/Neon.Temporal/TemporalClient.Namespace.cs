@@ -44,6 +44,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         private async Task RegisterNamespaceAsync(InternalRegisterNamespaceRequest request)
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
             var namespaceRegisterRequest =

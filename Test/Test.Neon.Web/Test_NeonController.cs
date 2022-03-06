@@ -445,7 +445,7 @@ namespace Test.Neon.Web.Controller
                 var evt = events[0];
 
                 Assert.Equal(LogLevel.Error, evt.LogLevel);
-                Assert.StartsWith("System.TimeoutException: test timeout", evt.Message);
+                Assert.StartsWith("[System.TimeoutException]: test timeout", evt.Message);
             }
             finally
             {

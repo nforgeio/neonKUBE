@@ -37,6 +37,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -131,7 +132,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task DisableInternetSshAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
         }
 
         /// <inheritdoc/>
@@ -304,63 +305,63 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task PauseClusterAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task ResumeClusterAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task StartNodeAsync(string nodeName)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-            await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-            await Task.CompletedTask;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
-            await Task.CompletedTask;
             throw new NotSupportedException();
         }
     }

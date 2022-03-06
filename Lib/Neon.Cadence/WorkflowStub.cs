@@ -96,6 +96,8 @@ namespace Neon.Cadence
         {
             public async Task CancelAsync(string workflowId, string runId)
             {
+                await SyncContext.ClearAsync;
+
                 var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
 
                 await stub.CancelAsync();
@@ -103,6 +105,8 @@ namespace Neon.Cadence
 
             public async Task<byte[]> GetResultAsync(string workflowId, string runId)
             {
+                await SyncContext.ClearAsync;
+                
                 var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
 
                 return await stub.GetResultAsync<byte[]>();
@@ -110,6 +114,8 @@ namespace Neon.Cadence
 
             public async Task<byte[]> QueryAsync(string workflowId, string runId, string queryType, byte[] args)
             {
+                await SyncContext.ClearAsync;
+
                 var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
 
                 return await stub.QueryAsync<byte[]>(queryType, args);
@@ -117,6 +123,8 @@ namespace Neon.Cadence
 
             public async Task SignalAsync(string workflowId, string runId, string signalName, byte[] args)
             {
+                await SyncContext.ClearAsync;
+
                 var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
 
                 await stub.SignalAsync(signalName, args);
@@ -139,6 +147,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         public static async Task<WorkflowStub> FromTypedAsync(object stub)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{stub.GetType().FullName}] is not a typed workflow stub.");
 

@@ -271,6 +271,8 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
+            await SyncContext.ClearAsync;
+
             var debugMode = Client.Settings.Debug;
             
             if (WorkflowBase.CallContext.Value == WorkflowCallContext.Entrypoint)
@@ -2271,6 +2273,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
@@ -2342,6 +2345,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args, LocalActivityOptions options)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
@@ -2382,7 +2386,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ForceReplayAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
 
             throw new ForceReplayException();
         }

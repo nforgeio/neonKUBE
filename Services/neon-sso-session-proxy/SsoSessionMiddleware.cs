@@ -15,6 +15,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Tasks;
 using Neon.Web;
 
 namespace NeonSsoSessionProxy
@@ -28,8 +29,9 @@ namespace NeonSsoSessionProxy
         }
 
         /// <summary>
-        /// Entrypoint for being called as part of the request pipeline.
-        /// 
+        /// <para>
+        /// Entrypoint called as part of the request pipeline.
+        /// </para>
         /// <para>
         /// This method is responsible for intercepting token requests from clients.
         /// If the client has a valid cookie with a token response in it, we save the 
@@ -38,12 +40,14 @@ namespace NeonSsoSessionProxy
         /// </para>
         /// </summary>
         public async Task InvokeAsync(
-            HttpContext context,
-            Service NeonSsoSessionProxyService,
-            IDistributedCache cache, 
-            AesCipher cipher,
-            DistributedCacheEntryOptions cacheOptions)
+            HttpContext                     context,
+            Service                         NeonSsoSessionProxyService,
+            IDistributedCache               cache, 
+            AesCipher                       cipher,
+            DistributedCacheEntryOptions    cacheOptions)
         {
+            await SyncContext.ClearAsync;
+
             try
             {
                 if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))

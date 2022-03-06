@@ -28,6 +28,7 @@ using System.Web;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Tasks;
 
 // $todo(jefflill):
 //
@@ -84,6 +85,7 @@ namespace Neon.Deployment
             GitHubPackageVisibility visibility      = GitHubPackageVisibility.All,
             bool                    includeVersions = false)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
             using (var client = GitHub.CreateJsonClient())
@@ -192,6 +194,7 @@ namespace Neon.Deployment
             string              nameOrPattern,
             GitHubPackageType   packageType = GitHubPackageType.Container)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 
@@ -249,6 +252,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 

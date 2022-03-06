@@ -164,6 +164,7 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task StartWorkerAsync(Worker worker)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 
@@ -198,6 +199,7 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 

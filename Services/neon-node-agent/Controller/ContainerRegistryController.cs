@@ -18,9 +18,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Retry;
-using Neon.Kube.Operator;
+using Neon.Tasks;
 
 using k8s.Models;
 
@@ -136,6 +137,8 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry registry)
         {
+            await SyncContext.ClearAsync;
+
             reconciledReceivedCounter.Inc();
 
             await resourceManager.ReconciledAsync(registry,
@@ -160,6 +163,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1ContainerRegistry registry)
         {
+            await SyncContext.ClearAsync;
+
             deletedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(registry,
@@ -182,6 +187,8 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry registry)
         {
+            await SyncContext.ClearAsync;
+
             statusModifiedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(registry,

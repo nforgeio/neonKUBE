@@ -2025,6 +2025,7 @@ namespace Neon.Common
         /// <returns>The task result.</returns>
         public static async Task<object> GetTaskResultAsObjectAsync(Task task)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             await task;

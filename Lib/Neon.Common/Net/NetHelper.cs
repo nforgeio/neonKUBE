@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Net
 {
@@ -722,6 +723,8 @@ namespace Neon.Net
         /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
         private static async Task<IPAddress[]> GetHostAddressesAsync(string hostname)
         {
+            await SyncContext.ClearAsync;
+
             try
             {
                 return await Dns.GetHostAddressesAsync(hostname);

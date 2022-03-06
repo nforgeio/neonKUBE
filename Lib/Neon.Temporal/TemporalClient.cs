@@ -984,6 +984,8 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnListenerRequestAsync(RequestContext context)
         {
+            await SyncContext.ClearAsync;
+
             var request  = context.Request;
             var response = context.Response;
 
@@ -1072,6 +1074,8 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnKestralRequestAsync(HttpContext context)
         {
+            await SyncContext.ClearAsync;
+
             var request  = context.Request;
             var response = context.Response;
 
@@ -1155,6 +1159,7 @@ namespace Neon.Temporal
         /// <returns>The HTTP reply information.</returns>
         private static async Task<HttpReply> OnRootRequestAsync(ProxyMessage proxyMessage)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(proxyMessage != null, nameof(proxyMessage));
 
             var httpReply = new HttpReply() { StatusCode = 200 };   // OK
@@ -1245,6 +1250,8 @@ namespace Neon.Temporal
 
         private static async Task OnLogRequestAsync(TemporalClient client, ProxyRequest request)
         {
+            await SyncContext.ClearAsync;
+
             var logRequest = (LogRequest)request;
 
             if (logRequest.FromTemporal)
@@ -1924,6 +1931,8 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ClearAsync;
+
             request.ClientId = this.ClientId;
 
             try
@@ -1994,6 +2003,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 

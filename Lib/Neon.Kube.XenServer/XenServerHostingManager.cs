@@ -35,6 +35,7 @@ using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
+using Neon.Tasks;
 
 using k8s.Models;
 
@@ -435,6 +436,8 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
+            await SyncContext.ClearAsync;
+
             var xenClient    = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKube}";
 
@@ -654,6 +657,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
@@ -670,8 +674,10 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
+            await SyncContext.ClearAsync;
+
             if (timeout <= TimeSpan.Zero)
             {
                 timeout = DefaultStatusTimeout;

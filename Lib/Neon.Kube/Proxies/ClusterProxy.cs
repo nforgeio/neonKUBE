@@ -36,6 +36,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -560,6 +561,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
@@ -572,6 +574,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="ClusterStatus"/>.</returns>
         public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             return await HostingManager.GetClusterStatusAsync(timeout);
@@ -589,6 +592,7 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         public async Task StartAsync()
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StartClusterAsync();
@@ -607,6 +611,7 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopClusterAsync(stopMode);
@@ -620,6 +625,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ResetAsync()
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             await Task.CompletedTask;
@@ -653,6 +659,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task RemoveAsync(bool removeOrphansByPrefix = false)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
@@ -684,6 +691,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartNodeAsync(string nodeName)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -703,6 +711,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -728,6 +737,7 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
         public async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
