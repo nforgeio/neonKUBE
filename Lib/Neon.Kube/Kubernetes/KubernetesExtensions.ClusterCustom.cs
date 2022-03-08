@@ -30,13 +30,13 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Rest;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Models;
-using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -295,6 +295,8 @@ namespace Neon.Kube
         {
             await SyncContext.ClearAsync;
 
+            body.Metadata.Name = name;
+
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
 
@@ -306,8 +308,6 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    body.Metadata.Name = name;
-
                     return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager);
                 }
                 else

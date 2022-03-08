@@ -27,9 +27,9 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Tasks;
 
 using Cassandra;
-using Neon.Tasks;
 
 namespace Neon.Cassandra
 {

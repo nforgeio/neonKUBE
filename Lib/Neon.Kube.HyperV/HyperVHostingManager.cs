@@ -44,9 +44,9 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
-using Neon.Tasks;
 
 namespace Neon.Kube
 {

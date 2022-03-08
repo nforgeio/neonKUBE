@@ -7,12 +7,12 @@ using System;
 using System.Globalization;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Tasks;
-using System.Net;
 
 namespace Neon.Time
 {

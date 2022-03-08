@@ -21,7 +21,6 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Neon.Tasks;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -32,6 +31,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;

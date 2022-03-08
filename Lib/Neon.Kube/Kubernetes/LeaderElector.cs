@@ -26,11 +26,11 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Models;
+using Prometheus;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
-using Prometheus;
 
 namespace Neon.Kube
 {

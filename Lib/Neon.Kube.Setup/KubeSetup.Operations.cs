@@ -15,16 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s;
-using k8s.Models;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.IO;
-using Neon.Kube.Resources;
-using Neon.Net;
-using Neon.SSH;
-using Neon.Tasks;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -35,6 +25,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
+using Newtonsoft.Json;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
+using Neon.Kube.Resources;
+using Neon.Net;
+using Neon.SSH;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -3765,7 +3767,7 @@ $@"- name: StorageType
                     localRegistry.Name     =
                     localRegistry.Prefix   =
                     localRegistry.Location = KubeConst.LocalClusterRegistry;
-                    localRegistry.Blocked = false;
+                    localRegistry.Blocked  = false;
                     localRegistry.Insecure = true;
                     localRegistry.Username = harborCrioUser.Name;
                     localRegistry.Password = harborCrioUser.Password;
@@ -3788,12 +3790,12 @@ $@"- name: StorageType
                         var clusterRegistry = new V1ContainerRegistry();
 
                         clusterRegistry.Spec.SearchOrder = cluster.Definition.Container.SearchRegistries.IndexOf(registry.Location);
-                        clusterRegistry.Spec.Prefix = registry.Prefix;
-                        clusterRegistry.Spec.Location = registry.Location;
-                        clusterRegistry.Spec.Blocked = registry.Blocked;
-                        clusterRegistry.Spec.Insecure = registry.Insecure;
-                        clusterRegistry.Spec.Username = registry.Username;
-                        clusterRegistry.Spec.Password = registry.Password;
+                        clusterRegistry.Spec.Prefix      = registry.Prefix;
+                        clusterRegistry.Spec.Location    = registry.Location;
+                        clusterRegistry.Spec.Blocked     = registry.Blocked;
+                        clusterRegistry.Spec.Insecure    = registry.Insecure;
+                        clusterRegistry.Spec.Username    = registry.Username;
+                        clusterRegistry.Spec.Password    = registry.Password;
 
                         await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
                     }

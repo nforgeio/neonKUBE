@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Stub.cs
+// FILE:	    Helper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,20 +19,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using DotnetKubernetesClient.Entities;
+using k8s;
 using k8s.Models;
-using KubeOps.Operator.Entities;
-using KubeOps.Operator.Entities.Annotations;
-
-using Neon.Kube;
 
 namespace Neon.Kube.Resources
 {
     /// <summary>
-    /// Used for obtaining a reference to the <b>Neon.Kube.Resources</b> assembly
-    /// by our Kubernetes operators for registering custom resource types.
+    /// Internal helpers.
     /// </summary>
-    public static class Stub
+    internal static class Helper
     {
+        /// <summary>
+        /// Identifes a special configmap used to report cluster status.  This configmap will
+        /// be located in the <b>neon-status</b> namespace and is created during cluster setup
+        /// and then is maintained by the neon-cluster-operator thereafter.
+        /// </summary>
+        public const string NeonResourceGroup = "neonkube.io";
     }
 }

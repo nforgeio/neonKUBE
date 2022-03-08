@@ -23,11 +23,11 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+#if KUBEOPS
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
-
-using Neon.Kube;
+#endif
 
 namespace Neon.Kube.Resources
 {

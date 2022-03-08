@@ -26,6 +26,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.Models;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
@@ -36,8 +37,6 @@ using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
-
-using k8s.Models;
 
 namespace Neon.Kube
 {
