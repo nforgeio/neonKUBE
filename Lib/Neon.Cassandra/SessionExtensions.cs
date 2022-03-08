@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using Cassandra;
 
@@ -228,6 +229,7 @@ namespace Neon.Cassandra
             this ISession       session,
             string              batchText)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(batchText), nameof(batchText));
 
             foreach (var command in SplitBatch(batchText))
@@ -246,6 +248,7 @@ namespace Neon.Cassandra
             this ISession       session,
             string              cqlText)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cqlText), nameof(cqlText));
 
             return await session.ExecuteAsync(new SimpleStatement(cqlText));

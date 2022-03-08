@@ -156,7 +156,7 @@ namespace Neon.Kube
 
                 if (clusterDefinition.NodeDefinitions.Count != 1 || !clusterDefinition.NodeDefinitions.Values.First().IsMaster)
                 {
-                    throw new ClusterDefinitionException("The neonDESKTOP build-in cluster must include only one node and that must be a [master].");
+                    throw new ClusterDefinitionException("The neonDESKTOP built-in cluster must include only one node and that must be a [master].");
                 }
 
                 clusterDefinition.NodeDefinitions.Values.First().Address = NeonDesktopNodeAddress.ToString();

@@ -15,6 +15,7 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
 
 		<PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
 		<SelfContained>true</SelfContained>
@@ -29,6 +30,7 @@
 		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
 		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

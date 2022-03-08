@@ -26,6 +26,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.Models;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
@@ -35,14 +36,28 @@ using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
-
-using k8s.Models;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.XenServer)]
     public partial class XenServerHostingManager : HostingManager
     {
@@ -420,6 +435,8 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
+            await SyncContext.ClearAsync;
+
             var xenClient    = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKube}";
 
@@ -637,8 +654,34 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostingResourceAvailability> GetResourceAvailability()
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+
+            // $todo(jefflill): Really implement this.
+
+            await Task.CompletedTask;
+            return new HostingResourceAvailability() { CanBeDeployed = true };
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
+
+        /// <inheritdoc/>
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            await SyncContext.ClearAsync;
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
             throw new NotImplementedException("$todo(jefflill)");
         }
     }

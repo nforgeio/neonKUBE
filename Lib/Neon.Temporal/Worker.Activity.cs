@@ -75,6 +75,7 @@ namespace Neon.Temporal
         /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
         private async Task RegisterActivityImplementationAsync(Type activityType)
         {
+            await SyncContext.ClearAsync;
             TemporalHelper.ValidateActivityImplementation(activityType);
 
             var interfaceType = TemporalHelper.GetActivityInterface(activityType);
@@ -360,6 +361,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task OnActivityProxyRequestAsync(ProxyRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
@@ -396,6 +398,8 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         private async Task<ActivityInvokeReply> OnActivityInvokeRequest(ActivityInvokeRequest request)
         {
+            await SyncContext.ClearAsync;
+
             ActivityRegistration    invokeInfo;
             ActivityBase            activity;
 
@@ -466,6 +470,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(ActivityInvokeLocalRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
@@ -525,6 +530,8 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         private async Task<ActivityStoppingReply> ActivityStoppingRequest(ActivityStoppingRequest request)
         {
+            await SyncContext.ClearAsync;
+
             ActivityBase    activity;
 
             lock (idToActivity)

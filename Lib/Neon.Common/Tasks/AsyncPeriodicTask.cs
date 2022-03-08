@@ -169,6 +169,8 @@ namespace Neon.Tasks
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnTerminateAsync()
         {
+            await SyncContext.ClearAsync;
+
             if (onTerminateAsync != null)
             {
                 await onTerminateAsync();
@@ -186,6 +188,8 @@ namespace Neon.Tasks
         /// <returns><c>true</c> if the handler indicates that the task should be terminated.</returns>
         private async Task<bool> OnExceptionAsync(Exception e)
         {
+            await SyncContext.ClearAsync;
+
             if (onExceptionAsync != null)
             {
                 return await onExceptionAsync(e);

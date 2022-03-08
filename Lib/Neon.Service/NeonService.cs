@@ -996,6 +996,8 @@ namespace Neon.Service
         /// <param name="newStatus">The new status.</param>
         public async Task SetStatusAsync(NeonServiceStatus newStatus)
         {
+            await SyncContext.ClearAsync;
+
             var orgStatus       = this.Status;
             var newStatusString = NeonHelper.EnumToString(newStatus);
 
@@ -1086,6 +1088,7 @@ namespace Neon.Service
         /// </remarks>
         public async Task StartedAsync(NeonServiceStatus status = NeonServiceStatus.Running)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentException>(status == NeonServiceStatus.Running || status == NeonServiceStatus.NotReady, nameof(status));
 
             await SetStatusAsync(status);
@@ -1544,6 +1547,8 @@ namespace Neon.Service
         /// </remarks>
         private async Task Runtimer(CancellationToken cancellationToken)
         {
+            await SyncContext.ClearAsync;
+
             var second = TimeSpan.FromSeconds(1);
 
             while (!cancellationToken.IsCancellationRequested)

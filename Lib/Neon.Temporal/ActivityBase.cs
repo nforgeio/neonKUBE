@@ -29,6 +29,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Tasks;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -126,6 +127,8 @@ namespace Neon.Temporal
         /// <returns>The encoded activity results.</returns>
         private async Task<byte[]> InvokeAsync(TemporalClient client, byte[] argBytes)
         {
+            await SyncContext.ClearAsync;
+
             var parameters     = activityMethod.GetParameters();
             var parameterTypes = new Type[parameters.Length];
 
@@ -163,6 +166,8 @@ namespace Neon.Temporal
         /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(byte[] args)
         {
+            await SyncContext.ClearAsync;
+
             // Capture the activity context details.
 
             var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(

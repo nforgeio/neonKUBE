@@ -56,9 +56,6 @@ namespace NeonCli
     [Command]
     public class ClusterCheckCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const string usage = @"
 Performs various checks on the current cluster.  These checks are targeted at 
 neonKUBE maintainers to verify that cluster setup worked correctly.  This does
@@ -143,7 +140,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             // Perform the requested checks.
 
-            var k8s    = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+            var k8s    = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile());
             var error = false;
 
             if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, details: details))

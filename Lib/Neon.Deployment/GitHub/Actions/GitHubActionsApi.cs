@@ -35,6 +35,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Deployment;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Deployment
 {
@@ -125,6 +126,7 @@ namespace Neon.Deployment
         /// <returns>The number of runs deleted.</returns>
         public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
         {
+            await SyncContext.ClearAsync;
             GitHub.GetCredentials();
 
             var repoPath    = GitHubRepoPath.Parse(repo);

@@ -26,11 +26,11 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Models;
+using Prometheus;
 
 using Neon.Common;
 using Neon.Diagnostics;
-
-using Prometheus;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -191,6 +191,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartAsync()
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<InvalidOperationException>(electionTask == null, $"You cannot reuse a [{nameof(LeaderElector)}].");
 
             log.LogInfo(() => $"{logPrefix}: starting [leaseDuration={settings.LeaseDuration}] [renewDeadline={settings.RenewDeadline}] [retryInterval={settings.RetryInterval}]");
@@ -207,6 +208,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopAsync()
         {
+            await SyncContext.ClearAsync;
+
             if (cts.IsCancellationRequested)
             {
                 return;
@@ -263,6 +266,8 @@ namespace Neon.Kube
         /// <returns><c>true</c> on success.</returns>
         private async Task<bool> AcquireOrRenewAsync()
         {
+            await SyncContext.ClearAsync;
+
             // Read the current lease information.
 
             V1Lease remoteLease;
@@ -528,6 +533,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ElectionLoopAsync()
         {
+            await SyncContext.ClearAsync;
+
             try
             {
                 StateChanged?.Invoke(new LeaderTransition(LeaderState.Unknown, LeaderState.Unknown, null));

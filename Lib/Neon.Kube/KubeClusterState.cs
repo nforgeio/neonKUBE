@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingResourceAvailability.cs
+// FILE:	    KubeClusterState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,27 +16,43 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-
-using Neon.Common;
+using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the types of resources required by a <see cref="IHostingManager"/>
-    /// to deploy a cluster.
+    /// Enumerates the health states for a Kubernetes cluster.
     /// </summary>
-    public enum HostingResourceType
+    public enum KubeClusterState
     {
         /// <summary>
-        /// RAM
+        /// The health status is not known.
         /// </summary>
-        Memory,
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
 
         /// <summary>
-        /// Disk
+        /// The cluster is not healthy.
         /// </summary>
-        Disk,
+        [EnumMember(Value = "unhealthy")]
+        Unhealthy,
+
+        /// <summary>
+        /// The cluster is healthy but in the process of adding or removing nodes.
+        /// </summary>
+        [EnumMember(Value = "transitioning")]
+        Transitioning,
+
+        /// <summary>
+        /// The cluster is healthy and stable.
+        /// </summary>
+        [EnumMember(Value = "healthy")]
+        Healthy,
+
+        /// <summary>
+        /// The cluster is paused.
+        /// </summary>
+        [EnumMember(Value = "paused")]
+        Paused
     }
 }

@@ -26,6 +26,7 @@ using Microsoft.Net.Http.Headers;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Tasks;
 
 namespace Neon.Web
 {
@@ -74,6 +75,8 @@ namespace Neon.Web
         /// <inheritdoc/>
         public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
         {
+            await SyncContext.ClearAsync;
+
             var response = context.HttpContext.Response;
 
             if (context.Object == null)

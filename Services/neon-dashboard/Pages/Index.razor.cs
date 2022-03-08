@@ -23,6 +23,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
+using Neon.Tasks;
+
 using NeonDashboard.Shared.Components;
 
 namespace NeonDashboard.Pages
@@ -52,6 +54,8 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
+            await SyncContext.ClearAsync;
+
             if (string.IsNullOrEmpty(CurrentDashboard))
             {
                 NavigationManager.NavigateTo("kubernetes", true);

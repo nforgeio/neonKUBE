@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -46,10 +47,10 @@ namespace Neon.Kube
         /// </summary>
         private struct PendingTask
         {
-            public Task Task { get; set; }
-            public string Verb { get; set; }
-            public string Message { get; set; }
-            public INodeSshProxy Node { get; set;}
+            public Task             Task { get; set; }
+            public string           Verb { get; set; }
+            public string           Message { get; set; }
+            public INodeSshProxy    Node { get; set;}
         }
 
         //---------------------------------------------------------------------
@@ -118,6 +119,7 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if <see cref="WaitAsync"/> has already been called.</exception>
         public async Task WaitAsync(ISetupController controller)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             if (waitAsyncCalled)

@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,9 +19,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Retry;
-using Neon.Kube.Operator;
+using Neon.Tasks;
 
 using k8s.Models;
 
@@ -31,7 +33,6 @@ using KubeOps.Operator.Rbac;
 
 using Prometheus;
 using Tomlyn;
-using System.Diagnostics.Contracts;
 
 namespace NeonNodeAgent
 {
@@ -122,6 +123,8 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NodeTask task)
         {
+            await SyncContext.ClearAsync;
+
             reconciledReceivedCounter.Inc();
 
             await resourceManager.ReconciledAsync(task,
@@ -159,6 +162,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1NodeTask task)
         {
+            await SyncContext.ClearAsync;
+
             deletedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(task,
@@ -181,6 +186,8 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1NodeTask task)
         {
+            await SyncContext.ClearAsync;
+
             statusModifiedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(task,
@@ -229,6 +236,8 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NodeTask> resources)
         {
+            await SyncContext.ClearAsync;
+
             var tasks = resourceManager.CloneResourcesAsync(resources);
 
             if (cleanupTaskRunning)
@@ -258,13 +267,13 @@ namespace NeonNodeAgent
         }
 
         /// <summary>
-        /// 
+        /// Executes a node task.
         /// </summary>
-        /// <param name="task"></param>
-        /// <returns></returns>
+        /// <param name="task">The node task.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NodeTask task)
         {
-            await Task.CompletedTask;
+            await SyncContext.ClearAsync;
             throw new NotImplementedException("$todo(jefflill)");
         }
     }

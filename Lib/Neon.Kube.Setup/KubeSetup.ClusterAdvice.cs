@@ -33,6 +33,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using k8s;
 using k8s.Models;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 
 using Neon.Collections;
 using Neon.Common;
@@ -41,7 +42,6 @@ using Neon.IO;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {

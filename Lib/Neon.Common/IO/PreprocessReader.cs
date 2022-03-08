@@ -29,6 +29,7 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
 using Neon.Deployment;
+using Neon.Tasks;
 
 namespace Neon.IO
 {
@@ -641,7 +642,7 @@ namespace Neon.IO
         /// <param name="value">The option value.</param>
         /// <remarks>
         /// <note>
-        /// The value set will be lower case <b>true</b> or <b>false</b>.
+        /// The value set will be lowercase <b>true</b> or <b>false</b>.
         /// </note>
         /// </remarks>
         public void Set(string name, bool value)
@@ -715,6 +716,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadLineAsync()
         {
+            await SyncContext.ClearAsync;
+
             string line;
 
             while (true)
@@ -806,6 +809,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadToEndAsync()
         {
+            await SyncContext.ClearAsync;
+
             var sb = new StringBuilder(1024);
 
             for (var line = await ReadLineAsync(); line != null; line = await ReadLineAsync())

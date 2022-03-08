@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Rest;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -145,24 +146,26 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = new T().GetKubernetesTypeMetadata();
 
             var result = await k8s.ListNamespacedCustomObjectAsync(
-                typeMetadata.Group,
-                typeMetadata.ApiVersion,
-                namespaceParameter,
-                typeMetadata.PluralName,
-                allowWatchBookmarks,
-                continueParameter,
-                fieldSelector,
-                labelSelector,
-                limit,
-                resourceVersion,
-                resourceVersionMatch,
-                timeoutSeconds,
-                watch,
-                pretty: false,
-                cancellationToken);
+                group:                typeMetadata.Group,
+                version:              typeMetadata.ApiVersion,
+                plural:               typeMetadata.PluralName,
+                namespaceParameter:   namespaceParameter,
+                allowWatchBookmarks:  allowWatchBookmarks,
+                continueParameter:    continueParameter,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                limit:                limit,
+                resourceVersion:      resourceVersion,
+                resourceVersionMatch: resourceVersionMatch,
+                timeoutSeconds:       timeoutSeconds,
+                watch:                watch,
+                pretty:               false,
+                cancellationToken:    cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
@@ -195,6 +198,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
 
@@ -218,6 +223,8 @@ namespace Neon.Kube
             
             where T : IKubernetesObject, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = new T().GetKubernetesTypeMetadata();
             var result       = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, cancellationToken);
 
@@ -256,6 +263,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
+            await SyncContext.ClearAsync;
+
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
 
@@ -295,6 +304,8 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.ClearAsync;
+
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
 
@@ -339,15 +350,17 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task DeleteNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            string namespaceParameter,
-            string name,
-            string dryRun = null,
-            string fieldManager = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            this                IKubernetes k8s,
+            string              namespaceParameter,
+            string              name,
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            CancellationToken   cancellationToken = default(CancellationToken))
 
             where T : IKubernetesObject, new()
         {
+            await SyncContext.ClearAsync;
+
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
 

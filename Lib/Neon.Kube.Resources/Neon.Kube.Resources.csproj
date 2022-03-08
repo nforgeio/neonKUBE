@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>netstandard2.1</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
 		<Version>10000.0.1650-dev-jeff</Version>
@@ -26,38 +26,20 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<!-- 
-    We need to prevent the KubeOps build targets from trying to call the non-existent
-    program entrypoint (due to this assembly being a Library) to generate the CRDs
-    and other installation related files.
-    -->
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\LICENSE" Link="LICENSE">
-			<PackagePath></PackagePath>
-			<Pack>True</Pack>
-		</None>
-		<None Include="..\nuget-icon.png" Link="nuget-icon.png">
-			<PackagePath></PackagePath>
-			<Pack>true</Pack>
-		</None>
+		<Compile Include="..\Neon.Kube.ResourceDefinitions\Resources\**\*.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubeOps" Version="6.2.4" />
+		<PackageReference Include="KubernetesClient" Version="7.0.8" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>

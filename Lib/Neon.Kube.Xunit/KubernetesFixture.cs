@@ -27,6 +27,7 @@ using Neon.Retry;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Xunit;
+using Neon.Tasks;
 
 namespace Neon.Kube.Xunit
 {
@@ -188,6 +189,8 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
         {
+            await SyncContext.ClearAsync;
+
             if (Client != null)
             {
                 if (deployed)
@@ -198,7 +201,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
+            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }
@@ -225,6 +228,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(KubernetesClientConfiguration kubeconfig)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(kubeconfig != null, nameof(kubeconfig));
 
             if (Client != null)
@@ -237,7 +241,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(kubeconfig);
+            Client = new KubernetesClient(kubeconfig);
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }
@@ -267,6 +271,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
 
             if (Client != null)
@@ -279,7 +284,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
+            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }
@@ -351,6 +356,7 @@ namespace Neon.Kube.Xunit
             int                 maxParallel           = 500,
             string              headendUri            = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -545,6 +551,7 @@ namespace Neon.Kube.Xunit
             int     maxParallel           = 500,
             string  headendUri            = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -611,6 +618,7 @@ namespace Neon.Kube.Xunit
             int         maxParallel           = 500,
             string      headendUri            = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 

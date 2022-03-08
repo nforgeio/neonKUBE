@@ -13,6 +13,7 @@
 		<Configurations>Debug;Release;CodeDoc</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -43,7 +44,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />

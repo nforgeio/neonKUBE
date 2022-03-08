@@ -32,6 +32,7 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -52,6 +53,8 @@ namespace Neon.Kube
         /// <returns>The updated secret.</returns>
         public async Task<V1Secret> UpsertSecretAsync(V1Secret secret, string @namespace = null)
         {
+            await SyncContext.ClearAsync;
+
             return await NormalizedRetryPolicy.InvokeAsync(
                 async () =>
                 {
@@ -79,6 +82,8 @@ namespace Neon.Kube
             CancellationToken   cancellationToken = default,
             bool                noSuccessCheck    = false)
         {
+            await SyncContext.ClearAsync;
+
             return await NormalizedRetryPolicy.InvokeAsync(
                 async () =>
                 {
@@ -112,6 +117,7 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.ClearAsync;
             await k8s.WaitForDeploymentAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
 
@@ -137,6 +143,7 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.ClearAsync;
             await k8s.WaitForStatefulSetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
 

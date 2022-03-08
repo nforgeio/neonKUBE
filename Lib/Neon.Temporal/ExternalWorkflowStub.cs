@@ -78,21 +78,26 @@ namespace Neon.Temporal
         {
             public async Task CancelAsync(WorkflowExecution execution)
             {
+                await SyncContext.ClearAsync;
                 await Activity.Client.CancelWorkflowAsync(execution);
             }
 
             public async Task GetResultAsync(WorkflowExecution execution)
             {
+                await SyncContext.ClearAsync;
                 await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task<byte[]> GetResultBytesAsync(WorkflowExecution execution)
             {
+                await SyncContext.ClearAsync;
                 return await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task SignalAsync(WorkflowExecution execution, string signalName, params object[] args)
             {
+                await SyncContext.ClearAsync;
+
                 var dataConverter = Activity.Client.DataConverter;
 
                 await Activity.Client.SignalWorkflowAsync(execution, signalName, TemporalHelper.ArgsToBytes(dataConverter, args));

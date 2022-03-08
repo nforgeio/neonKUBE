@@ -52,6 +52,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
@@ -64,6 +65,19 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
     /// </remarks>
     [HostingProvider(HostingEnvironment.Azure)]
     public class AzureHostingManager : HostingManager
@@ -1046,6 +1060,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
+            await SyncContext.ClearAsync;
+
             ConnectAzure();
             UpdateNetwork(NetworkOperations.EnableSsh);
             await Task.CompletedTask;
@@ -1054,6 +1070,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
+            await SyncContext.ClearAsync;
+
             ConnectAzure();
             UpdateNetwork(NetworkOperations.DisableSsh);
             await Task.CompletedTask;
@@ -1095,8 +1113,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostingResourceAvailability> GetResourceAvailability()
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+            
+            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill)");
         }
 
@@ -2211,6 +2234,23 @@ namespace Neon.Kube
 
             loadBalancer = loadBalancerUpdater.Apply();
             subnetNsg    = subnetNsgUpdater.Apply();
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
+
+        /// <inheritdoc/>
+        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
     }
 }

@@ -30,6 +30,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;
@@ -193,6 +194,7 @@ namespace Neon.Kube.Operator
         /// </remarks>
         public static async Task<bool> HandleGeneratorCommand(string[] args, Action<IOperatorBuilder> builderCallback = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));;
 
             try

@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
@@ -18,8 +19,11 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Service;
+using Neon.Tasks;
 using Neon.Web;
+
 using Newtonsoft.Json;
+
 using Yarp;
 using Yarp.ReverseProxy;
 using Yarp.ReverseProxy.Forwarder;
@@ -75,6 +79,8 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("{**catchAll}")]
         public async Task CatchAllAsync()
         {
+            await SyncContext.ClearAsync;
+
             var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, new ForwarderRequestConfig(), transformer);
 
             if (error != ForwarderError.None)
@@ -94,6 +100,8 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
+            await SyncContext.ClearAsync;
+
             LogDebug($"Processing request for code: [{code}]");
             var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));
             

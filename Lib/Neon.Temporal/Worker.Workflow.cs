@@ -80,6 +80,7 @@ namespace Neon.Temporal
         /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
         private async Task RegisterWorkflowImplementationAsync(Type workflowType)
         {
+            await SyncContext.ClearAsync;
             TemporalHelper.ValidateWorkflowImplementation(workflowType);
 
             var methodMap = WorkflowMethodMap.Create(workflowType);
@@ -308,6 +309,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task OnProxyRequestAsync(ProxyRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
@@ -344,6 +346,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<WorkflowInvokeReply> OnInvokeAsync(WorkflowInvokeRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
 
@@ -560,6 +563,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<WorkflowSignalInvokeReply> OnSignalAsync(WorkflowSignalInvokeRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             // Handle synchronous signals in a specialized method.
@@ -631,6 +635,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(WorkflowSignalInvokeRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
@@ -796,6 +801,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<WorkflowQueryInvokeReply> OnQueryAsync(WorkflowQueryInvokeRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try

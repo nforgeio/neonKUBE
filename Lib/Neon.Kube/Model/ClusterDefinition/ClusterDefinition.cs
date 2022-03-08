@@ -75,7 +75,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         public static void ValidateFile(string path, bool strict = false)
         {
             FromFile(path, strict: strict);
@@ -96,6 +97,7 @@ namespace Neon.Kube
         /// </note>
         /// </param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -132,7 +134,8 @@ namespace Neon.Kube
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -259,9 +262,11 @@ namespace Neon.Kube
                     case HostingEnvironment.HyperV:
 
                         return Hosting.HyperV != null && Hosting.HyperV.NeonDesktopBuiltIn;
-                }
 
-                return false;
+                    default:
+
+                        return false;
+                }
             }
         }
 

@@ -270,6 +270,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 

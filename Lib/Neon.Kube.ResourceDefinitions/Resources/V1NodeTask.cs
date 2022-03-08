@@ -22,11 +22,11 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+#if KUBEOPS
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
-
-using Neon.Kube;
+#endif
 
 namespace Neon.Kube.Resources
 {
@@ -90,10 +90,12 @@ namespace Neon.Kube.Resources
     /// </item>
     /// </list>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
+    [KubernetesEntity(Group = Helper.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
+#if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
+#endif
     public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.V1NodeTaskSpec, V1NodeTask.V1NodeTaskStatus>
     {
         /// <summary>
@@ -112,13 +114,17 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Identifies the node by host name where the command will be executed.
             /// </summary>
+#if KUBEOPS
             [Required]
+#endif
             public string Node { get; set; }
 
             /// <summary>
             /// Specifies the command and arguments to be executed on the node.
             /// </summary>
+#if KUBEOPS
             [Required]
+#endif
             public List<string> Command { get; set; }
 
             /// <summary>

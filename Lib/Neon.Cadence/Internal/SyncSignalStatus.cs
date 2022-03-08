@@ -18,13 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
 using Neon.Tasks;
-using System.Diagnostics.Contracts;
 
 namespace Neon.Cadence.Internal
 {

@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
+using Neon.Tasks;
+
 using Segment;
 
 namespace NeonDashboard.Shared.Components
@@ -25,6 +27,8 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnInitializedAsync()
         {
+            await SyncContext.ClearAsync;
+
             await base.OnInitializedAsync();
 
             NavigationManager.LocationChanged -= OnLocationChanged;
@@ -33,6 +37,8 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            await SyncContext.ClearAsync;
+
             await base.OnAfterRenderAsync(firstRender);
 
             if (firstRender)

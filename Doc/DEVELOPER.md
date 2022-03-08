@@ -187,13 +187,21 @@ Follow the steps below to configure a development or test workstation:
 20. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
 21. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+    then run this in a command window to add it to the PATH:
 
-22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer.  Install both programs to their default directories:
+    `%NF_TOOLBIN%\pathtool -dedup -system -add "C:\cygwin64\bin"`
+
+22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently 
+    standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer.  Install both programs to their default
+    directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
-    * *Optional:* The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
-    * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left and check **Show hidden files**:
+    * *Optional:* The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update 
+      the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** 
+      and selecting **Merge**
+    * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left 
+      and check **Show hidden files**:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 

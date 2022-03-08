@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Service;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Xunit;
@@ -417,6 +418,7 @@ namespace Neon.Xunit
         public static async Task AssertThrowsAsync<TException>(Func<Task> action)
             where TException : Exception
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try

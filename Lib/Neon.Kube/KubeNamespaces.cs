@@ -75,5 +75,45 @@ namespace Neon.Kube
         /// Hosts neonKUBE infrastructure.
         /// </summary>
         public const string NeonSystem = "neon-system";
+
+        /// <summary>
+        /// Hosts cluster status information.
+        /// </summary>
+        public const string NeonStatus = "neon-status";
+
+        /// <summary>
+        /// Returns the list of built-in Kubernetes namespaces.
+        /// </summary>
+        public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
+
+        /// <summary>
+        /// Returns the list of built-in neonKUBE namespaces.
+        /// </summary>
+        public static IReadOnlyList<string> NeonNamespaces { get; private set; }
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubeNamespaces()
+        {
+            KubernetesNamespaces = new List<string>()
+            {
+                Default,
+                KubeSystem,
+                KubePublic,
+                KubernetesDashboard
+            }
+            .AsReadOnly();
+
+            NeonNamespaces = new List<string>()
+            {
+                NeonIngress,
+                NeonMonitor,
+                NeonStorage,
+                NeonSystem,
+                NeonStatus
+            }
+            .AsReadOnly();
+        }
     }
 }

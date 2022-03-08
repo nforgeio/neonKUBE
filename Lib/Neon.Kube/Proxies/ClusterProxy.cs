@@ -36,6 +36,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -66,8 +67,8 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
-            /// <see cref="RemoveAsync(bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
+            /// <see cref="RemoveAsync(bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -525,6 +526,61 @@ namespace Neon.Kube
         // Cluster life cycle methods.
 
         /// <summary>
+        /// Returns flags describing any optional capabilities supported by the cluster's hosting manager.
+        /// </summary>
+        public HostingCapabilities Capabilities
+        {
+            get
+            {
+                Covenant.Assert(HostingManager != null);
+
+                return HostingManager.Capabilities;
+            }
+        }
+
+        /// <summary>
+        /// Returns the availability of resources required to deploy a cluster.
+        /// </summary>
+        /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
+        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <returns>Details about whether cluster deployment can proceed.</returns>
+        /// <remarks>
+        /// <para>
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
+        /// manager implementations are free to ignore this when they don't really makse sense.
+        /// </para>
+        /// <para>
+        /// This is currently used for Hyper-V based clusters running on a user workstation or laptop to ensure
+        /// that deployed clusters don't adverserly impact the host machine too badly.
+        /// </para>
+        /// <para>
+        /// These parameters don't really make sense for cloud or dedicated hypervisor hosting environments because
+        /// those environemnts will still work well when all available resources are consumed.
+        /// </para>
+        /// </remarks>
+        public async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Assert(HostingManager != null);
+
+            return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
+        }
+
+        /// <summary>
+        /// Determines the status of a cluster.
+        /// </summary>
+        /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Assert(HostingManager != null);
+
+            return await HostingManager.GetClusterStatusAsync(timeout);
+        }
+
+        /// <summary>
         /// <para>
         /// Starts a cluster if it's not already running.
         /// </para>
@@ -532,14 +588,14 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StartAsync(bool noWait = false)
+        public async Task StartAsync()
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StartClusterAsync(noWait);
+            await HostingManager.StartClusterAsync();
         }
 
         /// <summary>
@@ -551,14 +607,29 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StopAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StopClusterAsync(stopMode, noWait);
+            await HostingManager.StopClusterAsync(stopMode);
+        }
+
+        /// <summary>
+        /// Resets the cluster to factory defaults by removing all non <b>neon-*</b> namespaces including
+        /// <b>default</b> (which will be recreated to be empty) as well as restoring custom resources
+        /// as required.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ResetAsync()
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Assert(HostingManager != null);
+
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
         }
 
         /// <summary>
@@ -573,7 +644,6 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -587,21 +657,21 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public async Task RemoveAsync(bool removeOrphansByPrefix = false)
         {
+            await SyncContext.ClearAsync;
             Covenant.Assert(HostingManager != null);
-
-            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
 
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
             var context     = KubeHelper.Config.GetContext(contextName);
+            var login       = KubeHelper.GetClusterLogin(contextName);
+
+            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix);
 
             if (context != null)
             {
                 KubeHelper.Config.RemoveContext(context);
             }
-
-            var login = KubeHelper.GetClusterLogin(contextName);
 
             if (login != null)
             {
@@ -621,6 +691,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartNodeAsync(string nodeName)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -640,6 +711,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -665,6 +737,7 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
         public async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 

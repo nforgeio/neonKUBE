@@ -28,6 +28,7 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -107,22 +108,22 @@
 	</ItemGroup>
 
 	<!--
-  The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
-  download the cluster manifest JSON file for the current cluster version.  The manifest
-  will be generated during image builds in neonCLOUD and uploaded to S3.
+	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
+	download the cluster manifest JSON file for the current cluster version.  The manifest
+	will be generated during image builds in neonCLOUD and uploaded to S3.
   
-  The [neon-build download-const-uri] obtains the URI for the manifest from:
+	The [neon-build download-const-uri] obtains the URI for the manifest from:
   
-      assembly:   Neon.Kube.dll
-      constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
+		assembly:   Neon.Kube.dll
+		constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
   
-  We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
-  build configuration and target runtime as this project.  This is a bit fragile.
+	We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
+	build configuration and target runtime as this project.  This is a bit fragile.
   
-  Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
-  file so that developers will be able to work offline.  We'll just build with the existing
-  manifest file which is checked into git and won't change very often.
-  -->
+	Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
+	file so that developers will be able to work offline.  We'll just build with the existing
+	manifest file which is checked into git and won't change very often.
+	-->
 
 	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
 		<Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />

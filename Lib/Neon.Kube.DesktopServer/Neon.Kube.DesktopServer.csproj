@@ -27,6 +27,7 @@
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <AnalysisLevel>5.0</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>

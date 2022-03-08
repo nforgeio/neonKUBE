@@ -22,19 +22,20 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
 using Microsoft.AspNetCore.JsonPatch;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Models;
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
 
 namespace Neon.Kube
 {
@@ -54,6 +55,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -120,6 +122,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -194,10 +197,10 @@ namespace Neon.Kube
                 this.GroupApiVersion = $"{attr.Group}/{attr.ApiVersion}";
             }
 
-            public string Group { get; private set; }
-            public string ApiVersion { get; private set; }
-            public string Kind { get; private set; }
-            public string GroupApiVersion { get; private set; }
+            public string Group             { get; private set; }
+            public string ApiVersion        { get; private set; }
+            public string Kind              { get; private set; }
+            public string GroupApiVersion   { get; private set; }
         }
 
         private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new ();
@@ -274,6 +277,7 @@ namespace Neon.Kube
         /// <returns>The updated secret.</returns>
         public static async Task<V1Secret> UpsertSecretAsync(this IKubernetes k8s, V1Secret secret, string @namespace = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
             if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
@@ -312,6 +316,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
@@ -388,6 +393,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -464,6 +470,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -533,6 +540,7 @@ namespace Neon.Kube
             CancellationToken   cancellationToken = default,
             bool                noSuccessCheck    = false)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
             Covenant.Requires<ArgumentException>(command.Length > 0, nameof(command));
