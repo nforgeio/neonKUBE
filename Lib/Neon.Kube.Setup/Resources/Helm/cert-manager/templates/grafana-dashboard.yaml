@@ -1,3 +1,4 @@
+{{- if and .Values.prometheus.enabled .Values.prometheus.servicemonitor.enabled }}
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
@@ -9,47 +10,7 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "Cortex"
   json: >
-    {
-      "__inputs": [{
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }],
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "6.3.4"
-        },
-        {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": ""
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "table",
-          "name": "Table",
-          "version": ""
-        }
-      ],
+    {{`{
       "annotations": {
         "list": [
           {
@@ -59,17 +20,25 @@ spec:
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "description": "Monitors Kubernetes deployments in cluster using Prometheus. Shows overall cluster CPU / Memory of deployments, replicas in each deployment. Uses Kube state metrics and cAdvisor metrics (741)",
       "editable": true,
+      "fiscalYearStartMonth": 0,
       "gnetId": 11001,
       "graphTooltip": 0,
-      "id": null,
-      "iteration": 1571233502297,
+      "id": 62,
+      "iteration": 1646782208495,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
           "collapsed": false,
@@ -86,7 +55,6 @@ spec:
         },
         {
           "columns": [],
-          "datasource": "${DS_PROMETHEUS}",
           "fontSize": "100%",
           "gridPos": {
             "h": 8,
@@ -95,8 +63,6 @@ spec:
             "y": 1
           },
           "id": 15,
-          "options": {},
-          "pageSize": null,
           "pluginVersion": "6.3.4",
           "scroll": true,
           "showHeader": true,
@@ -107,12 +73,14 @@ spec:
           "styles": [
             {
               "alias": "Time",
+              "align": "auto",
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "pattern": "Time",
               "type": "hidden"
             },
             {
               "alias": "Time Left",
+              "align": "auto",
               "colorMode": "cell",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
@@ -131,7 +99,7 @@ spec:
             },
             {
               "alias": "Certificate",
-              "colorMode": null,
+              "align": "auto",
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
@@ -148,25 +116,37 @@ spec:
           ],
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": false,
               "expr": "sort_desc( sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace) )",
               "instant": true,
-              "legendFormat": " {{"{{"}}exported_namespace{{"}}"}} / {{"{{"}}name{{"}}"}}",
+              "interval": "",
+              "legendFormat": " {{exported_namespace}} / {{name}}",
               "refId": "A"
             }
           ],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Time Left",
           "transform": "timeseries_to_rows",
-          "type": "table"
+          "type": "table-old"
         },
         {
           "aliasColors": {},
           "bars": false,
-          "cacheTimeout": null,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cortex"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -175,6 +155,7 @@ spec:
             "x": 12,
             "y": 1
           },
+          "hiddenSeries": false,
           "id": 13,
           "legend": {
             "alignAsTable": false,
@@ -192,9 +173,10 @@ spec:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -207,15 +189,13 @@ spec:
               "expr": "sum(certmanager_certificate_ready_status) BY (condition)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}condition{{"}}"}}",
+              "legendFormat": "{{condition}}",
               "refId": "A",
               "step": 1800
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Certificate Ready Status",
           "tooltip": {
             "shared": true,
@@ -224,33 +204,25 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -258,7 +230,16 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cortex"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 0,
           "fillGradient": 0,
           "gridPos": {
@@ -267,6 +248,7 @@ spec:
             "x": 0,
             "y": 9
           },
+          "hiddenSeries": false,
           "id": 16,
           "legend": {
             "avg": false,
@@ -282,10 +264,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "6.3.4",
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -298,14 +280,12 @@ spec:
               "expr": "sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace)",
               "instant": false,
               "intervalFactor": 1,
-              "legendFormat": " {{"{{"}}exported_namespace{{"}}"}} / {{"{{"}}name{{"}}"}}",
+              "legendFormat": " {{exported_namespace}} / {{name}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "Time Left",
           "tooltip": {
             "shared": true,
@@ -314,9 +294,7 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
@@ -324,7 +302,6 @@ spec:
             {
               "decimals": 2,
               "format": "s",
-              "label": null,
               "logBase": 1,
               "max": "7776000",
               "min": "0",
@@ -332,16 +309,12 @@ spec:
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -358,13 +331,58 @@ spec:
           "type": "row"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "fill": 1,
-          "fillGradient": 0,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 8,
             "w": 20,
@@ -372,94 +390,66 @@ spec:
             "y": 18
           },
           "id": 22,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
           },
-          "percentage": false,
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "8.3.1",
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Overall requests per 2m",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "title": "Overall requests per 60m",
+          "type": "timeseries"
         },
         {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
-          ],
-          "datasource": "${DS_PROMETHEUS}",
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "text": "N/A"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
           },
           "gridPos": {
             "h": 8,
@@ -468,73 +458,93 @@ spec:
             "y": 18
           },
           "id": 26,
-          "interval": null,
           "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
           "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "options": {},
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false,
-            "ymax": null,
-            "ymin": null
+          "options": {
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
           },
-          "tableColumn": "",
+          "pluginVersion": "8.3.1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": false,
               "expr": "sum(certmanager_http_acme_client_request_count)",
               "instant": true,
+              "interval": "",
+              "legendFormat": "",
               "refId": "A"
             }
           ],
-          "thresholds": "",
-          "timeFrom": null,
-          "timeShift": null,
           "title": "Total requests",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
-            }
-          ],
-          "valueName": "avg"
+          "type": "stat"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "fill": 1,
-          "fillGradient": 0,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 8,
             "w": 8,
@@ -542,83 +552,44 @@ spec:
             "y": 26
           },
           "id": 24,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
           },
-          "percentage": false,
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "8.3.1",
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/directory\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/directory\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
           "title": "/directory",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "type": "timeseries"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -627,6 +598,7 @@ spec:
             "x": 8,
             "y": 26
           },
+          "hiddenSeries": false,
           "id": 27,
           "legend": {
             "avg": false,
@@ -641,9 +613,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -653,15 +626,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/cert\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/cert\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/cert",
           "tooltip": {
             "shared": true,
@@ -670,33 +647,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -704,7 +672,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -713,6 +686,7 @@ spec:
             "x": 16,
             "y": 26
           },
+          "hiddenSeries": false,
           "id": 28,
           "legend": {
             "avg": false,
@@ -727,9 +701,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -739,15 +714,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-acct\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-acct\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/new-acct",
           "tooltip": {
             "shared": true,
@@ -756,33 +735,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -790,7 +760,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -799,6 +774,7 @@ spec:
             "x": 0,
             "y": 34
           },
+          "hiddenSeries": false,
           "id": 29,
           "legend": {
             "avg": false,
@@ -813,9 +789,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -825,15 +802,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/order\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/order\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/order",
           "tooltip": {
             "shared": true,
@@ -842,33 +823,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -876,7 +848,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -885,6 +862,7 @@ spec:
             "x": 8,
             "y": 34
           },
+          "hiddenSeries": false,
           "id": 30,
           "legend": {
             "avg": false,
@@ -899,9 +877,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -911,15 +890,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-order\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-order\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/new-order",
           "tooltip": {
             "shared": true,
@@ -928,33 +911,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -962,7 +936,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -971,6 +950,7 @@ spec:
             "x": 16,
             "y": 34
           },
+          "hiddenSeries": false,
           "id": 31,
           "legend": {
             "avg": false,
@@ -985,9 +965,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -997,15 +978,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/authz-v3\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/authz-v3\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/authz-v3",
           "tooltip": {
             "shared": true,
@@ -1014,33 +999,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1048,7 +1024,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1057,6 +1038,7 @@ spec:
             "x": 0,
             "y": 42
           },
+          "hiddenSeries": false,
           "id": 32,
           "legend": {
             "avg": false,
@@ -1071,9 +1053,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1083,15 +1066,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/chall-v3\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/chall-v3\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/chall-v3",
           "tooltip": {
             "shared": true,
@@ -1100,33 +1087,24 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         },
         {
@@ -1134,7 +1112,12 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1143,6 +1126,7 @@ spec:
             "x": 8,
             "y": 42
           },
+          "hiddenSeries": false,
           "id": 33,
           "legend": {
             "avg": false,
@@ -1157,9 +1141,10 @@ spec:
           "linewidth": 1,
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "8.3.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1169,15 +1154,19 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/finalize\"}[2m])) BY (status)",
-              "legendFormat": "{{"{{"}}status{{"}}"}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "cortex"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/finalize\"}[60m])) BY (status)",
+              "interval": "",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
-          "timeFrom": null,
           "timeRegions": [],
-          "timeShift": null,
           "title": "/acme/finalize",
           "tooltip": {
             "shared": true,
@@ -1186,48 +1175,38 @@ spec:
           },
           "type": "graph",
           "xaxis": {
-            "buckets": null,
             "mode": "time",
-            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             },
             {
               "format": "short",
-              "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false,
-            "alignLevel": null
+            "align": false
           }
         }
       ],
       "refresh": false,
-      "schemaVersion": 19,
+      "schemaVersion": 33,
       "style": "dark",
-      "tags": [
-        "k8s"
-      ],
+      "tags": [],
       "templating": {
         "list": [
           {
             "current": {
-              "text": "k8s-qa",
-              "value": "k8s-qa"
+              "selected": false,
+              "text": "Cortex",
+              "value": "Cortex"
             },
             "hide": 0,
             "includeAll": false,
@@ -1236,51 +1215,113 @@ spec:
             "name": "Datasource",
             "options": [],
             "query": "prometheus",
+            "queryValue": "",
             "refresh": 1,
-            "regex": "/k8s.*/",
+            "regex": "",
             "skipUrlSync": false,
             "type": "datasource"
           },
           {
             "allValue": ".*",
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "cortex"
+            },
             "definition": "label_values(exported_namespace)",
+            "error": {
+              "config": {
+                "headers": {
+                  "X-Grafana-Org-Id": 1
+                },
+                "hideFromInspector": true,
+                "method": "GET",
+                "retry": 0,
+                "url": "api/datasources/proxy/1/api/v1/label/exported_namespace/values?start=1646695768&end=1646782168"
+              },
+              "data": {
+                "error": "",
+                "message": "",
+                "response": ""
+              },
+              "message": "Query error: 502 ",
+              "status": 502,
+              "statusText": ""
+            },
             "hide": 0,
             "includeAll": true,
-            "label": null,
             "multi": false,
             "name": "Namespace",
             "options": [],
-            "query": "label_values(exported_namespace)",
+            "query": {
+              "query": "label_values(exported_namespace)",
+              "refId": "Cortex-Namespace-Variable-Query"
+            },
             "refresh": 1,
             "regex": "",
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
           },
           {
             "allValue": ".*",
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "cortex"
+            },
             "definition": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
+            "error": {
+              "config": {
+                "data": {
+                  "end": "1646782198",
+                  "match[]": "certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\".*\"}",
+                  "start": "1646695798"
+                },
+                "headers": {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-Grafana-Org-Id": 1
+                },
+                "hideFromInspector": true,
+                "method": "POST",
+                "retry": 0,
+                "url": "api/datasources/proxy/1/api/v1/series"
+              },
+              "data": {
+                "error": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+                "errorType": "execution",
+                "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+                "status": "error"
+              },
+              "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+              "status": 422,
+              "statusText": ""
+            },
             "hide": 0,
             "includeAll": true,
-            "label": null,
             "multi": false,
             "name": "Certificate",
             "options": [],
-            "query": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
+            "query": {
+              "query": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
+              "refId": "Cortex-Certificate-Variable-Query"
+            },
             "refresh": 2,
             "regex": "",
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
-            "tags": [],
             "tagsQuery": "",
             "type": "query",
             "useTags": false
@@ -1318,6 +1359,8 @@ spec:
       },
       "timezone": "browser",
       "title": "cert-manager",
-      "uid": "u6M5igpWk",
-      "version": 5
-    }
+      "uid": "wLFlBVYnz",
+      "version": 2,
+      "weekStart": ""
+    }`}}
+{{- end }}
