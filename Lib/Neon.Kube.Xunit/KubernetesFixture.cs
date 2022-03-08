@@ -201,7 +201,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
+            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }
@@ -241,7 +241,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(kubeconfig);
+            Client = new KubernetesClient(kubeconfig);
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }
@@ -284,7 +284,7 @@ namespace Neon.Kube.Xunit
                 return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
             }
 
-            Client = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
+            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
 
             return await Task.FromResult(TestFixtureStatus.Started);
         }

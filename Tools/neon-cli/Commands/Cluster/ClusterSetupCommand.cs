@@ -259,7 +259,7 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile());
 
                         if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
                         {

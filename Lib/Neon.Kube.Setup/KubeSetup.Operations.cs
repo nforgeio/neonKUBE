@@ -263,8 +263,6 @@ spec:
 
             cluster.ClearNodeStatus();
 
-            KubeHelper.K8sClientConverterInitialize();
-
             controller.ThrowIfCancelled();
             ConfigureKubernetes(controller, master);
 
