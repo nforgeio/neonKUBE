@@ -1,3 +1,4 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
@@ -10,37 +11,6 @@ spec:
       datasourceName: "Cortex"
   json: >
     {{`{
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "Prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__elements": [],
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "8.3.3"
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "timeseries",
-          "name": "Time series",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": [
           {
@@ -63,9 +33,10 @@ spec:
       "description": "https://github.com/kubernetes/node-problem-detector",
       "editable": true,
       "fiscalYearStartMonth": 0,
-      "graphTooltip": 1,
-      "id": null,
-      "iteration": 1642155731801,
+      "gnetId": 15549,
+      "graphTooltip": 0,
+      "id": 63,
+      "iteration": 1646782230914,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -85,7 +56,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Cortex"
           },
           "fieldConfig": {
             "defaults": {
@@ -148,8 +119,8 @@ spec:
           "options": {
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "right"
             },
             "tooltip": {
               "mode": "single"
@@ -159,7 +130,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Cortex"
               },
               "exemplar": true,
               "expr": " sum(problem_gauge) by (node)",
@@ -172,10 +143,6 @@ spec:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -237,8 +204,8 @@ spec:
           "options": {
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "right"
             },
             "tooltip": {
               "mode": "single"
@@ -248,10 +215,10 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Cortex"
               },
               "exemplar": true,
-              "expr": "sum(rate(problem_counter[5m])) by (node)",
+              "expr": "sum(rate(problem_counter[$__rate_interval])) by (node)",
               "interval": "",
               "legendFormat": "{{node}}",
               "refId": "A"
@@ -261,10 +228,6 @@ spec:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -325,8 +288,8 @@ spec:
           "options": {
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "right"
             },
             "tooltip": {
               "mode": "single"
@@ -336,12 +299,12 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Cortex"
               },
               "exemplar": true,
-              "expr": "sum(rate(problem_counter[5m]))",
+              "expr": "sum(rate(problem_counter[$__rate_interval])) by (reason)",
               "interval": "",
-              "legendFormat": "total",
+              "legendFormat": "{{ reason }}",
               "refId": "A"
             }
           ],
@@ -362,10 +325,6 @@ spec:
           "type": "row"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -423,12 +382,12 @@ spec:
             "y": 8
           },
           "id": 8,
-          "maxPerRow": 4,
+          "maxPerRow": 3,
           "options": {
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "right"
             },
             "tooltip": {
               "mode": "single"
@@ -440,12 +399,12 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Cortex"
               },
               "exemplar": true,
-              "expr": "sum(problem_gauge{type=~\"$problem_type\"})",
+              "expr": "sum(problem_gauge{type=~\"$problem_type\"}) by (node)",
               "interval": "",
-              "legendFormat": "$problem_type",
+              "legendFormat": "{{node}}",
               "refId": "A"
             }
           ],
@@ -466,10 +425,6 @@ spec:
           "type": "row"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -531,8 +486,8 @@ spec:
           "options": {
             "legend": {
               "calcs": [],
-              "displayMode": "hidden",
-              "placement": "bottom"
+              "displayMode": "list",
+              "placement": "right"
             },
             "tooltip": {
               "mode": "multi"
@@ -544,12 +499,12 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Cortex"
               },
               "exemplar": true,
-              "expr": "sum(rate(problem_counter{reason=~\"$problem_counter_reason\"}[5m]))",
+              "expr": "sum(rate(problem_counter{reason=~\"$problem_counter_reason\"}[$__rate_interval])) by (node)",
               "interval": "",
-              "legendFormat": "$problem_counter_reason",
+              "legendFormat": "{{node}}",
               "refId": "A"
             }
           ],
@@ -557,21 +512,49 @@ spec:
           "type": "timeseries"
         }
       ],
-      "schemaVersion": 34,
+      "refresh": "",
+      "schemaVersion": 33,
       "style": "dark",
-      "tags": [
-        "infra",
-        "node"
-      ],
+      "tags": [],
       "templating": {
         "list": [
           {
-            "current": {},
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "Cortex"
             },
             "definition": "label_values(problem_counter,reason)",
+            "error": {
+              "config": {
+                "data": {
+                  "end": "1646782201",
+                  "match[]": "problem_counter",
+                  "start": "1646695801"
+                },
+                "headers": {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-Grafana-Org-Id": 1
+                },
+                "hideFromInspector": true,
+                "method": "POST",
+                "retry": 0,
+                "url": "api/datasources/proxy/1/api/v1/series"
+              },
+              "data": {
+                "error": "rpc error: code = Unavailable desc = error reading from server: read tcp 10.254.190.166:32846->10.254.190.166:9095: use of closed network connection",
+                "errorType": "execution",
+                "message": "rpc error: code = Unavailable desc = error reading from server: read tcp 10.254.190.166:32846->10.254.190.166:9095: use of closed network connection",
+                "status": "error"
+              },
+              "message": "rpc error: code = Unavailable desc = error reading from server: read tcp 10.254.190.166:32846->10.254.190.166:9095: use of closed network connection",
+              "status": 422,
+              "statusText": ""
+            },
             "hide": 0,
             "includeAll": true,
             "multi": true,
@@ -588,12 +571,41 @@ spec:
             "type": "query"
           },
           {
-            "current": {},
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "Cortex"
             },
             "definition": "label_values(problem_counter,node)",
+            "error": {
+              "config": {
+                "data": {
+                  "end": "1646782201",
+                  "match[]": "problem_counter",
+                  "start": "1646695801"
+                },
+                "headers": {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-Grafana-Org-Id": 1
+                },
+                "hideFromInspector": true,
+                "method": "POST",
+                "retry": 0,
+                "url": "api/datasources/proxy/1/api/v1/series"
+              },
+              "data": {
+                "error": "",
+                "message": "",
+                "response": ""
+              },
+              "message": "Query error: 502 ",
+              "status": 502,
+              "statusText": ""
+            },
             "hide": 0,
             "includeAll": true,
             "multi": true,
@@ -610,12 +622,42 @@ spec:
             "type": "query"
           },
           {
-            "current": {},
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
-              "uid": "${DS_PROMETHEUS}"
+              "uid": "Cortex"
             },
             "definition": "label_values(problem_gauge,type)",
+            "error": {
+              "config": {
+                "data": {
+                  "end": "1646782201",
+                  "match[]": "problem_gauge",
+                  "start": "1646695801"
+                },
+                "headers": {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-Grafana-Org-Id": 1
+                },
+                "hideFromInspector": true,
+                "method": "POST",
+                "retry": 0,
+                "url": "api/datasources/proxy/1/api/v1/series"
+              },
+              "data": {
+                "error": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+                "errorType": "execution",
+                "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+                "status": "error"
+              },
+              "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
+              "status": 422,
+              "statusText": ""
+            },
             "hide": 0,
             "includeAll": true,
             "multi": true,
@@ -640,8 +682,8 @@ spec:
       "timepicker": {},
       "timezone": "utc",
       "title": "Node Problem Detector",
-      "uid": "6wz5Uh1nk",
-      "version": 9,
-      "weekStart": "",
-      "gnetId": 15549
+      "uid": "PqlkL4Y7z",
+      "version": 14,
+      "weekStart": ""
     }`}}
+{{- end }}
