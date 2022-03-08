@@ -79,7 +79,7 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("{**catchAll}")]
         public async Task CatchAllAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, new ForwarderRequestConfig(), transformer);
 
@@ -100,7 +100,7 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             LogDebug($"Processing request for code: [{code}]");
             var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));

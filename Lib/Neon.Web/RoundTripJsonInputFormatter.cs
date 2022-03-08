@@ -78,7 +78,7 @@ namespace Neon.Web
         /// <inheritdoc/>
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = context.HttpContext.Request;
 

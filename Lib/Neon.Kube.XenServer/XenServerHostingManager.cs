@@ -435,7 +435,7 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var xenClient    = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKube}";
@@ -656,7 +656,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
@@ -675,7 +675,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (timeout <= TimeSpan.Zero)
             {

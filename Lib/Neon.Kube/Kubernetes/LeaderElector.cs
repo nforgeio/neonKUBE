@@ -191,7 +191,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<InvalidOperationException>(electionTask == null, $"You cannot reuse a [{nameof(LeaderElector)}].");
 
             log.LogInfo(() => $"{logPrefix}: starting [leaseDuration={settings.LeaseDuration}] [renewDeadline={settings.RenewDeadline}] [retryInterval={settings.RetryInterval}]");
@@ -208,7 +208,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (cts.IsCancellationRequested)
             {
@@ -266,7 +266,7 @@ namespace Neon.Kube
         /// <returns><c>true</c> on success.</returns>
         private async Task<bool> AcquireOrRenewAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Read the current lease information.
 
@@ -533,7 +533,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ElectionLoopAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             try
             {

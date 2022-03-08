@@ -1284,7 +1284,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var operations = NetworkOperations.InternetRouting;
 
@@ -1317,14 +1317,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             await UpdateNetworkAsync(NetworkOperations.EnableSsh);
         }
 
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             await UpdateNetworkAsync(NetworkOperations.DisableSsh);
         }
 
@@ -1363,7 +1363,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
@@ -1385,7 +1385,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConnectAwsAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("connect: AWS");
@@ -1431,7 +1431,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task GetResourcesAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Resource group
 
@@ -1660,7 +1660,7 @@ namespace Neon.Kube
         /// <returns>The load balancer or <c>null</c>.</returns>
         private async Task<LoadBalancer> GetLoadBalancerAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
 
@@ -1681,7 +1681,7 @@ namespace Neon.Kube
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<InternetGateway> GetInternetGatewayAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest() { Filters = clusterFilter });
 
@@ -1703,7 +1703,7 @@ namespace Neon.Kube
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<NatGateway> GetNatGatewayAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var gatewayPaginator = ec2Client.Paginators.DescribeNatGateways(new DescribeNatGatewaysRequest());
 
@@ -1727,7 +1727,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LoadElbTargetGroupsAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             nameToTargetGroup.Clear();
 
@@ -1754,7 +1754,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="NetworkAcl"/>.</returns>
         private async Task<NetworkAcl> GetNetworkAclAsync(string networkAclId)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // $todo(jefflill): This would be more efficient with a filter.
 
@@ -1779,7 +1779,7 @@ namespace Neon.Kube
         /// <returns>The network ACL.</returns>
         private async Task<NetworkAcl> GetVpcNetworkAclAsync(Vpc vpc)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
 
             var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
@@ -1819,7 +1819,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task VerifyRegionAndInstanceTypesAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("verify: AWS region, availibility zone, and machine types exist");
@@ -1913,7 +1913,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LocateAmiAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("locate: VM AMI image");
@@ -2015,7 +2015,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateResourceGroupAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus($"create: [{resourceGroupName}] resource group");
@@ -2086,7 +2086,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigurePlacementGroupAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             if (masterPlacementGroup == null)
@@ -2125,7 +2125,7 @@ namespace Neon.Kube
         /// <returns>The elastic IP address or <c>null</c> if it doesn't exist.</returns>
         private async Task<Address> GetElasticIpAsync(string addressName)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(addressName), nameof(addressName));
 
             var addressResponse = await ec2Client.DescribeAddressesAsync();
@@ -2149,7 +2149,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateAddressesAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("create: elastic IP address");
@@ -2225,7 +2225,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateEgressAddressAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (egressAddress == null)
             {
@@ -2309,7 +2309,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("configure: cluster network");
@@ -2595,7 +2595,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureLoadBalancerAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             // Create the load balancer in the subnet.
@@ -2635,7 +2635,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ImportKeyPairAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             if (keyPairId == null)
@@ -2664,7 +2664,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task WaitForSshTargetAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             node.Status = "waiting...";
@@ -2724,7 +2724,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNodeInstanceAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             //-----------------------------------------------------------------
@@ -3234,7 +3234,7 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateNetworkAsync(NetworkOperations operations)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // We're going to use the boolean VPC tag named [neonVpcSshEnabledTagKey]
             // to persist the current external SSH access status for the cluster.
@@ -3306,7 +3306,7 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateIngressEgressRulesAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
@@ -3557,7 +3557,7 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshListenersAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             await ConnectAwsAsync(null);
             AssignExternalSshPorts(null);
@@ -3591,7 +3591,7 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshListenersAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             await ConnectAwsAsync(null);
             AssignExternalSshPorts(null);

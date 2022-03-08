@@ -69,7 +69,7 @@ namespace Neon.Tasks
             Func<TWorkItem, Task>   action, 
             int                     maxParallel = 1)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(workItems != null, nameof(workItems));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
             Covenant.Requires<ArgumentException>(maxParallel >= 1, nameof(maxParallel));
@@ -93,7 +93,7 @@ namespace Neon.Tasks
             Func<TWorkItem, Task>       action,
             SemaphoreSlim               taskGate)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             await taskGate.WaitAsync();
 
             try 
@@ -133,7 +133,7 @@ namespace Neon.Tasks
             CancellationToken                           cancellationToken,
             int                                         maxParallel = 1)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(workItems != null, nameof(workItems));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
             Covenant.Requires<ArgumentException>(maxParallel >= 1, nameof(maxParallel));
@@ -159,7 +159,7 @@ namespace Neon.Tasks
             CancellationToken                           cancellationToken,
             SemaphoreSlim                               taskGate)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             cancellationToken.ThrowIfCancellationRequested();
             await taskGate.WaitAsync(cancellationToken);

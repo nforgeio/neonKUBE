@@ -27,7 +27,7 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnInitializedAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             await base.OnInitializedAsync();
 
@@ -37,7 +37,7 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             await base.OnAfterRenderAsync(firstRender);
 

@@ -181,7 +181,7 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task InvokeAsync(Func<Task> action)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();
@@ -219,7 +219,7 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();

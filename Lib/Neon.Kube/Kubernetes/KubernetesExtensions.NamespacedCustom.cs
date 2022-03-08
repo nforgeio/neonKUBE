@@ -146,7 +146,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var typeMetadata = new T().GetKubernetesTypeMetadata();
 
@@ -198,7 +198,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
@@ -223,7 +223,7 @@ namespace Neon.Kube
             
             where T : IKubernetesObject, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var typeMetadata = new T().GetKubernetesTypeMetadata();
             var result       = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, cancellationToken);
@@ -263,7 +263,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
@@ -304,7 +304,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
@@ -359,7 +359,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.

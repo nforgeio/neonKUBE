@@ -268,7 +268,7 @@ namespace Neon.Tasks
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task TimerLoopAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             while (!cts.IsCancellationRequested)
             {

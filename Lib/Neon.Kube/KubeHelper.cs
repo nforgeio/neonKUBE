@@ -2512,11 +2512,11 @@ TCPKeepAlive yes
             DownloadProgressDelegate    progressAction    = null,
             CancellationToken           cancellationToken = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 
@@ -2895,7 +2895,7 @@ TCPKeepAlive yes
         /// <exception cref="KeyNotFoundException">Thrown when the user doesn't exist.</exception>
         public static async Task<GlauthUser> GetClusterLdapUserAsync(IKubernetes k8s, string username)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
@@ -2912,7 +2912,7 @@ TCPKeepAlive yes
         /// <returns>A <see cref="KubeClusterHealth"/> instance.</returns>
         public static async Task<KubeClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
             // We're going to retrieve the special [neon-status/cluster-status] config map

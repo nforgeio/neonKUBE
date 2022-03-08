@@ -194,7 +194,7 @@ namespace Neon.Kube.Operator
         /// </remarks>
         public static async Task<bool> HandleGeneratorCommand(string[] args, Action<IOperatorBuilder> builderCallback = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));;
 
             try

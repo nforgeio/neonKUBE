@@ -46,7 +46,7 @@ namespace NeonSsoSessionProxy
             AesCipher                       cipher,
             DistributedCacheEntryOptions    cacheOptions)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             try
             {

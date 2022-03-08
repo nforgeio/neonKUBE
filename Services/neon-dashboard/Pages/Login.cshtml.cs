@@ -22,7 +22,7 @@ namespace NeonDashboard.Pages
     {
         public async Task OnGet(string redirectUri)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             await HttpContext.ChallengeAsync(
                 "oidc", 

@@ -54,7 +54,7 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (string.IsNullOrEmpty(CurrentDashboard))
             {

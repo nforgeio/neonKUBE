@@ -1689,7 +1689,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(groupName), nameof(groupName));
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1744,7 +1744,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task WaitForPendingTasksAsync(string groupName)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             SetupPendingTasks group;
 

@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task DisableInternetSshAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
         }
 
         /// <inheritdoc/>
@@ -305,42 +305,42 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task PauseClusterAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task ResumeClusterAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
         public virtual async Task StartNodeAsync(string nodeName)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             throw new NotSupportedException();
@@ -349,7 +349,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             throw new NotSupportedException();
@@ -358,7 +358,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task<string> GetNodeImageAsync(string nodeName, string folder)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 

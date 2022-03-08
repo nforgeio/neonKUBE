@@ -161,7 +161,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(manifest != null, nameof(manifest));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
@@ -384,7 +384,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             DownloadManifest manifest;
 

@@ -716,7 +716,7 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadLineAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             string line;
 
@@ -809,7 +809,7 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<string> ReadToEndAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var sb = new StringBuilder(1024);
 

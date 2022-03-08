@@ -52,7 +52,7 @@ namespace Neon.Temporal
         public static async Task<HttpResponseMessage> SendRequestAsync<TRequest>(this HttpClient client, TRequest request)
             where TRequest : ProxyRequest
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             if (client == null)
@@ -102,7 +102,7 @@ namespace Neon.Temporal
             where TRequest : ProxyRequest
             where TReply : ProxyReply
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
             Covenant.Requires<ArgumentException>(reply.Type == request.ReplyType, $"Reply message type [{reply.Type}] is not a suitable response for a [{request.Type}] request.", nameof(request));

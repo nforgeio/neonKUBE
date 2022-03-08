@@ -123,7 +123,7 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NodeTask task)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             reconciledReceivedCounter.Inc();
 
@@ -162,7 +162,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1NodeTask task)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             deletedReceivedCounter.Inc();
 
@@ -186,7 +186,7 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1NodeTask task)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             statusModifiedReceivedCounter.Inc();
 
@@ -236,7 +236,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NodeTask> resources)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var tasks = resourceManager.CloneResourcesAsync(resources);
 
@@ -273,7 +273,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NodeTask task)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             throw new NotImplementedException("$todo(jefflill)");
         }
     }

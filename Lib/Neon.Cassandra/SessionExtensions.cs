@@ -229,7 +229,7 @@ namespace Neon.Cassandra
             this ISession       session,
             string              batchText)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(batchText), nameof(batchText));
 
             foreach (var command in SplitBatch(batchText))
@@ -248,7 +248,7 @@ namespace Neon.Cassandra
             this ISession       session,
             string              cqlText)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cqlText), nameof(cqlText));
 
             return await session.ExecuteAsync(new SimpleStatement(cqlText));

@@ -44,7 +44,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         private async Task RegisterNamespaceAsync(InternalRegisterNamespaceRequest request)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             EnsureNotDisposed();
 
             var namespaceRegisterRequest =
@@ -84,7 +84,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         public async Task RegisterNamespaceAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0, nameof(retentionDays));
             Covenant.Requires<ArgumentException>(retentionDays <= 30, nameof(retentionDays));
@@ -122,7 +122,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         public async Task<NamespaceDescription> DescribeNamespaceAsync(string name)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             EnsureNotDisposed();
 
@@ -154,7 +154,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task UpdateNamespaceAsync(string name, UpdateNamespaceRequest request)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(request.Config != null, nameof(request));
@@ -205,7 +205,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<NamespaceListPage> ListNamespacesAsync(int pageSize, byte[] nextPageToken = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
             EnsureNotDisposed();
 

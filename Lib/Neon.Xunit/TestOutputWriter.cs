@@ -99,7 +99,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task FlushAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
         }
 
         /// <inheritdoc/>
@@ -333,7 +333,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task WriteLineAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             outputHelper.WriteLine(string.Empty);
         }
@@ -341,7 +341,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task WriteLineAsync(char value)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             outputHelper.WriteLine(value.ToString());
         }
@@ -349,7 +349,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task WriteLineAsync(char[] buffer, int index, int count)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             outputHelper.WriteLine(new string(buffer, index, count));
         }
@@ -357,7 +357,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override async Task WriteLineAsync(string value)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             outputHelper.WriteLine(value.ToString());
         }
