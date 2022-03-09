@@ -58,23 +58,15 @@ namespace Neon.Kube
         Starting,
 
         /// <summary>
-        /// The node is running.
-        /// </summary>
-        [EnumMember(Value = "running")]
-        Running,
-
-        /// <summary>
-        /// The node is paused.  This can happen for Hyper-V instances
-        /// running on Windows server due to the low available disk space:
-        /// <a href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/virtualization/virtual-machines-enter-paused-state-low-disk-free">More Info</a>
+        /// The node is sleeping.
         /// </summary>
         [EnumMember(Value = "paused")]
         Paused,
 
         /// <summary>
-        /// The node is sleeping.
+        /// The node is running.
         /// </summary>
-        [EnumMember(Value = "sleeping")]
-        Sleeping
+        [EnumMember(Value = "running")]
+        Running
     }
 }

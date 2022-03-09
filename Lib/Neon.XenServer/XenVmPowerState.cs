@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenObject.cs
+// FILE:	    XenVmPowerState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,36 +17,40 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 
 namespace Neon.XenServer
 {
     /// <summary>
-    /// Base class for all XenServer objects that implement common properties.
+    /// Enumerates the possible virtual machine states.
     /// </summary>
-    public class XenObject
+    public enum XenVmPowerState
     {
         /// <summary>
-        /// Constructs an instance from raw property values returned by the <b>xe client</b>.
+        /// Could not determine the virtual machine state.
         /// </summary>
-        /// <param name="rawProperties">The raw object properties.</param>
-        internal XenObject(IDictionary<string, string> rawProperties)
-        {
-            var properties = new Dictionary<string, string>();
-
-            foreach (var item in rawProperties)
-            {
-                properties.Add(item.Key, item.Value);
-            }
-
-            this.Properties = new ReadOnlyDictionary<string, string>(properties);
-        }
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
 
         /// <summary>
-        /// Returns the read-only dictionary including all raw object properties.
+        /// The virtual machine is turned off.
         /// </summary>
-        public IDictionary<string, string> Properties { get; private set; }
+        [EnumMember(Value = "halted")]
+        Halted,
+
+        /// <summary>
+        /// The virtual machine is either paused with its memory still loaded in RAM
+        /// or suspended with its memory persisted to disk.
+        /// </summary>
+        [EnumMember(Value = "paused")]
+        Paused,
+
+        /// <summary>
+        /// The virtual machine is running.
+        /// </summary>
+        [EnumMember(Value = "running")]
+        Running
     }
 }

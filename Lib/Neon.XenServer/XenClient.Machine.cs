@@ -363,7 +363,8 @@ namespace Neon.XenServer
             }
 
             /// <summary>
-            /// Starts a virtual machine.
+            /// Starts a stopped virtual machine resumes a suspended or paused virtual machine.
+            /// This does nothing when the virtual machine is already running.
             /// </summary>
             /// <param name="virtualMachine">The target virtual machine.</param>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
@@ -371,7 +372,34 @@ namespace Neon.XenServer
             {
                 Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
-                client.SafeInvoke("vm-start", $"uuid={virtualMachine.Uuid}");
+                var vm = Find(uuid: virtualMachine.Uuid);
+
+                if (vm == null)
+                {
+                    throw new XenException($"Virtual machine not found: {virtualMachine.NameLabel}");
+                }
+
+                switch (vm.PowerState)
+                {
+                    case XenVmPowerState.Running:
+
+                        return;
+
+                    case XenVmPowerState.Halted:
+
+                        client.SafeInvoke("vm-start", $"uuid={virtualMachine.Uuid}");
+                        break;
+
+                    case XenVmPowerState.Paused:
+
+                        client.SafeInvoke("vm-resume", $"uuid={virtualMachine.Uuid}");
+                        break;
+
+                    default:
+                    case XenVmPowerState.Unknown:
+
+                        throw new XenException($"Unexpected virtual machine power state: {virtualMachine.NameLabel}:{vm.PowerState}");
+                }
             }
 
             /// <summary>
@@ -399,6 +427,19 @@ namespace Neon.XenServer
                 {
                     client.SafeInvoke("vm-shutdown", $"uuid={virtualMachine.Uuid}");
                 }
+            }
+
+            /// <summary>
+            /// Suspends a virtual machine by persisting its memory to disk and stopping
+            /// the virtual machine so that it can be restarted where it left off later.
+            /// </summary>
+            /// <param name="virtualMachine">The target virtual machine.</param>
+            /// <exception cref="XenException">Thrown if the operation failed.</exception>
+            public void Suspend(XenVirtualMachine virtualMachine)
+            {
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
+
+                client.SafeInvoke("vm-suspend", $"uuid={virtualMachine.Uuid}", "--force");
             }
 
             /// <summary>

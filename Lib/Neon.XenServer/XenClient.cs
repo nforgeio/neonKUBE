@@ -106,6 +106,40 @@ namespace Neon.XenServer
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable, IXenClient
     {
+        //-------------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Parses <b>xe</b> client properties formatted like <b>name1:value1; name2: value2;...</b>
+        /// into a dictionary, making it easy to retrieve specific values.
+        /// </summary>
+        /// <param name="property">The property string.</param>
+        /// <returns>The case-insensitive dictionary.</returns>
+        public static Dictionary<string, string> ParseValues(string property)
+        {
+            var values = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var item in property.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var colonPos = item.IndexOf(':');
+
+                if (colonPos == -1)
+                {
+                    continue;
+                }
+
+                var key   = item.Substring(0, colonPos).Trim();
+                var value = item.Substring(colonPos + 1).Trim();
+
+                values[key] = value;
+            }
+
+            return values;
+        }
+
+        //-------------------------------------------------------------------------
+        // Instance members
+
         private bool            isDisposed = false;
         private SftpClient      sftpClient = null;
         private string          username;
@@ -413,32 +447,61 @@ namespace Neon.XenServer
         {
             // List the hosts to obtain the host UUID.  We're going to assume that only the
             // current host will be returned and the confguring a resource pool doesn't change
-            // this.
+            // this (which is probably not going to be the case in the real world).
 
             var response = SafeInvokeItems("host-list");
 
             Covenant.Assert(response.Items.Count == 1, "[xe host-list] is expected to return exactly one host.");
 
-            response = SafeInvokeItems("host-param-list", $"uuid={response.Items.Single()["uuid"]}");
+            var hostUuid = response.Items.Single()["uuid"];
+
+            // Fetch the host parameters and extract the host version information.
+
+            response = SafeInvokeItems("host-param-list", $"uuid={hostUuid}", "--all");
 
             var hostParams   = response.Items.Single();
-            var versionItems = hostParams["software-version"].Split(';');
+            var versionItems = ParseValues(hostParams["software-version"]);
 
-            for (int i = 0; i < versionItems.Length; i++)
-            {
-                versionItems[i] = versionItems[i].Trim();
-            }
+            var edition = hostParams["edition"];
+            var version = versionItems["product_version:"];
 
-            var version = versionItems.Single(item => item.StartsWith("product_version:"));
-            var pos     = version.IndexOf(':');
+            //-----------------------------------------------------------------
+            // Extract information about the available cores and memory.
 
-            version = version.Substring(pos + 1).Trim();
+            var cpuItems        = ParseValues(hostParams["cpu_info"]);
+            var cpuCount        = cpuItems["cpu_count"];
+            var usableCores     = int.Parse(cpuCount); ;
+            var availableMemory = long.Parse(hostParams["memory-free-computed"]);
+
+            //-----------------------------------------------------------------
+            // Fetch information about the available disk space.
+
+            // $note(jefflill):
+            //
+            // We're currently collecting information only for the [Local storage] repository.
+            // Eventually, we'll need to modify this to collect information for all attached
+            // repositories.
+
+            // Fetch the parameters for the local storage repository and extract [physical-size] and
+            // [physical-utilisation] to compute the available disk space.
+
+            var srParams = SafeInvokeItems("sr-list", $"name-label=Local storage", "--all").Items.Single();
+
+            var physicalSize        = long.Parse(srParams["physical-size"]);
+            var physicalUtilisation = long.Parse(srParams["physical-utilisation"]);
+            var availableDisk       = physicalSize - physicalUtilisation;
+
+            //-----------------------------------------------------------------
+            // Construct and return the result.
 
             return new XenHostInfo()
             {
-                Edition = hostParams["edition"],
-                Version = SemanticVersion.Parse(version),
-                Params  = new ReadOnlyDictionary<string, string>(hostParams)
+                Edition         = edition,
+                Version         = SemanticVersion.Parse(version),
+                Params          = new ReadOnlyDictionary<string, string>(hostParams),
+                UsableCores     = usableCores,
+                AvailableMemory = availableMemory,
+                AvailableDisk   = availableDisk
             };
         }
 

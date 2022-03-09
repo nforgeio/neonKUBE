@@ -84,7 +84,7 @@ namespace Neon.XenServer
             // When running XE commands directly on the XenServer host, this appears to 
             // be a list of records with each record being terminated by two blank lines.
             // When executing the commands remotely via the Windows [xe.exe] CLI, the
-            // blank are ommtted and it appears that the "uuid " or sometimes other property
+            // blank are omitted and it appears that the "uuid " or sometimes other property
             // names like "Disk 0 VDI:" at at the beginning of the line indicates a new record.
             //
             // PARSING PROBLEM:

@@ -35,7 +35,7 @@ namespace Neon.Kube
     public class HostingResourceConstraint
     {
         /// <summary>
-        /// Degfault constructor.
+        /// Default constructor.
         /// </summary>
         public HostingResourceConstraint()
         {

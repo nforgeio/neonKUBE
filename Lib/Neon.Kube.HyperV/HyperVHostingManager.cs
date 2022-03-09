@@ -75,6 +75,11 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Used to limit how many threads will be created by parallel operations.
+        /// </summary>
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+
+        /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
         /// </summary>
         public static void Load()
@@ -405,8 +410,6 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
-            await Task.CompletedTask;
-
             var hostMachineName = Environment.MachineName;
             var allNodeNames    = cluster.Definition.NodeDefinitions.Keys.ToList();
             var deploymentCheck = new HostingResourceAvailability();
@@ -554,7 +557,7 @@ namespace Neon.Kube
                         {
                              ResourceType = HostingConstrainedResourceType.Memory,
                              Nodes        = allNodeNames,
-                             Details      = $"[{humanRequiredMemory}] Physical memory is required but only [{humanAvailableMemory}] is available after reserving [{humanReservedMemory}]."
+                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] is available after reserving [{humanReservedMemory}]."
                         });
                 }
             }
@@ -721,8 +724,6 @@ namespace Neon.Kube
 
                 controller.SetGlobalStepStatus();
             }
-
-            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -899,7 +900,7 @@ namespace Neon.Kube
                 var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
 
                 // Create a hashset with the names of nodes that have existing virtual machines.
-                // Note that the node names will strip off any cluster prefix from the virtual
+                // Note that the node names will be stripped of any cluster prefix in the virtual
                 // machine name.
 
                 var existingNodes    = new HashSet<string>();
@@ -917,12 +918,14 @@ namespace Neon.Kube
                     existingMachines.Add(machine.Name, machine);
                 }
 
-                // The Kubernetes context for this cluster doesn't exist, so we know that any
-                // virtual machines with names matching the virtual machines that would be
-                // provisioned for the cluster definition are conflicting.
+                // Build the cluster status.
 
                 if (context == null && clusterLogin == null)
                 {
+                    // The Kubernetes context for this cluster doesn't exist, so we know that any
+                    // virtual machines with names matching the virtual machines that would be
+                    // provisioned for the cluster definition are conflicting.
+
                     var clusterStatus = new ClusterStatus()
                     {
                         State   = ClusterState.NotFound,
@@ -938,10 +941,11 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    var clusterStatus = new ClusterStatus();
-
                     // We're going to assume that all virtual machines that match cluster node names
-                    // (after stripping off any cluster prefix) belong to the cluster.
+                    // (after stripping off any cluster prefix) belong to the cluster and will
+                    // map the actual VM states to public node states.
+
+                    var clusterStatus = new ClusterStatus();
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
@@ -982,7 +986,7 @@ namespace Neon.Kube
 
                                     case VirtualMachineState.Saved:
 
-                                        nodeState = ClusterNodeState.Sleeping;
+                                        nodeState = ClusterNodeState.Paused;
                                         break;
 
                                     default:
@@ -997,8 +1001,8 @@ namespace Neon.Kube
 
                     // We're going to examine the node states from the Hyper-V perspective and
                     // short-circuit the Kubernetes level cluster health check when the cluster
-                    // nodes are not provisioned, are sleeping or appears to be transitioning
-                    // between starting, stopping, waking, or sleeping states.
+                    // nodes are not provisioned, are paused or appear to be transitioning
+                    // between starting, stopping, waking, or paused states.
 
                     var commonNodeState = clusterStatus.Nodes.Values.First();
 
@@ -1022,12 +1026,12 @@ namespace Neon.Kube
                     }
                     else if (clusterStatus.State != ClusterState.Transitioning)
                     {
-                        // If we get here then all of the nodes have the state so we'll
-                        // use that command state to set the overall cluster state.
+                        // If we get here then all of the nodes have the same state so
+                        // we'll use that command state to set the overall cluster state.
 
                         switch (commonNodeState)
                         {
-                            case ClusterNodeState.Sleeping:
+                            case ClusterNodeState.Paused:
 
                                 clusterStatus.State   = ClusterState.Paused;
                                 clusterStatus.Summary = "Cluster is paused";
@@ -1061,7 +1065,7 @@ namespace Neon.Kube
                     }
 
                     // When it looks like the cluster is configured from Hyper-V's perspective,
-                    // we're going to check from the Kubernetes perspective to determining whether
+                    // we're going to check from the Kubernetes perspective to determine whether
                     // the cluster itself appears to be healthy or not.
 
                     if (clusterStatus.State == ClusterState.Configured && context != null)
@@ -1113,10 +1117,10 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.Definition.Nodes,
-                    nodeDefinition =>
+                Parallel.ForEach(cluster.Definition.Nodes, parallelOptions,
+                    node =>
                     {
-                        var vmName = GetVmName(nodeDefinition);
+                        var vmName = GetVmName(node);
                         var vm     = hyperv.GetVm(vmName);
 
                         if (vm == null)
@@ -1148,8 +1152,6 @@ namespace Neon.Kube
                         }
                     });
             }
-
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -1162,16 +1164,16 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.Definition.Nodes,
-                    nodeDefinition =>
+                Parallel.ForEach(cluster.Definition.Nodes, parallelOptions,
+                    node =>
                     {
-                        var vmName = GetVmName(nodeDefinition);
+                        var vmName = GetVmName(node);
                         var vm     = hyperv.GetVm(vmName);
 
                         if (vm == null)
                         {
                             // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs.  We're just going to ignore this situation.
+                            // deployed cluster VMs.  We're just going to ignore this.
 
                             return;
                         }
@@ -1198,9 +1200,6 @@ namespace Neon.Kube
 
                                     case StopMode.Graceful:
 
-                                        // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1281
-
-                                        throw new NotImplementedException("Graceful cluster stop is not implemented yet.");
                                         hyperv.StopVm(vmName);
                                         break;
 
@@ -1219,8 +1218,6 @@ namespace Neon.Kube
                         }
                     });
             }
-
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -1241,10 +1238,10 @@ namespace Neon.Kube
             {
                 // Remove all of the cluster VMs.
 
-                Parallel.ForEach(cluster.Definition.Nodes,
-                    nodeDefinition =>
+                Parallel.ForEach(cluster.Definition.Nodes, parallelOptions,
+                    node =>
                     {
-                        var vmName = GetVmName(nodeDefinition);
+                        var vmName = GetVmName(node);
                         var vm     = hyperv.GetVm(vmName);
 
                         if (vm == null)
@@ -1271,7 +1268,7 @@ namespace Neon.Kube
                 {
                     var prefix = cluster.Definition.Deployment.Prefix + "-";
 
-                    Parallel.ForEach(hyperv.ListVms(),
+                    Parallel.ForEach(hyperv.ListVms(), parallelOptions,
                         vm =>
                         {
                             if (vm.Name.StartsWith(prefix))
@@ -1294,6 +1291,7 @@ namespace Neon.Kube
         public override async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
             await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
@@ -1342,8 +1340,6 @@ namespace Neon.Kube
                 {
                     hyperv.StopVm(vmName, stopMode == StopMode.TurnOff);
                 }
-
-                await Task.CompletedTask;
             }
         }
 
@@ -1351,6 +1347,7 @@ namespace Neon.Kube
         public override async Task StartNodeAsync(string nodeName)
         {
             await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
             if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
@@ -1377,8 +1374,6 @@ namespace Neon.Kube
                         hyperv.StartVm(vmName);
                         break;
                 }
-
-                await Task.CompletedTask;
             }
         }
 
