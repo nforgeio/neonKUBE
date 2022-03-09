@@ -337,24 +337,5 @@ namespace Neon.Kube
         /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful);
-
-        /// <summary>
-        /// <para>
-        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
-        /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
-        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
-        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer).
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the node being captured.</param>
-        /// <param name="folder">Path to the output folder.</param>
-        /// <returns>The fully qualified path to the downloaded image file.</returns>
-        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
-        Task<string> GetNodeImageAsync(string nodeName, string folder);
     }
 }

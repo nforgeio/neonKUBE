@@ -1376,52 +1376,5 @@ namespace Neon.Kube
                 }
             }
         }
-
-        /// <inheritdoc/>
-        public override async Task<string> GetNodeImageAsync(string nodeName, string folder)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-
-            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
-            {
-                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
-            }
-
-            using (var hyperv = new HyperVProxy())
-            {
-                var vmName = GetVmName(nodeDefinition);
-                var vm     = hyperv.GetVm(vmName);
-
-                if (vm == null)
-                {
-                    throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
-                }
-
-                if (vm.State != VirtualMachineState.Off)
-                {
-                    throw new InvalidOperationException($"Node [{nodeName}] current state is [{vm.State}].  The node must be stopped first.");
-                }
-
-                var drives = hyperv.GetVmDrives(vmName);
-
-                if (drives.Count != 1)
-                {
-                    throw new InvalidOperationException($"Node [{nodeName}] has [{drives.Count}] drives.  Only nodes with a single drive are supported.");
-                }
-
-                var sourceImagePath = drives.First();
-                var targetImagePath = Path.GetFullPath(Path.Combine(folder, $"{nodeName}.vhdx"));
-
-                Directory.CreateDirectory(folder);
-                NeonHelper.DeleteFile(targetImagePath);
-                File.Copy(sourceImagePath, targetImagePath);
-                hyperv.CompactDrive(targetImagePath);
-
-                return await Task.FromResult(targetImagePath);
-            }
-        }
     }
 }

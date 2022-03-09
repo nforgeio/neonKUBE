@@ -1428,15 +1428,5 @@ namespace Neon.Kube
                     break;
             }
         }
-
-        /// <inheritdoc/>
-        public override async Task<string> GetNodeImageAsync(string nodeName, string folder)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            throw new NotImplementedException($"[{nameof(GetNodeImageAsync)}] is not implemented for [{nameof(XenServerHostingManager)}].");
-        }
     }
 }

@@ -68,7 +68,7 @@ namespace Neon.Kube
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
-            /// <see cref="RemoveAsync(bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// amd <see cref="RemoveAsync(bool)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -716,32 +716,6 @@ namespace Neon.Kube
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopNodeAsync(nodeName, stopMode);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
-        /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
-        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
-        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the node being captured.</param>
-        /// <param name="folder">Path to the output folder.</param>
-        /// <returns>The fully qualified path to the downloaded image file.</returns>
-        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
-        public async Task<string> GetNodeImageAsync(string nodeName, string folder)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Assert(HostingManager != null);
-
-            return await HostingManager.GetNodeImageAsync(nodeName, folder); 
         }
     }
 }
