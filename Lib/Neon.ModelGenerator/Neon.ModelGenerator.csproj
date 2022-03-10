@@ -66,9 +66,9 @@
 		</Content>
 
 		<!--
-    Note that we're not using the glob [**] pattern in the <Content/> tags below
-    to avoid including any localization folders to reduce the package size.
-    -->
+		Note that we're not using the glob [**] pattern in the <Content/> tags below
+		to avoid including any localization folders to reduce the package size.
+		-->
 
 		<Content Include="linux-x64\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -85,12 +85,12 @@
 	</ItemGroup>
 
 	<!-- 
-  We're going to publish the [neon-modelgen] binaries for [linux-x64], [osx-x64],
-  and [win-x64] to the [neon-modelgen] folder of this project.
+	We're going to publish the [neon-modelgen] binaries for [linux-x64], [osx-x64],
+	and [win-x64] to the [neon-modelgen] folder of this project.
   
-  This assumes that this project has an explicit build dependency on the 
-  [Tools/neon-modelgen] project.
-  -->
+	This assumes that this project has an explicit build dependency on the 
+	[Tools/neon-modelgen] project.
+	-->
 
 	<Target Name="ModelGen" BeforeTargets="BeforeBuild">
 

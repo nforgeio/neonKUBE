@@ -50,17 +50,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="assets-Neon.XenServer\linux\**" />
-		<Compile Remove="assets-Neon.XenServer\osx\**" />
 		<EmbeddedResource Remove="assets-Neon.XenServer\linux\**" />
 		<EmbeddedResource Remove="assets-Neon.XenServer\osx\**" />
-		<None Remove="assets-Neon.XenServer\linux\**" />
-		<None Remove="assets-Neon.XenServer\osx\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="assets-Neon.XenServer\CommandLib.dll" />
-		<None Remove="assets-Neon.XenServer\xe.exe" />
+		<None Remove="assets-Neon.XenServer\**" Pack="true" />
 	</ItemGroup>
 
 	<ItemGroup>
