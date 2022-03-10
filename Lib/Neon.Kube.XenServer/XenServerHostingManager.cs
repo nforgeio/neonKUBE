@@ -151,6 +151,27 @@ namespace Neon.Kube
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(node => node.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
+
+            // Create the [XenClient] instances that we'll use to manage the XenServer hosts.
+
+            xenClients = new List<XenClient>();
+
+            foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
+            {
+                var hostAddress  = host.Address;
+                var hostname     = host.Name;
+                var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
+                var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
+
+                if (string.IsNullOrEmpty(hostname))
+                {
+                    hostname = host.Address;
+                }
+
+                var xenClient = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
+
+                xenClients.Add(xenClient);
+            }
         }
 
         /// <inheritdoc/>
@@ -212,21 +233,18 @@ namespace Neon.Kube
                 node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
             }
 
-            // Build a list of [NodeSshProxy<XenClient>] instances that map to the specified
-            // XenServer hosts.  We'll use the [XenClient] instances as proxy metadata.  Note
-            // that we're doing this to take advantage of [SetupController] to manage parallel
+            // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.
+            // Note that we're doing this to take advantage of [SetupController] to manage parallel
             // operations as well as to take advantage of existing UX progress code, but we're
-            // not going to ever connect to XenServers via [LinuxSshProxy] and will use [XenClient]
+            // never going to connect XenServers via [NodeSshProxy] and will use [XenClient]
             // to execute remote commands either via a local [xe-cli] or via the XenServer API
             // (in the future).
             //
-            // NOTE: We're going to add these proxies to the [ClusterProxy.Hosts] list so that
-            //       host proxy status updates will be included in the status event changes 
+            // NOTE: We're also going to add these proxies to the [ClusterProxy.Hosts] list so 
+            //       that host proxy status updates will be included in the status event changes 
             //       raised to any UX.
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
-
-            xenClients = new List<XenClient>();
 
             foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
@@ -246,17 +264,15 @@ namespace Neon.Kube
                 // XenServer commands and normal step/status related logging will be written to
                 // the log file for each xenClient.
                 //
-                // We're going to create the xenClient first and then pass its log writer to the proxy
-                // constructor.
+                // We're going to create the xenClient above (in the constructor) and then pass its
+                // log writer to the proxy constructor.
                 //
                 // WARNING: This assumes that we'll never attempt to write to any given log on
                 //          separate tasks or threads, which I believe is the case due to
                 //          [SetupController] semantics.
 
-                var xenClient = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
+                var xenClient = GetXenClient(hostname);
                 var sshProxy  = new NodeSshProxy<XenClient>(hostname, NetHelper.ParseIPv4Address(hostAddress), SshCredentials.FromUserPassword(hostUsername, hostPassword), NodeRole.XenServer, logWriter: xenClient.LogWriter); 
-
-                xenClients.Add(xenClient);
 
                 sshProxy.Metadata = xenClient;
 
@@ -287,7 +303,6 @@ namespace Neon.Kube
                 });
 
             xenController.AddWaitUntilOnlineStep();
-            xenController.AddNodeStep("verify readiness", (controller, hostProxy) => VerifyReady(hostProxy));
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
@@ -466,43 +481,6 @@ namespace Neon.Kube
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Verify that the XenServer is ready to provision the cluster virtual machines.
-        /// </summary>
-        /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void VerifyReady(NodeSshProxy<XenClient> xenSshProxy)
-        {
-            // $todo(jefflill):
-            //
-            // It would be nice to verify that XenServer actually has enough 
-            // resources (RAM, DISK, and perhaps CPU) here as well.
-
-            var xenClient = xenSshProxy.Metadata;
-            var nodes     = GetHostedNodes(xenClient);
-
-            xenSshProxy.Status = "check: virtual machines";
-
-            var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var vm in xenClient.Machine.List())
-            {
-                vmNames.Add(vm.NameLabel);
-            }
-
-            foreach (var hostedNode in nodes)
-            {
-                var vmName = GetVmName(hostedNode);
-
-                if (vmNames.Contains(vmName))
-                {
-                    xenSshProxy.Fault($"XenServer [{xenClient.Name}] already hosts a virtual machine named [{vmName}].");
-                    return;
-                }
-            }
-
-            xenSshProxy.Status = string.Empty;
         }
 
         /// <summary>
@@ -756,12 +734,14 @@ namespace Neon.Kube
                 {
                     try
                     {
+                        var hostInfo = xenClient.GetHostInfo();
+
                         lock (hostnameToCapacity)
                         {
-                            hostnameToCapacity.Add(xenClient.Name, xenClient.GetHostInfo());
+                            hostnameToCapacity.Add(xenClient.Name, hostInfo);
                         }
                     }
-                    catch
+                    catch (XenException)
                     {
                         // We're going to consider the host to be offline.
 
@@ -807,7 +787,7 @@ namespace Neon.Kube
                 return availability;
             }
 
-            // Total the memory and disk space required for the cluster nodes in each XenServer host.
+            // Total the memory and disk space required for the cluster nodes on each XenServer host.
 
             var hostnameToRequiredMemory = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
             var hostnameToRequiredDisk   = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
@@ -966,9 +946,9 @@ namespace Neon.Kube
                             hostnameToVms[hostClient.Name] = vmNameToMachine;
                         }
                     }
-                    catch
+                    catch (XenException)
                     {
-                        // We're considering the XenServer host to be offline for any exception.
+                        // We're considering the XenServer host to be offlinel.
 
                         lock (hostnameToVms)
                         {
