@@ -40,17 +40,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-		<None Include="..\nuget-icon.png">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="YugaByteCassandraCSharpDriver" Version="3.16.3" />
 	</ItemGroup>
 
@@ -58,4 +47,13 @@
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true"/>
+	</ItemGroup>
+	
 </Project>

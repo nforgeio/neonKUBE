@@ -53,6 +53,7 @@
 		<PublishTrimmed>false</PublishTrimmed>
 		<TrimMode>copyused</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
+		<Optimize>False</Optimize>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -99,10 +100,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -15,6 +15,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants />
+		<Optimize>False</Optimize>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,6 +31,11 @@
 		<ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
 		<ProjectReference Include="..\..\Test\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

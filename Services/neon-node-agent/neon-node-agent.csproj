@@ -24,6 +24,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants />
+		<Optimize>False</Optimize>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
@@ -57,11 +58,16 @@
 		<Folder Include="config.gitignore\" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
 	<!-- 
-  The KubeOps config file generator doesn't rebuild the files when the config output
-  directory already exists.  We're going to delete this folder to ensure that these
-  files are always regenerated.
-  -->
+    The KubeOps config file generator doesn't rebuild the files when the config output
+    directory already exists.  We're going to delete this folder to ensure that these
+    files are always regenerated.
+    -->
 
 	<Target Name="RemoveConfig">
 		<RemoveDir Directories="$(ProjectDir)config.gitignore" />

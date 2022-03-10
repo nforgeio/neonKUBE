@@ -16,6 +16,10 @@
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <Optimize>False</Optimize>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Analytics" Version="3.8.0" />
 		<PackageReference Include="Blazor-Analytics" Version="3.10.0" />
@@ -45,6 +49,11 @@
 		<Content Update="wwwroot\favicon.ico">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

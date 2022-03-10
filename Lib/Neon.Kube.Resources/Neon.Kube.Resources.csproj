@@ -29,6 +29,10 @@
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <Optimize>False</Optimize>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Compile Include="..\Neon.Kube.ResourceDefinitions\Resources\**\*.cs" />
 	</ItemGroup>
@@ -40,6 +44,10 @@
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

@@ -48,6 +48,10 @@
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <Optimize>False</Optimize>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
 		<EmbeddedResource Include="Resources/**/*" />
@@ -85,17 +89,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-		<None Include="..\nuget-icon.png">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Helm" Version="0.1.35" />
 		<PackageReference Include="Minio" Version="3.1.13" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
@@ -107,6 +100,15 @@
 		<Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+	
 	<!--
 	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
 	download the cluster manifest JSON file for the current cluster version.  The manifest
