@@ -675,7 +675,16 @@ namespace Neon.Kube
             lock (syncLock)
             {
                 SetupState = null;
-                Hosting?.ClearSecrets(this);
+
+                // $todo(jefflill):
+                //
+                // I'm temporarily commenting this out because neon-desktop needs
+                // the hosting related secrets in some circumstances.  We need to
+                // think through a comprehensive solution:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1482
+
+                // Hosting?.ClearSecrets(this);
             }
         }
 
