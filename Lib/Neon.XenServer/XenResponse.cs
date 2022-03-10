@@ -84,15 +84,17 @@ namespace Neon.XenServer
             // When running XE commands directly on the XenServer host, this appears to 
             // be a list of records with each record being terminated by two blank lines.
             // When executing the commands remotely via the Windows [xe.exe] CLI, the
-            // blank are omitted and it appears that the "uuid " or sometimes other property
-            // names like "Disk 0 VDI:" at at the beginning of the line indicates a new record.
+            // blank lines are omitted and it appears that the "uuid " or sometimes other
+            // property names like "Disk 0 VDI:" at the beginning of the line indicates
+            // a new record.
             //
             // PARSING PROBLEM:
             // ----------------
-            // The problem is that we may see more than one properties at the begining of
-            // the line for an individual record.  I'm going to assume that every record
-            // will include at least one [indented] property and also that all properties 
-            // that start the line appear at the begining of the record.
+            // The problem is that we may see more than one properties starting at the
+            // beginning of a line for an individual record.  I'm going to assume that every
+            // record will include at least one [indented] property and also that all
+            // properties that with no leading whitespace appear at the beginning of the
+            // record.
             //
             // Each line includes a read/write or read-only indicator (which we'll strip out) 
             // followed by a colon and the property value.  I'm not entirely sure if this 
@@ -165,7 +167,6 @@ namespace Neon.XenServer
 
                         var namePart  = line.Substring(0, colonPos).Trim();
                         var valuePart = line.Substring(colonPos + 1).Trim();
-
                         var parenPos  = namePart.IndexOf('(');
 
                         if (parenPos != -1)

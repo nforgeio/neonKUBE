@@ -50,7 +50,7 @@ using Renci.SshNet;
 //        SUDO and writing some config proxy related config files.  This will 
 //        probably cause some eyebrow raising amongst serious security folks.
 //
-//      * There are some operations we can't perform like importing a VM template
+//      * There are some operations we can't perform, like importing a VM template
 //        that needs to be downloaded in pieces and reassembled (to stay below
 //        GitHub Releases 2GB artifact file limit).  We also can't export an
 //        template XVA file to the controlling computer because there's not 
@@ -461,16 +461,15 @@ namespace Neon.XenServer
 
             var hostParams   = response.Items.Single();
             var versionItems = ParseValues(hostParams["software-version"]);
-
-            var edition = hostParams["edition"];
-            var version = versionItems["product_version:"];
+            var edition      = hostParams["edition"];
+            var version      = versionItems["product_version"];
 
             //-----------------------------------------------------------------
             // Extract information about the available cores and memory.
 
             var cpuItems        = ParseValues(hostParams["cpu_info"]);
             var cpuCount        = cpuItems["cpu_count"];
-            var usableCores     = int.Parse(cpuCount); ;
+            var usableCores     = int.Parse(cpuCount);
             var availableMemory = long.Parse(hostParams["memory-free-computed"]);
 
             //-----------------------------------------------------------------
@@ -485,8 +484,15 @@ namespace Neon.XenServer
             // Fetch the parameters for the local storage repository and extract [physical-size] and
             // [physical-utilisation] to compute the available disk space.
 
-            var srParams = SafeInvokeItems("sr-list", $"name-label=Local storage", "--all").Items.Single();
+            var srLocal = SafeInvokeItems("sr-list", $"name-label=Local storage").Items.SingleOrDefault();
 
+            if (srLocal == null)
+            {
+                throw new XenException($"Cannot locate the [Local storage] storage repository.");
+            }
+
+            var srLocalUuid         = srLocal["uuid"];
+            var srParams            = SafeInvokeItems("sr-param-list", $"uuid={srLocalUuid}").Items.Single();
             var physicalSize        = long.Parse(srParams["physical-size"]);
             var physicalUtilisation = long.Parse(srParams["physical-utilisation"]);
             var availableDisk       = physicalSize - physicalUtilisation;
