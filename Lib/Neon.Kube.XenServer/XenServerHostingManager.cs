@@ -1137,10 +1137,11 @@ namespace Neon.Kube
                             clusterStatus.Summary = "Cluster is turned off";
                             break;
 
+                        case ClusterNodeState.NotProvisioned:
                         case ClusterNodeState.Unknown:
                         default:
 
-                            clusterStatus.State   = ClusterState.Unknown;
+                            clusterStatus.State   = ClusterState.NotFound;
                             clusterStatus.Summary = "Cluster not found";
                             break;
                     }
