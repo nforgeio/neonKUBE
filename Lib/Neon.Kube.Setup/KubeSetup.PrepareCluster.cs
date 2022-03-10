@@ -310,6 +310,7 @@ namespace Neon.Kube
                         // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                         // to the PPK format PuTTY/WinSCP requires.
 
+#if TODO // $todo(jefflill): This code should probably be deleted.
                         if (NeonHelper.IsWindows)
                         {
                             var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
@@ -348,6 +349,7 @@ namespace Neon.Kube
                             NeonHelper.DeleteFile(ppkKeyPath);
                         }
                     }
+#endif
                 }
             });
 
