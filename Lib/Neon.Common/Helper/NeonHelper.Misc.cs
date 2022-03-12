@@ -2081,6 +2081,7 @@ namespace Neon.Common
         /// be the fully qualified pathj to <b>docker.exe</b> on Windows and just <b>docker</b>
         /// on Linux and OS/X.
         /// </summary>
+        /// <exception cref="FileNotFoundException">Thrown when the Docker client could  not be located.</exception>
         public static string DockerCli
         {
             get
@@ -2110,7 +2111,7 @@ namespace Neon.Common
                         }
                     }
 
-                    throw new Exception("Cannot locate the docker CLI.");
+                    throw new FileNotFoundException("Cannot locate the docker CLI.");
                 }
                 else
                 {
