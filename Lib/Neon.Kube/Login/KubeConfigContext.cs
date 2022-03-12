@@ -87,6 +87,14 @@ namespace Neon.Kube
         public bool IsNeonKubeContext => KubeContextName.Parse(Name).IsNeonKubeContext;
 
         /// <summary>
+        /// Indicates whether the Kubernetes context is a neonKUBE built-in
+        /// neon-desktop cluster.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsBuiltInContext => IsNeonKubeContext && Extension != null && Extension.ClusterDefinition.IsDesktopCluster;
+
+        /// <summary>
         /// The cluster login information for the context.
         /// </summary>
         [JsonIgnore]
