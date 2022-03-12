@@ -92,7 +92,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsBuiltInContext => IsNeonKubeContext && Extension != null && Extension.ClusterDefinition.IsDesktopCluster;
+        public bool IsBuiltInContext => IsNeonKubeContext && Extension != null && Extension.ClusterDefinition != null && Extension.ClusterDefinition.IsDesktopCluster;
 
         /// <summary>
         /// The cluster login information for the context.
