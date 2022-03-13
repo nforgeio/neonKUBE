@@ -905,7 +905,7 @@ namespace Neon.Kube
                                                 await step.AsyncNodeAction(this, node);
                                             });
 
-                                        runTask.Wait();
+                                        runTask.WaitWithoutAggregate();
 
                                         node.Status  = "[x] DONE";
                                         node.IsReady = true;
@@ -976,7 +976,7 @@ namespace Neon.Kube
                                         await step.AsyncGlobalAction(this);
                                     });
 
-                                runTask.Wait();
+                                runTask.WaitWithoutAggregate();
 
                                 foreach (var node in stepNodes)
                                 {

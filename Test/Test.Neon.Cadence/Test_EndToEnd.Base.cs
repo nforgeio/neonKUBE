@@ -99,7 +99,7 @@ namespace TestCadence
 
                             try
                             {
-                                client.PingAsync().Wait();
+                                client.PingAsync().WaitWithoutAggregate();
                             }
                             catch (Exception e)
                             {

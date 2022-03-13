@@ -69,8 +69,8 @@ namespace MyTests
                 // Register the test workflow and activity implementations
                 // from this assembly and start the worker.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                client.StartWorkerAsync("test-tasks").Wait();
+                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                client.StartWorkerAsync("test-tasks").WaitWithoutAggregate();
             }
             else
             {

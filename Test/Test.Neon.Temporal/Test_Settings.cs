@@ -113,8 +113,8 @@ namespace TestTemporal
 
                 var worker = client.NewWorkerAsync().Result;
 
-                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                worker.StartAsync().Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                worker.StartAsync().WaitWithoutAggregate();
 
                 // Do the first run; this should succeed.
 
@@ -156,8 +156,8 @@ namespace TestTemporal
 
                 var worker = client.NewWorkerAsync().Result;
 
-                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                worker.StartAsync().Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                worker.StartAsync().WaitWithoutAggregate();
 
                 // Do the first run.
 

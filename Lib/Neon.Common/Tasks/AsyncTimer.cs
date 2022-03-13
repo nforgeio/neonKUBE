@@ -216,7 +216,7 @@ namespace Neon.Tasks
                         Covenant.Assert(cts != null);
 
                         cts.Cancel();
-                        timerTask.Wait();
+                        timerTask.WaitWithoutAggregate();
 
                         cts = null;
                         timerTask = null;
@@ -254,7 +254,7 @@ namespace Neon.Tasks
                 Covenant.Assert(cts != null);
 
                 cts.Cancel();
-                timerTask.Wait();
+                timerTask.WaitWithoutAggregate();
                 timerTask = null;
 
                 cts.Dispose();

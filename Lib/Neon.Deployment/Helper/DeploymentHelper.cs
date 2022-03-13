@@ -96,7 +96,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry          = null,
             TimeSpan                    partTimeout    = default)
         {
-            DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
+            DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry          = null,
             TimeSpan                    partTimeout    = default)
         {
-            DownloadMultiPartAsync(uri, targetPath, progressAction, partTimeout, retry).Wait();
+            DownloadMultiPartAsync(uri, targetPath, progressAction, partTimeout, retry).WaitWithoutAggregate();
         }
 
         /// <summary>

@@ -91,7 +91,7 @@ namespace TestTemporal
 
                         for (int j = 0; j < iterations; j++)
                         {
-                            client.PingAsync().Wait();
+                            client.PingAsync().WaitWithoutAggregate();
                         }
 
                         stopwatch.Stop();

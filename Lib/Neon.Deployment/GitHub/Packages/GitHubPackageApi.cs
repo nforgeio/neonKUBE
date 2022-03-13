@@ -179,7 +179,7 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
-            DeleteAsync(organization, nameOrPattern, packageType).Wait();
+            DeleteAsync(organization, nameOrPattern, packageType).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            SetVisibilityAsync(organization, nameOrPattern, packageType, visibility).Wait();
+            SetVisibilityAsync(organization, nameOrPattern, packageType, visibility).WaitWithoutAggregate();
         }
 
         /// <summary>

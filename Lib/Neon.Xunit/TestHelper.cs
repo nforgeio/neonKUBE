@@ -774,7 +774,7 @@ namespace Neon.Xunit
                 if (!File.Exists(vhdxPath) || new FileInfo(vhdxPath).Length != expectedSize)
                 {
                     NeonHelper.DeleteFile(vhdxPath);
-                    httpClient.GetToFileSafeAsync(testVhdxUri, vhdxPath).Wait();
+                    httpClient.GetToFileSafeAsync(testVhdxUri, vhdxPath).WaitWithoutAggregate();
 
                     if (new FileInfo(vhdxPath).Length != expectedSize)
                     {

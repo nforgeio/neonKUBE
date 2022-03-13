@@ -1331,7 +1331,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            ConnectAwsAsync(null).Wait();
+            ConnectAwsAsync(null).WaitWithoutAggregate();
 
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {

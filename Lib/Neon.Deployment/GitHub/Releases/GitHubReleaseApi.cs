@@ -359,7 +359,7 @@ namespace Neon.Deployment
             var repoPath = GitHubRepoPath.Parse(repo);
             var client   = GitHub.CreateGitHubClient(repo);
 
-            client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).Wait();
+            client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).WaitWithoutAggregate();
         }
 
         /// <summary>

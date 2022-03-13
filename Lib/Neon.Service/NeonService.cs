@@ -1614,7 +1614,7 @@ namespace Neon.Service
             {
                 try
                 {
-                    httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"http://localhost:{NetworkPorts.IstioEnvoyAdmin}/quitquitquit")).Wait();
+                    httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"http://localhost:{NetworkPorts.IstioEnvoyAdmin}/quitquitquit")).WaitWithoutAggregate();
                 }
                 catch 
                 {

@@ -136,7 +136,7 @@ namespace Neon.Temporal
 
             if (disposing && !isClosed)
             {
-                CloseAsync().Wait();
+                CloseAsync().WaitWithoutAggregate();
             }
 
             isDisposed = true;

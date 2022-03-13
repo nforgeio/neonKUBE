@@ -1662,7 +1662,7 @@ namespace Neon.Temporal
 
                     // Signal the proxy to disconnect and then terminate.
 
-                    CallProxyAsync(new DisconnectRequest()).Wait();
+                    CallProxyAsync(new DisconnectRequest()).WaitWithoutAggregate();
 
                     // Terminate the associated proxy.
 

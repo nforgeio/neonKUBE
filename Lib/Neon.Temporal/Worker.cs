@@ -76,7 +76,7 @@ namespace Neon.Temporal
 
             if (isRunning)
             {
-                Client.StopWorkerAsync(this).Wait();
+                Client.StopWorkerAsync(this).WaitWithoutAggregate();
                 Client = null;
             }
 

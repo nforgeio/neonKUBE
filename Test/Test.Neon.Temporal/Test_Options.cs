@@ -191,8 +191,8 @@ namespace TestTemporal
 
                 var fixtureWorker = fixtureClient.NewWorkerAsync().Result;
 
-                fixtureWorker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                fixtureWorker.StartAsync().Wait();
+                fixtureWorker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                fixtureWorker.StartAsync().WaitWithoutAggregate();
 
                 // Initialize the test clients and workers
 
@@ -202,8 +202,8 @@ namespace TestTemporal
 
                 var test1Worker = test1Client.NewWorkerAsync().Result;
 
-                test1Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test1Worker.StartAsync().Wait();
+                test1Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test1Worker.StartAsync().WaitWithoutAggregate();
 
                 test2Settings.HostPort        = fixtureClient.Settings.HostPort;
                 test2Client                   = TemporalClient.ConnectAsync(test2Settings).Result;
@@ -211,8 +211,8 @@ namespace TestTemporal
 
                 var test2Worker = test2Client.NewWorkerAsync().Result;
 
-                test2Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test2Worker.StartAsync().Wait();
+                test2Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test2Worker.StartAsync().WaitWithoutAggregate();
 
                 test3Settings.HostPort        = fixtureClient.Settings.HostPort;
                 test3Client                   = TemporalClient.ConnectAsync(test3Settings).Result;
@@ -220,8 +220,8 @@ namespace TestTemporal
 
                 var test3Worker = test3Client.NewWorkerAsync().Result;
 
-                test3Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test3Worker.StartAsync().Wait();
+                test3Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test3Worker.StartAsync().WaitWithoutAggregate();
             }
             else
             {

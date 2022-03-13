@@ -136,7 +136,7 @@ namespace Neon.Cadence
 
             if (disposing && !isClosed)
             {
-                CloseAsync().Wait();
+                CloseAsync().WaitWithoutAggregate();
             }
 
             isDisposed = true;

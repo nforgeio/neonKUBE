@@ -363,7 +363,7 @@ namespace Neon.Xunit
             if (Service != null)
             {
                 Service.Terminator.Signal();
-                serviceTask.Wait();
+                serviceTask.WaitWithoutAggregate();
                 NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.NotStarted || Service.Status == NeonServiceStatus.Terminated, timeout: TimeSpan.FromSeconds(30));
                 Service.Dispose();
 

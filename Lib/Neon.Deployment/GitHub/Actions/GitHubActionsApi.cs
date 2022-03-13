@@ -225,7 +225,7 @@ namespace Neon.Deployment
 
                     if (response.StatusCode == HttpStatusCode.InternalServerError)
                     {
-                        Task.Delay(TimeSpan.FromSeconds(2)).Wait();     // Pause in case this is a rate-limit thing
+                        Task.Delay(TimeSpan.FromSeconds(2)).WaitWithoutAggregate();     // Pause in case this is a rate-limit thing
                         continue;
                     }
 

@@ -94,7 +94,7 @@ namespace NeonDashboard
                     {
                         clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
                         dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                        k8sClient.ReplaceNamespacedConfigMapAsync(configMap, dexConfigMap.Metadata.Name, KubeNamespaces.NeonSystem).Wait();
+                        k8sClient.ReplaceNamespacedConfigMapAsync(configMap, dexConfigMap.Metadata.Name, KubeNamespaces.NeonSystem).WaitWithoutAggregate();
                     }
                 }
                 catch (Exception ex)

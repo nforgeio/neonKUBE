@@ -138,7 +138,7 @@ namespace TestXunit
                             var couchbaseFixture = (CouchbaseFixture)composedFixture["couchbase"];
                             var bucket           = couchbaseFixture.Bucket;
 
-                            bucket.UpsertSafeAsync("test", "HELLO WORLD!").Wait();
+                            bucket.UpsertSafeAsync("test", "HELLO WORLD!").WaitWithoutAggregate();
 
                             // Configure the services via the service map.
 

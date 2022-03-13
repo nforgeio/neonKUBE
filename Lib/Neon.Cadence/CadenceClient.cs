@@ -953,7 +953,7 @@ namespace Neon.Cadence
                             CreateDomain  = settings.CreateDomain
                         };
 
-                    client.CallProxyAsync(connectRequest).Result.ThrowOnError();
+                    client.CallProxyAsync(connectRequest).ResultWithoutAggregate().ThrowOnError();
                 }
                 catch (Exception e)
                 {
@@ -1691,7 +1691,7 @@ namespace Neon.Cadence
 
                     try
                     {
-                        CallProxyAsync(new DisconnectRequest()).Wait();
+                        CallProxyAsync(new DisconnectRequest()).WaitWithoutAggregate();
                     }
                     catch (CancelledException)
                     {

@@ -432,7 +432,7 @@ namespace Neon.Xunit.Couchbase
                         throw;
                     }
 
-                }).Wait();
+                }).WaitWithoutAggregate();
 
             // Use the new bucket if this is the first Couchbase container initialization
             // or else substitute the new underlying bucket into the existing bucket so
@@ -464,7 +464,7 @@ namespace Neon.Xunit.Couchbase
             {
                 foreach (var _index in fullTextIndexes.indexDefs)
                 {
-                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").Wait();
+                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").WaitWithoutAggregate();
                 }
             }
 
@@ -474,7 +474,7 @@ namespace Neon.Xunit.Couchbase
 
             foreach (var index in existingIndexes.Where(index => index.Name != "#primary"))
             {
-                Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").Wait();
+                Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").WaitWithoutAggregate();
             }
 
             // Flush the bucket data.
@@ -487,7 +487,7 @@ namespace Neon.Xunit.Couchbase
                         bucketManager.Flush();
                         await Bucket.WaitUntilReadyAsync();
 
-                    }).Wait();
+                    }).WaitWithoutAggregate();
             }
 
             // Wait until all of the indexes are actually deleted as well
