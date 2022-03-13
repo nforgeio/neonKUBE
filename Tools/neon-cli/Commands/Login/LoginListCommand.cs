@@ -95,7 +95,7 @@ USAGE:
             var logins  = new List<LoginInfo>();
 
             foreach (var context in KubeHelper.Config.Contexts
-                .Where(context => context.IsNeonKubeContext)
+                .Where(context => context.IsNeonKube)
                 .OrderBy(context => context.Name))
             {
                 logins.Add(new LoginInfo(context));

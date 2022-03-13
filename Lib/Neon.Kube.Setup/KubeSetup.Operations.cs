@@ -406,7 +406,7 @@ spec:
                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
             }
 
-            if (cluster.Definition.IsDesktopCluster)
+            if (cluster.Definition.IsDesktopBuiltIn)
             {
                 sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
                 sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
@@ -2490,7 +2490,7 @@ $@"- name: StorageType
 
                     values.Add($"replicas", advice.ReplicaCount);
 
-                    if (cluster.Definition.IsDesktopCluster)
+                    if (cluster.Definition.IsDesktopBuiltIn)
                     {
                         values.Add($"persistentVolume.storage", "5Gi");
                     }
@@ -2715,7 +2715,7 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "setup", message: "cortex");
 
-                            if (cluster.Definition.IsDesktopCluster ||
+                            if (cluster.Definition.IsDesktopBuiltIn ||
                                 cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < ByteUnits.Parse("4 GiB")))
                             {
                                 values.Add($"cortexConfig.ingester.retain_period", $"120s");
@@ -2792,7 +2792,7 @@ $@"- name: StorageType
 
                     }
 
-                    if (cluster.Definition.IsDesktopCluster)
+                    if (cluster.Definition.IsDesktopBuiltIn)
                     {
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
@@ -3867,7 +3867,7 @@ $@"- name: StorageType
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-            if (cluster.Definition.IsDesktopCluster)
+            if (cluster.Definition.IsDesktopBuiltIn)
             {
                 values.Add($"persistence.size", "1Gi");
             }

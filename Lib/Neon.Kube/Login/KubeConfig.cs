@@ -209,7 +209,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace Neon.Kube
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>

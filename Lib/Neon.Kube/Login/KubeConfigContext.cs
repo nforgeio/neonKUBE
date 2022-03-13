@@ -79,20 +79,18 @@ namespace Neon.Kube
         public KubeConfigContextProperties Properties { get; set; }
 
         /// <summary>
-        /// Indicates whether the Kubernetes context is a neonKUBE context or
-        /// just a standard one.
+        /// Indicates whether the Kubernetes context references a neonKUBE cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsNeonKubeContext => KubeContextName.Parse(Name).IsNeonKubeContext;
+        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube;
 
         /// <summary>
-        /// Indicates whether the Kubernetes context is a neonKUBE built-in
-        /// neon-desktop cluster.
+        /// Indicates whether the Kubernetes context references a neon-desktop built-in cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsBuiltInContext => IsNeonKubeContext && Extension != null && Extension.ClusterDefinition != null && Extension.ClusterDefinition.IsDesktopCluster;
+        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
 
         /// <summary>
         /// The cluster login information for the context.

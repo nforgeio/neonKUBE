@@ -1235,7 +1235,7 @@ namespace Neon.Kube
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                if (!contextName.IsNeonKubeContext)
+                if (!contextName.IsNeonKube)
                 {
                     throw new ArgumentException($"[{contextName}] is not a neonKUBE context.", nameof(contextName));
                 }
@@ -1292,7 +1292,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns <c>true</c> if the current cluster is the neon-desktop built-in cluster.
         /// </summary>
-        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKubeContext && CurrentContext.Name == KubeConst.NeonDesktopContextName;
+        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
 
         /// <summary>
         /// Returns the Kuberneties API service certificate for the current

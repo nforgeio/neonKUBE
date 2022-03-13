@@ -194,7 +194,7 @@ namespace Neon.Kube
         {
             // We don't add a prefix for the special neon-desktop cluster.
 
-            if (clusterDefinition.IsDesktopCluster)
+            if (clusterDefinition.IsDesktopBuiltIn)
             {
                 return String.Empty;
             }

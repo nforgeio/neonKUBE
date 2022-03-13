@@ -1,6 +1,7 @@
 name: neon-desktop
 datacenter: neondesktop
 environment: development
+isDesktopBuiltIn: true
 timeSources:
 - pool.ntp.org
 kubernetes:

@@ -83,7 +83,7 @@ REMARKS:
             {
                 contextName = KubeContextName.Parse(rawName);
 
-                if (!contextName.IsNeonKubeContext)
+                if (!contextName.IsNeonKube)
                 {
                     Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
                     Program.Exit(1);
