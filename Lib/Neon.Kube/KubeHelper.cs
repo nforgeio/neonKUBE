@@ -2516,8 +2516,6 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
 
-            await SyncContext.Clear;
-
             var imageFolder = Path.GetDirectoryName(imagePath);
 
             Directory.CreateDirectory(imageFolder);
