@@ -210,8 +210,6 @@ namespace NeonDashboard
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task TrackExceptionAsync(MethodBase method, Exception exception, bool? isFatal = false)
         {
-            await SyncContext.Clear;
-
             Logger.LogError(exception);
 
             await Analytics.TrackEvent(method.Name, new 

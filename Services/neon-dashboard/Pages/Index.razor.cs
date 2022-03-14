@@ -54,8 +54,6 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
-            await SyncContext.Clear;
-
             if (string.IsNullOrEmpty(CurrentDashboard))
             {
                 NavigationManager.NavigateTo("kubernetes", true);

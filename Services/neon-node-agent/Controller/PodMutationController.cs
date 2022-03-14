@@ -73,8 +73,6 @@ namespace NeonNodeAgent
         /// <returns>The mutation result.</returns>
         public async Task<MutationResult> UpdateAsync(V1Pod originalPod, V1Pod newPod, bool dryRun)
         {
-            await SyncContext.Clear;
-
             return await Task.FromResult(MutationResult.NoChanges());
         }
     }

@@ -46,8 +46,6 @@ namespace NeonSsoSessionProxy
             AesCipher                       cipher,
             DistributedCacheEntryOptions    cacheOptions)
         {
-            await SyncContext.Clear;
-
             try
             {
                 if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))

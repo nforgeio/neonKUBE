@@ -27,8 +27,6 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnInitializedAsync()
         {
-            await SyncContext.Clear;
-
             await base.OnInitializedAsync();
 
             NavigationManager.LocationChanged -= OnLocationChanged;
@@ -37,8 +35,6 @@ namespace NeonDashboard.Shared.Components
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await SyncContext.Clear;
-
             await base.OnAfterRenderAsync(firstRender);
 
             if (firstRender)

@@ -22,8 +22,6 @@ namespace NeonDashboard.Pages
     {
         public async Task OnGet(string redirectUri)
         {
-            await SyncContext.Clear;
-
             await HttpContext.ChallengeAsync(
                 "oidc", 
                 new AuthenticationProperties 

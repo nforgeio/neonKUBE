@@ -137,8 +137,6 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry registry)
         {
-            await SyncContext.Clear;
-
             reconciledReceivedCounter.Inc();
 
             await resourceManager.ReconciledAsync(registry,
@@ -163,8 +161,6 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1ContainerRegistry registry)
         {
-            await SyncContext.Clear;
-
             deletedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(registry,
@@ -187,8 +183,6 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(V1ContainerRegistry registry)
         {
-            await SyncContext.Clear;
-
             statusModifiedReceivedCounter.Inc();
 
             await resourceManager.DeletedAsync(registry,
