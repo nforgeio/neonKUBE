@@ -590,7 +590,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Nop()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -602,7 +602,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task GetVersion()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -614,7 +614,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task WorkflowExecution()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -626,7 +626,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task MutableSideEffect()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -638,7 +638,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task MutableSideEffectGeneric()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -650,7 +650,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task SideEffect()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -662,7 +662,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task SideEffectGeneric()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -674,7 +674,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NewGuid()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -686,7 +686,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NextRandomDouble()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -698,7 +698,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NextRandom()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -710,7 +710,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NextRandomMax()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -722,7 +722,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NextRandomMinMax()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -734,7 +734,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task NextRandomBytes()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -746,7 +746,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task GetLastCompletionResult()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -758,7 +758,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task GetIsSetLastCompletionResult()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -770,7 +770,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task ChildWorkflow()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -782,7 +782,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Activity()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -794,7 +794,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task LocalActivity()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();

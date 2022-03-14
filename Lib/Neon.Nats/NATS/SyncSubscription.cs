@@ -173,14 +173,14 @@ namespace NATS.Client
         /// <inheritdoc/>
         public async Task DrainAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             await subscription.DrainAsync();
         }
 
         /// <inheritdoc/>
         public async Task DrainAsync(int timeout)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             await subscription.DrainAsync(timeout);
         }
     }

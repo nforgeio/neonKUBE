@@ -127,7 +127,7 @@ namespace Neon.Temporal
         /// <returns>The encoded activity results.</returns>
         private async Task<byte[]> InvokeAsync(TemporalClient client, byte[] argBytes)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var parameters     = activityMethod.GetParameters();
             var parameterTypes = new Type[parameters.Length];
@@ -166,7 +166,7 @@ namespace Neon.Temporal
         /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(byte[] args)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Capture the activity context details.
 

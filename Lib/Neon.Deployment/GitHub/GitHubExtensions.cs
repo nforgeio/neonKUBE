@@ -53,7 +53,7 @@ namespace Neon.Deployment
         /// <returns>The list of items returned by the request.</returns>
         public static async Task<IReadOnlyList<dynamic>> GetPaginatedAsync(this JsonClient client, string uri, int maxItemsPerPage = 100)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
             Covenant.Requires<ArgumentException>(maxItemsPerPage >= 1, nameof(maxItemsPerPage));

@@ -64,14 +64,14 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public async Task InvokeAsync(Func<Task> action)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             await action();
         }
 
         /// <inheritdoc/>
         public async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             return await action();
         }
 

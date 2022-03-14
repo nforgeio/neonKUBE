@@ -1747,7 +1747,7 @@ rm  install-kustomize.sh
             int                 downloadParallel = 5, 
             int                 loadParallel     = 2)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             await InvokeIdempotentAsync("setup/debug-load-images",
@@ -1834,7 +1834,7 @@ rm  install-kustomize.sh
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task LoadImageAsync(NodeImageInfo image)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             await Task.Yield();
 
             var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");

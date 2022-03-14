@@ -418,7 +418,7 @@ namespace Neon.Xunit
         public static async Task AssertThrowsAsync<TException>(Func<Task> action)
             where TException : Exception
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try

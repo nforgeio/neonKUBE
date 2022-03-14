@@ -150,7 +150,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task WorkflowStub_Start_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -171,7 +171,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task WorkflowStub_Execute_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Use an untyped workflow stub to execute a workflow that
             // returns a result in one step.
@@ -201,7 +201,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task WorkflowStub_Attach_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -230,7 +230,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task WorkflowStub_Signal_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.
@@ -255,7 +255,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task WorkflowStub_Query_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.

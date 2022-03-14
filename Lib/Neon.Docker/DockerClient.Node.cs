@@ -48,7 +48,7 @@ namespace Neon.Docker
         /// <returns>The node list.</returns>
         public async Task<List<DockerNode>> NodeListAsync(CancellationToken cancellationToken = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var response  = await JsonClient.GetAsync(GetUri("nodes"), cancellationToken: cancellationToken);
             var nodes     = new List<DockerNode>();

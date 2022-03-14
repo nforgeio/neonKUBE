@@ -75,7 +75,7 @@ namespace Neon.Web
         /// <inheritdoc/>
         public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var response = context.HttpContext.Response;
 

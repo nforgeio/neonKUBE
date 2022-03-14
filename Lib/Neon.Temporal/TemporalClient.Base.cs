@@ -44,7 +44,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task PingAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
 
             await CallProxyAsync(new PingRequest());
@@ -92,7 +92,7 @@ namespace Neon.Temporal
             string        taskQueue  = null, 
             WorkerOptions options    = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
 
             @namespace = @namespace ?? Settings.Namespace;
@@ -132,7 +132,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="TaskQueueDescription"/> for the pollers.</returns>
         public async Task<TaskQueueDescription> DescribeQueueListAsync(string taskQueue, TaskQueueType taskQueueType, string @namespace = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskQueue), nameof(taskQueue));
             EnsureNotDisposed();
 
@@ -164,7 +164,7 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task StartWorkerAsync(Worker worker)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 
@@ -199,7 +199,7 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 

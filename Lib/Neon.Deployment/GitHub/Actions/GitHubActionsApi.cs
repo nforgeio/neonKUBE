@@ -126,7 +126,7 @@ namespace Neon.Deployment
         /// <returns>The number of runs deleted.</returns>
         public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             GitHub.GetCredentials();
 
             var repoPath    = GitHubRepoPath.Parse(repo);

@@ -298,7 +298,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         internal static async Task RegisterAsync(CadenceClient client, Type workflowType, string workflowTypeName, string domain)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateWorkflowImplementation(workflowType);
@@ -552,7 +552,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowInvokeReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
@@ -768,7 +768,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task WaitForPendingWorkflowOperations(WorkflowBase workflow)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Right now, the only pending operations can be completed outstanding 
             // synchronous signals that haven't returned their results to the
@@ -829,7 +829,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(CadenceClient client, WorkflowSignalInvokeRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -903,7 +903,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(CadenceClient client, WorkflowSignalInvokeRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -1084,7 +1084,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowQueryInvokeReply> OnQueryAsync(CadenceClient client, WorkflowQueryInvokeRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -1221,7 +1221,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try

@@ -59,7 +59,7 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public async Task GetAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             if (completed)
             {
@@ -101,7 +101,7 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public async Task<TResult> GetAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             if (completed)
             {

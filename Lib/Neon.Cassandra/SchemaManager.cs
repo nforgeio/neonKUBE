@@ -553,7 +553,7 @@ namespace Neon.Cassandra
         /// </exception>
         public async Task<bool> CreateKeyspaceAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Check to see if the keyspace already exists and if it exists, verify
             // that the DBINFO table exists and has a reasonable Version.
@@ -620,7 +620,7 @@ CREATE TABLE IF NOT EXISTS {DbInfoTableName} (
         /// <exception cref="SchemaManagerException">Thrown when the keyspace has an invalid <see cref="DbInfoTableName"/> table.</exception>
         public async Task<KeyspaceStatus> GetStatusAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var orgKeyspace = session.Keyspace;
 
@@ -763,7 +763,7 @@ CREATE TABLE IF NOT EXISTS {DbInfoTableName} (
         /// </remarks>
         public async Task<int> UpgradeKeyspaceAsync(string updaterIdentity = null, int stopVersion = -1, bool force = false, Action<bool, int> updateAction = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var orgKeyspace = session.Keyspace;
 

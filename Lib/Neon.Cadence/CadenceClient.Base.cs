@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task PingAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
 
             await CallProxyAsync(new PingRequest());
@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyAsync(Assembly assembly, string domain = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
             
             await RegisterAssemblyWorkflowsAsync(assembly, domain);
@@ -135,7 +135,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty task list.");
             EnsureNotDisposed();
 
@@ -237,7 +237,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
         public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string domain = null)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
             EnsureNotDisposed();
 
@@ -270,7 +270,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 

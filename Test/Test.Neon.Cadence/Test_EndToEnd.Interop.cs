@@ -183,7 +183,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Interop_Workflow_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // verify that we can execute a GOLANG workflows using 
             // untyped stubs.
@@ -398,7 +398,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Interop_Activity_Untyped()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Verify that we can use a untyped activity stub to interoperate 
             // with GOLANG activities using a non-standard activity type name.
@@ -433,7 +433,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Interop_Workflow_StubFullName()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Verify that we can use a typed workflow stub to interoperate 
             // with a GOLANG workflow using a non-standard workflow type name.
@@ -506,7 +506,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Interop_Activity_StubFullName()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Verify that we can use a typed activity stub to interoperate 
             // with a GOLANG activity using a non-standard activity type name.

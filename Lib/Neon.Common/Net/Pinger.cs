@@ -140,7 +140,7 @@ namespace Neon.Net
         /// <returns>A <see cref="PingReply"/>.</returns>
         public async Task<PingReply> SendPingAsync(IPAddress address, int timeoutMilliseconds = 2000)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             Ping ping;
 
@@ -189,7 +189,7 @@ namespace Neon.Net
         /// <returns>A <see cref="PingReply"/>.</returns>
         public async Task<PingReply> SendPingAsync(string address, int timeoutMilliseconds = 2000)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             return await SendPingAsync(IPAddress.Parse(address), timeoutMilliseconds);
         }

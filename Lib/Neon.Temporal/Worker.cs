@@ -167,7 +167,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task RegisterAssemblyAsync(Assembly assembly, bool disableDuplicateCheck = false)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
             EnsureCanRegister();
 
@@ -182,7 +182,7 @@ namespace Neon.Temporal
         /// <exception cref="ObjectDisposedException">Thrown if the worker is disposed.</exception>
         public async Task StartAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             EnsureNotDisposed();
 
             if (isRunning)

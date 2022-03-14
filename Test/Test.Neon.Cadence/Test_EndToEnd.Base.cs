@@ -47,7 +47,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Base_Ping()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Verify that Ping works and optionally measure simple transaction throughput.
 
@@ -144,7 +144,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestTrait.Slow)]
         public async Task Base_Domain()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Exercise the Cadence domain operations.
 
@@ -207,7 +207,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Base_ListDomains()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Register 100 new domains and then list them in various ways 
             // to verify that works.
@@ -297,7 +297,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Base_DescribeTaskList()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // Verify some information about decision tasks.
 
@@ -336,7 +336,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestTrait.Buggy)]    // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var utcNow = DateTime.UtcNow;
 

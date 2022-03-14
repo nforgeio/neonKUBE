@@ -438,7 +438,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));

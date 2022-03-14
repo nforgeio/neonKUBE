@@ -192,7 +192,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         internal static async Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
@@ -407,7 +407,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -441,7 +441,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             ActivityRegistration  invokeInfo;
 
@@ -509,7 +509,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityStoppingReply> ActivityStoppingRequest(CadenceClient client, ActivityStoppingRequest request)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             lock (syncLock)
             {
@@ -612,7 +612,7 @@ namespace Neon.Cadence
         /// <returns>The encoded activity results.</returns>
         private async Task<byte[]> InvokeAsync(CadenceClient client, byte[] argBytes)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var parameters     = activityMethod.GetParameters();
             var parameterTypes = new Type[parameters.Length];
@@ -652,7 +652,7 @@ namespace Neon.Cadence
         /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(CadenceClient client, byte[] args)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             // Capture the activity information.

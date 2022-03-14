@@ -170,7 +170,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // $todo(jefflil): Implement this
         }
@@ -178,7 +178,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // $todo(jefflil): Implement this
         }
@@ -186,7 +186,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // $todo(jefflil): Implement this
         }
@@ -217,7 +217,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
             

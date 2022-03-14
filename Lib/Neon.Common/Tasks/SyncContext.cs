@@ -43,8 +43,8 @@ namespace Neon.Tasks
     /// <a href="https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/"/>
     /// </para>
     /// <para>
-    /// The only real changes are that I renamed the structure and converted
-    /// it into a singleton.
+    /// I renamed the structure, converted it into a singleton and added an optional <see cref="Task.Yield()"/>
+    /// call and a global mode to tune the operation for server vs. UI applications.
     /// </para>
     /// <para>
     /// The <b>async/await</b> pattern is more complex than it seems because the code after the await may
@@ -87,36 +87,84 @@ namespace Neon.Tasks
     /// clears it for the rest of the current method execution and then restores the original context when
     /// when the method returns.  This means that every subsequent <c>await</c>  performed within the method will 
     /// simply fetch a pool thread to continue execution, rather than to the original context thread.  To
-    /// accomplish this, you'll simply await <see cref="SyncContext.Clear"/> at or near the top of your method:
+    /// accomplish this, you'll simply await <see cref="SyncContext.Clear()"/> at or near the top of your 
+    /// async methods:
+    /// </para>
+    /// <para>
+    /// The global <see cref="Mode"/> property controls what the <see cref="Clear()"/> method actually does.
+    /// This defaults to <see cref="SyncContextMode.Disabled"/> which turns <see cref="Clear()"/> into a NOP
+    /// which is probably suitable for most non-UI applications that reduce overhead and increase performance.
+    /// </para>
+    /// <para>
+    /// UI applications should probably set the <see cref="SyncContextMode.ClearAndYield"/> which prevents
+    /// nested method continuations from running on the UI thread and also ensures that any initial synchronous
+    /// code won't run on the UI thread either.
     /// </para>
     /// <code language="C#">
     /// using Neon.Task;
     /// 
     /// public async Task&lt;string&gt; HelloAsync()
     /// {
-    ///     await SyncContext.Clear;
+    ///     // On UI thread
+    ///     
+    ///     await SyncContext.Clear();
+    ///     
+    ///     // On background thread
+    ///     
+    ///     SlowSyncOperation();
+    ///     
+    ///     // On background thread
     ///     
     ///     await DoSomthingAsync();
+    ///     
+    ///     // On background thread
+    ///     
     ///     await DoSomethingElseAsync();
+    ///     
+    ///     // On background thread
     ///     
     ///     return "Hello World!";
     /// }
+    ///
+    /// public async Task Main(string[] args)
+    /// {
+    ///     // Set a mode suitable for UI apps.
+    ///     
+    ///     SyncContext.Mode = SyncContextMode.ClearAndYield;
+    ///     
+    ///     // Assume that we're running on a UI thread here.
+    ///     
+    ///     var greeting = await HelloAsync();
+    ///     
+    ///     // On UI thread
+    /// }
     /// </code>
-    /// <note>
-    /// <see cref="Clear"/> is not a method so you don't need to pass any parameters.
-    /// </note>
     /// <para>
-    /// This call clears the current synchronization context such that the
-    /// subsequent <c>async</c> calls will each marshal back to threads
-    /// obtained from the thread pool and due to compiler async magic,
-    /// the original synchronization context will be restored before the
-    /// <c>HelloAsync()</c> method returns.
+    /// This example sets the <see cref="SyncContextMode.ClearAndYield"/> mode 
+    /// and then awaits <c>HelloAsync()</c> which clears the sync context and
+    /// then performs a long running synchronous operation and then two async
+    /// operations.  Note how all of the continuations in <c>HelloAsync()</c>
+    /// after the clear are running on a background thread but the continuation
+    /// after <c>await HelloAsync()</c> is back to running on the UI thread.
+    /// </para>
+    /// <para>
+    /// This is pretty close to being ideal behavior.
     /// </para>
     /// </remarks>
     public struct SyncContext : INotifyCompletion
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static SyncContext clear;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static SyncContext()
+        {
+            clear = new SyncContext(0);
+        }
 
         /// <summary>
         /// <c>await</c> this singleton to clear the current synchronization
@@ -134,7 +182,7 @@ namespace Neon.Tasks
         /// 
         /// public async Task&lt;string&gt; HelloAsync()
         /// {
-        ///     await SyncContext.Clear;
+        ///     await SyncContext.Clear();
         ///     
         ///     await DoSomthingAsync();
         ///     await DoSomethingElseAsync();
@@ -143,39 +191,63 @@ namespace Neon.Tasks
         /// }
         /// </code>
         /// <note>
-        /// <see cref="Clear"/> is not a method so you don't
-        /// need to pass any parameters.
+        /// <see cref="Clear"/> is not a method.
         /// </note>
         /// <para>
         /// This call clears the current synchronization context such that the
         /// subsequent <c>async</c> calls will each marshal back to threads
-        /// obtained from the thread pool and due to the compiler's async magic,
-        /// the original synchronization context will be restored before the
-        /// <c>HelloAsync()</c> method returns.
+        /// obtained from the thread pool and due to the compiler's async magic
+        /// with the original synchronization context will be restored before
+        /// the <c>HelloAsync()</c> method returns.
+        /// </para>
+        /// <para>
+        /// The <see cref="Mode"/> property controls what <see cref="Clear"/>
+        /// actually does.  This defaults to <see cref="SyncContextMode.Disabled"/>
+        /// which is probably suitable for most non-UI applications.  UI applications
+        /// will probably need to explicitly set <see cref="SyncContextMode.ClearAndYield"/>
+        /// to help keep continations off the UI thread. 
         /// </para>
         /// </remarks>
-        public static SyncContext Clear { get; private set; }
+        public static async Task Clear()
+        {
+            switch (Mode)
+            {
+                case SyncContextMode.Disabled:
+
+                    break;
+
+                case SyncContextMode.ClearOnly:
+
+                    await clear;
+                    break;
+
+                case SyncContextMode.ClearAndYield:
+
+                    await clear;
+                    await Task.Yield();
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
 
         /// <summary>
         /// <para>
-        /// Optionally disables context resetting globally.  This provides an
-        /// escape hatch for situations where an application needs to revert
-        /// back to the default synchronization context behavior.  This turns
-        /// <c>await SyncContext.Clear</c> calls into a NOP.
+        /// Used to control what <see cref="Clear()"/> actually does.  This defaults to
+        /// <see cref="SyncContextMode.Disabled"/> which is probably suitable for most
+        /// non-UI applications by reducing task overhead.  UI application will probably
+        /// want to set <see cref="SyncContextMode.ClearAndYield"/> to keep work from
+        /// running on the UI thread.
         /// </para>
-        /// <note>
-        /// Most applications should never need to set this.
-        /// </note>
+        /// <para>
+        /// This defaults to <see cref="SyncContextMode.Disabled"/> for server code,
+        /// because we're writing more server applications than UI applications these
+        /// days.
+        /// </para>
         /// </summary>
-        public static bool IsDisabled { get; set; } = false;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static SyncContext()
-        {
-            Clear = new SyncContext(0);
-        }
+        public static SyncContextMode Mode { get; set; } = SyncContextMode.Disabled;
 
         //---------------------------------------------------------------------
         // Instance members
@@ -183,8 +255,8 @@ namespace Neon.Tasks
         /// <summary>
         /// Private constructor.
         /// </summary>
-        /// <param name="unused">Ignored.</param>
-        private SyncContext(int unused)
+        /// <param name="stub">Ignored.</param>
+        private SyncContext(int stub)
         {
         }
 
@@ -199,12 +271,6 @@ namespace Neon.Tasks
         /// <param name="continuation">The continuation action.</param>
         public void OnCompleted(Action continuation)
         {
-            if (IsDisabled)
-            {
-                continuation();
-                return;
-            }
-
             var previousContext = SynchronizationContext.Current;
 
             try

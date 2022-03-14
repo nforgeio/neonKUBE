@@ -84,7 +84,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -129,7 +129,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -167,7 +167,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -207,7 +207,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -247,7 +247,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -287,7 +287,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -327,7 +327,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -367,7 +367,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -406,7 +406,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
             Covenant.Requires<ArgumentNullException>(output != null);
 
@@ -429,7 +429,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
             Covenant.Requires<ArgumentNullException>(output != null);
 
@@ -486,7 +486,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputPath), nameof(outputPath));
 
@@ -509,7 +509,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(Uri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputPath), nameof(outputPath));
 
@@ -555,7 +555,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
@@ -604,7 +604,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
@@ -653,7 +653,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
@@ -702,7 +702,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
@@ -752,7 +752,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
@@ -804,7 +804,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
@@ -856,7 +856,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
@@ -905,7 +905,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
@@ -954,7 +954,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
@@ -1006,7 +1006,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
@@ -1058,7 +1058,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
 
             var request = new HttpRequestMessage(headMethod, requestUri);
@@ -1110,7 +1110,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(requestUri != null, nameof(requestUri));
 
             var request = new HttpRequestMessage(headMethod, requestUri);
@@ -1161,7 +1161,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             if (!string.IsNullOrEmpty(activity.Id))

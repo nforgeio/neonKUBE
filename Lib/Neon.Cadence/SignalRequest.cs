@@ -144,7 +144,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ReplyAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             // This may only be called within a workflow method.
 

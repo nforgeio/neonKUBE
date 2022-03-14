@@ -64,7 +64,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             if (completed)
             {
@@ -111,7 +111,7 @@ namespace Neon.Cadence
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetAsync()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             if (completed)
             {

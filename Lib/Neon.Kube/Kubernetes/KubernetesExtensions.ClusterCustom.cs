@@ -144,7 +144,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var typeMetadata = new T().GetKubernetesTypeMetadata();
 
@@ -193,7 +193,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
@@ -216,7 +216,7 @@ namespace Neon.Kube
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var typeMetadata = new T().GetKubernetesTypeMetadata();
             var result       = await k8s.GetClusterCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, cancellationToken);
@@ -254,7 +254,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
@@ -293,7 +293,7 @@ namespace Neon.Kube
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await SyncContext.Clear;
+            await SyncContext.Clear();
 
             body.Metadata.Name = name;
 
