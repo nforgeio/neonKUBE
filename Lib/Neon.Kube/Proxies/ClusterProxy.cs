@@ -611,14 +611,10 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
-// $debug(jefflill): DELETE THIS LOGGING!
-NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
             await SyncContext.Clear;
-NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopClusterAsync(stopMode);
-NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
         }
 
         /// <summary>
