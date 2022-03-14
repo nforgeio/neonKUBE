@@ -500,7 +500,7 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
         }
@@ -540,7 +540,7 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory, environmentVariables, input));
         }
@@ -893,7 +893,7 @@ namespace Neon.Common
             TextReader                  input                = null,
             Encoding                    outputEncoding       = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, outputEncoding);
         }
@@ -949,7 +949,7 @@ namespace Neon.Common
             TextReader                  input                = null,
             Encoding                    outputEncoding       = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input, outputEncoding: outputEncoding));
         }

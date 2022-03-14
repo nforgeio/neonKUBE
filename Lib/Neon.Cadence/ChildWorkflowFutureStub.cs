@@ -113,7 +113,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ChildWorkflowFuture> StartAsync(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (childExecution != null)
@@ -144,7 +144,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (childExecution != null)
@@ -174,7 +174,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -281,7 +281,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ChildWorkflowFuture<TResult>> StartAsync(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (childExecution != null)
@@ -311,7 +311,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 

@@ -55,7 +55,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> AddVmAsync(GrpcAddVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -91,7 +91,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> AddVmDriveAsync(GrpcAddVmDriveRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -110,7 +110,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> CompactDriveRequestAsync(GrpcCompactDriveRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -127,7 +127,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> EjectVmDvdAsync(GrpcEjectVmDvdRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -144,7 +144,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetNatReply> GetNatByName(GrpcGetNatByNameRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -159,7 +159,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetNatReply> GetNatByNameSubnet(GrpcGetNatBySubnetRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -174,7 +174,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetSwitchReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -189,7 +189,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetVmReply> GetVmAsync(GrpcGetVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -204,7 +204,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -219,7 +219,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -236,7 +236,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetWindowsOptionalFeaturesReply> GetWindowsOptionalFeaturesAsync(GrpcGetWindowsOptionalFeaturesRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -251,7 +251,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> InsertVmDvdAsync(GrpcInsertVmDvdRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -268,7 +268,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcIsNestedVirtualizationReply> IsNestedVirtualizationAsync(GrpcIsNestedVirtualizationRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -283,7 +283,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcListNatsReply> ListNatsAsync(GrpcListNatsRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -298,7 +298,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcListSwitchesReply> ListSwitchesAsync(GrpcListSwitchesRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -313,7 +313,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcListVmsReply> ListVmsAsync(GrpcListVmsRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -328,7 +328,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> NewExternalSwitchAsync(GrpcNewExternalSwitchRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -345,7 +345,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> NewInternalSwitchAsync(GrpcNewInternalSwitchRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -365,7 +365,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> RemoveSwitchAsync(GrpcRemoveSwitchRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -382,7 +382,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> RemoveVmAsync(GrpcRemoveVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -399,7 +399,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> SaveVmAsync(GrpcSaveVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -416,7 +416,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> StartVmAsync(GrpcStartVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -433,7 +433,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcBaseReply> StopVmAsync(GrpcStopVmRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -450,7 +450,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcVmExistsReply> VmExistsAsync(GrpcVmExistsRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {
@@ -465,7 +465,7 @@ namespace Neon.Kube.DesktopServer
         /// <inheritdoc/>
         public async Task<GrpcGetIPAddressReply> GetIPAddress(GrpcGetIPAddressRequest request, CallContext context = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {

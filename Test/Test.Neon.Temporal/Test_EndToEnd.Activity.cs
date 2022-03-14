@@ -90,7 +90,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_WithNoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity and results
@@ -147,7 +147,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity that returns
@@ -260,7 +260,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Activity_WithError()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
@@ -274,7 +274,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task ActivityLocal_WithError()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
@@ -324,7 +324,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ActivityLocal_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple local activity that
@@ -387,7 +387,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ActivityLocal_WithoutResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call a simple workflow that accepts a
@@ -465,7 +465,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ActivityLocal_WithMultipleMethods()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call different methods of a local activity.
@@ -536,7 +536,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_WithMultipleMethods()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call different methods of a regular activity.
@@ -591,7 +591,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Logger()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that logging within an activity doesn't barf.
 
@@ -653,7 +653,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_MultipleStubs()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can reuse an activity stub to make multiple calls.
 
@@ -704,7 +704,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_DifferentNames()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that an activity whose class and interface names
             // don't match works.  This ensures that the Temporal client
@@ -861,7 +861,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Heartbeat()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the standard way works.
 
@@ -874,7 +874,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -887,7 +887,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Heartbeat_WithDetails()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -900,7 +900,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Heartbeat_WithInterval()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -963,7 +963,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_Fail()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a workflow that calls an activity
             // which throws an exception and that we see the error.
@@ -1027,7 +1027,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_ComplexData()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can round-trip an object to a workflow and activity
             // and then back.
@@ -1149,7 +1149,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_External_CompleteByToken()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can externally heartbeat and complete an activity
             // using its task token.
@@ -1171,7 +1171,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_External_CompleteById()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can externally heartbeat and complete an activity
             // using the workflow execution and the activity ID.
@@ -1193,7 +1193,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_External_ErrorByToken()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can externally fail an activity
             // using its task token.
@@ -1226,7 +1226,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_External_ErrorById()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can externally fail an activity
             // using the workflow execution and the activity ID.
@@ -1259,7 +1259,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Activity_External_HeartbeatTimeout()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that externally completed activities will timeout when
             // there are no recorded heartbeats.
@@ -1277,7 +1277,7 @@ namespace TestTemporal
         {
             // Verifies that external heartbeats submitted by ID works.
 
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             ActivityExternalCompletion.Reset();
 
@@ -1310,7 +1310,7 @@ namespace TestTemporal
         {
             // Verifies that external heartbeats submitted by token works.
 
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             ActivityExternalCompletion.Reset();
 
@@ -1384,7 +1384,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Activity_WithDependency()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that depdency injection works for activities.  Note that the
             // Test_EndToEnd constructor has configured a singleton ActivityDependency

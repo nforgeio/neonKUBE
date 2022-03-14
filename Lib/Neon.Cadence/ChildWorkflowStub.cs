@@ -87,7 +87,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
@@ -159,7 +159,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ChildWorkflowFuture> StartAsync(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 

@@ -95,7 +95,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that default Cadence settings allow duplicate workflow IDs
             // and then change this to prevent reuse.
@@ -141,7 +141,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaSettings()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that default Cadence settings allow duplicate workflow IDs.
 

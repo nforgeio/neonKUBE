@@ -18,6 +18,7 @@
 // Code based on a MSDN article by Stephen Toub (MSFT):
 // http://blogs.msdn.com/b/pfxteam/archive/2012/02/12/10267069.aspx
 
+using Neon.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -107,7 +108,7 @@ namespace Neon.Tasks
     /// {
     ///     // On UI thread
     ///     
-    ///     await SyncContext.Clear();
+    ///     await SyncContext.Clear;
     ///     
     ///     // On background thread
     ///     
@@ -156,16 +157,6 @@ namespace Neon.Tasks
         //---------------------------------------------------------------------
         // Static members
 
-        private static SyncContext clear;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static SyncContext()
-        {
-            clear = new SyncContext(0);
-        }
-
         /// <summary>
         /// <c>await</c> this singleton to clear the current synchronization
         /// context for the scope of the current method as a potential performance
@@ -182,7 +173,7 @@ namespace Neon.Tasks
         /// 
         /// public async Task&lt;string&gt; HelloAsync()
         /// {
-        ///     await SyncContext.Clear();
+        ///     await SyncContext.Clear;
         ///     
         ///     await DoSomthingAsync();
         ///     await DoSomethingElseAsync();
@@ -194,44 +185,21 @@ namespace Neon.Tasks
         /// <see cref="Clear"/> is not a method.
         /// </note>
         /// <para>
-        /// This call clears the current synchronization context such that the
-        /// subsequent <c>async</c> calls will each marshal back to threads
-        /// obtained from the thread pool and due to the compiler's async magic
-        /// with the original synchronization context will be restored before
-        /// the <c>HelloAsync()</c> method returns.
+        /// Awaiting this property clears the current synchronization context such 
+        /// that the subsequent <c>async</c> calls will each marshal back to threads
+        /// obtained from the thread pool and due to the compiler's async magic,
+        /// the original synchronization context will be restored before the
+        /// <c>HelloAsync()</c> method returns.
         /// </para>
         /// <para>
-        /// The <see cref="Mode"/> property controls what <see cref="Clear"/>
+        /// The <see cref="Mode"/> property controls what awaiting <see cref="Clear"/>
         /// actually does.  This defaults to <see cref="SyncContextMode.Disabled"/>
         /// which is probably suitable for most non-UI applications.  UI applications
-        /// will probably need to explicitly set <see cref="SyncContextMode.ClearAndYield"/>
-        /// to help keep continations off the UI thread. 
+        /// will probably want to explicitly set <see cref="SyncContextMode.ClearAndYield"/>
+        /// to help keep continations off the UI thread, which is often desirable.
         /// </para>
         /// </remarks>
-        public static async Task Clear()
-        {
-            switch (Mode)
-            {
-                case SyncContextMode.Disabled:
-
-                    break;
-
-                case SyncContextMode.ClearOnly:
-
-                    await clear;
-                    break;
-
-                case SyncContextMode.ClearAndYield:
-
-                    await clear;
-                    await Task.Yield();
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
-        }
+        public static SyncContext Clear { get; private set; } = new SyncContext(0);
 
         /// <summary>
         /// <para>
@@ -271,12 +239,25 @@ namespace Neon.Tasks
         /// <param name="continuation">The continuation action.</param>
         public void OnCompleted(Action continuation)
         {
+            if (Mode == SyncContextMode.Disabled)
+            {
+                return;
+            }
+
             var previousContext = SynchronizationContext.Current;
 
             try
             {
                 SynchronizationContext.SetSynchronizationContext(null);
-                continuation();
+
+                if (Mode == SyncContextMode.ClearAndYield)
+                {
+                    Task.Run(() => continuation());
+                }
+                else
+                {
+                    continuation();
+                }
             }
             finally
             {

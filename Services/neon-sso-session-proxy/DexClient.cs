@@ -45,7 +45,7 @@ namespace NeonSsoSessionProxy
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task<T> PostFormAsync<T>(string url, dynamic _object, CancellationToken cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var payloadString = "";
             var first         = true;
@@ -109,7 +109,7 @@ namespace NeonSsoSessionProxy
             string              grant_type, 
             CancellationToken   cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             jsonClient.DefaultRequestHeaders.Authorization = AuthHeaders[client];
             var args = new

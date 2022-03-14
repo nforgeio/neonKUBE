@@ -138,7 +138,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task WaitForPendingWorkflowOperationsAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Right now, the only pending operations can be completed outstanding 
             // synchronous signals that haven't returned their results to the

@@ -85,7 +85,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_WithNoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -147,7 +147,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -161,7 +161,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_WithMemos()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -203,7 +203,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Logger()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that logging within a workflow doesn't barf.
 
@@ -242,7 +242,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UtcNow()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify: Workflow.UtcNow(). 
 
@@ -284,7 +284,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Sleep()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify: Workflow.SleepAsync(). 
 
@@ -318,7 +318,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_SleepUntilUtc()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
 
@@ -369,7 +369,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_StubExecTwice()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a single workflow stub instance may only be used
             // to start a workflow once.
@@ -410,7 +410,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_MultiEntrypoints()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call multiple entry points.
 
@@ -445,7 +445,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_MultipleStubs()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we CANNOT reuse a workflow stub to make multiple calls.
 
@@ -648,7 +648,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_NextRandomDouble()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random doubles (0.0 <= value < 1.0)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -709,7 +709,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_NextRandomInt()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (unconstrained)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -764,7 +764,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_NextRandomInt_Max()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (<= 1 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -825,7 +825,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_NextRandomInt_MinMax()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (1 million <= value <= 2 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -919,7 +919,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_NextRandomBytes()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random byte arrays and verify that there
             // are only a small number of duplicates.  Then do the same with another workflow and
@@ -1003,7 +1003,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Echo()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we send and receive varying sizes of content, from
             // small to pretty large (1MiB).
@@ -1055,7 +1055,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_SideEffect()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that SideEffect() and SideEffect<T>() work.
 
@@ -1097,7 +1097,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_MutableSideEffect()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that MutableSideEffect() and MutableSideEffect<T>() work.
 
@@ -1172,7 +1172,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_SignalOnce()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             WorkflowSignal.Reset();
 
@@ -1190,7 +1190,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_SignalTwice()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowSignal.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
@@ -1212,7 +1212,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_SignalBeforeStart()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we're not allowed to send a signal via a
             // stub before we started the workflow.
@@ -1306,7 +1306,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_QueryOnce()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1322,7 +1322,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_QueryTwice()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1344,7 +1344,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_QueryNoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Verify that we can call a query method that doesn't
@@ -1363,7 +1363,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_QueryBeforeStart()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Verify that we're not allowed to submit a query via a
@@ -1396,7 +1396,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_GetVersion()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Minimally exercise the workflow GetVersion() API.
@@ -1541,7 +1541,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Complex()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can start a workflow via different entry point methods.
 
@@ -1965,7 +1965,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Child()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that doesn't return a result.
 
@@ -1981,7 +1981,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildHello()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that accepts a
             // parameter and returns a result.
@@ -2005,7 +2005,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can run a child workflow via a future that 
             // accepts no args and doesn't return a result.  This also tests
@@ -2025,7 +2025,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can run a child workflow via a future that 
             // accepts a parameter and returns a result.
@@ -2041,7 +2041,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildActivity()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that calls an activity.
 
@@ -2057,7 +2057,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildSignal()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can signal a child workflow.
 
@@ -2075,7 +2075,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildQuery()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that querying a child workflow works.
 
@@ -2091,7 +2091,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildNested()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that calls a child which
             // calls another child.
@@ -2107,7 +2107,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call an
             // activity with no parameters or result.
@@ -2121,7 +2121,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call a
             // local activity with no parameters or result.
@@ -2135,7 +2135,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call an
             // activity with parameters and a result.
@@ -2149,7 +2149,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call a
             // local activity with parameters and a result.
@@ -2163,7 +2163,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ParallelActivity()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2176,7 +2176,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ParallelLocalActivity()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2318,7 +2318,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_Parallel()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var count   = 1;
             var futures = new List<ExternalWorkflowFuture<string>>();
@@ -2366,7 +2366,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_DifferentNames()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a workflow whose class and interface names
             // don't match works.  This ensures that the Temporal client
@@ -2402,7 +2402,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithError()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we see an exception thrown by a workflow.
 
@@ -2442,7 +2442,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Unregistered()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we see an error when attempting to execute an
             // unregistered workflow.  In this case, there is no class
@@ -2486,7 +2486,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ComplexData()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can pass and return a complex object to/from
             // a workflow.
@@ -2567,7 +2567,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Info()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that the [Workflow.WorkflowInfo] properties are
             // set correctly for a workflow.
@@ -2699,7 +2699,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ContinueAsNew()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with the same options.
@@ -2713,7 +2713,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_Options()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with new options.
@@ -2733,7 +2733,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new using a stub
             // and with the same options.
@@ -2747,7 +2747,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new using a stub
             // and with new options.
@@ -2917,7 +2917,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2932,7 +2932,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2947,7 +2947,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2962,7 +2962,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2978,7 +2978,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestTrait.Slow)]
         public async Task Workflow_ExternalWaitForLongTime()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Create an external workflow that will run for a relatively long
             // time and then pass the external ID to a child workflow that will
@@ -3154,7 +3154,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildGetExecution()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
             // works correctly against a child workflow.
@@ -3170,7 +3170,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ToUntyped()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can convert an external workflow stub into an
             // untyped [WorkflowStub].
@@ -3199,7 +3199,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_FutureChild_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that creates a [ChildWorkflowStub] and starts a child
             // workflow, passing it a parameter, signalling it, and then verifying
@@ -3214,7 +3214,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Future_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that returns a result using the future stub.
 
@@ -3228,7 +3228,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Future_WithoutResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that returns no result using the future stub.
 
@@ -3369,7 +3369,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalIdNoReuse()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can have Temporal reject duplicate workflow IDs.
 
@@ -3398,7 +3398,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaOptions()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via options.
@@ -3426,7 +3426,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ExternalIdReuseViaAttribute()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via a [WorkflowMethod] attribute.
@@ -3453,7 +3453,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildIdNoReuse()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can have Temporal reject duplicate child workflow IDs.
 
@@ -3466,7 +3466,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_ChildIdReuseViaOptions()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can have Temporal use duplicate child workflow IDs.
 
@@ -3617,7 +3617,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a child workflow with no arguments or result can be 
             // called and signalled via an untyped future stub.
@@ -3631,7 +3631,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a child workflow with an argument and result can be 
             // called and signalled via an untyped future stub.
@@ -4009,7 +4009,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Single()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue a single item locally within the workflow method.
@@ -4023,7 +4023,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Multiple()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue multiple items locally within the workflow method.
@@ -4038,7 +4038,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Multiple_200()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue multiple items locally within the workflow method.
@@ -4053,7 +4053,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Timeout()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that [temporal-proxy] honors dequeue timeouts.
 
@@ -4066,7 +4066,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that [temporal-proxy] honors dequeue timeouts.
 
@@ -4082,7 +4082,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Close()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue a single item locally within the workflow method.
@@ -4096,7 +4096,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a workflow can process data received via a signal
             // when is then fed to the workflow via a queue.
@@ -4116,7 +4116,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a workflow can process data received via multiple signals
             // when are then fed to the workflow via a queue.
@@ -4151,7 +4151,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that a queue closed via a signal throws a [WorkflowQueueClosedException]
             // when dequeued in the workflow.
@@ -4188,7 +4188,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_ItemMax()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // The maximim size allowed for an encoded item is 64MiB-1.  This
             // test verifies that we proactively check for this by creating 
@@ -4236,7 +4236,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_Class()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that queues can handle arbetrary class instances.
 
@@ -4258,7 +4258,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can create a typed stub using an execution for an existing workflow
             // and use that to send a signal.
@@ -4279,7 +4279,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can create a typed stub using IDs for an existing workflow
             // and use that to send a signal.
@@ -4442,7 +4442,7 @@ namespace TestTemporal
         [Fact]
         public async Task Workflow_StartToCloseTimeout()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we get the expected exception when a workflow doesn't
             // complete within a START_TO_CLOSE_TIMEOUT.
@@ -4463,7 +4463,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_StartToCloseTimeout()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we get the expected exception when an activity doesn't
             // complete within a START_TO_CLOSE_TIMEOUT.
@@ -4477,7 +4477,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_HeartbeatTimeout()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we see an [ActivityHeartbeatTimeoutException] when
             // we run an activity that doesn't heartbeat in time.
@@ -4491,7 +4491,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity_DotNetException()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Call a workflow that calls an activity that throws a .NET
             // exception and verify that the exception caught by the
@@ -4511,7 +4511,7 @@ namespace TestTemporal
         {
             const string taskQueue = "test-temporal-container";
 
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Start the [ghcr.io/neonrelease/test-temporal:latest] Docker image locally, having it
             // connect to the local Temporal cluster and then start a bunch of workflows that

@@ -723,7 +723,7 @@ namespace Neon.Net
         /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
         private static async Task<IPAddress[]> GetHostAddressesAsync(string hostname)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             try
             {

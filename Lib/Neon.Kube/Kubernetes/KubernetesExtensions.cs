@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -122,7 +122,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -277,7 +277,7 @@ namespace Neon.Kube
         /// <returns>The updated secret.</returns>
         public static async Task<V1Secret> UpsertSecretAsync(this IKubernetes k8s, V1Secret secret, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
             if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
@@ -316,7 +316,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
 
@@ -393,7 +393,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -470,7 +470,7 @@ namespace Neon.Kube
             TimeSpan            timeout           = default,
             CancellationToken   cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -540,7 +540,7 @@ namespace Neon.Kube
             CancellationToken   cancellationToken = default,
             bool                noSuccessCheck    = false)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
             Covenant.Requires<ArgumentException>(command.Length > 0, nameof(command));

@@ -196,7 +196,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task EnqueueAsync(T item)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             client.EnsureNotDisposed();
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
@@ -246,7 +246,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<bool> TryEnqueueAsync(T item)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             client.EnsureNotDisposed();
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
@@ -288,7 +288,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> DequeueAsync(TimeSpan timeout = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             client.EnsureNotDisposed();
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -329,7 +329,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task CloseAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             client.EnsureNotDisposed();
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);

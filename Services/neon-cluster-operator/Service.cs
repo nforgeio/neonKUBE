@@ -121,7 +121,7 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task CheckNodeImagesAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // check busybox doesn't already exist
 
@@ -263,7 +263,7 @@ namespace NeonClusterOperator
             string      containerName = null,
             bool        retry         = false)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var podCommand = new string[]
             {

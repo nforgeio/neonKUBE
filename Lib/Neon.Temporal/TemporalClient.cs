@@ -462,7 +462,7 @@ namespace Neon.Temporal
                                 _ = Task.Factory.StartNew(
                                     async (object arg) =>
                                     {
-                                        await SyncContext.Clear();
+                                        await SyncContext.Clear;
 
                                         using (var context = (RequestContext)arg)
                                         {
@@ -507,7 +507,7 @@ namespace Neon.Temporal
                 {
                     app.Run(async context =>
                     {
-                        await SyncContext.Clear();
+                        await SyncContext.Clear;
                         await OnKestralRequestAsync(context);
                     });
                 }
@@ -873,7 +873,7 @@ namespace Neon.Temporal
         /// </remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalSettings settings)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specify a non-empty Temporal namespace in settings.");
 
@@ -984,7 +984,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnListenerRequestAsync(RequestContext context)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var request  = context.Request;
             var response = context.Response;
@@ -1074,7 +1074,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnKestralRequestAsync(HttpContext context)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var request  = context.Request;
             var response = context.Response;
@@ -1159,7 +1159,7 @@ namespace Neon.Temporal
         /// <returns>The HTTP reply information.</returns>
         private static async Task<HttpReply> OnRootRequestAsync(ProxyMessage proxyMessage)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(proxyMessage != null, nameof(proxyMessage));
 
             var httpReply = new HttpReply() { StatusCode = 200 };   // OK
@@ -1250,7 +1250,7 @@ namespace Neon.Temporal
 
         private static async Task OnLogRequestAsync(TemporalClient client, ProxyRequest request)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var logRequest = (LogRequest)request;
 
@@ -1931,7 +1931,7 @@ namespace Neon.Temporal
         /// <returns>The reply message.</returns>
         internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             request.ClientId = this.ClientId;
 
@@ -2003,7 +2003,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 

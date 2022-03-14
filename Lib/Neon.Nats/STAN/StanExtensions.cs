@@ -159,7 +159,7 @@ namespace STAN.Client
         public static async Task<string> PublishAsync<TMessage>(this IStanConnection connection, string subject, TMessage data)
             where TMessage : class, IRoundtripData, new()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             return await connection.PublishAsync(subject, data.ToBytes());

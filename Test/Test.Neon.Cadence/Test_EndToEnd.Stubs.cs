@@ -150,7 +150,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task WorkflowStub_Start_Untyped()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -170,7 +170,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task WorkflowStub_Execute_Untyped()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Use an untyped workflow stub to execute a workflow that
             // returns a result in one step.
@@ -199,7 +199,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task WorkflowStub_Attach_Untyped()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -228,7 +228,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task WorkflowStub_Signal_Untyped()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.

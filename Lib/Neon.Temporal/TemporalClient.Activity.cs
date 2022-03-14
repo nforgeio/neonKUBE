@@ -74,7 +74,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             EnsureNotDisposed();
 
@@ -99,7 +99,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             EnsureNotDisposed();
@@ -127,7 +127,7 @@ namespace Neon.Temporal
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             EnsureNotDisposed();
 
@@ -153,7 +153,7 @@ namespace Neon.Temporal
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             EnsureNotDisposed();
@@ -181,7 +181,7 @@ namespace Neon.Temporal
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             Covenant.Requires<ArgumentNullException>(error != null, nameof(error));
             EnsureNotDisposed();
@@ -208,7 +208,7 @@ namespace Neon.Temporal
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string @namespace = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             Covenant.Requires<ArgumentNullException>(error != null, nameof(error));

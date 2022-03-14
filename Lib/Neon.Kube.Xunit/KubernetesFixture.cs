@@ -189,7 +189,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             if (Client != null)
             {
@@ -228,7 +228,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(KubernetesClientConfiguration kubeconfig)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(kubeconfig != null, nameof(kubeconfig));
 
             if (Client != null)
@@ -271,7 +271,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public async Task<TestFixtureStatus> ConnectAsync(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
 
             if (Client != null)
@@ -356,7 +356,7 @@ namespace Neon.Kube.Xunit
             int                 maxParallel           = 500,
             string              headendUri            = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -551,7 +551,7 @@ namespace Neon.Kube.Xunit
             int     maxParallel           = 500,
             string  headendUri            = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -618,7 +618,7 @@ namespace Neon.Kube.Xunit
             int         maxParallel           = 500,
             string      headendUri            = null)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 

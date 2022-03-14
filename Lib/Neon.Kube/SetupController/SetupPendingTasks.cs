@@ -119,7 +119,7 @@ namespace Neon.Kube
         /// <exception cref="InvalidOperationException">Thrown if <see cref="WaitAsync"/> has already been called.</exception>
         public async Task WaitAsync(ISetupController controller)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             if (waitAsyncCalled)

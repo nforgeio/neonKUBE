@@ -181,7 +181,7 @@ namespace Neon.Kube
         /// <returns>The taint list.</returns>
         public static async Task<List<V1Taint>> GetTaintsAsync(ISetupController controller, string labelKey, string labelValue)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var taints = new List<V1Taint>();

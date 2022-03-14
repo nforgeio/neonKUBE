@@ -78,25 +78,25 @@ namespace Neon.Cadence
         {
             public async Task CancelAsync(WorkflowExecution execution)
             {
-                await SyncContext.Clear();
+                await SyncContext.Clear;
                 await Activity.Client.CancelWorkflowAsync(execution);
             }
 
             public async Task GetResultAsync(WorkflowExecution execution)
             {
-                await SyncContext.Clear();
+                await SyncContext.Clear;
                 await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task<byte[]> GetResultBytesAsync(WorkflowExecution execution)
             {
-                await SyncContext.Clear();
+                await SyncContext.Clear;
                 return await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task SignalAsync(WorkflowExecution execution, string signalName, params object[] args)
             {
-                await SyncContext.Clear();
+                await SyncContext.Clear;
 
                 var dataConverter = Activity.Client.DataConverter;
 
@@ -154,7 +154,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task CancelAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {
@@ -176,7 +176,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -198,7 +198,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetResultAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {
@@ -219,7 +219,7 @@ namespace Neon.Cadence
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {

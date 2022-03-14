@@ -561,7 +561,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
             return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
@@ -574,7 +574,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="ClusterStatus"/>.</returns>
         public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
             return await HostingManager.GetClusterStatusAsync(timeout);
@@ -592,7 +592,7 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         public async Task StartAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StartClusterAsync();
@@ -611,10 +611,14 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.Clear();
+// $debug(jefflill): DELETE THIS LOGGING!
+NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
+            await SyncContext.Clear;
+NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopClusterAsync(stopMode);
+NeonHelper.LogDebug($"Stop-0: thread-id={System.Threading.Thread.CurrentThread.ManagedThreadId}");
         }
 
         /// <summary>
@@ -625,7 +629,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ResetAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
             await Task.CompletedTask;
@@ -659,7 +663,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task RemoveAsync(bool removeOrphansByPrefix = false)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
@@ -691,7 +695,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartNodeAsync(string nodeName)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -711,7 +715,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 

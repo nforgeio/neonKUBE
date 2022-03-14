@@ -522,7 +522,7 @@ namespace Neon.Common
             string              timeoutMessage         = null, 
             CancellationToken   cancellationToken      = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
@@ -659,7 +659,7 @@ namespace Neon.Common
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             foreach (var task in tasks)
             {
@@ -674,7 +674,7 @@ namespace Neon.Common
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             foreach (var task in tasks)
             {
@@ -722,7 +722,7 @@ namespace Neon.Common
             string              timeoutMessage    = null,
             CancellationToken   cancellationToken = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             if (!timeout.HasValue)
             {
@@ -2025,7 +2025,7 @@ namespace Neon.Common
         /// <returns>The task result.</returns>
         public static async Task<object> GetTaskResultAsObjectAsync(Task task)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             await task;

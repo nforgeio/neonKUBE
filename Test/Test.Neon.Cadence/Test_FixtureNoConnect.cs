@@ -116,7 +116,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult1()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -130,7 +130,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult2()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.

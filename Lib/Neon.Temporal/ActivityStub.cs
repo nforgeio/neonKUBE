@@ -87,7 +87,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ExecuteAsync(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;
@@ -104,7 +104,7 @@ namespace Neon.Temporal
         /// <returns>The activity result.</returns>
         public async Task<TResult> ExecuteAsync<TResult>(params object[] args)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;

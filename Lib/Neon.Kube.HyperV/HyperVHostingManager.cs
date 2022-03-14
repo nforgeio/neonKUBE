@@ -406,7 +406,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
@@ -624,7 +624,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task PrepareHyperVAsync(SetupController<NodeDefinition> controller)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             // Handle any necessary Hyper-V initialization.
@@ -883,7 +883,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             using (var hyperV = new HyperVProxy())
             {
@@ -1110,7 +1110,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task StartClusterAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             // We just need to start any cluster VMs that aren't already running.
@@ -1157,7 +1157,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             // We just need to stop any running cluster VMs.
@@ -1223,7 +1223,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
@@ -1290,7 +1290,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
@@ -1346,7 +1346,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task StartNodeAsync(string nodeName)
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 

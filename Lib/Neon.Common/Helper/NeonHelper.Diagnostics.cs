@@ -34,13 +34,35 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
+using System.Diagnostics;
 
 namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static object   debugLogSyncRoot = new object();
-        private static string   debugLogPath     = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "debug-log.txt");
+        private static object       debugLogSyncRoot  = new object();
+        private static string       debugLogPath      = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "debug-log.txt");
+        private static Stopwatch    debugLogStopwatch = null;
+
+        /// <summary>
+        /// Creates and starts the debug log stopwatch when it's not already running.
+        /// </summary>
+        /// <param name="restart">Optionally restart the stopwatch.</param>
+        private static void StartDebugLogStopwatch(bool restart = false)
+        {
+            lock (debugLogSyncRoot)
+            {
+                if (debugLogStopwatch == null)
+                {
+                    debugLogStopwatch = new Stopwatch();
+                    debugLogStopwatch.Start();
+                }
+                else if (restart)
+                {
+                    debugLogStopwatch.Restart();
+                }
+            }
+        }
 
         /// <summary>
         /// <para>
@@ -67,6 +89,7 @@ namespace Neon.Common
                 lock (debugLogSyncRoot)
                 {
                     debugLogPath = value;
+                    StartDebugLogStopwatch(restart: true);
                 }
             }
         }
@@ -82,6 +105,8 @@ namespace Neon.Common
                 {
                     File.WriteAllText(DebugLogPath, string.Empty);
                 }
+
+                StartDebugLogStopwatch(restart: true);
             }
         }
 
@@ -102,7 +127,7 @@ namespace Neon.Common
                 line += Environment.NewLine;
 
                 Directory.CreateDirectory(folder);
-                File.AppendAllText(DebugLogPath, line);
+                File.AppendAllText(DebugLogPath, $"[{debugLogStopwatch.Elapsed}] {line}");
             }
         }
 

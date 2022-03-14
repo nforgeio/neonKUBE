@@ -231,7 +231,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
         public async Task<WorkflowStub> ToUntypedAsync()
         {
-            await SyncContext.Clear();
+            await SyncContext.Clear;
 
             return await (Task<WorkflowStub>)toUntypedAsync.Invoke(this, Array.Empty<object>());
         }
