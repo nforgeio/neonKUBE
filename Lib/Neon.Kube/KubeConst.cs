@@ -392,11 +392,25 @@ namespace Neon.Kube
         public const string NeonResourceGroup = "neonkube.io";
 
         /// <summary>
-        /// Identifes a special configmap used to report cluster status.  This configmap is
+        /// Identifes the neonKUBE configmap used to report cluster status.  This configmap is
         /// located in the <see cref="KubeNamespaces.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
         /// </summary>
         public const string ClusterStatusConfigMapName = "cluster-status";
+
+        /// <summary>
+        /// <para>
+        /// Identifies the neonKUBE configmap used to indicate whether the cluster is considered
+        /// to be locked.  <b>neon-desktop</b>, <b>neon-cli</b>, and <b>KubernetesFixture</b> use 
+        /// this to block operations like cluster <b>reset</b>, <b>remove</b>, <b>pause</b>, and 
+        /// <b>stop</b> when the cluster  is locked in an attempt to avoid harmful operations on
+        /// production or otherwise important clusters.
+        /// </para>
+        /// <para>
+        /// This configmap is located in the <see cref="KubeNamespaces.NeonStatus"/> namespace.
+        /// </para>
+        /// </summary>
+        public const string ClusterLockConfigMap = "cluster-lock";
     }
 }
