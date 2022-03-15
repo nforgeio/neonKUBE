@@ -61,7 +61,7 @@ Removes the current cluster.  This is not supported by all hosting environments.
 
 USAGE:
 
-    neon cluster pause [--force]
+    neon cluster remove [--force]
 
 OPTIONS:
 
