@@ -53,7 +53,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the health of a cluster.
+    /// Describes the current health of a cluster.
     /// </summary>
     public class KubeClusterHealth
     {

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -32,35 +33,25 @@ using k8s.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
+using Neon.Diagnostics;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-using Neon.Diagnostics;
-using System.ComponentModel;
-
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used to describe the status of a neonKUBE cluster.
+    /// Used to describe the current status of a neonKUBE cluster.  This is maintained by the <b>neon-cluster-operator</b>
+    /// and is persisted in the  <see cref="KubeNamespaces.NeonStatus"/> namespace with the information persisted as JSON 
+    /// in the configmap's <b>data</b> property.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This status is held to the special Kubernetes config map names <see cref="KubeConst.ClusterStatusConfigMapName"/> 
-    /// located in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  This will be serialized as JSON to the
-    /// config map's <b>status</b> property.
-    /// </para>
-    /// <para>
-    /// The config map is created initially by cluster setup and is then maintained by neon-cluster-operator thereafter.
-    /// </para>
-    /// </remarks>
     public class KubeClusterStatusConfig
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private const string statusPropertyName = "status";
+        private const string dataPropertyName = "data";
 
         /// <summary>
         /// Constructs an instance by parsing a <see cref="V1ConfigMap"/>.
@@ -71,9 +62,9 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(configMap != null, nameof(configMap));
 
-            if (!configMap.Data.TryGetValue("status", out var json))
+            if (!configMap.Data.TryGetValue(dataPropertyName, out var json))
             {
-                throw new InvalidDataException($"Expected the [{configMap}] to have a [{statusPropertyName}] property.");
+                throw new InvalidDataException($"Expected the [{configMap}] to have a [{dataPropertyName}] property.");
             }
 
             return NeonHelper.JsonDeserialize<KubeClusterStatusConfig>(json, strict: true);
@@ -128,7 +119,7 @@ namespace Neon.Kube
             var configmap = KubeHelper.CreateKubeObject<V1ConfigMap>(KubeConst.ClusterStatusConfigMapName);
 
             configmap.Data = new Dictionary<string, string>();
-            configmap.Data.Add(statusPropertyName, NeonHelper.JsonSerialize(this));
+            configmap.Data.Add(dataPropertyName, NeonHelper.JsonSerialize(this));
 
             return configmap;
         }
