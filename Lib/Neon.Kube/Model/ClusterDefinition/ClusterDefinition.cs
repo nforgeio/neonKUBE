@@ -278,6 +278,17 @@ namespace Neon.Kube
         public bool IsDesktopBuiltIn { get; set; }
 
         /// <summary>
+        /// Indicates whether the cluster should be locked after being deployed successfully.
+        /// <b>neon-desktop</b>, <b>neon-cli</b>, and <b>KubernetesFixture</b> will block distructive
+        /// operations such as cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
+        /// on locked clusters as to help avoid impacting production clusters by accident.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "isLocked", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool IsLocked { get; set; } = true;
+
+        /// <summary>
         /// <para>
         /// The cluster name.
         /// </para>

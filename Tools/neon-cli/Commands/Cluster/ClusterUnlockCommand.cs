@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterPauseCommand.cs
+// FILE:	    ClusterUnlockCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -51,42 +51,26 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster pause</b> command.
+    /// Implements the <b>cluster unlock</b> command.
     /// </summary>
     [Command]
-    public class ClusterPauseCommand : CommandBase
+    public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Pauses the current cluster by putting its nodes to sleep.  This is not
-supported by all hosting environments.
+Unlocks the current cluster by allowing KubernetesFixture to run unit tests
+as well as allowing potentially distructive commands like:
+
+    remove, reset, pause and stop
+
+to execute without confirmation by the user.
 
 USAGE:
-
-    neon cluster pause [--force]
-
-OPTIONS:
-
-    --force     - forces cluster pause without user confirmation.
-
-REMARKS:
-
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
-
-NOTE: [--force] DOES NOT OVERRIDE THE LOCK
-
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
 
     neon cluster unlock
 
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "pause" };
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" };
+        public override string[] Words => new string[] { "cluster", "unlock" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -111,41 +95,18 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
-            var force = commandLine.HasOption("--force");
-
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var status = await cluster.GetClusterStatusAsync();
+                var status       = await cluster.GetClusterStatusAsync();
+                var capabilities = cluster.Capabilities;
 
                 switch (status.State)
                 {
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        if (await cluster.IsLockedAsync())
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                            Program.Exit(1);
-                        }
-
-                        var capabilities = cluster.Capabilities;
-
-                        if ((capabilities & HostingCapabilities.Pausable) == 0)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: Cluster is not pausable.");
-                            Program.Exit(1);
-                        }
-
-                        if (!force)
-                        {
-                            if (!Program.PromptYesNo($"Are you sure you want to pause: {cluster.Name}?"))
-                            {
-                                Program.Exit(0);
-                            }
-                        }
-
-                        await cluster.StopAsync(StopMode.Sleep);
-                        Console.WriteLine($"Cluster is paused: {cluster.Name}");
+                        await cluster.UnlockAsync();
+                        Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
                         break;
 
                     default:

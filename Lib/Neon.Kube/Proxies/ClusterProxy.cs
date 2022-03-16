@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -90,10 +91,13 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
+        private object                  syncLock = new object();
+        private KubeConfigContext       context;
         private RunOptions              defaultRunOptions;
         private NodeProxyCreator        nodeProxyCreator;
         private string                  nodeImageUri;
         private string                  nodeImagePath;
+        private IKubernetes             cachedK8s;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/>.
@@ -131,6 +135,7 @@ namespace Neon.Kube
                   nodeProxyCreator:         nodeProxyCreator, 
                   defaultRunOptions:        defaultRunOptions)
         {
+            this.context = context;
         }
 
         /// <summary>
@@ -257,6 +262,9 @@ namespace Neon.Kube
 
             HostingManager?.Dispose();
             HostingManager = null;
+
+            cachedK8s?.Dispose();
+            cachedK8s = null;
 
             if (disposing)
             {
@@ -522,6 +530,42 @@ namespace Neon.Kube
             return master.GetTimeUtc();
         }
 
+        /// <summary>
+        /// Returns the cached <see cref="IKubernetes"/> client for the cluster, constructing one
+        /// when nothing is cached yet.
+        /// </summary>
+        /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method works only when the proxy was constructed with the 
+        /// <see cref="ClusterProxy(KubeConfigContext, IHostingManagerFactory, Operation, string, string, NodeProxyCreator, RunOptions)"/>
+        /// constructor, which includes the specification of the related KubeConfig.
+        /// </note>
+        /// </remarks>
+        private IKubernetes K8sClient
+        {
+            get
+            {
+                if (context == null)
+                {
+                    throw new InvalidOperationException($"Cannot retrieve the Kubernetes client: [{nameof(ClusterProxy)}] was created with the wrong constructor.");
+                }
+
+                lock (syncLock)
+                {
+                    if (cachedK8s != null)
+                    {
+                        return cachedK8s;
+                    }
+
+                    var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+
+                    return cachedK8s = new KubernetesClient(config);
+                }
+            }
+        }
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods.
 
@@ -535,6 +579,92 @@ namespace Neon.Kube
                 Covenant.Assert(HostingManager != null);
 
                 return HostingManager.Capabilities;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the cluster is considered to be locked for potentially distructive operations
+        /// such as <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>.  This is used
+        /// to help prevent impacting production clusters by accident.
+        /// </summary>
+        /// /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns><c>true</c> when the cluster is locked.</returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task<bool> IsLockedAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterLock,
+                namespaceParameter: KubeNamespaces.NeonStatus,
+                cancellationToken:  cancellationToken);
+
+            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+            return lockStatusConfig.Config.IsLocked;
+        }
+
+        /// <summary>
+        /// Locks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
+        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
+        /// are not allowed on locked clusters.
+        /// </summary>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task LockAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            // We need to check and the potentially modify the existing lock configmap
+            // so that Kubernetes can check for write conflicts.
+
+            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterLock,
+                namespaceParameter: KubeNamespaces.NeonStatus,
+                cancellationToken:  cancellationToken);
+
+            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+            if (!lockStatusConfig.Config.IsLocked)
+            {
+                lockStatusConfig.Config.IsLocked = true;
+                lockStatusConfig.Update();
+
+                await K8sClient.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+            }
+        }
+
+        /// <summary>
+        /// Unlocks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
+        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
+        /// are not allowed on locked clusters.
+        /// </summary>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task UnlockAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            // We need to check and the potentially modify the existing lock configmap
+            // so that Kubernetes can check for write conflicts.
+
+            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterLock,
+                namespaceParameter: KubeNamespaces.NeonStatus,
+                cancellationToken:  cancellationToken);
+
+            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+            if (lockStatusConfig.Config.IsLocked)
+            {
+                lockStatusConfig.Config.IsLocked = false;
+                lockStatusConfig.Update();
+
+                await K8sClient.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
             }
         }
 

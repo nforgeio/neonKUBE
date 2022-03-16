@@ -2930,23 +2930,19 @@ TCPKeepAlive yes
             
             using (var k8s = new KubernetesClient(config))
             {
-                // We're going to read a config with a name that probably won't exist
-                // to keep the response small.  We're expecting this to return NULL
-                // because the name is GUID but this will still work if it does.
-                //
-                // We're going to consider the cluster to be healthy as long as the
-                // call doesn't throw an exception.
+                // Cluster status is persisted to the [neon-status/cluster-status] configmap
+                // during cluster setup and is maintained there after by [neon-cluster-operator].
 
                 try
                 {
                     var configMap = await k8s.ReadNamespacedConfigMapAsync(
-                        name:               KubeConst.ClusterStatusConfigMapName,
+                        name:               KubeConfigMapName.ClusterStatus,
                         namespaceParameter: KubeNamespaces.NeonStatus,
                         cancellationToken:  cancellationToken);
 
-                    var statusConfigMap = KubeClusterStatusConfig.From(configMap);
+                    var statusConfig = new TypeSafeConfigMap<KubeClusterHealth>(configMap);
 
-                    return statusConfigMap.ToKubeClusterHealth();
+                    return statusConfig.Config;
                 }
                 catch (OperationCanceledException)
                 {

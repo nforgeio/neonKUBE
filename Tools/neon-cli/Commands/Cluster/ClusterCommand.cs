@@ -45,6 +45,8 @@ Performs basic cluster provisioning and management.
 USAGE:
 
     neon cluster check
+    neon cluster is-locked
+    neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
     neon cluster remove     [OPTIONS]
@@ -52,6 +54,7 @@ USAGE:
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
     neon cluster start
     neon cluster stop       [OPTIONS]
+    neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]
 ";
 

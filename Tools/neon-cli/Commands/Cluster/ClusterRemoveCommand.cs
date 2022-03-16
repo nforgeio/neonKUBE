@@ -67,6 +67,19 @@ OPTIONS:
 
     --force     - forces cluster removal without user confirmation.
 
+REMARKS:
+
+This command will not work on a locked clusters as a safety measure.  The idea
+it to add some friction to avoid impacting production clusters by accident.
+
+NOTE: [--force] DOES NOT OVERRIDE THE LOCK
+
+All clusters besides neon-desktop built-in clusters are locked by default when
+they're deployed.  You can disable this by setting [IsLocked=false] in your
+cluster definition or by executing this command on your cluster:
+
+    neon cluster unlock
+
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "remove" };
@@ -101,6 +114,12 @@ OPTIONS:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
+                if (await cluster.IsLockedAsync())
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                    Program.Exit(1);
+                }
+
                 var capabilities = cluster.Capabilities;
 
                 if ((capabilities & HostingCapabilities.Removable) == 0)

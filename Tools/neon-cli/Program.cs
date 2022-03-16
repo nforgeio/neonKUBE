@@ -135,9 +135,11 @@ NEON KUBECTL COMMANDS:
 
     neon apply -f my-manifest.yaml
 
-NEON CLUSTER MANAGEMENT COMMANDS:
+NEON CLUSTER LIFE-CYCLE COMMANDS:
 
     neon cluster check
+    neon cluster is-locked
+    neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
     neon cluster remove     [OPTIONS]
@@ -145,6 +147,7 @@ NEON CLUSTER MANAGEMENT COMMANDS:
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
     neon cluster start
     neon cluster stop       [OPTIONS]
+    neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]
 
     neon login              COMMAND

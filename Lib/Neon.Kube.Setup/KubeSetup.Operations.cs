@@ -366,12 +366,10 @@ spec:
 
             // IMPORTANT!
             //
-            // This must be the last cluster setup step; it writes the
-            // initial [cluster-status] config map to the [neon-status]
-            // namespace, indicating that the cluster is ready.
+            // This must be the last cluster setup steps.
 
             controller.ThrowIfCancelled();
-            await WriteClusterStatusAsync(controller, master);
+            await WriteClusterConfigMapsAsync(controller, master);
         }
 
         /// <summary>
@@ -4495,32 +4493,44 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Writes the initial <see cref="KubeConst.ClusterStatusConfigMapName"/> config map to the
-        /// <see cref="KubeNamespaces.NeonStatus"/> namespace, indicating that the cluster is ready.
+        /// Writes the <see cref="KubeConfigMapName.ClusterStatus"/> and <see cref="KubeConfigMapName.ClusterLock"/> 
+        /// config maps to the <see cref="KubeNamespaces.NeonStatus"/> namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WriteClusterStatusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task WriteClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var k8s = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
 
-            await master.InvokeIdempotentAsync("setup/cluster-status",
+            await master.InvokeIdempotentAsync("setup/cluster-configmaps",
                 async () =>
                 {
-                    var clusterStatus = new KubeClusterStatusConfig()
-                    {
-                        State   = KubeClusterState.Healthy,
-                        Summary = "Cluster setup complete"
-                    };
+                    var clusterStatusMap = new TypeSafeConfigMap<KubeClusterHealth>(
+                        name:       KubeConfigMapName.ClusterStatus,
+                        @namespace: KubeNamespaces.NeonStatus,
+                        config:     new KubeClusterHealth()
+                        {
+                            State   = KubeClusterState.Healthy,
+                            Summary = "Cluster setup complete"
+                        });
 
-                    var configmap = clusterStatus.ToConfigMap();
+                    await k8s.CreateNamespacedConfigMapAsync(clusterStatusMap.ConfigMap, KubeNamespaces.NeonStatus);
 
-                    await k8s.CreateNamespacedConfigMapAsync(configmap, KubeNamespaces.NeonStatus);
+                    var clusterLockedMap = new TypeSafeConfigMap<KubeClusterLock>(
+                        name:       KubeConfigMapName.ClusterLock,
+                        @namespace: KubeNamespaces.NeonStatus,
+                        config:     new KubeClusterLock()
+                        {
+                            IsLocked = cluster.Definition.IsLocked
+                        });
+
+                    await k8s.CreateNamespacedConfigMapAsync(clusterLockedMap.ConfigMap, KubeNamespaces.NeonStatus);
                 });
         }
 
