@@ -903,8 +903,15 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Cluster life-cycle methods
 
+        // $todo(jefflill):
+        //
+        // XenServer is having trouble suspending VMs so I'm going to disable this
+        // feature for the time being:
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/1488
+
         /// <inheritdoc/>
-        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
