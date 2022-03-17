@@ -1064,6 +1064,13 @@ namespace Neon.Kube
                         }
                     }
 
+                    if (clusterStatus.State == ClusterState.Off)
+                    {
+                        clusterStatus.Summary = "Cluster is turned off";
+
+                        return clusterStatus;
+                    }
+
                     // When it looks like the cluster is configured from Hyper-V's perspective,
                     // we're going to check from the Kubernetes perspective to determine whether
                     // the cluster itself appears to be healthy or not.

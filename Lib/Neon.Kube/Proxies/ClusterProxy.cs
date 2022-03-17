@@ -531,8 +531,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the cached <see cref="IKubernetes"/> client for the cluster, constructing one
-        /// when nothing is cached yet.
+        /// Returns the cached <see cref="IKubernetes"/> client for the cluster, constructing one when nothing is cached yet.
         /// </summary>
         /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>

@@ -955,7 +955,7 @@ namespace Neon.Kube
                     }
                     catch (XenException)
                     {
-                        // We're considering the XenServer host to be offlinel.
+                        // We're considering the XenServer host to be offline.
 
                         lock (hostnameToVms)
                         {
@@ -1154,9 +1154,16 @@ namespace Neon.Kube
                     }
                 }
 
-                // When it looks like the cluster is configured from XenServer's perspective,
-                // we're going to check from the Kubernetes perspective to determine whether
-                // the cluster itself appears to be healthy or not.
+                if (clusterStatus.State == ClusterState.Off)
+                {
+                    clusterStatus.Summary = "Cluster is turned off";
+
+                    return clusterStatus;
+                }
+
+                // When it looks like the cluster is configured and running from XenServer's
+                // perspective, we're going to check from the Kubernetes perspective to determine
+                // whether the cluster itself appears to be healthy or not.
 
                 if (clusterStatus.State == ClusterState.Configured && context != null)
                 {

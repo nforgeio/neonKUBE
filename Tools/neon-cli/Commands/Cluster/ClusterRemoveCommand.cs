@@ -62,6 +62,7 @@ Removes the current cluster.  This is not supported by all hosting environments.
 USAGE:
 
     neon cluster remove [--force]
+    neon cluster rm [--force]
 
 OPTIONS:
 
@@ -83,6 +84,9 @@ cluster definition or by executing this command on your cluster:
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "remove" };
+
+        /// <inheritdoc/>
+        public override string[] AltWords => new string[] { "cluster", "rm" };
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" };

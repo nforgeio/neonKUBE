@@ -113,6 +113,13 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
+            // $todo(jefflill): Temporarily disabling this command:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1281
+
+            Console.Error.WriteLine("*** ERROR: The [neon cluster stop] command is not fully implemented yet.");
+            Program.Exit(1);
+
             var turnoff = commandLine.HasOption("--turnoff");
             var force   = commandLine.HasOption("--force");
 
