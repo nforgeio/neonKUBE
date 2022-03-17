@@ -45,6 +45,8 @@ namespace TestDeployment
     {
         const string repo = "neon-test/github-automation";
 
+        private readonly TimeSpan releaseDelay = TimeSpan.FromSeconds(5);
+
         public Test_GitHubReleases()
         {
             // Remove any existing GitHub releases.
@@ -237,7 +239,7 @@ namespace TestDeployment
         }
 
         [Fact]
-        public void EndToEnd_WithDefaults()
+        public async Task EndToEnd_WithDefaults()
         {
             var tagName = Guid.NewGuid().ToString("d");
 
@@ -255,6 +257,12 @@ namespace TestDeployment
                 Assert.False(release.Prerelease);
                 Assert.Empty(release.Assets);
                 Assert.NotNull(release.PublishedAt);
+
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
 
                 // List all releases to ensure that new release is included:
 
@@ -292,6 +300,12 @@ namespace TestDeployment
 
                 GitHub.Release.Remove(repo, release);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // List all releases to ensure that the new release is no longer present:
 
                 releaseList = GitHub.Release.List(repo);
@@ -325,6 +339,12 @@ namespace TestDeployment
                 Assert.Empty(release.Assets);
                 Assert.NotNull(release.PublishedAt);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // List all releases to ensure that new release is included:
 
                 var releaseList = GitHub.Release.List(repo);
@@ -337,10 +357,21 @@ namespace TestDeployment
 
                 Assert.NotNull(release);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // Delete the draft release.
 
                 GitHub.Release.Remove(repo, release);
-                await Task.Delay(10);   // GitHub takes a few seconds to actually delete a release
+
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
 
                 // Confirm that the release is gone.
 
