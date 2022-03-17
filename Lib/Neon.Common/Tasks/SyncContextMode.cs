@@ -35,21 +35,16 @@ namespace Neon.Tasks
     public enum SyncContextMode
     {
         /// <summary>
-        /// Prevents `await SyncContext.Clear;` from actually doing anothing special.
-        /// This mode is probably suitable for most non-UI applications.
-        /// </summary>
-        Disabled = 0,
-
-        /// <summary>
         /// <para>
         /// Enables `await SyncContext.Clear;` such that the continuations within the
         /// nested scope of the method will not happen on the original thread.
         /// </para>
         /// <para>
-        /// There may be some use for this mode for server applications.
+        /// This mode is the default and is generally suitable for server and other
+        /// non-UI applications.
         /// </para>
         /// </summary>
-        ClearOnly,
+        ClearOnly = 0,
 
         /// <summary>
         /// <para>

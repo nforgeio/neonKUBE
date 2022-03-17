@@ -88,12 +88,12 @@ namespace Neon.Tasks
     /// clears it for the rest of the current method execution and then restores the original context when
     /// when the method returns.  This means that every subsequent <c>await</c>  performed within the method will 
     /// simply fetch a pool thread to continue execution, rather than to the original context thread.  To
-    /// accomplish this, you'll simply await <see cref="SyncContext.Clear()"/> at or near the top of your 
+    /// accomplish this, you'll simply await <see cref="SyncContext.Clear"/> at or near the top of your 
     /// async methods:
     /// </para>
     /// <para>
-    /// The global <see cref="Mode"/> property controls what the <see cref="Clear()"/> method actually does.
-    /// This defaults to <see cref="SyncContextMode.Disabled"/> which turns <see cref="Clear()"/> into a NOP
+    /// The global <see cref="Mode"/> property controls what the <see cref="Clear"/> method actually does.
+    /// This defaults to <see cref="SyncContextMode.ClearOnly"/> which turns <see cref="Clear"/> into a NOP
     /// which is probably suitable for most non-UI applications that reduce overhead and increase performance.
     /// </para>
     /// <para>
@@ -193,7 +193,7 @@ namespace Neon.Tasks
         /// </para>
         /// <para>
         /// The <see cref="Mode"/> property controls what awaiting <see cref="Clear"/>
-        /// actually does.  This defaults to <see cref="SyncContextMode.Disabled"/>
+        /// actually does.  This defaults to <see cref="SyncContextMode.ClearOnly"/>
         /// which is probably suitable for most non-UI applications.  UI applications
         /// will probably want to explicitly set <see cref="SyncContextMode.ClearAndYield"/>
         /// to help keep continations off the UI thread, which is often desirable.
@@ -203,19 +203,19 @@ namespace Neon.Tasks
 
         /// <summary>
         /// <para>
-        /// Used to control what <see cref="Clear()"/> actually does.  This defaults to
-        /// <see cref="SyncContextMode.Disabled"/> which is probably suitable for most
+        /// Used to control what <see cref="Clear"/> actually does.  This defaults to
+        /// <see cref="SyncContextMode.ClearOnly"/> which is probably suitable for most
         /// non-UI applications by reducing task overhead.  UI application will probably
         /// want to set <see cref="SyncContextMode.ClearAndYield"/> to keep work from
         /// running on the UI thread.
         /// </para>
         /// <para>
-        /// This defaults to <see cref="SyncContextMode.Disabled"/> for server code,
+        /// This defaults to <see cref="SyncContextMode.ClearOnly"/> for server code,
         /// because we're writing more server applications than UI applications these
         /// days.
         /// </para>
         /// </summary>
-        public static SyncContextMode Mode { get; set; } = SyncContextMode.Disabled;
+        public static SyncContextMode Mode { get; set; } = SyncContextMode.ClearOnly;
 
         //---------------------------------------------------------------------
         // Instance members
@@ -239,8 +239,9 @@ namespace Neon.Tasks
         /// <param name="continuation">The continuation action.</param>
         public void OnCompleted(Action continuation)
         {
-            if (Mode == SyncContextMode.Disabled)
+            if (Mode == SyncContextMode.ClearOnly)
             {
+                continuation();
                 return;
             }
 
