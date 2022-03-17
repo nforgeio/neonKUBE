@@ -68,7 +68,7 @@ namespace TestCommon
         }
 
         [Fact]
-        public async Task StartStop_Delay()
+        public async Task StartStop_DelayFirstTick()
         {
             var ticks = 0;
 
