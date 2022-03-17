@@ -51,12 +51,14 @@ namespace TestCommon
             {
                 Assert.False(timer.IsRunning);
                 await Task.Delay(TimeSpan.FromSeconds(1));
+                Assert.Equal(TimeSpan.Zero, timer.Interval);
                 Assert.False(timer.IsRunning);
                 Assert.Equal(0, ticks);
 
                 timer.Start(TimeSpan.FromSeconds(1));
                 await Task.Delay(TimeSpan.FromSeconds(4.5));
                 Assert.True(ticks == 5);
+                Assert.Equal(TimeSpan.FromSeconds(1), timer.Interval);
 
                 timer.Stop();
                 ticks = 0;

@@ -129,9 +129,20 @@ namespace Neon.Tasks
         }
 
         /// <summary>
+        /// <para>
         /// Indicates whether the timer is currently running.
+        /// </para>
+        /// <note>
+        /// This returns <see cref="TimeSpan.Zero"/> until <see cref="Start(TimeSpan, bool, Func{Task})"/>
+        /// is called for the first time.
+        /// </note>
         /// </summary>
         public bool IsRunning => timerTask != null;
+
+        /// <summary>
+        /// Returns the timer interval.
+        /// </summary>
+        public TimeSpan Interval => interval;
 
         /// <summary>
         /// Ensures that the instance is not disposed.
