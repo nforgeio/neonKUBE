@@ -38,6 +38,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Indicates whether the cluster is currently locked, unlocked, or whether the
+        /// lock state is currentlt unknown (when <c>null</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "isLocked", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public bool? IsLocked { get; set; }
+
+        /// <summary>
         /// Describes the overall state of a cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

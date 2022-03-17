@@ -118,7 +118,15 @@ cluster definition or by executing this command on your cluster:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                if (await cluster.IsLockedAsync())
+                var isLocked = await cluster.IsLockedAsync();
+
+                if (!isLocked.HasValue)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                    Program.Exit(1);
+                }
+
+                if (isLocked.Value)
                 {
                     Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
                     Program.Exit(1);

@@ -1084,10 +1084,16 @@ namespace Neon.Kube
                         switch (kubeClusterStatus.State)
                         {
                             case KubeClusterState.Unknown:
-                            case KubeClusterState.Unhealthy:
 
                                 clusterStatus.State   = ClusterState.Unhealthy;
                                 clusterStatus.Summary = kubeClusterStatus.Summary;
+                                break;
+
+                            case KubeClusterState.Unhealthy:
+
+                                clusterStatus.State    = ClusterState.Unhealthy;
+                                clusterStatus.Summary  = kubeClusterStatus.Summary;
+                                clusterStatus.IsLocked = await cluster.IsLockedAsync();
                                 break;
 
                             case KubeClusterState.Transitioning:

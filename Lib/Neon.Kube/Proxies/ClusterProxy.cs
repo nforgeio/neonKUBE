@@ -587,20 +587,30 @@ namespace Neon.Kube
         /// to help prevent impacting production clusters by accident.
         /// </summary>
         /// /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
-        /// <returns><c>true</c> when the cluster is locked.</returns>
+        /// <returns>
+        /// <c>true</c> when the cluster is locked, <c>false</c> when it's unlocked or <c>null</c> when
+        /// the lock status cannot be determined.
+        /// </returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
-        public async Task<bool> IsLockedAsync(CancellationToken cancellationToken = default)
+        public async Task<bool?> IsLockedAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
-            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
-                name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespaces.NeonStatus,
-                cancellationToken:  cancellationToken);
+            try
+            {
+                var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+                    name:               KubeConfigMapName.ClusterLock,
+                    namespaceParameter: KubeNamespaces.NeonStatus,
+                    cancellationToken:  cancellationToken);
 
-            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+                var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
 
-            return lockStatusConfig.Config.IsLocked;
+                return lockStatusConfig.Config.IsLocked;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>

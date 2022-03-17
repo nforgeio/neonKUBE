@@ -104,7 +104,15 @@ EXITCODE:
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        if (await cluster.IsLockedAsync())
+                        var isLocked = await cluster.IsLockedAsync();
+
+                        if (!isLocked.HasValue)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                            Program.Exit(1);
+                        }
+
+                        if (isLocked.Value)
                         {
                             Console.WriteLine($"[{cluster.Name}]: LOCKED");
                             Program.Exit(0);
