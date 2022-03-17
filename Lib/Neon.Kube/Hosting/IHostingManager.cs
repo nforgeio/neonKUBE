@@ -231,7 +231,8 @@ namespace Neon.Kube
         Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <summary>
-        /// Determines the status of a cluster.
+        /// Retrieves the status of a cluster from the hosting manager's perspective.  This includes information
+        /// about the infrastructor provisioned for the cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
         /// <returns>The <see cref="ClusterStatus"/>.</returns>

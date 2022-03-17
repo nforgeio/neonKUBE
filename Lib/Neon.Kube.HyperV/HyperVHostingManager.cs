@@ -1071,50 +1071,6 @@ namespace Neon.Kube
                         return clusterStatus;
                     }
 
-                    // When it looks like the cluster is configured from Hyper-V's perspective,
-                    // we're going to check from the Kubernetes perspective to determine whether
-                    // the cluster itself appears to be healthy or not.
-
-                    if (clusterStatus.State == ClusterState.Configured && context != null)
-                    {
-                        var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
-
-                        clusterStatus.Summary = kubeClusterStatus.Summary;
-
-                        switch (kubeClusterStatus.State)
-                        {
-                            case KubeClusterState.Unknown:
-
-                                clusterStatus.State   = ClusterState.Unhealthy;
-                                clusterStatus.Summary = kubeClusterStatus.Summary;
-                                break;
-
-                            case KubeClusterState.Unhealthy:
-
-                                clusterStatus.State    = ClusterState.Unhealthy;
-                                clusterStatus.Summary  = kubeClusterStatus.Summary;
-                                clusterStatus.IsLocked = await cluster.IsLockedAsync();
-                                break;
-
-                            case KubeClusterState.Transitioning:
-                            case KubeClusterState.Healthy:
-
-                                clusterStatus.State   = ClusterState.Healthy;
-                                clusterStatus.Summary = "Cluster is healthy";
-                                break;
-
-                            case KubeClusterState.Paused:
-
-                                clusterStatus.State   = ClusterState.Paused;
-                                clusterStatus.Summary = "Cluster is paused";
-                                break;
-
-                            default:
-
-                                throw new NotImplementedException();
-                        }
-                    }
-
                     return clusterStatus;
                 }
             }
