@@ -1,0 +1,177 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    ClusterResetOptions.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using k8s;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using Neon.Common;
+using Neon.IO;
+using Neon.Net;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Time;
+using Neon.Tasks;
+
+namespace Neon.Kube
+{
+    /// <summary>
+    /// Specifies options for resetting an existing cluster.
+    /// </summary>
+    public class ClusterResetOptions
+    {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ClusterResetOptions()
+        {
+        }
+
+        /// <summary>
+        /// <para>
+        /// Resets the container registry custom resources to match the original cluster definition.
+        /// These configure how the <b>CRI-O</b> container runtime on all cluster nodes reference
+        /// external container registries such as DockerHub, GitHub, Quay, etc. as well as
+        /// private registries.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetContainerRegistries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetContainerRegistries { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Enable resetting the Harbor to its original configuration.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetHarbor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetHarbor { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets <b>Minio</b> by removing any custom buckets.  Note that existing
+        /// buckets holding Harbor, Loki, or Cortex information will remain unchanged when
+        /// this is enabled.  The <see cref="ResetHarbor"/>, <see cref="ResetLoki"/>, and
+        /// <see cref="ResetCortex"/> options control clearing of the related Minio data
+        /// when enabled.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetMinio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetMinio { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets the CRI-O runtime on each cluster node by removing any non-factory deployed
+        /// container images.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetCrio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetCrio { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets <b>Dex</b> by removing any non-factory deployed users and other configuration.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetDex", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetDex { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets Grafana by removing any non-factory deployed custom resources controlling dashboards,
+        /// alerts, etc.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetGrafana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetGrafana { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets <b>Loki</b> by removing all existing metrics data as well a reconfiguing all server monitors
+        /// to factor defaults.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetLoki", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetLoki { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Resets <b>Cortex</b> by removing all existing log data
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ResetCortex", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool ResetCortex { get; set; } = true;
+
+        /// <summary>
+        /// <para>
+        /// Specifies namespaces to be excluded from those being removed during the reset operation.
+        /// Normally, all namespaces beside the internal neonKUBE namespaces will be removed with
+        /// the <b>default</b> being recreated as empty thereafter.
+        /// </para>
+        /// <para>
+        /// This defaults to an empty list.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "ExcludedNamespaces", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<string> ExcludedNamespaces { get; set; } = new List<string>();
+    }
+}

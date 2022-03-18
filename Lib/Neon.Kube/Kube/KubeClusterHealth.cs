@@ -79,5 +79,12 @@ namespace Neon.Kube
         [YamlMember(Alias = "summary", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Summary { get; set; }
+
+        /// <summary>
+        /// Describes which optional components have been deployed to the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "OptionalComponents", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public ClusterOptionalComponents OptionalComponents { get; set; } = new ClusterOptionalComponents();
     }
 }

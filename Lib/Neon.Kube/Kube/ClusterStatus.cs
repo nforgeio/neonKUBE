@@ -21,7 +21,6 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -42,23 +41,20 @@ namespace Neon.Kube
         /// lock state is currentlt unknown (when <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "isLocked", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public bool? IsLocked { get; set; }
+        public bool? IsLocked { get; set; } = null;
 
         /// <summary>
         /// Describes the overall state of a cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "status", ApplyNamingConventions = false)]
         [DefaultValue(ClusterState.Unknown)]
-        public ClusterState State { get; set; }
+        public ClusterState State { get; set; } = ClusterState.Unknown;
 
         /// <summary>
         /// Maps node names to their provisioning states.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "nodes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, ClusterNodeState> Nodes { get; set; } = new Dictionary<string, ClusterNodeState>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -66,8 +62,14 @@ namespace Neon.Kube
         /// Human readable string that summarizes the cluster state.
         /// </summary>
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "summary", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Summary { get; set; }
+        public string Summary { get; set; } = null;
+
+        /// <summary>
+        /// Describes which optional components have been deployed to the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "OptionalComponents", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public ClusterOptionalComponents OptionalComponents { get; set; } = new ClusterOptionalComponents();
     }
 }

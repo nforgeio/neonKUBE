@@ -726,7 +726,8 @@ namespace Neon.Kube
             {
                 var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
 
-                clusterStatus.Summary = kubeClusterStatus.Summary;
+                clusterStatus.Summary            = kubeClusterStatus.Summary;
+                clusterStatus.OptionalComponents = kubeClusterStatus.OptionalComponents;
 
                 switch (kubeClusterStatus.State)
                 {
@@ -762,6 +763,16 @@ namespace Neon.Kube
                         throw new NotImplementedException();
                 }
             }
+
+            // $todo(jefflill):
+            //
+            // We're going to indicate that all optional components have been deployed
+            // to the cluster right now because we haven't implemented this feature yet.
+            // We'll need to persist that information somewhere (probably in another
+            // [neon-status] configmap so neon-cluster-operator can include it when it
+            // updates the cluster health status.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1492
 
             return clusterStatus;
         }

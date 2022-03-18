@@ -4516,8 +4516,16 @@ $@"- name: StorageType
                         @namespace: KubeNamespaces.NeonStatus,
                         config:     new KubeClusterHealth()
                         {
-                            State   = KubeClusterState.Healthy,
-                            Summary = "Cluster setup complete"
+                            State              = KubeClusterState.Healthy,
+                            Summary            = "Cluster setup complete",
+                            OptionalComponents = new ClusterOptionalComponents()
+                            {
+                                Cortex  = true,
+                                Grafana = true,
+                                Harbor  = true,
+                                Loki    = true,
+                                Minio   = true
+                            }
                         });
 
                     await k8s.CreateNamespacedConfigMapAsync(clusterStatusMap.ConfigMap, KubeNamespaces.NeonStatus);

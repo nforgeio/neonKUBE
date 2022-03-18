@@ -82,7 +82,7 @@ namespace Neon.Kube
             public string Permissions { get; private set; }
 
             /// <summary>
-            /// Returns the file owner formatted as: USER:GROUP.
+            /// Returns the file owner formatted as: <b>USER:GROUP</b>
             /// </summary>
             public string Owner { get; private set; }
         }
