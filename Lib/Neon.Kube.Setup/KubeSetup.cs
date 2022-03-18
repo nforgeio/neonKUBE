@@ -253,9 +253,23 @@ namespace Neon.Kube
                                     return true;
                                 }
 
-                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                var httpOperationException = exception as HttpOperationException;
+
+                                if (httpOperationException != null)
                                 {
-                                    return true;
+                                    var statusCode = httpOperationException.Response.StatusCode;
+
+                                    switch (statusCode)
+                                    {
+                                        case HttpStatusCode.GatewayTimeout:
+                                        case HttpStatusCode.InternalServerError:
+                                        case HttpStatusCode.RequestTimeout:
+                                        case HttpStatusCode.ServiceUnavailable:
+                                        case (HttpStatusCode)423:   // Locked
+                                        case (HttpStatusCode)429:   // Too many requests
+
+                                            return true;
+                                    }
                                 }
 
                                 // This might be another variant of the check just above.  This looks like an SSL negotiation problem.

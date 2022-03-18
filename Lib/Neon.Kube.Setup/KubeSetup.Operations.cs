@@ -2082,7 +2082,7 @@ subjects:
                         },
                         Spec = new V1CStorPoolClusterSpec()
                         {
-                            Pools = new List<V1CStorPoolSpec>(),
+                            Pools     = new List<V1CStorPoolSpec>(),
                             Resources = new V1ResourceRequirements()
                             {
                                 Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
@@ -2118,7 +2118,7 @@ subjects:
                                 PoolConfig = new V1CStorPoolConfig()
                                 {
                                     DataRaidGroupType = DataRaidGroupType.Stripe,
-                                    Tolerations = new List<V1Toleration>()
+                                    Tolerations       = new List<V1Toleration>()
                                     {
                                         { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
                                         { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
