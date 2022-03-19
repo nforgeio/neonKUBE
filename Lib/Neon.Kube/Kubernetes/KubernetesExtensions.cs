@@ -291,16 +291,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Waits for a service deployment to complete.
+        /// Waits for a service deployment to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">OPtionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -318,7 +318,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
-            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be specified.");
 
             if (pollInterval <= TimeSpan.Zero)
             {
@@ -368,13 +368,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Waits for a stateful set deployment to complete.
+        /// Waits for a stateful set to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
-        /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="name">The statefulset name.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
@@ -444,13 +444,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Waits for a daemon set deployment to complete.
+        /// Waits for a daemon set to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
-        /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="name">The daemonset name.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
@@ -513,6 +513,58 @@ namespace Neon.Kube
                     {
                         return false;
                     }
+                },
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Waits for a pod to start successfully.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="name">The pod name.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>x
+        public static async Task WaitForPodAsync(
+            this IKubernetes    k8s, 
+            string              namespaceParameter, 
+            string              name              = null, 
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var pod = await k8s.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+
+                        return pod.Status.Phase == "Running";
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                            
                 },
                 timeout:           timeout,
                 pollInterval:      pollInterval,
