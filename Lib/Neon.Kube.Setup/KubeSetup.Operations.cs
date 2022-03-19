@@ -546,13 +546,37 @@ mode: {kubeProxyMode}");
 
                             controller.ThrowIfCancelled();
 
-                            var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
+                            // $note(jefflill):
+                            //
+                            // We've seen [ fail occasionally with this message in the command response:
+                            //
+                            //      [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+                            //      [kubelet-check] Initial timeout of 40s passed.
+                            //
+                            // Seems weird to claim that this may take up to 4 minutes to complete by then
+                            // fail after only 40 seconds.
+                            //
+                            // We're going to mitigate this by retrying a 7 times which combined with the
+                            // commands 40 second timeout will result in waiting 4.6 seconds for kubelet
+                            // to start (which exceeds the 4 minute limit stated above.
+
+                            var clusterConfig  = GenerateKubernetesClusterConfig(controller, master);
                             var kubeInitScript =
 $@"
-set -euo pipefail
+if ! systemctl enable kubelet.service; then
+    echo 'FAILED: systemctl enable kubelet.service' >&2
+    exit 1
+fi
 
-systemctl enable kubelet.service
-kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}
+for count in {{1..7}}
+do
+    if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}; then
+        exit 0
+    fi
+done
+
+echo 'FAILED: kubeadm init...' >&2
+exit 1
 ";
                             var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
@@ -1203,7 +1227,7 @@ kubectl apply -f priorityclasses.yaml
                         cancellationToken: controller.CancellationToken);
 
                     // Spin up a [dnsutils] pod and then exec into it to confirm that
-                    // CoreDNS is answering DNS lookups.
+                    // CoreDNS is answering DNS queries.
 
                     controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/dnsutils",
