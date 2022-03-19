@@ -56,25 +56,10 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Resets the container registry custom resources to match the original cluster definition.
-        /// These configure how the <b>CRI-O</b> container runtime on all cluster nodes reference
-        /// external container registries such as DockerHub, GitHub, Quay, etc. as well as
-        /// private registries.
-        /// </para>
-        /// <para>
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "ResetContainerRegistries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool ResetContainerRegistries { get; set; } = true;
-
-        /// <summary>
-        /// <para>
         /// Enable resetting the Harbor to its original configuration.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "ResetHarbor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -85,12 +70,11 @@ namespace Neon.Kube
         /// <para>
         /// Resets <b>Minio</b> by removing any custom buckets.  Note that existing
         /// buckets holding Harbor, Loki, or Cortex information will remain unchanged when
-        /// this is enabled.  The <see cref="ResetHarbor"/>, <see cref="ResetLoki"/>, and
-        /// <see cref="ResetCortex"/> options control clearing of the related Minio data
-        /// when enabled.
+        /// this is enabled.  The <see cref="ResetHarbor"/>, <see cref="ResetMonitoring"/>, 
+        /// options control clearing of the related Minio data when enabled.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "ResetMinio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -100,10 +84,13 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Resets the CRI-O runtime on each cluster node by removing any non-factory deployed
-        /// container images.
+        /// container images.  This also resets the container registry custom resources to match 
+        /// the original cluster definition.  These configure how the <b>CRI-O</b> container runtime 
+        /// on all cluster nodes reference external container registries such as DockerHub, GitHub, 
+        /// Quay, etc. as well as private registries.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "ResetCrio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -115,7 +102,7 @@ namespace Neon.Kube
         /// Resets <b>Dex</b> by removing any non-factory deployed users and other configuration.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "ResetDex", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -124,41 +111,16 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Resets Grafana by removing any non-factory deployed custom resources controlling dashboards,
-        /// alerts, etc.
+        /// Resets monitoring by clearing any recorded logs and metrics and restoring any Grafana
+        /// dashboards and alerts to the factory defaults.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "ResetGrafana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ResetMonitoring", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
-        public bool ResetGrafana { get; set; } = true;
-
-        /// <summary>
-        /// <para>
-        /// Resets <b>Loki</b> by removing all existing metrics data as well a reconfiguing all server monitors
-        /// to factor defaults.
-        /// </para>
-        /// <para>
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "ResetLoki", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool ResetLoki { get; set; } = true;
-
-        /// <summary>
-        /// <para>
-        /// Resets <b>Cortex</b> by removing all existing log data
-        /// </para>
-        /// <para>
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "ResetCortex", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool ResetCortex { get; set; } = true;
+        public bool ResetMonitoring { get; set; } = true;
 
         /// <summary>
         /// <para>
@@ -166,12 +128,15 @@ namespace Neon.Kube
         /// Normally, all namespaces beside the internal neonKUBE namespaces will be removed with
         /// the <b>default</b> being recreated as empty thereafter.
         /// </para>
+        /// <note>
+        /// Pass a namespace as <b>"*"</b> to retain all non-standard namespaces.
+        /// </note>
         /// <para>
         /// This defaults to an empty list.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "ExcludedNamespaces", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "KeepNamespaces", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<string> ExcludedNamespaces { get; set; } = new List<string>();
+        public List<string> KeepNamespaces { get; set; } = new List<string>();
     }
 }

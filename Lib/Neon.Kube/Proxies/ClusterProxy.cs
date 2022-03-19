@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
+using k8s.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -819,14 +820,72 @@ namespace Neon.Kube
         /// <b>default</b> (which will be recreated to be empty) as well as restoring custom resources
         /// as required.
         /// </summary>
+        /// <param name="options">
+        /// Optionally specifies details about components to be reset.  This defaults to resetting 
+        /// everything that makes sense.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ResetAsync()
+        public async Task ResetAsync(ClusterResetOptions options = null)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(jefflill)");
+            options ??= new ClusterResetOptions();
+
+            //-----------------------------------------------------------------
+            // Handle namespace resetting.
+
+            // Build a set of the namespaces to be retained.  This includes the internal
+            // neonKUBE namespaces as well as any explicitly requested to be excluded
+            // by the user.
+
+            var keepNamespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var @namespace in KubeNamespaces.InternalNamespacesWithoutDefault)
+            {
+                keepNamespaces.Add(@namespace);
+            }
+
+            foreach (var @namespace in options.KeepNamespaces)
+            {
+                if (!keepNamespaces.Contains(@namespace))
+                {
+                    keepNamespaces.Add(@namespace);
+                }
+            }
+
+            // List all of the existing cluster namespaces and then remove all of those
+            // that are not being retained.  Note that we're going to perform these
+            // deletions in parallel to speed things up.
+
+            var clusterNamespaces = await K8sClient.ListNamespaceAsync();
+            var taskList          = new List<Task<V1Status>>();
+
+            foreach (var @namespace in clusterNamespaces.Items
+                .Where(item => !keepNamespaces.Contains(item.Name()))
+                .Select(item => item.Metadata.Name))
+            {
+                taskList.Add(K8sClient.DeleteNamespaceAsync(@namespace));
+            }
+
+            foreach (var task in taskList)
+            {
+                await task;
+            }
+
+            // Recreate the [default] namespace if it wasn't excluded.
+
+            if (!keepNamespaces.Contains(KubeNamespaces.Default))
+            {
+                await K8sClient.CreateNamespaceAsync(
+                    new V1Namespace()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = KubeNamespaces.Default
+                        }
+                    });
+            }
         }
 
         /// <summary>

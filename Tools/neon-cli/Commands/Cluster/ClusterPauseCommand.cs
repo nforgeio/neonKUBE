@@ -66,7 +66,7 @@ USAGE:
 
 OPTIONS:
 
-    --force     - forces cluster pause without user confirmation.
+    --force     - forces cluster pause without user confirmation
 
 REMARKS:
 

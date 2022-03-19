@@ -65,9 +65,60 @@ USAGE:
 
 OPTIONS:
 
-    --force     - forces cluster reset without user confirmation.
+    --force             - forces cluster reset without user confirmation
+
+    --crio              - resets referenced container registeries to the 
+                          cluster definition specifications and removes
+                          any non-standard container images
+
+    --dex               - resets authentication
+
+    --harbor            - resets Harbor components
+
+    --minio             - resets Minio
+
+    --monitoring        - clears monitoring data as well as non-standard
+                          dashboards and alerts
+
+    --keep-namespaces   - comma separated list of non-standard namespaces
+                          to be retained or ""*"" to exclude all non-standard
+                          namespaces
 
 REMARKS:
+
+This command works by removing all non-standard namespaces including [default],
+along with anything contained within them.  The [default] namespace will be
+recreated afterwards, restoring it to its original empty condition.  You can
+specify namespaces to be retained via [--namespace-exclude], passing a comma
+separated list of namespaces.
+
+The command also resets Harbor, Minio, CRIO-O, Dex and the monitoring components
+to their defaults.  All components are reset by default, but you can You can control
+which components are reset by passing one or more of the compnent options.
+
+EXAMPLES:
+
+Full cluster reset with confirmation:
+
+    neon cluster reset
+
+Full cluster reset without confirmation:
+
+    neon cluster reset --force
+
+Full cluster reset excluding the FOO and BAR namespaces:
+
+    neon cluster reset --keep-namespaces=FOO,BAR
+
+Full cluster reset excluding all non-standard namespaces:
+
+    neon cluster reset --keep-namespaces=*
+
+Reset Minio and Harbor as well as removing all non-standard namespaces:
+
+    neon cluster reset --minio --harbor
+
+NOTE:
 
 This command will not work on a locked clusters as a safety measure.  The idea
 it to add some friction to avoid impacting production clusters by accident.
@@ -85,7 +136,7 @@ cluster definition or by executing this command on your cluster:
         public override string[] Words => new string[] { "cluster", "reset" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" };
+        public override string[] ExtendedOptions => new string[] { "--force", "--dex", "--crio", "--harbor", "--minio", "--monitoring", "--keep-namespaces" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -112,6 +163,37 @@ cluster definition or by executing this command on your cluster:
 
             var force = commandLine.HasOption("--force");
 
+            // Determine the individual components to be reset.  We'll default to
+            // resetting all of them when none of these options are specified.
+
+            var crio       = commandLine.HasOption("--crio");
+            var dex        = commandLine.HasOption("--dex");
+            var harbor     = commandLine.HasOption("--harbor");
+            var minio      = commandLine.HasOption("--minio");
+            var monitoring = commandLine.HasOption("--monitoring");
+
+            if (!crio && !dex && !harbor && !minio && monitoring)
+            {
+                crio       = true;
+                dex        = true;
+                harbor     = true;
+                minio      = true;
+                monitoring = true;
+            }
+
+            // Obtain the namespaces to be retained.
+
+            var keep           = commandLine.GetOption("--keep-namespaces");
+            var keepNamespaces = new List<string>();
+
+            if (!string.IsNullOrEmpty(keep))
+            {
+                foreach (var @namespace in keep.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    keepNamespaces.Add(@namespace);
+                }
+            }
+
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
                 var isLocked = await cluster.IsLockedAsync();
@@ -136,7 +218,17 @@ cluster definition or by executing this command on your cluster:
                     }
                 }
 
-                await cluster.ResetAsync();
+                await cluster.ResetAsync(
+                    new ClusterResetOptions()
+                    {
+                        KeepNamespaces  = keepNamespaces,
+                        ResetCrio       = crio,
+                        ResetDex        = dex,
+                        ResetHarbor     = harbor,
+                        ResetMinio      = minio,
+                        ResetMonitoring = monitoring
+                    });
+
                 Console.WriteLine($"Cluster was reset: {cluster.Name}");
             }
         }

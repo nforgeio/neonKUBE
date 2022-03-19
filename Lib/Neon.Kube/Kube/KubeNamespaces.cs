@@ -92,6 +92,16 @@ namespace Neon.Kube
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
+        /// Returns the list of all Kubernetes and neonKUBE namespaces.
+        /// </summary>
+        public static IReadOnlyList<string> InternalNamespaces { get; private set; }
+
+        /// <summary>
+        /// Returns the list of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
+        /// </summary>
+        public static IReadOnlyList<string> InternalNamespacesWithoutDefault { get; private set; }
+
+        /// <summary>
         /// Static constructor.
         /// </summary>
         static KubeNamespaces()
@@ -114,6 +124,9 @@ namespace Neon.Kube
                 NeonStatus
             }
             .AsReadOnly();
+
+            InternalNamespaces               = KubernetesNamespaces.Union(NeonNamespaces).ToList().AsReadOnly();
+            InternalNamespacesWithoutDefault = InternalNamespaces.Where(@namespace => @namespace != KubeNamespaces.Default).ToList().AsReadOnly();
         }
     }
 }

@@ -66,7 +66,7 @@ USAGE:
 
 OPTIONS:
 
-    --force     - forces cluster removal without user confirmation.
+    --force     - forces cluster removal without user confirmation
 
 REMARKS:
 

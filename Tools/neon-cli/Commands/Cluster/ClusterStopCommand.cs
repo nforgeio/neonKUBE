@@ -68,7 +68,7 @@ OPTIONS:
     --turnoff   - Turns the nodes off immediately without allowing
                   a graceful shutdown.  This may cause data loss.
 
-    --force     - forces cluster stop without user confirmation.
+    --force     - forces cluster stop without user confirmation
 
 REMARKS:
 
