@@ -1915,6 +1915,11 @@ set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
 
+# Pull the low-level Kubernetes container images to ensure they'll be present on
+# node images.
+
+kubeadm config images pull
+
 # Configure kublet:
 
 mkdir -p /opt/cni/bin
