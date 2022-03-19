@@ -73,7 +73,6 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
             Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero, nameof(initialRetryInterval));
-            Covenant.Requires<ArgumentNullException>(maxRetryInterval >= initialRetryInterval || initialRetryInterval > TimeSpan.Zero || maxRetryInterval == null, nameof(maxRetryInterval));
 
             this.transientDetector    = transientDetector ?? (e => true);
             this.MaxAttempts          = maxAttempts;
