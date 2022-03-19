@@ -29,6 +29,7 @@ using System.Threading;
 using Microsoft.AspNetCore.JsonPatch;
 
 using Neon.Common;
+using Neon.Retry;
 using Neon.Tasks;
 
 using Newtonsoft.Json;
@@ -626,6 +627,45 @@ namespace Neon.Kube
             }
 
             return response;
+        }
+
+
+        /// <summary>
+        /// Executes a program within a pod container with a <see cref="IRetryPolicy"/>
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="retry">The <see cref="IRetryPolicy"/>.</param>
+        /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
+        /// <param name="name">Specifies the target pod name.</param>
+        /// <param name="container">Identifies the target container within the pod.</param>
+        /// <param name="command">Specifies the program and arguments to be executed.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
+        public static async Task<ExecuteResponse> NamespacedPodExecWithRetryAsync(
+            this IKubernetes    k8s,
+            IRetryPolicy        retry,
+            string              namespaceParameter,
+            string              name,
+            string              container,
+            string[]            command,
+            CancellationToken   cancellationToken = default,
+            bool                noSuccessCheck    = false)
+        {
+            Covenant.Requires<ArgumentNullException>(retry != null, nameof(retry));
+
+            return await retry.InvokeAsync(
+                async () =>
+                {
+                    return await k8s.NamespacedPodExecAsync(
+                        namespaceParameter: namespaceParameter,
+                        name:               name,
+                        container:          container,
+                        command:            command,
+                        cancellationToken:  cancellationToken,
+                        noSuccessCheck:     noSuccessCheck);
+                });
         }
     }
 }

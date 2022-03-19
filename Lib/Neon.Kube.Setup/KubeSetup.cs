@@ -90,14 +90,15 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private constants
 
-        private const string                joinCommandMarker       = "kubeadm join";
-        private const int                   defaultMaxParallelNodes = 10;
-        private const int                   maxJoinAttempts         = 5;
-        private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
-        private static readonly TimeSpan    clusterOpPollInterval   = TimeSpan.FromSeconds(1);
-        private static IStaticDirectory     cachedResources;
-        private static ClusterManifest      cachedClusterManifest;
+        private const string                    joinCommandMarker       = "kubeadm join";
+        private const int                       defaultMaxParallelNodes = 10;
+        private const int                       maxJoinAttempts         = 5;
+        private static readonly TimeSpan        joinRetryDelay          = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan        clusterOpTimeout        = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan        clusterOpPollInterval   = TimeSpan.FromSeconds(1);
+        private static readonly IRetryPolicy    podExecRetry            = new ExponentialRetryPolicy(e => e is ExecuteException, maxAttempts: 5, maxRetryInterval: TimeSpan.FromSeconds(5));
+        private static IStaticDirectory         cachedResources;
+        private static ClusterManifest          cachedClusterManifest;
 
         //---------------------------------------------------------------------
         // Implementation
