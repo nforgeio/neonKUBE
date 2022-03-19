@@ -1189,35 +1189,21 @@ kubectl apply -f priorityclasses.yaml
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespaces.KubeSystem, values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
-                    // We're going to wait a maximum of 300 seconds.
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            controller.ThrowIfCancelled();
-
-                            var pods = await k8s.ListPodForAllNamespacesAsync();
-
-                            foreach (var pod in pods.Items)
-                            {
-                                if (pod.Status.Phase != "Running")
-                                {
-                                    if (pod.Metadata.Name.Contains("coredns") && pod.Status.Phase == "Pending")
-                                    {
-                                        master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
-                                    }
-
-                                    await Task.Delay(5000);
-
-                                    return false;
-                                }
-                            }
-
-                            return true;
-                        },
-                        timeout: clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval,
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDaemonsetAsync(KubeNamespaces.KubeSystem, "calico-node",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
+
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDeploymentAsync(KubeNamespaces.KubeSystem, "coredns",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
+
+                    // Spin up a [dnsutils] pod and then exec into it to confirm that
+                    // CoreDNS is answering DNS lookups.
 
                     controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/dnsutils",
@@ -1225,12 +1211,12 @@ kubectl apply -f priorityclasses.yaml
                         {
                             controller.LogProgress(master, verb: "setup", message: "dnsutils");
 
-                            var pods = await k8s.CreateNamespacedPodAsync(
+                            var pod = await k8s.CreateNamespacedPodAsync(
                                 new V1Pod()
                                 {
                                     Metadata = new V1ObjectMeta()
                                     {
-                                        Name = "dnsutils",
+                                        Name              = "dnsutils",
                                         NamespaceProperty = KubeNamespaces.NeonSystem
                                     },
                                     Spec = new V1PodSpec()
@@ -1254,31 +1240,23 @@ kubectl apply -f priorityclasses.yaml
                                     }
                                 },
                                 KubeNamespaces.NeonSystem);
+
+                            await k8s.WaitForPodAsync(pod.Namespace(), pod.Name(),
+                                timeout:           clusterOpTimeout,
+                                pollInterval:      clusterOpPollInterval,
+                                cancellationToken: controller.CancellationToken);
+
+                            // Verify that [coredns] is actually working, removing the [dnsutils] pod regardless.
+
+                            try
+                            {
+                                master.SudoCommand($"kubectl exec -n {KubeNamespaces.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput).EnsureSuccess();
+                            }
+                            finally
+                            {
+                                await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespaces.NeonSystem);
+                            }
                         });
-
-                    controller.ThrowIfCancelled();
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var result = master.SudoCommand($"kubectl exec -n {KubeNamespaces.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput);
-
-                            if (result.Success)
-                            {
-                                return await Task.FromResult(true);
-                            }
-                            else
-                            {
-                                master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
-                                await Task.Delay(5000);
-                                return await Task.FromResult(false);
-                            }
-                        },
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
-                        cancellationToken: controller.CancellationToken);
-
-                    controller.ThrowIfCancelled();
-                    await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespaces.NeonSystem);
                 });
         }
 
@@ -1438,13 +1416,14 @@ kubectl apply -f priorityclasses.yaml
             await master.InvokeIdempotentAsync("setup/ingress-namespace",
                 async () =>
                 {
-                    await k8s.CreateNamespaceAsync(new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
+                    await k8s.CreateNamespaceAsync(
+                        new V1Namespace()
                         {
-                            Name = KubeNamespaces.NeonIngress
-                        }
-                    });
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = KubeNamespaces.NeonIngress
+                            }
+                        });
                 });
 
             controller.ThrowIfCancelled();
@@ -2231,17 +2210,18 @@ subjects:
             await master.InvokeIdempotentAsync($"setup/namespace-{name}",
                 async () =>
                 {
-                    await k8s.CreateNamespaceAsync(new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
+                    await k8s.CreateNamespaceAsync(
+                        new V1Namespace()
                         {
-                            Name = name,
-                            Labels = new Dictionary<string, string>()
+                            Metadata = new V1ObjectMeta()
                             {
-                                { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
+                                Name = name,
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
+                                }
                             }
-                        }
-                    });
+                        });
                 });
         }
 
