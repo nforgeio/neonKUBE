@@ -643,8 +643,7 @@ namespace Neon.Kube
                     // Extend the primary partition and file system to fill 
                     // the virtual disk.  Note that we're not going to do
                     // this if the specified disk size is less than or equal
-                    // to the node template's disk size (because that
-                    // would fail).
+                    // to the node template's disk size (that would fail).
                     //
                     // Note that there should only be one unpartitioned disk
                     // at this point: the OS disk.
