@@ -2761,13 +2761,6 @@ echo $? > {cmdFolder}/exit
                 nameToDisk.Add(deviceName, new LinuxDiskInfo(deviceName, size, isRemovable, isReadOnly, partitions));
             }
 
-            // We're expecting at least one disk!
-
-            if (nameToDisk.Count == 0)
-            {
-                throw new ExecuteException(0, "Expected at least one disk.", outputText: response.OutputText, errorText: response.ErrorText);
-            }
-
             return nameToDisk;
         }
 
