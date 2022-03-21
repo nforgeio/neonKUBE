@@ -264,7 +264,10 @@ namespace {targetNamespace}
                 writer.WriteLine($"        /// <param name=\"e\">The original exception.</param>");
                 writer.WriteLine($"        private static Microsoft.Rest.HttpOperationException GetEnhancedHttpOperationException(Microsoft.Rest.HttpOperationException e)");
                 writer.WriteLine($"        {{");
-                writer.WriteLine($"            return new Microsoft.Rest.HttpOperationException($\"{{e.Message}}\\r\\n\\r\\nRESPONSE.CONTENT:\\r\\n\\r\\n{{e.Response.Content}}\", e.InnerException);");
+                writer.WriteLine($"            return new Microsoft.Rest.HttpOperationException($\"{{e.Message}}\\r\\n\\r\\nRESPONSE.CONTENT:\\r\\n\\r\\n{{e.Response.Content}}\", e.InnerException)");
+                writer.WriteLine($"            {{");
+                writer.WriteLine($"                Response = e.Response");
+                writer.WriteLine($"            }};");
                 writer.WriteLine($"        }}");
 
                 //-------------------------------------------------------------
