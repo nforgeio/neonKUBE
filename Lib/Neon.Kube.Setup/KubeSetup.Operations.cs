@@ -548,7 +548,7 @@ mode: {kubeProxyMode}");
 
                             // $note(jefflill):
                             //
-                            // We've seen [ fail occasionally with this message in the command response:
+                            // We've seen this fail occasionally with this message in the command response:
                             //
                             //      [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
                             //      [kubelet-check] Initial timeout of 40s passed.
@@ -568,9 +568,18 @@ if ! systemctl enable kubelet.service; then
     exit 1
 fi
 
-for count in {{1..7}}
+# The first call doesn't specify [--ignore-preflight-errors=all]
+
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}; then
+    exit 0
+fi
+
+# The remaining 6 calls specify [--ignore-preflight-errors=all] to avoid detecting
+# bogus conflicts with itself.
+
+for count in {{1..6}}
 do
-    if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}; then
+    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all--etc-kubernetes-manifests --cri-socket={crioSocket}; then
         exit 0
     fi
 done
@@ -780,7 +789,7 @@ exit 1
                             master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
-                                    controller.LogProgress(master, verb: "configure", message: "api server");
+                                    controller.LogProgress(master, verb: "configure", message: "api-server");
 
                                     master.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash

@@ -1915,8 +1915,8 @@ set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
 
-# Pull the low-level Kubernetes container images to ensure they'll be present on
-# node images.
+# Pull the core Kubernetes container images (kube-scheduler, kube-proxy,...) to ensure they'll 
+# be present on all node images.
 
 kubeadm config images pull
 
