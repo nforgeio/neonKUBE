@@ -880,7 +880,7 @@ namespace Neon.SSH
         /// <summary>
         /// Lists information about the disks on the remote machine.
         /// </summary>
-        /// <param name="fixedDiskOnly">
+        /// <param name="fixedDisksOnly">
         /// Optionally specifies that non-fixed disks should be returned as well 
         /// (defaults to <c>true</c>).
         /// </param>
@@ -889,7 +889,7 @@ namespace Neon.SSH
         /// disk name to a <see cref="LinuxDiskInfo"/> including information
         /// on the disk partitions.
         /// </returns>
-        Dictionary<string, LinuxDiskInfo> ListDisks(bool fixedDiskOnly = true);
+        Dictionary<string, LinuxDiskInfo> ListDisks(bool fixedDisksOnly = true);
 
         /// <summary>
         /// Returns the names of any unpartitioned disks (excluding floppy disks).
