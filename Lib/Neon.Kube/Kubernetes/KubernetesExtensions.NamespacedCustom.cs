@@ -334,18 +334,41 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="group">Specifies the custom resource API group.</param>
+        /// <param name="version">Specifies the custom resource version.</param>
+        /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
+        /// <param name="plural">Specifies the custom resource's plural name. For TPRs this would be lowercase plural kind.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="body">Optionally specifies deletion options.</param>
+        /// <param name="gracePeriodSeconds">
+        /// Optionally specifies the duration in seconds before the object should be deleted. Value must be
+        /// non-negative integer. The value zero indicates delete immediately. If this value
+        /// is nil, the default grace period for the specified type will be used. Defaults
+        /// to a per object value if not specified. zero means delete immediately.
+        /// </param>
+        /// <param name="orphanDependents">
+        /// Deprecated: please use the PropagationPolicy, this field will be deprecated in
+        /// 1.7. Should the dependent objects be orphaned. If true/false, the &quot;orphan&quot;
+        /// finalizer will be added to/removed from the object&apos;s finalizers list. Either
+        /// this field or PropagationPolicy may be set, but not both.
+        /// </param>
+        /// <param name="propagationPolicy">
+        /// Optionally specifies ehether and how garbage collection will be performed. Either 
+        /// this field or OrphanDependents may be set, but not both. The default policy is 
+        /// decided by the existing finalizer set in the metadata.finalizers and the resource-specific
+        /// default policy.
+        /// </param>
         /// <param name="dryRun">
-        /// When present, indicates that modifications should not be persisted. An invalid
+        /// Optionally specifies that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
         /// processing of the request. Valid values are: - All: all dry run stages will be
         /// processed
         /// </param>
         /// <param name="fieldManager">
-        /// fieldManager is a name associated with the actor or entity that is making these
-        /// changes. The value must be less than or 128 characters long, and only contain
-        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// Optionally specifies identifies the fieldManager, which is a name associated with
+        /// the actor or entity that is making these changes. The value must be less than or 
+        /// 128 characters long, and only contain printable characters, as defined by
+        /// https://golang.org/pkg/unicode/#IsPrint.
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
@@ -353,9 +376,13 @@ namespace Neon.Kube
             this                IKubernetes k8s,
             string              namespaceParameter,
             string              name,
-            string              dryRun            = null,
-            string              fieldManager      = null,
-            CancellationToken   cancellationToken = default(CancellationToken))
+            V1DeleteOptions     body               = null,
+            int?                gracePeriodSeconds = null,
+            bool?               orphanDependents   = null,
+            string              propagationPolicy  = null,
+            string              dryRun             = null,
+            string              fieldManager       = null,
+            CancellationToken   cancellationToken  = default(CancellationToken))
 
             where T : IKubernetesObject, new()
         {
@@ -367,7 +394,19 @@ namespace Neon.Kube
             try
             {
                 var typeMetadata = new T().GetKubernetesTypeMetadata();
-                await k8s.DeleteNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name);
+
+                await k8s.DeleteNamespacedCustomObjectAsync(
+                    group:              typeMetadata.Group, 
+                    version:            typeMetadata.ApiVersion, 
+                    namespaceParameter: namespaceParameter, 
+                    plural:             typeMetadata.PluralName, 
+                    name:               name,
+                    body:               body,
+                    gracePeriodSeconds: gracePeriodSeconds,
+                    orphanDependents:   orphanDependents,
+                    propagationPolicy:  propagationPolicy,
+                    dryRun:             dryRun,
+                    cancellationToken:  cancellationToken);
             }
             catch (HttpOperationException e)
             {
