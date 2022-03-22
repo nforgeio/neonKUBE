@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNodeFolders.cs
+// FILE:	    KubeNodeFolder.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -46,7 +46,7 @@ namespace Neon.Kube
     /// ver sure you know what you're doing when you make changes.
     /// </note>
     /// </remarks>
-    public static class KubeNodeFolders
+    public static class KubeNodeFolder
     {
         /// <summary>
         /// Path to a user's <b>.neon</b> home directory.

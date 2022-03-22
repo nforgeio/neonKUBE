@@ -340,12 +340,12 @@ namespace Neon.Kube
                 controller.AddNodeStep("upload helm charts",
                     (controller, node) =>
                     {
-                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
                         cluster.FirstMaster.NodeInstallHelmArchive(controller);
 
-                        var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+                        var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 
-                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
                         cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
                     },
                     (controller, node) => node == cluster.FirstMaster);

@@ -601,7 +601,7 @@ namespace Neon.Kube
             {
                 var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                     name:               KubeConfigMapName.ClusterLock,
-                    namespaceParameter: KubeNamespaces.NeonStatus,
+                    namespaceParameter: KubeNamespace.NeonStatus,
                     cancellationToken:  cancellationToken);
 
                 var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -616,7 +616,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Locks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
-        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
@@ -632,7 +632,7 @@ namespace Neon.Kube
 
             var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespaces.NeonStatus,
+                namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
             var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -648,7 +648,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Unlocks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
-        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
@@ -664,7 +664,7 @@ namespace Neon.Kube
 
             var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespaces.NeonStatus,
+                namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
             var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -841,7 +841,7 @@ namespace Neon.Kube
 
             var keepNamespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var @namespace in KubeNamespaces.InternalNamespacesWithoutDefault)
+            foreach (var @namespace in KubeNamespace.InternalNamespacesWithoutDefault)
             {
                 keepNamespaces.Add(@namespace);
             }
