@@ -601,7 +601,7 @@ namespace Neon.Kube
             {
                 var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                     name:               KubeConfigMapName.ClusterLock,
-                    namespaceParameter: KubeNamespaces.NeonStatus,
+                    namespaceParameter: KubeNamespace.NeonStatus,
                     cancellationToken:  cancellationToken);
 
                 var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -616,7 +616,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Locks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
-        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
@@ -632,7 +632,7 @@ namespace Neon.Kube
 
             var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespaces.NeonStatus,
+                namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
             var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -648,7 +648,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Unlocks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
-        /// in the <see cref="KubeNamespaces.NeonStatus"/> namespace.  Potentially distructive
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
         /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
         /// are not allowed on locked clusters.
         /// </summary>
@@ -664,7 +664,7 @@ namespace Neon.Kube
 
             var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespaces.NeonStatus,
+                namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
             var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
@@ -824,8 +824,9 @@ namespace Neon.Kube
         /// Optionally specifies details about components to be reset.  This defaults to resetting 
         /// everything that makes sense.
         /// </param>
+        /// <param name="progress">Optionally specified a callback to be called with human readable progress messages.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ResetAsync(ClusterResetOptions options = null)
+        public async Task ResetAsync(ClusterResetOptions options = null, Action<string> progress = null)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -835,56 +836,66 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Handle namespace resetting.
 
-            // Build a set of the namespaces to be retained.  This includes the internal
-            // neonKUBE namespaces as well as any explicitly requested to be excluded
-            // by the user.
-
-            var keepNamespaces = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var @namespace in KubeNamespaces.InternalNamespacesWithoutDefault)
+            if (!options.KeepNamespaces.Contains("*"))  // An ["*"] namespace indicates that all namespaces should be retained
             {
-                keepNamespaces.Add(@namespace);
-            }
+                progress?.Invoke("Resetting namespaces...");
 
-            foreach (var @namespace in options.KeepNamespaces)
-            {
-                if (!keepNamespaces.Contains(@namespace))
+                // Build a set of the namespaces to be retained.  This includes the internal
+                // neonKUBE namespaces as well as any explicitly requested to be excluded
+                // by the user.
+
+                // List all of the existing cluster namespaces and then delete the contents
+                // of all of those not being retained, including the [default] namespace.  Note
+                // that we're going to perform these deletions in parallel to speed things up.
+
+                // $todo(jefflill):
+                //
+                // We're going to SSH into the first master and execute this [kubectl] to
+                // remove the contents of each namespace:
+                //
+                //      kubectl delete all --all --namespace NAMESPACE
+                //
+                // I'm not entirely happy with this approach.  It would be much nicer to perform
+                // this using the API server only or perhaps using neon-node-agent/NodeTasks,
+                // since we wouldn't need the SSH credentials and we'd also get the benefit of
+                // RBAC security checks.
+
+                var resetNamespaces = (await K8sClient.ListNamespaceAsync()).Items
+                    .Where(item => !KubeNamespace.InternalNamespaces.Contains(item.Name()))
+                    .Where(item => !options.KeepNamespaces.Contains(item.Name()))
+                    .Select(item => item.Metadata.Name)
+                    .ToArray();
+
+                var master = GetReachableMaster(ReachableHostMode.Throw);
+
+                try
                 {
-                    keepNamespaces.Add(@namespace);
-                }
-            }
+                    master.Connect();
 
-            // List all of the existing cluster namespaces and then remove all of those
-            // that are not being retained.  Note that we're going to perform these
-            // deletions in parallel to speed things up.
+                    // Note that we're going to limit the number commands in-flight so that
+                    // we don't consume too much RAM (for thread stacks) here on the client
+                    // as well as not overloading the master.
 
-            var clusterNamespaces = await K8sClient.ListNamespaceAsync();
-            var taskList          = new List<Task<V1Status>>();
+                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 8 };
 
-            foreach (var @namespace in clusterNamespaces.Items
-                .Where(item => !keepNamespaces.Contains(item.Name()))
-                .Select(item => item.Metadata.Name))
-            {
-                taskList.Add(K8sClient.DeleteNamespaceAsync(@namespace));
-            }
-
-            foreach (var task in taskList)
-            {
-                await task;
-            }
-
-            // Recreate the [default] namespace if it wasn't excluded.
-
-            if (!keepNamespaces.Contains(KubeNamespaces.Default))
-            {
-                await K8sClient.CreateNamespaceAsync(
-                    new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
+                    Parallel.ForEach(resetNamespaces, parallelOptions,
+                        @namespace =>
                         {
-                            Name = KubeNamespaces.Default
-                        }
-                    });
+                            master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--namespace", @namespace });
+                        });
+
+                    // Delete all of the cleared namespaces other than [default].
+
+                    Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
+                        @namespace =>
+                        {
+                            master.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
+                        });
+                }
+                finally
+                {
+                    master.Disconnect();
+                }
             }
         }
 

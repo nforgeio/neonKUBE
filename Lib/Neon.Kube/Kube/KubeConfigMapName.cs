@@ -38,7 +38,7 @@ namespace Neon.Kube
     {
         /// <summary>
         /// Identifes the neonKUBE configmap used to report cluster status.  This configmap is
-        /// located in the <see cref="KubeNamespaces.NeonStatus"/> namespace and is initially
+        /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
         /// </summary>
@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// production or otherwise important clusters.
         /// </para>
         /// <para>
-        /// This configmap is located in the <see cref="KubeNamespaces.NeonStatus"/> namespace.
+        /// This configmap is located in the <see cref="KubeNamespace.NeonStatus"/> namespace.
         /// </para>
         /// </summary>
         public const string ClusterLock = "cluster-lock";

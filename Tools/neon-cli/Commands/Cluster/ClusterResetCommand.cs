@@ -210,13 +210,12 @@ cluster definition or by executing this command on your cluster:
                     Program.Exit(1);
                 }
 
-                if (!force)
-                {
-                    if (!Program.PromptYesNo($"Are you sure you want to reset: {cluster.Name}?"))
-                    {
-                        Program.Exit(0);
-                    }
+                if (!force && !Program.PromptYesNo($"Are you sure you want to reset: {cluster.Name}?"))
+                {    
+                    Program.Exit(0);
                 }
+
+                Console.WriteLine("Resetting cluster (this may take a while)...");
 
                 await cluster.ResetAsync(
                     new ClusterResetOptions()
@@ -227,9 +226,10 @@ cluster definition or by executing this command on your cluster:
                         ResetHarbor     = harbor,
                         ResetMinio      = minio,
                         ResetMonitoring = monitoring
-                    });
+                    },
+                    progressMessage => Console.WriteLine(progressMessage));
 
-                Console.WriteLine($"Cluster was reset: {cluster.Name}");
+                Console.WriteLine($"Cluster reset is complete: {cluster.Name}");
             }
         }
     }

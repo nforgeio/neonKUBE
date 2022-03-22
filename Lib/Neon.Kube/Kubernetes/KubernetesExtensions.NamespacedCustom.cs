@@ -334,10 +334,7 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="group">Specifies the custom resource API group.</param>
-        /// <param name="version">Specifies the custom resource version.</param>
         /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
-        /// <param name="plural">Specifies the custom resource's plural name. For TPRs this would be lowercase plural kind.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="body">Optionally specifies deletion options.</param>
         /// <param name="gracePeriodSeconds">

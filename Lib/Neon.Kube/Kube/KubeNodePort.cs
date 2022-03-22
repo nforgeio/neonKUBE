@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNodePorts.cs
+// FILE:	    KubeNodePort.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Kube
     /// <summary>
     /// Defines reserved node and cluster network ports.
     /// </summary>
-    public static class KubeNodePorts
+    public static class KubeNodePort
     {
         /// <summary>
         /// The first port reserved by Kubernetes for exposing node ports.

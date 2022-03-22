@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNamespaces.cs
+// FILE:	    KubeNamespace.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -32,9 +32,9 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the Kubernetes namespace names known to neonKUBE.
+    /// Defines the built-in namespace names created for Kubernetes and neonKUBE.
     /// </summary>
-    public static class KubeNamespaces
+    public static class KubeNamespace
     {
         /// <summary>
         /// The default namespace.
@@ -94,17 +94,17 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the list of all Kubernetes and neonKUBE namespaces.
         /// </summary>
-        public static IReadOnlyList<string> InternalNamespaces { get; private set; }
+        public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 
         /// <summary>
         /// Returns the list of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
         /// </summary>
-        public static IReadOnlyList<string> InternalNamespacesWithoutDefault { get; private set; }
+        public static IReadOnlySet<string> InternalNamespacesWithoutDefault { get; private set; }
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static KubeNamespaces()
+        static KubeNamespace()
         {
             KubernetesNamespaces = new List<string>()
             {
@@ -125,8 +125,23 @@ namespace Neon.Kube
             }
             .AsReadOnly();
 
-            InternalNamespaces               = KubernetesNamespaces.Union(NeonNamespaces).ToList().AsReadOnly();
-            InternalNamespacesWithoutDefault = InternalNamespaces.Where(@namespace => @namespace != KubeNamespaces.Default).ToList().AsReadOnly();
+            var internalNamespaces = new HashSet<string>();
+
+            foreach (var @namespace in KubernetesNamespaces.Union(NeonNamespaces).ToList().AsReadOnly())
+            {
+                internalNamespaces.Add(@namespace);
+            }
+
+            InternalNamespaces = internalNamespaces;
+
+            var internalNamespacesWithoutDefault = new HashSet<string>();
+
+            foreach (var @namespace in InternalNamespaces.Where(@namespace => @namespace != KubeNamespace.Default))
+            {
+                internalNamespaces.Add(@namespace);
+            }
+
+            InternalNamespacesWithoutDefault = internalNamespacesWithoutDefault;
         }
     }
 }

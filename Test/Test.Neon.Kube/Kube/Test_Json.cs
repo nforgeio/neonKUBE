@@ -63,7 +63,7 @@ namespace TestKube
                 Metadata = new V1ObjectMeta()
                 {
                     Name = "cspc-stripe",
-                    NamespaceProperty = KubeNamespaces.NeonStorage
+                    NamespaceProperty = KubeNamespace.NeonStorage
                 },
                 Spec = new V1CStorPoolClusterSpec()
                 {

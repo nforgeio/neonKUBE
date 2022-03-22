@@ -640,7 +640,6 @@ namespace Neon.Kube
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecWithRetryAsync(
@@ -650,8 +649,7 @@ namespace Neon.Kube
             string              name,
             string              container,
             string[]            command,
-            CancellationToken   cancellationToken = default,
-            bool                noSuccessCheck    = false)
+            CancellationToken   cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(retry != null, nameof(retry));
 
@@ -664,7 +662,7 @@ namespace Neon.Kube
                         container:          container,
                         command:            command,
                         cancellationToken:  cancellationToken,
-                        noSuccessCheck:     noSuccessCheck);
+                        noSuccessCheck:     true);
                 });
         }
     }

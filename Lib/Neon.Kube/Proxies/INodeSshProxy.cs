@@ -92,7 +92,7 @@ namespace Neon.Kube
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="KubeNodeFolder.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existence of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -116,7 +116,7 @@ namespace Neon.Kube
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="KubeNodeFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="KubeNodeFolder.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existence of
         /// this file and returns immediately without invoking the action if it is 
         /// present.

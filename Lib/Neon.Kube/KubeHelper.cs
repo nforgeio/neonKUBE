@@ -2897,7 +2897,7 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
+            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
 
             return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
         }
@@ -2937,7 +2937,7 @@ TCPKeepAlive yes
                 {
                     var configMap = await k8s.ReadNamespacedConfigMapAsync(
                         name:               KubeConfigMapName.ClusterStatus,
-                        namespaceParameter: KubeNamespaces.NeonStatus,
+                        namespaceParameter: KubeNamespace.NeonStatus,
                         cancellationToken:  cancellationToken);
 
                     var statusConfig = new TypeSafeConfigMap<KubeClusterHealth>(configMap);

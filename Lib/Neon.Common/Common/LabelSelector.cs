@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
@@ -33,7 +34,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using System.Collections;
 
 namespace Neon.Common
 {
@@ -70,10 +70,16 @@ namespace Neon.Common
     }
 
     /// <summary>
-    /// Implements a Kubernetes compatible general purpose label based selector mechanism that 
+    /// <para>
+    /// Implements a Kubernetes compatible general purpose label-based selector mechanism that 
     /// can select a set of items from a collection based on the set of labels assigned to each 
-    /// item.  This class supports some simple fixed query methods as well as a simple text 
+    /// item.  This class supports some simple fixed query methods as well as a simple text-based
     /// query language.
+    /// </para>
+    /// <para>
+    /// This is suitable for operations like selecting Kubernetes related items by labels 
+    /// or annotations.
+    /// </para>
     /// </summary>
     /// <typeparam name="TItem">The underlying item type.</typeparam>
     /// <remarks>

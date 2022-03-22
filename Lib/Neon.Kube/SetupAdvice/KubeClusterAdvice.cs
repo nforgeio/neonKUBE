@@ -150,7 +150,7 @@ namespace Neon.Kube
         public static string Dex = "dex";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Etc nodes</b> service.
+        /// Identifies the neonKUBE cluster's <b>etcd nodes</b> service.
         /// </summary>
         public static string EtcdCluster = "etcd-cluster";
 
