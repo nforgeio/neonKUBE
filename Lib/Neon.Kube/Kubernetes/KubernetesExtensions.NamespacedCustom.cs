@@ -334,7 +334,7 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
