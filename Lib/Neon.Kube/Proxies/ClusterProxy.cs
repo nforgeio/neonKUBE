@@ -854,37 +854,56 @@ namespace Neon.Kube
                 }
             }
 
-            // List all of the existing cluster namespaces and then remove all of those
-            // that are not being retained.  Note that we're going to perform these
-            // deletions in parallel to speed things up.
+            // List all of the existing cluster namespaces and then delete the contents
+            // of all of those not being retained, including the [default] namespace.  Note
+            // that we're going to perform these deletions in parallel to speed things up.
 
-            var clusterNamespaces = await K8sClient.ListNamespaceAsync();
-            var taskList          = new List<Task<V1Status>>();
+            // $todo(jefflill):
+            //
+            // We're going to SSH into the first master and execute this [kubectl] to
+            // remove the contents of each namespace:
+            //
+            //      kubectl delete all --all --namespace NAMESPACE
+            //
+            // I'm not entirely happy with this approach.  It would be much nicer to perform
+            // this using the API server only or perhaps using neon-node-agent/NodeTasks,
+            // since we wouldn't need the SSH credentials and we'd also get the benefit of
+            // RBAC security checks.
 
-            foreach (var @namespace in clusterNamespaces.Items
+            var resetNamespaces = (await K8sClient.ListNamespaceAsync()).Items
                 .Where(item => !keepNamespaces.Contains(item.Name()))
-                .Select(item => item.Metadata.Name))
-            {
-                taskList.Add(K8sClient.DeleteNamespaceAsync(@namespace));
-            }
+                .Select(item => item.Metadata.Name)
+                .ToArray();
 
-            foreach (var task in taskList)
-            {
-                await task;
-            }
+            var master = GetReachableMaster(ReachableHostMode.Throw);
 
-            // Recreate the [default] namespace if it wasn't excluded.
-
-            if (!keepNamespaces.Contains(KubeNamespaces.Default))
+            try
             {
-                await K8sClient.CreateNamespaceAsync(
-                    new V1Namespace()
+                master.Connect();
+
+                // Note that we're going to limit the number commands in-flight so that
+                // we don't consume too much RAM (for thread stacks) here on the client
+                // as well as not overloading the master.
+
+                var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 8 };
+
+                Parallel.ForEach(resetNamespaces, parallelOptions,
+                    @namespace =>
                     {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name = KubeNamespaces.Default
-                        }
+                        master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--namespace", @namespace });
                     });
+
+                // Delete all of the namespaces besides [default].
+
+                Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
+                    @namespace =>
+                    {
+                        master.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
+                    });
+            }
+            finally
+            {
+                master.Disconnect();
             }
         }
 

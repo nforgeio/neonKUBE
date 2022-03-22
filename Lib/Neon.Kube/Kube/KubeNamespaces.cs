@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the Kubernetes namespace names known to neonKUBE.
+    /// Defines the built-in namespace names created for Kubernetes and neonKUBE.
     /// </summary>
     public static class KubeNamespaces
     {

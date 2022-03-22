@@ -265,6 +265,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NodeTask task)
         {
+            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill)");
         }
     }
