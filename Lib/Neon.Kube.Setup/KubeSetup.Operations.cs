@@ -43,7 +43,7 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Configures a local HAProxy container that makes the Kubernetes Etc
+        /// Configures a local HAProxy container that makes the Kubernetes etcd
         /// cluster highly available.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -3512,9 +3512,9 @@ $@"- name: StorageType
                     var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-                    var serviceUser  = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
+                    var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
 
-                    await CreateMinioBucketAsync(controller, master, "harbor");
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Harbor);
 
                     // Install the Harbor Helm chart.
 
@@ -4447,53 +4447,53 @@ $@"- name: StorageType
             // Perform the Grafana Minio configuration.
 
             controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-loki",
+            await master.InvokeIdempotentAsync("setup/minio-alertmanager",
                 async () =>
                 {
-                    master.Status = "create: grafana [loki] minio bucket";
+                    master.Status = $"create: grafana [{KubeMinioBucket.AlertManager}] minio bucket";
 
-                    await CreateMinioBucketAsync(controller, master, "loki", clusterAdvice.LogsQuota);
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.AlertManager);
                 });
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/minio-cortex",
                 async () =>
                 {
-                    master.Status = "create: grafana [cortex] minio bucket";
+                    master.Status = $"create: grafana [{KubeMinioBucket.Grafana}] minio bucket";
 
-                    await CreateMinioBucketAsync(controller, master, "cortex", clusterAdvice.MetricsQuota);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-alertmanager",
-                async () =>
-                {
-                    master.Status = "create: grafana [alertmanager] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "alertmanager");
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Grafana, clusterAdvice.MetricsQuota);
                 });
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/minio-cortex-ruler",
                 async () =>
                 {
-                    master.Status = "create: grafana [cortex-ruler] minio bucket";
+                    master.Status = $"create: grafana [{KubeMinioBucket.CortexRuler}] minio bucket";
 
-                    await CreateMinioBucketAsync(controller, master, "cortex-ruler");
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.CortexRuler);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/minio-loki",
+                async () =>
+                {
+                    master.Status = $"create: grafana [{KubeMinioBucket.Loki}] minio bucket";
+
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
                 });
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/minio-tempo",
                 async () =>
                 {
-                    master.Status = "create: grafana [tempo] minio bucket";
+                    master.Status = $"create: grafana [{KubeMinioBucket.Tempo}] minio bucket";
 
-                    await CreateMinioBucketAsync(controller, master, "tempo", clusterAdvice.TracesQuota);
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
                 });
         }
 
         /// <summary>
-        /// Creates a minio bucket by using the mc client on one of the minio server pods.
+        /// Creates a Minio bucket by using the mc client on one of the minio server pods.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
