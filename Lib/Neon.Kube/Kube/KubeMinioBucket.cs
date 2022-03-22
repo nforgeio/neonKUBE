@@ -39,7 +39,7 @@ namespace Neon.Kube
         /// <summary>
         /// AlertManager bucket name.
         /// </summary>
-        public const string AlertManager = "harbor";
+        public const string AlertManager = "alertmanager";
 
         /// <summary>
         /// Cortex bucket name.
@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// <summary>
         /// Tempo bucket name.
         /// </summary>
-        public const string Tempo = "temp";
+        public const string Tempo = "tempo";
 
         /// <summary>
         /// Returns the list of all internal neonKUBE Minio bucket names.

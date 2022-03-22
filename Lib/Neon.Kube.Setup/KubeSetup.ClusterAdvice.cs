@@ -68,11 +68,11 @@ namespace Neon.Kube
 
             var clusterAdvice = new KubeClusterAdvice();
 
-            clusterAdvice.MetricsEnabled = true;
+            clusterAdvice.MetricsEnabled  = true;
             clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "1m";
-            clusterAdvice.MetricsQuota = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
-            clusterAdvice.LogsQuota = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
-            clusterAdvice.TracesQuota = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
+            clusterAdvice.MetricsQuota    = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
+            clusterAdvice.LogsQuota       = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
+            clusterAdvice.TracesQuota     = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
 
             if (cluster.Definition.IsDesktopBuiltIn
                 || cluster.Definition.Nodes.Count() == 1)

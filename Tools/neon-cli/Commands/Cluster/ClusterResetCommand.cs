@@ -226,9 +226,10 @@ cluster definition or by executing this command on your cluster:
                         ResetHarbor     = harbor,
                         ResetMinio      = minio,
                         ResetMonitoring = monitoring
-                    });
+                    },
+                    progressMessage => Console.WriteLine(progressMessage));
 
-                Console.WriteLine($"Cluster was reset: {cluster.Name}");
+                Console.WriteLine($"Cluster reset is complete: {cluster.Name}");
             }
         }
     }

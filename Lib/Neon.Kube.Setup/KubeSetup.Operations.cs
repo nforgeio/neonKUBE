@@ -2668,7 +2668,6 @@ $@"- name: StorageType
 
                         values.Add($"cortexConfig.blocks_storage.bucket_store.index_cache.inmemory.max_size_bytes", 
                             Math.Min(1073741824, serviceAdvice.PodMemoryRequest.Value / 4));
-
                     }
 
                     for (int i = 0; i < etcdAdvice.ReplicaCount; i++)
@@ -3117,7 +3116,7 @@ $@"- name: StorageType
                             {
                                 var pod = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana")).Items.First();
 
-                                (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
+                                await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd);
 
                                 return true;
                             }
@@ -3132,8 +3131,8 @@ $@"- name: StorageType
                                 return false;
                             }
                         },
-                    timeout:           TimeSpan.FromMinutes(10),
-                    pollInterval:      TimeSpan.FromSeconds(15),
+                    timeout:           clusterOpTimeout,
+                    pollInterval:      clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
                 });
         }
@@ -4212,7 +4211,8 @@ $@"- name: StorageType
                                 name:               postgres.Name(),
                                 namespaceParameter: postgres.Namespace(),
                                 container:          "postgres",
-                                command:            command);
+                                command:            command,
+                                noSuccessCheck:     true);
 
                             if (result.ExitCode != 0)
                             {
@@ -4233,7 +4233,8 @@ $@"- name: StorageType
                                 name:               postgres.Name(),
                                 namespaceParameter: postgres.Namespace(),
                                 container:          "postgres",
-                                command:            command);
+                                command:            command,
+                                noSuccessCheck:     true);
 
                             if (result.ExitCode != 0)
                             {
@@ -4254,7 +4255,8 @@ $@"- name: StorageType
                                 name:               postgres.Name(),
                                 namespaceParameter: postgres.Namespace(),
                                 container:          "postgres",
-                                command:            command);
+                                command:            command,
+                                noSuccessCheck:     true);
 
                             if (result.ExitCode != 0)
                             {
@@ -4327,7 +4329,7 @@ $@"- name: StorageType
                         };
 
                         controller.ThrowIfCancelled();
-                        var result = await k8s.NamespacedPodExecAsync(
+                        await k8s.NamespacedPodExecAsync(
                             name:               postgres.Name(),
                             namespaceParameter: postgres.Namespace(),
                             container:          "postgres",
@@ -4347,7 +4349,7 @@ $@"- name: StorageType
                                 };
 
                                 controller.ThrowIfCancelled();
-                                result = await k8s.NamespacedPodExecAsync(
+                                await k8s.NamespacedPodExecAsync(
                                     name:               postgres.Name(),
                                     namespaceParameter: postgres.Namespace(),
                                     container:          "postgres",
