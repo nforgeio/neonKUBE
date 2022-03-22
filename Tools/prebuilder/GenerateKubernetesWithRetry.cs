@@ -377,11 +377,6 @@ namespace {targetNamespace}
                                 writer.WriteLine($"                    }}");
                                 writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
                                 writer.WriteLine($"                    {{");
-                                writer.WriteLine($"                        if (e.Response == null || string.IsNullOrEmpty(e.Response.Content))");
-                                writer.WriteLine($"                        {{");
-                                writer.WriteLine($"                            throw;");
-                                writer.WriteLine($"                        }}");
-                                writer.WriteLine();
                                 writer.WriteLine($"                        throw GetEnhancedHttpOperationException(e);");
                                 writer.WriteLine($"                    }}");
                                 writer.WriteLine($"                }});");
@@ -397,11 +392,6 @@ namespace {targetNamespace}
                                 writer.WriteLine($"                    }}");
                                 writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
                                 writer.WriteLine($"                    {{");
-                                writer.WriteLine($"                        if (e.Response == null || string.IsNullOrEmpty(e.Response.Content))");
-                                writer.WriteLine($"                        {{");
-                                writer.WriteLine($"                            throw;");
-                                writer.WriteLine($"                        }}");
-                                writer.WriteLine();
                                 writer.WriteLine($"                        throw GetEnhancedHttpOperationException(e);");
                                 writer.WriteLine($"                    }}");
                                 writer.WriteLine($"                }});");
