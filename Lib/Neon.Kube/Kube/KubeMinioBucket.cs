@@ -34,37 +34,42 @@ namespace Neon.Kube
     /// <summary>
     /// Defines the Minio bucket names used by neonKUBE applications.
     /// </summary>
-    public static class KubeMinioBuckets
+    public static class KubeMinioBucket
     {
         /// <summary>
         /// AlertManager bucket name.
         /// </summary>
-        public const string AlertManager = "neon-harbor";
+        public const string AlertManager = "harbor";
 
         /// <summary>
         /// Cortex bucket name.
         /// </summary>
-        public const string Cortex = "neon-cortex";
+        public const string Cortex = "cortex";
 
         /// <summary>
         /// Cortex-ruler bucket name.
         /// </summary>
-        public const string CortexRuler = "neon-cortex-ruler";
+        public const string CortexRuler = "cortex-ruler";
 
         /// <summary>
         /// Harbor bucket name.
         /// </summary>
-        public const string Harbor = "neon-harbor";
+        public const string Grafana = "grafana";
+
+        /// <summary>
+        /// Harbor bucket name.
+        /// </summary>
+        public const string Harbor = "harbor";
 
         /// <summary>
         /// Loki bucket name.
         /// </summary>
-        public const string Loki = "neon-loki";
+        public const string Loki = "loki";
 
         /// <summary>
         /// Tempo bucket name.
         /// </summary>
-        public const string Tempo = "neon-temp";
+        public const string Tempo = "temp";
 
         /// <summary>
         /// Returns the list of all internal neonKUBE Minio bucket names.
