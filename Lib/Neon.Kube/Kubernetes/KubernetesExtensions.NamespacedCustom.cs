@@ -148,7 +148,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var typeMetadata = new T().GetKubernetesTypeMetadata();
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var result = await k8s.ListNamespacedCustomObjectAsync(
                 group:                typeMetadata.Group,
@@ -225,7 +225,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var typeMetadata = new T().GetKubernetesTypeMetadata();
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
             var result       = await k8s.GetNamespacedCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, name, cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
@@ -390,7 +390,7 @@ namespace Neon.Kube
 
             try
             {
-                var typeMetadata = new T().GetKubernetesTypeMetadata();
+                var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
                 await k8s.DeleteNamespacedCustomObjectAsync(
                     group:              typeMetadata.Group, 

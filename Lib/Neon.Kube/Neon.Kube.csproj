@@ -95,6 +95,7 @@
 		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
 		<ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
 		<ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
 	</ItemGroup>

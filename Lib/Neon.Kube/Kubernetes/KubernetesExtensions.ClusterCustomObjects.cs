@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubernetesExtensions.ClusterCustom.cs
+// FILE:	    KubernetesExtensions.ClusterCustomObject.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -43,7 +43,7 @@ namespace Neon.Kube
     public static partial class KubernetesExtensions
     {
         //---------------------------------------------------------------------
-        // Namedspaced generic custom object extensions:
+        // Generic cluster-scoped generic custom object extensions:
 
         /// <summary>
         /// List or watch a cluster scoped custom object, deserializing it into the specified
@@ -129,7 +129,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        public static async Task<T> ListClusterCustomObjectAsync<T>(
+        public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
@@ -146,25 +146,25 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var typeMetadata = new T().GetKubernetesTypeMetadata();
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var result = await k8s.ListClusterCustomObjectAsync(
-                typeMetadata.Group,
-                typeMetadata.ApiVersion,
-                typeMetadata.PluralName,
-                allowWatchBookmarks,
-                continueParameter,
-                fieldSelector,
-                labelSelector,
-                limit,
-                resourceVersion,
-                resourceVersionMatch,
-                timeoutSeconds,
-                watch,
-                pretty: false,
-                cancellationToken);
+                group:                  typeMetadata.Group,
+                version:                typeMetadata.ApiVersion,
+                plural:                 typeMetadata.PluralName,
+                allowWatchBookmarks:    allowWatchBookmarks,
+                continueParameter:      continueParameter,
+                fieldSelector:          fieldSelector,
+                labelSelector:          labelSelector,
+                limit:                  limit,
+                resourceVersion:        resourceVersion,
+                resourceVersionMatch:   resourceVersionMatch,
+                timeoutSeconds:         timeoutSeconds,
+                watch:                  watch,
+                pretty:                 false,
+                cancellationToken:      cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return NeonHelper.JsonDeserialize<V1CustomObjectList<T>>(((JsonElement)result).GetRawText());
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var typeMetadata = new T().GetKubernetesTypeMetadata();
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
             var result       = await k8s.GetClusterCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());

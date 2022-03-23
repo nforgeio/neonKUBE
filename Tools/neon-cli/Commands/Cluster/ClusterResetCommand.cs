@@ -71,7 +71,7 @@ OPTIONS:
                           cluster definition specifications and removes
                           any non-standard container images
 
-    --dex               - resets authentication
+    --auth              - resets authentication (Dex, Glauth)
 
     --harbor            - resets Harbor components
 
@@ -106,9 +106,9 @@ Full cluster reset without confirmation:
 
     neon cluster reset --force
 
-Full cluster reset excluding the FOO and BAR namespaces:
+Full cluster reset while retaining the ""foo"" and ""bar"" namespaces:
 
-    neon cluster reset --keep-namespaces=FOO,BAR
+    neon cluster reset --keep-namespaces=foo,bar
 
 Full cluster reset excluding all non-standard namespaces:
 
@@ -136,7 +136,7 @@ cluster definition or by executing this command on your cluster:
         public override string[] Words => new string[] { "cluster", "reset" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force", "--dex", "--crio", "--harbor", "--minio", "--monitoring", "--keep-namespaces" };
+        public override string[] ExtendedOptions => new string[] { "--force", "--auth", "--crio", "--harbor", "--minio", "--monitoring", "--keep-namespaces" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -167,15 +167,15 @@ cluster definition or by executing this command on your cluster:
             // resetting all of them when none of these options are specified.
 
             var crio       = commandLine.HasOption("--crio");
-            var dex        = commandLine.HasOption("--dex");
+            var auth       = commandLine.HasOption("--auth");
             var harbor     = commandLine.HasOption("--harbor");
             var minio      = commandLine.HasOption("--minio");
             var monitoring = commandLine.HasOption("--monitoring");
 
-            if (!crio && !dex && !harbor && !minio && monitoring)
+            if (!crio && !auth && !harbor && !minio && monitoring)
             {
                 crio       = true;
-                dex        = true;
+                auth        = true;
                 harbor     = true;
                 minio      = true;
                 monitoring = true;
@@ -222,7 +222,7 @@ cluster definition or by executing this command on your cluster:
                     {
                         KeepNamespaces  = keepNamespaces,
                         ResetCrio       = crio,
-                        ResetDex        = dex,
+                        ResetAuth       = auth,
                         ResetHarbor     = harbor,
                         ResetMinio      = minio,
                         ResetMonitoring = monitoring

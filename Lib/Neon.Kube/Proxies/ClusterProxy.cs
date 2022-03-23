@@ -34,6 +34,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -935,7 +936,7 @@ namespace Neon.Kube
             options ??= new ClusterResetOptions();
 
             //-----------------------------------------------------------------
-            // Handle namespace resetting.
+            // Reset namespaces.
 
             if (!options.KeepNamespaces.Contains("*"))  // An ["*"] namespace indicates that all namespaces should be retained
             {
@@ -997,6 +998,25 @@ namespace Neon.Kube
                 {
                     master.Disconnect();
                 }
+            }
+
+            //-----------------------------------------------------------------
+            // Reset CRI-O
+            //
+            // Currently all we need to do is replace any existing [ContainerRegistry]
+            // custom resources with fresh ones built from the original cluster definition.
+
+            if (options.ResetCrio)
+            {
+                // Remove all existing [ContainerRegistry] CRDs.
+
+                var result = await K8sClient.ListClusterCustomObjectAsync<V1ContainerRegistry>();
+
+                //await Parallel.ForEachAsync((await K8sClient.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
+                //    async (item, cancellationToken) =>
+                //    {
+                //        await Task.CompletedTask;
+                //    });
             }
         }
 

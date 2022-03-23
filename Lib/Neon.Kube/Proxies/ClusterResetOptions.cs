@@ -99,15 +99,15 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Resets <b>Dex</b> by removing any non-factory deployed users and other configuration.
+        /// Resets <b>Dex/Glauth</b> by removing any non-factory deployed users and other configuration.
         /// </para>
         /// <para>
         /// This defaults to <c>true</c>.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "ResetDex", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ResetAuth", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
-        public bool ResetDex { get; set; } = true;
+        public bool ResetAuth { get; set; } = true;
 
         /// <summary>
         /// <para>
