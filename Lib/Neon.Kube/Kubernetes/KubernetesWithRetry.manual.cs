@@ -70,8 +70,8 @@ namespace Neon.Kube
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public async Task<ExecuteResponse> NamespacedPodExecAsync(
@@ -79,15 +79,15 @@ namespace Neon.Kube
             string              name,
             string              container,
             string[]            command,
-            CancellationToken   cancellationToken = default,
-            bool                noSuccessCheck    = false)
+            bool                noSuccessCheck    = false,
+            CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
 
             return await NormalizedRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    return await k8s.NamespacedPodExecAsync(@namespace, name, container, command, cancellationToken, noSuccessCheck);
+                    return await k8s.NamespacedPodExecAsync(@namespace, name, container, command, noSuccessCheck, cancellationToken);
                 });
         }
 

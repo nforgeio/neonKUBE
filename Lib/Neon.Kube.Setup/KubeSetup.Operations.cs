@@ -3290,12 +3290,11 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "wait for", message: "minio");
 
-                            controller.ThrowIfCancelled();
                             var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
                             await k8s.NamespacedPodExecWithRetryAsync(
-                                retry:              podExecRetry,
-                                namespaceParameter: KubeNamespace.NeonSystem,
+                                retryPolicy:              podExecRetry,
+                                namespaceParameter: minioPod.Namespace(),
                                 name:               minioPod.Name(),
                                 container:          "minio-operator",
                                 command:            new string[] {
@@ -3305,16 +3304,9 @@ $@"- name: StorageType
                                 });
 
                             controller.ThrowIfCancelled();
-                            await k8s.NamespacedPodExecWithRetryAsync(
-                                retry:              podExecRetry,
-                                namespaceParameter: KubeNamespace.NeonSystem,
-                                name:               minioPod.Name(),
-                                container:          "minio-operator",
-                                command:            new string[] {
-                                    "/bin/bash",
-                                    "-c",
-                                    $"/mc admin policy add minio superadmin /tmp/superadmin.json"
-                                });
+                            await cluster.ExecMinioCommandAsync(
+                                retryPolicy:    podExecRetry,
+                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json");
                         });
                 });
         }
@@ -3333,7 +3325,7 @@ $@"- name: StorageType
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
-            controller.LogProgress(master, verb: "setup", message: "cluster metrics");
+            controller.LogProgress(master, verb: "setup", message: "cluster monitoring");
 
             tasks.Add(WaitForPrometheusAsync(controller, master));
             tasks.Add(InstallCortexAsync(controller, master));
@@ -3341,6 +3333,8 @@ $@"- name: StorageType
             tasks.Add(InstallKubeStateMetricsAsync(controller, master));
             tasks.Add(InstallTempoAsync(controller, master));
             tasks.Add(InstallGrafanaAsync(controller, master));
+
+            controller.LogProgress(master, verb: "wait", message: "for cluster monitoring");
 
             await NeonHelper.WaitAllAsync(tasks,
                 timeoutMessage:    "install-monitoring",
@@ -4204,28 +4198,13 @@ $@"- name: StorageType
                     // by quering the three tables we'll be modifying later below.  The database
                     // will be ready when these queries succeed.
 
-                    var postgres = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
-
                     controller.ThrowIfCancelled();
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
                             // Verify [groups] table.
 
-                            var command = new string[]
-                            {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""SELECT * FROM groups;"""
-                            };
-
-                            controller.ThrowIfCancelled();
-                            var result = await k8s.NamespacedPodExecAsync(
-                                name:               postgres.Name(),
-                                namespaceParameter: postgres.Namespace(),
-                                container:          "postgres",
-                                command:            command,
-                                noSuccessCheck:     true);
+                            var result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM groups;");
 
                             if (result.ExitCode != 0)
                             {
@@ -4234,20 +4213,9 @@ $@"- name: StorageType
 
                             // Verify [users] table.
 
-                            command = new string[]
-                            {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""SELECT * FROM users;"""
-                            };
-
                             controller.ThrowIfCancelled();
-                            result = await k8s.NamespacedPodExecAsync(
-                                name:               postgres.Name(),
-                                namespaceParameter: postgres.Namespace(),
-                                container:          "postgres",
-                                command:            command,
-                                noSuccessCheck:     true);
+
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM users;");
 
                             if (result.ExitCode != 0)
                             {
@@ -4256,20 +4224,9 @@ $@"- name: StorageType
 
                             // Verify [capabilities] table.
 
-                            command = new string[]
-                            {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""SELECT * FROM capabilities;"""
-                            };
-
                             controller.ThrowIfCancelled();
-                            result = await k8s.NamespacedPodExecAsync(
-                                name:               postgres.Name(),
-                                namespaceParameter: postgres.Namespace(),
-                                container:          "postgres",
-                                command:            command,
-                                noSuccessCheck:     true);
+
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM capabilities;");
 
                             if (result.ExitCode != 0)
                             {
@@ -4289,31 +4246,19 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "create", message: "glauth users");
 
-                    var users    = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
-                    var groups   = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
-                    var postgres = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+                    var users  = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                    var groups = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
 
                     foreach (var key in groups.Data.Keys)
                     {
                         var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
 
-                        var command = new string[]
-                        {
-                            "/bin/bash",
-                            "-c",
-                            $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                INSERT INTO groups(name, gidnumber)
-                                    VALUES('{group.Name}','{group.GidNumber}') 
-                                        ON CONFLICT (name) DO UPDATE
-                                            SET gidnumber = '{group.GidNumber}';"""
-                        };
-
                         controller.ThrowIfCancelled();
-                        var result = await k8s.NamespacedPodExecAsync(
-                            name:               postgres.Name(),
-                            namespaceParameter: postgres.Namespace(),
-                            container:          "postgres",
-                            command:            command);
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO groups(name, gidnumber)
+                                   VALUES('{group.Name}','{group.GidNumber}') 
+                                       ON CONFLICT (name) DO UPDATE
+                                           SET gidnumber = '{group.GidNumber}';");
                     }
 
                     foreach (var user in users.Data.Keys)
@@ -4326,47 +4271,25 @@ $@"- name: StorageType
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
 
-                        var command = new string[]
-                        {
-                            "/bin/bash",
-                            "-c",
-                            $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
                                     VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
                                         ON CONFLICT (name) DO UPDATE
-                                            SET givenname     = '{givenname}',
-                                                mail          = '{mail}',
-                                                uidnumber     = '{uidnumber}',
-                                                primarygroup  = '{primarygroup}',
-                                                passsha256    = '{passsha256}';"""
-                        };
-
-                        controller.ThrowIfCancelled();
-                        await k8s.NamespacedPodExecAsync(
-                            name:               postgres.Name(),
-                            namespaceParameter: postgres.Namespace(),
-                            container:          "postgres",
-                            command:            command);
+                                            SET givenname    = '{givenname}',
+                                                mail         = '{mail}',
+                                                uidnumber    = '{uidnumber}',
+                                                primarygroup = '{primarygroup}',
+                                                passsha256   = '{passsha256}';");
 
                         if (userData.Capabilities != null)
                         {
                             foreach (var capability in userData.Capabilities)
                             {
-                                command = new string[]
-                                {
-                                    "/bin/bash",
-                                    "-c",
-                                    $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                        INSERT INTO capabilities(userid, action, object)
-                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');"""
-                                };
-
                                 controller.ThrowIfCancelled();
-                                await k8s.NamespacedPodExecAsync(
-                                    name:               postgres.Name(),
-                                    namespaceParameter: postgres.Namespace(),
-                                    container:          "postgres",
-                                    command:            command);
+                                await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"INSERT INTO capabilities(userid, action, object)
+                                           VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
                             }
                         }
                     }
@@ -4522,27 +4445,19 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
+            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
             var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
-            var minioPod    = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
-                    controller.ThrowIfCancelled();
-                    await k8s.NamespacedPodExecWithRetryAsync(
-                        retry:              podExecRetry,
-                        namespaceParameter: KubeNamespace.NeonSystem,
-                        name:               minioPod.Name(),
-                        container:          "minio-operator",
-                        command:            new string[] {
-                            "/bin/bash",
-                            "-c",
-                            $"/mc mb minio/{name}"
-                        });
+                    await cluster.ExecMinioCommandAsync(
+                        retryPolicy: podExecRetry,
+                        mcCommand:   $"mb minio/{name}");
                 });
 
             controller.ThrowIfCancelled();
@@ -4551,18 +4466,9 @@ $@"- name: StorageType
                 await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
                     async () =>
                     {
-                        controller.ThrowIfCancelled();
-
-                        await k8s.NamespacedPodExecWithRetryAsync(
-                            retry:              podExecRetry,
-                            namespaceParameter: KubeNamespace.NeonSystem,
-                            name:               minioPod.Name(),
-                            container:          "minio-operator",
-                            command:            new string[] {
-                                "/bin/bash",
-                                "-c",
-                                $"/mc admin bucket quota minio/{name} --hard {quota}"
-                        });
+                        await cluster.ExecMinioCommandAsync(
+                            retryPolicy: podExecRetry,
+                            mcCommand:   $"admin bucket quota minio/{name} --hard {quota}");
                     });
             }
         }

@@ -341,10 +341,10 @@ service ntp restart
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.LogProgress(this, verb: "configure", message: "environment");
+
             var clusterDefinition = Cluster.Definition;
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
-
-            Status = "environment variables";
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
 
@@ -438,8 +438,13 @@ service ntp restart
         /// <summary>
         /// Updates the node hostname and related configuration.
         /// </summary>
-        private void UpdateHostname()
+        /// <param name="controller">The setup controller.</param>
+        private void UpdateHostname(ISetupController controller)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.LogProgress(this, verb: "configure", message: "hostname");
+            
             // Update the hostname.
 
             SudoCommand($"hostnamectl set-hostname {Name}");
@@ -478,6 +483,8 @@ ff02::2         ip6-allrouters
             InvokeIdempotent("setup/package-caching",
                 () =>
                 {
+                    controller.LogProgress(this, verb: "configure", message: "apt package proxy");
+
                     // Configure the [apt-cacher-ng] pckage proxy service on master nodes.
 
                     if (NodeDefinition.Role == NodeRole.Master)
@@ -600,7 +607,7 @@ EOF
                     PrepareNode(controller);
                     ConfigureEnvironmentVariables(controller);
                     SetupPackageProxy(controller);
-                    UpdateHostname();
+                    UpdateHostname(controller);
                     NodeInitialize(controller);
                     NodeInstallCriO(controller, clusterManifest);
                     NodeInstallIPVS(controller);

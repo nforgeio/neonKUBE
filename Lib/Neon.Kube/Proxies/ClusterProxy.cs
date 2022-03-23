@@ -535,21 +535,19 @@ namespace Neon.Kube
         /// Returns the cached <see cref="IKubernetes"/> client for the cluster, constructing one when nothing is cached yet.
         /// </summary>
         /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
-        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
-        /// <remarks>
-        /// <note>
-        /// This method works only when the proxy was constructed with the 
-        /// <see cref="ClusterProxy(KubeConfigContext, IHostingManagerFactory, Operation, string, string, NodeProxyCreator, RunOptions)"/>
-        /// constructor, which includes the specification of the related KubeConfig.
-        /// </note>
-        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when there isn't a current Kubernetes context.</exception>
         private IKubernetes K8sClient
         {
             get
             {
                 if (context == null)
                 {
-                    throw new InvalidOperationException($"Cannot retrieve the Kubernetes client: [{nameof(ClusterProxy)}] was created with the wrong constructor.");
+                    context = KubeHelper.Config.Context;
+
+                    if (context == null)
+                    {
+                        throw new InvalidOperationException($"There is no current Kubernetes context.");
+                    }
                 }
 
                 lock (syncLock)
@@ -561,8 +559,111 @@ namespace Neon.Kube
 
                     var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
 
-                    return cachedK8s = new KubernetesClient(config);
+                    return cachedK8s = new KubernetesWithRetry(new KubernetesClient(config));
                 }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Handy cluster utility methods.
+
+        /// <summary>
+        /// Executes a command on a Minio node using the <b>mc</b> Minio Client.
+        /// </summary>
+        /// <param name="mcCommand">The Minio Client command.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <param name="retryPolicy">Optionally specifies a <see cref="IRetryPolicy"/>.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public async Task<ExecuteResponse> ExecMinioCommandAsync(
+            string              mcCommand, 
+            bool                noSuccessCheck    = false,
+            IRetryPolicy        retryPolicy       = null,
+            CancellationToken   cancellationToken = default)
+        {
+            var minioPod = await K8sClient.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var command  = new string[]
+            {
+                "/bin/bash",
+                "-c",
+                $"/mc {mcCommand}"
+            };
+
+            if (retryPolicy != null)
+            {
+                return await K8sClient.NamespacedPodExecWithRetryAsync(
+                    retryPolicy:        retryPolicy,
+                    namespaceParameter: minioPod.Namespace(),
+                    name:               minioPod.Name(),
+                    container:          "minio-operator",
+                    command:            command);
+            }
+            else
+            {
+                return await K8sClient.NamespacedPodExecAsync(
+                    namespaceParameter: minioPod.Namespace(),
+                    name:               minioPod.Name(),
+                    container:          "minio-operator",
+                    command:            command,
+                    noSuccessCheck:     noSuccessCheck);
+            }
+        }
+
+        /// <summary>
+        /// Executes a PSQL command on one of the system database pods using the <b>pgsql</b>
+        /// and returns the response.  The database command is executed in the context of the
+        /// <see cref="KubeConst.NeonSystemDbAdminUser"/>.
+        /// </summary>
+        /// <param name="database">Identifies the target database.</param>
+        /// <param name="psqlCommand">The PSQL command text.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="retryPolicy">Optionally specifies a <see cref="IRetryPolicy"/>.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public async Task<ExecuteResponse> ExecSystemDbCommandAsync(
+            string              database, 
+            string              psqlCommand, 
+            bool                noSuccessCheck    = false,
+            IRetryPolicy        retryPolicy       = null,
+            CancellationToken   cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(psqlCommand), nameof(psqlCommand));
+
+            psqlCommand = psqlCommand.Trim();
+
+            if (!psqlCommand.EndsWith(";"))
+            {
+                psqlCommand += ';';
+            }
+
+            var sysDbPod = await K8sClient.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+            var command  = new string[]
+            {
+                "/bin/bash",
+                "-c",
+                $@"psql -U {KubeConst.NeonSystemDbAdminUser} {database} -t -c ""{psqlCommand};"""
+            };
+
+            if (retryPolicy != null)
+            {
+                return await K8sClient.NamespacedPodExecWithRetryAsync(
+                    retryPolicy:        retryPolicy,
+                    namespaceParameter: sysDbPod.Namespace(),
+                    name:               sysDbPod.Name(),
+                    container:          "postgres",
+                    command:            command,
+                    cancellationToken:  cancellationToken);
+            }
+            else
+            {
+                return await K8sClient.NamespacedPodExecAsync(
+                    namespaceParameter: sysDbPod.Namespace(),
+                    name:               sysDbPod.Name(),
+                    container:          "postgres",
+                    command:            command,
+                    noSuccessCheck:     noSuccessCheck,
+                    cancellationToken:  cancellationToken);
             }
         }
 

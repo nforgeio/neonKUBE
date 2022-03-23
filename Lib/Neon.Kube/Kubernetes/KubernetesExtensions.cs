@@ -610,8 +610,8 @@ namespace Neon.Kube
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecAsync(
@@ -620,8 +620,8 @@ namespace Neon.Kube
             string              name,
             string              container,
             string[]            command,
-            CancellationToken   cancellationToken = default,
-            bool                noSuccessCheck    = false)
+            bool                noSuccessCheck    = false,
+            CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -663,26 +663,26 @@ namespace Neon.Kube
         /// Executes a command within a pod container with a <see cref="IRetryPolicy"/>
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="retry">The <see cref="IRetryPolicy"/>.</param>
+        /// <param name="retryPolicy">The <see cref="IRetryPolicy"/>.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
-        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecWithRetryAsync(
             this IKubernetes    k8s,
-            IRetryPolicy        retry,
+            IRetryPolicy        retryPolicy,
             string              namespaceParameter,
             string              name,
             string              container,
             string[]            command,
             CancellationToken   cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(retry != null, nameof(retry));
+            Covenant.Requires<ArgumentNullException>(retryPolicy != null, nameof(retryPolicy));
 
-            return await retry.InvokeAsync(
+            return await retryPolicy.InvokeAsync(
                 async () =>
                 {
                     return await k8s.NamespacedPodExecAsync(
