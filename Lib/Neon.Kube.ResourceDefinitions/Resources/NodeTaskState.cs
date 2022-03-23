@@ -29,7 +29,11 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 #endif
 
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
 namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
     /// Enumerates the possible status of a <see cref="V1NodeTask"/>.

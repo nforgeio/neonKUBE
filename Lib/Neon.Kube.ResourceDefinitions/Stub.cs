@@ -21,7 +21,7 @@ using System.Text;
 
 using Neon.Kube;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.ResourceDefinitions
 {
     /// <summary>
     /// Used for obtaining a reference to the <b>Neon.Kube.Resources</b> assembly

@@ -28,7 +28,11 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 #endif
 
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
 namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
     /// Describes an upstream container registry to be configured on each of the cluster nodes.

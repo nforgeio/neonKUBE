@@ -28,7 +28,11 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 #endif
 
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
 namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
     /// Describes a task to be executed as a command on a node by the <b>neon-node-agent</b> pods running on 
