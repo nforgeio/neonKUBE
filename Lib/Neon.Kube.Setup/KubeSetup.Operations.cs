@@ -4204,7 +4204,7 @@ $@"- name: StorageType
                         {
                             // Verify [groups] table.
 
-                            var result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM groups;");
+                            var result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM groups;", noSuccessCheck: true);
 
                             if (result.ExitCode != 0)
                             {
@@ -4215,7 +4215,7 @@ $@"- name: StorageType
 
                             controller.ThrowIfCancelled();
 
-                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM users;");
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM users;", noSuccessCheck: true);
 
                             if (result.ExitCode != 0)
                             {
@@ -4226,7 +4226,7 @@ $@"- name: StorageType
 
                             controller.ThrowIfCancelled();
 
-                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM capabilities;");
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM capabilities;", noSuccessCheck: true);
 
                             if (result.ExitCode != 0)
                             {
