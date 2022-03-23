@@ -573,7 +573,37 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Executes a program within a pod container.
+        /// Returns a running pod within the specified namespace that matches a label selector. 
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
+        /// <param name="labelSelector">
+        /// Specifies the label selector to constrain the set of pods to be targeted.
+        /// This is required.
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
+        public static async Task<V1Pod> GetNamespacedRunningPodAsync(
+            this IKubernetes    k8s,
+            string              namespaceParameter,
+            string              labelSelector)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
+
+            var pods = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: labelSelector)).Items;
+            var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
+
+            if (pod == null)
+            {
+                throw new KubernetesException(pods.Count > 0 ? $"[0 of {pods.Count}] pods are running." : "No deployed pods.");
+            }
+
+            return pod;
+        }
+
+        /// <summary>
+        /// Executes a command within a pod container.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
@@ -629,9 +659,8 @@ namespace Neon.Kube
             return response;
         }
 
-
         /// <summary>
-        /// Executes a program within a pod container with a <see cref="IRetryPolicy"/>
+        /// Executes a command within a pod container with a <see cref="IRetryPolicy"/>
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="retry">The <see cref="IRetryPolicy"/>.</param>

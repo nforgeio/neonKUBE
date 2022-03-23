@@ -3123,8 +3123,9 @@ $@"- name: StorageType
                         {
                             try
                             {
-                                var pod = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana")).Items.First();
+                                var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
+                                controller.ThrowIfCancelled();
                                 await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd);
 
                                 return true;
@@ -3289,7 +3290,8 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(master, verb: "wait for", message: "minio");
 
-                            var minioPod = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
+                            controller.ThrowIfCancelled();
+                            var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
                             await k8s.NamespacedPodExecWithRetryAsync(
                                 retry:              podExecRetry,
@@ -3302,6 +3304,7 @@ $@"- name: StorageType
                                     $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
                                 });
 
+                            controller.ThrowIfCancelled();
                             await k8s.NamespacedPodExecWithRetryAsync(
                                 retry:              podExecRetry,
                                 namespaceParameter: KubeNamespace.NeonSystem,
@@ -4201,8 +4204,9 @@ $@"- name: StorageType
                     // by quering the three tables we'll be modifying later below.  The database
                     // will be ready when these queries succeed.
 
-                    var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+                    var postgres = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
 
+                    controller.ThrowIfCancelled();
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
@@ -4287,7 +4291,7 @@ $@"- name: StorageType
 
                     var users    = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
                     var groups   = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
-                    var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+                    var postgres = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
 
                     foreach (var key in groups.Data.Keys)
                     {
@@ -4522,14 +4526,13 @@ $@"- name: StorageType
             var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
-            var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
+            var minioPod    = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
                     controller.ThrowIfCancelled();
-
                     await k8s.NamespacedPodExecWithRetryAsync(
                         retry:              podExecRetry,
                         namespaceParameter: KubeNamespace.NeonSystem,
