@@ -74,9 +74,6 @@ spec:
           requests:
             cpu: "{{ .Values.resources.ingress.requests.cpu }}"
             memory: "{{ .Values.resources.ingress.requests.memory }}"
-          limits:
-            cpu: "{{ .Values.resources.ingress.limits.cpu }}"
-            memory: "{{ .Values.resources.ingress.limits.memory }}"
     cni:
       enabled: true
       namespace: kube-system
@@ -94,9 +91,6 @@ spec:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
             memory: "{{ .Values.resources.proxy.requests.memory }}"
-          limits:
-            cpu: "{{ .Values.resources.proxy.limits.cpu }}"
-            memory: "{{ .Values.resources.proxy.limits.memory }}"
       defaultNodeSelector: 
         neonkube.io/istio: true
       tracer:
