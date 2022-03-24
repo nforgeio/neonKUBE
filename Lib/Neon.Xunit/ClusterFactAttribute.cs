@@ -46,7 +46,7 @@ namespace Neon.Xunit
         /// </summary>
         public ClusterFactAttribute()
         {
-            if (!TestHelper.IsClusterTestingEnabled))
+            if (!TestHelper.IsClusterTestingEnabled)
             {
                 Skip = $"Disabled because the [{TestHelper.ClusterTestingVariable}] environment variable does not exist.";
             }
