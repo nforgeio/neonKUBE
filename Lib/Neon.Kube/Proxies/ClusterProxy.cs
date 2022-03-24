@@ -1068,6 +1068,26 @@ namespace Neon.Kube
 
                 await AddContainerRegistryResourcesAsync();
             }
+
+            // $todo(jefflill):
+            //
+            // Create NodeTask custom resources to have node agents remove non-standard
+            // container images from the node local CRI-O instance.
+
+            //-----------------------------------------------------------------
+            // Reset Auth (Dex/GlAuth)
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
+
+            //-----------------------------------------------------------------
+            // Reset Harbor
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
+
+            //-----------------------------------------------------------------
+            // Reset Monitoring
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
         }
 
         /// <summary>
