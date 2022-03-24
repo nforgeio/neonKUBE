@@ -23,6 +23,8 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Deployment;
+using Neon.IO;
 using Neon.Retry;
 using Neon.Net;
 using Neon.SSH;
@@ -32,8 +34,8 @@ using Neon.Tasks;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// Fixture for testing against an existing Kubernetes cluster as well as 
-    /// a neonKUBE cluster deployed by the fixture.
+    /// Fixture for testing against neonKUBE clusters.  This can execute against an existing
+    /// cluster or it can manage the lifecycle of a new cluster during test runs.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -58,7 +60,7 @@ namespace Neon.Kube.Xunit
     /// {
     ///     [Collection(TestCollection.NonParallel)]
     ///     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    ///     [Fact]
+    ///     [ClusterFact]
     ///     public void Test()
     ///     {
     ///     }
@@ -66,12 +68,12 @@ namespace Neon.Kube.Xunit
     /// </code>
     /// </note>
     /// <para>
-    /// This fixture can be used to run tests against any existing Kubernetes cluster
-    /// as well as a new neonKUBE cluster deployed by the fixture.  The idea here is
-    /// that you'll have your unit test class inherit from <see cref="IClassFixture{TFixture}"/>,
-    /// passing <see cref="ClusterFixture"/> as the type parameter and then implementing
-    /// a test class constructor that has a <see cref="ClusterFixture"/> parameter that
-    /// will receive an instance of the the fixture.
+    /// This fixture can be used to run tests against any existing neonKUBE cluster
+    /// as well as new clusters deployed by the fixture.  The idea here is that you'll have
+    /// your unit test class inherit from <see cref="IClassFixture{TFixture}"/>, passing
+    /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
+    /// constructor that has a <see cref="ClusterFixture"/> parameter that will receive an 
+    /// instance of the fixture.
     /// </para>
     /// <para>
     /// <b>To connect to an existing cluster</b>, you'll need to call one of the <see cref="ConnectAsync(K8SConfiguration, string, string)"/>,
@@ -96,6 +98,39 @@ namespace Neon.Kube.Xunit
     /// created by <b>DeployAsync()</b> methods will be automatically removed when <see cref="Reset"/> is called 
     /// or when xUnit finishes running the tests in your class.
     /// </note>
+    /// <para><b>CLUSTER TEST METHOD ATTRIBUTES</b></para>
+    /// <para>
+    /// Tests that require a neonKUBE cluster will generally be quite slow and will require additional
+    /// resources on the machine where the test is executing and potentially external resources including
+    /// XenServer hosts, cloud accounts, specific network configuration, etc.  This means that cluster
+    /// based unit tests can generally run only on specifically configured enviroments.
+    /// </para>
+    /// <para>
+    /// We provide the <see cref="ClusterFactAttribute"/> and <see cref="ClusterTheoryAttribute"/> attributes
+    /// to manage this.  These derive from <see cref="FactAttribute"/> and <see cref="TheoryAttribute"/>
+    /// respectively and set the base class <c>Skip</c> property when the <c>NEON_CLUSTER_TESTING</c> environment
+    /// variable <b>does not exist</b>.
+    /// </para>
+    /// <para>
+    /// Test cases that require neonKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
+    /// <see cref="ClusterTheoryAttribute"/> instead of <see cref="FactAttribute"/> or <see cref="TheoryAttribute"/>.
+    /// Then by default, these cases won't be executed unless the user explicitly enable this on the test machine
+    /// by defining <c>NEON_CLUSTER_TESTING</c>.
+    /// </para>
+    /// <para>
+    /// In addition to tagging test cases like this, you'll need to modify your test class constructors to do
+    /// nothing rather than calling the <see cref="ClusterFixture"/> instance passed when cluster testing is
+    /// disabled.  You can use the <see cref="TestHelper.IsClusterTestingEnabled"/> property to know when to
+    /// do this.
+    /// </para>
+    /// <para><b>CLUSTER LOCKS</b></para>
+    /// <para>
+    /// neonKUBE clusters are generally locked by default after being deployed.  This helps prevent the accidential
+    /// disruption or removal of important or production clusters.  The <see cref="ClusterFixture"/> class will
+    /// never perform operations on locked clusters to help avoid breaking things.  You'll need to explicitly
+    /// unlock already deployed clusters or modify the cluster definition by setting <see cref="ClusterDefinition.IsLocked"/>
+    /// to <c>false</c> when deploying your test clusters.
+    /// </para>
     /// <para><b>CLUSTER DEPLOYMENT CONFLICTS</b></para>
     /// <para>
     /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>DeployAsync()</b> 
@@ -117,6 +152,12 @@ namespace Neon.Kube.Xunit
     /// the cluster.  This could be the machine name, user or a combination of the machine and the current
     /// username, like <b>runner0-</b> or <b>jeff-</b>, or <b>runner0-jeff-</b>...
     /// </para>
+    /// <note>
+    /// neonKUBE maintainers can also use <see cref="IProfileClient"/> functionality to reference per-user
+    /// and/or per-machine profile settings including things like cluster name prefixes, reserved node IP
+    /// addresses, etc.  These can be referenced by cluster definitions using special macros like <c>$&lt;$&lt;$&lt;NAME&gt;&gt;&gt;</c>
+    /// as described here: <see cref="PreprocessReader"/>.
+    /// </note>
     /// <para>
     /// The idea here is prevent cluster and/or VM naming conflicts for test clusters deployed in parallel
     /// by different runners or developers on their own machines.

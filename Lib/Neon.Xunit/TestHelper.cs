@@ -44,6 +44,18 @@ namespace Neon.Xunit
     public static class TestHelper
     {
         /// <summary>
+        /// The presence of this environment variable indicates that neonKUBE cluster
+        /// based unit tests should be enabled.
+        /// </summary>
+        public const string ClusterTestingVariable = "NEON_CLUSTER_TESTING";
+
+        /// <summary>
+        /// Indicates whether neonKUBE cluster based testing is enabled by the presence 
+        /// of the <c>NEON_CLUSTER_TESTING</c> environment variable.
+        /// </summary>
+        public static bool IsClusterTestingEnabled = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(TestHelper.ClusterTestingVariable));
+
+        /// <summary>
         /// Creates and populates a temporary test folder with a test file.
         /// </summary>
         /// <param name="data">The file name</param>
