@@ -982,7 +982,7 @@ namespace Neon.Kube
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.Definition.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.Definition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
             {
                 // We need to add any required OpenEBS cStor disks after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks

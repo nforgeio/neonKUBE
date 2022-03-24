@@ -405,11 +405,11 @@ namespace Neon.Kube
         public DeploymentOptions Deployment { get; set; } = new DeploymentOptions();
 
         /// <summary>
-        /// Specifies the cluster OpenEbs related options.
+        /// Specifies the cluster storage related options.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Always)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
-        public OpenEbsOptions OpenEbs { get; set; } = new OpenEbsOptions();
+        [JsonProperty(PropertyName = "Storage", Required = Required.Always)]
+        [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
+        public StorageOptions Storage { get; set; } = new StorageOptions();
 
         /// <summary>
         /// Specifies cluster security options.
@@ -904,7 +904,7 @@ namespace Neon.Kube
             Debug        = Debug ?? new DebugOptions();
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
             Deployment   = Deployment ?? new DeploymentOptions();
-            OpenEbs      = OpenEbs ?? new OpenEbsOptions();
+            Storage      = Storage ?? new StorageOptions();
             Security     = Security ?? new SecurityOptions();
             Kubernetes   = Kubernetes ?? new KubernetesOptions();
             Docker       = Docker ?? new DockerOptions();
@@ -912,7 +912,7 @@ namespace Neon.Kube
             Hosting      = Hosting ?? new HostingOptions();
             NodeOptions  = NodeOptions ?? new NodeOptions();
             Network      = Network ?? new NetworkOptions();
-            Container     = Container ?? new ContainerOptions();
+            Container    = Container ?? new ContainerOptions();
 
             if (IsDesktopCluster && Nodes.Count() > 1)
             {
@@ -926,7 +926,7 @@ namespace Neon.Kube
 
             Debug.Validate(this);
             Deployment.Validate(this);
-            OpenEbs.Validate(this);
+            Storage.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);

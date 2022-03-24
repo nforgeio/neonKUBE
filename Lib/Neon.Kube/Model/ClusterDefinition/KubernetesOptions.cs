@@ -258,31 +258,6 @@ namespace Neon.Kube
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Minio))
-            {
-                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
-                {
-                    foreach (var n in clusterDefinition.Nodes)
-                    {
-                        n.Labels.MinioInternal = true;
-                    }
-                }
-                else
-                {
-                    foreach (var n in clusterDefinition.Workers)
-                    {
-                        n.Labels.MinioInternal = true;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
-                {
-                    n.Labels.MinioInternal = true;
-                }
-            }
-
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
             {
                 if (AllowPodsOnMasters.GetValueOrDefault())
