@@ -537,7 +537,7 @@ namespace Neon.Kube
         /// </summary>
         /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">Thrown when there isn't a current Kubernetes context.</exception>
-        private IKubernetes K8sClient
+        private IKubernetes K8s
         {
             get
             {
@@ -582,7 +582,7 @@ namespace Neon.Kube
             IRetryPolicy        retryPolicy       = null,
             CancellationToken   cancellationToken = default)
         {
-            var minioPod = await K8sClient.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
             {
                 "/bin/bash",
@@ -592,7 +592,7 @@ namespace Neon.Kube
 
             if (retryPolicy != null)
             {
-                return await K8sClient.NamespacedPodExecWithRetryAsync(
+                return await K8s.NamespacedPodExecWithRetryAsync(
                     retryPolicy:        retryPolicy,
                     namespaceParameter: minioPod.Namespace(),
                     name:               minioPod.Name(),
@@ -601,7 +601,7 @@ namespace Neon.Kube
             }
             else
             {
-                return await K8sClient.NamespacedPodExecAsync(
+                return await K8s.NamespacedPodExecAsync(
                     namespaceParameter: minioPod.Namespace(),
                     name:               minioPod.Name(),
                     container:          "minio-operator",
@@ -638,7 +638,7 @@ namespace Neon.Kube
                 psqlCommand += ';';
             }
 
-            var sysDbPod = await K8sClient.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+            var sysDbPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
             var command  = new string[]
             {
                 "/bin/bash",
@@ -648,7 +648,7 @@ namespace Neon.Kube
 
             if (retryPolicy != null)
             {
-                return await K8sClient.NamespacedPodExecWithRetryAsync(
+                return await K8s.NamespacedPodExecWithRetryAsync(
                     retryPolicy:        retryPolicy,
                     namespaceParameter: sysDbPod.Namespace(),
                     name:               sysDbPod.Name(),
@@ -658,13 +658,63 @@ namespace Neon.Kube
             }
             else
             {
-                return await K8sClient.NamespacedPodExecAsync(
+                return await K8s.NamespacedPodExecAsync(
                     namespaceParameter: sysDbPod.Namespace(),
                     name:               sysDbPod.Name(),
                     container:          "postgres",
                     command:            command,
                     noSuccessCheck:     noSuccessCheck,
                     cancellationToken:  cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task AddContainerRegistryResourcesAsync()
+        {
+            await SyncContext.Clear;
+
+            // We need to add the implict local cluster Harbor registry.
+
+            var localRegistries = new List<Registry>();
+            var localRegistry   = new Registry();
+            var harborCrioUser  = await KubeHelper.GetClusterLdapUserAsync(K8s, KubeConst.HarborCrioUser);
+
+            localRegistry.Name     =
+            localRegistry.Prefix   =
+            localRegistry.Location = KubeConst.LocalClusterRegistry;
+            localRegistry.Blocked  = false;
+            localRegistry.Insecure = true;
+            localRegistry.Username = harborCrioUser.Name;
+            localRegistry.Password = harborCrioUser.Password;
+
+            localRegistries.Add(localRegistry);
+
+            // Add registries from the cluster definition.
+
+            foreach (var registry in Definition.Container.Registries)
+            {
+                localRegistries.Add(registry);
+            }
+
+            // Write the custom resources to the cluster.
+
+            foreach (var registry in localRegistries)
+            {
+                var clusterRegistry = new V1ContainerRegistry();
+
+                clusterRegistry.Spec.SearchOrder = Definition.Container.SearchRegistries.IndexOf(registry.Location);
+                clusterRegistry.Spec.Prefix      = registry.Prefix;
+                clusterRegistry.Spec.Location    = registry.Location;
+                clusterRegistry.Spec.Blocked     = registry.Blocked;
+                clusterRegistry.Spec.Insecure    = registry.Insecure;
+                clusterRegistry.Spec.Username    = registry.Username;
+                clusterRegistry.Spec.Password    = registry.Password;
+
+                await K8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
             }
         }
 
@@ -701,7 +751,7 @@ namespace Neon.Kube
 
             try
             {
-                var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+                var configMap = await K8s.ReadNamespacedConfigMapAsync(
                     name:               KubeConfigMapName.ClusterLock,
                     namespaceParameter: KubeNamespace.NeonStatus,
                     cancellationToken:  cancellationToken);
@@ -732,7 +782,7 @@ namespace Neon.Kube
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+            var configMap = await K8s.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
@@ -744,7 +794,7 @@ namespace Neon.Kube
                 lockStatusConfig.Config.IsLocked = true;
                 lockStatusConfig.Update();
 
-                await K8sClient.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
             }
         }
 
@@ -764,7 +814,7 @@ namespace Neon.Kube
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8sClient.ReadNamespacedConfigMapAsync(
+            var configMap = await K8s.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
@@ -776,7 +826,7 @@ namespace Neon.Kube
                 lockStatusConfig.Config.IsLocked = false;
                 lockStatusConfig.Update();
 
-                await K8sClient.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
+                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
             }
         }
 
@@ -962,7 +1012,7 @@ namespace Neon.Kube
                 // since we wouldn't need the SSH credentials and we'd also get the benefit of
                 // RBAC security checks.
 
-                var resetNamespaces = (await K8sClient.ListNamespaceAsync()).Items
+                var resetNamespaces = (await K8s.ListNamespaceAsync()).Items
                     .Where(item => !KubeNamespace.InternalNamespaces.Contains(item.Name()))
                     .Where(item => !options.KeepNamespaces.Contains(item.Name()))
                     .Select(item => item.Metadata.Name)
@@ -1008,15 +1058,15 @@ namespace Neon.Kube
 
             if (options.ResetCrio)
             {
-                // Remove all existing [ContainerRegistry] CRDs.
+                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
+                    async (item, cancellationToken) =>
+                    {
+                        var metadata = item.GetKubernetesTypeMetadata();
 
-                var result = await K8sClient.ListClusterCustomObjectAsync<V1ContainerRegistry>();
+                        await K8s.DeleteClusterCustomObjectWithHttpMessagesAsync(metadata.Group, metadata.ApiVersion, metadata.PluralName, item.Name());
+                    });
 
-                //await Parallel.ForEachAsync((await K8sClient.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
-                //    async (item, cancellationToken) =>
-                //    {
-                //        await Task.CompletedTask;
-                //    });
+                await AddContainerRegistryResourcesAsync();
             }
         }
 

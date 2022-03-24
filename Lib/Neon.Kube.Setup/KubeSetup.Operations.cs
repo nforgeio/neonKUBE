@@ -362,7 +362,7 @@ spec:
             await InstallNodeAgentAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallContainerRegistryResources(controller, master);
+            await InstallContainerRegistryResourcesAsync(controller, master);
 
             // IMPORTANT!
             //
@@ -3771,7 +3771,7 @@ $@"- name: StorageType
         /// because that's where the cluster CRDs get installed.
         /// </note>
         /// </remarks>
-        public static async Task InstallContainerRegistryResources(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallContainerRegistryResourcesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -3784,47 +3784,7 @@ $@"- name: StorageType
                     var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s     = GetK8sClient(controller);
 
-                    // We need to add the implict local cluster Harbor registry.
-
-                    var localRegistries = new List<Registry>();
-                    var localRegistry   = new Registry();
-                    var harborCrioUser  = await KubeHelper.GetClusterLdapUserAsync(k8s, KubeConst.HarborCrioUser);
-
-                    localRegistry.Name     =
-                    localRegistry.Prefix   =
-                    localRegistry.Location = KubeConst.LocalClusterRegistry;
-                    localRegistry.Blocked  = false;
-                    localRegistry.Insecure = true;
-                    localRegistry.Username = harborCrioUser.Name;
-                    localRegistry.Password = harborCrioUser.Password;
-
-                    localRegistries.Add(localRegistry);
-
-                    // Add registries from the cluster definition.
-
-                    foreach (var registry in cluster.Definition.Container.Registries)
-                    {
-                        localRegistries.Add(registry);
-                    }
-
-                    // Write the custom resources to the cluster.
-
-                    foreach (var registry in localRegistries)
-                    {
-                        controller.ThrowIfCancelled();
-
-                        var clusterRegistry = new V1ContainerRegistry();
-
-                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Container.SearchRegistries.IndexOf(registry.Location);
-                        clusterRegistry.Spec.Prefix      = registry.Prefix;
-                        clusterRegistry.Spec.Location    = registry.Location;
-                        clusterRegistry.Spec.Blocked     = registry.Blocked;
-                        clusterRegistry.Spec.Insecure    = registry.Insecure;
-                        clusterRegistry.Spec.Username    = registry.Username;
-                        clusterRegistry.Spec.Password    = registry.Password;
-
-                        await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
-                    }
+                    await cluster.AddContainerRegistryResourcesAsync();
                 });
         }
 
