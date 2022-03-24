@@ -62,6 +62,10 @@ spec:
           value: {{ template "etcd.fullname" . }}
         - name: HELM_INSTALL
           value: {{ default (ternary "true" "false" .Release.IsInstall) | quote }}
+        - name: ETCD_AUTO_COMPACTION_RETENTION
+          value: '1'
+        - name: ETCD_AUTO_COMPACTION_MODE
+          value: 'periodic'
         {{- if .Values.snapshot.restore.enabled }}
         - name: SNAPSHOT_PATH
           value: {{ printf "/snapshots/%s" (.Values.snapshot.restore.fileName) }}
