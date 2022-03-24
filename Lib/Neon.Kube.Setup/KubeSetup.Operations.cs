@@ -284,6 +284,9 @@ spec:
             await TaintNodesAsync(controller);
 
             controller.ThrowIfCancelled();
+            await InstallCrdsAsync(controller);
+
+            controller.ThrowIfCancelled();
             await LabelNodesAsync(controller, master);
 
             controller.ThrowIfCancelled();
@@ -1799,6 +1802,79 @@ subjects:
         }
 
         /// <summary>
+        /// Installs CRDs used later on in setup by various helm charts.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallCrdsAsync(ISetupController controller)
+        {
+            await SyncContext.ClearAsync;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var master = cluster.FirstMaster;
+
+            controller.ThrowIfCancelled();
+            master.InvokeIdempotent("setup/install-crds",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "Install", message: "CRDS");
+
+                    var grafanaDashboardScript =
+                    @"
+cat <<EOF | kubectl apply -f -
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: grafanadashboards.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: GrafanaDashboard
+    listKind: GrafanaDashboardList
+    plural: grafanadashboards
+    singular: grafanadashboard
+  scope: Namespaced
+  subresources:
+    status: {}
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            name:
+              type: string
+            json:
+              type: string
+            jsonnet:
+              description: Jsonnet source. Has access to grafonnet.
+              type: string
+            url:
+              type: string
+              description: URL to dashboard json
+            datasources:
+              type: array
+              items:
+                description: Input datasources to resolve before importing
+                type: object
+            plugins:
+              type: array
+              items:
+                description: Grafana Plugin Object
+                type: object
+            customFolderName:
+              description: Folder name that this dashboard will be assigned to.
+              type: string
+EOF
+";
+
+                    master.SudoCommand(CommandBundle.FromScript(grafanaDashboardScript), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Deploy Kiali.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -1994,7 +2070,7 @@ subjects:
                                 values: values);
                         });
 
-                    switch (cluster.Definition.OpenEbs.Engine)
+                    switch (cluster.Definition.Storage.OpenEbs.Engine)
                     {
                         case OpenEbsEngine.cStor:
 
@@ -2011,7 +2087,7 @@ subjects:
                         case OpenEbsEngine.Default:
                         case OpenEbsEngine.Mayastor:
 
-                            throw new NotImplementedException($"[{cluster.Definition.OpenEbs.Engine}]");
+                            throw new NotImplementedException($"[{cluster.Definition.Storage.OpenEbs.Engine}]");
                     }
                 });
         }
@@ -2436,7 +2512,7 @@ $@"- name: StorageType
 
             controller.ThrowIfCancelled();
 
-            switch (cluster.Definition.OpenEbs.Engine)
+            switch (cluster.Definition.Storage.OpenEbs.Engine)
             {
                 case OpenEbsEngine.Default:
 
@@ -2460,7 +2536,7 @@ $@"- name: StorageType
                 case OpenEbsEngine.Mayastor:
                 default:
 
-                    throw new NotImplementedException($"Support for the [{cluster.Definition.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
+                    throw new NotImplementedException($"Support for the [{cluster.Definition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
             };
         }
 
@@ -2665,9 +2741,10 @@ $@"- name: StorageType
                         values.Add($"cortexConfig.blocks_storage.tsdb.block_ranges_period[0]", "2h0m0s");
                         values.Add($"cortexConfig.blocks_storage.tsdb.retention_period", "6h");
 
-                        values.Add($"cortexConfig.compactor.block_ranges[0]", "2h0m0s");
-                        values.Add($"cortexConfig.compactor.block_ranges[1]", "12h0m0s");
-                        values.Add($"cortexConfig.compactor.block_ranges[2]", "24h0m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[0]", "30m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[1]", "2h0m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[2]", "12h0m0s");
+                        values.Add($"cortexConfig.compactor.block_ranges[3]", "24h0m0s");
 
                         values.Add($"cortexConfig.blocks_storage.bucket_store.index_cache.inmemory.max_size_bytes", 
                             Math.Min(1073741824, serviceAdvice.PodMemoryRequest.Value / 4));
@@ -3185,8 +3262,8 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
-                            values.Add($"tenants[0].pools[0].volumesPerServer", 4);
-                            //values.Add($"tenants[0].pools[0].size", );
+                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerServer);
+                            values.Add($"tenants[0].pools[0].size", cluster.Definition.Storage.Minio.VolumeSize);
 
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 

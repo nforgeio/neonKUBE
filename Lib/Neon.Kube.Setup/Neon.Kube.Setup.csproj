@@ -53,8 +53,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Resources\Helm\grafana\templates\dashboards\node-problem-detector.yaml" />
+		<None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
+		<None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
+		<None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
+		<None Remove="Resources\Helm\cert-manager\crds\issuers.yaml" />
+		<None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
+		<None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
+		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
+		<None Remove="Resources\Helm\minio\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
 		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
@@ -72,6 +80,7 @@
 		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
+		<None Remove="Resources\Helm\redis-ha\templates\grafana-dashboard.yaml" />
 	</ItemGroup>
 
 	<ItemGroup>
