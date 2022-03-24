@@ -32,7 +32,7 @@ settings:
             "args": [
               "--component=cri",
               "--crictl-path=/host/usr/bin/crictl",
-              "--cri-socket-path=/var/run/crio/crio.sock",
+              "--cri-socket-path=unix:///var/run/crio/crio.sock",
               "--enable-repair=true",
               "--cooldown-time=2m",
               "--health-check-timeout=60s"
