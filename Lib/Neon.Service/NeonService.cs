@@ -718,8 +718,8 @@ namespace Neon.Service
             }
 
             this.MetricsPrefix  = normalizedPrefix;
-            this.runtimeCount   = Metrics.CreateCounter($"{MetricsPrefix}runtime_seconds", "Service runtime in seconds.");
-            this.unhealthyCount = Metrics.CreateCounter($"{MetricsPrefix}unhealthy_transitions", "Service [unhealthy] transitions.");
+            this.runtimeCount   = Metrics.CreateCounter($"{MetricsPrefix}_runtime_seconds", "Service runtime in seconds.");
+            this.unhealthyCount = Metrics.CreateCounter($"{MetricsPrefix}_unhealthy_transitions", "Service [unhealthy] transitions.");
 
             // Set a default logger so logging calls in the service constructor won't 
             // fail with a [NullReferenceException].  Note that we don't recommend
