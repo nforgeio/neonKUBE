@@ -81,7 +81,7 @@ namespace TestCommon
                 Assert.Null(evt.Exception);
                 Assert.Equal(1, evt.Index);
                 Assert.Equal(LogLevel.Info, evt.LogLevel);
-                Assert.Null(evt.Module);
+                Assert.Equal(string.Empty, evt.Module);
                 Assert.Equal("information", evt.Message);
 
                 evt = events[1];
@@ -92,7 +92,7 @@ namespace TestCommon
                 Assert.Null(evt.Exception);
                 Assert.Equal(2, evt.Index);
                 Assert.Equal(LogLevel.Error, evt.LogLevel);
-                Assert.Null(evt.Module);
+                Assert.Equal(string.Empty, evt.Module);
                 Assert.Equal("error", evt.Message);
             }
             finally
@@ -151,7 +151,7 @@ namespace TestCommon
                 Assert.Null(evt.Exception);
                 Assert.Equal(1, evt.Index);
                 Assert.Equal(LogLevel.Info, evt.LogLevel);
-                Assert.Null(evt.Module);
+                Assert.Equal(string.Empty, evt.Module);
                 Assert.Equal("information", evt.Message);
 
                 evt = events[1];
@@ -162,7 +162,7 @@ namespace TestCommon
                 Assert.Null(evt.Exception);
                 Assert.Equal(2, evt.Index);
                 Assert.Equal(LogLevel.Error, evt.LogLevel);
-                Assert.Null(evt.Module);
+                Assert.Equal(string.Empty, evt.Module);
                 Assert.Equal("error", evt.Message);
             }
             finally

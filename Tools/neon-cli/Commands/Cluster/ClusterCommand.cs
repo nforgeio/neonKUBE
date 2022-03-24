@@ -44,10 +44,19 @@ Performs basic cluster provisioning and management.
 
 USAGE:
 
-    neon cluster check      - Performs checks on the current cluster
-    neon cluster prepare    - Prepares cluster infrastructure
-    neon cluster setup      - Creates a cluster on prepared infrastructure
-    neon cluster verify     - Verifies a cluster definition
+    neon cluster check
+    neon cluster is-locked
+    neon cluster lock
+    neon cluster prepare    CLUSTER-DEF
+    neon cluster pause      [OPTIONS]
+    neon cluster remove     [OPTIONS]
+    neon cluster rm         [OPTIONS]
+    neon cluster reset      [OPTIONS]
+    neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster start
+    neon cluster stop       [OPTIONS]
+    neon cluster unlock
+    neon cluster verify     [CLUSTER-DEF]
 ";
 
         /// <inheritdoc/>

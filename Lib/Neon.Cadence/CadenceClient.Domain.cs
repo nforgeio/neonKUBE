@@ -44,6 +44,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
+            await SyncContext.Clear;
             EnsureNotDisposed();
 
             var domainRegisterRequest =
@@ -83,7 +84,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0, nameof(retentionDays));
             Covenant.Requires<ArgumentException>(retentionDays <= 30, nameof(retentionDays));
@@ -121,7 +122,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             EnsureNotDisposed();
 
@@ -160,7 +161,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="DomainDescription"/>.</returns>
         public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
             EnsureNotDisposed();
 
@@ -200,7 +201,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
@@ -251,7 +252,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
             EnsureNotDisposed();
 

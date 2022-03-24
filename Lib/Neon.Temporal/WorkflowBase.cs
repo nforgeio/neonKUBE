@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Tasks;
 using Neon.Temporal.Internal;
 using Neon.Time;
 
@@ -137,6 +138,8 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task WaitForPendingWorkflowOperationsAsync()
         {
+            await SyncContext.Clear;
+
             // Right now, the only pending operations can be completed outstanding 
             // synchronous signals that haven't returned their results to the
             // calling client via polled queries.

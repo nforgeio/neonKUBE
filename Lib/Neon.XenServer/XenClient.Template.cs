@@ -129,8 +129,6 @@ namespace Neon.XenServer
                 return template;
             }
 
-
-
             /// <summary>
             /// Renames a virtual machine template.
             /// </summary>

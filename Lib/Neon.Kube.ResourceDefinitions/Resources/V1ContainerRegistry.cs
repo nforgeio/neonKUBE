@@ -22,13 +22,17 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+#if KUBEOPS
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+#endif
 
-using Neon.Kube;
-
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
 namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
     /// Describes an upstream container registry to be configured on each of the cluster nodes.
@@ -39,10 +43,12 @@ namespace Neon.Kube.Resources
     /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+    [KubernetesEntity(Group = Helper.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+#if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
+#endif
     public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistrySpec>
     {
         /// <summary>
@@ -68,8 +74,10 @@ namespace Neon.Kube.Resources
             /// The prefix may include a leading <b>"*"</b> wildcard character for subdomain matching.
             /// </note>
             /// </summary>
+#if KUBEOPS
             [Required]
             [Pattern(@"^(\*.)?" + prefixRegex)]
+#endif
             public string Prefix { get; set; } = null;
 
             /// <summary>
@@ -107,7 +115,9 @@ namespace Neon.Kube.Resources
             /// and Helm charts such that they pull images from an alternate registry without
             /// modification.  This defaults to <c>null</c>.
             /// </summary>
+#if KUBEOPS
             [Pattern(prefixRegex)]
+#endif
             public string Location { get; set; } = null;
 
             /// <summary>

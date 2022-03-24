@@ -39,7 +39,7 @@ namespace TestWSL
         /// Reasonable base WSL2 image for testing.  This will need to be updated if/when the
         /// location for this changes.
         /// </summary>
-        public const string BaseImageUri = $"{KubeDownloads.NeonPublicBucketUri}/vm-images/wsl2/base/ubuntu-20.04.20210206.wsl2.amd64.tar.gz";
+        public const string BaseImageUri = $"{KubeDownloads.NeonPublicBucketUri}/downloads/ubuntu-20.04.tar";
 
         /// <summary>
         /// Used to identify the WSL2 distribution we'll be using for testing.

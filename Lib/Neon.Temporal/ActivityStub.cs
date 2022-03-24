@@ -23,6 +23,7 @@ using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -86,6 +87,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ExecuteAsync(params object[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;
@@ -102,6 +104,7 @@ namespace Neon.Temporal
         /// <returns>The activity result.</returns>
         public async Task<TResult> ExecuteAsync<TResult>(params object[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;

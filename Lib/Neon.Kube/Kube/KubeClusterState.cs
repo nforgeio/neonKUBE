@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNodePorts.cs
+// FILE:	    KubeClusterState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,43 +16,43 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Neon.Net;
+using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines reserved node and cluster network ports.
+    /// Enumerates the health states for a Kubernetes cluster.
     /// </summary>
-    public static class KubeNodePorts
+    public enum KubeClusterState
     {
         /// <summary>
-        /// The first port reserved by Kubernetes for exposing node ports.
+        /// The health status is not known.
         /// </summary>
-        public const int KubeFirstNodePort = 30000;
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
 
         /// <summary>
-        /// The last port reserved by Kubernetes for exposing node ports.
+        /// The cluster is not healthy.
         /// </summary>
-        public const int KubeLastNodePort = 32767;
+        [EnumMember(Value = "unhealthy")]
+        Unhealthy,
 
         /// <summary>
-        /// The node port exposed by the Istio Ingress HTTP service.
+        /// The cluster is healthy but in the process of adding or removing nodes.
         /// </summary>
-        public const int IstioIngressHttp = 30080;
+        [EnumMember(Value = "transitioning")]
+        Transitioning,
 
         /// <summary>
-        /// The node port exposed by the Istio Ingress HTTPS service.
+        /// The cluster is healthy and stable.
         /// </summary>
-        public const int IstioIngressHttps = 30443;
+        [EnumMember(Value = "healthy")]
+        Healthy,
 
         /// <summary>
-        /// The port exposed by the Kubernetes API servers on the master nodes.
+        /// The cluster is paused.
         /// </summary>
-        public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
+        [EnumMember(Value = "paused")]
+        Paused
     }
 }

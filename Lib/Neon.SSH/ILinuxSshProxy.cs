@@ -880,13 +880,16 @@ namespace Neon.SSH
         /// <summary>
         /// Lists information about the disks on the remote machine.
         /// </summary>
-        /// <param name="includeFloppy">Optionally include floppy disks.</param>
+        /// <param name="fixedDisksOnly">
+        /// Optionally specifies that non-fixed disks should be returned as well 
+        /// (defaults to <c>true</c>).
+        /// </param>
         /// <returns>
         /// A <see cref="Dictionary{TKey, TValue}"/> relating the case sensitive 
         /// disk name to a <see cref="LinuxDiskInfo"/> including information
         /// on the disk partitions.
         /// </returns>
-        Dictionary<string, LinuxDiskInfo> ListDisks(bool includeFloppy = false);
+        Dictionary<string, LinuxDiskInfo> ListDisks(bool fixedDisksOnly = true);
 
         /// <summary>
         /// Returns the names of any unpartitioned disks (excluding floppy disks).

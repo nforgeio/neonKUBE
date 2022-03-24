@@ -82,7 +82,7 @@ namespace Neon.Kube
             public string Permissions { get; private set; }
 
             /// <summary>
-            /// Returns the file owner formatted as: USER:GROUP.
+            /// Returns the file owner formatted as: <b>USER:GROUP</b>
             /// </summary>
             public string Owner { get; private set; }
         }
@@ -90,14 +90,15 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Private constants
 
-        private const string                joinCommandMarker       = "kubeadm join";
-        private const int                   defaultMaxParallelNodes = 10;
-        private const int                   maxJoinAttempts         = 5;
-        private static readonly TimeSpan    joinRetryDelay          = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan    clusterOpTimeout        = TimeSpan.FromMinutes(10);
-        private static readonly TimeSpan    clusterOpPollInterval   = TimeSpan.FromSeconds(1);
-        private static IStaticDirectory     cachedResources;
-        private static ClusterManifest      cachedClusterManifest;
+        private const string                    joinCommandMarker       = "kubeadm join";
+        private const int                       defaultMaxParallelNodes = 10;
+        private const int                       maxJoinAttempts         = 5;
+        private static readonly TimeSpan        joinRetryDelay          = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan        clusterOpTimeout        = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan        clusterOpPollInterval   = TimeSpan.FromSeconds(1);
+        private static readonly IRetryPolicy    podExecRetry            = new ExponentialRetryPolicy(e => e is ExecuteException, maxAttempts: 5, maxRetryInterval: TimeSpan.FromSeconds(5));
+        private static IStaticDirectory         cachedResources;
+        private static ClusterManifest          cachedClusterManifest;
 
         //---------------------------------------------------------------------
         // Implementation
@@ -181,6 +182,7 @@ namespace Neon.Kube
         /// <returns>The taint list.</returns>
         public static async Task<List<V1Taint>> GetTaintsAsync(ISetupController controller, string labelKey, string labelValue)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var taints = new List<V1Taint>();
@@ -252,9 +254,23 @@ namespace Neon.Kube
                                     return true;
                                 }
 
-                                if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
+                                var httpOperationException = exception as HttpOperationException;
+
+                                if (httpOperationException != null)
                                 {
-                                    return true;
+                                    var statusCode = httpOperationException.Response.StatusCode;
+
+                                    switch (statusCode)
+                                    {
+                                        case HttpStatusCode.GatewayTimeout:
+                                        case HttpStatusCode.InternalServerError:
+                                        case HttpStatusCode.RequestTimeout:
+                                        case HttpStatusCode.ServiceUnavailable:
+                                        case (HttpStatusCode)423:   // Locked
+                                        case (HttpStatusCode)429:   // Too many requests
+
+                                            return true;
+                                    }
                                 }
 
                                 // This might be another variant of the check just above.  This looks like an SSL negotiation problem.

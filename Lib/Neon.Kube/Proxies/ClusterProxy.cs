@@ -27,15 +27,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -66,8 +70,8 @@ namespace Neon.Kube
         {
             /// <summary>
             /// <para>
-            /// Only cluster lifecycle operations like <see cref="StartAsync(bool)"/>, <see cref="StopAsync(StopMode, bool)"/>,
-            /// <see cref="RemoveAsync(bool, bool)"/>, and <see cref="GetNodeImageAsync(string, string)"/> will be enabled.
+            /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
+            /// amd <see cref="RemoveAsync(bool)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -89,10 +93,13 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
+        private object                  syncLock = new object();
+        private KubeConfigContext       context;
         private RunOptions              defaultRunOptions;
         private NodeProxyCreator        nodeProxyCreator;
         private string                  nodeImageUri;
         private string                  nodeImagePath;
+        private IKubernetes             cachedK8s;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/>.
@@ -130,6 +137,7 @@ namespace Neon.Kube
                   nodeProxyCreator:         nodeProxyCreator, 
                   defaultRunOptions:        defaultRunOptions)
         {
+            this.context = context;
         }
 
         /// <summary>
@@ -256,6 +264,9 @@ namespace Neon.Kube
 
             HostingManager?.Dispose();
             HostingManager = null;
+
+            cachedK8s?.Dispose();
+            cachedK8s = null;
 
             if (disposing)
             {
@@ -521,8 +532,403 @@ namespace Neon.Kube
             return master.GetTimeUtc();
         }
 
+        /// <summary>
+        /// Returns the <see cref="IKubernetes"/> client for the cluster.
+        /// </summary>
+        /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when there isn't a current Kubernetes context.</exception>
+        public IKubernetes K8s
+        {
+            get
+            {
+                if (context == null)
+                {
+                    context = KubeHelper.Config.Context;
+
+                    if (context == null)
+                    {
+                        throw new InvalidOperationException($"There is no current Kubernetes context.");
+                    }
+                }
+
+                lock (syncLock)
+                {
+                    if (cachedK8s != null)
+                    {
+                        return cachedK8s;
+                    }
+
+                    var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+
+                    return cachedK8s = new KubernetesWithRetry(new KubernetesClient(config));
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Handy cluster utility methods.
+
+        /// <summary>
+        /// Executes a command on a Minio node using the <b>mc</b> Minio Client.
+        /// </summary>
+        /// <param name="mcCommand">The Minio Client command.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <param name="retryPolicy">Optionally specifies a <see cref="IRetryPolicy"/>.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public async Task<ExecuteResponse> ExecMinioCommandAsync(
+            string              mcCommand, 
+            bool                noSuccessCheck    = false,
+            IRetryPolicy        retryPolicy       = null,
+            CancellationToken   cancellationToken = default)
+        {
+            var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var command  = new string[]
+            {
+                "/bin/bash",
+                "-c",
+                $"/mc {mcCommand}"
+            };
+
+            if (retryPolicy != null)
+            {
+                return await K8s.NamespacedPodExecWithRetryAsync(
+                    retryPolicy:        retryPolicy,
+                    namespaceParameter: minioPod.Namespace(),
+                    name:               minioPod.Name(),
+                    container:          "minio-operator",
+                    command:            command);
+            }
+            else
+            {
+                return await K8s.NamespacedPodExecAsync(
+                    namespaceParameter: minioPod.Namespace(),
+                    name:               minioPod.Name(),
+                    container:          "minio-operator",
+                    command:            command,
+                    noSuccessCheck:     noSuccessCheck);
+            }
+        }
+
+        /// <summary>
+        /// Executes a PSQL command on one of the system database pods using the <b>pgsql</b>
+        /// and returns the response.  The database command is executed in the context of the
+        /// <see cref="KubeConst.NeonSystemDbAdminUser"/>.
+        /// </summary>
+        /// <param name="database">Identifies the target database.</param>
+        /// <param name="psqlCommand">The PSQL command text.</param>
+        /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="retryPolicy">Optionally specifies a <see cref="IRetryPolicy"/>.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public async Task<ExecuteResponse> ExecSystemDbCommandAsync(
+            string              database, 
+            string              psqlCommand, 
+            bool                noSuccessCheck    = false,
+            IRetryPolicy        retryPolicy       = null,
+            CancellationToken   cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(psqlCommand), nameof(psqlCommand));
+
+            psqlCommand = psqlCommand.Trim();
+
+            if (!psqlCommand.EndsWith(";"))
+            {
+                psqlCommand += ';';
+            }
+
+            var sysDbPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+            var command  = new string[]
+            {
+                "/bin/bash",
+                "-c",
+                $@"psql -U {KubeConst.NeonSystemDbAdminUser} {database} -t -c ""{psqlCommand};"""
+            };
+
+            if (retryPolicy != null)
+            {
+                return await K8s.NamespacedPodExecWithRetryAsync(
+                    retryPolicy:        retryPolicy,
+                    namespaceParameter: sysDbPod.Namespace(),
+                    name:               sysDbPod.Name(),
+                    container:          "postgres",
+                    command:            command,
+                    cancellationToken:  cancellationToken);
+            }
+            else
+            {
+                return await K8s.NamespacedPodExecAsync(
+                    namespaceParameter: sysDbPod.Namespace(),
+                    name:               sysDbPod.Name(),
+                    container:          "postgres",
+                    command:            command,
+                    noSuccessCheck:     noSuccessCheck,
+                    cancellationToken:  cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task AddContainerRegistryResourcesAsync()
+        {
+            await SyncContext.Clear;
+
+            // We need to add the implict local cluster Harbor registry.
+
+            var localRegistries = new List<Registry>();
+            var localRegistry   = new Registry();
+            var harborCrioUser  = await KubeHelper.GetClusterLdapUserAsync(K8s, KubeConst.HarborCrioUser);
+
+            localRegistry.Name     =
+            localRegistry.Prefix   =
+            localRegistry.Location = KubeConst.LocalClusterRegistry;
+            localRegistry.Blocked  = false;
+            localRegistry.Insecure = true;
+            localRegistry.Username = harborCrioUser.Name;
+            localRegistry.Password = harborCrioUser.Password;
+
+            localRegistries.Add(localRegistry);
+
+            // Add registries from the cluster definition.
+
+            foreach (var registry in Definition.Container.Registries)
+            {
+                localRegistries.Add(registry);
+            }
+
+            // Write the custom resources to the cluster.
+
+            foreach (var registry in localRegistries)
+            {
+                var clusterRegistry = new V1ContainerRegistry();
+
+                clusterRegistry.Spec.SearchOrder = Definition.Container.SearchRegistries.IndexOf(registry.Location);
+                clusterRegistry.Spec.Prefix      = registry.Prefix;
+                clusterRegistry.Spec.Location    = registry.Location;
+                clusterRegistry.Spec.Blocked     = registry.Blocked;
+                clusterRegistry.Spec.Insecure    = registry.Insecure;
+                clusterRegistry.Spec.Username    = registry.Username;
+                clusterRegistry.Spec.Password    = registry.Password;
+
+                await K8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods.
+
+        /// <summary>
+        /// Returns flags describing any optional capabilities supported by the cluster's hosting manager.
+        /// </summary>
+        public HostingCapabilities Capabilities
+        {
+            get
+            {
+                Covenant.Assert(HostingManager != null);
+
+                return HostingManager.Capabilities;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the cluster is considered to be locked for potentially distructive operations
+        /// such as <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>.  This is used
+        /// to help prevent impacting production clusters by accident.
+        /// </summary>
+        /// /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns>
+        /// <c>true</c> when the cluster is locked, <c>false</c> when it's unlocked or <c>null</c> when
+        /// the lock status cannot be determined.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task<bool?> IsLockedAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            try
+            {
+                var configMap = await K8s.ReadNamespacedConfigMapAsync(
+                    name:               KubeConfigMapName.ClusterLock,
+                    namespaceParameter: KubeNamespace.NeonStatus,
+                    cancellationToken:  cancellationToken);
+
+                var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+                return lockStatusConfig.Config.IsLocked;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Locks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
+        /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
+        /// are not allowed on locked clusters.
+        /// </summary>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task LockAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            // We need to check and the potentially modify the existing lock configmap
+            // so that Kubernetes can check for write conflicts.
+
+            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterLock,
+                namespaceParameter: KubeNamespace.NeonStatus,
+                cancellationToken:  cancellationToken);
+
+            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+            if (!lockStatusConfig.Config.IsLocked)
+            {
+                lockStatusConfig.Config.IsLocked = true;
+                lockStatusConfig.Update();
+
+                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+            }
+        }
+
+        /// <summary>
+        /// Unlocks the cluster by modifying the <see cref="KubeConfigMapName.ClusterLock"/> configmap
+        /// in the <see cref="KubeNamespace.NeonStatus"/> namespace.  Potentially distructive
+        /// operations like <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>
+        /// are not allowed on locked clusters.
+        /// </summary>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
+        public async Task UnlockAsync(CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+
+            // We need to check and the potentially modify the existing lock configmap
+            // so that Kubernetes can check for write conflicts.
+
+            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterLock,
+                namespaceParameter: KubeNamespace.NeonStatus,
+                cancellationToken:  cancellationToken);
+
+            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+
+            if (lockStatusConfig.Config.IsLocked)
+            {
+                lockStatusConfig.Config.IsLocked = false;
+                lockStatusConfig.Update();
+
+                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
+            }
+        }
+
+        /// <summary>
+        /// Returns the availability of resources required to deploy a cluster.
+        /// </summary>
+        /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
+        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <returns>Details about whether cluster deployment can proceed.</returns>
+        /// <remarks>
+        /// <para>
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
+        /// manager implementations are free to ignore this when they don't really makse sense.
+        /// </para>
+        /// <para>
+        /// This is currently used for Hyper-V based clusters running on a user workstation or laptop to ensure
+        /// that deployed clusters don't adverserly impact the host machine too badly.
+        /// </para>
+        /// <para>
+        /// These parameters don't really make sense for cloud or dedicated hypervisor hosting environments because
+        /// those environemnts will still work well when all available resources are consumed.
+        /// </para>
+        /// </remarks>
+        public async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            await SyncContext.Clear;
+            Covenant.Assert(HostingManager != null);
+
+            return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
+        }
+
+        /// <summary>
+        /// Determines the status of a cluster.
+        /// </summary>
+        /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Assert(HostingManager != null);
+
+            var clusterStatus = await HostingManager.GetClusterStatusAsync(timeout);
+
+            // When it looks like the cluster is configured from the hosting manager's
+            // perspective, we're going to check from the Kubernetes perspective to
+            // determine whether the cluster itself appears to be healthy or not.
+
+            if (clusterStatus.State == ClusterState.Configured && context != null)
+            {
+                var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
+
+                clusterStatus.Summary            = kubeClusterStatus.Summary;
+                clusterStatus.OptionalComponents = kubeClusterStatus.OptionalComponents;
+
+                switch (kubeClusterStatus.State)
+                {
+                    case KubeClusterState.Unknown:
+
+                        clusterStatus.State   = ClusterState.Unhealthy;
+                        clusterStatus.Summary = kubeClusterStatus.Summary;
+                        break;
+
+                    case KubeClusterState.Unhealthy:
+
+                        clusterStatus.State    = ClusterState.Unhealthy;
+                        clusterStatus.Summary  = kubeClusterStatus.Summary;
+                        clusterStatus.IsLocked = await IsLockedAsync();
+                        break;
+
+                    case KubeClusterState.Transitioning:
+                    case KubeClusterState.Healthy:
+
+                        clusterStatus.State    = ClusterState.Healthy;
+                        clusterStatus.Summary  = "Cluster is healthy";
+                        clusterStatus.IsLocked = await IsLockedAsync();
+                        break;
+
+                    case KubeClusterState.Paused:
+
+                        clusterStatus.State   = ClusterState.Paused;
+                        clusterStatus.Summary = "Cluster is paused";
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+            }
+
+            // $todo(jefflill):
+            //
+            // We're going to indicate that all optional components have been deployed
+            // to the cluster right now because we haven't implemented this feature yet.
+            // We'll need to persist that information somewhere (probably in another
+            // [neon-status] configmap so neon-cluster-operator can include it when it
+            // updates the cluster health status.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1492
+
+            return clusterStatus;
+        }
 
         /// <summary>
         /// <para>
@@ -532,14 +938,14 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StartAsync(bool noWait = false)
+        public async Task StartAsync()
         {
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StartClusterAsync(noWait);
+            await HostingManager.StartClusterAsync();
         }
 
         /// <summary>
@@ -551,14 +957,137 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task StopAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public async Task StopAsync(StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            await HostingManager.StopClusterAsync(stopMode, noWait);
+            await HostingManager.StopClusterAsync(stopMode);
+        }
+
+        /// <summary>
+        /// Resets the cluster to factory defaults by removing all non <b>neon-*</b> namespaces including
+        /// <b>default</b> (which will be recreated to be empty) as well as restoring custom resources
+        /// as required.
+        /// </summary>
+        /// <param name="options">
+        /// Optionally specifies details about components to be reset.  This defaults to resetting 
+        /// everything that makes sense.
+        /// </param>
+        /// <param name="progress">Optionally specified a callback to be called with human readable progress messages.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ResetAsync(ClusterResetOptions options = null, Action<string> progress = null)
+        {
+            await SyncContext.Clear;
+            Covenant.Assert(HostingManager != null);
+
+            options ??= new ClusterResetOptions();
+
+            //-----------------------------------------------------------------
+            // Reset namespaces.
+
+            if (!options.KeepNamespaces.Contains("*"))  // An ["*"] namespace indicates that all namespaces should be retained
+            {
+                progress?.Invoke("Resetting namespaces...");
+
+                // Build a set of the namespaces to be retained.  This includes the internal
+                // neonKUBE namespaces as well as any explicitly requested to be excluded
+                // by the user.
+
+                // List all of the existing cluster namespaces and then delete the contents
+                // of all of those not being retained, including the [default] namespace.  Note
+                // that we're going to perform these deletions in parallel to speed things up.
+
+                // $todo(jefflill):
+                //
+                // We're going to SSH into the first master and execute this [kubectl] to
+                // remove the contents of each namespace:
+                //
+                //      kubectl delete all --all --namespace NAMESPACE
+                //
+                // I'm not entirely happy with this approach.  It would be much nicer to perform
+                // this using the API server only or perhaps using neon-node-agent/NodeTasks,
+                // since we wouldn't need the SSH credentials and we'd also get the benefit of
+                // RBAC security checks.
+
+                var resetNamespaces = (await K8s.ListNamespaceAsync()).Items
+                    .Where(item => !KubeNamespace.InternalNamespaces.Contains(item.Name()))
+                    .Where(item => !options.KeepNamespaces.Contains(item.Name()))
+                    .Select(item => item.Metadata.Name)
+                    .ToArray();
+
+                var master = GetReachableMaster(ReachableHostMode.Throw);
+
+                try
+                {
+                    master.Connect();
+
+                    // Note that we're going to limit the number commands in-flight so that
+                    // we don't consume too much RAM (for thread stacks) here on the client
+                    // as well as not overloading the master.
+
+                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 8 };
+
+                    Parallel.ForEach(resetNamespaces, parallelOptions,
+                        @namespace =>
+                        {
+                            master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--namespace", @namespace });
+                        });
+
+                    // Delete all of the cleared namespaces other than [default].
+
+                    Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
+                        @namespace =>
+                        {
+                            master.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
+                        });
+                }
+                finally
+                {
+                    master.Disconnect();
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Reset CRI-O
+            //
+            // Currently all we need to do is replace any existing [ContainerRegistry]
+            // custom resources with fresh ones built from the original cluster definition.
+
+            if (options.ResetCrio)
+            {
+                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
+                    async (item, cancellationToken) =>
+                    {
+                        var metadata = item.GetKubernetesTypeMetadata();
+
+                        await K8s.DeleteClusterCustomObjectWithHttpMessagesAsync(metadata.Group, metadata.ApiVersion, metadata.PluralName, item.Name());
+                    });
+
+                await AddContainerRegistryResourcesAsync();
+            }
+
+            // $todo(jefflill):
+            //
+            // Create NodeTask custom resources to have node agents remove non-standard
+            // container images from the node local CRI-O instance.
+
+            //-----------------------------------------------------------------
+            // Reset Auth (Dex/Glauth)
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
+
+            //-----------------------------------------------------------------
+            // Reset Harbor
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
+
+            //-----------------------------------------------------------------
+            // Reset Monitoring
+
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
         }
 
         /// <summary>
@@ -573,7 +1102,6 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -587,21 +1115,21 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public async Task RemoveAsync(bool removeOrphansByPrefix = false)
         {
+            await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
-
-            await HostingManager.RemoveClusterAsync(noWait, removeOrphansByPrefix);
 
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
             var context     = KubeHelper.Config.GetContext(contextName);
+            var login       = KubeHelper.GetClusterLogin(contextName);
+
+            await HostingManager.RemoveClusterAsync(removeOrphansByPrefix);
 
             if (context != null)
             {
                 KubeHelper.Config.RemoveContext(context);
             }
-
-            var login = KubeHelper.GetClusterLogin(contextName);
 
             if (login != null)
             {
@@ -621,6 +1149,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartNodeAsync(string nodeName)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
@@ -640,35 +1169,11 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopNodeAsync(nodeName, stopMode);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
-        /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
-        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
-        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the node being captured.</param>
-        /// <param name="folder">Path to the output folder.</param>
-        /// <returns>The fully qualified path to the downloaded image file.</returns>
-        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
-        public async Task<string> GetNodeImageAsync(string nodeName, string folder)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Assert(HostingManager != null);
-
-            return await HostingManager.GetNodeImageAsync(nodeName, folder); 
         }
     }
 }

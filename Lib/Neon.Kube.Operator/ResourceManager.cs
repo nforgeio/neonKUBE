@@ -21,7 +21,6 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Neon.Tasks;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -32,6 +31,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;
@@ -302,6 +302,8 @@ namespace Neon.Kube.Operator
         /// </remarks>
         public async Task<ResourceControllerResult> ReconciledAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            await SyncContext.Clear;
+
             if (resource != null && !filter(resource))
             {
                 return null;
@@ -390,6 +392,8 @@ namespace Neon.Kube.Operator
         /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
         public async Task<ResourceControllerResult> DeletedAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            await SyncContext.Clear;
+
             if (resource != null && !filter(resource))
             {
                 return null;
@@ -446,6 +450,8 @@ namespace Neon.Kube.Operator
         /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
         public async Task<ResourceControllerResult> StatusModifiedAsync(TCustomResource resource, EventHandlerAsync handler, Counter errorCounter = null)
         {
+            await SyncContext.Clear;
+
             if (resource != null && !filter(resource))
             {
                 return null;
@@ -497,6 +503,7 @@ namespace Neon.Kube.Operator
         /// <returns><c>true</c> when the name exists.</returns>
         public async Task<bool> ContainsAsync(string name)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             using (await mutex.AcquireAsync())
@@ -512,6 +519,7 @@ namespace Neon.Kube.Operator
         /// <returns>Returns the resource if it exists or <c>null</c>.</returns>
         public async Task<TCustomResource> GetResourceAsync(string name)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             using (await mutex.AcquireAsync())
@@ -539,6 +547,8 @@ namespace Neon.Kube.Operator
         /// <returns>A deep clone of the current set of resources being managed or the dictionary passed..</returns>
         public async Task<IReadOnlyDictionary<string, TCustomResource>> CloneResourcesAsync(IReadOnlyDictionary<string, TCustomResource> resources = null)
         {
+            await SyncContext.Clear;
+
             if (resources == null)
             {
                 using (await mutex.AcquireAsync())

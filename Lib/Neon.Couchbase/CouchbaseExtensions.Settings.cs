@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 using Couchbase;
 using Couchbase.Authentication;
@@ -214,7 +215,7 @@ namespace Couchbase
             timeout = timeout - stopwatch.Elapsed;  // Adjust the timeout downward by the time taken to connect.
             stopwatch.Restart();
 
-            bucket.WaitUntilReadyAsync(timeout).Wait();
+            bucket.WaitUntilReadyAsync(timeout).WaitWithoutAggregate();
 
             return bucket;
         }

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Retry
 {
@@ -72,7 +73,6 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
             Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero, nameof(initialRetryInterval));
-            Covenant.Requires<ArgumentNullException>(maxRetryInterval >= initialRetryInterval || initialRetryInterval > TimeSpan.Zero || maxRetryInterval == null, nameof(maxRetryInterval));
 
             this.transientDetector    = transientDetector ?? (e => true);
             this.MaxAttempts          = maxAttempts;
@@ -180,6 +180,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task InvokeAsync(Func<Task> action)
         {
+            await SyncContext.Clear;
+
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();
             var interval    = InitialRetryInterval;
@@ -216,6 +218,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
+            await SyncContext.Clear;
+
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();
             var interval    = InitialRetryInterval;

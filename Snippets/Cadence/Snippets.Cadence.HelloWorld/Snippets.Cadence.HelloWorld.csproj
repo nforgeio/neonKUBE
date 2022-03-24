@@ -5,6 +5,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<StartupObject>HelloWorld.Program</StartupObject>
 		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">

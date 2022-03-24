@@ -100,8 +100,8 @@ namespace TestTemporal
 
                 var worker = client.NewWorkerAsync().Result;
 
-                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                worker.StartAsync().Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                worker.StartAsync().WaitWithoutAggregate();
             }
             else
             {
@@ -588,7 +588,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Nop()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -600,7 +600,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task GetVersion()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -612,7 +612,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task WorkflowExecution()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -624,7 +624,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task MutableSideEffect()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -636,7 +636,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task MutableSideEffectGeneric()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -648,7 +648,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task SideEffect()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -660,7 +660,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task SideEffectGeneric()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -672,7 +672,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NewGuid()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -684,7 +684,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NextRandomDouble()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -696,7 +696,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NextRandom()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -708,7 +708,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NextRandomMax()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -720,7 +720,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NextRandomMinMax()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -732,7 +732,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task NextRandomBytes()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -744,7 +744,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task GetLastCompletionResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -756,7 +756,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task GetIsSetLastCompletionResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -768,7 +768,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task ChildWorkflow()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -780,7 +780,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task Activity()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
@@ -792,7 +792,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestArea.NeonTemporal)]
         public async Task LocalActivity()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();

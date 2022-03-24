@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,9 +19,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Retry;
 using Neon.Kube.Operator;
+using Neon.Kube.ResourceDefinitions;
+using Neon.Retry;
+using Neon.Tasks;
 
 using k8s.Models;
 
@@ -31,7 +33,6 @@ using KubeOps.Operator.Rbac;
 
 using Prometheus;
 using Tomlyn;
-using System.Diagnostics.Contracts;
 
 namespace NeonNodeAgent
 {
@@ -258,10 +259,10 @@ namespace NeonNodeAgent
         }
 
         /// <summary>
-        /// 
+        /// Executes a node task.
         /// </summary>
-        /// <param name="task"></param>
-        /// <returns></returns>
+        /// <param name="task">The node task.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NodeTask task)
         {
             await Task.CompletedTask;

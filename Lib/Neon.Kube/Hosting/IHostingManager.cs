@@ -199,14 +199,44 @@ namespace Neon.Kube
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
-        /// <summary>
-        /// Returns availability information for resources required to deploy a cluster.
-        /// </summary>
-        /// <returns></returns>
-        List<HostingResourceAvailability> GetResourceAvailability();
-
         //---------------------------------------------------------------------
         // Cluster life cycle methods
+
+        /// <summary>
+        /// Returns flags describing any optional capabilities supported by the hosting manager.
+        /// </summary>
+        HostingCapabilities Capabilities { get; }
+
+        /// <summary>
+        /// Returns the availability of resources required to deploy a cluster.
+        /// </summary>
+        /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
+        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <returns>Details about whether cluster deployment can proceed.</returns>
+        /// <remarks>
+        /// <para>
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
+        /// manager implementations are free to ignore this when they don't really makse sense.
+        /// </para>
+        /// <para>
+        /// This is currently used for Hyper-V based clusters running on a user workstation or laptop to ensure
+        /// that deployed clusters don't adverserly impact the host machine too badly.
+        /// </para>
+        /// <para>
+        /// These parameters don't really make sense for cloud or dedicated hypervisor hosting environments because
+        /// those environemnts will still work well when all available resources are consumed.
+        /// </para>
+        /// </remarks>
+        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
+
+        /// <summary>
+        /// Retrieves the status of a cluster from the hosting manager's perspective.  This includes information
+        /// about the infrastructor provisioned for the cluster.
+        /// </summary>
+        /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <summary>
         /// <para>
@@ -216,10 +246,9 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task StartClusterAsync(bool noWait = false);
+        Task StartClusterAsync();
 
         /// <summary>
         /// <para>
@@ -230,10 +259,33 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="stopMode">Optionally specifies how the cluster nodes are stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false);
+        Task StopClusterAsync(StopMode stopMode = StopMode.Graceful);
+
+        /// <summary>
+        /// <para>
+        /// Pauses a cluster if it's running, by putting all cluster nodes to sleep.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task PauseClusterAsync();
+
+        /// <summary>
+        /// <para>
+        /// Resumes a paused cluster, by waking all cluster nodes.
+        /// </para>
+        /// <note>
+        /// This operation may not be supported for all environments.
+        /// </note>
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
+        Task ResumeClusterAsync();
 
         /// <summary>
         /// <para>
@@ -247,7 +299,6 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="noWait">Optionally specifies that the method should not wait until the operation has completed.</param>
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
@@ -261,7 +312,7 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false);
+        Task RemoveClusterAsync(bool removeOrphansByPrefix = false);
 
         /// <summary>
         /// <para>
@@ -287,24 +338,5 @@ namespace Neon.Kube
         /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful);
-
-        /// <summary>
-        /// <para>
-        /// Retrieves the node image for a specified node in a cluster to a folder.  The node
-        /// must already be stopped.  The node image file name will look like <b>NODE-NAME.EXTENSION</b>
-        /// where <b>NODE-NAME</b> is the name of the node and <b>EXTENSION</b> will be the native
-        /// extension for the hosting environment (e.g. <b>.vhdx</b> for Hyper-V, <b>.xva</b> for
-        /// XenServer).
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the node being captured.</param>
-        /// <param name="folder">Path to the output folder.</param>
-        /// <returns>The fully qualified path to the downloaded image file.</returns>
-        /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the node is not stopped or the node has multiple drives.</exception>
-        Task<string> GetNodeImageAsync(string nodeName, string folder);
     }
 }

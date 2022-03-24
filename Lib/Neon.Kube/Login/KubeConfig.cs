@@ -55,7 +55,7 @@ namespace Neon.Kube
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns the current KubeConfig.
+        /// Reads and returns information loaded from the current <b>~/.kube/config</b> file.
         /// </summary>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
@@ -209,7 +209,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace Neon.Kube
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>

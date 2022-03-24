@@ -29,7 +29,7 @@ namespace Neon.XenServer
     public class XenObject
     {
         /// <summary>
-        /// Constructs an instance from raw property values returned by the <b>xe CLI</b>.
+        /// Constructs an instance from raw property values returned by the <b>xe client</b>.
         /// </summary>
         /// <param name="rawProperties">The raw object properties.</param>
         internal XenObject(IDictionary<string, string> rawProperties)

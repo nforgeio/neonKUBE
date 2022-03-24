@@ -269,72 +269,84 @@ namespace Neon.Temporal.Internal
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowExecution> StartWorkflowAsync(TemporalClient client, string workflowTypeName, byte[] args, StartWorkflowOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> GetWorkflowResultAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<ChildExecution> StartChildWorkflowAsync(TemporalClient client, Workflow parentWorkflow, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<ChildExecution>)startChildWorkflowAsync.Invoke(client, new object[] { parentWorkflow, workflowTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> GetChildWorkflowResultAsync(TemporalClient client, Workflow parentWorkflow, ChildExecution execution)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)getChildWorkflowResultAsync.Invoke(client, new object[] { parentWorkflow, execution });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
+                await SyncContext.Clear;
                 return await (Task<WorkflowDescription>)describeWorkflowExecutionAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task CancelWorkflowAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
+                await SyncContext.Clear;
                 await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task TerminateWorkflowAsync(TemporalClient client, WorkflowExecution execution, string reason, byte[] details, string @namespace)
             {
+                await SyncContext.Clear;
                 await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string @namespace)
             {
+                await SyncContext.Clear;
                 await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowWithStartAsync(TemporalClient client, string workflowTypeName, string signalName, byte[] signalArgs, byte[] workflowArgs, StartWorkflowOptions options)
             {
+                await SyncContext.Clear;
                 await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowTypeName, signalName, signalArgs, workflowArgs, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> QueryWorkflowAsync(TemporalClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string @namespace)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> SyncSignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string @namespace)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)syncSignalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalId, signalArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> SyncSignalChildWorkflowAsync(TemporalClient client, Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)syncSignalChildWorkflowAsync.Invoke(client, new object[] { parentWorkflow, childExecution, signalName, signalId, signalArgs });
             }
 
@@ -353,18 +365,21 @@ namespace Neon.Temporal.Internal
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalChildWorkflowAsync(TemporalClient client, Workflow workflow, ChildExecution child, string signalName, byte[] signalArgs)
             {
+                await SyncContext.Clear;
                 await (Task)signalChildWorkflowAsync.Invoke(client, new object[] { workflow, child, signalName, signalArgs });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, ConstructorInfo constructor, MethodInfo method, byte[] args, LocalActivityOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, constructor, method, args, options });
             }
 
@@ -792,7 +807,7 @@ namespace Neon.Temporal.Internal
 #if DEBUG
             sbSource.LogDebug($"{stubClassName}: ToUntyped()");
 #endif
-            sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+            sbSource.AppendLine($"            await SyncContext.Clear;");
             sbSource.AppendLine($"            await WaitForExecutionAsync();");
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (isChild)");
@@ -859,7 +874,7 @@ namespace Neon.Temporal.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            if (this.continueAsNew)");
                 sbSource.AppendLine($"            {{");
@@ -1008,7 +1023,7 @@ namespace Neon.Temporal.Internal
                 }
 
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine($"            await WaitForExecutionAsync();");
                 sbSource.AppendLine();
 
@@ -1083,7 +1098,7 @@ namespace Neon.Temporal.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine($"            await WaitForExecutionAsync();");
                 sbSource.AppendLine();
 
@@ -1579,7 +1594,7 @@ namespace Neon.Temporal.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            byte[]    ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                 sbSource.AppendLine($"            byte[]    ___resultBytes;");

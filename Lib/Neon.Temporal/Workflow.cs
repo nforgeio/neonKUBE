@@ -271,6 +271,8 @@ namespace Neon.Temporal
         /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
+            await SyncContext.Clear;
+
             var debugMode = Client.Settings.Debug;
             
             if (WorkflowBase.CallContext.Value == WorkflowCallContext.Entrypoint)
@@ -385,7 +387,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<DateTime> UtcNowAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -419,7 +421,7 @@ namespace Neon.Temporal
             // like to keep the method signature async just in case this changes
             // in the future.
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -450,7 +452,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
@@ -648,7 +650,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId), nameof(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported, nameof(minSupported));
             Client.EnsureNotDisposed();
@@ -686,7 +688,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), "The parameter is not a workflow stub.");
             Client.EnsureNotDisposed();
@@ -743,7 +745,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -830,7 +832,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<object> MutableSideEffectAsync(Type resultType, string id, Func<dynamic> function)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
@@ -881,7 +883,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<Guid> NewGuidAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -910,7 +912,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<double> NextRandomDoubleAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -938,7 +940,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<int> NextRandomAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -967,7 +969,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<int> NextRandomAsync(int maxValue)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(maxValue > 0, nameof(maxValue));
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -999,7 +1001,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<int> NextRandomAsync(int minValue, int maxValue)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(minValue < maxValue, nameof(minValue));
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -1029,7 +1031,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<byte[]> NextRandomBytesAsync(int size)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(size > 0, nameof(size));
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -1086,7 +1088,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<T> SideEffectAsync<T>(Func<T> function)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -1161,7 +1163,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<object> SideEffectAsync(Type resultType, Func<object> function)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
@@ -1219,7 +1221,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -1256,7 +1258,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -1278,7 +1280,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<bool> HasLastCompletionResultAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -1310,7 +1312,7 @@ namespace Neon.Temporal
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<TResult> GetLastCompletionResultAsync<TResult>()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
@@ -2226,7 +2228,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = WorkflowQueue<T>.DefaultCapacity)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -2271,6 +2273,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
@@ -2342,6 +2345,7 @@ namespace Neon.Temporal
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args, LocalActivityOptions options)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
@@ -2382,7 +2386,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ForceReplayAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
 
             throw new ForceReplayException();
         }

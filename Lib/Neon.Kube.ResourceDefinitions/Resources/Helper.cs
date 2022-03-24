@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LeaderEventHandler.cs
+// FILE:	    Helper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,17 +17,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Text;
 
-using Neon.Common;
+using k8s;
+using k8s.Models;
 
-namespace Neon.Kube
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
+namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
-    /// Defines the delegate called when a <see cref="LeaderElector"/> state changes.
+    /// Internal helpers.
     /// </summary>
-    /// <param name="transition">Specifies the transition details.</param>
-    public delegate void LeaderEventHandler(LeaderTransition transition);
+    internal static class Helper
+    {
+        /// <summary>
+        /// Identifes a special configmap used to report cluster status.  This configmap will
+        /// be located in the <b>neon-status</b> namespace and is created during cluster setup
+        /// and then is maintained by the neon-cluster-operator thereafter.
+        /// </summary>
+        public const string NeonResourceGroup = "neonkube.io";
+    }
 }

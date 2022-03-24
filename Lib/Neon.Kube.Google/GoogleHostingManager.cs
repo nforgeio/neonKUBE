@@ -41,12 +41,28 @@ using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.Google)]
     public class GoogleHostingManager : HostingManager
     {
@@ -154,25 +170,25 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
-            // $todo(jefflil): Implement this
+            await SyncContext.Clear;
 
-            await Task.CompletedTask;
+            // $todo(jefflil): Implement this
         }
 
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
-            // $todo(jefflil): Implement this
+            await SyncContext.Clear;
 
-            await Task.CompletedTask;
+            // $todo(jefflil): Implement this
         }
 
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
-            // $todo(jefflil): Implement this
+            await SyncContext.Clear;
 
-            await Task.CompletedTask;
+            // $todo(jefflil): Implement this
         }
 
         /// <inheritdoc/>
@@ -199,8 +215,30 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostingResourceAvailability> GetResourceAvailability()
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+            
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
+
+        /// <inheritdoc/>
+        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
             throw new NotImplementedException("$todo(jefflill)");
         }
     }

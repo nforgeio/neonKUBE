@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNamespaces.cs
+// FILE:	    KubeMinioBuckets.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -32,48 +32,58 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the Kubernetes namespace names known to neonKUBE.
+    /// Defines the Minio bucket names used by neonKUBE applications.
     /// </summary>
-    public static class KubeNamespaces
+    public static class KubeMinioBucket
     {
         /// <summary>
-        /// The default namespace.
+        /// AlertManager bucket name.
         /// </summary>
-        public const string Default = "default";
+        public const string AlertManager = "alertmanager";
 
         /// <summary>
-        /// Hosts the Kubernetes dashboard.
+        /// Cortex bucket name.
         /// </summary>
-        public const string KubernetesDashboard = "kubernetes-dashboard";
+        public const string Cortex = "cortex";
 
         /// <summary>
-        /// Hosts Kubernetes public services.
+        /// Cortex-ruler bucket name.
         /// </summary>
-        public const string KubePublic = "kube-public";
+        public const string CortexRuler = "cortex-ruler";
 
         /// <summary>
-        /// Hosts Kubernetes infrastructure components.
+        /// Harbor bucket name.
         /// </summary>
-        public const string KubeSystem = "kube-system";
+        public const string Grafana = "grafana";
 
         /// <summary>
-        /// Hosts the remaining Istio components.
+        /// Harbor bucket name.
         /// </summary>
-        public const string NeonIngress = "neon-ingress";
+        public const string Harbor = "harbor";
 
         /// <summary>
-        /// Hosts cluster monitoring.
+        /// Loki bucket name.
         /// </summary>
-        public const string NeonMonitor = "neon-monitor";
+        public const string Loki = "loki";
 
         /// <summary>
-        /// Hosts OpenEBS components.
+        /// Tempo bucket name.
         /// </summary>
-        public const string NeonStorage = "neon-storage";
+        public const string Tempo = "tempo";
 
         /// <summary>
-        /// Hosts neonKUBE infrastructure.
+        /// Returns the list of all internal neonKUBE Minio bucket names.
         /// </summary>
-        public const string NeonSystem = "neon-system";
+        public static readonly IReadOnlyList<string> All =
+            new List<string>()
+            {
+                AlertManager,
+                Cortex,
+                CortexRuler,
+                Harbor,
+                Loki,
+                Tempo
+            }
+            .AsReadOnly();
     }
 }

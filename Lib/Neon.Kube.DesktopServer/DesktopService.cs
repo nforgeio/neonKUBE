@@ -113,7 +113,7 @@ namespace Neon.Kube.DesktopServer
             isDisposed = true;
 
             cts.Cancel();
-            task.Wait();
+            task.WaitWithoutAggregate();
             NeonHelper.DeleteFile(socketPath);
         }
     }

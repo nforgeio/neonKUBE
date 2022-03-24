@@ -35,6 +35,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Newtonsoft.Json;
@@ -109,7 +110,7 @@ namespace Neon.Kube
 
             // Append the neonKUBE cluster binary folder to the remote path.
 
-            RemotePath += $":{KubeNodeFolders.Bin}";
+            RemotePath += $":{KubeNodeFolder.Bin}";
 
             // We're going to maintain an internal log writer as well as the external writer
             // so that we'll always have easy access to the log even when the external writer
@@ -376,13 +377,13 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public bool GetIdempotentState(string actionId)
         {
-            return FileExists(LinuxPath.Combine(KubeNodeFolders.State, actionId));
+            return FileExists(LinuxPath.Combine(KubeNodeFolder.State, actionId));
         }
 
         /// <inheritdoc/>
         public void SetIdempotentState(string actionId)
         {
-            SudoCommand($"mkdir -p {KubeNodeFolders.State} && touch {KubeNodeFolders.State}/{actionId}", RunOptions.FaultOnError);
+            SudoCommand($"mkdir -p {KubeNodeFolder.State} && touch {KubeNodeFolder.State}/{actionId}", RunOptions.FaultOnError);
         }
 
         /// <inheritdoc/>
@@ -401,7 +402,7 @@ namespace Neon.Kube
                 throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotent)}()]", nameof(action));
             }
 
-            var stateFolder = KubeNodeFolders.State;
+            var stateFolder = KubeNodeFolder.State;
             var slashPos = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -437,11 +438,12 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
-            var stateFolder = KubeNodeFolders.State;
+            var stateFolder = KubeNodeFolder.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -626,12 +628,12 @@ sfill -fllz /
                     if (fullUpgrade)
                     {
                         Status = "upgrade: full";
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get dist-upgrade -yq");
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get dist-upgrade -yq");
                     }
                     else
                     {
                         Status = "upgrade: partial";
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get upgrade -yq");
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get upgrade -yq");
                     }
 
                     // Check to see whether the upgrade requires a reboot and
@@ -646,7 +648,7 @@ sfill -fllz /
                     // Clean up any cached APT files.
 
                     Status = "clean up";
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get clean -yq");
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get clean -yq");
                     SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }

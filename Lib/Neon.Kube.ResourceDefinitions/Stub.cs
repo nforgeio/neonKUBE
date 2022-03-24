@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingResourceAvailability.cs
+// FILE:	    Stub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,26 +17,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Text;
 
-using Neon.Common;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.ResourceDefinitions
 {
     /// <summary>
-    /// Enumerates the types of resources required by a <see cref="IHostingManager"/>
-    /// to deploy a cluster.
+    /// Used for obtaining a reference to the <b>Neon.Kube.Resources</b> assembly
+    /// by our Kubernetes operators for registering custom resource types.
     /// </summary>
-    public enum HostingResourceType
+    public static class Stub
     {
-        /// <summary>
-        /// RAM
-        /// </summary>
-        Memory,
-
-        /// <summary>
-        /// Disk
-        /// </summary>
-        Disk,
     }
 }

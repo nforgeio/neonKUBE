@@ -942,7 +942,6 @@ rm {HostFolders.Home(Username)}/askpass
                             // [/dev/shm/neonssh/rebooting] file is not present, so we're done.
 
                             LogLine($"*** WAITFORBOOT: DONE");
-
                             break;
                         }
                         else
@@ -2688,7 +2687,7 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <inheritdoc/>
-        public Dictionary<string, LinuxDiskInfo> ListDisks(bool includeFloppy = false)
+        public Dictionary<string, LinuxDiskInfo> ListDisks(bool fixedDisksOnly = true)
         {
             var nameToDisk = new Dictionary<string, LinuxDiskInfo>();
 
@@ -2715,10 +2714,7 @@ echo $? > {cmdFolder}/exit
             //        ]
             //     }
 
-            var response = SudoCommand("lsblk --json -b");
-
-            response.EnsureSuccess();
-
+            var response    = SudoCommand("lsblk --json -b").EnsureSuccess();
             var rootObject  = JObject.Parse(response.OutputText);
             var deviceArray = (JArray)rootObject.Property("blockdevices").Value;
 
@@ -2730,21 +2726,9 @@ echo $? > {cmdFolder}/exit
                 var isReadOnly  = device.Property("ro").ToObject<bool>();
                 var type        = device.Property("type").ToObject<string>();
 
-                if (type != "disk")
+                if (type != "disk" || (fixedDisksOnly && isRemovable))
                 {
                     continue;
-                }
-
-                // $hack(jefflill): I'm assuming that floppy disks are named like: fd#
-
-                if (deviceName.Length == 3 && deviceName.StartsWith("fd") && char.IsDigit(deviceName[2]))
-                {
-                    // Looks like a floppy device.
-
-                    if (!includeFloppy)
-                    {
-                        continue;
-                    }
                 }
 
                 deviceName = $"/dev/{deviceName}";
@@ -2763,7 +2747,7 @@ echo $? > {cmdFolder}/exit
                         var partitionName = partition.Property("name").ToObject<string>();
                         var partitionSize = partition.Property("size").ToObject<long>();
                         var partitionType = partition.Property("type").ToObject<string>();
-                        var mountPoint = partition.Property("mountpoint").ToObject<string>();
+                        var mountPoint    = partition.Property("mountpoint").ToObject<string>();
 
                         if (partitionType != "part")
                         {

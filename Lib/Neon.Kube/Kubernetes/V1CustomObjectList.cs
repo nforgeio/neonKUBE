@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Stub.cs
+// FILE:	    V1CustomObjectList.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,22 +17,39 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text;
 
-using DotnetKubernetesClient.Entities;
+using k8s;
 using k8s.Models;
-using KubeOps.Operator.Entities;
-using KubeOps.Operator.Entities.Annotations;
 
-using Neon.Kube;
+using Neon.Common;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube
 {
     /// <summary>
-    /// Used for obtaining a reference to the <b>Neon.Kube.Resources</b> assembly
-    /// by our Kubernetes operators for registering custom resource types.
+    /// Holds a list of generic custom object instances returned by the API server.
     /// </summary>
-    public static class Stub
+    /// <typeparam name="T">The custom obecj type.</typeparam>
+    public class V1CustomObjectList<T> : IKubernetesObject<V1ListMeta>, IKubernetesObject, IMetadata<V1ListMeta>, IItems<T>, IValidate
+        where T : IKubernetesObject
     {
+        /// <inheritdoc/>
+        public string ApiVersion { get; set; }
+
+        /// <inheritdoc/>
+        public string Kind { get; set; }
+
+        /// <inheritdoc/>
+        public V1ListMeta Metadata { get; set; }
+
+        /// <inheritdoc/>
+        public IList<T> Items { get; set; }
+
+        /// <inheritdoc/>
+        public void Validate()
+        {
+        }
     }
 }

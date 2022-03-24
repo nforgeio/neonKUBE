@@ -56,9 +56,6 @@ namespace NeonCli
     [Command]
     public class ClusterSetupCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const string usage = @"
 Configures a neonKUBE cluster as described in the cluster definition file.
 
@@ -262,7 +259,7 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile());
 
                         if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
                         {

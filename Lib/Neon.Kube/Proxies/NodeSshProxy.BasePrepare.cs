@@ -204,8 +204,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // $note(jefflill):
                     //
@@ -251,7 +251,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
 
                     if (this.KernelVersion < new Version(5, 6, 0))
                     {
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                     }
                 });
         }
@@ -379,7 +379,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+{KubeNodeFolder.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -528,7 +528,7 @@ set -euo pipefail
 
 cloud-init clean
 
-{KubeNodeFolders.Bin}/safe-apt-get purge -y \
+{KubeNodeFolder.Bin}/safe-apt-get purge -y \
     cloud-init \
     git git-man \
     iso-codes \
@@ -538,7 +538,7 @@ cloud-init clean
     snapd \
     vim vim-runtime vim-tiny
 
-{KubeNodeFolders.Bin}/safe-apt-get autoremove -y
+{KubeNodeFolder.Bin}/safe-apt-get autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -660,7 +660,7 @@ EOF
                     var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
 
-mkdir -p {KubeNodeFolders.Bin}
+mkdir -p {KubeNodeFolder.Bin}
 
 # Create the systemd unit file.
 
@@ -672,7 +672,7 @@ After=systemd-networkd.service
 
 [Service]
 Type=oneshot
-ExecStart={KubeNodeFolders.Bin}/neon-init
+ExecStart={KubeNodeFolder.Bin}/neon-init
 RemainAfterExit=false
 StandardOutput=journal+console
 
@@ -682,7 +682,7 @@ EOF
 
 # Create the service script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/neon-init
+cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:	        neon-init
@@ -778,7 +778,7 @@ mkdir -p /etc/neon-init
 touch /etc/neon-init/ready
 EOF
 
-chmod 744 {KubeNodeFolders.Bin}/neon-init
+chmod 744 {KubeNodeFolder.Bin}/neon-init
 
 # Configure [neon-init] to start at boot.
 
@@ -808,23 +808,23 @@ systemctl daemon-reload
 $@"
 set -euo pipefail
 
-mkdir -p {KubeNodeFolders.Bin}
-chmod 750 {KubeNodeFolders.Bin}
+mkdir -p {KubeNodeFolder.Bin}
+chmod 750 {KubeNodeFolder.Bin}
 
-mkdir -p {KubeNodeFolders.Config}
-chmod 750 {KubeNodeFolders.Config}
+mkdir -p {KubeNodeFolder.Config}
+chmod 750 {KubeNodeFolder.Config}
 
-mkdir -p {KubeNodeFolders.Setup}
-chmod 750 {KubeNodeFolders.Setup}
+mkdir -p {KubeNodeFolder.Setup}
+chmod 750 {KubeNodeFolder.Setup}
 
-mkdir -p {KubeNodeFolders.Helm}
-chmod 750 {KubeNodeFolders.Helm}
+mkdir -p {KubeNodeFolder.Helm}
+chmod 750 {KubeNodeFolder.Helm}
 
-mkdir -p {KubeNodeFolders.State}
-chmod 750 {KubeNodeFolders.State}
+mkdir -p {KubeNodeFolder.State}
+chmod 750 {KubeNodeFolder.State}
 
-mkdir -p {KubeNodeFolders.State}/setup
-chmod 750 {KubeNodeFolders.State}/setup
+mkdir -p {KubeNodeFolder.State}/setup
+chmod 750 {KubeNodeFolder.State}/setup
 ";
                     SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -865,7 +865,7 @@ chmod 750 {KubeNodeFolders.State}/setup
 
                         using (var toolStream = file.OpenStream())
                         {
-                            UploadText(LinuxPath.Combine(KubeNodeFolders.Bin, targetName), toolStream, permissions: "744");
+                            UploadText(LinuxPath.Combine(KubeNodeFolder.Bin, targetName), toolStream, permissions: "744");
                         }
                     }
                 });

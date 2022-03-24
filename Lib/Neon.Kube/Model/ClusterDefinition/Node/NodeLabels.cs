@@ -755,7 +755,7 @@ namespace Neon.Kube
             //
             //      1. Must start or end with an alphnumeric character.
             //      2. May include alphanumerics, dashes, underscores or dots
-            //         between the begining and ending characters.
+            //         between the beginning and ending characters.
             //      3. Values can be empty.
             //      4. Maximum length is 63 characters.
 

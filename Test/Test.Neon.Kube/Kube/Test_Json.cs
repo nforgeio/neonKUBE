@@ -24,12 +24,15 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
 using k8s.Models;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
+
 using Xunit;
 
 namespace TestKube
@@ -39,11 +42,6 @@ namespace TestKube
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_Json
     {
-        public Test_Json()
-        {
-
-        }
-
         [Fact]
         public void SerializeEnum()
         {
@@ -65,7 +63,7 @@ namespace TestKube
                 Metadata = new V1ObjectMeta()
                 {
                     Name = "cspc-stripe",
-                    NamespaceProperty = KubeNamespaces.NeonStorage
+                    NamespaceProperty = KubeNamespace.NeonStorage
                 },
                 Spec = new V1CStorPoolClusterSpec()
                 {

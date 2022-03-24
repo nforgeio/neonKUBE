@@ -7,12 +7,12 @@ using System;
 using System.Globalization;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Tasks;
-using System.Net;
 
 namespace Neon.Time
 {
@@ -323,7 +323,7 @@ namespace Neon.Time
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitAsync(TimeSpan pollInterval = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (pollInterval <= TimeSpan.Zero)
             {

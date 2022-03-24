@@ -30,6 +30,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -776,7 +777,7 @@ namespace Neon.Kube
                 }
 
                 // NOTE: We're not going to notify the UX for quiet/hidden steps but
-                //       we will report this in the logs.
+                //       we will report these in the logs.
 
                 if (!step.IsQuiet)
                 {
@@ -904,7 +905,7 @@ namespace Neon.Kube
                                                 await step.AsyncNodeAction(this, node);
                                             });
 
-                                        runTask.Wait();
+                                        runTask.WaitWithoutAggregate();
 
                                         node.Status  = "[x] DONE";
                                         node.IsReady = true;
@@ -975,7 +976,7 @@ namespace Neon.Kube
                                         await step.AsyncGlobalAction(this);
                                     });
 
-                                runTask.Wait();
+                                runTask.WaitWithoutAggregate();
 
                                 foreach (var node in stepNodes)
                                 {
@@ -1215,7 +1216,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
+            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb} {message}";
 
             if (ProgressEvent != null)
             {
@@ -1451,7 +1452,7 @@ namespace Neon.Kube
                                 ConsoleWriter?.Stop();
 
                                 Cleanup();
-                                tcs.SetResult(SetupDisposition.Cancelled);
+                                tcs.TrySetResult(SetupDisposition.Cancelled);
                             }
 
                             if (!ExecuteStep(step))
@@ -1514,7 +1515,7 @@ namespace Neon.Kube
                             ConsoleWriter?.Stop();
 
                             Cleanup();
-                            tcs.SetResult(SetupDisposition.Failed);
+                            tcs.TrySetResult(SetupDisposition.Failed);
                             return;
                         }
 
@@ -1542,7 +1543,8 @@ namespace Neon.Kube
                         ConsoleWriter?.Stop();
 
                         Cleanup();
-                        tcs.SetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
+
+                        tcs.TrySetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
                         return;
                     }
                     catch (OperationCanceledException)
@@ -1557,7 +1559,7 @@ namespace Neon.Kube
 
                         ConsoleWriter?.Stop();
                         Cleanup();
-                        tcs.SetResult(SetupDisposition.Cancelled);
+                        tcs.TrySetResult(SetupDisposition.Cancelled);
                     }
                     catch (AggregateException e)
                     {
@@ -1573,7 +1575,7 @@ namespace Neon.Kube
 
                             ConsoleWriter?.Stop();
                             Cleanup();
-                            tcs.SetResult(SetupDisposition.Cancelled);
+                            tcs.TrySetResult(SetupDisposition.Cancelled);
                         }
                         else
                         {
@@ -1687,6 +1689,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(groupName), nameof(groupName));
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1741,6 +1744,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task WaitForPendingTasksAsync(string groupName)
         {
+            await SyncContext.Clear;
+
             SetupPendingTasks group;
 
             lock (syncLock)

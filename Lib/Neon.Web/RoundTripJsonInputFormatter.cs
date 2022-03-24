@@ -27,6 +27,8 @@ using Microsoft.Net.Http.Headers;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Tasks;
+
 using Newtonsoft.Json.Linq;
 
 namespace Neon.Web
@@ -76,6 +78,8 @@ namespace Neon.Web
         /// <inheritdoc/>
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding)
         {
+            await SyncContext.Clear;
+
             var request = context.HttpContext.Request;
 
             if (request.Body == null)

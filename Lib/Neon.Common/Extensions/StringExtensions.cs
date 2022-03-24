@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 namespace System
 {
     /// <summary>
-    /// String extension methods.
+    /// <see cref="string"/> extension methods.
     /// </summary>
     public static class StringExtensions
     {

@@ -193,7 +193,7 @@ namespace NATS.Client
             where TRequest : class, IRoundtripData, new()
             where TResponse : class, IRoundtripData, new()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             Msg response;

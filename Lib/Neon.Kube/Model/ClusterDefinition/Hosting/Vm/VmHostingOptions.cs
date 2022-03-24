@@ -192,6 +192,13 @@ namespace Neon.Kube
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
+            // We don't add a prefix for the special neon-desktop cluster.
+
+            if (clusterDefinition.IsDesktopBuiltIn)
+            {
+                return String.Empty;
+            }
+
             var prefix = string.Empty;
 
             if (NamePrefix == null)

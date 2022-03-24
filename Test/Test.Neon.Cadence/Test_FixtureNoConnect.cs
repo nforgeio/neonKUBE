@@ -77,11 +77,11 @@ namespace TestCadence
 
                 // Auto register the test workflow and activity implementations.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
 
                 // Start the worker.
 
-                client.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
+                client.StartWorkerAsync(CadenceTestHelper.TaskList).WaitWithoutAggregate();
             }
             else
             {
@@ -116,7 +116,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult1()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -130,7 +130,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Workflow_WithResult2()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LeaderState.cs
+// FILE:	    KubeClusterLock.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,39 +17,42 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using k8s.Models;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
+using Neon.Diagnostics;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the leadership states for <see cref="LeaderElector"/>.
+    /// Used to describe the current lock status of a neonKUBE cluster.  This is used to help avoid
+    /// disructive operations like cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
+    /// on production or otherwise important clusters.
     /// </summary>
-    public enum LeaderState
+    public class KubeClusterLock
     {
         /// <summary>
-        /// The current leader is unknown at this time.
+        /// Set to <c>true</c> when the cluster is locked.
         /// </summary>
-        Unknown,
-
-        /// <summary>
-        /// Another entity is the leader and the entity associated with the
-        /// <see cref="LeaderElector"/> is a follower.
-        /// </summary>
-        Follower,
-
-        /// <summary>
-        /// The entity associated with the <see cref="LeaderElector"/> is
-        /// the leader.
-        /// </summary>
-        Leader,
-
-        /// <summary>
-        /// The associated <see cref="LeaderElector"/> has been stopped.
-        /// </summary>
-        Stopped
+        [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool IsLocked { get; set; }
     }
 }

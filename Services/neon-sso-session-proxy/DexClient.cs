@@ -8,6 +8,7 @@ using System.ComponentModel;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -45,24 +46,22 @@ namespace NeonSsoSessionProxy
         public async Task<T> PostFormAsync<T>(string url, dynamic _object, CancellationToken cancellationToken = default)
         {
             var payloadString = "";
-            var first = true;
-
-            //dynamic data = JObject.Parse(_object);
+            var first         = true;
 
             dynamic data = JObject.FromObject(_object);
 
             foreach (var descriptor in TypeDescriptor.GetProperties(data))
             {
-                var key = descriptor.Name;
+                var key   = descriptor.Name;
                 var value = descriptor.GetValue(data).Value;
+
                 if (value is null)
                 {
                     continue;
                 }
-                if (!(value is string))
+                else if (!(value is string))
                 {
-                    value = (descriptor.GetValue(data) == null) ? null : JsonConvert.SerializeObject(descriptor.GetValue(data),
-                        Newtonsoft.Json.Formatting.None);
+                    value = (descriptor.GetValue(data) == null) ? null : JsonConvert.SerializeObject(descriptor.GetValue(data), Newtonsoft.Json.Formatting.None);
                     value = (string)value.Trim('"');
                 }
                 if (!string.IsNullOrEmpty(value))
@@ -71,13 +70,13 @@ namespace NeonSsoSessionProxy
                     {
                         payloadString += "&";
                     }
+
                     payloadString += $"{key}={value}";
-                    first = false;
+                    first          = false;
                 }
             }
 
-            var payload = new JsonClientPayload("application/x-www-form-urlencoded", payloadString);
-
+            var payload  = new JsonClientPayload("application/x-www-form-urlencoded", payloadString);
             var response = await jsonClient.PostUnsafeAsync(url, payload);
 
             if (response.IsSuccess)
@@ -102,18 +101,18 @@ namespace NeonSsoSessionProxy
         /// <param name="cancellationToken"></param>
         /// <returns>The token response.</returns>
         public async Task<TokenResponse> GetTokenAsync(
-            string client,
-            string code, 
-            string redirect_uri, 
-            string grant_type, 
-            CancellationToken cancellationToken = default)
+            string              client,
+            string              code, 
+            string              redirect_uri, 
+            string              grant_type, 
+            CancellationToken   cancellationToken = default)
         {
             jsonClient.DefaultRequestHeaders.Authorization = AuthHeaders[client];
             var args = new
             {
-                code = code,
+                code         = code,
                 redirect_uri = redirect_uri,
-                grant_type = grant_type
+                grant_type   = grant_type
             };
 
             var result = await PostFormAsync<TokenResponse>("/token", args, cancellationToken: cancellationToken);

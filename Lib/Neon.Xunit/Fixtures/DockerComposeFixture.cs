@@ -104,7 +104,7 @@ namespace Neon.Xunit
 
             Covenant.Assert(result.ExitCode == 0, result.ErrorText);
 
-            var appNamePrefix  = $"{name}_";
+            var appNamePrefix  = $"{name}-";
             var containerNames = new List<string>();
 
             using (var reader = new StringReader(result.AllText))

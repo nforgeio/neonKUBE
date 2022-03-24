@@ -94,7 +94,7 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
-        private static string               cachedDesktopDataFolder;
+        private static string               cachedDesktopCommonFolder;
 
         /// <summary>
         /// CURL command common options.
@@ -149,7 +149,7 @@ namespace Neon.Kube
             cachedResources            = null;
             cachedNodeImageFolder      = null;
             cachedDashboardStateFolder = null;
-            cachedDesktopDataFolder    = null;
+            cachedDesktopCommonFolder  = null;
         }
 
         /// <summary>
@@ -471,7 +471,7 @@ namespace Neon.Kube
         /// the socket will be located within the Windows program data folder.
         /// </note>
         /// </summary>
-        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopDataFolder, "desktop-service.sock");
+        public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
 
         /// <summary>
         /// Returns the current <see cref="KubeAutomationMode"/>.
@@ -908,22 +908,22 @@ namespace Neon.Kube
         /// All users will have read/write access to files in this folder.
         /// </note>
         /// </summary>
-        public static string DesktopDataFolder
+        public static string DesktopCommonFolder
         {
             get
             {
-                if (cachedDesktopDataFolder != null)
+                if (cachedDesktopCommonFolder != null)
                 {
-                    return cachedDesktopDataFolder;
+                    return cachedDesktopCommonFolder;
                 }
 
-                cachedDesktopDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
+                cachedDesktopCommonFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NeonDesktop");
 
                 if (OperatingSystem.IsWindowsVersionAtLeast(10))
                 {
-                    if (!Directory.Exists(cachedDesktopDataFolder))
+                    if (!Directory.Exists(cachedDesktopCommonFolder))
                     {
-                        Directory.CreateDirectory(cachedDesktopDataFolder);
+                        Directory.CreateDirectory(cachedDesktopCommonFolder);
 
                         // Grant all users access to this folder.  The simple approach would be to allow "Users"
                         // but apparently that only works for English Windows installations.  We'll need to look up
@@ -935,7 +935,7 @@ namespace Neon.Kube
                         //      https://stackoverflow.com/questions/51277338/remove-users-group-permission-for-folder-inside-programdata
 
                         var builtUnsersSid    = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
-                        var directoryInfo     = new DirectoryInfo(cachedDesktopDataFolder);
+                        var directoryInfo     = new DirectoryInfo(cachedDesktopCommonFolder);
                         var directorySecurity = directoryInfo.GetAccessControl();
 
                         // Disable inherited ACLs.
@@ -952,7 +952,7 @@ namespace Neon.Kube
                     }
                 }
 
-                return cachedDesktopDataFolder;
+                return cachedDesktopCommonFolder;
             }
         }
 
@@ -1171,8 +1171,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="Config"/>.</returns>
         public static KubeConfig LoadConfig()
         {
-            cachedConfig = null;
-            return Config;
+            return cachedConfig = KubeConfig.Load();
         }
 
         /// <summary>
@@ -1187,14 +1186,7 @@ namespace Neon.Kube
                     return cachedConfig;
                 }
 
-                var configPath = KubeConfigPath;
-
-                if (File.Exists(configPath))
-                {
-                    return cachedConfig = NeonHelper.YamlDeserialize<KubeConfig>(ReadFileTextWithRetry(configPath));
-                }
-
-                return cachedConfig = new KubeConfig();
+                return cachedConfig = KubeConfig.Load();
             }
         }
 
@@ -1225,7 +1217,7 @@ namespace Neon.Kube
         /// <summary>
         /// Sets the current Kubernetes config context.
         /// </summary>
-        /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
+        /// <param name="contextName">The context name or <c>null</c> to clear the current context.</param>
         /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(KubeContextName contextName)
         {
@@ -1243,7 +1235,7 @@ namespace Neon.Kube
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                if (!contextName.IsNeonKubeContext)
+                if (!contextName.IsNeonKube)
                 {
                     throw new ArgumentException($"[{contextName}] is not a neonKUBE context.", nameof(contextName));
                 }
@@ -1260,7 +1252,7 @@ namespace Neon.Kube
         /// <summary>
         /// Sets the current Kubernetes config context by string name.
         /// </summary>
-        /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
+        /// <param name="contextName">The context name or <c>null</c> to clear the current context.</param>
         /// <exception cref="ArgumentException">Thrown if the context specified doesn't exist.</exception>
         public static void SetCurrentContext(string contextName)
         {
@@ -1300,7 +1292,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns <c>true</c> if the current cluster is the neon-desktop built-in cluster.
         /// </summary>
-        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKubeContext && CurrentContext.Name == KubeConst.NeonDesktopContextName;
+        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
 
         /// <summary>
         /// Returns the Kuberneties API service certificate for the current
@@ -2520,10 +2512,9 @@ TCPKeepAlive yes
             DownloadProgressDelegate    progressAction    = null,
             CancellationToken           cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(imageUri != null, nameof(imageUri));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(imagePath), nameof(imagePath));
-
-            await SyncContext.ClearAsync;
 
             var imageFolder = Path.GetDirectoryName(imagePath);
 
@@ -2894,21 +2885,6 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Configure the kubernetes client to use the <see cref="JsonStringEnumMemberConverter"/>.
-        /// </summary>
-        public static void K8sClientConverterInitialize()
-        {
-            var type = typeof(Kubernetes).Assembly.GetType("k8s.KubernetesJson");
-
-            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
-
-            var member  = type.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-            var options = (JsonSerializerOptions)member.GetValue(type);
-
-            options.Converters.Add(new JsonStringEnumMemberConverter());
-        }
-
-        /// <summary>
         /// Returns the credentials for a specific cluster user from the Glauth LDAP secret.
         /// </summary>
         /// <param name="k8s">The Kubernetes client.</param>
@@ -2917,13 +2893,164 @@ TCPKeepAlive yes
         /// <exception cref="KeyNotFoundException">Thrown when the user doesn't exist.</exception>
         public static async Task<GlauthUser> GetClusterLdapUserAsync(IKubernetes k8s, string username)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-            var user  = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
+            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
 
             return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
+        }
+
+        /// <summary>
+        /// Determines the health of a cluster by querying the API server.
+        /// </summary>
+        /// <param name="context">The cluster context.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns>A <see cref="KubeClusterHealth"/> instance.</returns>
+        public static async Task<KubeClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+
+            // We're going to retrieve the special [neon-status/cluster-status] config map
+            // and return the status from there.  This config map is created initially by
+            // cluster setup and then is updated by neon-cluster-operator.
+
+            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+
+            if (config == null)
+            {
+                return new KubeClusterHealth()
+                {
+                     State   = KubeClusterState.Unknown,
+                     Summary = $"kubecontext for [{context.Name}] not found."
+                };
+            }
+            
+            using (var k8s = new KubernetesClient(config))
+            {
+                // Cluster status is persisted to the [neon-status/cluster-status] configmap
+                // during cluster setup and is maintained there after by [neon-cluster-operator].
+
+                try
+                {
+                    var configMap = await k8s.ReadNamespacedConfigMapAsync(
+                        name:               KubeConfigMapName.ClusterStatus,
+                        namespaceParameter: KubeNamespace.NeonStatus,
+                        cancellationToken:  cancellationToken);
+
+                    var statusConfig = new TypeSafeConfigMap<KubeClusterHealth>(configMap);
+
+                    return statusConfig.Config;
+                }
+                catch (OperationCanceledException)
+                {
+                    return new KubeClusterHealth()
+                    {
+                        State   = KubeClusterState.Unknown,
+                        Summary = "Timeout checking cluster health"
+                    };
+                }
+                catch (HttpOperationException e)
+                {
+                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        // We're expecting this.
+
+                        return new KubeClusterHealth()
+                        {
+                            State   = KubeClusterState.Healthy,
+                            Summary = "Cluster is healthy"
+                        };
+                    }
+                    else
+                    {
+                        return new KubeClusterHealth()
+                        {
+                            State   = KubeClusterState.Unknown,
+                            Summary = e.Message
+                        };
+                    }
+                }
+                catch (Exception e)
+                {
+                    return new KubeClusterHealth()
+                    {
+                        State   = KubeClusterState.Unknown,
+                        Summary = e.Message
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// Constructs an <b>initialized</b> Kubernetes object of a specific type.
+        /// </summary>
+        /// <typeparam name="T">The Kubernetes object type.</typeparam>
+        /// <param name="name">Specifies the object name.</param>
+        /// <returns>The new <typeparamref name="T"/>.</returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when <typeparamref name="T"/> does not define define string <b>KubeGroup</b>, 
+        /// <b>KubeApiVersion</b> and <b>KubeKind</b> constants.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Unfortunately, the default constructors for objects like <see cref="V1ConfigMap"/> do not
+        /// initialize the <see cref="IKubernetesObject.ApiVersion"/> and <see cref="IKubernetesObject.Kind"/>
+        /// and properties even though these values will be the same for all instances of each object type.
+        /// (I assume that Microsoft doesn't do this as an optimization that avoids initializing these
+        /// properties and then doing that again when deserializing responses from the API server.
+        /// </para>
+        /// <para>
+        /// This method constructs the request object and then configures its <see cref="IKubernetesObject.ApiVersion"/>
+        /// and <see cref="IKubernetesObject.Kind"/> properties by reflecting <typeparamref name="T"/> and using
+        /// the constant <b>KubeGroup</b>, <b>KubeApiVersion</b> and <b>KubeKind</b> values.  This is very convenient 
+        /// but will be somwehat slower than setting these values explicitly but is probably worth the cost in most
+        /// situations because Kubernetes objects are typically read much more often than created.
+        /// </para>
+        /// <note>
+        /// This method requires that <typeparamref name="T"/> define string <b>KubeGroup</b> <b>KubeApiVersion</b> 
+        /// and <b>KubeKind</b> constants that return the correct values for the type.
+        /// </note>
+        /// </remarks>
+        public static T CreateKubeObject<T>(string name)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>, new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var type            = typeof(T);
+            var groupConst      = type.GetField("KubeGroup", BindingFlags.Public | BindingFlags.Static);
+            var apiVersionConst = type.GetField("KubeApiVersion", BindingFlags.Public | BindingFlags.Static);
+            var kindConst       = type.GetField("KubeKind", BindingFlags.Public | BindingFlags.Static);
+
+            if (groupConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeGroup] constant.");
+            }
+
+            var group = (string)groupConst.GetValue(null);
+
+            if (apiVersionConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeApiVersion] constant.");
+            }
+
+            var apiVersion = (string)apiVersionConst.GetValue(null);
+
+            if (kindConst == null)
+            {
+                throw new NotSupportedException($"Object type [{type.FullName}] does not define the [KubeKind] constant.");
+            }
+
+            var kind = (string)kindConst.GetValue(null);
+            var obj  = new T();
+
+            obj.ApiVersion = String.IsNullOrEmpty(group) ? apiVersion : $"{group}/{apiVersion}";
+            obj.Kind       = kind;
+            obj.Metadata   = new V1ObjectMeta() { Name = name };
+
+            return obj;
         }
     }
 }

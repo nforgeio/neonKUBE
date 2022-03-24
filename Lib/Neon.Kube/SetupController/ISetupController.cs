@@ -176,7 +176,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Logs a progress for a specific node with a verb and message.  
-        /// This will be formatted like <b>VERB: MESSAGE</b>.
+        /// This will be formatted like <b>VERB MESSAGE</b>.
         /// </summary>
         /// <param name="node">Identifies the node</param>
         /// <param name="verb">The message verb.</param>

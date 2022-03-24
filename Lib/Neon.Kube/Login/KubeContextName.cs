@@ -331,7 +331,7 @@ namespace Neon.Kube
         /// Indicates whether this is a neonKUBE context name or a standard one.
         /// neonKUBE contexts include a user name before the <b>"@"</b> symbol.
         /// </summary>
-        public bool IsNeonKubeContext => User != null;
+        public bool IsNeonKube => User != null;
 
         /// <summary>
         /// Validates that a name component includes only nvalid characters.

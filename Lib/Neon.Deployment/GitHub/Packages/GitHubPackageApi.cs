@@ -28,6 +28,7 @@ using System.Web;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Tasks;
 
 // $todo(jefflill):
 //
@@ -84,6 +85,7 @@ namespace Neon.Deployment
             GitHubPackageVisibility visibility      = GitHubPackageVisibility.All,
             bool                    includeVersions = false)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
             using (var client = GitHub.CreateJsonClient())
@@ -177,7 +179,7 @@ namespace Neon.Deployment
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
 
-            DeleteAsync(organization, nameOrPattern, packageType).Wait();
+            DeleteAsync(organization, nameOrPattern, packageType).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -192,6 +194,7 @@ namespace Neon.Deployment
             string              nameOrPattern,
             GitHubPackageType   packageType = GitHubPackageType.Container)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 
@@ -226,7 +229,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
-            SetVisibilityAsync(organization, nameOrPattern, packageType, visibility).Wait();
+            SetVisibilityAsync(organization, nameOrPattern, packageType, visibility).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -249,6 +252,7 @@ namespace Neon.Deployment
             GitHubPackageType       packageType = GitHubPackageType.Container,
             GitHubPackageVisibility visibility  = GitHubPackageVisibility.All)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(organization), nameof(organization));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrPattern), nameof(nameOrPattern));
 

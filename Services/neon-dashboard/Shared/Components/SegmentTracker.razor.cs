@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
+using Neon.Tasks;
+
 using Segment;
 
 namespace NeonDashboard.Shared.Components

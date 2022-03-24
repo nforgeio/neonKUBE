@@ -23,13 +23,17 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+#if KUBEOPS
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+#endif
 
-using Neon.Kube;
-
+#if KUBEOPS
+namespace Neon.Kube.ResourceDefinitions
+#else
 namespace Neon.Kube.Resources
+#endif
 {
     /// <summary>
     /// Enumerates the possible status of a <see cref="V1NodeTask"/>.

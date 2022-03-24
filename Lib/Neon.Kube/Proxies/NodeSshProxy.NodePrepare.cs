@@ -38,6 +38,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Newtonsoft.Json;
@@ -67,7 +68,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolders.Bin"/> folder.
+        /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void NodeInstallTools(ISetupController controller)
@@ -84,7 +85,7 @@ namespace Neon.Kube
                         // Upload each tool script, removing the extension.
 
                         var targetName = LinuxPath.GetFileNameWithoutExtension(file.Path);
-                        var targetPath = LinuxPath.Combine(KubeNodeFolders.Bin, targetName);
+                        var targetPath = LinuxPath.Combine(KubeNodeFolder.Bin, targetName);
 
                         UploadText(targetPath, file.ReadAllText(), permissions: "774", owner: KubeConst.SysAdminUser);
                     }
@@ -851,7 +852,7 @@ EOF
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge just those.  Not a high priority.
 
-cat <<EOF > {KubeNodeFolders.Bin}/neon-cleaner
+cat <<EOF > {KubeNodeFolder.Bin}/neon-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
@@ -936,7 +937,7 @@ do
 done
 EOF
 
-chmod 700 {KubeNodeFolders.Bin}/neon-cleaner
+chmod 700 {KubeNodeFolder.Bin}/neon-cleaner
 
 # Generate the [neon-cleaner] systemd unit.
 
@@ -951,7 +952,7 @@ After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart={KubeNodeFolders.Bin}/neon-cleaner
+ExecStart={KubeNodeFolder.Bin}/neon-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -1012,8 +1013,8 @@ systemctl daemon-reload
 $@"
 set -euo pipefail
 
-{KubeNodeFolders.Bin}/safe-apt-get update -y
-{KubeNodeFolders.Bin}/safe-apt-get install -y ipset ipvsadm
+{KubeNodeFolder.Bin}/safe-apt-get update -y
+{KubeNodeFolder.Bin}/safe-apt-get install -y ipset ipvsadm
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -1138,8 +1139,8 @@ EOF
     cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
     rm /tmp/key
 
-    {KubeNodeFolders.Bin}/safe-apt-get update -y
-    {KubeNodeFolders.Bin}/safe-apt-get install -y cri-o cri-o-runc
+    {KubeNodeFolder.Bin}/safe-apt-get update -y
+    {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o cri-o-runc
 fi
 
 set -euo pipefail
@@ -1665,8 +1666,8 @@ set -euo pipefail
 source /etc/os-release
 echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${{VERSION_ID}}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${{VERSION_ID}}/Release.key -O- | apt-key add -
-{KubeNodeFolders.Bin}/safe-apt-get update -qq
-{KubeNodeFolders.Bin}/safe-apt-get install -yq podman-rootless
+{KubeNodeFolder.Bin}/safe-apt-get update -qq
+{KubeNodeFolder.Bin}/safe-apt-get install -yq podman-rootless
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
@@ -1746,6 +1747,7 @@ rm  install-kustomize.sh
             int                 downloadParallel = 5, 
             int                 loadParallel     = 2)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             await InvokeIdempotentAsync("setup/debug-load-images",
@@ -1832,6 +1834,7 @@ rm  install-kustomize.sh
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task LoadImageAsync(NodeImageInfo image)
         {
+            await SyncContext.Clear;
             await Task.Yield();
 
             var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
@@ -1894,23 +1897,28 @@ set -euo pipefail
 
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-{KubeNodeFolders.Bin}/safe-apt-get update
+{KubeNodeFolder.Bin}/safe-apt-get update
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
+{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
 
 # Note that the [kubeadm] install also installs [kubelet] and [kubectl] but that the
 # versions installed may be more recent than the Kubernetes version.  We want our
 # clusters to use consistent versions of all tools so we're going to install these
 # two packages again with specific versions and allow them to be downgraded.
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage}
-{KubeNodeFolders.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage}
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage}
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage}
 
 # Prevent the package manager these components from starting automatically.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
+
+# Pull the core Kubernetes container images (kube-scheduler, kube-proxy,...) to ensure they'll 
+# be present on all node images.
+
+kubeadm config images pull
 
 # Configure kublet:
 

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Retry
 {
@@ -162,6 +163,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task InvokeAsync(Func<Task> action)
         {
+            await SyncContext.Clear;
+
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();
 
@@ -190,6 +193,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
+            await SyncContext.Clear;
+
             var attempts    = 0;
             var sysDeadline = base.SysDeadline();
 

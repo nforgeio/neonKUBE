@@ -101,6 +101,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\neonkube-nuget-public.cmd = ToolBin\neonkube-nuget-public.cmd
 		ToolBin\neonkube-nuget-public.ps1 = ToolBin\neonkube-nuget-public.ps1
 		ToolBin\pubcore.exe = ToolBin\pubcore.exe
+		ToolBin\s3-upload.cmd = ToolBin\s3-upload.cmd
+		ToolBin\s3-upload.ps1 = ToolBin\s3-upload.ps1
 		ToolBin\text.cmd = ToolBin\text.cmd
 		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
 		ToolBin\wsl-util.cmd = ToolBin\wsl-util.cmd
@@ -437,6 +439,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopServer", "Lib\Neon.Kube.DesktopServer\Neon.Kube.DesktopServer.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Grpc", "Test\Test.Neon.Grpc\Test.Neon.Grpc.csproj", "{073E7438-F2C6-4E59-9488-F4D3B9993BBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.ResourceDefinitions", "Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj", "{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -2051,6 +2055,24 @@ Global
 		{073E7438-F2C6-4E59-9488-F4D3B9993BBB}.Release|x64.Build.0 = Release|Any CPU
 		{073E7438-F2C6-4E59-9488-F4D3B9993BBB}.Release|x86.ActiveCfg = Release|Any CPU
 		{073E7438-F2C6-4E59-9488-F4D3B9993BBB}.Release|x86.Build.0 = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|Any CPU.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|x64.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|x64.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|x86.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.CodeDoc|x86.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|x64.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Debug|x86.Build.0 = Debug|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|x64.ActiveCfg = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|x64.Build.0 = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|x86.ActiveCfg = Release|Any CPU
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2159,6 +2181,7 @@ Global
 		{EE73B97C-84AB-478A-ADEA-2808285871DF} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{83B7756D-E696-47C1-B89C-F7575364B5FD} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{073E7438-F2C6-4E59-9488-F4D3B9993BBB} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
+		{3A908DF0-E5CE-4F01-AA9C-C133F45C9886} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

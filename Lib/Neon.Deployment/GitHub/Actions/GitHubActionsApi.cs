@@ -35,6 +35,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Deployment;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Deployment
 {
@@ -125,6 +126,7 @@ namespace Neon.Deployment
         /// <returns>The number of runs deleted.</returns>
         public async Task<int> DeleteRunsAsync(string repo, string workflowName = null, TimeSpan maxAge = default)
         {
+            await SyncContext.Clear;
             GitHub.GetCredentials();
 
             var repoPath    = GitHubRepoPath.Parse(repo);
@@ -223,7 +225,7 @@ namespace Neon.Deployment
 
                     if (response.StatusCode == HttpStatusCode.InternalServerError)
                     {
-                        Task.Delay(TimeSpan.FromSeconds(2)).Wait();     // Pause in case this is a rate-limit thing
+                        Task.Delay(TimeSpan.FromSeconds(2)).WaitWithoutAggregate();     // Pause in case this is a rate-limit thing
                         continue;
                     }
 

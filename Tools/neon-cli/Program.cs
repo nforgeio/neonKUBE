@@ -31,6 +31,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon;
@@ -132,15 +135,22 @@ NEON KUBECTL COMMANDS:
 
     neon apply -f my-manifest.yaml
 
-NEON CLUSTER MANAGEMENT COMMANDS:
+NEON CLUSTER LIFE-CYCLE COMMANDS:
 
     neon cluster check
-    neon cluster prepare    [CLUSTER-DEF]
-    neon cluster remove
-    neon cluster setup      [CLUSTER-DEF]
-    neon cluster start      USER@CLUSTER[/NAMESPACE]
-    neon cluster stop       USER@CLUSTER[/NAMESPACE] [--turnoff]
+    neon cluster is-locked
+    neon cluster lock
+    neon cluster prepare    CLUSTER-DEF
+    neon cluster pause      [OPTIONS]
+    neon cluster remove     [OPTIONS]
+    neon cluster rm         [OPTIONS]
+    neon cluster reset      [OPTIONS]
+    neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster start
+    neon cluster stop       [OPTIONS]
+    neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]
+
     neon login              COMMAND
     neon logout
 

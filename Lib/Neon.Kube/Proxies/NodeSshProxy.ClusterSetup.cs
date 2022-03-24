@@ -166,9 +166,9 @@ do
     fi
 done
 
-# Generate the [{KubeNodeFolders.Bin}/update-time] script.
+# Generate the [{KubeNodeFolder.Bin}/update-time] script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/update-time
+cat <<EOF > {KubeNodeFolder.Bin}/update-time
 #!/bin/bash
 #------------------------------------------------------------------------------
 # This script stops the NTP time service and forces an immediate update.  This 
@@ -204,7 +204,7 @@ if \${{restart}} ; then
 fi
 EOF
 
-chmod 700 {KubeNodeFolders.Bin}/update-time
+chmod 700 {KubeNodeFolder.Bin}/update-time
 
 # Edit the NTP [/etc/init.d/ntp] script to initialize the hardware clock and
 # call [update-time] before starting NTP.
@@ -284,7 +284,7 @@ case $1 in
 		log_daemon_msg ""Finished: Disabling Hyper-V time synchronization"" ""ntpd""
         
         log_daemon_msg ""Start: Updating current time"" ""ntpd""
-        {KubeNodeFolders.Bin}/update-time --norestart
+        {KubeNodeFolder.Bin}/update-time --norestart
         log_daemon_msg ""Finished: Updating current time"" ""ntpd""
 
         #------------------------------
@@ -341,10 +341,10 @@ service ntp restart
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.LogProgress(this, verb: "configure", message: "environment");
+
             var clusterDefinition = Cluster.Definition;
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
-
-            Status = "environment variables";
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
 
@@ -368,9 +368,9 @@ service ntp restart
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(KubeNodeFolders.Bin))
+                            if (!line.Contains(KubeNodeFolder.Bin))
                             {
-                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolders.Bin}");
+                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolder.Bin}");
                             }
                             else
                             {
@@ -417,11 +417,11 @@ service ntp restart
                 sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolders.Bin}");
-            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolders.Config}");
-            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolders.Setup}");
-            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolders.State}");
-            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolders.Tmpfs}");
+            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolder.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolder.Config}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolder.Setup}");
+            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolder.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolder.Tmpfs}");
 
             // Kubernetes related variables for masters.
 
@@ -438,8 +438,13 @@ service ntp restart
         /// <summary>
         /// Updates the node hostname and related configuration.
         /// </summary>
-        private void UpdateHostname()
+        /// <param name="controller">The setup controller.</param>
+        private void UpdateHostname(ISetupController controller)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.LogProgress(this, verb: "configure", message: "hostname");
+            
             // Update the hostname.
 
             SudoCommand($"hostnamectl set-hostname {Name}");
@@ -478,6 +483,8 @@ ff02::2         ip6-allrouters
             InvokeIdempotent("setup/package-caching",
                 () =>
                 {
+                    controller.LogProgress(this, verb: "configure", message: "apt package proxy");
+
                     // Configure the [apt-cacher-ng] pckage proxy service on master nodes.
 
                     if (NodeDefinition.Role == NodeRole.Master)
@@ -486,8 +493,8 @@ ff02::2         ip6-allrouters
 $@"
 	set -eou pipefail	# Enable full failure detection
 
-	{KubeNodeFolders.Bin}/safe-apt-get update
-	{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng
+	{KubeNodeFolder.Bin}/safe-apt-get update
+	{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
 
 	# Configure the cache to pass-thru SSL requests
 	# and then restart.
@@ -521,7 +528,7 @@ $@"
 $@"
 # Configure APT proxy selection.
 
-echo {sbPackageProxies} > {KubeNodeFolders.Config}/package-proxy
+echo {sbPackageProxies} > {KubeNodeFolder.Config}/package-proxy
 
 cat <<EOF > /usr/local/bin/get-package-proxy
 #!/bin/bash
@@ -532,7 +539,7 @@ cat <<EOF > /usr/local/bin/get-package-proxy
 # This script determine which (if any) configured APT proxy caches are running
 # and returns its endpoint or ""DIRECT"" if none of the proxies are available and 
 # the distribution's mirror should be accessed directly.  This uses the
-# [{KubeNodeFolders.Config}/package-proxy] file to obtain the list of proxies.
+# [{KubeNodeFolder.Config}/package-proxy] file to obtain the list of proxies.
 #
 # This is called when the following is specified in the APT configuration,
 # as we do further below:
@@ -542,7 +549,7 @@ cat <<EOF > /usr/local/bin/get-package-proxy
 # See this link for more information:
 #
 #		https://trent.utfs.org/wiki/Apt-get#Failover_Proxy
-NEON_PACKAGE_PROXY=$(cat {KubeNodeFolders.Config}/package-proxy)
+NEON_PACKAGE_PROXY=$(cat {KubeNodeFolder.Config}/package-proxy)
 if [ ""\${{NEON_PACKAGE_PROXY}}"" == """" ] ; then
     echo DIRECT
     exit 0
@@ -600,7 +607,7 @@ EOF
                     PrepareNode(controller);
                     ConfigureEnvironmentVariables(controller);
                     SetupPackageProxy(controller);
-                    UpdateHostname();
+                    UpdateHostname(controller);
                     NodeInitialize(controller);
                     NodeInstallCriO(controller, clusterManifest);
                     NodeInstallIPVS(controller);
@@ -817,9 +824,9 @@ systemctl enable kubelet
                 {
                     controller.LogProgress(this, verb: "unzip", message: "helm charts");
 
-                    var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+                    var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
                     
-                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolders.Helm} || true");
+                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolder.Helm} || true");
                     SudoCommand($"rm -f {zipPath}");
                 });
 
@@ -864,7 +871,7 @@ systemctl enable kubelet
 $@"
 set -euo pipefail
 
-cd {KubeNodeFolders.Helm}
+cd {KubeNodeFolder.Helm}
 
 helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 

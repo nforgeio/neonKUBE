@@ -75,7 +75,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         public static void ValidateFile(string path, bool strict = false)
         {
             FromFile(path, strict: strict);
@@ -96,6 +97,7 @@ namespace Neon.Kube
         /// </note>
         /// </param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -132,7 +134,8 @@ namespace Neon.Kube
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -259,18 +262,31 @@ namespace Neon.Kube
                     case HostingEnvironment.HyperV:
 
                         return Hosting.HyperV != null && Hosting.HyperV.NeonDesktopBuiltIn;
-                }
 
-                return false;
+                    default:
+
+                        return false;
+                }
             }
         }
 
         /// <summary>
         /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
         /// </summary>
-        [JsonProperty(PropertyName = "IsDesktopCluster", Required = Required.Always)]
-        [YamlMember(Alias = "isDesktopCluster", ApplyNamingConventions = false)]
-        public bool IsDesktopCluster { get; set; }
+        [JsonProperty(PropertyName = "IsDesktopBuiltIn", Required = Required.Always)]
+        [YamlMember(Alias = "isDesktopBuiltIn", ApplyNamingConventions = false)]
+        public bool IsDesktopBuiltIn { get; set; }
+
+        /// <summary>
+        /// Indicates whether the cluster should be locked after being deployed successfully.
+        /// <b>neon-desktop</b>, <b>neon-cli</b>, and <b>KubernetesFixture</b> will block distructive
+        /// operations such as cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
+        /// on locked clusters as to help avoid impacting production clusters by accident.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "isLocked", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool IsLocked { get; set; } = true;
 
         /// <summary>
         /// <para>
@@ -670,7 +686,16 @@ namespace Neon.Kube
             lock (syncLock)
             {
                 SetupState = null;
-                Hosting?.ClearSecrets(this);
+
+                // $todo(jefflill):
+                //
+                // I'm temporarily commenting this out because neon-desktop needs
+                // the hosting related secrets in some circumstances.  We need to
+                // think through a comprehensive solution:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1482
+
+                // Hosting?.ClearSecrets(this);
             }
         }
 
@@ -914,14 +939,14 @@ namespace Neon.Kube
             Network      = Network ?? new NetworkOptions();
             Container    = Container ?? new ContainerOptions();
 
-            if (IsDesktopCluster && Nodes.Count() > 1)
+            if (IsDesktopBuiltIn && Nodes.Count() > 1)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only for single node clusters.");
+                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only for single node clusters.");
             }
 
-            if (IsDesktopCluster && !IsSpecialNeonCluster)
+            if (IsDesktopBuiltIn && !IsSpecialNeonCluster)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
             Debug.Validate(this);

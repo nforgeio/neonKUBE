@@ -18,9 +18,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Retry;
 using Neon.Kube.Operator;
+using Neon.Kube.ResourceDefinitions;
+using Neon.Retry;
+using Neon.Tasks;
 
 using k8s.Models;
 

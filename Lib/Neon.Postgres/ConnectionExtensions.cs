@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using Npgsql;
 
@@ -65,6 +66,7 @@ namespace Neon.Postgres
         /// <returns>The new <see cref="NpgsqlConnection"/>.</returns>
         public static async Task<NpgsqlConnection> OpenDatabaseAsync(this NpgsqlConnection connection, string database)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
 
             var targetConnection = connection.CloneWith($"host={connection.Host};port={connection.Port};database={database};user id={connection.UserName}");
@@ -133,6 +135,7 @@ namespace Neon.Postgres
             CancellationToken       cancellationToken = default,
             NpgsqlTransaction       transaction       = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cmdText), nameof(cmdText));
 
             NpgsqlCommand   command;
@@ -213,6 +216,7 @@ namespace Neon.Postgres
             CancellationToken       cancellationToken = default,
             NpgsqlTransaction       transaction = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cmdText), nameof(cmdText));
 
             NpgsqlCommand command;
@@ -297,6 +301,7 @@ namespace Neon.Postgres
             CancellationToken       cancellationToken = default,
             NpgsqlTransaction       transaction       = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cmdText), nameof(cmdText));
 
             NpgsqlCommand   command;
@@ -484,6 +489,8 @@ namespace Neon.Postgres
             CancellationToken       cancellationToken = default,
             NpgsqlTransaction       transaction       = null)
         {
+            await SyncContext.Clear;
+
             foreach (var command in SplitBatch(batchText))
             {
                 await connection.ExecuteNonQueryAsync(command, cancellationToken, transaction);

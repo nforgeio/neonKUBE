@@ -298,7 +298,7 @@ namespace TestCommon
             autoEvent.Dispose();
             Assert.Throws<ObjectDisposedException>(() => autoEvent.Set());
             Assert.Throws<ObjectDisposedException>(() => autoEvent.Reset());
-            Task.Run(() => Assert.ThrowsAsync<ObjectDisposedException>(async () => await autoEvent.WaitAsync())).Wait();
+            Task.Run(() => Assert.ThrowsAsync<ObjectDisposedException>(async () => await autoEvent.WaitAsync())).WaitWithoutAggregate();
 
             // Verify that disposing an event causes any waiting tasks
             // to unblock with an [ObjectDisposedException].

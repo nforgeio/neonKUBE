@@ -144,6 +144,8 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ReplyAsync()
         {
+            await SyncContext.Clear;
+            
             // This may only be called within a workflow method.
 
             WorkflowBase.CheckCallContext(allowWorkflow: true);

@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -87,6 +88,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ExecuteAsync(params object[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;
@@ -103,6 +105,7 @@ namespace Neon.Cadence
         /// <returns>The activity result.</returns>
         public async Task<TResult> ExecuteAsync<TResult>(params object[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             var dataConverter = client.DataConverter;

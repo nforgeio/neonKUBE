@@ -59,7 +59,7 @@ namespace Neon.Temporal
         /// <inheritdoc/>
         public async Task GetAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (completed)
             {
@@ -101,7 +101,7 @@ namespace Neon.Temporal
         /// <inheritdoc/>
         public async Task<TResult> GetAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (completed)
             {

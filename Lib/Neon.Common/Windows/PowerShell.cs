@@ -176,9 +176,13 @@ $@"
 try {{
     {command} | Out-String -Width {PowershellBufferWidth}
 }}
-catch [Exception] {{
-    write-error $_Exception.Message
-    exit 1
+catch [Exception]
+{{
+    if ($_Exception -ne $null)
+    {{
+        write-error $_Exception.Message
+        exit 1
+    }}
 }}
 ");
                 var result  = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);

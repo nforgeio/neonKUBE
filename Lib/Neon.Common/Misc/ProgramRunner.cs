@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 
 namespace Neon.Common
 {
@@ -226,6 +227,7 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public async Task<ExecuteResponse> ExecuteAsync(ProgramEntrypointAsync mainAsync, params string[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
 
             if (programThread != null)
@@ -388,6 +390,7 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypointAsync mainAsync, byte[] inputBytes, params string[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
             Covenant.Requires<ArgumentNullException>(inputBytes != null, nameof(inputBytes));
 
@@ -454,6 +457,7 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public async Task<ExecuteResponse> ExecuteWithInputAsync(ProgramEntrypointAsync mainAsync, string inputText, params string[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(mainAsync != null, nameof(mainAsync));
             Covenant.Requires<ArgumentNullException>(inputText != null, nameof(inputText));
 

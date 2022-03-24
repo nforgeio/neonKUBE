@@ -68,7 +68,7 @@ services:
             var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new string[] { "ps" });
 
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("neon-unit-test-stack_", result.AllText);
+            Assert.Contains("neon-unit-test-stack-", result.AllText);
 
             result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new string[] { "network", "ls" });
 
@@ -80,9 +80,9 @@ services:
         public void Restart()
         {
             // We're going to verify that the application was actually restarted by verifying
-            // that the new container ID was assigned a new ID.
+            // that the new container was assigned a new ID.
 
-            var idRegex = new Regex(@"^neon-unit-test-stack_.+$", RegexOptions.Multiline);
+            var idRegex = new Regex(@"^neon-unit-test-stack-.+$", RegexOptions.Multiline);
             var result  = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--format", "{{.Names}}.{{.ID}}" });
 
             Assert.Equal(0, result.ExitCode);

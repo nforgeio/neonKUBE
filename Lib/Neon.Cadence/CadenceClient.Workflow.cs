@@ -61,7 +61,7 @@ namespace Neon.Cadence
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
             where TWorkflow : WorkflowBase
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
             EnsureNotDisposed();
@@ -111,7 +111,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
@@ -149,7 +149,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0, nameof(cacheMaximumSize));
             EnsureNotDisposed();
 
@@ -171,7 +171,7 @@ namespace Neon.Cadence
         /// <returns>The maximum number of cached workflows.</returns>
         public async Task<int> GetWorkflowCacheSizeAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             EnsureNotDisposed();
 
             return await Task.FromResult(workflowCacheSize);
@@ -527,7 +527,7 @@ namespace Neon.Cadence
         /// <exception cref="EntityNotExistsException">Thrown if the workflow does not exist.</exception>
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
@@ -564,6 +564,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             maxWait = maxWait ?? Settings.MaxWorkflowWaitUntilRunning;
@@ -665,6 +666,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
@@ -700,6 +702,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
@@ -745,6 +748,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<ChildExecution> StartChildWorkflowAsync(Workflow parentWorkflow, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
@@ -785,6 +789,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution childExecution)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             EnsureNotDisposed();
@@ -817,6 +822,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(WorkflowExecution execution, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
@@ -844,6 +850,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
@@ -871,6 +878,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         public async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
@@ -900,6 +908,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
@@ -931,6 +940,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             EnsureNotDisposed();
@@ -967,6 +977,7 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
             EnsureNotDisposed();
@@ -1007,6 +1018,7 @@ namespace Neon.Cadence
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, byte[] signalArgs)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
@@ -1058,6 +1070,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<byte[]> SyncSignalWorkflowAsync(WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
@@ -1150,6 +1163,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<byte[]> SyncSignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
