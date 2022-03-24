@@ -12,7 +12,7 @@ data:
       agent:
         enabled: true
         instance: ${HOSTNAME}
-        scrape_integration: true
+        scrape_integration: false
       node_exporter:
         enabled: true
         wal_truncate_frequency: 15m
@@ -32,19 +32,21 @@ data:
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
             queue_config:
-              max_backoff: 60s
+              min_backoff: 1m
+              max_backoff: 5m
+              batch_send_deadline: 5m
         external_labels:
           cluster: {{ .Values.cluster.name }}
           node: ${HOSTNAME}
         scrape_interval: {{ .Values.metrics.global.scrapeInterval | default "60s" }}
       wal_directory: /var/lib/agent/data
-      wal_cleanup_age: 1h
+      wal_cleanup_age: 15m
       wal_cleanup_period: 15m
       configs:
         - name: node
           host_filter: false
           wal_truncate_frequency: 15m
-          max_wal_time: 1h
+          max_wal_time: 15m
           scrape_configs:
             - job_name: crio
               scrape_interval:  {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
@@ -55,13 +57,8 @@ data:
                     instance: ${HOSTNAME}
         - host_filter: true
           name: agent
-          wal_truncate_frequency: 15m
-          max_wal_time: 1h
-          remote_write:
-            - url: http://cortex:9009/api/prom/push
-              headers: 
-                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
-              send_exemplars: true
+          wal_truncate_frequency: 5m
+          max_wal_time: 15m
           scrape_configs:
             - job_name: 'istiod'
               scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
@@ -131,7 +128,7 @@ data:
             - job_name: journal
               journal:
                 path: /var/log/journal
-                max_age: 12h
+                max_age: 1h
                 labels:
                   job: systemd-journal
               relabel_configs:
