@@ -69,13 +69,14 @@ config:
     wal:
       dir: /loki/wal
   limits_config:
-    enforce_metric_name: false
+    enforce_metric_name: true
     reject_old_samples: true
-    reject_old_samples_max_age: 168h
+    reject_old_samples_max_age: 12h
     retention_period: 6h
   server:
     http_listen_port: 3100
   ruler:
+    rule_path: /loki/ruler
     enable_sharding: true
     alertmanager_url: "cortex:9009/api/prom/alertmanager"
     enable_alertmanager_v2: true
@@ -89,6 +90,9 @@ config:
       schema: v11
       index:
         prefix: index_
+        period: 24h
+      chunks:
+        prefix: chunks_
         period: 24h
   storage_config:
     boltdb_shipper:
@@ -104,6 +108,12 @@ config:
       insecure: true
       s3forcepathstyle: true
       region: neon
+    index_queries_cache_config:
+      redis:
+        db: 5
+        endpoint: neon-redis.neon-system:26379
+        master_name: master
+        timeout: 2000ms
   compactor:
     working_directory: /loki/boltdb-shipper-compactor
     shared_store: s3
@@ -111,9 +121,19 @@ config:
     retention_delete_delay: 5m
     retention_delete_worker_count: 5
     delete_request_cancel_period: 5m
+  query_range:
+    split_queries_by_interval: 30m
+    results_cache:
+      cache:
+        redis:
+          db: 5
+          endpoint: neon-redis.neon-system:26379
+          master_name: master
+          timeout: 2000ms
+    cache_results: true
   table_manager:
     retention_deletes_enabled: true
-    retention_period: 6h
+    retention_period: 7d
 
 tracing:
   jaegerAgentHost: grafana-agent-node
@@ -200,10 +220,10 @@ resources: {}
 #   memory: 128Mi
 
 securityContext:
-  fsGroup: 10001
-  runAsGroup: 10001
+  fsGroup: 1000
+  runAsGroup: 1000
   runAsNonRoot: true
-  runAsUser: 10001
+  runAsUser: 1000
 
 service:
   type: ClusterIP

@@ -68,15 +68,16 @@ spec:
             - name: storage
               mountPath: "/loki"
               subPath: {{ .Values.persistence.subPath }}
-            {{- if gt (len .Values.alerting_groups) 0 }}
             - name: scratch
               mountPath: /tmp/scratch
             - name: rules
               mountPath: /rules
-            {{- end }}
           ports:
             - name: http-metrics
               containerPort: {{ .Values.config.server.http_listen_port }}
+              protocol: TCP
+            - name: tcp-memberlist
+              containerPort: 7946
               protocol: TCP
           startupProbe:
             {{- toYaml .Values.startupProbe | nindent 12 }}
@@ -91,6 +92,10 @@ spec:
           env:
             - name: GOGC
               value: "10"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             {{- if .Values.env }}
               {{- toYaml .Values.env | nindent 12 }}
             {{- end }}
@@ -109,13 +114,10 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       volumes:
-        {{- if gt (len .Values.alerting_groups) 0 }}
         - name: scratch
           emptyDir: {}
         - name: rules
-          configMap:
-            name: {{ template "loki.fullname" . }}-alerting-rules
-        {{- end }}
+          emptyDir: {}
         - name: config
           secret:
             secretName: {{ template "loki.fullname" . }}

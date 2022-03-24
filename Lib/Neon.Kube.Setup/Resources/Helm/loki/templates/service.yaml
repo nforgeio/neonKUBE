@@ -35,6 +35,10 @@ spec:
 {{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
       nodePort: {{ .Values.service.nodePort }}
 {{- end }}
+    - port: 7946
+      protocol: TCP
+      name: tcp-memberlist
+      targetPort: 7946
 {{- if .Values.extraPorts }}
 {{ toYaml .Values.extraPorts | indent 4}}
 {{- end }}
