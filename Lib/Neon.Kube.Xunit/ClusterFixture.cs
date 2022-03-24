@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubernetesFixture.cs
+// FILE:	    ClusterFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
@@ -69,8 +69,8 @@ namespace Neon.Kube.Xunit
     /// This fixture can be used to run tests against any existing Kubernetes cluster
     /// as well as a new neonKUBE cluster deployed by the fixture.  The idea here is
     /// that you'll have your unit test class inherit from <see cref="IClassFixture{TFixture}"/>,
-    /// passing <see cref="KubernetesFixture"/> as the type parameter and then implementing
-    /// a test class constructor that has a <see cref="KubernetesFixture"/> parameter that
+    /// passing <see cref="ClusterFixture"/> as the type parameter and then implementing
+    /// a test class constructor that has a <see cref="ClusterFixture"/> parameter that
     /// will receive an instance of the the fixture.
     /// </para>
     /// <para>
@@ -122,7 +122,7 @@ namespace Neon.Kube.Xunit
     /// by different runners or developers on their own machines.
     /// </para>
     /// </remarks>
-    public class KubernetesFixture : TestFixture
+    public class ClusterFixture : TestFixture
     {
         private bool    deployed              = false;
         private bool    unredacted            = false;
@@ -131,7 +131,7 @@ namespace Neon.Kube.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        public KubernetesFixture()
+        public ClusterFixture()
         {
         }
 
@@ -331,13 +331,13 @@ namespace Neon.Kube.Xunit
         /// <remarks>
         /// <note>
         /// <para>
-        /// <b>IMPORTANT:</b> Only one <see cref="KubernetesFixture"/> can be run at a time on
+        /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
         /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/(fixture)/*.*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
-        /// This means that not only will running <see cref="KubernetesFixture"/> based tests in parallel
+        /// This means that not only will running <see cref="ClusterFixture"/> based tests in parallel
         /// within the same instance of Visual Studio fail, but but running these tests in different
         /// Visual Studio instances will also fail.
         /// </para>
