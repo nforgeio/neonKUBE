@@ -57,6 +57,11 @@ namespace Neon.Kube
         public const string KubeSystem = "kube-system";
 
         /// <summary>
+        /// Hosts the Kubernetes node leases.
+        /// </summary>
+        public const string KubeNodeLease = "kube-node-lease";
+
+        /// <summary>
         /// Hosts the remaining Istio components.
         /// </summary>
         public const string NeonIngress = "neon-ingress";
@@ -82,22 +87,22 @@ namespace Neon.Kube
         public const string NeonStatus = "neon-status";
 
         /// <summary>
-        /// Returns the list of built-in Kubernetes namespaces.
+        /// Returns the set of built-in Kubernetes namespaces.
         /// </summary>
         public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the list of built-in neonKUBE namespaces.
+        /// Returns the set of built-in neonKUBE namespaces.
         /// </summary>
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the list of all Kubernetes and neonKUBE namespaces.
+        /// Returns the set of all Kubernetes and neonKUBE namespaces.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the list of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
+        /// Returns the set of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespacesWithoutDefault { get; private set; }
 
@@ -109,8 +114,9 @@ namespace Neon.Kube
             KubernetesNamespaces = new List<string>()
             {
                 Default,
-                KubeSystem,
+                KubeNodeLease,
                 KubePublic,
+                KubeSystem,
                 KubernetesDashboard
             }
             .AsReadOnly();
@@ -138,7 +144,7 @@ namespace Neon.Kube
 
             foreach (var @namespace in InternalNamespaces.Where(@namespace => @namespace != KubeNamespace.Default))
             {
-                internalNamespaces.Add(@namespace);
+                internalNamespacesWithoutDefault.Add(@namespace);
             }
 
             InternalNamespacesWithoutDefault = internalNamespacesWithoutDefault;

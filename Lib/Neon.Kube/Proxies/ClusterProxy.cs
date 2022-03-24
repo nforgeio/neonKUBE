@@ -533,11 +533,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the cached <see cref="IKubernetes"/> client for the cluster, constructing one when nothing is cached yet.
+        /// Returns the <see cref="IKubernetes"/> client for the cluster.
         /// </summary>
         /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
         /// <exception cref="InvalidOperationException">Thrown when there isn't a current Kubernetes context.</exception>
-        private IKubernetes K8s
+        public IKubernetes K8s
         {
             get
             {
@@ -1075,7 +1075,7 @@ namespace Neon.Kube
             // container images from the node local CRI-O instance.
 
             //-----------------------------------------------------------------
-            // Reset Auth (Dex/GlAuth)
+            // Reset Auth (Dex/Glauth)
 
             // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
 
