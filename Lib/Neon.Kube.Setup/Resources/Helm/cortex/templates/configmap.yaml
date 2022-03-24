@@ -38,3 +38,20 @@ data:
     - name: 'team-X-mails'
       email_configs:
       - to: 'team-X+alerts@example.org'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "cortex.fullname" . }}-runtime
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app: "{{ template "cortex.fullname" . }}"
+data:
+  runtime.yaml: |-
+    ingester_limits:
+      max_ingestion_rate: 60000
+      max_series: 500000
+      max_tenants: 1000
+      max_inflight_push_requests: 1000

@@ -52,6 +52,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "-config.file=/etc/cortex/cortex.yaml"
+            - "-runtime-config.file=/etc/cortex-runtime/runtime.yaml"
             - "-config.expand-env"
             - "-log.level=error"
             - "-log.format=json"
@@ -59,12 +60,23 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/cortex
+            - name: config-runtime
+              mountPath: /etc/cortex-runtime
+            - name: rules
+              mountPath: /tmp/cortex/rules
+            - name: compactor
+              mountPath: /tmp/cortex/compactor
+            - name: tsdb
+              mountPath: /tmp/cortex/tsdb
+            - name: tsdb-sync
+              mountPath: /tmp/cortex/tsdb-sync
+            - name: query-tracker
+              mountPath: /tmp/cortex/query-tracker
+            - name: alertmanager
+              mountPath: /tmp/cortex/alertmanager
           ports:
             - name: http-metrics
               containerPort: {{ .Values.cortexConfig.server.http_listen_port }}
-              protocol: TCP
-            - name: tcp-memberlist
-              containerPort: {{ .Values.cortexConfig.memberlist.bind_port }}
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
@@ -104,5 +116,19 @@ spec:
         - name: config
           configMap:
             name: {{ template "cortex.fullname" . }}
-        - name: storage
+        - name: config-runtime
+          configMap:
+            name: {{ template "cortex.fullname" . }}-runtime
+            defaultMode: 420
+        - name: rules
+          emptyDir: {}
+        - name: compactor
+          emptyDir: {}
+        - name: tsdb
+          emptyDir: {}
+        - name: tsdb-sync
+          emptyDir: {}
+        - name: query-tracker
+          emptyDir: {}
+        - name: alertmanager
           emptyDir: {}

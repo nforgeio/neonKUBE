@@ -20,7 +20,7 @@ rbac:
 replicas: 1
 
 cortexConfig:
-  target: all,alertmanager
+  target: all,alertmanager,compactor
   auth_enabled: true
   http_prefix: /api/prom
   api:
@@ -31,18 +31,11 @@ cortexConfig:
     http_listen_port: 9009
     grpc_listen_port: 9095
     # Configure the server to allow messages up to 100MB.
-    grpc_server_max_recv_msg_size: 10485760
-    grpc_server_max_send_msg_size: 10485760
-    grpc_server_max_concurrent_streams: 1000
-    grpc_server_min_time_between_pings: 10s
+    grpc_server_min_time_between_pings: 1s
     grpc_server_ping_without_stream_allowed: true
-  memberlist:
-    # defaults to hostname
-    bind_port: 7946
-    join_members:
-      - cortex:7946
-    abort_if_cluster_join_fails: false
   distributor:
+    remote_timeout: 10s
+    extend_writes: true
     shard_by_all_labels: true
     pool:
       health_check_ingesters: true
@@ -56,16 +49,19 @@ cortexConfig:
             - neon-etcd.neon-system.svc.cluster.local:2379
     ring:
       kvstore:
-        store: memberlist
+        store: etcd
         prefix: neonkube.io/cortex/collectors/
   ingester_client:
     grpc_client_config:
-      # Configure the client to allow messages up to 100MB.
-      max_recv_msg_size: 10485760
-      max_send_msg_size: 10485760
       grpc_compression: gzip
   storage:
     engine: blocks
+    index_queries_cache_config:
+      redis:
+        db: 4
+        endpoint: neon-redis.neon-system.svc.cluster.local:26379
+        master_name: master
+        timeout: 2000ms
   limits:
     enforce_metric_name: true
     reject_old_samples: true
@@ -81,18 +77,20 @@ cortexConfig:
     tsdb:
       dir: /tmp/cortex/tsdb
       block_ranges_period:
-        - 5m
-      retention_period: 15m
+        - 30m0s
+      retention_period: 1h30m0s
       stripe_size: 4096
-      head_chunks_write_buffer_size_bytes: 1048576
+      wal_compression_enabled: true
     bucket_store:
+      max_concurrent: 25
+      max_chunk_pool_bytes: 357913941
       sync_dir: /tmp/cortex/tsdb-sync
       block_sync_concurrency: 5
       meta_sync_concurrency: 5
       index_cache:
         backend: inmemory
         inmemory:
-          max_size_bytes: 128000000
+          max_size_bytes: 357913941
     s3:
       bucket_name: cortex
       endpoint: minio.neon-system
@@ -103,6 +101,7 @@ cortexConfig:
     retain_period: 1m
     max_chunk_age: 1h
     lifecycler:
+      unregister_on_shutdown: true
       # The address to advertise for this ingester. Will be autodiscovered by
       # looking up address on eth0 or en0; can be specified if this fails.
       min_ready_duration: 20s
@@ -116,14 +115,18 @@ cortexConfig:
       ring:
         replication_factor: 1
         kvstore:
-          store: memberlist
+          store: etcd
           prefix: neonkube.io/cortex/collectors/
+          etcd:
+            endpoints:
+              - neon-etcd.neon-system.svc.cluster.local:2379
   frontend_worker:
-    frontend_address: ${MY_POD_IP}:9095
+    frontend_address: 0.0.0.0:9095
   alertmanager:
+    data_dir: /tmp/cortex/alertmanager
     fallback_config_file: /etc/cortex/alertmanager.yaml
     cluster:
-      listen_address: ${MY_POD_IP}:9094
+      listen_address: 0.0.0.0:9094
     enable_api: true
     external_url: /api/prom/alertmanager
     sharding_enabled: true
@@ -143,16 +146,21 @@ cortexConfig:
       endpoint: minio.neon-system
       insecure: true
       secret_access_key: ${SECRET_ACCESS_KEY}
+  querier:
+    batch_iterators: true
+    store_gateway_addresses: dns+cortex.neon-monitor.svc.cluster.local:9095
+    active_query_tracker_dir: /tmp/cortex/query-tracker
   query_range:
-    split_queries_by_interval: 24h
     align_queries_with_step: true
     cache_results: true
     results_cache:
       cache:
         redis:
-          endpoint: neon-redis.neon-system:26379
-          master_name: master
           db: 3
+          endpoint: neon-redis.neon-system.svc.cluster.local:26379
+          master_name: master
+          timeout: 2000ms
+    split_queries_by_interval: 24h
   ruler:
     alertmanager_url: /api/prom/alertmanager
     external_url: /api/prom/ruler
@@ -177,8 +185,10 @@ cortexConfig:
       secret_access_key: ${SECRET_ACCESS_KEY}
   compactor:
     block_ranges:
-      - 15m
-      - 1h
+      - 30m0s
+      - 2h0m0s
+      - 12h0m0s
+      - 24h0m0s
     meta_sync_concurrency: 5
     block_sync_concurrency: 5
     compaction_retries: 1
@@ -265,7 +275,11 @@ env:
   - name: GOGC
     value: "10"
 
-securityContext: {}
+securityContext:
+  fsGroup: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
 
 initContainers: []
 
