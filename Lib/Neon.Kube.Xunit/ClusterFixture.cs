@@ -34,20 +34,22 @@ using Neon.Tasks;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
+    /// <para>
     /// Fixture for testing against neonKUBE clusters.  This can execute against an existing
     /// cluster or it can manage the lifecycle of a new cluster during test runs.
+    /// </para>
+    /// <note>
+    /// The <c>NEON_CLUSTER_TESTING</c> environment variable must be defined on the current
+    /// machine to enable this feature.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <note>
     /// <para>
     /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
-    /// support parallel test execution because fixtures may impact global machine state
-    /// like starting a Docker container, modifying the local DNS <b>hosts</b> file, or 
-    /// configuring a test database.
-    /// </para>
-    /// <para>
-    /// You should explicitly disable parallel execution in all test assemblies that
-    /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+    /// support parallel test execution.  You need to explicitly disable parallel execution in 
+    /// all test assemblies that rely on thesex test fixtures by adding a C# file called 
+    /// <c>AssemblyInfo.cs</c> with:
     /// </para>
     /// <code language="csharp">
     /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
@@ -56,48 +58,112 @@ namespace Neon.Kube.Xunit
     /// and then define your test classes like:
     /// </para>
     /// <code language="csharp">
-    /// public class MyTests
+    /// public class MyTests : IClassFixture&lt;ClusterFixture&gt;
     /// {
+    ///     private const string clusterDefinitionYaml =
+    /// @"name: test
+    /// datacenter: test
+    /// environment: test
+    /// isLocked: false
+    /// timeSources:
+    /// - pool.ntp.org
+    /// kubernetes:
+    ///   allowPodsOnMasters: true
+    /// hosting:
+    ///   environment: hyperv
+    ///   hyperv:
+    ///     useInternalSwitch: true
+    ///   vm:
+    ///     namePrefix: "test"
+    ///     cores: 4
+    ///     memory: 12 GiB
+    ///     osDisk: 40 GiB
+    /// network:
+    ///   premiseSubnet: 100.64.0.0/24
+    ///   gateway: 100.64.0.1
+    /// nodes:
+    ///   master:
+    ///     role: master
+    ///     address: 100.64.0.2
+    /// ";
+    ///     
+    ///     private ClusterFixture foxture;
+    /// 
+    ///     public MyTests(ClusterFixture fixture)
+    ///     {
+    ///         this.fixture = foxture;    
+    /// 
+    ///         var status = fixture.StartAsync(clusterDefinitionYaml);
+    ///         
+    ///         switch (status)
+    ///         {
+    ///             case TestFixtureStatus.Disabled:
+    ///             
+    ///                 return;
+    ///                 
+    ///             case TestFixtureStatus.Started:
+    ///             
+    ///                 // The fixture ensures that the cluster is reset when
+    ///                 // [StartAsync()] is called the first time for a 
+    ///                 // fixture instance.
+    ///                 
+    ///                 break;
+    ///                 
+    ///             case TestFixtureStatus.AlreadyRunning:
+    ///             
+    ///                 // Reset the cluster between test method calls.
+    /// 
+    ///                 fixture.Reset();
+    ///                 break;
+    ///         }
+    ///     }
+    ///     
     ///     [Collection(TestCollection.NonParallel)]
     ///     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     ///     [ClusterFact]
     ///     public void Test()
     ///     {
+    ///         // Implement your test here.  Note that [fixture.Cluster] returns a [clusterProxy]
+    ///         // that can be used to manage the cluster and [fixture.K8s] returns an
+    ///         // [IKubernetes] client connected to the cluster with root privileges.
     ///     }
     /// }
     /// </code>
     /// </note>
     /// <para>
-    /// This fixture can be used to run tests against any existing neonKUBE cluster
-    /// as well as new clusters deployed by the fixture.  The idea here is that you'll have
+    /// This fixture can be used to run tests against an existing neonKUBE cluster as well
+    /// as a new clusters deployed by the fixture.  The idea here is that you'll have
     /// your unit test class inherit from <see cref="IClassFixture{TFixture}"/>, passing
     /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
     /// constructor that has a <see cref="ClusterFixture"/> parameter that will receive an 
-    /// instance of the fixture.
+    /// instance of the fixture and use that to initialize the test cluster using 
+    /// <see cref="StartAsync(string, string, bool, bool, int, string)"/> or one it its
+    /// overrides.
     /// </para>
     /// <para>
-    /// <b>To connect to an existing cluster</b>, you'll need to call one of the <see cref="ConnectAsync(K8SConfiguration, string, string)"/>,
-    /// <see cref="ConnectAsync(KubernetesClientConfiguration)"/>, or <see cref="ConnectAsync(string, string, string)"/>
-    /// methods to connect to an existing cluster within the constructor.
+    /// <see cref="StartAsync(string, string, bool, bool, int, string)"/> handles the deployment
+    /// of the test cluster when it doesn't already exist as well as the removal of any previous
+    /// cluster, depending on the parameters passed.  You'll be calling this in your test class
+    /// constructor.
     /// </para>
     /// <para>
-    /// <b>To deploy a temporary neonKUBE cluster</b>, you'll need to call one of
-    /// the <see cref="DeployAsync(ClusterDefinition, string, bool, bool, int, string)"/>, <see cref="DeployAsync(FileInfo, string, bool, bool, int, string)"/>,
-    /// or <see cref="DeployAsync(string, string, bool, bool, int, string)"/> methods within the constructor to provision
-    /// and setup the cluster using the specified cluster definition.  The <see cref="ClusterDefinition"/>
-    /// property will be set in this case.
+    /// The <b>StartAsync()</b> methods accept a cluster definition in various forms and returns
+    /// <see cref="TestFixtureStatus.Disabled"/> when cluster unit testing is disabled on the 
+    /// current machine, <see cref="TestFixtureStatus.Started"/> the first time one of these methods 
+    /// have been called on a fixture instance or <see cref="TestFixtureStatus.AlreadyRunning"/>
+    /// when <b>StartedAsync()</b> has already been called on the fixture.
     /// </para>
     /// <para>
-    /// The <b>ConnectAsync()</b> and <b>DeployAsync()</b> methods return <see cref="TestFixtureStatus.Started"/>
-    /// the first time one of these methods have been called on a fixture instance or after a
-    /// <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/> when the
-    /// fixture is already managing a cluster.
+    /// Any existing neonKUBE cluster may be removed by <c>StartAsync()</c>, depending on the
+    /// parameters passed and the test cluster may also be removed when the fixture is disposed,
+    /// also depending on the parameter passed.
     /// </para>
-    /// <note>
-    /// Any existing neonKUBE cluster will be removed by the <b>DeployAsync()</b> methods and any neonKUBE clusters 
-    /// created by <b>DeployAsync()</b> methods will be automatically removed when <see cref="Reset"/> is called 
-    /// or when xUnit finishes running the tests in your class.
-    /// </note>
+    /// <para>
+    /// It's up to you to call <see cref="ClusterFixture.Reset(ClusterResetOptions)"/> within your
+    /// test class constructor when you wish to reset the cluster state between test method executions.
+    /// Alternatively, you could design your tests such that each method runs in its own namespace
+    /// to improve performance while still providing some isolation.
+    /// </para>
     /// <para><b>CLUSTER TEST METHOD ATTRIBUTES</b></para>
     /// <para>
     /// Tests that require a neonKUBE cluster will generally be quite slow and will require additional
@@ -112,16 +178,16 @@ namespace Neon.Kube.Xunit
     /// variable <b>does not exist</b>.
     /// </para>
     /// <para>
-    /// Test cases that require neonKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
+    /// Test methods that require neonKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
     /// <see cref="ClusterTheoryAttribute"/> instead of <see cref="FactAttribute"/> or <see cref="TheoryAttribute"/>.
-    /// Then by default, these cases won't be executed unless the user explicitly enable this on the test machine
-    /// by defining <c>NEON_CLUSTER_TESTING</c>.
+    /// Then by default, these methods won't be executed unless the user has explicitly enabled this on the test
+    /// machine by defining the <c>NEON_CLUSTER_TESTING</c> environment variable.
     /// </para>
     /// <para>
-    /// In addition to tagging test cases like this, you'll need to modify your test class constructors to do
-    /// nothing rather than calling the <see cref="ClusterFixture"/> instance passed when cluster testing is
-    /// disabled.  You can use the <see cref="TestHelper.IsClusterTestingEnabled"/> property to know when to
-    /// do this.
+    /// In addition to tagging test methods like this, you'll need to modify your test class constructors to do
+    /// nothing when the fixture's <c>StartAsync()</c> methods return <see cref="TestFixtureStatus.Disabled"/>.
+    /// You can also use <see cref="TestHelper.IsClusterTestingEnabled"/> determine when cluster testing is
+    /// disabled.
     /// </para>
     /// <para><b>CLUSTER LOCKS</b></para>
     /// <para>
@@ -131,9 +197,14 @@ namespace Neon.Kube.Xunit
     /// unlock already deployed clusters or modify the cluster definition by setting <see cref="ClusterDefinition.IsLocked"/>
     /// to <c>false</c> when deploying your test clusters.
     /// </para>
+    /// <note>
+    /// The statement above is not strictly true: existing cluster resources may be removed by VM prefix or
+    /// cloud resource group depending on the <c>StartAsync()</c> parameters.  This functionality is provided
+    /// so that tests can cleanup after previous interrupted tests that didn't cleanup after itself.
+    /// </note>
     /// <para><b>CLUSTER DEPLOYMENT CONFLICTS</b></para>
     /// <para>
-    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>DeployAsync()</b> 
+    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>StartAsync()</b> 
     /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
     /// within separate directories named like <b>$(USERPROFILE)\.neonkube\automation\CLUSTER-NAME</b>.
@@ -153,19 +224,20 @@ namespace Neon.Kube.Xunit
     /// username, like <b>runner0-</b> or <b>jeff-</b>, or <b>runner0-jeff-</b>...
     /// </para>
     /// <note>
-    /// neonKUBE maintainers can also use <see cref="IProfileClient"/> functionality to reference per-user
-    /// and/or per-machine profile settings including things like cluster name prefixes, reserved node IP
-    /// addresses, etc.  These can be referenced by cluster definitions using special macros like <c>$&lt;$&lt;$&lt;NAME&gt;&gt;&gt;</c>
-    /// as described here: <see cref="PreprocessReader"/>.
+    /// neonKUBE maintainers can also use <see cref="IProfileClient"/> combined with the <b>neon-assistant</b>
+    /// tool to reference per-user and/or per-machine profile settings including things like cluster name prefixes, 
+    /// reserved node IP addresses, etc.  These can be referenced by cluster definitions using special macros like
+    /// <c>$&lt;$&lt;$&lt;NAME&gt;&gt;&gt;</c> as described here: <see cref="PreprocessReader"/>.
     /// </note>
     /// <para>
     /// The idea here is prevent cluster and/or VM naming conflicts for test clusters deployed in parallel
-    /// by different runners or developers on their own machines.
+    /// by different runners or developers on their own workstations as well as specifying environment specific
+    /// settings such as host hypervisors, LAN configuration, and node IP addresses.
     /// </para>
     /// </remarks>
     public class ClusterFixture : TestFixture
     {
-        private bool    deployed              = false;
+        private bool    isDeployed            = false;
         private bool    unredacted            = false;
         bool            removeOrphansByPrefix = false;
 
@@ -191,144 +263,23 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
-        /// Returns a standard <see cref="Kubernetes"/> client instance that can be used to
-        /// manage the attached cluster.  This property is set when a cluster is connected or
-        /// deployed.
+        /// Returns a <see cref="ClusterProxy"/> instance that can be used to manage the attached
+        /// cluster after it has been started.
         /// </summary>
-        public Kubernetes Client { get; private set; }
+        public ClusterProxy Cluster { get; private set; }
+
+        /// <summary>
+        /// Returns a <see cref="IKubernetes"/> client instance with root privileges that can be 
+        /// used to manage the test cluster after it has been started.
+        /// </summary>
+        public IKubernetes K8s => Cluster?.K8s;
 
         /// <summary>
         /// Returns the cluster definition for cluster deployed by this fixture via one of the
-        /// <b>DeployAsync()</b> methods or <c>null</c> when the fixture was connected to the cluster
+        /// <b>StartAsync()</b> methods or <c>null</c> when the fixture was connected to the cluster
         /// via one of the <b>ConnectAsync()</b> methods.
         /// </summary>
         public ClusterDefinition ClusterDefinition { get; private set; }
-
-        /// <summary>
-        /// <para>
-        /// Connects the Kubernetes cluster specified in the default kubeconfig.  You can explicitly specify
-        /// the configuration file location via <paramref name="kubeconfigPath"/> and override the current 
-        /// context and API server endpoint using the remaining optional parameters.
-        /// </para>
-        /// <note>
-        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
-        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
-        /// operations via the <see cref="Client"/>
-        /// </note>
-        /// </summary>
-        /// <param name="kubeconfigPath">Optionally specifies a specific kubeconfig file.</param>
-        /// <param name="currentContext">Optionally overrides the current context.</param>
-        /// <param name="masterUrl">Optionally overrides the URI for the API server endpoint.</param>
-        /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
-        public async Task<TestFixtureStatus> ConnectAsync(string kubeconfigPath = null, string currentContext = null, string masterUrl = null)
-        {
-            await SyncContext.Clear;
-
-            if (Client != null)
-            {
-                if (deployed)
-                {
-                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
-                }
-
-                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
-            }
-
-            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath, currentContext, masterUrl));
-
-            return await Task.FromResult(TestFixtureStatus.Started);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Connects the Kubernetes cluster specified by <see cref="KubernetesClientConfiguration"/>.
-        /// </para>
-        /// <note>
-        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
-        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
-        /// operations via the <see cref="Client"/>
-        /// </note>
-        /// </summary>
-        /// <param name="kubeconfig">Specifies the <see cref="KubernetesClientConfiguration"/>.</param>
-        /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
-        public async Task<TestFixtureStatus> ConnectAsync(KubernetesClientConfiguration kubeconfig)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(kubeconfig != null, nameof(kubeconfig));
-
-            if (Client != null)
-            {
-                if (deployed)
-                {
-                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
-                }
-
-                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
-            }
-
-            Client = new KubernetesClient(kubeconfig);
-
-            return await Task.FromResult(TestFixtureStatus.Started);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Connects the Kubernetes cluster specified by <see cref="K8SConfiguration"/>.  You can override the current  
-        /// context and API server endpoint using the remaining optional parameters.
-        /// </para>
-        /// <note>
-        /// Unlike the <b>DeployAsync()</b> methods, the <b>ConnectAsync()</b> methods make no attempt to reset the
-        /// Kubernetes cluster to any initial state.  You'll need to do that yourself by performing cluster
-        /// operations via the <see cref="Client"/>
-        /// </note>
-        /// </summary>
-        /// <param name="k8sConfig">The configuration.</param>
-        /// <param name="currentContext">Optionally overrides the current context.</param>
-        /// <param name="masterUrl">Optionally overrides the URI for the API server endpoint.</param>
-        /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>ConnectAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>DeployAsync()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
-        public async Task<TestFixtureStatus> ConnectAsync(K8SConfiguration k8sConfig, string currentContext = null, string masterUrl = null)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
-
-            if (Client != null)
-            {
-                if (deployed)
-                {
-                    throw new InvalidOperationException("[DeployAsync()] has already been called on this fixture.");
-                }
-
-                return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
-            }
-
-            Client = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigObject(k8sConfig, currentContext, masterUrl));
-
-            return await Task.FromResult(TestFixtureStatus.Started);
-        }
 
         /// <summary>
         /// <para>
@@ -359,16 +310,35 @@ namespace Neon.Kube.Xunit
         /// <param name="headendUri">
         /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
-        /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
+        /// <para>
+        /// The <see cref="TestFixtureStatus"/>:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Disabled"/></term>
+        ///     <description>
+        ///     Returned when cluster unit testing is disabled due to the <c>NEON_CLUSTER_TESTING</c> environment
+        ///     variable not being present on the current machine which means that <see cref="TestHelper.IsClusterTestingEnabled"/>
+        ///     returns <c>false</c>.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Started"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     class instance.
+        ///     </description>
+        /// </item>
+        /// </list>
         /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
         /// <remarks>
         /// <note>
         /// <para>
@@ -385,11 +355,11 @@ namespace Neon.Kube.Xunit
         /// </note>
         /// <para>
         /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
-        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// to ensure that clusters and VMs orphaned by previous interrupted test runs are removed in addition to
+        /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> DeployAsync(
+        public async Task<TestFixtureStatus> StartAsync(
             ClusterDefinition   clusterDefinition,
             string              imageUriOrPath        = null,
             bool                removeOrphansByPrefix = false, 
@@ -401,18 +371,18 @@ namespace Neon.Kube.Xunit
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
+            if (!TestHelper.IsClusterTestingEnabled)
+            {
+                return TestFixtureStatus.Disabled;
+            }
+
             try
             {
                 this.removeOrphansByPrefix = removeOrphansByPrefix;
                 this.unredacted            = unredacted;
 
-                if (this.Client != null)
+                if (this.Cluster != null)
                 {
-                    if (!this.deployed)
-                    {
-                        throw new InvalidOperationException("[ConnectAsync() has already been called on this fixture.");
-                    }
-
                     return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
                 }
 
@@ -567,24 +537,43 @@ namespace Neon.Kube.Xunit
         /// <param name="headendUri">
         /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
-        /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
+        /// <para>
+        /// The <see cref="TestFixtureStatus"/>:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Disabled"/></term>
+        ///     <description>
+        ///     Returned when cluster unit testing is disabled due to the <c>NEON_CLUSTER_TESTING</c> environment
+        ///     variable not being present on the current machine which means that <see cref="TestHelper.IsClusterTestingEnabled"/>
+        ///     returns <c>false</c>.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Started"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     class instance.
+        ///     </description>
+        /// </item>
+        /// </list>
         /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This
-        /// fixture does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
         /// <remarks>
         /// <para>
         /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
-        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// to ensure that clusters and VMs orphaned by previous interrupted test runs are removed in addition to
+        /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> DeployAsync(
+        public async Task<TestFixtureStatus> StartAsync(
             string  clusterDefinitionYaml, 
             string  imageUriOrPath        = null, 
             bool    removeOrphansByPrefix = false, 
@@ -596,7 +585,7 @@ namespace Neon.Kube.Xunit
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return await DeployAsync(
+            return await StartAsync(
                 clusterDefinition:      ClusterDefinition.FromYaml(clusterDefinitionYaml),
                 imageUriOrPath:         imageUriOrPath, 
                 removeOrphansByPrefix:  removeOrphansByPrefix,
@@ -634,24 +623,43 @@ namespace Neon.Kube.Xunit
         /// <param name="headendUri">
         /// Optionally overrides the default neonKUBE headend URI.
         /// </param>
-        /// <returns>The connected <see cref="Kubernetes"/> client.  This will also be available from <see cref="Client"/>.</returns>
         /// <returns>
-        /// <see cref="TestFixtureStatus.Started"/> the first time one of the <b>DeployAsync()</b> methods have been called 
-        /// on a fixture instance or after a <see cref="Reset"/> call or <see cref="TestFixtureStatus.AlreadyRunning"/>
-        /// when the fixture is already managing a cluster.
+        /// <para>
+        /// The <see cref="TestFixtureStatus"/>:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Disabled"/></term>
+        ///     <description>
+        ///     Returned when cluster unit testing is disabled due to the <c>NEON_CLUSTER_TESTING</c> environment
+        ///     variable not being present on the current machine which means that <see cref="TestHelper.IsClusterTestingEnabled"/>
+        ///     returns <c>false</c>.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Started"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     class instance.
+        ///     </description>
+        /// </item>
+        /// </list>
         /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when a <b>ConnectAsync()</b> method has already been called on the fixture.  This fixture
-        /// does not support mixing <b>ConnectAsync()</b> and <b>DeployAsync()</b> calls.
-        /// </exception>
         /// <remarks>
         /// <para>
         /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
-        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
+        /// to ensure that clusters and VMs orphaned by previous interrupted test runs are removed in addition to
+        /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> DeployAsync(
+        public async Task<TestFixtureStatus> StartAsync(
             FileInfo    clusterDefinitionFile,
             string      imageUriOrPath        = null,
             bool        removeOrphansByPrefix = false,
@@ -663,7 +671,7 @@ namespace Neon.Kube.Xunit
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return await DeployAsync(
+            return await StartAsync(
                 clusterDefinition:      ClusterDefinition.FromFile(clusterDefinitionFile.FullName),
                 imageUriOrPath:         imageUriOrPath, 
                 removeOrphansByPrefix:  removeOrphansByPrefix,
@@ -675,20 +683,20 @@ namespace Neon.Kube.Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            if (deployed)
+            if (isDeployed)
             {
                 RemoveCluster(ClusterDefinition);
             }
 
-            deployed          = false;
-            Client            = null;
+            isDeployed        = false;
+            Cluster           = null;
             ClusterDefinition = null;
 
             base.Reset();
         }
 
         /// <summary>
-        /// Removes any cluster associated with a cluster defintion.
+        /// Removes any existing cluster associated with a cluster defintion.
         /// </summary>
         /// <param name="clusterDefinition">The target cluster definition.</param>
         private void RemoveCluster(ClusterDefinition clusterDefinition)
