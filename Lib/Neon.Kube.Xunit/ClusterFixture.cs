@@ -30,6 +30,18 @@ using Neon.Net;
 using Neon.SSH;
 using Neon.Xunit;
 using Neon.Tasks;
+using Xunit.Abstractions;
+
+// $hack(jeff):
+//
+// We're using [Task.WaitWithoutAggregate()] and [Task.ResultWithoutAggregate] which
+// call [Task.Wait()] and [Task.Result] respectively.  This isn't ideal.  This will be
+// probably be OK since this will never be called by UX code and isn't really going
+// to consume a bunch of threads.
+//
+// I'm not sure what else we can do because we need to await operations in the class
+// constructor and destructors and I don't want to change the method signture for
+// things like [Reset()] to make them async.
 
 namespace Neon.Kube.Xunit
 {
@@ -48,7 +60,7 @@ namespace Neon.Kube.Xunit
     /// <para>
     /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution.  You need to explicitly disable parallel execution in 
-    /// all test assemblies that rely on thesex test fixtures by adding a C# file called 
+    /// all test assemblies that rely on these test fixtures by adding a C# file named 
     /// <c>AssemblyInfo.cs</c> with:
     /// </para>
     /// <code language="csharp">
@@ -104,7 +116,7 @@ namespace Neon.Kube.Xunit
     ///             case TestFixtureStatus.Started:
     ///             
     ///                 // The fixture ensures that the cluster is reset when
-    ///                 // [StartAsync()] is called the first time for a 
+    ///                 // [Start()] is called the first time for a 
     ///                 // fixture instance.
     ///                 
     ///                 break;
@@ -137,32 +149,32 @@ namespace Neon.Kube.Xunit
     /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
     /// constructor that has a <see cref="ClusterFixture"/> parameter that will receive an 
     /// instance of the fixture and use that to initialize the test cluster using 
-    /// <see cref="StartAsync(string, string, bool, bool, int, string)"/> or one it its
+    /// <see cref="StartAsync(string, ClusterResetOptions, string, bool, bool, int, string)"/> or one it its
     /// overrides.
     /// </para>
     /// <para>
-    /// <see cref="StartAsync(string, string, bool, bool, int, string)"/> handles the deployment
+    /// <see cref="StartAsync(string, ClusterResetOptions, string, bool, bool, int, string)"/> handles the deployment
     /// of the test cluster when it doesn't already exist as well as the removal of any previous
     /// cluster, depending on the parameters passed.  You'll be calling this in your test class
     /// constructor.
     /// </para>
     /// <para>
-    /// The <b>StartAsync()</b> methods accept a cluster definition in various forms and returns
+    /// The <b>Start()</b> methods accept a cluster definition in various forms and returns
     /// <see cref="TestFixtureStatus.Disabled"/> when cluster unit testing is disabled on the 
     /// current machine, <see cref="TestFixtureStatus.Started"/> the first time one of these methods 
     /// have been called on a fixture instance or <see cref="TestFixtureStatus.AlreadyRunning"/>
     /// when <b>StartedAsync()</b> has already been called on the fixture.
     /// </para>
     /// <para>
-    /// Any existing neonKUBE cluster may be removed by <c>StartAsync()</c>, depending on the
+    /// Any existing neonKUBE cluster may be removed by <c>Start()</c>, depending on the
     /// parameters passed and the test cluster may also be removed when the fixture is disposed,
     /// also depending on the parameter passed.
     /// </para>
     /// <para>
-    /// It's up to you to call <see cref="ClusterFixture.Reset(ClusterResetOptions)"/> within your
-    /// test class constructor when you wish to reset the cluster state between test method executions.
-    /// Alternatively, you could design your tests such that each method runs in its own namespace
-    /// to improve performance while still providing some isolation.
+    /// It's up to you to call <see cref="ClusterFixture.Reset()"/> within your test class constructor
+    /// when you wish to reset the cluster state between test method executions.  Alternatively, you 
+    /// could design your tests such that each method runs in its own namespace to improve test performance
+    /// while still providing some isolation across test cases.
     /// </para>
     /// <para><b>CLUSTER TEST METHOD ATTRIBUTES</b></para>
     /// <para>
@@ -185,7 +197,7 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <para>
     /// In addition to tagging test methods like this, you'll need to modify your test class constructors to do
-    /// nothing when the fixture's <c>StartAsync()</c> methods return <see cref="TestFixtureStatus.Disabled"/>.
+    /// nothing when the fixture's <c>Start()</c> methods return <see cref="TestFixtureStatus.Disabled"/>.
     /// You can also use <see cref="TestHelper.IsClusterTestingEnabled"/> determine when cluster testing is
     /// disabled.
     /// </para>
@@ -199,12 +211,12 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <note>
     /// The statement above is not strictly true: existing cluster resources may be removed by VM prefix or
-    /// cloud resource group depending on the <c>StartAsync()</c> parameters.  This functionality is provided
+    /// cloud resource group depending on the <c>Start()</c> parameters.  This functionality is provided
     /// so that tests can cleanup after previous interrupted tests that didn't cleanup after itself.
     /// </note>
     /// <para><b>CLUSTER DEPLOYMENT CONFLICTS</b></para>
     /// <para>
-    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>StartAsync()</b> 
+    /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Start()</b> 
     /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
     /// within separate directories named like <b>$(USERPROFILE)\.neonkube\automation\CLUSTER-NAME</b>.
@@ -237,9 +249,10 @@ namespace Neon.Kube.Xunit
     /// </remarks>
     public class ClusterFixture : TestFixture
     {
-        private bool    isDeployed            = false;
-        private bool    unredacted            = false;
-        bool            removeOrphansByPrefix = false;
+        private ClusterResetOptions resetOptions;
+        private bool                unredacted            = false;
+        private bool                removeOrphansByPrefix = false;
+        private ITestOutputHelper   output                = null;
 
         /// <summary>
         /// Constructor.
@@ -276,10 +289,20 @@ namespace Neon.Kube.Xunit
 
         /// <summary>
         /// Returns the cluster definition for cluster deployed by this fixture via one of the
-        /// <b>StartAsync()</b> methods or <c>null</c> when the fixture was connected to the cluster
+        /// <b>Start()</b> methods or <c>null</c> when the fixture was connected to the cluster
         /// via one of the <b>ConnectAsync()</b> methods.
         /// </summary>
         public ClusterDefinition ClusterDefinition { get; private set; }
+
+        /// <summary>
+        /// Writes a line of text to the test output (when an <see cref="ITestOutputHelper"/>
+        /// was passed top one of the <b>Start()</b> methods.
+        /// </summary>
+        /// <param name="line">The line to be written or <c>null</c> for a blank line.</param>
+        private void WriteLine(string line = null)
+        {
+            output?.WriteLine(line ?? string.Empty);
+        }
 
         /// <summary>
         /// <para>
@@ -290,6 +313,10 @@ namespace Neon.Kube.Xunit
         /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition model.</param>
+        /// <param name="resetOptions">
+        /// Optionally specifies the options that <see cref="Reset()"/> will use to reset
+        /// the cluster.  This defaults to resetting everything possible (or currently implemented).
+        /// </param>
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
@@ -298,6 +325,10 @@ namespace Neon.Kube.Xunit
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="output">
+        /// Optionally specifies an <see cref="ITestOutputHelper"/> that the fixture can use
+        /// for log additional information and diagnostics.
         /// </param>
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
@@ -326,14 +357,14 @@ namespace Neon.Kube.Xunit
         /// <item>
         ///     <term><see cref="TestFixtureStatus.Started"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     Returned when one of the <c>Start()</c> methods is called for the first time for the fixture
         ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     Returned when one of the <c>Start()</c> methods has already been called by your test
         ///     class instance.
         ///     </description>
         /// </item>
@@ -359,15 +390,16 @@ namespace Neon.Kube.Xunit
         /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> StartAsync(
+        public TestFixtureStatus Start(
             ClusterDefinition   clusterDefinition,
+            ClusterResetOptions resetOptions          = null,
             string              imageUriOrPath        = null,
             bool                removeOrphansByPrefix = false, 
+            ITestOutputHelper   output                = null,
             bool                unredacted            = false,
             int                 maxParallel           = 500,
             string              headendUri            = null)
         {
-            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
@@ -375,6 +407,10 @@ namespace Neon.Kube.Xunit
             {
                 return TestFixtureStatus.Disabled;
             }
+            
+            resetOptions    ??= new ClusterResetOptions();
+            this.resetOptions = resetOptions;
+            this.output       = output;
 
             try
             {
@@ -383,7 +419,7 @@ namespace Neon.Kube.Xunit
 
                 if (this.Cluster != null)
                 {
-                    return await Task.FromResult(TestFixtureStatus.AlreadyRunning);
+                    return TestFixtureStatus.AlreadyRunning;
                 }
 
                 // Set the automation mode, using any previously downloaded node image unless
@@ -439,14 +475,14 @@ namespace Neon.Kube.Xunit
                 try
                 {
                     var controller = KubeSetup.CreateClusterPrepareController(
-                        clusterDefinition,
-                        nodeImageUri:   imageUri,
-                        nodeImagePath:  imagePath,
-                        maxParallel:    maxParallel,
-                        unredacted:     unredacted,
-                        headendUri:     headendUri);
+                        clusterDefinition:  clusterDefinition,
+                        nodeImageUri:       imageUri,
+                        nodeImagePath:      imagePath,
+                        maxParallel:        maxParallel,
+                        unredacted:         unredacted,
+                        headendUri:         headendUri);
 
-                    switch (await controller.RunAsync())
+                    switch (controller.RunAsync().ResultWithoutAggregate())
                     {
                         case SetupDisposition.Succeeded:
 
@@ -476,7 +512,7 @@ namespace Neon.Kube.Xunit
                         maxParallel:    maxParallel,
                         unredacted:     unredacted);
 
-                    switch (await controller.RunAsync())
+                    switch (controller.RunAsync().ResultWithoutAggregate())
                     {
                         case SetupDisposition.Succeeded:
 
@@ -505,7 +541,7 @@ namespace Neon.Kube.Xunit
                 }
             }
 
-            return await Task.FromResult(TestFixtureStatus.Started);
+            return TestFixtureStatus.Started;
         }
 
         /// <summary>
@@ -517,6 +553,10 @@ namespace Neon.Kube.Xunit
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionYaml">The cluster definition YAML.</param>
+        /// <param name="resetOptions">
+        /// Optionally specifies the options that <see cref="Reset()"/> will use to reset
+        /// the cluster.  This defaults to resetting everything possible (or currently implemented).
+        /// </param>
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
@@ -525,6 +565,10 @@ namespace Neon.Kube.Xunit
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="output">
+        /// Optionally specifies an <see cref="ITestOutputHelper"/> that the fixture can use
+        /// for log additional information and diagnostics.
         /// </param>
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
@@ -553,14 +597,14 @@ namespace Neon.Kube.Xunit
         /// <item>
         ///     <term><see cref="TestFixtureStatus.Started"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     Returned when one of the <c>Start()</c> methods is called for the first time for the fixture
         ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     Returned when one of the <c>Start()</c> methods has already been called by your test
         ///     class instance.
         ///     </description>
         /// </item>
@@ -573,22 +617,25 @@ namespace Neon.Kube.Xunit
         /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> StartAsync(
-            string  clusterDefinitionYaml, 
-            string  imageUriOrPath        = null, 
-            bool    removeOrphansByPrefix = false, 
-            bool    unredacted            = false,
-            int     maxParallel           = 500,
-            string  headendUri            = null)
+        public TestFixtureStatus Start(
+            string              clusterDefinitionYaml, 
+            ClusterResetOptions resetOptions          = null,
+            string              imageUriOrPath        = null, 
+            bool                removeOrphansByPrefix = false,
+            ITestOutputHelper   output                = null,
+            bool                unredacted            = false,
+            int                 maxParallel           = 500,
+            string              headendUri            = null)
         {
-            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return await StartAsync(
+            return Start(
                 clusterDefinition:      ClusterDefinition.FromYaml(clusterDefinitionYaml),
+                resetOptions:           resetOptions,
                 imageUriOrPath:         imageUriOrPath, 
                 removeOrphansByPrefix:  removeOrphansByPrefix,
+                output:                 output,
                 unredacted:             unredacted,
                 maxParallel:            maxParallel,
                 headendUri:             headendUri);
@@ -603,6 +650,10 @@ namespace Neon.Kube.Xunit
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionFile"><see cref="FileInfo"/> for the cluster definition YAML file.</param>
+        /// <param name="resetOptions">
+        /// Optionally specifies the options that <see cref="Reset()"/> will use to reset
+        /// the cluster.  This defaults to resetting everything possible (or currently implemented).
+        /// </param>
         /// <param name="imageUriOrPath">
         /// Optionally specifies the (compressed) node image URI or file path to use when
         /// provisioning the cluster.  This defaults to the published image for the current
@@ -611,6 +662,10 @@ namespace Neon.Kube.Xunit
         /// <param name="removeOrphansByPrefix">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
+        /// </param>
+        /// <param name="output">
+        /// Optionally specifies an <see cref="ITestOutputHelper"/> that the fixture can use
+        /// for log additional information and diagnostics.
         /// </param>
         /// <param name="unredacted">
         /// Optionally disables the redaction of potentially sensitive information from cluster
@@ -639,14 +694,14 @@ namespace Neon.Kube.Xunit
         /// <item>
         ///     <term><see cref="TestFixtureStatus.Started"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods is called for the first time for the fixture
+        ///     Returned when one of the <c>Start()</c> methods is called for the first time for the fixture
         ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
         ///     <description>
-        ///     Returned when one of the <c>StartAsync()</c> methods has already been called by your test
+        ///     Returned when one of the <c>Start()</c> methods has already been called by your test
         ///     class instance.
         ///     </description>
         /// </item>
@@ -659,22 +714,25 @@ namespace Neon.Kube.Xunit
         /// removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task<TestFixtureStatus> StartAsync(
-            FileInfo    clusterDefinitionFile,
-            string      imageUriOrPath        = null,
-            bool        removeOrphansByPrefix = false,
-            bool        unredacted            = false, 
-            int         maxParallel           = 500,
-            string      headendUri            = null)
+        public TestFixtureStatus Start(
+            FileInfo            clusterDefinitionFile,
+            ClusterResetOptions resetOptions          = null,
+            string              imageUriOrPath        = null,
+            bool                removeOrphansByPrefix = false,
+            ITestOutputHelper   output                = null,
+            bool                unredacted            = false, 
+            int                 maxParallel           = 500,
+            string              headendUri            = null)
         {
-            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            return await StartAsync(
+            return Start(
                 clusterDefinition:      ClusterDefinition.FromFile(clusterDefinitionFile.FullName),
+                resetOptions:           resetOptions,
                 imageUriOrPath:         imageUriOrPath, 
                 removeOrphansByPrefix:  removeOrphansByPrefix,
+                output:                 output,
                 unredacted:             unredacted,
                 maxParallel:            maxParallel,
                 headendUri:             headendUri);
@@ -683,20 +741,16 @@ namespace Neon.Kube.Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            if (isDeployed)
+            if (TestHelper.IsClusterTestingEnabled)
             {
-                RemoveCluster(ClusterDefinition);
+                Cluster.ResetAsync(resetOptions, message => WriteLine(message)).WaitWithoutAggregate();
             }
-
-            isDeployed        = false;
-            Cluster           = null;
-            ClusterDefinition = null;
 
             base.Reset();
         }
 
         /// <summary>
-        /// Removes any existing cluster associated with a cluster defintion.
+        /// Removes any existing cluster associated with a cluster definition.
         /// </summary>
         /// <param name="clusterDefinition">The target cluster definition.</param>
         private void RemoveCluster(ClusterDefinition clusterDefinition)
