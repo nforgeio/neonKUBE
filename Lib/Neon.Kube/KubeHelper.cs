@@ -506,7 +506,8 @@ namespace Neon.Kube
         /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
         /// </para>
         /// </param>
-        public static void SetAutomationMode(KubeAutomationMode mode, string folder)
+        /// <returns>The path to the automation folder.</returns>
+        public static string SetAutomationMode(KubeAutomationMode mode, string folder)
         {
             Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
@@ -539,6 +540,8 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(kubeFolder);
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
+
+            return folder;
         }
 
         /// <summary>
