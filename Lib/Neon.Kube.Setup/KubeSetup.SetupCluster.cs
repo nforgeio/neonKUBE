@@ -152,6 +152,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
+            clusterDefinition.Validate();
+
             // Create the automation subfolder for the operation if required and determine
             // where the log files should go.
 

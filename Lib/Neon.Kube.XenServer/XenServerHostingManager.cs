@@ -210,6 +210,52 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
             }
+
+            if (clusterDefinition.Hosting == null || clusterDefinition.Hosting.Vm == null)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}] property is required for XenServer clusters.");
+            }
+
+            var defaultHostUsername = clusterDefinition.Hosting.Vm.HostUsername;
+            var defaultHostPassword = clusterDefinition.Hosting.Vm.HostPassword;
+
+            if (clusterDefinition.Hosting.Vm.Hosts == null || clusterDefinition.Hosting.Vm.Hosts.Count == 0)
+            {
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}.{nameof(VmHostingOptions.Hosts)}] must specify at least one XenServer host.");
+            }
+
+            var hostSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var host in clusterDefinition.Hosting.Vm.Hosts)
+            {
+                if (string.IsNullOrEmpty(host.Username) && string.IsNullOrEmpty(defaultHostUsername))
+                {
+                    throw new ClusterDefinitionException($"XenServer host [{host.Name}] does not specify a [{nameof(host.Username)}] and there isn't a default username either.");
+                }
+
+                if (string.IsNullOrEmpty(host.Password) && string.IsNullOrEmpty(defaultHostPassword))
+                {
+                    throw new ClusterDefinitionException($"XenServer host [{host.Name}] does not specify a [{nameof(host.Password)}] and; there isn't a default password either.");
+                }
+
+                if (!hostSet.Contains(host.Name))
+                {
+                    hostSet.Add(host.Name);
+                }
+            }
+
+            foreach (var node in clusterDefinition.Nodes)
+            {
+                if (node.Vm == null || string.IsNullOrEmpty(node.Vm.Host))
+                {
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] does not specify a [{nameof(VmNodeOptions)}.{nameof(VmNodeOptions.Host)}]");
+                }
+
+                if (!hostSet.Contains(node.Vm.Host))
+                {
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Vm.Host}] which is not defined.");
+                }
+            }
         }
 
         /// <inheritdoc/>

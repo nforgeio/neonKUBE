@@ -106,6 +106,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
+            clusterDefinition.Validate();
+
             if (!string.IsNullOrEmpty(nodeImagePath))
             {
                 if (!File.Exists(nodeImagePath))
