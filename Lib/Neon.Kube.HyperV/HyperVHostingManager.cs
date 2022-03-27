@@ -434,7 +434,7 @@ namespace Neon.Kube
 
                 if (node.OpenEbsStorage)
                 {
-                    switch (cluster.Definition.OpenEbs.Engine)
+                    switch (cluster.Definition.Storage.OpenEbs.Engine)
                     {
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:

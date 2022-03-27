@@ -176,7 +176,7 @@ namespace Neon.Kube
         {
             const string minOpenEbsSize = "50 GiB";
 
-            switch (clusterDefinition.OpenEbs.Engine)
+            switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
                 case OpenEbsEngine.cStor:
                 case OpenEbsEngine.Mayastor:
