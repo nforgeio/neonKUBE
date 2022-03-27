@@ -121,6 +121,22 @@ ARGUMENTS:
                 {
                     await k8s.ListNamespaceAsync();
                 }
+
+                if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
+                {
+                    Console.WriteLine($"Logging into registry...");
+
+                    var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
+
+                    NeonHelper.Execute(NeonHelper.DockerCli, new object[]
+                        {
+                            "login",
+                            $"{ClusterDomain.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                            "--username",
+                            "root",
+                            "--password-stdin"},
+                            input: new StringReader(login.SsoPassword));
+                }
             }
             catch (Exception e)
             {
