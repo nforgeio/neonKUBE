@@ -73,6 +73,13 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            VolumeSize = VolumeSize.Replace(" ", "");
+
+            if (VolumeSize.EndsWith("iB"))
+            {
+                VolumeSize = VolumeSize.Replace("iB", "i");
+            }
+
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Minio))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
@@ -104,7 +111,14 @@ namespace Neon.Kube
 
             foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.MinioInternal))
             {
-                Covenant.Assert(ByteUnits.Parse(n.Vm.OsDisk) - (ByteUnits.Parse(VolumeSize) * VolumesPerServer) > ByteUnits.Parse("40Gi"));
+                if (!string.IsNullOrEmpty(n.Vm?.OsDisk))
+                {
+                    Covenant.Assert(ByteUnits.Parse(n.Vm.OsDisk) - (ByteUnits.Parse(VolumeSize) * VolumesPerServer) > ByteUnits.Parse("40Gi"));
+                }
+                else
+                {
+                    Covenant.Assert(ByteUnits.Parse(clusterDefinition.Hosting.Vm.OsDisk) - (ByteUnits.Parse(VolumeSize) * VolumesPerServer) > ByteUnits.Parse("40Gi"));
+                }
             }
         }
     }
