@@ -471,6 +471,8 @@ namespace Neon.XenServer
             {
                 Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
+                // Power down the VM and the remove it.
+
                 client.SafeInvoke("vm-reset-powerstate", $"uuid={virtualMachine.Uuid}", "--force");
 
                 if (keepDrives)
