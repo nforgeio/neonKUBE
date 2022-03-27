@@ -342,9 +342,6 @@ spec:
             await InstallMinioAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await SetupGrafanaAsync(controller, master);
-
-            controller.ThrowIfCancelled();
             await InstallHarborAsync(controller, master);
 
             controller.ThrowIfCancelled();
@@ -1821,7 +1818,7 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCrdsAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -2771,6 +2768,10 @@ $@"- name: StorageType
                         values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
                     }
 
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.AlertManager);
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Cortex, clusterAdvice.MetricsQuota);
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.CortexRuler);
+
                     controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/monitoring-cortex-secret",
                         async () =>
@@ -2890,6 +2891,8 @@ $@"- name: StorageType
                         values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
                     }
 
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
+
                     await master.InstallHelmChartAsync(controller, "loki",
                         releaseName:  "loki",
                         @namespace:   KubeNamespace.NeonMonitor,
@@ -2949,6 +2952,8 @@ $@"- name: StorageType
                         values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
                         values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
                     }
+
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
 
                     await master.InstallHelmChartAsync(controller, "tempo",
                         releaseName: "tempo",
@@ -4405,69 +4410,6 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Deploys a Kubernetes job that runs Grafana setup.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SetupGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-
-            // Perform the Grafana Minio configuration.
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-alertmanager",
-                async () =>
-                {
-                    master.Status = $"create: grafana [{KubeMinioBucket.AlertManager}] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.AlertManager);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-cortex",
-                async () =>
-                {
-                    master.Status = $"create: grafana [{KubeMinioBucket.Grafana}] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Grafana, clusterAdvice.MetricsQuota);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-cortex-ruler",
-                async () =>
-                {
-                    master.Status = $"create: grafana [{KubeMinioBucket.CortexRuler}] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.CortexRuler);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-loki",
-                async () =>
-                {
-                    master.Status = $"create: grafana [{KubeMinioBucket.Loki}] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/minio-tempo",
-                async () =>
-                {
-                    master.Status = $"create: grafana [{KubeMinioBucket.Tempo}] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
-                });
-        }
-
-        /// <summary>
         /// Creates a Minio bucket by using the mc client on one of the minio server pods.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -4481,6 +4423,8 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            master.Status = $"create: [{name}] minio bucket";
 
             var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
