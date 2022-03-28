@@ -1190,21 +1190,38 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
+        public override async Task RemoveClusterAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
-            // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
-            // Note that we're just turning nodes off to save time and because we're going
-            // to be deleting them all anyway.
-            //
-            // We're going to leave any virtual switches alone.
-
-            await StopClusterAsync(stopMode: StopMode.TurnOff);
-
             using (var hyperv = new HyperVProxy())
             {
+                // If [removeOrphans=true] and the cluster definition specifies a
+                // VM name prefix, then we'll simply remove all VMs with that prefix.
+                // Otherwise, we'll do a normal remove.
+
+                var vmPrefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
+
+                if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
+                {
+                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                        vm =>
+                        {
+                            hyperv.RemoveVm(vm.Name);
+                        });
+
+                    return;
+                }
+
+                // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
+                // Note that we're just turning nodes off to save time and because we're going
+                // to be deleting them all anyway.
+                //
+                // We're going to leave any virtual switches alone.
+
+                await StopClusterAsync(stopMode: StopMode.TurnOff);
+
                 // Remove all of the cluster VMs.
 
                 Parallel.ForEach(cluster.Definition.Nodes, parallelOptions,
@@ -1233,7 +1250,7 @@ namespace Neon.Kube
 
                 // Remove any potentially orphaned VMs when enabled and a prefix is specified.
 
-                if (removeOrphansByPrefix && !string.IsNullOrEmpty(cluster.Definition.Deployment.Prefix))
+                if (removeOrphans && !string.IsNullOrEmpty(cluster.Definition.Deployment.Prefix))
                 {
                     var prefix = cluster.Definition.Deployment.Prefix + "-";
 

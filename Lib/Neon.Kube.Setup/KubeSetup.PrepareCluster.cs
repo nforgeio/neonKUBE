@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
         /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
-        /// <param name="headendUri">Optionally override the headend service URI</param>
+        /// <param name="neonCloudHeadendUri">Optionally overrides the headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
@@ -97,7 +97,7 @@ namespace Neon.Kube
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
             string                      automationFolder      = null,
-            string                      headendUri            = "https://headend.neoncloud.io",
+            string                      neonCloudHeadendUri   = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false)
         {
@@ -105,6 +105,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
+
+            neonCloudHeadendUri ??= KubeConst.NeonCloudHeadendUri;
 
             clusterDefinition.Validate();
 
@@ -192,7 +194,8 @@ namespace Neon.Kube
             // Otherwise, we'll fail the cluster prepare to avoid the possiblity of overwriting
             // the login for an active cluster.
 
-            var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+            var contextName      = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
+            var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)contextName);
             var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
             if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
@@ -223,7 +226,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
-            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
@@ -246,7 +249,7 @@ namespace Neon.Kube
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
                     {
-                        await hostingManager.RemoveClusterAsync(removeOrphansByPrefix: true);
+                        await hostingManager.RemoveClusterAsync(removeOrphans: true);
                     });
             }
 
@@ -309,51 +312,8 @@ namespace Neon.Kube
 
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
 
-                        // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
-                        // to the PPK format PuTTY/WinSCP requires.
-
-#if TODO // $todo(jefflill): This code should probably be deleted.
-                        if (NeonHelper.IsWindows)
-                        {
-                            var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-                            var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
-
-                            try
-                            {
-                                File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
-
-                                ExecuteResponse result;
-
-                                try
-                                {
-                                    result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
-                                }
-                                catch (Win32Exception)
-                                {
-                                    return; // Tolerate when WinSCP isn't installed.
-                            }
-
-                            if (result.ExitCode != 0)
-                            {
-                                controller.LogProgressError(result.AllText);
-                                return;
-                            }
-
-                            clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
-
-                            // Persist the SSH key.
-
-                            clusterLogin.Save();
-                        }
-                        finally
-                        {
-                            NeonHelper.DeleteFile(pemKeyPath);
-                            NeonHelper.DeleteFile(ppkKeyPath);
-                        }
                     }
-#endif
-                }
-            });
+                });
 
             // We also need to generate the root SSO password when necessary and add this
             // to the cluster login.
@@ -409,7 +369,7 @@ namespace Neon.Kube
 
                     using (var jsonClient = new JsonClient())
                     {
-                        jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.HeadendUri));
+                        jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.NeonCloudHeadendUri));
 
                         if (IPAddress.TryParse(clusterIp, out var ip))
                         {
@@ -431,10 +391,10 @@ namespace Neon.Kube
             hostingManager.AddPostProvisioningSteps(controller);
 
             // Indicate that cluster prepare succeeded by creating [prepare-ok] file to
-            // the log folder.  Cluster setup will eerify that this file exists beforre
+            // the log folder.  Cluster setup will verify that this file exists before
             // proceeding.
 
-            controller.AddGlobalStep("create file: prepare-ok",
+            controller.AddGlobalStep("finish",
                 controller =>
                 {
                     File.Create(Path.Combine(logFolder, "prepare-ok"));

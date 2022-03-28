@@ -22,6 +22,8 @@ using System.Runtime.Serialization;
 
 using Newtonsoft.Json;
 
+using Neon.Common;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -35,6 +37,13 @@ namespace Neon.Kube
         public ClusterStatus()
         {
         }
+
+        /// <summary>
+        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string Version { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
         /// Indicates whether the cluster is currently locked, unlocked, or whether the

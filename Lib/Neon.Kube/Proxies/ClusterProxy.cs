@@ -1102,7 +1102,7 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="removeExisting">
+        /// <param name="removeOrphans">
         /// Optionally specifies that VMs or clusters with the same VM or resource group prefix
         /// will be tewrminated and removed.  See the remarks for more information.
         /// </param>
@@ -1110,12 +1110,12 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
         /// <para>
-        /// The <paramref name="removeExisting"/> parameter is typically enabled when running unit tests
+        /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
         /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool removeExisting = false)
+        public async Task RemoveAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1124,7 +1124,7 @@ namespace Neon.Kube
             var context     = KubeHelper.Config.GetContext(contextName);
             var login       = KubeHelper.GetClusterLogin(contextName);
 
-            await HostingManager.RemoveClusterAsync(removeExisting);
+            await HostingManager.RemoveClusterAsync(removeOrphans);
 
             if (context != null)
             {

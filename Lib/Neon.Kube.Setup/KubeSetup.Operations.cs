@@ -4457,6 +4457,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new KubeClusterHealth()
                         {
+                            Version            = KubeVersions.NeonKube,
                             State              = KubeClusterState.Healthy,
                             Summary            = "Cluster setup complete",
                             OptionalComponents = new ClusterOptionalComponents()

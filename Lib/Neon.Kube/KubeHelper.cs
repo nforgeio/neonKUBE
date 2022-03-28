@@ -2926,8 +2926,9 @@ TCPKeepAlive yes
             {
                 return new KubeClusterHealth()
                 {
-                     State   = KubeClusterState.Unknown,
-                     Summary = $"kubecontext for [{context.Name}] not found."
+                    Version = "0",
+                    State   = KubeClusterState.Unknown,
+                    Summary = $"kubecontext for [{context.Name}] not found."
                 };
             }
             
@@ -2951,35 +2952,16 @@ TCPKeepAlive yes
                 {
                     return new KubeClusterHealth()
                     {
+                        Version = "0",
                         State   = KubeClusterState.Unknown,
-                        Summary = "Timeout checking cluster health"
+                        Summary = "Cluster health check cancelled"
                     };
-                }
-                catch (HttpOperationException e)
-                {
-                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        // We're expecting this.
-
-                        return new KubeClusterHealth()
-                        {
-                            State   = KubeClusterState.Healthy,
-                            Summary = "Cluster is healthy"
-                        };
-                    }
-                    else
-                    {
-                        return new KubeClusterHealth()
-                        {
-                            State   = KubeClusterState.Unknown,
-                            Summary = e.Message
-                        };
-                    }
                 }
                 catch (Exception e)
                 {
                     return new KubeClusterHealth()
                     {
+                        Version = "0",
                         State   = KubeClusterState.Unknown,
                         Summary = e.Message
                     };

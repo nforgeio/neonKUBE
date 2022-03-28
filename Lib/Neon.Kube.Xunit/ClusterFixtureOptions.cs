@@ -47,7 +47,7 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
-        /// Specifies the options that <see cref="ClusterFixture.Reset()"/> will use when
+        /// Specifies the options that <see cref="ClusterFixture.ResetCluster()"/> will use when
         /// resetting the target cluster.  This defaults to the stock <see cref="ClusterResetOptions"/>
         /// which performs a full cluster reset.
         /// </summary>
@@ -101,15 +101,15 @@ namespace Neon.Kube.Xunit
         public string ImageUriOrPath { get; set; } = null;
 
         /// <summary>
-        /// Optionally overrides the default headend URI.  This defaults to <c>null</c>.
+        /// Optionally overrides the default neonCLOUD headend URI.  This defaults to <c>null</c>.
         /// </summary>
-        public string HeadendUri { get; set; } = null;
+        public string NeonCloudHeadendUri { get; set; } = null;
 
         /// <summary>
         /// Optionally write the cluster deployment logs to <see cref="TestOutputHelper"/>.
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </summary>
-        public bool CaptureDeploymentLogs { get; set; } = false;
+        public bool CaptureDeploymentLogs { get; set; } = true;
 
         /// <summary>
         /// Optionally specifies the maximum number of operations to be performed in parallel.

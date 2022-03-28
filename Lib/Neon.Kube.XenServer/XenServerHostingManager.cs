@@ -1316,10 +1316,33 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
+        public override async Task RemoveClusterAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
+
+            // If [removeOrphans=true] and the cluster definition specifies a
+            // VM name prefix, then we'll simply remove all VMs with that prefix
+            // that exist on any of the target XenServer hosts.
+            //
+            // Otherwise, we'll do a normal remove.
+
+            var vmPrefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
+
+            if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
+            {
+                Parallel.ForEach(xenClients, new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                    xenClient =>
+                    {
+                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                            vm =>
+                            {
+                                xenClient.Machine.Remove(vm, keepDrives: false);
+                            });
+                    });
+
+                return;
+            }
 
             // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
             // Note that we're just turning nodes off to save time and because we're going

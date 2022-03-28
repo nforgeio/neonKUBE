@@ -3,45 +3,28 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 using k8s;
-using k8s.KubeConfigModels;
-
-using Newtonsoft.Json.Linq;
-using Xunit;
-
 using Neon.Common;
-using Neon.Data;
 using Neon.Deployment;
 using Neon.IO;
-using Neon.Retry;
-using Neon.Net;
-using Neon.SSH;
 using Neon.Xunit;
-using Neon.Tasks;
+using System;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 using Xunit.Abstractions;
 
 // $hack(jeff):
 //
-// We're using [Task.WaitWithoutAggregate()] and [Task.ResultWithoutAggregate] which
-// call [Task.Wait()] and [Task.Result] respectively.  This isn't ideal.  This will be
+// We're using [Task.WaitWithoutAggregate()] and [Task.ResultWithoutAggregate()] which
+// call [Task.Wait()] and [Task.Result] respectively.  This isn't ideal, but will
 // probably be OK since this will never be called by UX code and isn't really going
 // to consume a bunch of threads.
 //
 // I'm not sure what else we can do because we need to await operations in the class
-// constructor and destructors and I don't want to change the method signture for
-// things like [Reset()] to make them async.
+// constructor and destructors.
 
 namespace Neon.Kube.Xunit
 {
@@ -125,7 +108,7 @@ namespace Neon.Kube.Xunit
     ///             
     ///                 // Reset the cluster between test method calls.
     /// 
-    ///                 fixture.Reset();
+    ///                 fixture.ResetCluster();
     ///                 break;
     ///         }
     ///     }
@@ -167,7 +150,7 @@ namespace Neon.Kube.Xunit
     /// configuration is required (e.g. deploying test applications).
     /// </para>
     /// <para>
-    /// It's up to you to call <see cref="ClusterFixture.Reset()"/> within your test class constructor
+    /// It's up to you to call <see cref="ClusterFixture.ResetCluster()"/> within your test class constructor
     /// when you wish to reset the cluster state between test method executions.  Alternatively, you 
     /// could design your tests such that each method runs in its own namespace to improve test performance
     /// while still providing some isolation across test cases.
@@ -290,6 +273,20 @@ namespace Neon.Kube.Xunit
     /// </remarks>
     public class ClusterFixture : TestFixture
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ClusterFixture()
+        {
+            HostingLoader.Initialize();
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private ClusterFixtureOptions   options;
         private bool                    started = false;
         private string                  automationFolder;
@@ -308,7 +305,7 @@ namespace Neon.Kube.Xunit
             {
                 if (!base.IsDisposed)
                 {
-                    Reset();
+                    ResetCluster();
                 }
 
                 GC.SuppressFinalize(this);
@@ -416,161 +413,191 @@ namespace Neon.Kube.Xunit
             options    ??= new ClusterFixtureOptions();
             this.options = options;
 
+            if (this.Cluster != null)
+            {
+                return TestFixtureStatus.AlreadyRunning;
+            }
+
+            // Set the automation mode, using any previously downloaded node image unless
+            // the user specifies a custom image.  We're going to host the fixture state
+            // files in this fixed folder:
+            //
+            //      $(USERPROFILE)\.neonkube\automation\(fixture)\*.*
+
+            automationFolder = KubeHelper.SetAutomationMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled, KubeHelper.AutomationPrefix("fixture"));
+
+            // Figure out whether the user passed an image URI or file path to override
+            // the default node image.
+
+            var imageUriOrPath = options.ImageUriOrPath;
+            var imageUri       = (string)null;
+            var imagePath      = (string)null;
+
+            if (string.IsNullOrEmpty(imageUriOrPath))
+            {
+                imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+            }
+
+            if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+            {
+                imageUri = imageUriOrPath;
+            }
+            else
+            {
+                imagePath = imageUriOrPath;
+            }
+
+            //-------------------------------------------------------------
+            // We need to deal with some scenarios here:
+            //
+            //  1. No cluster context or login exists for the target cluster:
+            //
+            //     A conflicting cluster may still exist though, having been deployed
+            //     by another computer or perhaps the kubecontext/logins on the current
+            //     machine may have been modified.  We need to be sure to remove any
+            //     conflicting resources in this case.
+            //
+            //  2. Cluster context and login exist on the current machine that match the
+            //     target cluster.  We'll compare the existing cluster definition with
+            //     that for the new cluster and if they match and [RemoveClusterOnStart=false]
+            //     we'll just use the existing cluster.
+            //  
+            //  3. The current cluster matches the target but [RemoveClusterOnStart=true].
+            //     We need to remove the current cluster in this case so we'll deploy a
+            //     fresh one.
+
+            // Determine whether a test cluster with the same name exists and if
+            // its cluster definition matches the test cluster's definition.
+
+            var clusterExists      = false;
+            var clusterContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var clusterContext     = KubeHelper.Config.GetContext(clusterContextName);
+            var clusterLogin       = KubeHelper.GetClusterLogin(clusterContextName);
+
+            if (clusterContext != null && clusterLogin != null)
+            {
+                clusterExists = NeonHelper.JsonEquals(clusterDefinition, clusterLogin.ClusterDefinition);
+            }
+
+            if (clusterExists && !options.RemoveClusterOnStart)
+            {
+                // SCENARIO: #2
+                // 
+                // It looks like the test cluster may already exist.  We'll verify
+                // that it's running and healthy and use it when it looks good.
+                // Otherwise we'll remove the cluster as well as its context/login,
+                // and deploy a new cluster below.
+
+                using (var cluster = new ClusterProxy(clusterLogin.ClusterDefinition, new HostingManagerFactory()))
+                {
+                    KubeHelper.SetCurrentContext(clusterContextName);
+
+                    var status = cluster.GetClusterStatusAsync().ResultWithoutAggregate();
+
+                    if (status.IsLocked.HasValue && status.IsLocked.Value)
+                    {
+                        throw new NeonKubeException($"Cluster is locked: {cluster.Name}");
+                    }
+
+                    if (status.State == ClusterState.Healthy)
+                    {
+                        return TestFixtureStatus.Started;
+                    }
+
+                    cluster.RemoveAsync(removeOrphans: true).WaitWithoutAggregate();
+                }
+
+                return TestFixtureStatus.Started;
+            }
+            else
+            {
+                // SCENARIOS: #1 and #3:
+                //
+                // We have an existing cluster that matches and [RemoveClusterOnStart=true], the
+                // existing cluster does not match, or we don't have any information on existing
+                // clusters so we need to do a preemptive cluster remove.
+
+                using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
+                {
+                    cluster.RemoveAsync(removeOrphans: true).WaitWithoutAggregate();
+                }
+            }
+
+            // Provision the new cluster.
+
+            WriteTestOutputLine($"PREPARE CLUSTER: {clusterDefinition.Name}");
+
             try
             {
-                if (this.Cluster != null)
+                var controller = KubeSetup.CreateClusterPrepareController(
+                    clusterDefinition:   clusterDefinition,
+                    nodeImageUri:        imageUri,
+                    nodeImagePath:       imagePath,
+                    maxParallel:         options.MaxParallel,
+                    unredacted:          options.Unredacted,
+                    neonCloudHeadendUri: options.NeonCloudHeadendUri);
+
+                switch (controller.RunAsync().ResultWithoutAggregate())
                 {
-                    return TestFixtureStatus.AlreadyRunning;
-                }
+                    case SetupDisposition.Succeeded:
 
-                // Set the automation mode, using any previously downloaded node image unless
-                // the user specifies a custom image.  We're going to host the fixture state
-                // files in this fixed folder:
-                //
-                //      $(USERPROFILE)\.neonkube\automation\(fixture)\*.*
+                        WriteTestOutputLine("CLUSTER PREPARE: SUCCESS");
+                        break;
 
-                automationFolder = KubeHelper.SetAutomationMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled, KubeHelper.AutomationPrefix("fixture"));
+                    case SetupDisposition.Failed:
 
-                // Figure out whether the user passed an image URI or file path to override
-                // the default node image.
+                        WriteTestOutputLine("CLUSTER PREPARE: FAIL");
+                        throw new NeonKubeException("Cluster prepare failed.");
 
-                var imageUriOrPath = options.ImageUriOrPath;
-                var imageUri       = (string)null;
-                var imagePath      = (string)null;
+                    case SetupDisposition.Cancelled:
+                    default:
 
-                if (string.IsNullOrEmpty(imageUriOrPath))
-                {
-                    imageUriOrPath = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
-                }
-
-                if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    imageUri = imageUriOrPath;
-                }
-                else
-                {
-                    imagePath = imageUriOrPath;
-                }
-
-                // Determine whether a test cluster with the same name exists and if
-                // its cluster definition matches the test cluster's definition.
-
-                var clusterExists      = false;
-                var clusterContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-                var clusterContext     = KubeHelper.Config.GetContext(clusterContextName);
-                var clusterLogin       = KubeHelper.GetClusterLogin(clusterContextName);
-
-                if (clusterContext != null && clusterContext != null)
-                {
-                    clusterExists = NeonHelper.JsonEquals(clusterDefinition, clusterLogin.ClusterDefinition);
-                }
-
-                if (clusterExists && !options.RemoveClusterOnStart)
-                {
-                    // It looks like the test cluster may already exist.  We'll make it
-                    // the current cluster and then verify that it's running and healthy
-                    // and use it when it looks good.  Otherwise we'll remove the context
-                    // and login and then deploy a new cluster below.
-
-                    try
-                    {
-                        KubeHelper.SetCurrentContext(clusterContextName);
-
-                        Cluster = new ClusterProxy(clusterLogin.ClusterDefinition, new HostingManagerFactory());
-
-                        if (Cluster.GetClusterStatusAsync().ResultWithoutAggregate().State == ClusterState.Healthy)
-                        {
-                            return TestFixtureStatus.Started;
-                        }
-
-                        Cluster.RemoveAsync(removeExisting: true).WaitWithoutAggregate();
-
-                        Cluster?.Dispose();
-                        Cluster = null;
-                    }
-                    catch
-                    {
-                        Cluster?.Dispose();
-                        Cluster = null;
-
-                        KubeHelper.SetCurrentContext((string)null);
-                        throw;
-                    }
-
-                    return TestFixtureStatus.Started;
-                }
-
-                // Provision the cluster.
-
-                try
-                {
-                    var controller = KubeSetup.CreateClusterPrepareController(
-                        clusterDefinition:  clusterDefinition,
-                        nodeImageUri:       imageUri,
-                        nodeImagePath:      imagePath,
-                        maxParallel:        options.MaxParallel,
-                        unredacted:         options.Unredacted,
-                        headendUri:         options.HeadendUri);
-
-                    switch (controller.RunAsync().ResultWithoutAggregate())
-                    {
-                        case SetupDisposition.Succeeded:
-
-                            break;
-
-                        case SetupDisposition.Failed:
-
-                            throw new NeonKubeException("Cluster prepare failed.");
-
-                        case SetupDisposition.Cancelled:
-                        default:
-
-                            throw new NotImplementedException();
-                    }
-                }
-                finally
-                {
-                    if (options.CaptureDeploymentLogs)
-                    {
-                        CaptureDeploymentLogs();
-                    }
-                }
-
-                // Setup the cluster.
-
-                try
-                {
-                    var controller = KubeSetup.CreateClusterSetupController(
-                        clusterDefinition,
-                        maxParallel:    options.MaxParallel,
-                        unredacted:     options.Unredacted);
-
-                    switch (controller.RunAsync().ResultWithoutAggregate())
-                    {
-                        case SetupDisposition.Succeeded:
-
-                            break;
-
-                        case SetupDisposition.Failed:
-
-                            throw new NeonKubeException("Cluster setup failed.");
-
-                        case SetupDisposition.Cancelled:
-                        default:
-
-                            throw new NotImplementedException();
-                    }
-                }
-                finally
-                {
-                    if (options.CaptureDeploymentLogs)
-                    {
-                        CaptureDeploymentLogs();
-                    }
+                        throw new NotImplementedException();
                 }
             }
             finally
             {
+                if (options.CaptureDeploymentLogs)
+                {
+                    CaptureDeploymentLogs();
+                }
+            }
+
+            // Setup the cluster.
+
+            WriteTestOutputLine($"SETUP CLUSTER: {clusterDefinition.Name}");
+
+            try
+            {
+                var controller = KubeSetup.CreateClusterSetupController(
+                    clusterDefinition: clusterDefinition,
+                    maxParallel:       options.MaxParallel,
+                    unredacted:        options.Unredacted);
+
+                switch (controller.RunAsync().ResultWithoutAggregate())
+                {
+                    case SetupDisposition.Succeeded:
+
+                        WriteTestOutputLine("CLUSTER SETUP: SUCCESS");
+                        break;
+
+                    case SetupDisposition.Failed:
+
+                        WriteTestOutputLine("CLUSTER SETUP: FAILED");
+                        throw new NeonKubeException("Cluster setup failed.");
+
+                    case SetupDisposition.Cancelled:
+                    default:
+
+                        throw new NotImplementedException();
+                }
+            }
+            finally
+            {
+                if (options.CaptureDeploymentLogs)
+                {
+                    CaptureDeploymentLogs();
+                }
             }
 
             started = true;
@@ -633,11 +660,11 @@ namespace Neon.Kube.Xunit
         /// Visual Studio instances will also fail.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Start(string clusterDefinitionYaml, ClusterFixtureOptions options = null)
+        public TestFixtureStatus StartCluster(string clusterDefinitionYaml, ClusterFixtureOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
 
-            return Start(ClusterDefinition.FromYaml(clusterDefinitionYaml), options);
+            return Start(ClusterDefinition.FromYaml(clusterDefinitionYaml, strict: true, validate: true), options);
         }
 
         /// <summary>
@@ -825,8 +852,10 @@ namespace Neon.Kube.Xunit
             return NeonExecute(args).EnsureSuccess();
         }
 
-        /// <inheritdoc/>
-        public override void Reset()
+        /// <summary>
+        /// Resets the cluster.
+        /// </summary>
+        public void ResetCluster()
         {
             if (TestHelper.IsClusterTestingEnabled)
             {

@@ -278,32 +278,14 @@ namespace Neon.Kube
                 hostAddressSet.Add(vmHost.Address);
             }
 
-            // Ensure that some hypervisor hosts have been specified if we're deploying to remote
-            // hypervisors and also that each node definition specifies a host hypervisor.
+            // Ensure that some hypervisor hosts have been specified if we're deploying
+            // to remote hypervisors.
 
             if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
-                if (clusterDefinition.Hosting.Vm.Hosts.Count == 0)
-                {
-                    throw new ClusterDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.Hosts)}].");
-                }
-
                 foreach (var vmHost in Hosts)
                 {
                     vmHost.Validate(clusterDefinition);
-                }
-
-                foreach (var node in clusterDefinition.Nodes)
-                {
-                    if (string.IsNullOrEmpty(node.Vm?.Host))
-                    {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.Vm.Host)}].");
-                    }
-
-                    if (!hostNameSet.Contains(node.Vm.Host))
-                    {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(HypervisorHost)}={node.Vm.Host}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.Hosts)}].");
-                    }
                 }
             }
         }

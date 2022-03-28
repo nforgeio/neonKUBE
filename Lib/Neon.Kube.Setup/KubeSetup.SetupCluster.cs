@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
         /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
         /// </param>
-        /// <param name="headendUri">Optionally override the headend service URI</param>
+        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
         /// enabled for non-console applications.
@@ -146,11 +146,13 @@ namespace Neon.Kube
             bool                debugMode            = false,
             bool                uploadCharts         = false,
             string              automationFolder     = null,
-            string              headendUri           = "https://headend.neoncloud.io",
+            string              neonCloudHeadendUri  = null,
             bool                disableConsoleOutput = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
+
+            neonCloudHeadendUri ??= KubeConst.NeonCloudHeadendUri;
 
             clusterDefinition.Validate();
 
@@ -262,7 +264,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
-            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the setup steps.

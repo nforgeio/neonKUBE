@@ -46,7 +46,6 @@ using Microsoft.Win32;
 using SharpCompress.Readers;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Common;
 
@@ -65,10 +64,17 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// The neonKUBE version of the cluster or <b>"0"</b> when the version
+        /// is not known.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string Version { get; set; } = KubeVersions.NeonKube;
+
+        /// <summary>
         /// The cluster health state.
         /// </summary>
         [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "state", ApplyNamingConventions = false)]
         [DefaultValue(KubeClusterState.Unknown)]
         public KubeClusterState State { get; set; }
 
@@ -76,7 +82,6 @@ namespace Neon.Kube
         /// Human readable text summarizing the cluster health state.
         /// </summary>
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "summary", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Summary { get; set; }
 
