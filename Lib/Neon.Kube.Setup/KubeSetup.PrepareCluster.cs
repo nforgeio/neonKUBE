@@ -381,6 +381,7 @@ namespace Neon.Kube
 
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={hostAddress.First()}");
                         }
+
                         clusterLogin.Save();
                     }
                 });

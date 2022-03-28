@@ -1207,7 +1207,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// This is used for special situations for setting up a cluster to
+        /// This is used for special situations like setting up a cluster to
         /// set an uninitialized Kubernetes config context as the current
         /// <see cref="CurrentContext"/>.
         /// </summary>
