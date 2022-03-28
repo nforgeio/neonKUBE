@@ -299,7 +299,7 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="removeOrphansByPrefix">
+        /// <param name="removeOrphans">
         /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
         /// prefix will be removed as well.  See the remarks for more information.
         /// </param>
@@ -307,12 +307,12 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
         /// <para>
-        /// The <paramref name="removeOrphansByPrefix"/> parameter is typically enabled when running unit tests
+        /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
         /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(bool removeOrphansByPrefix = false);
+        Task RemoveClusterAsync(bool removeOrphans = false);
 
         /// <summary>
         /// <para>

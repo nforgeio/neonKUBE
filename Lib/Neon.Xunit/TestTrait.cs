@@ -34,9 +34,14 @@ namespace Neon.Xunit
         public const string Category = "Category";
 
         /// <summary>
-        /// Set this category value for slow tests.
+        /// Set this as the category value for slow tests.
         /// </summary>
         public const string Slow = "slow";
+
+        /// <summary>
+        /// Set this as the category value for tests that require a neonKUBE cluster.
+        /// </summary>
+        public const string NeonKube = "neon-kube";
 
         /// <summary>
         /// Set as the category value to identify test cases that appear to have

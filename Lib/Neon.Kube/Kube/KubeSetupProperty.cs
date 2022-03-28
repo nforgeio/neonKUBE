@@ -124,10 +124,10 @@ namespace Neon.Kube
         public const string AutomationFolder = "automation-folder";
 
         /// <summary>
-        /// Property name for accessing the headend service base URI. This can be overridden
+        /// Property name for accessing the neonCLOUD headend service base URI. This can be overridden
         /// for development purposes.
         /// </summary>
-        public const string HeadendUri = "headend-uri";
+        public const string NeonCloudHeadendUri = "neoncloud-headend-uri";
 
         /// <summary>
         /// Property name for a boolean indicating that the node image has already been downloaded

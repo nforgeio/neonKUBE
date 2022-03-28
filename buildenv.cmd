@@ -50,6 +50,7 @@ set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
 set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set MSBUILDPATH=C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe
+set NEON_CLUSTER_TESTING=1
 
 REM Persist the environment variables.
 
@@ -64,6 +65,7 @@ setx NF_TEMP "%NF_TEMP%" /M                                   > nul
 setx NF_ACTIONS_ROOT "%NF_ACTIONS_ROOT%" /M                   > nul
 setx NF_CODEDOC "%NF_CODEDOC%" /M                             > nul
 setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M             > nul
+setx NEON_CLUSTER_TESTING "%NEON_CLUSTER_TESTING%" /M         > nul
 
 setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
 setx MSBUILDPATH "%MSBUILDPATH%" /M                           > nul

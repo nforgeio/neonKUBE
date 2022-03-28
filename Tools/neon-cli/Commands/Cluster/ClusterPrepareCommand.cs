@@ -185,7 +185,7 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var automationFolder  = commandLine.GetOption("--automation-folder");
-            var headendUri        = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeConst.NeonCloudHeadendUri;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
 
@@ -293,7 +293,7 @@ OPTIONS:
                 debugMode:              debug,
                 baseImageName:          baseImageName,
                 automationFolder:       automationFolder,
-                headendUri:             headendUri);
+                neonCloudHeadendUri:    headendUri);
 
             controller.DisablePendingTasks = disablePending;
 

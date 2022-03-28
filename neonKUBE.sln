@@ -440,7 +440,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopServer", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Grpc", "Test\Test.Neon.Grpc\Test.Neon.Grpc.csproj", "{073E7438-F2C6-4E59-9488-F4D3B9993BBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.ResourceDefinitions", "Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj", "{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.ResourceDefinitions", "Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj", "{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

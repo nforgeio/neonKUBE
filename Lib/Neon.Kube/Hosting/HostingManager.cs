@@ -331,7 +331,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(bool removeOrphansByPrefix = false)
+        public virtual async Task RemoveClusterAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             throw new NotSupportedException();

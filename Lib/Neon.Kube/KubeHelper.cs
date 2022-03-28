@@ -506,7 +506,8 @@ namespace Neon.Kube
         /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
         /// </para>
         /// </param>
-        public static void SetAutomationMode(KubeAutomationMode mode, string folder)
+        /// <returns>The path to the automation folder.</returns>
+        public static string SetAutomationMode(KubeAutomationMode mode, string folder)
         {
             Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
@@ -539,6 +540,8 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(kubeFolder);
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
+
+            return folder;
         }
 
         /// <summary>
@@ -1204,7 +1207,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// This is used for special situations for setting up a cluster to
+        /// This is used for special situations like setting up a cluster to
         /// set an uninitialized Kubernetes config context as the current
         /// <see cref="CurrentContext"/>.
         /// </summary>
@@ -2923,8 +2926,9 @@ TCPKeepAlive yes
             {
                 return new KubeClusterHealth()
                 {
-                     State   = KubeClusterState.Unknown,
-                     Summary = $"kubecontext for [{context.Name}] not found."
+                    Version = "0",
+                    State   = KubeClusterState.Unknown,
+                    Summary = $"kubecontext for [{context.Name}] not found."
                 };
             }
             
@@ -2948,35 +2952,16 @@ TCPKeepAlive yes
                 {
                     return new KubeClusterHealth()
                     {
+                        Version = "0",
                         State   = KubeClusterState.Unknown,
-                        Summary = "Timeout checking cluster health"
+                        Summary = "Cluster health check cancelled"
                     };
-                }
-                catch (HttpOperationException e)
-                {
-                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        // We're expecting this.
-
-                        return new KubeClusterHealth()
-                        {
-                            State   = KubeClusterState.Healthy,
-                            Summary = "Cluster is healthy"
-                        };
-                    }
-                    else
-                    {
-                        return new KubeClusterHealth()
-                        {
-                            State   = KubeClusterState.Unknown,
-                            Summary = e.Message
-                        };
-                    }
                 }
                 catch (Exception e)
                 {
                     return new KubeClusterHealth()
                     {
+                        Version = "0",
                         State   = KubeClusterState.Unknown,
                         Summary = e.Message
                     };
