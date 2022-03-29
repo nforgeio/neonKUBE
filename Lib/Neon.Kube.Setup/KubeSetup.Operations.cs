@@ -3269,7 +3269,14 @@ $@"- name: StorageType
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerServer);
-                            values.Add($"tenants[0].pools[0].size", cluster.Definition.Storage.Minio.VolumeSize);
+
+                            var volumesize = ByteUnits.Humanize(
+                                ByteUnits.Parse(cluster.Definition.Storage.Minio.VolumeSize),
+                                powerOfTwo: true,
+                                spaceBeforeUnit: false,
+                                removeByteUnit: true);
+
+                            values.Add($"tenants[0].pools[0].size", volumesize);
 
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
