@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,6 +34,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
@@ -540,62 +542,177 @@ namespace Neon.Kube
             var xenClient    = xenSshProxy.Metadata;
             var templateName = $"neonkube-{KubeVersions.NeonKube}";
 
-            xenSshProxy.Status = $"check: node image {templateName}";
+            // Download the node template to the workstation if it's not already present.
 
-            if (xenClient.Template.Find(templateName) != null)
+            if (nodeImagePath != null)
             {
-                xenSshProxy.Status = string.Empty;
+                Covenant.Assert(File.Exists(nodeImagePath));
+
+                driveTemplatePath = nodeImagePath;
             }
             else
             {
-                if (nodeImagePath != null)
-                {
-                    Covenant.Assert(File.Exists(nodeImagePath));
+                xenSshProxy.Status = $"download: node image {templateName}";
+                xenController.SetGlobalStepStatus();
 
-                    driveTemplatePath = nodeImagePath;
+                string driveTemplateName;
+
+                if (!string.IsNullOrEmpty(nodeImageUri))
+                {
+                    // Download the GZIPed XVA template if it's not already present and has a valid
+                    // MD5 hash file.
+                    //
+                    // NOTE: We're going to name the file the same as the file name from the URI.
+
+                    var driveTemplateUri = new Uri(nodeImageUri);
+
+                    driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
+                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+
+                    await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
+                        (progressType, progress) =>
+                        {
+                            xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: XVA [{progress}%] [{driveTemplateName}]");
+
+                            return !xenController.IsCancelPending;
+                        });
                 }
                 else
                 {
-                    xenSshProxy.Status = $"download: node image {templateName}";
+                    Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
 
-                    string driveTemplateName;
+                    driveTemplateName = Path.GetFileName(nodeImagePath);
+                    driveTemplatePath = nodeImagePath;
+                }
+            }
 
-                    if (!string.IsNullOrEmpty(nodeImageUri))
-                    {
-                        // Download the GZIPed XVA template if it's not already present and has a valid
-                        // MD5 hash file.
-                        //
-                        // Note that we're going to name the file the same as the file name from the URI.
+            // The MD5 is computed for the GZIP compressed node image as downloaded
+            // from the source.  We're expecting a file at $"{driveTemplatePath}.gz" 
+            // holding this MD5 (this file is created during the multi-part download).
+            // 
+            // It's possible that the MD5 file won't exist for maintainer who are using
+            // a cached template file.  We'll recompute the MD5 here in that case and
+            // save the file for next time.
 
-                        var driveTemplateUri = new Uri(nodeImageUri);
-                        
-                        driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
-                        driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+            string templateMd5;
+            string templateMd5Path = $"{driveTemplatePath}.md5";
 
-                        await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
-                            (progressType, progress) =>
-                            {
-                                xenController.SetGlobalStepStatus($"{NeonHelper.EnumToString(progressType)}: XVA [{progress}%] [{driveTemplateName}]");
+            if (File.Exists(templateMd5Path))
+            {
+                templateMd5 = File.ReadAllText(templateMd5Path).Trim();
+            }
+            else
+            {
+                xenSshProxy.Status = $"compute: node image MD5: {templateMd5Path}";
+                xenController.SetGlobalStepStatus();
 
-                                return !xenController.IsCancelPending;
-                            });
-                    }
-                    else
-                    {
-                        Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
-
-                        driveTemplateName = Path.GetFileName(nodeImagePath);
-                        driveTemplatePath = nodeImagePath;
-                    }
-
-                    xenController.SetGlobalStepStatus();
+                using (var templateStream = File.OpenRead(driveTemplatePath))
+                {
+                    templateMd5 = CryptoHelper.ComputeMD5String(templateStream);
                 }
 
-                xenController.SetGlobalStepStatus();
-                xenSshProxy.Status = $"install: node image {templateName} (slow)";
-                xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
-                xenSshProxy.Status = string.Empty;
+                File.WriteAllText(templateMd5Path, templateMd5);
             }
+
+            // We need to check for an existing node template on the XenServer and
+            // compare the MD5 encoded in the remote template description against
+            // the local template MD5.  The remote description should look like:
+            //
+            //      neonKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //
+            // We'll return immediately if the description MD5 matches otherwise
+            // we'll remove the remote template and import a new one.
+
+            xenSshProxy.Status = $"check: node image [{templateName}]";
+            xenController.SetGlobalStepStatus();
+
+            var template = xenClient.Template.Find(templateName);
+
+            if (template != null)
+            {
+                var description = template.NameDescription;
+                var md5RegEx    = new Regex(@"\[MD5:(?<md5>[0-9a-f]{32})\]");
+                var match       = md5RegEx.Match(description);
+
+                if (match.Success)
+                {
+                    // The description has an encoded MD5 so compare that against the
+                    // MD5 for the local template.  We're done when they match.
+
+                    if (templateMd5 == match.Groups["md5"].Value)
+                    {
+                        xenSshProxy.Status = $"check: node image [{templateName}] MD5 match";
+                        xenController.SetGlobalStepStatus();
+                        return;
+                    }
+                }
+
+                // We'll arrive here if the existing template's description wasn't
+                // formatted correctly or if the MD5 didn't match the local template.
+                // 
+                // We'll remove the existing template and then import a new one 
+                // below.
+                //
+                // NOTE: Template removal will fail when any VMs on the XenServer
+                //       reference the template in snapshhot mode.  This won't be an issue
+                //       for end-users because published templates will be invarient,
+                //       but maintainers will need to manually remove the VMs and
+                //       try again.
+                //
+                //       This also won't be an issue for VMs that weren't created
+                //       with snapshot mode.
+
+                xenSshProxy.Status = $"check: Node image MD5 mismatch; deleting [{templateName}]";
+                xenController.SetGlobalStepStatus();
+
+                try
+                {
+                    xenClient.Template.Destroy(template);
+                }
+                catch (XenException)
+                {
+                    xenSshProxy.LogLine($"Cannot delete [{templateName}].  You may need to delete VMs referencing this template using snapshot mode.");
+                    throw;
+                }
+            }
+
+            // Install the node template on the XenServer.  Note that we're going to
+            // add a description formatted like:
+            //
+            //      neonKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //
+            // The MD5 is computed for the GZIP compressed node image as downloaded
+            // from the source.  We're expecting a file at $"{driveTemplatePath}.gz" 
+            // holding this MD5 (this file is when the multi-part template was downloaded.
+            // 
+            // It's possible that the MD5 file won't exist for maintainers who are using
+            // a cached template file.  In this case, we'll recompute the MD5 here.
+
+            string md5;
+            string md5Path = $"{driveTemplatePath}.md5";
+
+            if (File.Exists(md5Path))
+            {
+                md5 = File.ReadAllText(md5Path).Trim();
+            }
+            else
+            {
+                xenSshProxy.Status = $"compute: node image MD5: {templateName}";
+                xenController.SetGlobalStepStatus();
+
+                using (var templateStream = File.OpenRead(driveTemplatePath))
+                {
+                    md5 = CryptoHelper.ComputeMD5String(templateStream);
+                }
+            }
+
+            xenSshProxy.Status = $"install: node image {templateName} (slow)";
+            xenController.SetGlobalStepStatus();
+
+            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Definition.Hosting.XenServer.StorageRepository, description: $"neonKUBE Node Image [MD5:{md5}]");
+
+            xenSshProxy.Status = string.Empty;
+            xenController.SetGlobalStepStatus();
         }
 
         /// <summary>
