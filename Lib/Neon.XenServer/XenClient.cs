@@ -207,7 +207,7 @@ namespace Neon.XenServer
             this.Address  = addressOrFQDN;
             this.username = username;
             this.password = password;
-            this.Name     = name;
+            this.Name     = name ?? $"XENSERVER-{addressOrFQDN}";
             this.xePath   = Path.Combine(NeonHelper.GetBaseDirectory(), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
             this.xeFolder = Path.GetDirectoryName(xePath);
 
