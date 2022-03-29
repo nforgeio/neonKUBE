@@ -655,7 +655,7 @@ namespace Neon.Kube
                 //
                 // NOTE: Template removal will fail when any VMs on the XenServer
                 //       reference the template in snapshhot mode.  This won't be an issue
-                //       for end-users because published templates will be invarient,
+                //       for end-users because published templates will be invariant,
                 //       but maintainers will need to manually remove the VMs and
                 //       try again.
                 //
