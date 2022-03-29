@@ -72,7 +72,7 @@ namespace Neon.Kube.Xunit
     ///     namePrefix: "test"
     ///     cores: 4
     ///     memory: 12 GiB
-    ///     osDisk: 40 GiB
+    ///     osDisk: 64 GiB
     /// network:
     ///   premiseSubnet: 100.64.0.0/24
     ///   gateway: 100.64.0.1

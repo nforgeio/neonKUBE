@@ -364,5 +364,10 @@ namespace Neon.Kube
         /// The base URI for the neonCLOUD production headend services.
         /// </summary>
         public const string NeonCloudHeadendUri = "https://headend.neoncloud.io";
+
+        /// <summary>
+        /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
+        /// </summary>
+        public const string MinimumOsDiskAfterMinio = "40 GiB";
     }
 }
