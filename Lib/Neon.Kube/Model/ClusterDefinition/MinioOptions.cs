@@ -43,7 +43,7 @@ namespace Neon.Kube
     /// </summary>
     public class MinioOptions
     {
-        private const string minVolumeSize = "10 GiB";
+        private const string minVolumeSize = "2 GiB";
 
         /// <summary>
         /// <para>

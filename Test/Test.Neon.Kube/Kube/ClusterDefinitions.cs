@@ -217,7 +217,7 @@ hosting:
     namePrefix: tiny
     cores: 4
     memory: 12 GiB
-    osDisk: 40 GiB
+    osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
@@ -258,7 +258,7 @@ hosting:
     namePrefix: small
     cores: 4
     memory: 12 GiB
-    osDisk: 40 GiB
+    osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
@@ -314,7 +314,7 @@ hosting:
     namePrefix: large
     cores: 4
     memory: 12 GiB
-    osDisk: 40 GiB
+    osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
