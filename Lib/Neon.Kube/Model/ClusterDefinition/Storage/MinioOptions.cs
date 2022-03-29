@@ -50,10 +50,10 @@ namespace Neon.Kube
         /// Specifies the number of volumes per server. This defaults to 4.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "VolumesPerServer", Required = Required.Default)]
-        [YamlMember(Alias = "volumesPerServer", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "VolumesPerNode", Required = Required.Default)]
+        [YamlMember(Alias = "volumesPerNode", ApplyNamingConventions = false)]
         [DefaultValue(4)]
-        public int VolumesPerServer { get; set; } = 4;
+        public int VolumesPerNode { get; set; } = 4;
 
         /// <summary>
         /// The size of each volume to be mounted to each server.
@@ -73,6 +73,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
+
             VolumeSize = VolumeSize.Replace(" ", "");
 
             if (VolumeSize.EndsWith("iB"))
@@ -84,32 +86,32 @@ namespace Neon.Kube
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.MinioInternal = true;
+                        node.Labels.MinioInternal = true;
                     }
                 }
                 else
                 {
-                    foreach (var n in clusterDefinition.Workers)
+                    foreach (var node in clusterDefinition.Workers)
                     {
-                        n.Labels.MinioInternal = true;
+                        node.Labels.MinioInternal = true;
                     }
                 }
             }
             else
             {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
                 {
-                    n.Labels.MinioInternal = true;
+                    node.Labels.MinioInternal = true;
                 }
             }
 
             var serverCount = clusterDefinition.Nodes.Where(n => n.Labels.MinioInternal).Count();
 
-            if (serverCount * VolumesPerServer < 4)
+            if (serverCount * VolumesPerNode < 4)
             {
-                throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster but only [{VolumesPerServer}] are defined.  Increase [{nameof(MinioOptions)}.{nameof(MinioOptions.VolumesPerServer)}].");
+                throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster.  Increase [{minioOptionsPrefix}.{nameof(MinioOptions.VolumesPerNode)}] so the number of nodes hosting Minio times [{VolumesPerNode}] is at least [4].");
             }
 
             var minOsDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumOsDiskAfterMinio);
@@ -117,9 +119,9 @@ namespace Neon.Kube
             foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.MinioInternal))
             {
                 var osDisk       = !string.IsNullOrEmpty(node.Vm?.OsDisk) ? ByteUnits.Parse(node.Vm.OsDisk) : ByteUnits.Parse(clusterDefinition.Hosting.Vm.OsDisk);
-                var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerServer;
+                var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;
 
-                if (osDisk - minioVolumes > minOsDiskAfterMinio)
+                if (osDisk - minioVolumes < minOsDiskAfterMinio)
                 {
                     throw new ClusterDefinitionException($"Node [{node.Name}] does not have enough OS disk.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true)}].");
                 }

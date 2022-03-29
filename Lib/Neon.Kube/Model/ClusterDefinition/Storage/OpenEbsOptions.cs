@@ -75,6 +75,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var openEbsOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.OpenEbs)}";
+
             NfsSize = NfsSize ?? minNfsSize;
 
             ClusterDefinition.ValidateSize(NfsSize, typeof(OpenEbsOptions), nameof(NfsSize), minimum: minNfsSize);
@@ -120,7 +122,7 @@ namespace Neon.Kube
 
                     if (clusterDefinition.Nodes.Count() > 1)
                     {
-                        new ClusterDefinitionException($"The [{Engine}] storage engine is supported only for single-node clusters.");
+                        new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is supported only for single-node clusters.");
                     }
                     break;
 
@@ -135,7 +137,7 @@ namespace Neon.Kube
                 default:
                 case OpenEbsEngine.Mayastor:
 
-                    throw new ClusterDefinitionException($"Support for the [{Engine}] storage engine is not implemented yet.");
+                    throw new ClusterDefinitionException($"[{openEbsOptionsPrefix}.{nameof(Engine)}={Engine}] storage engine is not implemented.");
             }
         }
     }

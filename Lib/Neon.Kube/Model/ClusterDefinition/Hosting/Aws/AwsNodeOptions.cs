@@ -202,7 +202,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
 
-            var node = clusterDefinition.NodeDefinitions[nodeName];
+            var node                 = clusterDefinition.NodeDefinitions[nodeName];
+            var awsNodeOptionsPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}.{nameof(NodeDefinition.Aws)}";
 
             // Set the cluster default storage types if necessary.
 
@@ -259,7 +260,7 @@ namespace Neon.Kube
 
                     if (PlacementPartition > partitionCount)
                     {
-                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
+                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
                     }
                 }
                 else if (node.IsWorker)
@@ -270,7 +271,7 @@ namespace Neon.Kube
 
                     if (PlacementPartition > partitionCount)
                     {
-                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
+                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
                     }
                 }
                 else
@@ -288,7 +289,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.VolumeSize, out var volumeSizeBytes) || volumeSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(VolumeSize)}={VolumeSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(VolumeSize)}={VolumeSize}] which is not valid.");
             }
 
             var driveSizeGiB = AwsHelper.GetVolumeSizeGiB(VolumeType, volumeSizeBytes);
@@ -304,7 +305,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.VolumeSize, out var openEbsVolumeSizeBytes) || openEbsVolumeSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(OpenEBSVolumeSize)}={OpenEBSVolumeSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(OpenEBSVolumeSize)}={OpenEBSVolumeSize}] which is not valid.");
             }
 
             var openEBSVolumeSizeGiB = AwsHelper.GetVolumeSizeGiB(OpenEBSVolumeType, openEbsVolumeSizeBytes);

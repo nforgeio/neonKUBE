@@ -240,6 +240,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
+
             // Ensure that the labels are wired up to the parent node.
 
             if (Labels == null)
@@ -253,22 +255,22 @@ namespace Neon.Kube
 
             if (Name == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}] property is required.");
             }
 
             if (!ClusterDefinition.IsValidName(Name))
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (name == "localhost")
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
             if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && !clusterDefinition.IsSpecialNeonCluster)
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
             }
 
             if (name.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
@@ -281,7 +283,7 @@ namespace Neon.Kube
                 //
                 // See: KubeConst.ClusterSetupLogName
 
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
             }
 
             if (string.IsNullOrEmpty(Role))
@@ -291,7 +293,7 @@ namespace Neon.Kube
 
             if (!Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase) && !Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new ClusterDefinitionException($"Node [{Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
+                throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
             }
 
             // We don't need to check the node address for cloud providers.
@@ -300,12 +302,12 @@ namespace Neon.Kube
             {
                 if (string.IsNullOrEmpty(Address))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
+                    throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
                 }
 
                 if (!NetHelper.TryParseIPv4Address(Address, out var nodeAddress))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{Address}].");
+                    throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid IP address [{Address}].");
                 }
             }
 

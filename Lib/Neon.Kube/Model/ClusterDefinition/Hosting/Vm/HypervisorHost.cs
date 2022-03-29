@@ -88,24 +88,26 @@ namespace Neon.Kube
         [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
+            var hypervisorHostPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}";
+
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Name)}] is required when specifying a hypervisor host.");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Name)}] is required when specifying a hypervisor host.");
             }
 
             if (string.IsNullOrEmpty(Address))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Address)}] is required when specifying a hypervisor host.");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}] is required when specifying a hypervisor host.");
             }
 
             if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostUsername))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostUsername)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostUsername)}].");
             }
 
             if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostPassword))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostPassword)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostPassword)}].");
             }
         }
     }

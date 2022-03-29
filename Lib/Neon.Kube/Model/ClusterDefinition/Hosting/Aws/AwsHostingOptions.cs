@@ -348,6 +348,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var awsHostionOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Aws)}";
+
             foreach (var ch in clusterDefinition.Name)
             {
                 if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
@@ -360,17 +362,17 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(AccessKeyId))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(AccessKeyId)}] is required.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(AccessKeyId)}] is required.");
             }
 
             if (string.IsNullOrEmpty(SecretAccessKey))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(SecretAccessKey)}] is required.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(SecretAccessKey)}] is required.");
             }
 
             if (string.IsNullOrEmpty(AvailabilityZone))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(AvailabilityZone)}] is required.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(AvailabilityZone)}] is required.");
             }
 
             // Verify [ResourceGroup].
@@ -382,24 +384,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
+                    throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -413,7 +415,7 @@ namespace Neon.Kube
             {
                 if (MasterPlacementPartitions < 1 || MaxPlacementPartitions < MasterPlacementPartitions)
                 {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(MasterPlacementPartitions)}={MasterPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
+                    throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(MasterPlacementPartitions)}={MasterPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
                 }
             }
 
@@ -421,7 +423,7 @@ namespace Neon.Kube
 
             if (WorkerPlacementPartitions < 1 || MaxPlacementPartitions < WorkerPlacementPartitions)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(WorkerPlacementPartitions)}={WorkerPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(WorkerPlacementPartitions)}={WorkerPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
             }
 
             // Verify [DefaultInstanceType]
@@ -440,7 +442,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultVolumeSize, out var volumeSize) || volumeSize <= 0)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultVolumeSize)}={DefaultVolumeSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(DefaultVolumeSize)}={DefaultVolumeSize}] is not valid.");
             }
 
             // Verify [DefaultOpenEBSVolumeSize].
@@ -452,19 +454,19 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultOpenEBSVolumeSize, out var openEbsVolumeSize) || openEbsVolumeSize <= 0)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSVolumeSize)}={DefaultOpenEBSVolumeSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(DefaultOpenEBSVolumeSize)}={DefaultOpenEBSVolumeSize}] is not valid.");
             }
 
             // Check AWS cluster limits.
 
             if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
             {
-                throw new ClusterDefinitionException($"cluster master count [{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster master count [{awsHostionOptionsPrefix}.{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AwsHelper.MaxClusterNodes)
             {
-                throw new ClusterDefinitionException($"cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AwsHelper.MaxClusterNodes}] limit for clusters deployed to AWS.");
+                throw new ClusterDefinitionException($"cluster node count [{awsHostionOptionsPrefix}.{clusterDefinition.Nodes.Count()}] exceeds the [{AwsHelper.MaxClusterNodes}] limit for clusters deployed to AWS.");
             }
 
             //-----------------------------------------------------------------

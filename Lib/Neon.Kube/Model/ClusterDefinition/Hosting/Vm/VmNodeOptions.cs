@@ -207,31 +207,33 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
+
             if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
                 if (string.IsNullOrEmpty(Host))
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.Vm.Host)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nodeDefinitionPrefix}.{nameof(NodeDefinition.Vm.Host)}].");
                 }
                 else if (clusterDefinition.Hosting.Vm.Hosts.FirstOrDefault(h => h.Name.Equals(Host, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.Vm.Hosts)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is not defined in [{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}.{nameof(ClusterDefinition.Hosting.Vm.Hosts)}].");
                 }
             }
 
             if (Memory != null)
             {
-                ClusterDefinition.ValidateSize(Memory, this.GetType(), nameof(Memory));
+                ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(Memory)}");
             }
 
             if (OsDisk != null)
             {
-                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
+                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OsDisk)}");
             }
 
             if (OpenEbsDisk != null)
             {
-                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
+                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OpenEbsDisk)}");
             }
         }
     }

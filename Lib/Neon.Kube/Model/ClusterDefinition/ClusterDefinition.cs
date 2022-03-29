@@ -443,15 +443,6 @@ namespace Neon.Kube
         public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
 
         /// <summary>
-        /// Returns the options to be used when installing Docker on each
-        /// of the cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "Docker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "docker", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public DockerOptions Docker { get; set; } = new DockerOptions();
-
-        /// <summary>
         /// Returns the options to be used for configuring the cluster integrated
         /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
         /// </summary>
@@ -932,7 +923,6 @@ namespace Neon.Kube
             Storage      = Storage ?? new StorageOptions();
             Security     = Security ?? new SecurityOptions();
             Kubernetes   = Kubernetes ?? new KubernetesOptions();
-            Docker       = Docker ?? new DockerOptions();
             Monitor      = Monitor ?? new MonitorOptions();
             Hosting      = Hosting ?? new HostingOptions();
             NodeOptions  = NodeOptions ?? new NodeOptions();
@@ -954,7 +944,6 @@ namespace Neon.Kube
             Storage.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);
-            Docker.Validate(this);
             Monitor.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
@@ -1000,27 +989,27 @@ namespace Neon.Kube
 
             if (Name == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}] property is required.");
             }
 
             if (!IsValidName(Name))
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (Name.Length > 32)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Datacenter == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(Datacenter)}] property is required.");
             }
 
             if (!IsValidName(Datacenter))
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             var masterNodeCount = Masters.Count();
@@ -1052,12 +1041,12 @@ namespace Neon.Kube
 
                     if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
                     {
-                        throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                        throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
 
                     if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
                     {
-                        throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                        throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
                 }
             }

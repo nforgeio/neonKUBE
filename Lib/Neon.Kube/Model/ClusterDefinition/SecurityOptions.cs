@@ -64,7 +64,7 @@ namespace Neon.Kube
         {
             if (PasswordLength < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
+                throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Security)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
             }
         }
     }

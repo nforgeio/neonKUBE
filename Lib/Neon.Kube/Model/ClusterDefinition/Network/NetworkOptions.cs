@@ -318,10 +318,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var isCloud       = clusterDefinition.Hosting.IsCloudProvider;
-            var subnets       = new List<SubnetDefinition>();
-            var gateway       = (IPAddress)null;
-            var premiseSubnet = (NetworkCidr)null;
+            var networkOptionsPrefix = $"{nameof(ClusterDefinition.Network)}";
+            var isCloud              = clusterDefinition.Hosting.IsCloudProvider;
+            var subnets              = new List<SubnetDefinition>();
+            var gateway              = (IPAddress)null;
+            var premiseSubnet        = (NetworkCidr)null;
 
             // Nameservers
 
@@ -336,7 +337,7 @@ namespace Neon.Kube
             {
                 if (!NetHelper.TryParseIPv4Address(nameserver, out var address))
                 {
-                    throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ClusterDefinition.Network.Nameservers)}={nameserver}] is not a valid IPv4 address.");
                 }
             }
 
@@ -349,7 +350,7 @@ namespace Neon.Kube
 
                 if (!NetworkCidr.TryParse(PremiseSubnet, out premiseSubnet))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 // Verify [Gateway]
@@ -364,12 +365,12 @@ namespace Neon.Kube
 
                 if (!NetHelper.TryParseIPv4Address(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseSubnet.Contains(gateway))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] address is not within the [{networkOptionsPrefix}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
                 }
             }
 
@@ -377,7 +378,7 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(PodSubnet, out var podSubnet))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PodSubnet), podSubnet));
@@ -386,7 +387,7 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(ServiceSubnet, out var serviceSubnet))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(ServiceSubnet), serviceSubnet));
@@ -404,7 +405,7 @@ namespace Neon.Kube
 
                     if (subnet.Cidr.Overlaps(next.Cidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
                     }
                 }
             }
@@ -442,7 +443,7 @@ namespace Neon.Kube
 
                 if (ingressRuleNames.Contains(rule.Name))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
                 }
 
                 ingressRuleNames.Add(rule.Name);
@@ -480,7 +481,7 @@ namespace Neon.Kube
             {
                 if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
                 }
             }
 
@@ -491,27 +492,27 @@ namespace Neon.Kube
 
             if (!GoDuration.TryParse(CertificateDuration, out var duration))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
             }
 
             if (!GoDuration.TryParse(CertificateRenewBefore, out var renewBefore))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
             }
 
             if (duration.TimeSpan < TimeSpan.FromSeconds(1))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
             }
 
             if (renewBefore.TimeSpan < TimeSpan.FromSeconds(1))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
             }
 
             if (duration.TimeSpan < renewBefore.TimeSpan)
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{nameof(NetworkOptions)}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
             }
         }
 
@@ -523,41 +524,6 @@ namespace Neon.Kube
         internal bool IsExternalSshPort(int port)
         {
             return FirstExternalSshPort <= port && port <= LastExternalSshPort;
-        }
-
-        /// <summary>
-        /// Ensures that for cloud deployments, an explicit node address assignment does not conflict 
-        /// with any VNET addresses reserved by the cloud provider or neonKUBE.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeDefinition">The node definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown for cloud deployments where the node specifies an explicit IP address that conflicts with a reserved VNET address.</exception>
-        internal void ValidateCloudNodeAddress(ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
-
-            if (!NetHelper.IsValidPort(ReservedIngressStartPort))
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressStartPort)}={ReservedIngressStartPort}] port.");
-            }
-
-            if (!NetHelper.IsValidPort(ReservedIngressEndPort))
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressEndPort)}={ReservedIngressEndPort}] port.");
-            }
-
-            if (ReservedIngressStartPort >= ReservedIngressEndPort)
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressStartPort)}={ReservedIngressStartPort}]-[{nameof(ReservedIngressEndPort)}={ReservedIngressEndPort}] range.  [{nameof(ReservedIngressStartPort)}] must be greater than [{nameof(ReservedIngressEndPort)}].");
-            }
-
-            if (ReservedIngressEndPort - ReservedIngressStartPort + additionalReservedPorts < clusterDefinition.Nodes.Count())
-            {
-                throw new ClusterDefinitionException($"[{nameof(ReservedIngressStartPort)}]-[{nameof(ReservedIngressEndPort)}] range is not large enough to support [{clusterDefinition.Nodes.Count()}] cluster nodes in addition to [{additionalReservedPorts}] additional reserved ports.");
-            }
-
-            IngressHealthCheck?.Validate(clusterDefinition, nameof(NetworkOptions));
         }
     }
 }

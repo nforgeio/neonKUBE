@@ -175,7 +175,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(ContainerOptions)}.{nameof(SearchRegistries)}");
+                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(SearchRegistries)}");
             }
 
             // Ensure that any registry customizations are valid.
@@ -187,11 +187,11 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
+                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
 
                 if (!string.IsNullOrEmpty(registry.Location))
                 {
-                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Location)}");
+                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(Registries)}.{nameof(registry.Location)}");
                 }
             }
         }
