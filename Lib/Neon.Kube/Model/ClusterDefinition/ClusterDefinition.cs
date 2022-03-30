@@ -353,18 +353,6 @@ namespace Neon.Kube
         public List<ResourceTag> ResourceTags { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies cluster debugging options.
-        /// </para>
-        /// <note>
-        /// These options are generally intended for neonKUBE maintainers only.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
-        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
-        public DebugOptions Debug { get; set; } = new DebugOptions();
-
-        /// <summary>
         /// Enables or disables specific Kubernetes features.  This can be used to enable
         /// alpha quality or other features that are disabled by default for the Kubernetes
         /// version being deployed or to disable features.
@@ -682,7 +670,7 @@ namespace Neon.Kube
                 //
                 // I'm temporarily commenting this out because neon-desktop needs
                 // the hosting related secrets in some circumstances.  We need to
-                // think through a comprehensive solution:
+                // think about a comprehensive solution:
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/1482
 
@@ -917,7 +905,6 @@ namespace Neon.Kube
 
             // Validate the properties.
 
-            Debug        = Debug ?? new DebugOptions();
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
             Deployment   = Deployment ?? new DeploymentOptions();
             Storage      = Storage ?? new StorageOptions();
@@ -939,7 +926,6 @@ namespace Neon.Kube
                 new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
-            Debug.Validate(this);
             Deployment.Validate(this);
             Storage.Validate(this);
             Security.Validate(this);
