@@ -75,13 +75,6 @@ namespace Neon.Kube
 
             var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
 
-            VolumeSize = VolumeSize.Replace(" ", "");
-
-            if (VolumeSize.EndsWith("iB"))
-            {
-                VolumeSize = VolumeSize.Replace("iB", "i");
-            }
-
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Minio))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
