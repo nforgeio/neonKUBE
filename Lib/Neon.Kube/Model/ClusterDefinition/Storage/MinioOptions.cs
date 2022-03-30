@@ -43,17 +43,17 @@ namespace Neon.Kube
     /// </summary>
     public class MinioOptions
     {
-        private const string minVolumeSize = "10 GiB";
+        private const string minVolumeSize = "2 GiB";
 
         /// <summary>
         /// <para>
         /// Specifies the number of volumes per server. This defaults to 4.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "VolumesPerServer", Required = Required.Default)]
-        [YamlMember(Alias = "volumesPerServer", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "VolumesPerNode", Required = Required.Default)]
+        [YamlMember(Alias = "volumesPerNode", ApplyNamingConventions = false)]
         [DefaultValue(4)]
-        public int VolumesPerServer { get; set; } = 4;
+        public int VolumesPerNode { get; set; } = 4;
 
         /// <summary>
         /// The size of each volume to be mounted to each server.
@@ -73,6 +73,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var minioOptionsPrefix = $"{nameof(ClusterDefinition.Storage)}.{nameof(ClusterDefinition.Storage.Minio)}";
+
             VolumeSize = VolumeSize.Replace(" ", "");
 
             if (VolumeSize.EndsWith("iB"))
@@ -84,40 +86,44 @@ namespace Neon.Kube
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.MinioInternal = true;
+                        node.Labels.MinioInternal = true;
                     }
                 }
                 else
                 {
-                    foreach (var n in clusterDefinition.Workers)
+                    foreach (var node in clusterDefinition.Workers)
                     {
-                        n.Labels.MinioInternal = true;
+                        node.Labels.MinioInternal = true;
                     }
                 }
             }
             else
             {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.Minio))
                 {
-                    n.Labels.MinioInternal = true;
+                    node.Labels.MinioInternal = true;
                 }
             }
 
             var serverCount = clusterDefinition.Nodes.Where(n => n.Labels.MinioInternal).Count();
 
-            Covenant.Assert(serverCount * VolumesPerServer >= 4);
-
-            foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.MinioInternal))
+            if (serverCount * VolumesPerNode < 4)
             {
-                if (!string.IsNullOrEmpty(n.Vm?.OsDisk))
+                throw new ClusterDefinitionException($"Minio requires at least [4] volumes within the cluster.  Increase [{minioOptionsPrefix}.{nameof(MinioOptions.VolumesPerNode)}] so the number of nodes hosting Minio times [{VolumesPerNode}] is at least [4].");
+            }
+
+            var minOsDiskAfterMinio = ByteUnits.Parse(KubeConst.MinimumOsDiskAfterMinio);
+
+            foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.MinioInternal))
+            {
+                var osDisk       = !string.IsNullOrEmpty(node.Vm?.OsDisk) ? ByteUnits.Parse(node.Vm.OsDisk) : ByteUnits.Parse(clusterDefinition.Hosting.Vm.OsDisk);
+                var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;
+
+                if (osDisk - minioVolumes < minOsDiskAfterMinio)
                 {
-                    Covenant.Assert(ByteUnits.Parse(n.Vm.OsDisk) - (ByteUnits.Parse(VolumeSize) * VolumesPerServer) > ByteUnits.Parse("40Gi"));
-                }
-                else
-                {
-                    Covenant.Assert(ByteUnits.Parse(clusterDefinition.Hosting.Vm.OsDisk) - (ByteUnits.Parse(VolumeSize) * VolumesPerServer) > ByteUnits.Parse("40Gi"));
+                    throw new ClusterDefinitionException($"Node [{node.Name}] does not have enough OS disk.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true)}].");
                 }
             }
         }

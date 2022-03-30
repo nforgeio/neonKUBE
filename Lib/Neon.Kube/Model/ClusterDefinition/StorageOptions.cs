@@ -65,7 +65,6 @@ namespace Neon.Kube
         [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
-
             OpenEbs = OpenEbs ?? new OpenEbsOptions();
             Minio   = Minio   ?? new MinioOptions();
 

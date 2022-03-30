@@ -61,16 +61,6 @@ namespace Neon.Xunit
         public const string NeonDeployment = "Neon.Deployment";
 
         /// <summary>
-        /// Identifies <b>Neon.Kube</b> tests.
-        /// </summary>
-        public const string NeonKube = "Neon.Kube";
-
-        /// <summary>
-        /// Identifies <b>Neon.Cloud</b> tests.
-        /// </summary>
-        public const string NeonCloud = "Neon.Cloud";
-
-        /// <summary>
         /// Identifies <b>Neon.Couchbase</b> tests.
         /// </summary>
         public const string NeonCouchbase = "Neon.Couchbase";
@@ -124,5 +114,15 @@ namespace Neon.Xunit
         /// Identifies gRPC service related tests.
         /// </summary>
         public const string NeonGrpc = "Neon.Grpc";
+
+        /// <summary>
+        /// Identifies <b>Neon.Kube</b> tests.
+        /// </summary>
+        public const string NeonKube = "Neon.Kube";
+
+        /// <summary>
+        /// Identifies <b>Neon.Cloud</b> tests.
+        /// </summary>
+        public const string NeonCloud = "Neon.Cloud";
     }
 }

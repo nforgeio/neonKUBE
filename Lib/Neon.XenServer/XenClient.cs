@@ -207,7 +207,7 @@ namespace Neon.XenServer
             this.Address  = addressOrFQDN;
             this.username = username;
             this.password = password;
-            this.Name     = name;
+            this.Name     = name ?? $"XENSERVER-{addressOrFQDN}";
             this.xePath   = Path.Combine(NeonHelper.GetBaseDirectory(), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
             this.xeFolder = Path.GetDirectoryName(xePath);
 
@@ -386,6 +386,78 @@ namespace Neon.XenServer
         public ExecuteResponse Invoke(string command, params string[] args)
         {
             EnsureNotDisposed();
+
+            if (command == "vm-reset-powerstate")
+            {
+                // $hack(jefflill):
+                //
+                // [vm-reset-powerstate] commands can fail sometimes with errors like:
+                //
+                //      The operation could not be performed because a domain still exists for the specified VM.
+                //
+                // It appears that we need to remove the VM's "domain" in case the VM is "stuck".
+                // I'm not entirely sure what these domains are, but apparently it's an internal
+                // XenServer entity that that manages VM resources while the VM is actually running.
+                // We're going to proactively remove any associated domain before resetting the 
+                // VM powerstate.
+                //
+                // We need identify the domain associated with the VM if there is one and 
+                // remove it.  We need to SSH into the host to do this because domains aren't
+                // managed by the XE command line tool.
+                //
+                // We'll execute [list_domains] to list all of the existing domains.  This will
+                // print output something like:
+                //
+                //      id |                                 uuid |  state
+                //      0  | 5aadf5d8-85e0-4aaf-9ce8-85fd500a2dbb |     R
+                //      3  | 79ebe13d-5d6f-1518-c320-45b3103fb866 |     RH
+                //
+                // Where the [uuid] for each row identify the associated VM and the [id]
+                // specifies the domain ID.  We'll look for a line with the VM's UUID and
+                // extract the associated domain ID when the VM is listed and then remove
+                // the domain via:
+                //
+                //      /usr/sbin/xl destroy <domid>
+
+                // Extract the VM UUID from the command arguments.
+
+                var vmUuid = args
+                    .Where(arg => arg.StartsWith("uuid="))
+                    .Select(arg => arg.Substring("uuid=".Length))
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(vmUuid))
+                {
+                    // Connect to the XenServer host and handle the domain removal.
+
+                    using (var hostProxy = Connect())
+                    {
+                        var response = hostProxy.SudoCommand("/bin/list_domains").EnsureSuccess();
+                        var domainId = -1;
+
+                        using (var reader = new StringReader(response.OutputText))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                if (line.Contains(vmUuid))
+                                {
+                                    var pipePos = line.IndexOf('|');
+
+                                    Covenant.Assert(pipePos > 1);
+
+                                    domainId = int.Parse(line.Substring(0, pipePos).Trim());
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (domainId > 0)
+                        {
+                            hostProxy.SudoCommand("/usr/sbin/xl", "destroy", domainId).EnsureSuccess();
+                        }
+                    }
+                }
+            }
 
             return LogXeCommand(command, args, NeonHelper.ExecuteCapture(xePath, NormalizeArgs(command, args), workingDirectory: xeFolder));
         }
@@ -657,6 +729,19 @@ namespace Neon.XenServer
 
             SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
             SafeInvoke("sr-forget", $"uuid={tempIso.SrUuid}");
+        }
+
+        /// <summary>
+        /// Establishes an SSH connection to the assocated XenServer.
+        /// </summary>
+        /// <returns>The connected <see cref="LinuxSshProxy"/>.</returns>
+        public LinuxSshProxy Connect()
+        {
+            var proxy = new LinuxSshProxy(Name, IPAddress.Parse(Address), SshCredentials.FromUserPassword(username, password));
+
+            proxy.Connect();
+
+            return proxy;
         }
     }
 }

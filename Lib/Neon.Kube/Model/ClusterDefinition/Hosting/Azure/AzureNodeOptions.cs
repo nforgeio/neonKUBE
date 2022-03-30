@@ -171,6 +171,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var azureNodeOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
+
             // Set the cluster default storage types if necessary.
 
             if (StorageType == AzureStorageType.Default)
@@ -197,7 +199,7 @@ namespace Neon.Kube
 
             if (VmGen.HasValue && (VmGen.Value != 1 && VmGen.Value != 2))
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureHostingOptions)}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
             }
 
             // Validate the VM size, setting the cluster default if necessary.
@@ -220,7 +222,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureNodeOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
@@ -236,7 +238,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.OpenEBSDiskSize, out var openEbsDiskSizeBytes) || openEbsDiskSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureNodeOptions)}.{nameof(OpenEBSDiskSize)}={OpenEBSDiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(OpenEBSDiskSize)}={OpenEBSDiskSize}] which is not valid.");
             }
 
             var openEBSDiskSizeGiB = AzureHelper.GetDiskSizeGiB(OpenEBSStorageType, openEbsDiskSizeBytes);

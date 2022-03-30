@@ -153,19 +153,21 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
+
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
 
             if (Version != defaultVersion)
             {
-                if (!System.Version.TryParse(Version, out var vKubernetes))
+                if (!System.Version.TryParse(Version, out var kubernetesVersion))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
                 }
 
-                if (vKubernetes < System.Version.Parse(minVersion))
+                if (kubernetesVersion < System.Version.Parse(minVersion))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
                 }
             }
 
@@ -173,13 +175,13 @@ namespace Neon.Kube
             {
                 if (!System.Version.TryParse(DashboardVersion, out var vDashboard))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
                 }
             }
 
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
             {
-                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
             }
 
             if (!string.IsNullOrEmpty(ApiLoadBalancer))
@@ -187,7 +189,7 @@ namespace Neon.Kube
                 // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
 
                 var fields = ApiLoadBalancer.Split(':', 2);
-                var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].  HOSTNAME:PORT or IPADDRESS:PORT expected.";
+                var error  = $"[{kubernetesOptionsPrefix}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].  HOSTNAME:PORT or IPADDRESS:PORT expected.";
 
                 if (fields.Length != 2)
                 {
@@ -210,11 +212,11 @@ namespace Neon.Kube
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystem))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystem))
             {
-                foreach (var m in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystem = true;
+                    manager.Labels.NeonSystem = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
@@ -226,52 +228,52 @@ namespace Neon.Kube
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemDb))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemDb))
             {
-                foreach (var m in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystemDb = true;
+                    manager.Labels.NeonSystemDb = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
                 {
-                    foreach (var w in clusterDefinition.Workers)
+                    foreach (var worker in clusterDefinition.Workers)
                     {
-                        w.Labels.NeonSystemDb = true;
+                        worker.Labels.NeonSystemDb = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemRegistry))
             {
-                foreach (var m in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystemRegistry = true;
+                    manager.Labels.NeonSystemRegistry = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
                 {
-                    foreach (var w in clusterDefinition.Workers)
+                    foreach (var worker in clusterDefinition.Workers)
                     {
-                        w.Labels.NeonSystemRegistry = true;
+                        worker.Labels.NeonSystemRegistry = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.Istio))
             {
                 if (AllowPodsOnMasters.GetValueOrDefault())
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.Istio = true;
+                        node.Labels.Istio = true;
                     };
                 }
                 else
                 {
-                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
                     {
-                        w.Labels.Istio = true;
+                        worker.Labels.Istio = true;
                     }
                 }
             }

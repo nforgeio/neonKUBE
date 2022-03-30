@@ -3268,7 +3268,7 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
-                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerServer);
+                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerNode);
 
                             var volumesize = ByteUnits.Humanize(
                                 ByteUnits.Parse(cluster.Definition.Storage.Minio.VolumeSize),
@@ -4485,6 +4485,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new KubeClusterHealth()
                         {
+                            Version            = KubeVersions.NeonKube,
                             State              = KubeClusterState.Healthy,
                             Summary            = "Cluster setup complete",
                             OptionalComponents = new ClusterOptionalComponents()

@@ -379,6 +379,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var azureHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
+
             foreach (var ch in clusterDefinition.Name)
             {
                 if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
@@ -391,27 +393,27 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(SubscriptionId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(TenantId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(AppId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(AppId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(AppPassword))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(AppPassword)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(Region)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
@@ -430,24 +432,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
+                    throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -474,7 +476,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }
 
             // Verify [DefaultOpenEBSDiskSize].
@@ -486,7 +488,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultOpenEBSDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.
@@ -505,17 +507,17 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(VnetSubnet, out var vnetSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
             }
 
             if (!NetworkCidr.TryParse(NodeSubnet, out var nodeSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
             }
 
             if (!vnetSubnet.Contains(nodeSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
 

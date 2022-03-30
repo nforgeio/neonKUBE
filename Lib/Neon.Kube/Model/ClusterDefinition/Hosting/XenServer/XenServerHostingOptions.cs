@@ -93,11 +93,13 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var xenServerHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.XenServer)}";
+
             StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
-                throw new ClusterDefinitionException($"[{nameof(XenServerHostingOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{xenServerHostingOptionsPrefix}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.

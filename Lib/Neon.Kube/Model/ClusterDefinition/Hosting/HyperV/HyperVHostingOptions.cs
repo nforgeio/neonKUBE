@@ -194,12 +194,12 @@ namespace Neon.Kube
 
                 if (clusterDefinition.Network.PremiseSubnet != NeonKubeInternalSubnet.ToString())
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.PremiseSubnet)} must be set to [{NeonKubeInternalSubnet}] for the clusters deployed to the internal Hyper-V switch.");
+                    throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.PremiseSubnet)} must be set to [{NeonKubeInternalSubnet}] for the clusters deployed to the internal Hyper-V switch.");
                 }
 
                 if (clusterDefinition.Network.Gateway != NeonKubeInternalGateway.ToString())
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.Gateway)} must be set to [{NeonKubeInternalGateway}] for the clusters deployed to the internal Hyper-V switch.");
+                    throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.Gateway)} must be set to [{NeonKubeInternalGateway}] for the clusters deployed to the internal Hyper-V switch.");
                 }
 
                 if (NeonDesktopBuiltIn)

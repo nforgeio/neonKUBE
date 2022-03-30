@@ -77,7 +77,7 @@ namespace Neon.Kube
         {
             if (!string.IsNullOrEmpty(Prefix) && !ClusterDefinition.PrefixRegex.IsMatch(Prefix))
             {
-                throw new ClusterDefinitionException($"[{nameof(DeploymentOptions)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
+                throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Deployment)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
             }
         }
 

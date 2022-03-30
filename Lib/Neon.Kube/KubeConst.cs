@@ -106,42 +106,11 @@ namespace Neon.Kube
         public const int SysAdminGID = 1000;
 
         /// <summary>
-        /// The root account password baked into the Hyper-V and XenServer cluster
-        /// neonKUBE node images.
+        /// The default <b>sysadmin</b> account password baked into neonKUBE
+        /// base images.  This will be set to a secure password during cluster
+        /// provisioning.
         /// </summary>
         public const string SysAdminPassword = "sysadmin0000";
-
-        /// <summary>
-        /// The default host machine container username.
-        /// </summary>
-        public const string ContainerUsername = "container";
-
-        /// <summary>
-        /// <para>
-        /// The default host machine container user ID.
-        /// </para>
-        /// <note>
-        /// This explicitly set to the first valid normal Linux user ID to
-        /// be compatible with as many Docker images as possible.
-        /// </note>
-        /// </summary>
-        public const int ContainerUID = 1000;
-
-        /// <summary>
-        /// The default host machine container group name.
-        /// </summary>
-        public const string ContainerGroup = "container";
-
-        /// <summary>
-        /// <para>
-        /// The default host machine container group ID.
-        /// </para>
-        /// <note>
-        /// This explicitly set to the first valid normal Linux user ID to
-        /// be compatible with as many Docker images as possible.
-        /// </note>
-        /// </summary>
-        public const int ContainerGID = 1000;
 
         /// <summary>
         /// <para>
@@ -390,5 +359,15 @@ namespace Neon.Kube
         /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
         /// </summary>
         public const string NeonResourceGroup = "neonkube.io";
+
+        /// <summary>
+        /// The base URI for the neonCLOUD production headend services.
+        /// </summary>
+        public const string NeonCloudHeadendUri = "https://headend.neoncloud.io";
+
+        /// <summary>
+        /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
+        /// </summary>
+        public const string MinimumOsDiskAfterMinio = "40 GiB";
     }
 }

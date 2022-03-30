@@ -210,7 +210,7 @@ namespace Neon.Kube
 
                     if (Aws == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Hosting)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Aws.Validate(clusterDefinition);
@@ -223,7 +223,7 @@ namespace Neon.Kube
 
                     if (Azure == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Hosting)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Azure.Validate(clusterDefinition);
@@ -242,7 +242,7 @@ namespace Neon.Kube
 
                     if (Google == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Hosting)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Google.Validate(clusterDefinition);
