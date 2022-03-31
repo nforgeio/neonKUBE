@@ -216,7 +216,7 @@ hosting:
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
     namePrefix: tiny
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -257,7 +257,7 @@ hosting:
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
     namePrefix: small
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -313,7 +313,7 @@ hosting:
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
     namePrefix: large
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:

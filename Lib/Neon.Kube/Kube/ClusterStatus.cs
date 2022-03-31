@@ -41,9 +41,9 @@ namespace Neon.Kube
         /// <summary>
         /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KubeVersions.NeonKube)]
-        public string Version { get; set; } = KubeVersions.NeonKube;
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
         /// Indicates whether the cluster is currently locked, unlocked, or whether the

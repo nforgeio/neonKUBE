@@ -1395,11 +1395,11 @@ namespace Neon.Kube
             this.isRunning    = true;
             this.maxStackSize = maxStackSize;
 
-            // This method had been synchronous for a very long time (maybe 5 years)
-            // but we need to make this async now so that it would integrate well
-            // with the neonDESKTOP UX. 
+            // This method has been synchronous for a very long time (maybe 5 years).
+            // We need to make this async now so that it will integrate well with
+            // the neonDESKTOP UX. 
             //
-            // We're simply going to wrap the main setup loop into a new thread and
+            // We're simply going to wrap the main setup loop onto a new thread and
             // have setup execute there.  We'll use a task completion source to signal
             // the caller when we're done.
 

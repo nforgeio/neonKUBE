@@ -37,6 +37,13 @@ using Xunit.Abstractions;
 
 namespace TestKube
 {
+    /// <summary>
+    /// This is a somewhat limited test of <see cref="ClusterFixture"/> for XenServer hosted
+    /// clusters.  This isn't intended to be comprehensive but is intended to be temporarily 
+    /// modified for manually testing corner cases.  We've decided not to make this comprehensive
+    /// because that would require that we test removing clusters which would disrupt other \
+    /// cluster unit tests.
+    /// </summary>
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
@@ -90,9 +97,9 @@ namespace TestKube
             Assert.False(fixtureOptions.Unredacted);
             Assert.False(fixtureOptions.RemoveClusterOnStart);
             Assert.False(fixtureOptions.RemoveClusterOnDispose);
-            Assert.NotNull(fixtureOptions.TestOutputHelper);
-            Assert.NotNull(fixtureOptions.ImageUriOrPath);
-            Assert.NotNull(fixtureOptions.NeonCloudHeadendUri);
+            Assert.Null(fixtureOptions.TestOutputHelper);
+            Assert.Null(fixtureOptions.ImageUriOrPath);
+            Assert.Null(fixtureOptions.NeonCloudHeadendUri);
             Assert.True(fixtureOptions.CaptureDeploymentLogs);
             Assert.Equal(500, fixtureOptions.MaxParallel);
 
@@ -113,6 +120,80 @@ namespace TestKube
             Assert.True(resetOptions.ResetAuth);
             Assert.True(resetOptions.ResetMonitoring);
             Assert.Empty(resetOptions.KeepNamespaces);
+        }
+
+        [ClusterFact]
+        public void KubeCtl()
+        {
+            // Verify that we can execute a neon-cli command.
+
+            var response   = fixture.NeonExecute("get", "namespaces").EnsureSuccess();
+            var namespaces = 
+                new string[]
+                {
+                    "default",
+                    "kube-node-lease",
+                    "kube-public",
+                    "kube-system"
+                };
+
+            foreach (var @namespace in namespaces)
+            {
+                Assert.Contains(@namespace, response.OutputText);
+            }
+        }
+
+        [ClusterFact]
+        public void Helm()
+        {
+            // Verify that we can deploy a simple test pod via the Helm method.
+
+            using (var tempFolder = new TempFolder())
+            {
+                var chartPath      = Path.Combine(tempFolder.Path, "Chart.yaml");
+                var templateFolder = Path.Combine(tempFolder.Path, "templates");
+                var templatePath   = Path.Combine(templateFolder, "deployment.yaml");
+
+                File.WriteAllText(Path.Combine(tempFolder.Path, ".helmignore"), string.Empty);
+                Directory.CreateDirectory(templateFolder);
+
+                const string deploymentYaml =
+@"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test
+  name: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: test
+        image: ghcr.io/neonrelease-dev/test:latest
+";
+                File.WriteAllText(templatePath, deploymentYaml);
+
+                const string chartYaml =
+@"
+apiVersion: v2
+name: neon-cluster-operator
+description: Manages neonKUBE clusters via multiple control loops
+type: application
+version: 0
+appVersion: 0
+";
+                File.WriteAllText(chartPath, chartYaml);
+
+                fixture.NeonExecute("helm", "install", "test-pod", "--namespace", "default", tempFolder.Path).EnsureSuccess();
+            }
         }
     }
 }

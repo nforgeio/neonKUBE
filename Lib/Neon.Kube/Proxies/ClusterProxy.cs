@@ -558,7 +558,21 @@ namespace Neon.Kube
                         return cachedK8s;
                     }
 
-                    var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+                    var kubeConfigPath = Environment.GetEnvironmentVariable("KUBECONFIG");
+
+                    if (kubeConfigPath == null)
+                    {
+                        throw new NeonKubeException("[KUBECONFIG] environment variable not found.");
+                    }
+
+                    if (kubeConfigPath.Contains(';'))
+                    {
+                        throw new NotSupportedException("[KUBECONFIG]: multiple config paths are not supported.");
+                    }
+
+                    kubeConfigPath = kubeConfigPath.Trim();
+
+                    var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
 
                     return cachedK8s = new KubernetesWithRetry(new KubernetesClient(config));
                 }
@@ -1013,7 +1027,7 @@ namespace Neon.Kube
                 // RBAC security checks.
 
                 var resetNamespaces = (await K8s.ListNamespaceAsync()).Items
-                    .Where(item => !KubeNamespace.InternalNamespaces.Contains(item.Name()))
+                    .Where(item => !KubeNamespace.InternalNamespacesWithoutDefault.Contains(item.Name()))
                     .Where(item => !options.KeepNamespaces.Contains(item.Name()))
                     .Select(item => item.Metadata.Name)
                     .ToArray();
