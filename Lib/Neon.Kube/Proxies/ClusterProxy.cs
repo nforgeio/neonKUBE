@@ -1013,18 +1013,15 @@ namespace Neon.Kube
                 // List all of the existing cluster namespaces and then delete the contents
                 // of all of those not being retained, including the [default] namespace.  Note
                 // that we're going to perform these deletions in parallel to speed things up.
-
-                // $todo(jefflill):
                 //
-                // We're going to SSH into the first master and execute this [kubectl] to
+                // We're going to SSH into the first master and execute this via [kubectl] to
                 // remove the contents of each namespace:
                 //
-                //      kubectl delete all --all --namespace NAMESPACE
+                //      kubectl delete all --all --cascade --namespace NAMESPACE
                 //
-                // I'm not entirely happy with this approach.  It would be much nicer to perform
-                // this using the API server only or perhaps using neon-node-agent/NodeTasks,
-                // since we wouldn't need the SSH credentials and we'd also get the benefit of
-                // RBAC security checks.
+                // We're using [kubectl] here instead of using the API server because I believe
+                // [kubectl] will be smarter about deleting resources in the correct order and
+                // we don't want to have to implement that logic right now.
 
                 var resetNamespaces = (await K8s.ListNamespaceAsync()).Items
                     .Where(item => !KubeNamespace.InternalNamespacesWithoutDefault.Contains(item.Name()))
@@ -1047,7 +1044,7 @@ namespace Neon.Kube
                     Parallel.ForEach(resetNamespaces, parallelOptions,
                         @namespace =>
                         {
-                            master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--namespace", @namespace });
+                            master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
                         });
 
                     // Delete all of the cleared namespaces other than [default].
@@ -1057,6 +1054,36 @@ namespace Neon.Kube
                         {
                             master.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
                         });
+
+                    // The [kubectl] command doesn't actually delete everything in a namespace.  This isn't
+                    // a problem for the non-default namespaces because we were able to delete them, but
+                    // we'll need to explicitly remove any remaining resources in the [default] namespace.
+                    //
+                    // We're going to use the API server to list listing all namespaced resources
+                    // available in the cluster, filter them to include only delete-able resources
+                    // and resources without a "/" in their name.  Then we'll use [kubectl] to delete
+                    // them all:
+                    //
+                    //      kubectl delete type0,type1,type2 --all --cascade --namespace default
+                    //
+                    // We're doing it this way because the API server isn't structured to make this easy.
+
+                    var namespacedResourceTypes = (await K8s.GetAPIResourcesAsync())
+                        .Resources
+                        .Where(resource => resource.Namespaced && !resource.Name.Contains("/") && resource.Verbs.Contains("delete"))
+                        .ToArray();
+
+                    var sbResourceTypes = new StringBuilder();
+
+                    foreach (var resourceType in namespacedResourceTypes)
+                    {
+                        sbResourceTypes.AppendWithSeparator(resourceType.Name, ",");
+                    }
+
+                    if (sbResourceTypes.Length > 0)
+                    {
+                        master.SudoCommand("kubectl", new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }).EnsureSuccess();
+                    }
                 }
                 finally
                 {
