@@ -3150,30 +3150,6 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "grafana");
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            try
-                            {
-                                var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespace.NeonMonitor);
-
-                                if (configmap.Data == null || configmap.Data.Keys.Count < 3)
-                                {
-                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespace.NeonMonitor)).RestartAsync(k8s);
-                                    return false;
-                                }
-                            }
-                            catch
-                            {
-                                return false;
-                            }
-
-                            return true;
-                        },
-                        timeout:           TimeSpan.FromMinutes(5),
-                        pollInterval:      TimeSpan.FromSeconds(60),
-                        cancellationToken: controller.CancellationToken);
-
                     controller.ThrowIfCancelled();
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
@@ -3200,32 +3176,16 @@ $@"- name: StorageType
                         $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
                     };
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            try
-                            {
-                                var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+                    var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
-                                controller.ThrowIfCancelled();
-                                await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd);
+                    controller.ThrowIfCancelled();
 
-                                return true;
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                throw;
-                            }
-                            catch
-                            {
-                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-deployment", KubeNamespace.NeonMonitor)).RestartAsync(k8s);
-                                await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespace.NeonMonitor)).RestartAsync(k8s);
-                                return false;
-                            }
-                        },
-                    timeout:           clusterOpTimeout,
-                    pollInterval:      clusterOpPollInterval,
-                    cancellationToken: controller.CancellationToken);
+                    await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy: podExecRetry,
+                                namespaceParameter: pod.Namespace(),
+                                name: pod.Name(),
+                                container: "grafana",
+                                command: cmd);
                 });
         }
 
