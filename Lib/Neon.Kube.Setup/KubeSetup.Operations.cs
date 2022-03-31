@@ -570,7 +570,7 @@ fi
 
 # The first call doesn't specify [--ignore-preflight-errors=all]
 
-if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}; then
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable --cri-socket={crioSocket}; then
     exit 0
 fi
 
@@ -579,7 +579,7 @@ fi
 
 for count in {{1..6}}
 do
-    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all--etc-kubernetes-manifests --cri-socket={crioSocket}; then
+    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all --cri-socket={crioSocket}; then
         exit 0
     fi
 done
@@ -1072,12 +1072,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Update kubeconfig.
 
-                    // $todo(marcusbooyah):
-                    //
-                    // This is hardcoding the kubeconfig to point to the first master.  Issue 
-                    // https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy
-                    // to neonDESKTOP and load balancing requests across the k8s api servers.
-
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
 
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
@@ -1128,6 +1122,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         KubeHelper.SetConfig(existingConfig);
                     }
+
+                    // Make sure that the config cached by [KubeHelper] is up to date.
+
+                    KubeHelper.LoadConfig();
                 }));
         }
 
