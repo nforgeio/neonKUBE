@@ -116,7 +116,7 @@ namespace Neon.Kube.Operator
     /// Holding back calls to your reconciled handler is important in many situations by ensuring
     /// that the entire set of resources is known before the first handler call.  Without this,
     /// your handler may perform delete actions on resources that exist in the cluster but haven't
-    /// been reconciled yet, which could easily cause a lot of trouble, especially if your operator
+    /// been reconciled yet which could easily cause a lot of trouble, especially if your operator
     /// gets scheduled and needs to start from scratch.
     /// </para>
     /// </note>
@@ -187,8 +187,9 @@ namespace Neon.Kube.Operator
         /// <para>
         /// Controls whether the resource manager will absorb all reconciled events until an
         /// event is raised that indicates that nothing has changed.  This happens when the 
-        /// manager has all of the resources.  This means that your handler can depend
-        /// on all of the resources being present when it is called for the first time.
+        /// manager has received all of the resources.  Doing this means that your handler can
+        /// depend on all of the resources being present when <see cref="ReconciledAsync(TCustomResource, EventHandlerAsync, Counter)"/> 
+        /// returns resources the for the first time.
         /// </para>
         /// <para>
         /// This defaults to <c>true</c> which will work for most scenarios.
