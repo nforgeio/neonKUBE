@@ -57,10 +57,13 @@ namespace TestKube
         /// </summary>
         static Test_KubeFixtureXenServer()
         {
-            // Register a [ProfileClient] so commands will be able to pick
-            // up secrets and profile information from [neon-assistant].
+            if (TestHelper.IsClusterTestingEnabled)
+            {
+                // Register a [ProfileClient] so commands will be able to pick
+                // up secrets and profile information from [neon-assistant].
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+            }
         }
 
         //---------------------------------------------------------------------
