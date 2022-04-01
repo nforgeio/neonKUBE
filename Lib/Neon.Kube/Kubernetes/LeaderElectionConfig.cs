@@ -45,6 +45,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used to communicate with th\e cluster.</param>
         /// <param name="namespace">Identifies the namespace where the lease will be hosted.</param>
         /// <param name="leaseName">Specifies the lease name used to manage elections.</param>
         /// <param name="identity">
@@ -72,13 +73,15 @@ namespace Neon.Kube
         /// wait before retrying any actions.  This defaults to <b>2 seconds</b>.
         /// </param>
         public LeaderElectionConfig(
-            string      @namespace,
-            string      leaseName,
-            string      identity,
-            TimeSpan    leaseDuration = default,
-            TimeSpan    renewDeadline = default,
-            TimeSpan    retryPeriod   = default)
+            IKubernetes     k8s,
+            string          @namespace,
+            string          leaseName,
+            string          identity,
+            TimeSpan        leaseDuration = default,
+            TimeSpan        renewDeadline = default,
+            TimeSpan        retryPeriod   = default)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(leaseName), nameof(leaseName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity), nameof(identity));
@@ -103,14 +106,20 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(leaseDuration)}={leaseDuration}] is not greater than [{nameof(renewDeadline)}={renewDeadline}].");
             }
 
+            this.K8s           = k8s;
             this.Namespace     = @namespace;
             this.LeaseName     = leaseName;
             this.LeaseRef      = $"{@namespace}/{leaseName}";
             this.Identity      = identity;
             this.LeaseDuration = leaseDuration;
             this.RenewDeadline = renewDeadline;
-            this.RetryPeriod = retryPeriod;
+            this.RetryPeriod   = retryPeriod;
         }
+
+        /// <summary>
+        /// Returns the <see cref="IKubernetes"/> client to be used to communicate with the cluster.
+        /// </summary>
+        public IKubernetes K8s { get; private set; }
 
         /// <summary>
         /// Returns the Kubernetes namespace where the lease will reside.
