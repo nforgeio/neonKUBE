@@ -200,7 +200,7 @@ namespace TestKube
         /// <b>XenServer:</b> single node cluster definition.
         /// </summary>
         public const string Tiny = @"
-name: tiny
+name: xenserver-tiny
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -241,7 +241,7 @@ nodes:
         /// <b>XenServer:</b> 1 master and 3 worker cluster definition.
         /// </summary>
         public const string Small = @"
-name: small
+name: xenserver-small
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -297,7 +297,7 @@ nodes:
         /// <b>XenServer:</b> 3 master and 3 worker cluster definition.
         /// </summary>
         public const string Large = @"
-name: large
+name: xenserver-large
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false

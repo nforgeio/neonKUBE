@@ -191,7 +191,7 @@ namespace TestKube
         /// <b>HYper-V:</b> single node cluster definition.
         /// </summary>
         public const string Tiny = @"
-name: tiny
+name: hyperv-tiny
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -224,7 +224,7 @@ nodes:
         /// <b>HYper-V:</b> 1 master and 3 worker cluster definition.
         /// </summary>
         public const string Small = @"
-name: small
+name: hyperv-small
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -266,7 +266,7 @@ nodes:
         /// <b>HYper-V:</b> 3 master and 3 worker cluster definition.
         /// </summary>
         public const string Large = @"
-name: large
+name: hyperv-large
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
