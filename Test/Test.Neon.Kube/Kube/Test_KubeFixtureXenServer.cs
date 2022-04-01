@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_XenKubeFixture.cs
+// FILE:	    Test_KubeFixtureXenServer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace TestKube
     /// This is a somewhat limited test of <see cref="ClusterFixture"/> for XenServer hosted
     /// clusters.  This isn't intended to be comprehensive but is intended to be temporarily 
     /// modified for manually testing corner cases.  We've decided not to make this comprehensive
-    /// because that would require that we test removing clusters which would disrupt other \
+    /// because that would require that we test removing clusters which would disrupt other
     /// cluster unit tests.
     /// </summary>
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_XenKubeFixture : IClassFixture<ClusterFixture>
+    public class Test_KubeFixtureXenServer : IClassFixture<ClusterFixture>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -55,7 +55,7 @@ namespace TestKube
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static Test_XenKubeFixture()
+        static Test_KubeFixtureXenServer()
         {
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
@@ -68,12 +68,12 @@ namespace TestKube
 
         private ClusterFixture fixture;
 
-        public Test_XenKubeFixture(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
+        public Test_KubeFixtureXenServer(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
         {
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions() { TestOutputHelper = testOutputHelper };
-            var status  = fixture.StartCluster(ClusterDefinitions.XenTiny, options: options);
+            var status  = fixture.StartCluster(XenServerClusters.Tiny, options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDefinitions.cs
+// FILE:	    HyperVClusters.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
-    /// Cluster definitions used for unit test clusters deployed by <see cref="ClusterFixture"/>.
+    /// <b>Hyper-V</b> cluster definitions used for unit test clusters deployed by <see cref="ClusterFixture"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -79,25 +79,17 @@ namespace TestKube
     ///     </description>
     /// </item>
     /// </list>
-    /// <para><b>XENSERVER/XCP-ng</b></para>
+    /// <para><b>Hyper-V</b></para>
     /// <para>
-    /// These clusters are hosted on a single XenServer specified by the <b>neon-assistant</b>
-    /// profile along with other required common settings: 
+    /// These clusters are hosted on the local workstation using Hyper-V.  Your
+    /// <b>neon-assistant</b> profile will need these settings: 
     /// </para>
+    /// <list type="table">
     /// <item>
-    ///     <term><b>xen-testhost</b> (profile)</term>
+    ///     <term><b>hyperv.diskfolder</b> (profile)</term>
     ///     <description>
-    ///     Specifies the IPv4 address for the XenServer/XCP-ng server where
-    ///     the cluster nodes will be provisioned.  Each machine that runs tests
-    ///     will need to specify a unique host machine to avoid conflicts.
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><b>XENSERVER_LOGIN</b> (1Password)</term>
-    ///     <description>
-    ///     The 1Password password credentials for the XenServer host machine.
-    ///     These credentials are currently shared across all XenServer deployments,
-    ///     but this may change in the future.
+    ///     Specifies the workstation path where the test virtual machine 
+    ///     VHDX files will be created.
     ///     </description>
     /// </item>
     /// </list>
@@ -105,102 +97,100 @@ namespace TestKube
     /// Each cluster definition also uses the neon-assistant profile to obtain
     /// the IP addresses to be assigned to the cluster nodes.
     /// </para>
-    /// <para><b>XEN-TINY</b></para>
+    /// <para><b>HYPERV-TINY</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenTiny"/> cluster.
+    /// required for the <see cref="Tiny"/> cluster.
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>xenserver.tiny0.ip</b></term>
+    ///     <term><b>hyperv.tiny0.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the single cluster node.
     ///     </description>
     /// </item>
     /// </list>
-    /// <para><b>XEN-SMALL</b></para>
+    /// <para><b>HYPERV-SMALL</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenSmall"/> cluster.
+    /// required for the <see cref="Small"/> cluster.
     /// </para>
     /// <list type="table">
-    /// <list type="table">
     /// <item>
-    ///     <term><b>xenserver.small0.ip</b></term>
+    ///     <term><b>hyperv.small0.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the cluster master node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.small1.ip</b></term>
+    ///     <term><b>hyperv.small1.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the first cluster worker node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.small2.ip</b></term>
+    ///     <term><b>hyperv.small2.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the second cluster worker node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.small3.ip</b></term>
+    ///     <term><b>hyperv.small3.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the third cluster worker node.
     ///     </description>
     /// </item>
     /// </list>
-    /// </list>
-    /// <para><b>XEN-LARGE</b></para>
+    /// <para><b>HYPERV-LARGE</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenLarge"/> cluster.
+    /// required for the <see cref="Large"/> cluster.
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>xenserver.large0.ip</b></term>
+    ///     <term><b>hyperv.large0.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the first cluster master node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.large1.ip</b></term>
+    ///     <term><b>hyperv.large1.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the second cluster master node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.large2.ip</b></term>
+    ///     <term><b>hyperv.large2.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the thirg cluster master node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.large3.ip</b></term>
+    ///     <term><b>hyperv.large3.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the first cluster worker node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.large4.ip</b></term>
+    ///     <term><b>hyperv.large4.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the second cluster worker node.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>xenserver.large5.ip</b></term>
+    ///     <term><b>hyperv.large5.ip</b></term>
     ///     <description>
     ///     IPv4 address to be assigned to the third cluster worker node.
     ///     </description>
     /// </item>
     /// </list>
     /// </remarks>
-    public static class ClusterDefinitions
+    public static class HyperVClusters
     {
         /// <summary>
-        /// <b>XenServer:</b> single node cluster definition.
+        /// <b>HYper-V:</b> single node cluster definition.
         /// </summary>
-        public const string XenTiny = @"
+        public const string Tiny = @"
 name: tiny
 datacenter: $<<<profile:datacenter>>>
 environment: test
@@ -210,20 +200,14 @@ timeSources:
 kubernetes:
   allowPodsOnMasters: true
 hosting:
-  environment: xenserver
+  environment: hyperv
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: tiny
+    namePrefix: test-tiny
     cores: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    hosts:
-    - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
-  xenServer:
-     snapshot: true
+    diskLocation: $<<<profile:hyperv.diskfolder>>>
 network:
   premiseSubnet: $<<<profile:lan.subnet>>>
   gateway: $<<<profile:lan.gateway>>>
@@ -233,15 +217,13 @@ network:
 nodes:
   master-0:
     role: master
-    address: $<<<profile:xenserver.tiny0.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.tiny0.ip>>>
 ";
 
         /// <summary>
-        /// <b>XenServer:</b> 1 master and 3 worker cluster definition.
+        /// <b>HYper-V:</b> 1 master and 3 worker cluster definition.
         /// </summary>
-        public const string XenSmall = @"
+        public const string Small = @"
 name: small
 datacenter: $<<<profile:datacenter>>>
 environment: test
@@ -251,20 +233,14 @@ timeSources:
 kubernetes:
   allowPodsOnMasters: false
 hosting:
-  environment: xenserver
+  environment: hyperv
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: small
+    namePrefix: test-small
     cores: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    hosts:
-    - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
-  xenServer:
-     snapshot: true
+    diskLocation: $<<<profile:hyperv.diskfolder>>>
 network:
   premiseSubnet: $<<<profile:lan.subnet>>>
   gateway: $<<<profile:lan.gateway>>>
@@ -274,30 +250,22 @@ network:
 nodes:
   master-0:
     role: master
-    address: $<<<profile:xenserver.small0.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.small0.ip>>>
   worker-0:
     role: master
-    address: $<<<profile:xenserver.small1.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.small1.ip>>>
   worker-1:
     role: master
-    address: $<<<profile:xenserver.small2.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.small2.ip>>>
   worker-2:
     role: master
-    address: $<<<profile:xenserver.small3.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.small3.ip>>>
 ";
 
         /// <summary>
-        /// <b>XenServer:</b> 3 master and 3 worker cluster definition.
+        /// <b>HYper-V:</b> 3 master and 3 worker cluster definition.
         /// </summary>
-        public const string XenLarge = @"
+        public const string Large = @"
 name: large
 datacenter: $<<<profile:datacenter>>>
 environment: test
@@ -307,20 +275,14 @@ timeSources:
 kubernetes:
   allowPodsOnMasters: false
 hosting:
-  environment: xenserver
+  environment: hyperv
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: large
+    namePrefix: test-large
     cores: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    hosts:
-    - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
-  xenServer:
-     snapshot: true
+    diskLocation: $<<<profile:hyperv.diskfolder>>>
 network:
   premiseSubnet: $<<<profile:lan.subnet>>>
   gateway: $<<<profile:lan.gateway>>>
@@ -330,37 +292,25 @@ network:
 nodes:
   master-0:
     role: master
-    address: $<<<profile:xenserver.large0.ip>>>
+    address: $<<<profile:hyperv.large0.ip>>>
     memory: 4 GiB
-    vm:
-      host: XEN-TEST
   master-1:
     role: master
-    address: $<<<profile:xenserver.large1.ip>>>
+    address: $<<<profile:hyperv.large1.ip>>>
     memory: 4 GiB
-    vm:
-      host: XEN-TEST
   master-2:
     role: master
-    address: $<<<profile:xenserver.large2.ip>>>
+    address: $<<<profile:hyperv.large2.ip>>>
     memory: 4 GiB
-    vm:
-      host: XEN-TEST
   worker-0:
     role: master
-    address: $<<<profile:xenserver.large3.ip>>>
-     vm:
-       host: XEN-TEST
+    address: $<<<profile:hyperv.large3.ip>>>
   worker-1:
     role: master
-    address: $<<<profile:xenserver.large4.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.large4.ip>>>
   worker-2:
     role: master
-    address: $<<<profile:xenserver.large5fs.ip>>>
-    vm:
-      host: XEN-TEST
+    address: $<<<profile:hyperv.large5.ip>>>
 ";
     }
 }
