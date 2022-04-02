@@ -92,14 +92,15 @@ namespace Neon.Kube
     /// client instance and your <see cref="LeaderElectionConfig"/>.
     /// </item>
     /// <item>
-    /// Call <see cref="RunAsync(CancellationToken)"/> to start the elector.  You can signal
-    /// is to stop by passing a <see cref="CancellationToken"/> and cancelling it.
+    /// Call <see cref="RunAsync()"/> to start the elector.  This method will return
+    /// when the elector is disposed.
     /// </item>
     /// </list>
     /// </remarks>
     public sealed class LeaderElector : IDisposable
     {
-        private StockLeaderElector  leaderElector;
+        private StockLeaderElector          leaderElector;
+        private CancellationTokenSource     tcs;
 
         /// <summary>
         /// Constructor.
@@ -123,6 +124,8 @@ namespace Neon.Kube
             Action                  onStoppedLeading = null)
         {
             Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+
+            tcs = new CancellationTokenSource();
 
             leaderElector = new StockLeaderElector(
                 new StockLeaderElectionConfig(new StockLeaseLock(config.K8s, config.Namespace, config.LeaseName, config.Identity))
@@ -154,11 +157,11 @@ namespace Neon.Kube
                 {
                     if (hasCounterLabels)
                     {
-                        config.LeaderChangeCounter?.WithLabels(config.CounterLabels).Inc();
+                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
                     }
                     else
                     {
-                        config.LeaderChangeCounter?.Inc();
+                        config.NewLeaderCounter?.Inc();
                     }
 
                     onStoppedLeading?.Invoke();
@@ -169,11 +172,11 @@ namespace Neon.Kube
                 {
                     if (hasCounterLabels)
                     {
-                        config.LeaderChangeCounter?.WithLabels(config.CounterLabels).Inc();
+                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
                     }
                     else
                     {
-                        config.LeaderChangeCounter?.Inc();
+                        config.NewLeaderCounter?.Inc();
                     }
 
                     onNewLeader?.Invoke(identity);
@@ -183,27 +186,76 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public void Dispose()
         {
-            leaderElector?.Dispose();
+            if (leaderElector == null)
+            {
+                return;
+            }
+
+            tcs.Cancel();
+
+            leaderElector.Dispose();
             leaderElector = null;
 
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
+        /// Ensures that the instance is not dispoed.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        private void EnsureNotDisposed()
+        {
+            if (leaderElector == null)
+            {
+                throw new ObjectDisposedException(nameof(LeaderElector));
+            }
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if the current instance is currently the leader.
         /// </summary>
-        public bool IsLeader => leaderElector.IsLeader();
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public bool IsLeader
+        {
+            get
+            {
+                EnsureNotDisposed();
+
+                return leaderElector.IsLeader();
+            }
+        }
 
         /// <summary>
-        /// Returns the identity of the current leader.
+        /// Returns the identity of the current leader or <c>null</c> when there's no leader.
         /// </summary>
-        public string Geteader() => leaderElector.GetLeader();
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public string Leader
+        {
+            get
+            {
+                EnsureNotDisposed();
+
+                return leaderElector.GetLeader();
+            }
+        }
 
         /// <summary>
-        /// Starts the elector.
+        /// Starts the elector.  Note that this will return when the elector is disposed.
         /// </summary>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task RunAsync(CancellationToken cancellationToken = default) => leaderElector.RunAsync(cancellationToken);
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public async Task RunAsync()
+        {
+            EnsureNotDisposed();
+
+            try
+            {
+                await leaderElector.RunAsync(tcs.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore this.
+            }
+        }
     }
 }

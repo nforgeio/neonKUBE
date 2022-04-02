@@ -114,7 +114,7 @@ namespace NeonNodeAgent
 
         private static readonly Counter promotionCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_promoted", "Leader promotions");
         private static readonly Counter demotedCounter                  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_demoted", "Leader demotions");
-        private static readonly Counter leaderChange                    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes");
+        private static readonly Counter newLeaderCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -142,7 +142,7 @@ namespace NeonNodeAgent
                         identity:            Pod.Name,
                         promotionCounter:    promotionCounter,
                         demotionCounter:     demotedCounter,
-                        leaderChangeCounter: leaderChange);
+                        newLeaderCounter: newLeaderCounter);
 
                 resourceManager = new ResourceManager<V1ContainerRegistry>(leaderConfig: leaderConfig)
                 {

@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// Optionally specifies the metrics counter to be incremented when the instance is 
         /// demoted from leader.  This defaults to <c>null</c>.
         /// </param>
-        /// <param name="leaderChangeCounter">
+        /// <param name="newLeaderCounter">
         /// Optionally specifies the metrics counter to be incremented when the the leader
         /// changes.  This defaults to <c>null</c>.
         /// </param>
@@ -97,13 +97,13 @@ namespace Neon.Kube
             string          @namespace,
             string          leaseName,
             string          identity,
-            TimeSpan        leaseDuration       = default,
-            TimeSpan        renewDeadline       = default,
-            TimeSpan        retryPeriod         = default,
-            Counter         promotionCounter    = null,
-            Counter         demotionCounter     = null,
-            Counter         leaderChangeCounter = null,
-            string[]        counterLabels       = null)
+            TimeSpan        leaseDuration    = default,
+            TimeSpan        renewDeadline    = default,
+            TimeSpan        retryPeriod      = default,
+            Counter         promotionCounter = null,
+            Counter         demotionCounter  = null,
+            Counter         newLeaderCounter = null,
+            string[]        counterLabels    = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
@@ -150,25 +150,25 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(demotionCounter)}] label name [count={demotionCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
             }
 
-            if (leaderChangeCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
+            if (newLeaderCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
             {
-                throw new ArgumentException($"[{nameof(leaderChangeCounter)}] label name [count={leaderChangeCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
+                throw new ArgumentException($"[{nameof(newLeaderCounter)}] label name [count={newLeaderCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
             }
 
             // Initialize the properties.
 
-            this.K8s                 = k8s;
-            this.Namespace           = @namespace;
-            this.LeaseName           = leaseName;
-            this.LeaseRef            = $"{@namespace}/{leaseName}";
-            this.Identity            = identity;
-            this.LeaseDuration       = leaseDuration;
-            this.RenewDeadline       = renewDeadline;
-            this.RetryPeriod         = retryPeriod;
-            this.PromotionCounter    = promotionCounter;
-            this.DemotionCounter     = demotionCounter;
-            this.LeaderChangeCounter = leaderChangeCounter;
-            this.CounterLabels       = counterLabels;
+            this.K8s              = k8s;
+            this.Namespace        = @namespace;
+            this.LeaseName        = leaseName;
+            this.LeaseRef         = $"{@namespace}/{leaseName}";
+            this.Identity         = identity;
+            this.LeaseDuration    = leaseDuration;
+            this.RenewDeadline    = renewDeadline;
+            this.RetryPeriod      = retryPeriod;
+            this.PromotionCounter = promotionCounter;
+            this.DemotionCounter  = demotionCounter;
+            this.NewLeaderCounter = newLeaderCounter;
+            this.CounterLabels    = counterLabels;
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace Neon.Kube
         /// Returns the metrics counter to be incremented when a leadership
         /// change is detected.  This may be <c>null</c>.
         /// </summary>
-        internal Counter LeaderChangeCounter { get; private set; }
+        internal Counter NewLeaderCounter { get; private set; }
 
         /// <summary>
         /// Returns the label values to be used when incrementing any of the

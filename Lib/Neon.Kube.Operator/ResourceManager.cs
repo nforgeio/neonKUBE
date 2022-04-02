@@ -246,7 +246,6 @@ namespace Neon.Kube.Operator
         private TimeSpan                        deletedErrorBackoff;
         private TimeSpan                        statusModifiedErrorBackoff;
         private LeaderElector                   leaderElector;
-        private CancellationTokenSource         leaderTcs;
         private Task                            leaderTask;
 
         /// <summary>
@@ -303,8 +302,7 @@ namespace Neon.Kube.Operator
             if (leaderConfig != null)
             {
                 this.leaderElector = new LeaderElector(leaderConfig);
-                this.leaderTcs     = new CancellationTokenSource();
-                this.leaderTask    = leaderElector.RunAsync(leaderTcs.Token);
+                this.leaderTask    = leaderElector.RunAsync();
             }
         }
 
@@ -318,11 +316,12 @@ namespace Neon.Kube.Operator
 
             isDisposed = true;
 
-            if (leaderTask != null)
+            if (leaderElector != null)
             {
+                leaderElector.Dispose();
+
                 try
                 {
-                    leaderTcs.Cancel();
                     leaderTask.WaitWithoutAggregate();
                 }
                 catch (OperationCanceledException)
@@ -330,7 +329,8 @@ namespace Neon.Kube.Operator
                     // We're expoecting this.
                 }
 
-                leaderTask = null;
+                leaderElector = null;
+                leaderTask    = null;
             }
 
             mutex.Dispose();
