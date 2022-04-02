@@ -128,9 +128,8 @@ namespace TestKube
             // Verify that the elector works without callback actions.
 
             var  config = new LeaderElectionConfig(fixture.K8s, KubeNamespace.Default, "test", "instance-0");
+            var  elector = new LeaderElector(config);
             Task electorTask;
-
-            var elector = new LeaderElector(config);
 
             using (elector)
             {
@@ -165,8 +164,8 @@ namespace TestKube
                 demotionCounter:  demotionCounter,
                 newLeaderCounter: newLeaderCounter);
 
-            Task electorTask;
             var  elector = new LeaderElector(config);
+            Task electorTask;
 
             using (elector)
             {
