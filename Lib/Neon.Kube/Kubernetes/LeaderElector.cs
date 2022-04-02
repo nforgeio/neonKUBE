@@ -36,8 +36,8 @@ using StockLeaseLock            = k8s.LeaderElection.ResourceLock.LeaseLock;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/> by optionally
-    /// implementing metrics counters.
+    /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/>
+    /// integrating optional metric counters for tracking leadership changes.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -92,11 +92,6 @@ namespace Neon.Kube
     /// client instance and your <see cref="LeaderElectionConfig"/>.
     /// </item>
     /// <item>
-    /// Add handlers for the <see cref="OnNewLeader"/>, <see cref="OnStartedLeading"/>, and
-    /// <see cref="OnStoppedLeading"/> events.  These events are raised as leaders are elected
-    /// and demoted.
-    /// </item>
-    /// <item>
     /// Call <see cref="RunAsync(CancellationToken)"/> to start the elector.  You can signal
     /// is to stop by passing a <see cref="CancellationToken"/> and cancelling it.
     /// </item>
@@ -137,9 +132,52 @@ namespace Neon.Kube
                     RetryPeriod   = config.RetryPeriod
                 });
 
-            leaderElector.OnStartedLeading += () => onStartedLeading?.Invoke();
-            leaderElector.OnNewLeader      += (identity) => onNewLeader?.Invoke(identity);
-            leaderElector.OnStoppedLeading += () => onStoppedLeading?.Invoke();
+            var hasCounterLabels = config.CounterLabels != null && config.CounterLabels.Length > 0;
+
+            leaderElector.OnStartedLeading +=
+                () =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.PromotionCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.PromotionCounter?.Inc();
+                    }
+
+                    onStartedLeading?.Invoke();
+                };
+
+            leaderElector.OnStoppedLeading +=
+                () =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.LeaderChangeCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.LeaderChangeCounter?.Inc();
+                    }
+
+                    onStoppedLeading?.Invoke();
+                };
+
+            leaderElector.OnNewLeader += 
+                identity =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.LeaderChangeCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.LeaderChangeCounter?.Inc();
+                    }
+
+                    onNewLeader?.Invoke(identity);
+                };
         }
 
         /// <inheritdoc/>

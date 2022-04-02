@@ -207,7 +207,7 @@ namespace Neon.Kube.Operator
     /// </code>
     /// <para>
     /// Then you'll need to pass a <see cref="LeaderElectionConfig"/> to the <see cref="ResourceManager{TCustomResource}"/>
-    /// constructors for the resources where processing should only happen on a single operator instance.  Then 
+    /// constructor when resource processing needs to be restricted to a single operator instance (the leader).  Then 
     /// <see cref="ResourceManager{TCustomResource}"/> instances with this config will allow methods like 
     /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource}.EventHandlerAsync, Counter)"/> to
     /// return only when the instance holds the lease and all <see cref="ResourceManager{TCustomResource}"/> instances
@@ -355,9 +355,18 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
-        /// been assumed leadership.
+        /// assumed leadership.
         /// </summary>
         private void OnStartedLeading()
+        {
+            // $todo(jefflill)
+        }
+
+        /// <summary>
+        /// Called when the instance has a <see cref="LeaderElector"/> this instance has
+        /// been demoted.
+        /// </summary>
+        private void OnStoppedLeading()
         {
             // $todo(jefflill)
         }
@@ -370,16 +379,6 @@ namespace Neon.Kube.Operator
         private void OnNewLeader(string identity)
         {
             // $todo(jefflill)
-        }
-
-        /// <summary>
-        /// Called when the instance has a <see cref="LeaderElector"/> this instance has
-        /// been demoted.
-        /// </summary>
-        private void OnStoppedLeading()
-        {
-            // $todo(jefflill)
-
         }
 
         /// <summary>
