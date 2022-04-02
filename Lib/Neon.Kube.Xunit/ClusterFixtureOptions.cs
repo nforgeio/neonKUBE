@@ -91,7 +91,7 @@ namespace Neon.Kube.Xunit
 
         /// <summary>
         /// Optionally specifies a <see cref="ITestOutputHelper"/> where <see cref="ClusterFixture"/>
-        /// can write diagnostics.
+        /// can write diagnostics including the cluster deployment logs.
         /// </summary>
         public ITestOutputHelper TestOutputHelper { get; set; } = null;
 
