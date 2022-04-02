@@ -3,16 +3,19 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
-using k8s;
-using Neon.Common;
-using Neon.Deployment;
-using Neon.IO;
-using Neon.Xunit;
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Deployment;
+using Neon.IO;
+using Neon.Xunit;
+
+using k8s;
+
 using Xunit;
 using Xunit.Abstractions;
 

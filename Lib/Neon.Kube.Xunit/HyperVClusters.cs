@@ -31,10 +31,10 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestKube
+namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// <b>Hyper-V</b> cluster definitions used for unit test clusters deployed by <see cref="ClusterFixture"/>.
+    /// <b>INTERNAL USE ONLY:</b> <b>Hyper-V</b> cluster definitions used by maintainers for unit test clusters deployed by <see cref="ClusterFixture"/>.
     /// </summary>
     /// <remarks>
     /// <para>

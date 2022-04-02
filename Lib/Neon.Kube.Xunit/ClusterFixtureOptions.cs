@@ -19,7 +19,9 @@ using k8s;
 using k8s.KubeConfigModels;
 
 using Newtonsoft.Json.Linq;
+
 using Xunit;
+using Xunit.Abstractions;
 
 using Neon.Common;
 using Neon.Data;
@@ -30,7 +32,6 @@ using Neon.Net;
 using Neon.SSH;
 using Neon.Xunit;
 using Neon.Tasks;
-using Xunit.Abstractions;
 
 namespace Neon.Kube.Xunit
 {
