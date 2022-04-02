@@ -36,7 +36,7 @@ namespace Neon.Kube
         /// <summary>
         /// The current neonKUBE version.
         /// </summary>
-        public const string NeonKube = "0.3.0-alpha";
+        public const string NeonKube = "0.3.0-alpha1";
 
         /// <summary>
         /// Returns the container image tag for the current neonKUBE release.  This adds the
