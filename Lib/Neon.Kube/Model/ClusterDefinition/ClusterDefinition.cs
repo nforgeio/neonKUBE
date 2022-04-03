@@ -61,7 +61,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Regex for verifying cluster prefixes.  This is the similar to <see cref="NameRegex"/> but optionally
-        /// allows a "(" and ")" which we use for automation related deployments.
+        /// allows a "(" and ")" which we use for clusterspace related deployments.
         /// </summary>
         public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
 
@@ -358,7 +358,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Indicates whether the cluster should be locked after being deployed successfully.
-        /// <b>neon-desktop</b>, <b>neon-cli</b>, and <b>KubernetesFixture</b> will block distructive
+        /// <b>neon-desktop</b>, <b>neon-cli</b>, and <b>ClusterFixture</b> will block distructive
         /// operations such as cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
         /// on locked clusters as to help avoid impacting production clusters by accident.
         /// </summary>
@@ -481,7 +481,7 @@ namespace Neon.Kube
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
 
         /// <summary>
-        /// Optionally specifies options used by <b>KubernetesFixture</b> and possibly
+        /// Optionally specifies options used by <b>ClusterFixture</b> and possibly
         /// custom tools for customizing cluster and node names to avoid conflicts.
         /// </summary>
         [JsonProperty(PropertyName = "Deployment", Required = Required.Always)]

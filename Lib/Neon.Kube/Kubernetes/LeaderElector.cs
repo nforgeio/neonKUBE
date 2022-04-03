@@ -36,8 +36,8 @@ using StockLeaseLock            = k8s.LeaderElection.ResourceLock.LeaseLock;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/> by optionally
-    /// implementing metrics counters.
+    /// Implements a thin wrapper over <see cref="k8s.LeaderElection.LeaderElector"/>
+    /// integrating optional metric counters for tracking leadership changes.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -92,84 +92,170 @@ namespace Neon.Kube
     /// client instance and your <see cref="LeaderElectionConfig"/>.
     /// </item>
     /// <item>
-    /// Add handlers for the <see cref="OnNewLeader"/>, <see cref="OnStartedLeading"/>, and
-    /// <see cref="OnStoppedLeading"/> events.  These events are raised as leaders are elected
-    /// and demoted.
-    /// </item>
-    /// <item>
-    /// Call <see cref="RunAsync(CancellationToken)"/> to start the elector.  You can signal
-    /// is to stop by passing a <see cref="CancellationToken"/> and cancelling it.
+    /// Call <see cref="RunAsync()"/> to start the elector.  This method will return
+    /// when the elector is disposed.
     /// </item>
     /// </list>
     /// </remarks>
     public sealed class LeaderElector : IDisposable
     {
-        private IKubernetes         k8s;
-        private StockLeaderElector  leaderElector;
+        private StockLeaderElector          leaderElector;
+        private CancellationTokenSource     tcs;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s">
-        /// Specifies the Kubernetes client that will be used by <see cref="RunAsync(CancellationToken)"/> 
-        /// to communicate with the cluster.
-        /// </param>
         /// <param name="config">Specifies the elector configuration.</param>
-        public LeaderElector(IKubernetes k8s, LeaderElectionConfig config)
+        /// <param name="onStartedLeading">
+        /// Optionally specifies the action to be called when the instance assumes 
+        /// leadership.
+        /// </param>
+        /// <param name="onNewLeader">
+        /// Optionally specifies the action to be called when leadership changes.  
+        /// The identity of the new leader will be passed.
+        /// </param>
+        /// <param name="onStoppedLeading">
+        /// Optionally specifies the action to be called when the instance is demoted.
+        /// </param>
+        public LeaderElector(
+            LeaderElectionConfig    config,
+            Action                  onStartedLeading = null,
+            Action<string>          onNewLeader      = null,
+            Action                  onStoppedLeading = null)
         {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
 
-            this.k8s = k8s;
+            tcs = new CancellationTokenSource();
 
             leaderElector = new StockLeaderElector(
-                new StockLeaderElectionConfig(new StockLeaseLock(k8s, config.Namespace, config.LeaseName, config.Identity))
+                new StockLeaderElectionConfig(new StockLeaseLock(config.K8s, config.Namespace, config.LeaseName, config.Identity))
                 {
                     LeaseDuration = config.LeaseDuration,
                     RenewDeadline = config.RenewDeadline,
                     RetryPeriod   = config.RetryPeriod
                 });
+
+            var hasCounterLabels = config.CounterLabels != null && config.CounterLabels.Length > 0;
+
+            leaderElector.OnStartedLeading +=
+                () =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.PromotionCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.PromotionCounter?.Inc();
+                    }
+
+                    onStartedLeading?.Invoke();
+                };
+
+            leaderElector.OnStoppedLeading +=
+                () =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.NewLeaderCounter?.Inc();
+                    }
+
+                    onStoppedLeading?.Invoke();
+                };
+
+            leaderElector.OnNewLeader += 
+                identity =>
+                {
+                    if (hasCounterLabels)
+                    {
+                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
+                    }
+                    else
+                    {
+                        config.NewLeaderCounter?.Inc();
+                    }
+
+                    onNewLeader?.Invoke(identity);
+                };
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            leaderElector?.Dispose();
+            if (leaderElector == null)
+            {
+                return;
+            }
+
+            tcs.Cancel();
+
+            leaderElector.Dispose();
             leaderElector = null;
+
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Raised when the instance has been elected as leader.
+        /// Ensures that the instance is not dispoed.
         /// </summary>
-        public event Action OnStartedLeading;
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        private void EnsureNotDisposed()
+        {
+            if (leaderElector == null)
+            {
+                throw new ObjectDisposedException(nameof(LeaderElector));
+            }
+        }
 
         /// <summary>
-        /// Raised when leadership has changed or when the current leader is observed
-        /// for the first time after the elector started.  The string passed identifies
-        /// the new leader.
+        /// Returns <c>true</c> if the current instance is currently the leader.
         /// </summary>
-        public event Action<string> OnNewLeader;
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public bool IsLeader
+        {
+            get
+            {
+                EnsureNotDisposed();
+
+                return leaderElector.IsLeader();
+            }
+        }
 
         /// <summary>
-        /// Raised when the current instance has been demoted.
+        /// Returns the identity of the current leader or <c>null</c> when there's no leader.
         /// </summary>
-        public event Action OnStoppedLeading;
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public string Leader
+        {
+            get
+            {
+                EnsureNotDisposed();
+
+                return leaderElector.GetLeader();
+            }
+        }
 
         /// <summary>
-        /// Returns <c>true</c> if the current instance is the leader.
+        /// Starts the elector.  Note that this will return when the elector is disposed.
         /// </summary>
-        public bool IsLeader => leaderElector.IsLeader();
-
-        /// <summary>
-        /// Returns the identity of the current leader.
-        /// </summary>
-        public string Geteader() => leaderElector.GetLeader();
-
-        /// <summary>
-        /// Starts the elector.
-        /// </summary>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task RunAsync(CancellationToken cancellationToken = default) => leaderElector.RunAsync(cancellationToken);
+        /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
+        public async Task RunAsync()
+        {
+            EnsureNotDisposed();
+
+            try
+            {
+                await leaderElector.RunAsync(tcs.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore this.
+            }
+        }
     }
 }

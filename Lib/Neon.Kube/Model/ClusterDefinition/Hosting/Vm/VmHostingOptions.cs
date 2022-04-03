@@ -214,7 +214,7 @@ namespace Neon.Kube
                 prefix = $"{NamePrefix}-".ToLowerInvariant();
             }
 
-            if (KubeHelper.AutomationMode != KubeAutomationMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+            if (KubeHelper.ClusterspaceMode != KubeClusterspaceMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
             {
                 prefix = $"{clusterDefinition.Deployment.Prefix}-{prefix}";
             }

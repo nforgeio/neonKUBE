@@ -69,9 +69,8 @@ USAGE:
                 return;
             }
 
-            Console.WriteLine($"Logging out of: {KubeHelper.CurrentContext.Name}");
+            Console.WriteLine($"Logout: {KubeHelper.CurrentContext.Name}");
             KubeHelper.SetCurrentContext((string)null);
-            Console.WriteLine();
 
             await Task.CompletedTask;
         }

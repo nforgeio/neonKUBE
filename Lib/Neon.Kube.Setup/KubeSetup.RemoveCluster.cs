@@ -59,31 +59,19 @@ namespace Neon.Kube
         /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
         /// (typically used when debugging).
         /// </param>
-        /// <param name="automate">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b>, where the
-        /// current neonDESKTOP state will not be impacted.
-        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterRemoveController(
             ClusterLogin        clusterLogin,
             int                 maxParallel = 500,
-            bool                unredacted  = false,
-            bool                automate    = false)
+            bool                unredacted  = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            // Create the automation subfolder for the operation if required and determine
-            // where the log files should go.
+            // Determine where the log files should go.
 
-            var automationFolder = (string)null;
-            var logFolder        = KubeHelper.LogFolder;
-
-            if (!string.IsNullOrEmpty(automationFolder))
-            {
-                logFolder = Path.Combine(automationFolder, logFolder);
-            }
+            var logFolder = KubeHelper.LogFolder;
 
             // Initialize the cluster proxy.
 

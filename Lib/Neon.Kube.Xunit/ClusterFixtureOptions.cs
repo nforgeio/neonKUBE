@@ -19,7 +19,9 @@ using k8s;
 using k8s.KubeConfigModels;
 
 using Newtonsoft.Json.Linq;
+
 using Xunit;
+using Xunit.Abstractions;
 
 using Neon.Common;
 using Neon.Data;
@@ -30,7 +32,6 @@ using Neon.Net;
 using Neon.SSH;
 using Neon.Xunit;
 using Neon.Tasks;
-using Xunit.Abstractions;
 
 namespace Neon.Kube.Xunit
 {
@@ -90,7 +91,7 @@ namespace Neon.Kube.Xunit
 
         /// <summary>
         /// Optionally specifies a <see cref="ITestOutputHelper"/> where <see cref="ClusterFixture"/>
-        /// can write diagnostics.
+        /// can write diagnostics including the cluster deployment logs.
         /// </summary>
         public ITestOutputHelper TestOutputHelper { get; set; } = null;
 

@@ -140,7 +140,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             // Perform the requested checks.
 
-            var k8s    = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+            var k8s    = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
             var error = false;
 
             if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, details: details))

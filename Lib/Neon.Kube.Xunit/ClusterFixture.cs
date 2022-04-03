@@ -3,16 +3,20 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
-using k8s;
-using Neon.Common;
-using Neon.Deployment;
-using Neon.IO;
-using Neon.Xunit;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Deployment;
+using Neon.IO;
+using Neon.Xunit;
+
+using k8s;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -244,7 +248,7 @@ namespace Neon.Kube.Xunit
     /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Start()</b> 
     /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
-    /// within separate directories named like <b>$(USERPROFILE)\.neonkube\automation\()fixture</b>.
+    /// within separate directories named like <b>~/.neonkube/spaces(fixture)</b>.
     /// This effectively isolates clusters deployed by the fixture from the user clusters.
     /// </para>
     /// <para>
@@ -309,7 +313,7 @@ namespace Neon.Kube.Xunit
 
         private ClusterFixtureOptions   options;
         private bool                    started = false;
-        private string                  automationFolder;
+        private string                  clusterspaceFolder;
 
         /// <summary>
         /// Constructor.
@@ -419,7 +423,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/(fixture)/*.*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*.*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -450,13 +454,13 @@ namespace Neon.Kube.Xunit
                 return TestFixtureStatus.AlreadyRunning;
             }
 
-            // Set the automation mode, using any previously downloaded node image unless
+            // Set the clusterspace mode, using any previously downloaded node image unless
             // the user specifies a custom image.  We're going to host the fixture state
             // files in this fixed folder:
             //
-            //      $(USERPROFILE)\.neonkube\automation\(fixture)\*.*
+            //      ~/.neonkube/spaces/(fixture)/*
 
-            automationFolder = KubeHelper.SetAutomationMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeAutomationMode.EnabledWithSharedCache : KubeAutomationMode.Enabled, KubeHelper.AutomationPrefix("fixture"));
+            clusterspaceFolder = KubeHelper.SetClusterSpaceMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeClusterspaceMode.EnabledWithSharedCache : KubeClusterspaceMode.Enabled, KubeHelper.ClusterspacePrefix("fixture"));
 
             // Figure out whether the user passed an image URI or file path to override
             // the default node image.
@@ -654,6 +658,78 @@ namespace Neon.Kube.Xunit
 
         /// <summary>
         /// <para>
+        /// <b>INTERNAL USE ONLY:</b> Deploys a new cluster using the current user's <b>neon-assistant</b> 
+        /// <b>clusterdefinition.key</b> profile value to determine which of the built-in cluster definitions
+        /// from <see cref="KubeTestHelper.ClusterDefinitions"/> to be used for unit testing in the user's
+        /// environment.s
+        /// </para>
+        /// <note>
+        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// </note>
+        /// </summary>
+        /// <param name="options">
+        /// Optionally specifies the options that <see cref="ClusterFixture"/> will use to
+        /// manage the test cluster.
+        /// </param>
+        /// <returns>
+        /// <para>
+        /// The <see cref="TestFixtureStatus"/>:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Disabled"/></term>
+        ///     <description>
+        ///     Returned when cluster unit testing is disabled due to the <c>NEON_CLUSTER_TESTING</c> environment
+        ///     variable not being present on the current machine which means that <see cref="TestHelper.IsClusterTestingEnabled"/>
+        ///     returns <c>false</c>.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.Started"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>Start()</c> methods is called for the first time for the fixture
+        ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
+        ///     <description>
+        ///     Returned when one of the <c>Start()</c> methods has already been called by your test
+        ///     class instance.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
+        /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
+        /// so multiple fixture instances will be confused when trying to manage these same files.
+        /// </para>
+        /// <para>
+        /// This means that not only will running <see cref="ClusterFixture"/> based tests in parallel
+        /// within the same instance of Visual Studio fail, but but running these tests in different
+        /// Visual Studio instances will also fail.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown when the cluster definition requested by the <b>clusterdefinition.key</b>
+        /// does not exist.
+        /// </exception>
+        /// <exception cref="ProfileException">
+        /// Thrown when the <b>clusterdefinition.key</b> profile value could not be retrieved.
+        /// </exception>
+        public TestFixtureStatus Start(ClusterFixtureOptions options = null)
+        {
+            var profileClient = new ProfileClient();
+            var key           = profileClient.GetProfileValue("clusterdefinition.key");
+
+            return Start(ClusterDefinition.FromYaml(KubeTestHelper.ClusterDefinitions[key], strict: true, validate: true), options);
+        }
+
+        /// <summary>
+        /// <para>
         /// Deploys a new cluster as specified by the cluster definition YAML definition.
         /// </para>
         /// <note>
@@ -698,7 +774,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/(fixture)/*.*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -760,7 +836,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>$(USERPROFILE)/.neonkube/automation/(fixture)/*.*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>

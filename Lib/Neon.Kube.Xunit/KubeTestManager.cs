@@ -58,9 +58,9 @@ namespace Neon.Kube.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="mode">Optionally specifies the test mode.  This defaults to <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.</param>
+        /// <param name="mode">Optionally specifies the test mode.  This defaults to <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.</param>
         /// <exception cref="InvalidOperationException">Thrown if another test manager instance is active.</exception>
-        public KubeTestManager(KubeAutomationMode mode = KubeAutomationMode.EnabledWithSharedCache)
+        public KubeTestManager(KubeClusterspaceMode mode = KubeClusterspaceMode.EnabledWithSharedCache)
         {
             lock (syncLock)
             {
@@ -74,11 +74,11 @@ namespace Neon.Kube.Xunit
                     tempFolder = new TempFolder();
                     Current    = this;
 
-                    KubeHelper.SetAutomationMode(mode, tempFolder.Path);
+                    KubeHelper.SetClusterSpaceMode(mode, tempFolder.Path);
                 }
                 catch
                 {
-                    KubeHelper.ResetAutomationMode();
+                    KubeHelper.ResetClusterspaceMode();
                     Current = null;
                     throw;
                 }
@@ -88,7 +88,7 @@ namespace Neon.Kube.Xunit
         /// <inheritdoc/>
         public void Dispose()
         {
-            KubeHelper.ResetAutomationMode();
+            KubeHelper.ResetClusterspaceMode();
 
             if (tempFolder != null)
             {
