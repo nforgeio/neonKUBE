@@ -992,7 +992,6 @@ namespace Neon.Common
             {
                 var processStart = new ProcessStartInfo(uri)
                 {
-                    CreateNoWindow = true,
                     UseShellExecute = true
                 };
 
@@ -1000,14 +999,10 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jefflill): Test this.
-
-                Process.Start("open", uri);
+                Process.Start("open", uri.Replace("&", "^&"));
             }
             else if (IsLinux)
             {
-                // $todo(jefflill): test this.
-
                 Process.Start("xdg-open", uri);
             }
             else
