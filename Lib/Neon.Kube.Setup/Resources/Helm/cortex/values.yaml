@@ -19,6 +19,11 @@ rbac:
 
 replicas: 1
 
+podManagementPolicy: Parallel
+
+updateStrategy:
+  type: RollingUpdate
+
 cortexConfig:
   target: all,alertmanager,compactor
   auth_enabled: true

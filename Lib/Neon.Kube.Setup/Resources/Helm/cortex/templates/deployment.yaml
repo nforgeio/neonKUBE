@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ template "cortex.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -11,13 +11,15 @@ metadata:
   annotations:
     {{- toYaml .Values.annotations | nindent 4 }}
 spec:
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: {{ template "cortex.name" . }}
       release: {{ .Release.Name }}
-  strategy:
-    {{- toYaml .Values.strategy | nindent 4 }}
+  serviceName: {{ template "cortex.fullname" . }}-headless
+  updateStrategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
   template:
     metadata:
       labels:
