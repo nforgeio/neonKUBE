@@ -57,12 +57,12 @@ namespace NeonCli
     public class ClusterLockCommand : CommandBase
     {
         private const string usage = @"
-Locks the current cluster by preventing KubernetesFixture to run unit tests as well
-as requiring potentially distructive commands like:
+Locks the current cluster by preventing ClusterFixture to run unit tests on
+reachable clusters as well requiring potentially distructive commands like:
 
     remove, reset, pause and stop
 
-from executing with confirmation by the user.
+from executing without user confirmation.
 
 USAGE:
 

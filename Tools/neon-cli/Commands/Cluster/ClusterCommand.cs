@@ -45,7 +45,7 @@ Performs basic cluster provisioning and management.
 USAGE:
 
     neon cluster check
-    neon cluster is-locked
+    neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
@@ -53,6 +53,8 @@ USAGE:
     neon cluster rm         [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster space      [CLUSTERSPACE] [--current] [--reset]
+    neon cluster space      [CLUSTERSPACE] [--current] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock

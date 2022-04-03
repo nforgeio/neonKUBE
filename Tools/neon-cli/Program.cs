@@ -196,8 +196,15 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that this
-            // will download them when necessary.
+            // Set the clusterspace mode when necessary.
+
+            if (KubeHelper.CurrentClusterSpace != null)
+            {
+                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
+            }
+
+            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
+            // will download them when they're not already present.
 
             KubectlPath = GetKubectlPath();
             HelmPath    = GetHelmPath();

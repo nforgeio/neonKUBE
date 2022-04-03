@@ -57,12 +57,12 @@ namespace NeonCli
     public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current cluster by allowing KubernetesFixture to run unit tests
+Unlocks the current cluster by allowing ClusterFixture to run unit tests
 as well as allowing potentially distructive commands like:
 
     remove, reset, pause and stop
 
-to execute without confirmation by the user.
+to execute without user confirmation.
 
 USAGE:
 

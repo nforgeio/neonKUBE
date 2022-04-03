@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeAutomationMode.cs
+// FILE:	    KubeClusterspaceMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,25 +20,25 @@ using System;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used to enable/disable cluster automation mode to allow multiple deployments
+    /// Used to enable/disable cluster clusterspace mode to allow multiple deployments
     /// to be managed in parallel on a client workstation without conflict.
     /// </summary>
-    public enum KubeAutomationMode
+    public enum KubeClusterspaceMode
     {
         /// <summary>
-        /// Disables automation mode such that cluster state will be persisted to the
+        /// Disables clusterspace mode such that cluster state will be persisted to the
         /// normal default user folders.
         /// </summary>
         Disabled = 0,
 
         /// <summary>
-        /// Enables automation mode such that cluster state will be persisted to a non
+        /// Enables clusterspaces such that cluster state will be persisted to a non
         /// standard folder to avoid conflicts.
         /// </summary>
         Enabled,
 
         /// <summary>
-        /// Enables automation like <see cref="Enabled"/> while still using the standard
+        /// Enables clusterspaces like <see cref="Enabled"/> while still using the standard
         /// image cache folder to improve performance by avoiding unncessary image downloads.
         /// </summary>
         EnabledWithSharedCache

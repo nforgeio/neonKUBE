@@ -73,7 +73,8 @@ namespace Neon.Kube
         private static string               orgKUBECONFIG;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
-        private static string               automationFolder;
+        private static string               clusterspaceFolder;
+        private static string               cachedCurrentClusterspacePath;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static string               cachedKubeConfigPath;
@@ -129,27 +130,28 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig               = null;
-            cachedContext              = null;
-            cachedKubeConfigPath       = null;
-            cachedNeonKubeUserFolder   = null;
-            cachedRunFolder            = null;
-            cachedLogFolder            = null;
-            cachedTempFolder           = null;
-            cachedLoginsFolder         = null;
-            cachedPasswordsFolder      = null;
-            cachedCacheFolder          = null;
-            cachedDesktopFolder        = null;
-            cachedDesktopHypervFolder  = null;
-            cachedClientConfig         = null;
-            cachedClusterCertificate   = null;
-            cachedInstallFolder        = null;
-            cachedToolsFolder          = null;
-            cachedPwshPath             = null;
-            cachedResources            = null;
-            cachedNodeImageFolder      = null;
-            cachedDashboardStateFolder = null;
-            cachedDesktopCommonFolder  = null;
+            cachedConfig                  = null;
+            cachedContext                 = null;
+            cachedKubeConfigPath          = null;
+            cachedNeonKubeUserFolder      = null;
+            cachedRunFolder               = null;
+            cachedLogFolder               = null;
+            cachedTempFolder              = null;
+            cachedLoginsFolder            = null;
+            cachedCurrentClusterspacePath = null;
+            cachedPasswordsFolder         = null;
+            cachedCacheFolder             = null;
+            cachedDesktopFolder           = null;
+            cachedDesktopHypervFolder     = null;
+            cachedClientConfig            = null;
+            cachedClusterCertificate      = null;
+            cachedInstallFolder           = null;
+            cachedToolsFolder             = null;
+            cachedPwshPath                = null;
+            cachedResources               = null;
+            cachedNodeImageFolder         = null;
+            cachedDashboardStateFolder    = null;
+            cachedDesktopCommonFolder     = null;
         }
 
         /// <summary>
@@ -275,8 +277,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the path to the current user's <b>.neonkube</b> folder.  This value does not
-        /// change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
-        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// change when the clusterspace mode is set to <see cref="KubeClusterspaceMode.Enabled"/> or
+        /// <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.
         /// </summary>
         public static string StandardNeonKubeFolder
         {
@@ -288,15 +290,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the current user's <b>.neonkube/automation</b> folder.  This value does
-        /// not change when automation mode is set to <see cref="KubeAutomationMode.Enabled"/> or
-        /// <see cref="KubeAutomationMode.EnabledWithSharedCache"/>.
+        /// Returns the path to the current user's <b>~/.neonkube/spaces</b> folder.  This value does
+        /// not change when clusterespace mode is set to <see cref="KubeClusterspaceMode.Enabled"/> or
+        /// <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.
         /// </summary>
-        public static string StandardNeonKubeAutomationFolder
+        public static string StandardNeonKubeClusterspacesFolder
         {
             get
             {
-                var path = Path.Combine(StandardNeonKubeFolder, "automation");
+                var path = Path.Combine(StandardNeonKubeFolder, "spaces");
 
                 Directory.CreateDirectory(path);
                 return path;
@@ -474,76 +476,76 @@ namespace Neon.Kube
         public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
 
         /// <summary>
-        /// Returns the current <see cref="KubeAutomationMode"/>.
+        /// Returns the current <see cref="KubeClusterspaceMode"/>.
         /// </summary>
-        public static KubeAutomationMode AutomationMode { get; private set; } = KubeAutomationMode.Disabled;
+        public static KubeClusterspaceMode ClusterspaceMode { get; private set; } = KubeClusterspaceMode.Disabled;
 
         /// <summary>
-        /// Returns the path to the standard automation folder within the user's <b>.neonkube</b>
-        /// directory.  This doesn't change when a non <see cref="KubeAutomationMode.Disabled"/>
+        /// Returns the path to the standard clusterspaces folder within the user's <b>~/.neonkube</b>
+        /// directory.  This doesn't change when a non <see cref="KubeClusterspaceMode.Disabled"/>
         /// mode is set.
         /// </summary>
-        public static string StandardAutomationFolder => Path.Combine(neonkubeHomeFolder, "automation");
+        public static string StandardClusterspacesFolder => Path.Combine(neonkubeHomeFolder, "spaces");
 
         /// <summary>
-        /// Sets cluster deployment automation mode by specifying the folder where 
+        /// Sets cluster deployment clusterspaces mode by specifying the folder where 
         /// cluster related assets such as the KubeConfig file, cluster login, logs,
         /// etc. are saved.
         /// </summary>
         /// <param name="mode">
-        /// Passed as one of <see cref="KubeAutomationMode.Enabled"/> or <see cref="KubeAutomationMode.EnabledWithSharedCache"/>,
-        /// where <see cref="KubeAutomationMode.Enabled"/> relocates all folders from the
-        /// standard <b>$(USERPROFILE)\.neonkube</b> to <paramref name="folder"/> including
-        /// the node image cache.  <see cref="KubeAutomationMode.EnabledWithSharedCache"/>
+        /// Passed as one of <see cref="KubeClusterspaceMode.Enabled"/> or <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>,
+        /// where <see cref="KubeClusterspaceMode.Enabled"/> relocates all folders from the
+        /// standard <b>~/.neonkube</b> to <paramref name="folder"/> including
+        /// the node image cache.  <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>
         /// continues to use the shared neon image cache to avoid downloading multiple
         /// copies of node images.
         /// </param>
         /// <param name="folder">
         /// <para>
         /// Specifies the root folder where global cluster-specific files will
-        /// be folders will be located as long as automation mode is set.  You may
+        /// be folders will be located as long as clusterspaces mode is set.  You may
         /// pass an fully qualified or relative folder path.  Relative paths will be
-        /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
+        /// rooted at <b>~/.neonkube/spaces/</b>.
         /// </para>
         /// </param>
-        /// <param name="clear">Optionally clear any existing automation folder.  This defaults to <c>false</c>.</param>
-        /// <returns>The path to the automation folder.</returns>
-        public static string SetAutomationMode(KubeAutomationMode mode, string folder, bool clear = false)
+        /// <param name="clear">Optionally clear any existing clusterspaces folder.  This defaults to <c>false</c>.</param>
+        /// <returns>The path to the clusterspaces folder.</returns>
+        public static string SetClusterSpaceMode(KubeClusterspaceMode mode, string folder, bool clear = false)
         {
-            Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
+            Covenant.Requires<ArgumentException>(mode != KubeClusterspaceMode.Disabled, nameof(mode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
-            if (AutomationMode != KubeAutomationMode.Disabled)
+            if (ClusterspaceMode != KubeClusterspaceMode.Disabled)
             {
-                // Ensure that the automation folder is the same as that already set.
+                // Ensure that the clusterspaces folder is the same as that already set.
 
-                Covenant.Assert(Path.GetFileName(automationFolder) == folder);
-                return automationFolder;
+                Covenant.Assert(Path.GetFileName(clusterspaceFolder) == folder);
+                return clusterspaceFolder;
             }
 
             ClearCachedItems();
 
             if (!Path.IsPathFullyQualified(folder))
             {
-                folder = Path.Combine(neonkubeHomeFolder, "automation", folder);
+                folder = Path.Combine(neonkubeHomeFolder, "spaces", folder);
             }
 
-            AutomationMode   = mode;
-            automationFolder = folder;
-            orgKUBECONFIG    = Environment.GetEnvironmentVariable("KUBECONFIG");
+            ClusterspaceMode   = mode;
+            clusterspaceFolder = folder;
+            orgKUBECONFIG      = Environment.GetEnvironmentVariable("KUBECONFIG");
 
-            var kubeFolder = Path.Combine(automationFolder, ".kube");
+            var kubeFolder = Path.Combine(clusterspaceFolder, ".kube");
 
             if (clear && Directory.Exists(folder))
             {
-                // Remove any existing automation folder that was potentially left over
-                // from a previous test or other automation run.
+                // Remove any existing clusterspaces folder that was potentially left
+                // over from a previous test or other automation run.
 
                 NeonHelper.DeleteFolder(folder);
             }
 
-            // Create the new automation folder and set the environment variable that
-            // references where the Kubernetes config file will be located.
+            // Create the new clusterspaces folder and set the environment variable
+            // that references where the Kubernetes config file will be located.
 
             Directory.CreateDirectory(kubeFolder);
             Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
@@ -552,37 +554,37 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Resets the automation mode to <see cref="KubeAutomationMode.Disabled"/> and deletes
-        /// the current automation folder and its contents.
+        /// Resets the clusterspace mode to <see cref="KubeClusterspaceMode.Disabled"/> and deletes
+        /// the current clusterspace folder and its contents.
         /// </summary>
-        public static void ResetAutomationMode()
+        public static void ResetClusterspaceMode()
         {
-            if (AutomationMode == KubeAutomationMode.Disabled)
+            if (ClusterspaceMode == KubeClusterspaceMode.Disabled)
             {
                 return;
             }
 
-            Covenant.Assert(automationFolder != null);
-            NeonHelper.DeleteFolder(automationFolder);
+            Covenant.Assert(clusterspaceFolder != null);
+            NeonHelper.DeleteFolder(clusterspaceFolder);
 
             Environment.SetEnvironmentVariable("KUBECONFIG", orgKUBECONFIG);
 
-            AutomationMode   = KubeAutomationMode.Disabled;
-            automationFolder = null;
-            orgKUBECONFIG    = null;
+            ClusterspaceMode   = KubeClusterspaceMode.Disabled;
+            clusterspaceFolder = null;
+            orgKUBECONFIG      = null;
 
             ClearCachedItems();
         }
 
         /// <summary>
         /// Returns a special prefix based on <paramref name="prefix"/> that can be used to distinguish
-        /// between automation related assets and those belonging to production clusters.  This is used
-        /// by <b>KubernetesFixture</b> and custom tools to ensure that automation related cluster and
+        /// between clusterspace related assets and those belonging to production clusters.  This is used
+        /// by <b>ClusterFixture</b> and custom tools to ensure that clusterspaces related cluster and
         /// file/folder names don't conflict.
         /// </summary>
         /// <param name="prefix">The prefix string.</param>
         /// <returns>A string like: (PREFIX)</returns>
-        public static string AutomationPrefix(string prefix)
+        public static string ClusterspacePrefix(string prefix)
         {
             return $"({prefix})";
         }
@@ -600,18 +602,18 @@ namespace Neon.Kube
                     return cachedNeonKubeUserFolder;
                 }
 
-                switch (AutomationMode)
+                switch (ClusterspaceMode)
                 {
-                    case KubeAutomationMode.Disabled:
+                    case KubeClusterspaceMode.Disabled:
 
                         cachedNeonKubeUserFolder = neonkubeHomeFolder;
                         break;
 
-                    case KubeAutomationMode.Enabled:
-                    case KubeAutomationMode.EnabledWithSharedCache:
+                    case KubeClusterspaceMode.Enabled:
+                    case KubeClusterspaceMode.EnabledWithSharedCache:
 
-                        Covenant.Assert(automationFolder != null);
-                        cachedNeonKubeUserFolder = automationFolder;
+                        Covenant.Assert(clusterspaceFolder != null);
+                        cachedNeonKubeUserFolder = clusterspaceFolder;
                         break;
 
                     default:
@@ -706,9 +708,9 @@ namespace Neon.Kube
                     return cachedKubeConfigPath;
                 }
 
-                switch (AutomationMode)
+                switch (ClusterspaceMode)
                 {
-                    case KubeAutomationMode.Disabled:
+                    case KubeClusterspaceMode.Disabled:
 
                         kubeFolder = Path.Combine(userHomeFolder, ".kube");
 
@@ -716,12 +718,12 @@ namespace Neon.Kube
 
                         return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
 
-                    case KubeAutomationMode.Enabled:
-                    case KubeAutomationMode.EnabledWithSharedCache:
+                    case KubeClusterspaceMode.Enabled:
+                    case KubeClusterspaceMode.EnabledWithSharedCache:
 
-                        Covenant.Assert(automationFolder != null);
+                        Covenant.Assert(clusterspaceFolder != null);
                         
-                        kubeFolder = Path.Combine(automationFolder, ".kube");
+                        kubeFolder = Path.Combine(clusterspaceFolder, ".kube");
 
                         Directory.CreateDirectory(kubeFolder);
 
@@ -762,6 +764,63 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedLoginsFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the optional <b>current-space</b> file which holds the name
+        /// of the clusterspace folder <b>neon-cli</b> should use for managing clusters
+        /// managed by <b>ClusterFixture</b> or some other automation solution.
+        /// </summary>
+        public static string CurrentClusterspacePath
+        {
+            get
+            {
+                if (cachedCurrentClusterspacePath != null)
+                {
+                    return cachedCurrentClusterspacePath;
+                }
+
+                return cachedCurrentClusterspacePath = Path.Combine(StandardNeonKubeFolder, "current-space");
+            }
+        }
+
+        /// <summary>
+        /// Manages the <b>~/.neonkube/current-space</b> file that <b>neon-cli</b> uses to 
+        /// reference logins and kubeconfigs within the <b>~/.neonkube/spaces</b>
+        /// folder.  The value will be <c>null</c> when <b>neon-cli</b> should just
+        /// reference normal logins or the clusterspace.
+        /// </summary>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the referenced clusterspace folder that doesn't exist.</exception>
+        public static string CurrentClusterSpace
+        {
+            get
+            {
+                if (!File.Exists(CurrentClusterspacePath))
+                {
+                    return null;
+                }
+
+                var folder = File.ReadAllText(CurrentClusterspacePath).Trim();
+
+                if (string.IsNullOrEmpty(folder))
+                {
+                    NeonHelper.DeleteFile(CurrentClusterspacePath); // Clean-up
+                    return null;
+                }
+
+                return folder;
+            }
+
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    NeonHelper.DeleteFile(CurrentClusterspacePath);
+                    return;
+                }
+
+                File.WriteAllText(CurrentClusterspacePath, value);
             }
         }
 
@@ -1050,7 +1109,7 @@ namespace Neon.Kube
 
                 // $note(jefflill): 
                 //
-                // We need to use the standard image cache folder even while in automation mode,
+                // We need to use the standard image cache folder even while in clusterspace mode,
                 // to avoid re-downloading image files:
                 //
                 //      https://github.com/nforgeio/neonCLOUD/issues/246
@@ -2927,7 +2986,8 @@ TCPKeepAlive yes
             // and return the status from there.  This config map is created initially by
             // cluster setup and then is updated by neon-cluster-operator.
 
-            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(currentContext: context.Name);
+            var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+            var config     = KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: context.Name);
 
             if (config == null)
             {

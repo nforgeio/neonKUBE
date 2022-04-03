@@ -115,7 +115,7 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --automation-folder         - Indicates that the command must not impact normal clusters
+    --clusterspace              - Indicates that the command must not impact normal clusters
                                   by changing the current login, Kubernetes config or
                                   other files like cluster deployment logs.  This is
                                   used for automated CI/CD or unit test cluster deployments 
@@ -141,7 +141,7 @@ OPTIONS:
             "--remove-templates", 
             "--debug",
             "--base-image-name",
-            "--automation-folder", 
+            "--clusterspace", 
             "--headend-uri" };
 
         /// <inheritdoc/>
@@ -184,7 +184,7 @@ OPTIONS:
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
-            var automationFolder  = commandLine.GetOption("--automation-folder");
+            var clusterspace      = commandLine.GetOption("--clusterspace");
             var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeConst.NeonCloudHeadendUri;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
@@ -292,7 +292,7 @@ OPTIONS:
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automationFolder:       automationFolder,
+                clusterspace:           clusterspace,
                 neonCloudHeadendUri:    headendUri);
 
             controller.DisablePendingTasks = disablePending;

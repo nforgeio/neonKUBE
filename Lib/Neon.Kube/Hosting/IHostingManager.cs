@@ -308,7 +308,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
-        /// via the <b>KubernetesFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
+        /// via the <b>ClusterFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
