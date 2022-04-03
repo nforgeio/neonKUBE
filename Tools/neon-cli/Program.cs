@@ -138,7 +138,8 @@ NEON KUBECTL COMMANDS:
 NEON CLUSTER LIFE-CYCLE COMMANDS:
 
     neon cluster check
-    neon cluster is-locked
+    neon cluster dashboard
+    neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
@@ -146,6 +147,7 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster rm         [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock

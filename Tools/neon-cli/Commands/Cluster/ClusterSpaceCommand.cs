@@ -34,7 +34,7 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>login space</b> command.
+    /// Implements the <b>cluster space</b> command.
     /// </summary>
     [Command]
     public class ClusterSpaceCommand : CommandBase
@@ -44,7 +44,7 @@ Configures [neon-cli] to manage clusters in separate clusterspaces created
 by automation like [ClusterFixture] for unit testing.  The logins and other
 cluster related information can be found under:
 
-    ~/.neonkube/spaces/CLUSTERSPACE
+    ~/.neonkube/spaces/SPACE-NAME
 
 [ClusterFixture] manages the clusters it deploys under this directory:
 
@@ -58,7 +58,7 @@ USAGE:
 
     Changes the clusternamespace:
 
-        neon cluster space CLUSTERSPACE
+        neon cluster space SPACE-NAME
 
     Resets the clusterspace to the default:
 
@@ -87,8 +87,8 @@ REMARKS:
     along with the additional neonKUBE information is known as the [default]
     space.
 
-    Clusterspaces are managed in at [~/.neonkube/spaces/CLUSTERSPACE/*] where 
-    CLUSTERSPACE identifies the clusterspace.  A separate [.kube/config] file
+    Clusterspaces are managed in at [~/.neonkube/spaces/SPACE-NAME/*] where 
+    SPACE-NAME identifies the clusterspace.  A separate [.kube/config] file
     will be created here with the Kubernetes contexts for the clusters in the 
     space and other folders will be present with the neonKUBE related cluster
     information.  [neon-cli] modifies the KUBECONFIG environment variable
