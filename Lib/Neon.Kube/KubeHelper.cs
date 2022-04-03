@@ -506,13 +506,20 @@ namespace Neon.Kube
         /// rooted at <b>$(USERPROFILE)/.neonkube/automation/</b>.
         /// </para>
         /// </param>
+        /// <param name="clear">Optionally clear any existing automation folder.  This defaults to <c>false</c>.</param>
         /// <returns>The path to the automation folder.</returns>
-        public static string SetAutomationMode(KubeAutomationMode mode, string folder)
+        public static string SetAutomationMode(KubeAutomationMode mode, string folder, bool clear = false)
         {
             Covenant.Requires<ArgumentException>(mode != KubeAutomationMode.Disabled, nameof(mode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-            Covenant.Assert(AutomationMode == KubeAutomationMode.Disabled);
-            Covenant.Assert(automationFolder == null);
+
+            if (AutomationMode != KubeAutomationMode.Disabled)
+            {
+                // Ensure that the automation folder is the same as that already set.
+
+                Covenant.Assert(Path.GetFileName(automationFolder) == folder);
+                return automationFolder;
+            }
 
             ClearCachedItems();
 
@@ -527,11 +534,11 @@ namespace Neon.Kube
 
             var kubeFolder = Path.Combine(automationFolder, ".kube");
 
-            // Remove any existing automation folder that was potentially left over
-            // from a previous test or other automation run.
-
-            if (Directory.Exists(folder))
+            if (clear && Directory.Exists(folder))
             {
+                // Remove any existing automation folder that was potentially left over
+                // from a previous test or other automation run.
+
                 NeonHelper.DeleteFolder(folder);
             }
 
@@ -1189,7 +1196,7 @@ namespace Neon.Kube
                     return cachedConfig;
                 }
 
-                return cachedConfig = KubeConfig.Load();
+                return LoadConfig();
             }
         }
 

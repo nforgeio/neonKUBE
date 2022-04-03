@@ -75,10 +75,10 @@ namespace NeonDashboard
                 try
                 {
                     var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
-                    var k8sClient = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+                    var k8sClient  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
                     var configMap = k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
-                    var secret = k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                    var secret    = k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
 
                     NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", configMap.Data["CLUSTER_DOMAIN"]);
                     NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
@@ -86,10 +86,10 @@ namespace NeonDashboard
                     // Check dex config
                     var dexConfigMap = k8sClient.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
 
-                    var yamlConfig = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
-                    var dexConfig = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
-
+                    var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
+                    var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
                     var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
+
                     if (!clientConfig.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
                     {
                         clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
@@ -131,9 +131,9 @@ namespace NeonDashboard
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
-                options.UsePkce = false;
-                options.UseTokenLifetime = false;
-                options.ProtocolValidator = new OpenIdConnectProtocolValidator()
+                options.UsePkce                       = false;
+                options.UseTokenLifetime              = false;
+                options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
                 {
                     RequireNonce = false,
                     RequireState = false

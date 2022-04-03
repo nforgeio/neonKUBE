@@ -270,6 +270,26 @@ namespace Neon.Kube.Xunit
     /// by different runners or developers on their own workstations as well as specifying environment specific
     /// settings such as host hypervisors, LAN configuration, and node IP addresses.
     /// </para>
+    /// <para><b>LIMITATIONS</b></para>
+    /// <para>
+    /// <see cref="ClusterFixture"/> assumes that published cluster node images are invariant for a cluster version.
+    /// The fixture will not automatically redeploy a cluster when a new node template is published without also 
+    /// incrementing the cluster version.  This won't impact normal users but maintainers will need to manually
+    /// remove test clusters for this situation.
+    /// </para>
+    /// <note>
+    /// In the past, we've been somewhat lazy and have node been incrementing cluster versions as we publish new
+    /// node images.  As of 3-30-2022, we're going to start incrementing versions properly so this should no 
+    /// longer be an issue.
+    /// </note>
+    /// <para>
+    /// <see cref="ClusterFixture"/> attempts to detect significant differences between an already deployed
+    /// cluster and a new cluster definition and redeploy the cluster in this case.  Unforunately, the detection
+    /// mechanism isn't perfect at this time and sometimes clusters that should be redeployed won't be.
+    /// </para>
+    /// <para>
+    /// Specifically, node labels won't be considered when detecting changes: https://github.com/nforgeio/neonKUBE/issues/1505
+    /// </para>
     /// </remarks>
     public class ClusterFixture : TestFixture
     {
@@ -305,10 +325,22 @@ namespace Neon.Kube.Xunit
             {
                 if (!base.IsDisposed)
                 {
-                    ResetCluster();
+                    if (options.RemoveClusterOnDispose)
+                    {
+                        Cluster.RemoveAsync(removeOrphans: true).WaitWithoutAggregate();
+                    }
+                    else
+                    {
+                        ResetCluster();
+                    }
                 }
 
                 GC.SuppressFinalize(this);
+
+                Cluster?.Dispose();
+                Cluster = null;
+
+                IsRunning = false;
             }
         }
 
@@ -392,7 +424,7 @@ namespace Neon.Kube.Xunit
         /// </para>
         /// <para>
         /// This means that not only will running <see cref="ClusterFixture"/> based tests in parallel
-        /// within the same instance of Visual Studio fail, but but running these tests in different
+        /// within the same instance of Visual Studio fail, but running these tests in different
         /// Visual Studio instances will also fail.
         /// </para>
         /// </remarks>
@@ -450,42 +482,49 @@ namespace Neon.Kube.Xunit
             //-------------------------------------------------------------
             // We need to deal with some scenarios here:
             //
-            //  1. No cluster context or login exists for the target cluster:
+            //  1. No cluster context or login exists for the target cluster.
             //
             //     A conflicting cluster may still exist though, having been deployed
             //     by another computer or perhaps the kubecontext/logins on the current
             //     machine may have been modified.  We need to be sure to remove any
             //     conflicting resources in this case.
             //
-            //  2. Cluster context and login exist on the current machine that match the
-            //     target cluster.  We'll compare the existing cluster definition with
-            //     that for the new cluster and if they match and [RemoveClusterOnStart=false]
-            //     we'll just use the existing cluster.
+            //  2. Cluster context and login exist on the current machine for the target
+            //     cluster but the cluster is unhealthy or locked.  We'll abort for locked
+            //     clusters and remove and redeploy for unhealth clusters.
+            //
+            //  3.  Cluster context and login exist and the cluster is healthy.  In this case,
+            //      we need to compare the deployed cluster version against the current version
+            //      and remove/redeploy when the versions don't match.
+            //
+            //  4. Cluster context and login exist and the cluster is healthy and cluster versions
+            //     match.  In this case,  We'll compare the existing cluster definition with that for
+            //     the new cluster and also compare the cluster versions and if they match and
+            //     [RemoveClusterOnStart=false] we'll just use the existing cluster.
             //  
-            //  3. The current cluster matches the target but [RemoveClusterOnStart=true].
+            //  5. The current cluster matches the target but [RemoveClusterOnStart=true].
             //     We need to remove the current cluster in this case so we'll deploy a
             //     fresh one.
 
             // Determine whether a test cluster with the same name exists and if
             // its cluster definition matches the test cluster's definition.
-
+            ;
             var clusterExists      = false;
             var clusterContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
             var clusterContext     = KubeHelper.Config.GetContext(clusterContextName);
             var clusterLogin       = KubeHelper.GetClusterLogin(clusterContextName);
 
-            if (clusterContext != null && clusterLogin != null)
+            if (clusterContext != null && clusterLogin != null && !clusterLogin.SetupDetails.SetupPending)
             {
-                clusterExists = NeonHelper.JsonEquals(clusterDefinition, clusterLogin.ClusterDefinition);
+                clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, clusterLogin.ClusterDefinition);
             }
 
             if (clusterExists && !options.RemoveClusterOnStart)
             {
-                // SCENARIO: #2
-                // 
                 // It looks like the test cluster may already exist.  We'll verify
-                // that it's running and healthy and use it when it looks good.
-                // Otherwise we'll remove the cluster as well as its context/login,
+                // that it's running, healthy, unlocked and the cluster versions match.
+                // When all of these conditions are true, we'll use the existing cluster,
+                // otherwise we'll remove the cluster as well as its context/login,
                 // and deploy a new cluster below.
 
                 using (var cluster = new ClusterProxy(clusterLogin.ClusterDefinition, new HostingManagerFactory()))
@@ -499,23 +538,27 @@ namespace Neon.Kube.Xunit
                         throw new NeonKubeException($"Cluster is locked: {cluster.Name}");
                     }
 
-                    if (status.State == ClusterState.Healthy)
+                    if ((status.State == ClusterState.Healthy || status.State == ClusterState.Configured) && status.ClusterVersion == KubeVersions.NeonKube)
                     {
+                        // We need to reset an existing cluster to ensure it's in a known state.
+
+                        cluster.ResetAsync().WaitWithoutAggregate();
+
+                        started   = true;
+                        IsRunning = true;
+                        Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory());
+
                         return TestFixtureStatus.Started;
                     }
 
                     cluster.RemoveAsync(removeOrphans: true).WaitWithoutAggregate();
                 }
-
-                return TestFixtureStatus.Started;
             }
             else
             {
-                // SCENARIOS: #1 and #3:
-                //
-                // We have an existing cluster that matches and [RemoveClusterOnStart=true], the
-                // existing cluster does not match, or we don't have any information on existing
-                // clusters so we need to do a preemptive cluster remove.
+                // There is no known existing cluster but there still might be a cluster
+                // deployed by another machine or fragments of a partially deployed cluster,
+                // so we need to do a preemptive cluster remove.
 
                 using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
                 {
@@ -600,7 +643,11 @@ namespace Neon.Kube.Xunit
                 }
             }
 
-            started = true;
+            // NOTE: We just deployed brand new cluster so there's no need to reset it.
+
+            started   = true;
+            IsRunning = true;
+            Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory());
 
             return TestFixtureStatus.Started;
         }
@@ -859,7 +906,7 @@ namespace Neon.Kube.Xunit
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
-                Cluster.ResetAsync(options.ResetOptions, message => WriteTestOutputLine(message)).WaitWithoutAggregate();
+                Cluster?.ResetAsync(options.ResetOptions, message => WriteTestOutputLine(message)).WaitWithoutAggregate();
             }
 
             base.Reset();

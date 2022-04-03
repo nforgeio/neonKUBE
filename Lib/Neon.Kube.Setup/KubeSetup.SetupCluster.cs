@@ -176,6 +176,21 @@ namespace Neon.Kube
                 throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
             }
 
+            // Clear the log folder.
+
+            if (Directory.Exists(logFolder))
+            {
+                NeonHelper.DeleteFolderContents(logFolder);
+            }
+            else
+            {
+                Directory.CreateDirectory(logFolder);
+            }
+
+            // Reload the any KubeConfig file to ensure we're in-sync.
+
+            KubeHelper.LoadConfig();
+
             // Do some quick checks to ensure that component versions look reasonable.
 
             var kubernetesVersion = new Version(KubeVersions.Kubernetes);

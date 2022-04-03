@@ -187,6 +187,14 @@ namespace Neon.Kube
         public KubeSshKey SshKey { get; set; }
 
         /// <summary>
+        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
+
+        /// <summary>
         /// Sets the file path where the extension will be persisted.
         /// </summary>
         /// <param name="path">The target path.</param>

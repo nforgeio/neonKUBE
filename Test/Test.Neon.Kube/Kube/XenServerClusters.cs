@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDefinitions.cs
+// FILE:	    XenServerClusters.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
-    /// Cluster definitions used for unit test clusters deployed by <see cref="ClusterFixture"/>.
+    /// <b>XenServer</b> cluster definitions used for unit test clusters deployed by <see cref="ClusterFixture"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -84,6 +84,7 @@ namespace TestKube
     /// These clusters are hosted on a single XenServer specified by the <b>neon-assistant</b>
     /// profile along with other required common settings: 
     /// </para>
+    /// <list type="table">
     /// <item>
     ///     <term><b>xen-testhost</b> (profile)</term>
     ///     <description>
@@ -108,7 +109,7 @@ namespace TestKube
     /// <para><b>XEN-TINY</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenTiny"/> cluster.
+    /// required for the <see cref="Tiny"/> cluster.
     /// </para>
     /// <list type="table">
     /// <item>
@@ -121,9 +122,8 @@ namespace TestKube
     /// <para><b>XEN-SMALL</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenSmall"/> cluster.
+    /// required for the <see cref="Small"/> cluster.
     /// </para>
-    /// <list type="table">
     /// <list type="table">
     /// <item>
     ///     <term><b>xenserver.small0.ip</b></term>
@@ -150,11 +150,10 @@ namespace TestKube
     ///     </description>
     /// </item>
     /// </list>
-    /// </list>
     /// <para><b>XEN-LARGE</b></para>
     /// <para>
     /// The following profile definitions assigning IPv4 addresses to nodes are
-    /// required for the <see cref="XenLarge"/> cluster.
+    /// required for the <see cref="Large"/> cluster.
     /// </para>
     /// <list type="table">
     /// <item>
@@ -195,13 +194,13 @@ namespace TestKube
     /// </item>
     /// </list>
     /// </remarks>
-    public static class ClusterDefinitions
+    public static class XenServerClusters
     {
         /// <summary>
         /// <b>XenServer:</b> single node cluster definition.
         /// </summary>
-        public const string XenTiny = @"
-name: tiny
+        public const string Tiny = @"
+name: xenserver-tiny
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -214,9 +213,9 @@ hosting:
   vm:
     hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: tiny
+    namePrefix: test-tiny
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -241,8 +240,8 @@ nodes:
         /// <summary>
         /// <b>XenServer:</b> 1 master and 3 worker cluster definition.
         /// </summary>
-        public const string XenSmall = @"
-name: small
+        public const string Small = @"
+name: xenserver-small
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -255,9 +254,9 @@ hosting:
   vm:
     hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: small
+    namePrefix: test-small
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -297,8 +296,8 @@ nodes:
         /// <summary>
         /// <b>XenServer:</b> 3 master and 3 worker cluster definition.
         /// </summary>
-        public const string XenLarge = @"
-name: large
+        public const string Large = @"
+name: xenserver-large
 datacenter: $<<<profile:datacenter>>>
 environment: test
 isLocked: false
@@ -311,9 +310,9 @@ hosting:
   vm:
     hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
     hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
-    namePrefix: large
+    namePrefix: test-large
     cores: 4
-    memory: 12 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -358,7 +357,7 @@ nodes:
       host: XEN-TEST
   worker-2:
     role: master
-    address: $<<<profile:xenserver.large5fs.ip>>>
+    address: $<<<profile:xenserver.large5.ip>>>
     vm:
       host: XEN-TEST
 ";

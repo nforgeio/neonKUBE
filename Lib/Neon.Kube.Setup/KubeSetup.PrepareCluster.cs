@@ -311,7 +311,7 @@ namespace Neon.Kube
                         controller.SetGlobalStepStatus("generate: SSH key pair");
 
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
-
+                        clusterLogin.Save();
                     }
                 });
 

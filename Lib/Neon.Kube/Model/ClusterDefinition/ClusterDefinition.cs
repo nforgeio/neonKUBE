@@ -233,6 +233,85 @@ namespace Neon.Kube
             return (long)size;
         }
 
+        /// <summary>
+        /// Normalizes a cluster definition for <see cref="AreSimilar(ClusterDefinition, ClusterDefinition)"/>.
+        /// </summary>
+        /// <param name="definition">The cluster definition.</param>
+        private static void Normalize(ClusterDefinition definition)
+        {
+            Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
+
+            // The domain isn't important to [ClusterFixture].
+
+            definition.Domain = null;
+
+            // Ensure that computed peroperties are set.
+
+            definition.Validate();
+
+            // $todo(jefflill):
+            //
+            // We're going to clear a bunch of the node properties that may be
+            // customized during cluster setup.  This means that changes to these
+            // properties will not impact [ClusterFixture]'s decision about redeploying
+            // the cluster or not.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1505
+
+            foreach (var node in definition.Nodes)
+            {
+                node.Ingress                        = true;
+                node.Labels.StorageSize             = null;
+                node.Labels.ComputeCores            = 0;
+                node.Labels.ComputeRam              = 0;
+                node.Labels.PhysicalLocation        = null;
+                node.Labels.PhysicalMachine         = null;
+                node.Labels.PhysicalAvailabilitySet = null;
+                node.Labels.PhysicalPower           = null;
+                node.Labels.Istio                   = true;
+                node.Labels.OpenEBS                 = false;
+                node.Labels.NeonSystem              = true;
+                node.Labels.NeonSystemDb            = true;
+                node.Labels.NeonSystemRegistry      = true;
+                node.Labels.Minio                   = true;
+                node.Labels.MetricsInternal         = true;
+                node.Labels.Logs                    = true;
+                node.Labels.LogsInternal            = true;
+                node.Labels.Minio                   = true;
+                node.Labels.MetricsInternal         = true;
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// <b>INTERNAL USE ONLY:</b> Compares two <see cref="ClusterDefinition"/> instances to 
+        /// determine whether they can be considered the same by <c>ClusterFixture</c> when it's 
+        /// deciding whether to reuse an existing cluster or deploy a new one.
+        /// </para>
+        /// <note>
+        /// This method works by comparing the definitions serialized to JSON after removing a handful
+        /// of unimportant properties that may conflict.
+        /// </note>
+        /// </summary>
+        /// <param name="definition1">The first cluster definition.</param>
+        /// <param name="definition2">The second cluster definition.</param>
+        /// <returns><c>true</c> when the definitions are close enough for <c>ClusterFixture</c>.</returns>
+        public static bool AreSimilar(ClusterDefinition definition1, ClusterDefinition definition2)
+        {
+            Covenant.Requires<ArgumentNullException>(definition1 != null, nameof(definition1));
+            Covenant.Requires<ArgumentNullException>(definition2 != null, nameof(definition2));
+
+            definition1 = NeonHelper.JsonClone(definition1);
+            definition2 = NeonHelper.JsonClone(definition2);
+
+            // Clear properties [ClusterFixture] doesn't care about.
+
+            Normalize(definition1);
+            Normalize(definition2);
+
+            return NeonHelper.JsonEquals(definition1, definition2);
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -305,7 +384,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The cluster DNS domain. neonKUBE will generate a domain like <b>GUID.neoncluster.io</b>
+        /// The cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
         /// </para>
         /// <note>
@@ -326,8 +405,9 @@ namespace Neon.Kube
         /// registar API.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Domain { get; set; }
 
         /// <summary>
@@ -351,18 +431,6 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public List<ResourceTag> ResourceTags { get; set; } = null;
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies cluster debugging options.
-        /// </para>
-        /// <note>
-        /// These options are generally intended for neonKUBE maintainers only.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
-        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
-        public DebugOptions Debug { get; set; } = new DebugOptions();
 
         /// <summary>
         /// Enables or disables specific Kubernetes features.  This can be used to enable
@@ -682,7 +750,7 @@ namespace Neon.Kube
                 //
                 // I'm temporarily commenting this out because neon-desktop needs
                 // the hosting related secrets in some circumstances.  We need to
-                // think through a comprehensive solution:
+                // think about a comprehensive solution:
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/1482
 
@@ -917,7 +985,6 @@ namespace Neon.Kube
 
             // Validate the properties.
 
-            Debug        = Debug ?? new DebugOptions();
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
             Deployment   = Deployment ?? new DeploymentOptions();
             Storage      = Storage ?? new StorageOptions();
@@ -939,7 +1006,6 @@ namespace Neon.Kube
                 new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
-            Debug.Validate(this);
             Deployment.Validate(this);
             Storage.Validate(this);
             Security.Validate(this);
