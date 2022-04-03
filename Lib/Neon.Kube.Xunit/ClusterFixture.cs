@@ -248,7 +248,7 @@ namespace Neon.Kube.Xunit
     /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Start()</b> 
     /// methods may conflict with an existing production or neonDESKTOP built-in cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
-    /// within separate directories named like <b>~/.neonkube/spaces(fixture)</b>.
+    /// within separate directories named like <b>~/.neonkube/spaces/$fixture</b>.
     /// This effectively isolates clusters deployed by the fixture from the user clusters.
     /// </para>
     /// <para>
@@ -423,7 +423,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*.*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -458,7 +458,7 @@ namespace Neon.Kube.Xunit
             // the user specifies a custom image.  We're going to host the fixture state
             // files in this fixed folder:
             //
-            //      ~/.neonkube/spaces/(fixture)/*
+            //      ~/.neonkube/spaces/$fixture/*
 
             clusterspaceFolder = KubeHelper.SetClusterSpaceMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeClusterspaceMode.EnabledWithSharedCache : KubeClusterspaceMode.Enabled, KubeHelper.ClusterspacePrefix("fixture"));
 
@@ -704,7 +704,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -774,7 +774,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -836,7 +836,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/(fixture)/*</b>
+        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>

@@ -44,11 +44,11 @@ Configures [neon-cli] to manage clusters in separate clusterspaces created
 by automation like [ClusterFixture] for unit testing.  The logins and other
 cluster related information can be found under:
 
-    [~/.neonkube/spaces/CLUSTERSPACE]
+    ~/.neonkube/spaces/CLUSTERSPACE
 
 [ClusterFixture] manages the clusters it deploys under this directory:
 
-    [~/.neonkube/spaces/(fixture)]
+    ~/.neonkube/spaces/$fixture
 
 USAGE:
 
@@ -95,7 +95,7 @@ REMARKS:
     along with the [~/.neonkube/current-space] file to manage the current 
     space for subsequent [neon-cli] commands.
 
-    [ClusterFixture] currently creates the ""(fixture)"" clusterspace where
+    [ClusterFixture] currently creates the ""$fixture"" clusterspace where
     cluster information about test clusters is managed.    
 
     NOTE:
