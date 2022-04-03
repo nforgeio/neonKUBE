@@ -304,4 +304,4 @@ data:
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
-  strategies.json: '{"default_strategy": {"param": 1.000, "type": "probabilistic"}}'
+  strategies.json: '{"default_strategy": {"param": 0.010, "type": "probabilistic"}}'

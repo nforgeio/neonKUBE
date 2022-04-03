@@ -97,10 +97,8 @@ affinity: {}
 ## Pod resource requests & limits
 resources:
   requests:
-    cpu: 100m
     memory: 200Mi
   limits:
-    cpu: 2
     memory: 200Mi
 
 ## Serve application over HTTP without TLS

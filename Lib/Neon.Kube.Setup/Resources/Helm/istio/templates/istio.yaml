@@ -51,6 +51,10 @@ spec:
     pilot:
       k8s:
         priorityClassName: {{ .Values.priorityClassName }}
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.pilot.requests.cpu }}"
+            memory: "{{ .Values.resources.pilot.requests.memory }}"
     ingressGateways:
     - name: istio-ingressgateway
       enabled: true

@@ -26,7 +26,7 @@ tempo:
   #    cpu: 2000m
   #    memory: 6Gi
 
-  memBallastSizeMbs: 1024
+  memBallastSizeMbs: 64
   authEnabled: false
   ingester:
     lifecycler:
@@ -39,7 +39,7 @@ tempo:
           etcd:
             endpoints:
               - neon-etcd.neon-system.svc.cluster.local:2379
-  retention: 24h
+  retention: 1h
   server:
     httpListenPort: 3100
   storage:

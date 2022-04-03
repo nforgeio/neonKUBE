@@ -23,7 +23,7 @@ resource:
     memory: 110Mi
   requests:
     cpu: 100m
-    memory: 110Mi
+    memory: 50Mi
 
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 

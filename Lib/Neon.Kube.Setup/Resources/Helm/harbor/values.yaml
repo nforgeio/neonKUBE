@@ -127,15 +127,6 @@ controllers:
     # controllers.trivy.maxReconcile -- Max parallel reconciliation for Trivy controller
     maxReconcile: 1
 
-# resources -- Expects input structure as per specification <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core>
-resources:
-  limits:
-    cpu: 500m
-    memory: 300Mi
-  requests:
-    cpu: 300m
-    memory: 200Mi
-
 storage:
   trivy:
     cache:

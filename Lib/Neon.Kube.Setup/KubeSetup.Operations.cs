@@ -387,6 +387,7 @@ spec:
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var controlPlaneEndpoint = $"kubernetes-masters:6442";
             var sbCertSANs           = new StringBuilder();
+            var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
             {
@@ -438,6 +439,7 @@ apiServer:
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
     oidc-groups-prefix: """"
+    default-watch-cache-size: ""{clusterAdvice.KubeApiServerWatchCacheSize}""
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
@@ -1044,7 +1046,35 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         }
 
+                        // Set GOGC so that GC happens more frequently, reducing memory usage.
+
+                        // This is a bit of a 2 part hack because the environment variable needs to be
+                        // a string, and YamlDotNet doesn't serialise it as such.
+
+                        var env = new List<Dictionary<string, string>>();
+
+                        env.Add(new Dictionary<string, string>() { 
+                            { "name", "GOGC"},
+                        });
+
+                        container["env"] = env;
+
                         manifestText = NeonHelper.YamlSerialize(manifest);
+
+                        var sb = new StringBuilder();
+                        using (var reader = new StringReader(manifestText))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                sb.AppendLine(line);
+                                if (line.Contains("- name: GOGC"))
+                                {
+                                    sb.AppendLine(line.Replace("- name: GOGC", @"  value: ""25"""));
+                                }
+                            }
+                        }
+
+                        manifestText = sb.ToString();
 
                         master.UploadText(manifestPath, manifestText, permissions: "600", owner: "root");
                     });
@@ -1205,9 +1235,45 @@ kubectl apply -f priorityclasses.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = master.Cluster;
-            var k8s     = GetK8sClient(controller);
+            var cluster       = master.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
 
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/dns",
+                async () =>
+                {
+                    var coreDnsDeployment = await k8s.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
+
+                    var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                    var coreDnsDaemonset = new V1DaemonSet()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "coredns",
+                            NamespaceProperty = KubeNamespace.KubeSystem,
+                            Labels = coreDnsDeployment.Metadata.Labels
+                        },
+                        Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
+                    };
+
+                    coreDnsDaemonset.Spec.Template.Spec.NodeSelector = new Dictionary<string, string>()
+                    {
+                        { "neonkube.io/node.role", "master" }
+                    };
+
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] =
+                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
+
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] =
+                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+
+                    await k8s.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
+                    await k8s.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
+
+                });
+            
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cni",
                 async () =>
@@ -1230,7 +1296,7 @@ kubectl apply -f priorityclasses.yaml
                         cancellationToken: controller.CancellationToken);
 
                     controller.ThrowIfCancelled();
-                    await k8s.WaitForDeploymentAsync(KubeNamespace.KubeSystem, "coredns",
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
                         timeout:           clusterOpTimeout,
                         pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
@@ -1444,6 +1510,7 @@ kubectl apply -f priorityclasses.yaml
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/ingress-namespace",
@@ -1490,6 +1557,11 @@ kubectl apply -f priorityclasses.yaml
                     values.Add($"resources.proxy.limits.memory", $"{ToSiString(proxyAdvice.PodMemoryLimit)}");
                     values.Add($"resources.proxy.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
                     values.Add($"resources.proxy.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
+
+                    values.Add($"resources.pilot.limits.cpu", $"{ToSiString(proxyAdvice.PodCpuLimit)}");
+                    values.Add($"resources.pilot.limits.memory", $"{ToSiString(proxyAdvice.PodMemoryLimit)}");
+                    values.Add($"resources.pilot.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
+                    values.Add($"resources.pilot.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
 
                     await master.InstallHelmChartAsync(controller, "istio",
                         releaseName: "neon-ingress",
@@ -1734,8 +1806,9 @@ subjects:
                     values.Add("settings.clusterName", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("ingress.subdomain", ClusterDomain.KubernetesDashboard);
-                    values.Add($"metricsScraper.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metricsScraper.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
 
                     await master.InstallHelmChartAsync(controller, "kubernetes-dashboard",
                         releaseName:     "kubernetes-dashboard",
@@ -2583,8 +2656,8 @@ $@"- name: StorageType
                         values.Add($"persistentVolume.storage", "10Gi");
                     }
 
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
                     values.Add($"priorityClassName", PriorityClass.NeonMonitor.Name);
 
                     int i = 0;
@@ -2646,17 +2719,11 @@ $@"- name: StorageType
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
 
-                    if (agentAdvice.PodMemoryRequest != null && agentAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
+                    values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
 
-                    if (agentNodeAdvice.PodMemoryRequest != null && agentNodeAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest));
+                    values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit));
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
@@ -2762,11 +2829,8 @@ $@"- name: StorageType
                         values.Add($"cortexConfig.ruler.ring.kvstore.etcd.endpoints[{i}]", $"neon-etcd-{i}.neon-etcd.neon-system.svc.cluster.local:2379");
                     }
 
-                    if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.AlertManager);
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Cortex, clusterAdvice.MetricsQuota);
@@ -2885,11 +2949,8 @@ $@"- name: StorageType
                         values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
                     }
 
-                    if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
 
@@ -2947,11 +3008,8 @@ $@"- name: StorageType
                         values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
                     }
 
-                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
 
@@ -3201,10 +3259,11 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Minio);
+            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s            = GetK8sClient(controller);
+            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Minio);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MinioOperator);
 
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
@@ -3245,11 +3304,11 @@ $@"- name: StorageType
                                 values.Add($"mode", "distributed");
                             }
 
-                            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
-                            {
-                                values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                                values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-                            }
+                            values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                            values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+
+                            values.Add($"operator.resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
+                            values.Add($"operator.resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
 
                             var accessKey = NeonHelper.GetCryptoRandomPassword(16);
                             var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);

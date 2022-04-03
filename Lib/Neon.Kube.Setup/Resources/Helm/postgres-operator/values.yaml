@@ -398,7 +398,7 @@ resources:
     memory: 500Mi
   requests:
     cpu: 50m
-    memory: 100Mi
+    memory: 50Mi
 
 securityContext:
   runAsUser: 1000

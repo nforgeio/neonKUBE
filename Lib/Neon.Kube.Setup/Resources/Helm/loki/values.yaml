@@ -194,7 +194,7 @@ podAnnotations:
   traffic.sidecar.istio.io/excludeInboundPorts: '2379'
   traffic.sidecar.istio.io/excludeOutboundPorts: '2379'
 
-podManagementPolicy: OrderedReady
+podManagementPolicy: Parallel
 
 ## Assign a PriorityClassName to pods if set
 # priorityClassName:

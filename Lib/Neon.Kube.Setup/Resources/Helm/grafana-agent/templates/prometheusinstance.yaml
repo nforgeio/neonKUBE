@@ -15,7 +15,6 @@ spec:
         maxBackoff: 1m
         maxRetries: 3
         minBackoff: 1m
-      send_exemplars: true
   maxWALTime: 15m0s
   minWALTime: 5m0s
   remoteFlushDeadline: 1m0s

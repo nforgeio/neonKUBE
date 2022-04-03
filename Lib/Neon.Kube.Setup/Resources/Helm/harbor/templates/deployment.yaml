@@ -58,11 +58,9 @@ spec:
             port: ready
         resources:
           limits:
-            cpu: 500m
             memory: 300Mi
           requests:
-            cpu: 300m
-            memory: 200Mi
+            memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:

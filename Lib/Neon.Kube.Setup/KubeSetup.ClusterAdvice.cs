@@ -83,6 +83,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CertManager, CalculateCertManagerAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CoreDns, CalculateCoreDnsAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Cortex, CalculateCortexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Dex, CalculateDexAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.EtcdCluster, CalculateEtcdClusterAdvice(cluster));
@@ -103,12 +104,14 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborRegistry, CalculateHarborRegistryAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioIngressGateway, CalculateIstioIngressGatewayAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioProxy, CalculateIstioProxyAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioPilot, CalculateIstioPilotAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Kiali, CalculateKialiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubernetesDashboard, CalculateKubernetesDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Loki, CalculateLokiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MetricsServer, CalculateMetricsServerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Minio, CalculateMinioAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MinioOperator, CalculateMinioOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonDashboard, CalculateNeonDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice(cluster));
@@ -185,10 +188,20 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
-                advice.MetricsEnabled   = false;
+                advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+                advice.MetricsEnabled = false;
             }
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateCoreDnsAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.CoreDns);
+
+            advice.PodMemoryRequest = ByteUnits.Parse("30Mi");
+            advice.PodMemoryLimit   = ByteUnits.Parse("170Mi");
 
             return advice;
         }
@@ -199,13 +212,11 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-
-
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
             else
             {
@@ -226,7 +237,7 @@ namespace Neon.Kube
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
             advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-            advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
             advice.MetricsEnabled   = false;
 
             return advice;
@@ -259,7 +270,7 @@ namespace Neon.Kube
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
                 advice.MetricsEnabled   = false;
             }
             else
@@ -279,7 +290,7 @@ namespace Neon.Kube
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
                 advice.MetricsEnabled   = false;
             }
             else
@@ -388,7 +399,7 @@ namespace Neon.Kube
             advice.PodCpuLimit      = 2;
             advice.PodCpuRequest    = 0.010;
             advice.PodMemoryLimit   = ByteUnits.Parse("160Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
             return advice;
         }
@@ -397,10 +408,22 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.IstioProxy);
 
-            advice.PodCpuLimit      = 2;
-            advice.PodCpuRequest    = 0.010;
-            advice.PodMemoryLimit   = ByteUnits.Parse("160Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+            advice.PodCpuLimit = 2;
+            advice.PodCpuRequest = 0.010;
+            advice.PodMemoryLimit = ByteUnits.Parse("160Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateIstioPilotAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.IstioPilot);
+
+            advice.PodCpuLimit = 0.5;
+            advice.PodCpuRequest = 0.010;
+            advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
             return advice;
         }
@@ -410,7 +433,7 @@ namespace Neon.Kube
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Dex);
 
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
@@ -487,7 +510,7 @@ namespace Neon.Kube
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
                 advice.MetricsEnabled   = false;
             }
             else
@@ -522,9 +545,9 @@ namespace Neon.Kube
                     advice.ReplicaCount = 1;
                 }
 
-                advice.PodMemoryLimit   = ByteUnits.Parse("4Gi");
+                advice.PodMemoryLimit = ByteUnits.Parse("4Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("4Gi");
-                advice.MetricsInterval  = "1m";
+                advice.MetricsInterval = "1m";
             }
             else
             {
@@ -533,14 +556,23 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
+                advice.PodMemoryLimit = ByteUnits.Parse("768Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
-                advice.MetricsEnabled   = false;
+                advice.MetricsEnabled = false;
             }
 
             return advice;
         }
-        
+
+        private static KubeServiceAdvice CalculateMinioOperatorAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.MinioOperator);
+
+            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+
+            return advice;
+        }
         private static KubeServiceAdvice CalculateNeonClusterOperatorAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
@@ -782,8 +814,8 @@ namespace Neon.Kube
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
             {
-                advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
-                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
                 advice.MetricsEnabled   = false;
             }
             else

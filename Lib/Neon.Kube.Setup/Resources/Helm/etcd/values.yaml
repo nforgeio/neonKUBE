@@ -17,11 +17,9 @@ resources:
 # resources, such as Minikube. If you do want to specify resources, uncomment the following
 # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   limits:
-    cpu: 100m
     memory: 256Mi
   requests:
-    cpu: 100m
-    memory: 128Mi
+    memory: 64Mi
 
 # Authentication parameters
 ##
