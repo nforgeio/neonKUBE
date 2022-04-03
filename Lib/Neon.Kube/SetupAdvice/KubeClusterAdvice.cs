@@ -140,6 +140,11 @@ namespace Neon.Kube
         public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>CoreDNS</b> service.
+        /// </summary>
+        public static string CoreDns = "coredns";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Cortex</b> service.
         /// </summary>
         public static string Cortex = "cortex";
@@ -250,6 +255,11 @@ namespace Neon.Kube
         public static string IstioIngressGateway = "istio-ingressgateway";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Istio Pilot</b> service.
+        /// </summary>
+        public static string IstioPilot = "istio-pilot";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Kubernetes Dashboard</b> service.
         /// </summary>
         public static string KubernetesDashboard = "kubernetes-dashboard";
@@ -278,6 +288,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Minio</b> service.
         /// </summary>
         public static string Minio = "minio";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Minio Operator</b> service.
+        /// </summary>
+        public static string MinioOperator = "minio-operator";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>neon-cluster-operator</b> service.
@@ -431,6 +446,11 @@ namespace Neon.Kube
         /// Specifies the cluster default Traces quota.
         /// </summary>
         public string TracesQuota = "10Gi";
+
+        /// <summary>
+        /// Specifies the default watch cache size for the Kubernetes API Server.
+        /// </summary>
+        public int KubeApiServerWatchCacheSize = 5;
 
         private Dictionary<string, KubeServiceAdvice>   services   = new Dictionary<string, KubeServiceAdvice>(StringComparer.CurrentCultureIgnoreCase);
         private bool                                    isReadOnly = false;
