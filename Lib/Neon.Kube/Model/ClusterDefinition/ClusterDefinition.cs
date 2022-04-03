@@ -529,6 +529,14 @@ namespace Neon.Kube
         public HostingOptions Hosting { get; set; } = null;
 
         /// <summary>
+        /// Specifies optional features to be installed in the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "Features", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "features", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public FeatureOptions Features { get; set; } = new FeatureOptions();
+
+        /// <summary>
         /// Identifies the datacenter.
         /// </summary>
         /// <remarks>
@@ -995,6 +1003,7 @@ namespace Neon.Kube
             NodeOptions  = NodeOptions ?? new NodeOptions();
             Network      = Network ?? new NetworkOptions();
             Container    = Container ?? new ContainerOptions();
+            Features     = Features ?? new FeatureOptions();
 
             if (IsDesktopBuiltIn && Nodes.Count() > 1)
             {
@@ -1016,6 +1025,7 @@ namespace Neon.Kube
             NodeOptions.Validate(this);
             Network.Validate(this);
             Container.Validate(this);
+            Features.Validate(this);
 
             // Have the hosting manager perform its own validation.
 
