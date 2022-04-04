@@ -18,7 +18,7 @@ set NEON_CONTAINER_TAG_OVERRIDE=jeff
 and then rebuilding the image and then installing the Helm chart like:
 
 ```
-neon helm install --set image.tag=%NEON_CONTAINER_TAG_OVERRIDE% --set image.pullPolicy=Always --set logLevel=debug NAME .
+neon helm install --set image.organization=ghcr.io/neonkube-dev --set image.tag=%NEON_CONTAINER_TAG_OVERRIDE% --set image.pullPolicy=Always --set logLevel=debug NAME .
 ```
 
 Doing this allows developers to push development images to the container repository for
