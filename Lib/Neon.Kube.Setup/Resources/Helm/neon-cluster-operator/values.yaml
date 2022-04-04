@@ -30,16 +30,3 @@ resource:
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
 logLevel: info
-
-###############################################################################
-# WARNING: BE SURE TO COMMENT THIS OUT BEFORE PUSHING TO MASTER!
-#
-# $debug(): DEBUG related configurations.
-
-#image:
-#  organization: ghcr.io/neonkube-dev
-#  repository: neon-cluster-operator
-#  pullPolicy: Always
-#  tag: neonkube-0.3.0-alpha
-
-#logLevel: debug
