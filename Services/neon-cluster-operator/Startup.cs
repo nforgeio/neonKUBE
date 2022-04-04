@@ -29,7 +29,7 @@ namespace NeonClusterOperator
                     settings =>
                     {
                         settings.EnableAssemblyScanning = true;
-                        settings.EnableLeaderElection   = true;
+                        settings.EnableLeaderElection   = false;
                     });
 
             Program.AddResourceAssemblies(operatorBuilder);
