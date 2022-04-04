@@ -167,23 +167,18 @@ namespace TestNeonService
 
             task = Task.Run(async () => await TaskFunc());
 
-            // Indicate that the service is ready for business.
+            // Indicate that the service is running.
 
             await StartedAsync();
 
-            // Wait for the process terminator to signal that the service is stopping.
+            // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();
-
-            // Wait for the service thread and task to exit.
-
             thread.Join();
             await task;
             Terminator.ReadyToExit();
 
-            // Return the exit code specified by the configuration.
-
-            return await Task.FromResult(0);
+            return 0;
         }
 
         /// <summary>

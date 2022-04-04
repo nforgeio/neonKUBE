@@ -144,11 +144,11 @@ namespace TestNeonService
 
             webHost.Start();
 
-            // Indicate that the service is ready for business.
+            // Indicate that the service is running.
 
             await StartedAsync();
 
-            // Wait for the process terminator to signal that the service is stopping.
+            // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();
             Terminator.ReadyToExit();

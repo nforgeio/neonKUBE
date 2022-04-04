@@ -101,14 +101,16 @@ namespace NeonClusterOperator
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
+            // Indicate that the service is running.
+
             await StartedAsync();
 
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            // Handle termination gracefully.
 
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(5));
-            }
+            await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
+
+            return 0;
         }
 
 #if TODO
