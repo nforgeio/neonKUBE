@@ -109,11 +109,11 @@ namespace NeonNodeAgent
                 var leaderConfig = 
                     new LeaderElectionConfig(
                         k8s,
-                        @namespace:          KubeNamespace.NeonSystem,
-                        leaseName:           $"nodeagent-nodetask-{Node.Name}",
-                        identity:            Pod.Name,
-                        promotionCounter:    promotionCounter,
-                        demotionCounter:     demotedCounter,
+                        @namespace:       KubeNamespace.NeonSystem,
+                        leaseName:        $"nodeagent-nodetask-{Node.Name}",
+                        identity:         Pod.Name,
+                        promotionCounter: promotionCounter,
+                        demotionCounter:  demotedCounter,
                         newLeaderCounter: newLeaderCounter);
 
                 resourceManager = new ResourceManager<V1NodeTask>(filter: NodeTaskFilter, leaderConfig: leaderConfig)
