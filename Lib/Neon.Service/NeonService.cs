@@ -97,6 +97,12 @@ namespace Neon.Service
     /// or <see cref="InDevelopment"/> properties to check this.
     /// </note>
     /// <code source="..\..\Snippets\Snippets.NeonService\Program-Basic.cs" language="c#" title="Simple example showing a basic service implementation:"/>
+    /// <para><b>INITIALIZATION</b></para>
+    /// <para>
+    /// We recommend that all service applications call the <c>static </c><see cref="Initialize()"/>
+    /// at the very top of the main program entry point.  This ensures that the execution 
+    /// environment is configured properly for some scenarios.
+    /// </para>
     /// <para><b>CONFIGURATION</b></para>
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
@@ -446,8 +452,9 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly char[]      equalArray = new char[] { '=' };
-        private static readonly Gauge       infoGauge  = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
+        private static bool                 isInitalized = false;
+        private static readonly char[]      equalArray   = new char[] { '=' };
+        private static readonly Gauge       infoGauge    = Metrics.CreateGauge("neon_service_info", "Describes your service version.", "version");
 
         // WARNING:
         //
@@ -457,6 +464,70 @@ namespace Neon.Service
         private static string testFolder;
         private static string cachedNeonKubeUserFolder;
         private static string cachedPasswordsFolder;
+
+        /// <summary>
+        /// Call this at the top of your service's main entry point to ensure
+        /// that the current execution environment is properly initialized.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This method currently handles initialization of the [Kubernetes] client's
+        /// JSON serializer which is required to support some custom resources.  The
+        /// method automatically detects whether the Kubernetes related types are
+        /// loaded and does nothing when they are not present.
+        /// </para>
+        /// <para>
+        /// Calling this method isn't strictly required at this time, but we highly
+        /// recommend that you call it anyway.
+        /// </para>
+        /// </remarks>
+        public static void Initialize()
+        {
+            if (isInitalized)
+            {
+                return;
+            }
+
+            // $hack(jefflill):
+            //
+            // Services deployed to Kubernetes that manage custom resouces may need
+            // to customize the JSON serializer settings used by the stock [Kubernetes]
+            // client.  There isn't a clean way to handle this so we're going to do
+            // the best we can.
+            //
+            // The static [Neon.Kube.KubernetesClient] class implements a static
+            // [Initialize()] method which intializes the serializer the first time
+            // it's called.  The problem is that this call will fail after the first
+            // stock [Kubernetes] client has been created.
+            //
+            // To make this transparent for most service implementators, we're going
+            // to detect whether the [Neon.Kube] assembly is loaded in the appdomain
+            // and call the [Initialize()] method when it's present.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1517
+
+            var kubernetesClientType = (Type)null;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                kubernetesClientType = assembly.GetType("Neon.Kube.KubernetesClient");
+
+                if (kubernetesClientType != null)
+                {
+                    break;
+                }
+            }
+
+            if (kubernetesClientType != null)
+            {
+                var initialzeMethod = kubernetesClientType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+
+                Covenant.Assert(initialzeMethod != null);
+                initialzeMethod.Invoke(null, Array.Empty<object>());
+            }
+
+            isInitalized = true;
+        }
 
         /// <summary>
         /// Returns <c>true</c> if the service is running in test mode.
@@ -660,6 +731,8 @@ namespace Neon.Service
             TimeSpan                minShutdownTime         = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            Initialize();
 
             Version = version ?? string.Empty;
 
