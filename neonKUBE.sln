@@ -432,7 +432,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.WSL", "Test\Test.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wsl-util", "Tools\wsl-util\wsl-util.csproj", "{776E985C-E4C6-428A-8259-A29DF873A84E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube.Operator", "Test\Test.Neon.Kube.Operator\Test.Neon.Kube.Operator.csproj", "{D3B67365-D439-463A-BADE-A98F84A8BC29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube.Operators", "Test\Test.Neon.Kube.Operators\Test.Neon.Kube.Operators.csproj", "{D3B67365-D439-463A-BADE-A98F84A8BC29}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.GrpcProto", "Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj", "{EE73B97C-84AB-478A-ADEA-2808285871DF}"
 EndProject
