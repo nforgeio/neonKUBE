@@ -22,10 +22,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+using Neon.Xunit;
+
 using Xunit;
 using Xunit.Sdk;
 
-namespace Neon.Xunit
+namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// <para>

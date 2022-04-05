@@ -98,7 +98,7 @@ OPTIONS:
                           NOTE: A non-zero exit code will be returned when this
                                 option is specified and one or more chechks fail.
 
-    --automation-folder - Indicates that the command must not impact normal clusters
+    --clusterspace      - Indicates that the command must not impact normal clusters
                           by changing the current login, Kubernetes config or
                           other files like cluster deployment logs.  This is
                           used for automated CI/CD or unit test cluster deployments 
@@ -122,7 +122,7 @@ OPTIONS:
             "--upload-charts",
             "--debug",
             "--check",
-            "--automation-folder" };
+            "--clusterspace" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -151,7 +151,7 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var check             = commandLine.HasOption("--check");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
-            var automationFolder  = commandLine.GetOption("--automation-folder");
+            var clusterspace      = commandLine.GetOption("--clusterspace");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
 
@@ -220,11 +220,11 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                maxParallel:        maxParallel,
-                unredacted:         unredacted,
-                debugMode:          debug,
-                uploadCharts:       uploadCharts,
-                automationFolder:   automationFolder);
+                maxParallel:    maxParallel,
+                unredacted:     unredacted,
+                debugMode:      debug,
+                uploadCharts:   uploadCharts,
+                clusterspace:   clusterspace);
 
             controller.DisablePendingTasks = disablePending;
 
@@ -259,7 +259,7 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile());
+                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
 
                         if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
                         {

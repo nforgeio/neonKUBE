@@ -138,7 +138,8 @@ NEON KUBECTL COMMANDS:
 NEON CLUSTER LIFE-CYCLE COMMANDS:
 
     neon cluster check
-    neon cluster is-locked
+    neon cluster dashboard
+    neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
@@ -146,6 +147,7 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster rm         [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
@@ -196,8 +198,15 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that this
-            // will download them when necessary.
+            // Set the clusterspace mode when necessary.
+
+            if (KubeHelper.CurrentClusterSpace != null)
+            {
+                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
+            }
+
+            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
+            // will download them when they're not already present.
 
             KubectlPath = GetKubectlPath();
             HelmPath    = GetHelmPath();

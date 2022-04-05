@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +25,7 @@ using Neon.Kube.ResourceDefinitions;
 using Neon.Retry;
 using Neon.Tasks;
 
+using k8s;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
@@ -32,12 +34,20 @@ using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
 using Prometheus;
-using Tomlyn;
 
 namespace NeonNodeAgent
 {
     /// <summary>
+    /// <para>
     /// Manages <see cref="V1NodeTask"/> resources on the Kubernetes API Server.
+    /// </para>
+    /// <note>
+    /// This controller relies on a lease named like <b>nodeagent-nodetask-NODENAME</b> where <b>NODENAME</b>
+    /// is the name of the node where the <b>neon-node-agent</b> operator is running.  This lease will be
+    /// persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace and will be used to
+    /// elect a leader for the node in case there happens to be two agents running on the same
+    /// node for some reason.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// This controller handles command executions on the local cluster node.  See
@@ -73,10 +83,15 @@ namespace NeonNodeAgent
         private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing.");
         private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.");
 
+        private static readonly Counter promotionCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions");
+        private static readonly Counter demotedCounter                  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions");
+        private static readonly Counter newLeaderCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes");
+
         //---------------------------------------------------------------------
         // Instance members
 
-        private bool    cleanupTaskRunning = false;
+        private IKubernetes     k8s            = new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig(), new HttpClient()); 
+        private bool            cleanupRunning = false;
 
         /// <summary>
         /// Coinstructor.
@@ -91,7 +106,17 @@ namespace NeonNodeAgent
                 errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
                 errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
 
-                resourceManager = new ResourceManager<V1NodeTask>(filter: NodeTaskFilter)
+                var leaderConfig = 
+                    new LeaderElectionConfig(
+                        k8s,
+                        @namespace:       KubeNamespace.NeonSystem,
+                        leaseName:        $"nodeagent-nodetask-{Node.Name}",
+                        identity:         Pod.Name,
+                        promotionCounter: promotionCounter,
+                        demotionCounter:  demotedCounter,
+                        newLeaderCounter: newLeaderCounter);
+
+                resourceManager = new ResourceManager<V1NodeTask>(filter: NodeTaskFilter, leaderConfig: leaderConfig)
                 {
                      ReconcileNoChangeInterval = reconciledNoChangeInterval,
                      ErrorMinRequeueInterval   = errorMinRequeueInterval,
@@ -232,7 +257,7 @@ namespace NeonNodeAgent
         {
             var tasks = resourceManager.CloneResourcesAsync(resources);
 
-            if (cleanupTaskRunning)
+            if (cleanupRunning)
             {
                 await Task.CompletedTask;
                 return;
@@ -243,9 +268,7 @@ namespace NeonNodeAgent
                 {
                     try
                     {
-                        cleanupTaskRunning = true;
-
-
+                        cleanupRunning = true;
                     }
                     catch (Exception e)
                     {
@@ -253,7 +276,7 @@ namespace NeonNodeAgent
                     }
                     finally
                     {
-                        cleanupTaskRunning = false;
+                        cleanupRunning = false;
                     }
                 });
         }

@@ -34,7 +34,16 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
+        /// <para>
         /// The current neonKUBE version.
+        /// </para>
+        /// <note>
+        /// Pre-release versions should append <b>-alpha</b>, <b>-beta</b>,
+        /// or <b>-preview</b> to the version number.  When multiple prereleases
+        /// with the same tag have been released, we will append a two digits like
+        /// <b>0.3.0-alpha.01</b> which will allow us to describe up to 101
+        /// pre-preleases for the same version.
+        /// </note>
         /// </summary>
         public const string NeonKube = "0.3.0-alpha";
 

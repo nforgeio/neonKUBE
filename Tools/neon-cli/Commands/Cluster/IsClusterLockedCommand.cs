@@ -51,7 +51,7 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster is-locked</b> command.
+    /// Implements the <b>cluster islocked</b> command.
     /// </summary>
     [Command]
     public class ClusterIsLockedCommand : CommandBase
@@ -61,7 +61,7 @@ Determines whether the current cluster is locked.
 
 USAGE:
 
-    neon cluster is-locked
+    neon cluster islocked
 
 EXITCODE:
 
@@ -70,7 +70,7 @@ EXITCODE:
     2   - when the cluster is unlocked
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "is-locked" };
+        public override string[] Words => new string[] { "cluster", "islocked" };
 
         /// <inheritdoc/>
         public override void Help()

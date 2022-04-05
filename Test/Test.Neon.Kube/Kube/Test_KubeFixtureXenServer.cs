@@ -59,7 +59,7 @@ namespace TestKube
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
-                // Register a [ProfileClient] so commands will be able to pick
+                // Register a [ProfileClient] so tests will be able to pick
                 // up secrets and profile information from [neon-assistant].
 
                 NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());

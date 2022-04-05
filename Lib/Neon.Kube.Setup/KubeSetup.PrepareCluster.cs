@@ -74,11 +74,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
-        /// <param name="automationFolder">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
-        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
-        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
-        /// </param>
+        /// <param name="clusterspace">Optionally specifies the clusterspace for the operation.</param>
         /// <param name="neonCloudHeadendUri">Optionally overrides the headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="disableConsoleOutput">
@@ -96,7 +92,7 @@ namespace Neon.Kube
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
-            string                      automationFolder      = null,
+            string                      clusterspace          = null,
             string                      neonCloudHeadendUri   = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false)
@@ -118,15 +114,9 @@ namespace Neon.Kube
                 }
             }
 
-            // Create the automation subfolder for the operation if required and determine
-            // where the log files should go.
+            // Determine where the log files should go.
 
             var logFolder = KubeHelper.LogFolder;
-
-            if (!string.IsNullOrEmpty(automationFolder))
-            {
-                logFolder = Path.Combine(automationFolder, logFolder);
-            }
 
             // Remove any log files left over from a previous prepare/setup operation.
 
@@ -225,7 +215,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
+            controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
             controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);

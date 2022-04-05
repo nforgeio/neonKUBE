@@ -102,7 +102,7 @@ ARGUMENTS:
 
             if (currentContext != null)
             {
-                Console.Error.WriteLine($"Logging out of [{currentContext.Name}].");
+                Console.Error.WriteLine($"Logout: {currentContext.Name}...");
                 KubeHelper.SetCurrentContext((string)null);
             }
 
@@ -112,30 +112,31 @@ ARGUMENTS:
             var orgContext = KubeHelper.CurrentContext;
 
             KubeHelper.SetCurrentContext(newContextName);
-            Console.WriteLine($"Logging into [{newContextName}]...");
-            Console.WriteLine();
+            Console.WriteLine($"Login: {newContextName}...");
 
             try
             {
-                using (var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile()))
+                using (var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath)))
                 {
                     await k8s.ListNamespaceAsync();
                 }
 
                 if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                 {
-                    Console.WriteLine($"Logging into registry...");
+                    Console.WriteLine($"Login: Docker to Harbor...");
 
                     var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
 
-                    NeonHelper.Execute(NeonHelper.DockerCli, new object[]
+                    NeonHelper.Execute(NeonHelper.DockerCli,
+                        new object[]
                         {
                             "login",
                             $"{ClusterDomain.HarborRegistry}.{login.ClusterDefinition.Domain}",
                             "--username",
                             "root",
-                            "--password-stdin"},
-                            input: new StringReader(login.SsoPassword));
+                            "--password-stdin"
+                        },
+                        input: new StringReader(login.SsoPassword));
                 }
             }
             catch (Exception e)
@@ -149,8 +150,8 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Console.WriteLine($"Logged into [{newContextName}].");
             Console.WriteLine();
+            Console.WriteLine($"Now logged into: {newContextName}");
 
             await Task.CompletedTask;
         }

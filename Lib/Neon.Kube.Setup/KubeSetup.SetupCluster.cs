@@ -56,12 +56,12 @@ namespace Neon.Kube
         /// <param name="deploymentPrefix">
         /// <para>
         /// Optionally specifies a deployment prefix string to be set as <see cref="DeploymentOptions.Prefix"/>
-        /// in the cluster definition returned.  This can be used by <b>KubernetesFixture</b> and custom tools
+        /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
         /// to help isolated temporary cluster assets from production clusters.
         /// </para>
         /// <note>
-        /// This parameter has no effect unless <see cref="KubeHelper.AutomationMode"/> is set to something
-        /// other than <see cref="KubeAutomationMode.Disabled"/>.
+        /// This parameter has no effect unless <see cref="KubeHelper.ClusterspaceMode"/> is set to something
+        /// other than <see cref="KubeClusterspaceMode.Disabled"/>.
         /// </note>
         /// </param>
         /// <returns>The cluster definition.</returns>
@@ -127,25 +127,20 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name="automationFolder">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
-        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
-        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
-        /// </param>
-        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
-        /// <param name="disableConsoleOutput">
-        /// Optionally disables status output to the console.  This is typically
-        /// enabled for non-console applications.
-        /// </param>
-        /// <returns>The <see cref="ISetupController"/>.</returns>
-        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
+        /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
+                                                                                                       /// <param name="disableConsoleOutput">
+                                                                                                       /// Optionally disables status output to the console.  This is typically
+                                                                                                       /// enabled for non-console applications.
+                                                                                                       /// </param>
+                                                                                                       /// <returns>The <see cref="ISetupController"/>.</returns>
+                                                                                                       /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
             int                 maxParallel          = 500,
             bool                unredacted           = false,
             bool                debugMode            = false,
             bool                uploadCharts         = false,
-            string              automationFolder     = null,
+            string              clusterspace         = null,
             string              neonCloudHeadendUri  = null,
             bool                disableConsoleOutput = false)
         {
@@ -156,15 +151,9 @@ namespace Neon.Kube
 
             clusterDefinition.Validate();
 
-            // Create the automation subfolder for the operation if required and determine
-            // where the log files should go.
+            // Determine where the log files should go.
 
             var logFolder = KubeHelper.LogFolder;
-
-            if (!string.IsNullOrEmpty(automationFolder))
-            {
-                logFolder = Path.Combine(automationFolder, logFolder);
-            }
 
             // Ensure that the [prepare-ok] file in the log folder exists, indicating that
             // the last prepare operation succeeded.
@@ -277,7 +266,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
+            controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
             controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.Redact, !unredacted);

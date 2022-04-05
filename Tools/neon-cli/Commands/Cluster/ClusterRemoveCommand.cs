@@ -148,6 +148,7 @@ cluster definition or by executing this command on your cluster:
                     }
                 }
 
+                Console.WriteLine($"Removing: {cluster.Name}");
                 await cluster.RemoveAsync();
                 Console.WriteLine($"Cluster was removed: {cluster.Name}");
             }

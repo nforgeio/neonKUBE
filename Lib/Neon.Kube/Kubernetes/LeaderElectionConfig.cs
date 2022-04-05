@@ -31,6 +31,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using k8s;
+using Prometheus;
 
 using Neon.Common;
 using Neon.Retry;
@@ -45,18 +46,21 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used to communicate with th\e cluster.</param>
         /// <param name="namespace">Identifies the namespace where the lease will be hosted.</param>
-        /// <param name="leaseName">Specifies the lease name used to manage elections.</param>
+        /// <param name="leaseName">
+        /// Specifies the lease name used to manage elections.  Note that this must be a valid
+        /// Kubernetes resource name.
+        /// </param>
         /// <param name="identity">
         /// <para>
-        /// Specifies the unique identity of the entity using to elector to run for the leadership
-        /// role.  This will typically be passed as the name of the host pod but this may be customized 
-        /// for other scenarios.
+        /// Specifies the unique identity of the entity using <see cref="LeaderElector"/> to run for
+        /// the leadership role.  This will typically be passed as the host pod name.
         /// </para>
         /// <note>
-        /// It's very important that the identifiers used by different candidate entities be 
-        /// unique.  As mentioned above, the host pod name is a great option for most situations
-        /// but this could also be a UUID or some other identity scheme which guarentees uniqueness.
+        /// It's very important that the identifiers used by different leader candidates be unique.
+        /// As mentioned above, the host pod name is a great option for most situations but this
+        /// could also be a UUID or some other identity scheme which guarentees uniqueness.
         /// </note>
         /// </param>
         /// <param name="leaseDuration">
@@ -71,14 +75,37 @@ namespace Neon.Kube
         /// Optionally specifies the interval that <see cref="LeaderElector"/> instances should 
         /// wait before retrying any actions.  This defaults to <b>2 seconds</b>.
         /// </param>
+        /// <param name="promotionCounter">
+        /// Optionally specifies the metrics counter to be incremented when the instance is 
+        /// promoted to leader.  This defaults to <c>null</c>.
+        /// </param>
+        /// <param name="demotionCounter">
+        /// Optionally specifies the metrics counter to be incremented when the instance is 
+        /// demoted from leader.  This defaults to <c>null</c>.
+        /// </param>
+        /// <param name="newLeaderCounter">
+        /// Optionally specifies the metrics counter to be incremented when the the leader
+        /// changes.  This defaults to <c>null</c>.
+        /// </param>
+        /// <param name="counterLabels">
+        /// Optionally specifies any label values to be included when the metrics counters 
+        /// are incremented.  The values in this array must match any label names defined
+        /// when the counters passed were created.
+        /// </param>
         public LeaderElectionConfig(
-            string      @namespace,
-            string      leaseName,
-            string      identity,
-            TimeSpan    leaseDuration = default,
-            TimeSpan    renewDeadline = default,
-            TimeSpan    retryPeriod   = default)
+            IKubernetes     k8s,
+            string          @namespace,
+            string          leaseName,
+            string          identity,
+            TimeSpan        leaseDuration    = default,
+            TimeSpan        renewDeadline    = default,
+            TimeSpan        retryPeriod      = default,
+            Counter         promotionCounter = null,
+            Counter         demotionCounter  = null,
+            Counter         newLeaderCounter = null,
+            string[]        counterLabels    = null)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(leaseName), nameof(leaseName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity), nameof(identity));
@@ -103,14 +130,51 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(leaseDuration)}={leaseDuration}] is not greater than [{nameof(renewDeadline)}={renewDeadline}].");
             }
 
-            this.Namespace     = @namespace;
-            this.LeaseName     = leaseName;
-            this.LeaseRef      = $"{@namespace}/{leaseName}";
-            this.Identity      = identity;
-            this.LeaseDuration = leaseDuration;
-            this.RenewDeadline = renewDeadline;
-            this.RetryPeriod = retryPeriod;
+            // Ensure that the number of counter label values passed match the number
+            // of labels defined for each counter.
+
+            var counterLabelCount = 0;
+
+            if (counterLabels != null)
+            {
+                counterLabelCount = counterLabels.Length;
+            }
+
+            if (promotionCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
+            {
+                throw new ArgumentException($"[{nameof(promotionCounter)}] label name [count={promotionCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
+            }
+
+            if (demotionCounter != null && demotionCounter.LabelNames.Length != counterLabelCount)
+            {
+                throw new ArgumentException($"[{nameof(demotionCounter)}] label name [count={demotionCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
+            }
+
+            if (newLeaderCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
+            {
+                throw new ArgumentException($"[{nameof(newLeaderCounter)}] label name [count={newLeaderCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
+            }
+
+            // Initialize the properties.
+
+            this.K8s              = k8s;
+            this.Namespace        = @namespace;
+            this.LeaseName        = leaseName;
+            this.LeaseRef         = $"{@namespace}/{leaseName}";
+            this.Identity         = identity;
+            this.LeaseDuration    = leaseDuration;
+            this.RenewDeadline    = renewDeadline;
+            this.RetryPeriod      = retryPeriod;
+            this.PromotionCounter = promotionCounter;
+            this.DemotionCounter  = demotionCounter;
+            this.NewLeaderCounter = newLeaderCounter;
+            this.CounterLabels    = counterLabels;
         }
+
+        /// <summary>
+        /// Returns the <see cref="IKubernetes"/> client to be used to communicate with the cluster.
+        /// </summary>
+        public IKubernetes K8s { get; private set; }
 
         /// <summary>
         /// Returns the Kubernetes namespace where the lease will reside.
@@ -155,5 +219,29 @@ namespace Neon.Kube
         /// retrying any actions.
         /// </summary>
         public TimeSpan RetryPeriod { get; private set; }
+
+        /// <summary>
+        /// Returns the metrics counter to be incremented when the instance is 
+        /// promoted to leader.  This may be <c>null</c>.
+        /// </summary>
+        internal Counter PromotionCounter { get; private set; }
+
+        /// <summary>
+        /// Returns the metrics counter to be incremented when the instance is 
+        /// demoted from leader.  This may be <c>null</c>.
+        /// </summary>
+        internal Counter DemotionCounter { get; private set; }
+
+        /// <summary>
+        /// Returns the metrics counter to be incremented when a leadership
+        /// change is detected.  This may be <c>null</c>.
+        /// </summary>
+        internal Counter NewLeaderCounter { get; private set; }
+
+        /// <summary>
+        /// Returns the label values to be used when incrementing any of the
+        /// metrics counters.  This may be empty or <c>null</c>.
+        /// </summary>
+        internal string[] CounterLabels { get; private set; }
     }
 }

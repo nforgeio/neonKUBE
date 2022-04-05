@@ -123,11 +123,11 @@ namespace TestNeonService
             sendTask    = Task.Run(async () => await SendTaskFunc());
             receiveTask = Task.Run(async () => await ReceiveTaskFunc());
 
-            // Indicate that the service is ready for business.
+            // Indicate that the service is running.
 
             await StartedAsync();
 
-            // Wait for the process terminator to signal that the service is stopping.
+            // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();
 

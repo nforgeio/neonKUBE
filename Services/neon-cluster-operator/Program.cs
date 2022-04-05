@@ -45,6 +45,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
+            NeonService.Initialize();
+
             try
             {
                 // Intercept and handle KubeOps [generator] commands executed by the 

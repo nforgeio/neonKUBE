@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterCommand.cs
+// FILE:	    ClusterDashboardCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,35 +34,21 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster</b> command.
+    /// Implements the <b>cluster dashboard</b> command.
     /// </summary>
     [Command]
-    public class ClusterCommand : CommandBase
+    public class ClusterDashboardCommand : CommandBase
     {
         private const string usage = @"
-Performs basic cluster provisioning and management.
+Displays the current cluster's dashboard using the default web browser.
 
 USAGE:
 
-    neon cluster check
     neon cluster dashboard
-    neon cluster islocked
-    neon cluster lock
-    neon cluster prepare    CLUSTER-DEF
-    neon cluster pause      [OPTIONS]
-    neon cluster remove     [OPTIONS]
-    neon cluster rm         [OPTIONS]
-    neon cluster reset      [OPTIONS]
-    neon cluster setup      [OPTIONS] root@CLUSTER-NAME
-    neon cluster space      [SPACE-NAME] [--reset]
-    neon cluster start
-    neon cluster stop       [OPTIONS]
-    neon cluster unlock
-    neon cluster verify     [CLUSTER-DEF]
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster" };
+        public override string[] Words => new string[] { "cluster", "dashboard" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -73,7 +59,19 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            Help();
+            Console.WriteLine();
+
+            var currentContextName = KubeHelper.CurrentContextName;
+
+            if (currentContextName == null)
+            {
+                Console.Error.WriteLine("*** ERROR: To cluster selected.");
+                Program.Exit(1);
+            }
+
+            var currentLogin = KubeHelper.GetClusterLogin(currentContextName);
+
+            NeonHelper.OpenBrowser($"https://{currentLogin.ClusterDefinition.Domain}");
             await Task.CompletedTask;
         }
     }
