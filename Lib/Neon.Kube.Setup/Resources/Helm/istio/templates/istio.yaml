@@ -55,6 +55,8 @@ spec:
           requests:
             cpu: "{{ .Values.resources.pilot.requests.cpu }}"
             memory: "{{ .Values.resources.pilot.requests.memory }}"
+        hpaSpec:
+          maxReplicas: 1
     ingressGateways:
     - name: istio-ingressgateway
       enabled: true
@@ -68,7 +70,8 @@ spec:
               - path: kind
                 value: DaemonSet
               - path: spec.strategy
-        hpaSpec: {}
+        hpaSpec:
+          maxReplicas: 1
         service:
           {{- with .Values.nodePorts }}
             ports:
