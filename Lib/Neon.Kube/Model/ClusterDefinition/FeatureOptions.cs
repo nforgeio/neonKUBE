@@ -52,20 +52,20 @@ namespace Neon.Kube
         public class HarborOptions
         {
             /// <summary>
+            /// Optionally installs the Harbor Chart Museum.  This defaults to <c>false</c>.
+            /// </summary>
+            [JsonProperty(PropertyName = "ChartMuseum", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "chartMuseum", ApplyNamingConventions = false)]
+            [DefaultValue(false)]
+            public bool ChartMuseum { get; set; } = false;
+
+            /// <summary>
             /// Optionally installs the Harbor JobService.  This defaults to <c>false</c>.
             /// </summary>
             [JsonProperty(PropertyName = "JobService", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [YamlMember(Alias = "jobService", ApplyNamingConventions = false)]
             [DefaultValue(false)]
             public bool JobService { get; set; } = false;
-
-            /// <summary>
-            /// Optionally installs the Harbor NotarySigner.  This defaults to <c>false</c>.
-            /// </summary>
-            [JsonProperty(PropertyName = "NotarySigner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "notarySigner", ApplyNamingConventions = false)]
-            [DefaultValue(false)]
-            public bool NotarySigner { get; set; } = false;
 
             /// <summary>
             /// Optionally installs the Harbor NotaryServer.  This defaults to <c>false</c>.
@@ -76,12 +76,12 @@ namespace Neon.Kube
             public bool NotaryServer { get; set; } = false;
 
             /// <summary>
-            /// Optionally installs the Harbor ChartMuseum.  This defaults to <c>false</c>.
+            /// Optionally installs the Harbor NotarySigner.  This defaults to <c>false</c>.
             /// </summary>
-            [JsonProperty(PropertyName = "ChartMuseum", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "chartMuseum", ApplyNamingConventions = false)]
+            [JsonProperty(PropertyName = "NotarySigner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "notarySigner", ApplyNamingConventions = false)]
             [DefaultValue(false)]
-            public bool ChartMuseum { get; set; } = false;
+            public bool NotarySigner { get; set; } = false;
 
             /// <summary>
             /// Validates the options.
@@ -99,12 +99,36 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
-        /// Specifies the optional Harbor related components to be installed in the cluster.
+        /// Specifies optional Harbor related components to be installed in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Harbor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "harbor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HarborOptions Harbor { get; set; } = new HarborOptions();
+
+        /// <summary>
+        /// Optionally installs the Node Problem Detector.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeProblemDetector", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "nodeProblemDetector", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NodeProblemDetector { get; set; } = false;
+
+        /// <summary>
+        /// Optionally enables the Istio service mesh.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServiceMesh", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "serviceMesh", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool ServiceMesh { get; set; } = false;
+
+        /// <summary>
+        /// Optionally installs Tempo.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Tempo", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tempo", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Tracing { get; set; } = false;
 
         /// <summary>
         /// Validates the options.
