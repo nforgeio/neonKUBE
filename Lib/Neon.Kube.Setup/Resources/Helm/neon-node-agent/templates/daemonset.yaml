@@ -71,7 +71,7 @@ spec:
             command:
             - /health-check
           initialDelaySeconds: 5
-          failureThreshold: 60
+          failureThreshold: 120
           periodSeconds: 1
           timeoutSeconds: 1
         livenessProbe:
