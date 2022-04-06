@@ -1900,7 +1900,7 @@ subjects:
             master.InvokeIdempotent("setup/install-crds",
                 () =>
                 {
-                    controller.LogProgress(master, verb: "Install", message: "CRDS");
+                    controller.LogProgress(master, verb: "Install", message: "CRDs");
 
                     var grafanaDashboardScript =
                     @"
