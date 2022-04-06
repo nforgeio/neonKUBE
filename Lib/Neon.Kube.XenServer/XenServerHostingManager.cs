@@ -1278,7 +1278,7 @@ namespace Neon.Kube
                 else if (clusterStatus.State != ClusterState.Transitioning)
                 {
                     // If we get here then all of the nodes have the same state so
-                    // we'll use that command state to set the overall cluster state.
+                    // we'll use that common state to set the overall cluster state.
 
                     switch (commonNodeState)
                     {
@@ -1307,6 +1307,11 @@ namespace Neon.Kube
                             break;
 
                         case ClusterNodeState.NotProvisioned:
+
+                            clusterStatus.State   = ClusterState.NotFound;
+                            clusterStatus.Summary = "Cluster is not found.";
+                            break;
+
                         case ClusterNodeState.Unknown:
                         default:
 
