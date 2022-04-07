@@ -65,10 +65,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.Core" Version="3.5.1.42" />
-		<PackageReference Include="AWSSDK.EC2" Version="3.5.19.1" />
-		<PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.5.5.5" />
-		<PackageReference Include="AWSSDK.ResourceGroups" Version="3.5.0.42" />
+		<PackageReference Include="AWSSDK.Core" Version="3.7.10.4" />
+		<PackageReference Include="AWSSDK.EC2" Version="3.7.63.3" />
+		<PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.7.3.63" />
+		<PackageReference Include="AWSSDK.ResourceGroups" Version="3.7.0.144" />
 	</ItemGroup>
 
 </Project>
