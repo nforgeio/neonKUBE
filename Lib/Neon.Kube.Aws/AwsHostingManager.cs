@@ -96,7 +96,7 @@ namespace Neon.Kube
         //        gateway and NAT gateway will be deployed to manage internet 
         //        traffic.
         //
-        //      * Node (private subnet) where the nodes will be deployed.
+        //      * Node private subnet where the nodes will be deployed.
         //
         //      * Instances & EC2 volumes
         //
@@ -123,6 +123,7 @@ namespace Neon.Kube
         // [NetworkOptions.IngressRules] which specify two ports: 
         // 
         //      * The external load balancer port
+        //
         //      * The node port where Istio is listening and will forward traffic
         //        into the Kubernetes cluster
         //
@@ -152,18 +153,15 @@ namespace Neon.Kube
         // image can be used.
         //
         // This hosting manager will support creating VMs from the base Canonical
-        // image as well as from custom images published to the marketplace by
-        // neonFORGE.  The custom images will be preprovisioned with all of the
-        // software required, making cluster setup much faster and reliable.  The
-        // Canonical based images will need lots of configuration before they can
-        // be added to a cluster.  Note that the neonFORGE images are actually
-        // created by starting with a Canonical image and doing most of a cluster
-        // setup on that image, so we'll continue supporting the raw Canonical
-        // images.
+        // image as well as from custom images published to the marketplace.
+        // The custom images will be preprovisioned with all of the software
+        // by the propriatary neonCLOUD [neon-image] tool, making cluster setup
+        // much faster and reliable.  The Canonical based images will need lots
+        // of configuration before they can used by a cluster.
         //
         // NOTE: We're not going to use the base Canonical image from the AWS 
-        //       Marketplace because marketplace images cannot be copied and
-        //       we'll need to do that when we make our own marketplace image.
+        //       Marketplace because marketplace images cannot be cloned and
+        //       we need to do that when we make our own marketplace image.
         //
         // Node instance and disk types and sizes are specified by the 
         // [NodeDefinition.Aws] property.  Instance types are specified

@@ -115,7 +115,7 @@ namespace Neon.Deployment
         /// Requests the value of a secret password from 1Password via the assistant.
         /// </summary>
         /// <param name="name">Specifies the secret name.</param>
-        /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+        /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the current user (as managed by the <see cref="IProfileClient"/> implementaton).</param>
         /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
         /// <returns>The password value.</returns>
@@ -126,7 +126,7 @@ namespace Neon.Deployment
         ///  Requests the value of a secret value from 1Password via the assistant.
         /// </summary>
         /// <param name="name">Specifies the secret name.</param>
-        /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+        /// <param name="vault">Optionally specifies the 1Password vault.  This defaults to the current user (as managed by the <see cref="IProfileClient"/> implementaton).</param>
         /// <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
         /// <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
         /// <returns>The password value.</returns>
