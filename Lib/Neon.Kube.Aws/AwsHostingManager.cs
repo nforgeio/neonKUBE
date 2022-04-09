@@ -1903,7 +1903,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Locates tha AMI to use for provisioning the nodes in the target region.
+        /// Locates the AMI to use for provisioning the nodes in the target region.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

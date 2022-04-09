@@ -98,7 +98,7 @@ namespace Neon.Xunit
     /// <para>
     /// This fixture provides several methods for managing the cluster state.
     /// These may be called within the test class constructor's action method,
-    /// within the test constructor but outside of tha action, or within
+    /// within the test constructor but outside of the action, or within
     /// the test methods:
     /// </para>
     /// <list type="table">
