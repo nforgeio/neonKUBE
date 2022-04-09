@@ -135,7 +135,7 @@ namespace Neon.Kube
         // from specific source IP addresses and/or subnets.
         //
         // NOTE: Only TCP connections are supported at this time because Istio
-        //       doesn't support UDP, ICMP, etc. at this time.
+        //       doesn't support UDP, ICMP,... at this time.
         //
         // A network security group will be created and assigned to the subnet.
         // This will include ingress rules constructed from [NetworkOptions.IngressRules],

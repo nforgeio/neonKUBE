@@ -53,8 +53,6 @@ using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
-using Renci.SshNet.Common;
-
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
 using Ec2VolumeType  = Amazon.EC2.VolumeType;
@@ -344,7 +342,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Describes an Ubuntu ami from the AWS Marketplace.
+        /// Describes an Ubuntu AMI from the AWS Marketplace.
         /// </summary>
         private class AwsUbuntuImage
         {
@@ -1920,7 +1918,7 @@ namespace Neon.Kube
             //
             // We're going to do this by querying the region for AMIs published by Canonical
             // that satisfy somewhat fragile conditions.  This won't be a big risk after we
-            // publish our own marketplace image because we'll control things and hupefully,
+            // publish our own marketplace image because we'll control things and hopefully,
             // we won't need to build new markeplace images from base Canonical images more
             // than a few times a year and we'll be able to debug problems if anything bad
             // happens.  Here's how we're going to accomplish this:
@@ -2851,16 +2849,15 @@ namespace Neon.Kube
                 //      3. Set the secure password for [sysadmin]
 
                 var bootScript =
-$@"
-# To enable debugging for this AWS user-script, add the ""-ex"" options to the
-# comment at the top of the file and uncomment the command below.  These cause
-# each command and its output to be logged and can be viewable in the AWS portal.
+$@"#!/bin/bash # -ex
+
+# To enable debugging for this AWS user-script, uncomment the ""-ex"" options in
+# the SHEBANG above uncomment the EXEC command below.  Then each command and its
+# output to be logged and can be viewable in the AWS portal.
 #
 # WARNING: Do not leave any of this in production builds to avoid 
 #          leaking the secure SSH password to any logs!
 #          
-# Use: #!/bin/bash -ex
-#
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 #------------------------------------------------------------------------------
@@ -2874,8 +2871,7 @@ apt-get install -yq unzip
 apt-get remove -qy ec2-instance-connect
 
 #------------------------------------------------------------------------------
-# Overwrite the OpenSSH configuration with a known good one and then 
-# restart OpenSSH.
+# Overwrite the OpenSSH configuration with a known good one and then restart OpenSSH.
 
 sshdConfigPath=/etc/ssh/sshd_config
 
