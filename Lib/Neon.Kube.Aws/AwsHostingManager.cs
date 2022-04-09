@@ -462,7 +462,7 @@ namespace Neon.Kube
         /// for internal AWS use only and must be cleared before comparing the
         /// status to one of these values.
         /// </summary>
-        private static class InstanceStatusCodes
+        private static class InstanceStatusCode
         {
             /// <summary>
             /// The instance is provisioning or starting.
@@ -493,13 +493,68 @@ namespace Neon.Kube
             /// The instance has been stopped.
             /// </summary>
             public static readonly int Stopped = 80;
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is pending.
+            /// </summary>
+            /// <param name="code">The instance state code.</param>
+            /// <returns><c>true</c> for pending.</returns>
+            public static bool IsPending(int code)
+            {
+                return (code & 0x00FF) == Pending;
+            }
+
+            /// <summary>
+            /// Determines whether the instance state passed indicates that the
+            /// instance is running.
+            /// </summary>
+            /// <param name="code">The instance state code.</param>
+            /// <returns><c>true</c> for running.</returns>
+            public static bool IsRunning(int code)
+            {
+                return (code & 0x00FF) == Running;
+            }
+
+            /// <summary>
+            /// Determines whether the instance state passed indicates that the
+            /// instance is stopping.
+            /// </summary>
+            /// <param name="code">The instance state code.</param>
+            /// <returns><c>true</c> for stopping.</returns>
+            public static bool IsStopping(int code)
+            {
+                return (code & 0x00FF) == Stopping;
+            }
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is stopped.
+            /// </summary>
+            /// <param name="code">The instance state code.</param>
+            /// <returns><c>true</c> for stopped.</returns>
+            public static bool IsStopped(int code)
+            {
+                return (code & 0x00FF) == Stopping;
+            }
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is terminated.
+            /// </summary>
+            /// <param name="code">The instance state code.</param>
+            /// <returns><c>true</c> for terminated.</returns>
+            public static bool IsTerminated(int code)
+            {
+                return (code & 0x00FF) == Terminated;
+            }
         }
 
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Specifies the ID to use when querying for Canonical images 
+        /// Specifies the owner ID to use when querying for Canonical AMIs 
         /// </summary>
         private const string canonicalOwnerId = "099720109477";
 
@@ -509,7 +564,7 @@ namespace Neon.Kube
         private const string nameTagKey = "Name";
 
         /// <summary>
-        /// The (namespace) prefix used for neonKUBE related Azure resource tags.
+        /// The (namespace) prefix used for neonKUBE related AWS resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
 
@@ -1923,20 +1978,23 @@ namespace Neon.Kube
             // than a few times a year and we'll be able to debug problems if anything bad
             // happens.  Here's how we're going to accomplish this:
             //
+            // Here's how we're going to accomplish this:
+            //
             //      * Filter for Cannonical owned images
             //      * Filter for x86_64 architecture
             //      * Filter for machine images
             //      * Filter the description for Ubuntu 20.04 images
-            //
             //      * Filter out images with "UNSUPPORTED" in the description (daily builds)
-            //        AWS doesn't support NOT filters, so we'll need to do this on the client.
+            //        AWS doesn't support NOT filters, so we'll need to do this here.
             //
-            //      * The image location specifies the date of the build at the and of the
-            //        string, like:
+            // NOTE:
             //
-            //            099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20200729
+            // The image location specifies the date of the build at the end of the
+            // string, like:
             //
-            //        We'll use this to find the image for a specific Ubuntu release. 
+            //      099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20200729
+            //
+            // We're ignoring this for now but it might come in handy later.
 
             var request = new DescribeImagesRequest()
             {
@@ -2843,10 +2901,11 @@ namespace Neon.Kube
                 // I'm going to address this by passing a first boot script as user-data
                 // when creating the instance, which will:
                 //
-                //      1. Remove [ec2-instance-connect]
-                //      1. Enable SSH password authentication
-                //      2. Rename the [ubuntu] user and home directory to [sysadmin]
-                //      3. Set the secure password for [sysadmin]
+                //      1. Install unzip (LinuxSshProxy requires this)
+                //      2. Remove [ec2-instance-connect]
+                //      3. Enable SSH password authentication
+                //      4. Rename the [ubuntu] user and home directory to [sysadmin]
+                //      5. Set the secure password for [sysadmin]
 
                 var bootScript =
 $@"#!/bin/bash # -ex
@@ -2854,6 +2913,8 @@ $@"#!/bin/bash # -ex
 # To enable debugging for this AWS user-script, uncomment the ""-ex"" options in
 # the SHEBANG above uncomment the EXEC command below.  Then each command and its
 # output to be logged and can be viewable in the AWS portal.
+#
+#   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
 #
 # WARNING: Do not leave any of this in production builds to avoid 
 #          leaking the secure SSH password to any logs!
@@ -2963,9 +3024,9 @@ groupmod -n sysadmin ubuntu
             var invalidStates = 
                 new HashSet<int>
                 {
-                    InstanceStatusCodes.ShuttingDown,
-                    InstanceStatusCodes.Stopping,
-                    InstanceStatusCodes.Terminated
+                    InstanceStatusCode.ShuttingDown,
+                    InstanceStatusCode.Stopping,
+                    InstanceStatusCode.Terminated
                 };
 
             await NeonHelper.WaitForAsync(
@@ -2992,11 +3053,11 @@ groupmod -n sysadmin ubuntu
                         throw new NeonKubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                     }
 
-                    if (state == InstanceStatusCodes.Running)
+                    if (state == InstanceStatusCode.Running)
                     {
                         node.Status = "starting...";
                     }
-                    else if (state == InstanceStatusCodes.Stopped)
+                    else if (state == InstanceStatusCode.Stopped)
                     {
                         node.Status = "restarting...";
 
@@ -3112,7 +3173,7 @@ groupmod -n sysadmin ubuntu
                         var status = statusResponse.InstanceStatuses.SingleOrDefault();
                         var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                        return state == InstanceStatusCodes.Stopped;
+                        return state == InstanceStatusCode.Stopped;
                     },
                     timeout:      operationTimeout,
                     pollInterval: operationPollInternal);
@@ -3149,7 +3210,7 @@ groupmod -n sysadmin ubuntu
                         var status = statusResponse.InstanceStatuses.SingleOrDefault();
                         var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                        return state == InstanceStatusCodes.Running;
+                        return state == InstanceStatusCode.Running;
                     },
                     timeout: operationTimeout,
                     pollInterval: operationPollInternal);
