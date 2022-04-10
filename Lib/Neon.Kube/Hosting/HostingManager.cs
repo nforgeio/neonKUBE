@@ -57,7 +57,8 @@ namespace Neon.Kube
         /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
         public static bool SupportsFsTrim(HostingEnvironment environment)
         {
-            return environment != HostingEnvironment.XenServer;
+            return environment != HostingEnvironment.Aws &&
+                   environment != HostingEnvironment.XenServer;
         }
 
         //---------------------------------------------------------------------
