@@ -61,6 +61,23 @@ namespace Neon.Kube
                    environment != HostingEnvironment.XenServer;
         }
 
+        /// <summary>
+        /// Determines whether the hosting environment supports <b>zeroing</b>
+        /// clock devices.
+        /// </summary>
+        /// <param name="environment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
+        public static bool SupportsFsZero(HostingEnvironment environment)
+        {
+            // AWS EC2 backed block devices shouldn't be zeroed because that will
+            // actually make snapshots and thus AMIs created from the snapshots
+            // bigger.
+            //
+            // https://aws.amazon.com/blogs/apn/how-to-build-sparse-ebs-volumes-for-fun-and-easy-snapshotting/
+
+            return environment != HostingEnvironment.Aws;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 

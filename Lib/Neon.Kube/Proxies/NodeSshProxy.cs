@@ -572,13 +572,22 @@ namespace Neon.Kube
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
-            var fstrim  = string.Empty;
+            var fstrim = string.Empty;
+            var fsZero = string.Empty;
 
             if (HostingManager.SupportsFsTrim(hostingEnvironment))
             {
                 // Not all hosting enviuronments supports: fstrim
 
                 fstrim = "fstrim /";
+            }
+
+            if (HostingManager.SupportsFsZero(hostingEnvironment))
+            {
+                // Zeroing block devices can actually make things worse for
+                // some environment.
+
+                fsZero = "sfill -fllz /";
             }
 
             var cleanScript =
@@ -599,7 +608,7 @@ rm -rf /var/lib/dhcp/*
 # Filesystem cleaning
 
 {fstrim}
-sfill -fllz /
+{fsZero}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }
