@@ -1980,7 +1980,7 @@ namespace Neon.Kube
             //
             // Here's how we're going to accomplish this:
             //
-            //      * Filter for Cannonical owned images
+            //      * Filter for Canonical owned images
             //      * Filter for x86_64 architecture
             //      * Filter for machine images
             //      * Filter the description for Ubuntu 20.04 images
