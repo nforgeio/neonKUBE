@@ -462,7 +462,7 @@ namespace Neon.Kube
         /// for internal AWS use only and must be cleared before comparing the
         /// status to one of these values.
         /// </summary>
-        private static class InstanceStatusCode
+        private static class InstanceStateCode
         {
             /// <summary>
             /// The instance is provisioning or starting.
@@ -2924,12 +2924,13 @@ $@"#!/bin/bash # -ex
 #------------------------------------------------------------------------------
 # Install required packages.
 
+apt-get update
 apt-get install -yq unzip
 
 #------------------------------------------------------------------------------
 # Remove: ec2-instance-connect (this could potentially cause SSH auth issues)
 
-apt-get remove -qy ec2-instance-connect
+apt-get remove -yq ec2-instance-connect
 
 #------------------------------------------------------------------------------
 # Overwrite the OpenSSH configuration with a known good one and then restart OpenSSH.
@@ -3024,9 +3025,9 @@ groupmod -n sysadmin ubuntu
             var invalidStates = 
                 new HashSet<int>
                 {
-                    InstanceStatusCode.ShuttingDown,
-                    InstanceStatusCode.Stopping,
-                    InstanceStatusCode.Terminated
+                    InstanceStateCode.ShuttingDown,
+                    InstanceStateCode.Stopping,
+                    InstanceStateCode.Terminated
                 };
 
             await NeonHelper.WaitForAsync(
@@ -3053,11 +3054,11 @@ groupmod -n sysadmin ubuntu
                         throw new NeonKubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                     }
 
-                    if (state == InstanceStatusCode.Running)
+                    if (InstanceStateCode.IsRunning(status.InstanceState.Code))
                     {
                         node.Status = "starting...";
                     }
-                    else if (state == InstanceStatusCode.Stopped)
+                    else if (InstanceStateCode.IsStopped(status.InstanceState.Code))
                     {
                         node.Status = "restarting...";
 
@@ -3071,6 +3072,9 @@ groupmod -n sysadmin ubuntu
                     {
                         return false;
                     }
+
+                    // This verifies that the instance has finished running thr boot
+                    // script and is ready to go.
 
                     if (!status.SystemStatus.Status.Value.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -3173,7 +3177,7 @@ groupmod -n sysadmin ubuntu
                         var status = statusResponse.InstanceStatuses.SingleOrDefault();
                         var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                        return state == InstanceStatusCode.Stopped;
+                        return state == InstanceStateCode.Stopped;
                     },
                     timeout:      operationTimeout,
                     pollInterval: operationPollInternal);
@@ -3210,7 +3214,7 @@ groupmod -n sysadmin ubuntu
                         var status = statusResponse.InstanceStatuses.SingleOrDefault();
                         var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                        return state == InstanceStatusCode.Running;
+                        return state == InstanceStateCode.Running;
                     },
                     timeout: operationTimeout,
                     pollInterval: operationPollInternal);
