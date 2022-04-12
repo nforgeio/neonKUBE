@@ -281,7 +281,7 @@ namespace Neon.Net
         /// <summary>
         /// Kubernetes API port.
         /// </summary>
-        public const int KubernetesApiServer = 6443;
+        public const int KubernetesApiServer = 6442;
 
         /// <summary>
         /// The Cassnadra database port.
