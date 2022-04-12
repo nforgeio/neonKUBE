@@ -2908,15 +2908,15 @@ namespace Neon.Kube
                 //      5. Set the secure password for [sysadmin]
 
                 var bootScript =
-$@"#!/bin/bash # -ex
+$@"#!/bin/bash
 
-# To enable debugging for this AWS user-script, uncomment the ""-ex"" options in
+# To enable logging for this AWS user-data script, add ""-ex"" to the SHABANG above.
 # the SHEBANG above uncomment the EXEC command below.  Then each command and its
 # output to be logged and can be viewable in the AWS portal.
 #
 #   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
 #
-# WARNING: Do not leave any of this in production builds to avoid 
+# WARNING: Do not leave the ""-ex"" option in production builds to avoid 
 #          leaking the secure SSH password to any logs!
 #          
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1

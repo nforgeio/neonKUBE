@@ -80,7 +80,7 @@ namespace Neon.Kube
                 {
                     foreach (var file in KubeHelper.Resources.GetDirectory("/Tools").GetFiles())
                     {
-                        controller.LogProgress(this, verb: "setup", message: "tools");
+                        controller.LogProgress(this, verb: "setup", message: "tools (node)");
 
                         // Upload each tool script, removing the extension.
 

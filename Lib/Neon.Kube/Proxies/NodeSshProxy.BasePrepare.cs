@@ -846,7 +846,7 @@ chmod 750 {KubeNodeFolder.State}/setup
             InvokeIdempotent("base/tool-scripts",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "tools");
+                    controller.LogProgress(this, verb: "setup", message: "tools (base)");
 
                     // Upload any tool scripts to the neonKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute

@@ -62,6 +62,10 @@
         <EmbeddedResource Include="Resources/**/*" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Resources\Tools\net-interface.sh" />
+    </ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="7.0.0" />
 		<PackageReference Include="GitInfo" Version="2.2.0">
