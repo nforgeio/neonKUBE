@@ -410,30 +410,50 @@ namespace Neon.Kube
                 }
             }
 
-            // Verify [IngressRules] and also ensure that all rule names are unique.
+            // Rules for HTTP/HTTPS/Kubernetes(6442) are required.
 
-            if (IngressRules == null || IngressRules?.Count == 0)
+            IngressRules ??= new List<IngressRule>();
+
+            if (!IngressRules.Any(rule => rule.Name == "http"))
             {
-                IngressRules = new List<IngressRule>()
-                {
+                IngressRules.Add(
                     new IngressRule()
                     {
-                        Name         = "http2",
+                        Name         = "http",
                         Protocol     = IngressProtocol.Tcp,
-                        ExternalPort = 80,
-                        TargetPort   = 8080,
-                        NodePort     = KubeNodePort.IstioIngressHttp
-                    },
+                        ExternalPort = NetworkPorts.HTTP,
+                        NodePort     = KubeNodePort.IstioIngressHttp,
+                        TargetPort   = 8080
+                    });
+            }
+
+            if (!IngressRules.Any(rule => rule.Name == "https"))
+            {
+                IngressRules.Add(
                     new IngressRule()
                     {
                         Name         = "https",
                         Protocol     = IngressProtocol.Tcp,
-                        ExternalPort = 443,
-                        TargetPort   = 8443,
-                        NodePort     = KubeNodePort.IstioIngressHttps
-                    }
-                };
+                        ExternalPort = NetworkPorts.HTTPS,
+                        NodePort     = KubeNodePort.IstioIngressHttps,
+                        TargetPort   = 8443
+                    });
             }
+
+            if (!IngressRules.Any(rule => rule.Name == "kube-api"))
+            {
+                IngressRules.Add(
+                    new IngressRule()
+                    {
+                        Name         = "kube-api",
+                        Protocol     = IngressProtocol.Tcp,
+                        ExternalPort = NetworkPorts.KubernetesApiServer,
+                        NodePort     = KubeNodePort.KubeApiServer,
+                        TargetPort   = 0    // Disable route through the ingress gateway 
+                    });
+            }
+
+            // Ensure that ingress rules are valid and that their names are unique.
 
             var ingressRuleNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -447,6 +467,20 @@ namespace Neon.Kube
                 }
 
                 ingressRuleNames.Add(rule.Name);
+            }
+
+            // Ensure that external ports are unique.
+
+            var externalPorts = new HashSet<int>();
+
+            foreach (var rule in IngressRules)
+            {
+                if (externalPorts.Contains(rule.ExternalPort))
+                {
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules use the same external port: [{rule.ExternalPort}].");
+                }
+
+                externalPorts.Add(rule.ExternalPort);
             }
 
             // Verify [EgressAddressRules].

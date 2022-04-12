@@ -114,7 +114,7 @@ namespace Neon.Kube
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly.  neonKUBE will default to reasonable ingress nodes when
-        // necessary.  We'll be automaticall managing the AWS target groups and
+        // necessary.  We'll be automatically managing the AWS target groups and
         // network ACLs to make this all work.
         //
         // External load balancer traffic can be enabled for specific ports via 

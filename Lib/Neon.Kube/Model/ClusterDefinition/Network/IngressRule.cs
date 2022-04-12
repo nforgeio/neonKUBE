@@ -61,7 +61,8 @@ namespace Neon.Kube
         public IngressProtocol Protocol { get; set; } = IngressProtocol.Tcp;
 
         /// <summary>
-        /// The external ingress port.
+        /// The external ingress port used to handle external (generally Internet) traffic 
+        /// received by the cluster load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "ExternalPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "externalPort", ApplyNamingConventions = false)]
@@ -69,20 +70,34 @@ namespace Neon.Kube
         public int ExternalPort { get; set; }
 
         /// <summary>
-        /// The target ingress port.
-        /// </summary>
-        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public int TargetPort { get; set; }
-
-        /// <summary>
-        /// The Kubernetes NodePort. This is where the ingress gateway is listening.
+        /// The port on cluster nodes where external traffic received by the load balancer 
+        /// on <see cref="ExternalPort"/> will be forwarded.  The cluster's ingress gateway
+        /// (Istio) will be configured to listen for traffic on this port and route it into
+        /// the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "NodePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "nodePort", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int NodePort { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The target ingress port internal to the cluster.  The cluster's ingress gateway
+        /// (Istio) applies routing rules (virtual service) to the network traffic as it was
+        /// received on <see cref="TargetPort"/>.  This decouples routing rules from <see cref="NodePort"/>
+        /// which may change for different hosting environments.
+        /// </para>
+        /// <para>
+        /// This property is optional and defaults to zero, indicating that the traffic should
+        /// be routed to just the node port but <b>should not be routed through ingress gateway</b>.
+        /// This is useful for handling UDP traffic which Istio doesn't currently support and
+        /// perhaps some other scenarios.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int TargetPort { get; set; } = 0;
 
         /// <summary>
         /// Identifies which group of cluster nodes will receive the network traffic
@@ -192,14 +207,14 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
             }
 
-            if (!NetHelper.IsValidPort(TargetPort))
-            {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
-            }
-
             if (!NetHelper.IsValidPort(NodePort))
             {
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
+            }
+
+            if (!NetHelper.IsValidPort(TargetPort) && TargetPort != 0)  // NOTE: [TargetPort=0] indicates that the traffic is not managed by the ingress gateway.
+            {
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
             }
 
             if (AddressRules != null)

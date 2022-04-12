@@ -1536,7 +1536,8 @@ kubectl apply -f priorityclasses.yaml
                     values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
 
                     var i = 0;
-                    foreach (var rule in master.Cluster.Definition.Network.IngressRules)
+                    foreach (var rule in master.Cluster.Definition.Network.IngressRules
+                        .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through ingress gateway
                     {
                         values.Add($"nodePorts[{i}].name", $"{rule.Name}");
                         values.Add($"nodePorts[{i}].protocol", $"{rule.Protocol.ToString().ToUpper()}");
