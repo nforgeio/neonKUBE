@@ -118,18 +118,19 @@ namespace Neon.Kube
         // network ACLs to make this all work.
         //
         // External load balancer traffic can be enabled for specific ports via 
-        // [NetworkOptions.IngressRules] which specify two ports: 
+        // [NetworkOptions.IngressRules] which specify three ports: 
         // 
-        //      * The external load balancer port
+        //      * The external load balancer port.
         //
-        //      * The node port where Istio is listening and will forward traffic
-        //        into the Kubernetes cluster
+        //      * The node port where where traffic will be routed 
+        //        into the cluster.
+        //
+        //      * The optional target port for traffic processed by the
+        //        Istio ingress gateway.  This is used bu Istio when processing
+        //        its routing rules.
         //
         // The [NetworkOptions.IngressRules] can also explicitly allow or deny traffic
         // from specific source IP addresses and/or subnets.
-        //
-        // NOTE: Only TCP connections are supported at this time because Istio
-        //       doesn't support UDP, ICMP, etc. at this time.
         //
         // We're going to use two network ACLs to try make ingress rule changes
         // as non-disruptive as possible.  The idea is to update the network ACL
@@ -148,20 +149,15 @@ namespace Neon.Kube
         // need to query for images within the region where we're deploying the
         // cluster (which is a bit of a pain).  AWS also appears to require that
         // the user "subscribe" to marketplace images via the portal before the
-        // image can be used.
+        // image can be used (which is a good thing).
         //
-        // This hosting manager will support creating VMs from the base Canonical
-        // image as well as from custom images published to the marketplace.
-        // The custom images will be preprovisioned with all of the software
-        // by the propriatary neonCLOUD [neon-image] tool, making cluster setup
-        // much faster and reliable.  The Canonical based images will need lots
-        // of configuration before they can used by a cluster.
+        // This hosting manager requires that the node image AMI be present in
+        // target region.  Project maintainers can deploy alpha node image releases
+        // from the US-WEST-2 (Oregon) region using the neonFORGE AWS account.
+        // Preview and Release node images can be used from the AWS Marketplace
+        // by normal users.
         //
-        // NOTE: We're not going to use the base Canonical image from the AWS 
-        //       Marketplace because marketplace images cannot be cloned and
-        //       we need to do that when we make our own marketplace image.
-        //
-        // Node instance and disk types and sizes are specified by the 
+        // Node instance, disk types and sizes are specified by the 
         // [NodeDefinition.Aws] property.  Instance types are specified
         // using standard AWS names, disk type is an enum and disk sizes
         // are specified via strings including optional [ByteUnits].  Provisioning
@@ -172,8 +168,8 @@ namespace Neon.Kube
         // SSH connections and the cluster reserves 1000 external load balancer
         // ports (by default) to accomplish this.  When we need an external SSH
         // connection to any cluster node, the hosting manager will add one or
-        // more rules to allow traffic to the range of external SSH ports assigned to
-        // the cluster nodes.  Load balancer rules will also be created to 
+        // more rules to allow traffic to the range of external SSH ports assigned
+        // to the cluster nodes.  Load balancer rules will also be created to 
         // effectively port forward traffic from the external SSH port to 
         // port 22 on the nodes.
         //
@@ -186,7 +182,7 @@ namespace Neon.Kube
         // AWS VPCs come with a default network ACL that allows all ingress/egress
         // traffic.  We're going to remove the allow rules, leaving just the deny-all
         // rules for each direction.  We're not going to rely on the default VPC rule
-        // in favor of rules we'll associate with the subnet.
+        // and instead control this via subnet rules.
         //
         // We're going to create two independent network ACLs and use these to control
         // traffic entering and leaving the subnet (and by extension, the cluster).
@@ -207,7 +203,8 @@ namespace Neon.Kube
         // and probably never.  The logic is that if you need more resilence, just deploy
         // another cluster in another availability zone or region and load balance
         // traffic between them.  I believe that will address most reasonable scenarios
-        // and this will be easy to implement and test.
+        // and this will be easy to implement and test.  Of course, we'll revisit this
+        // upon user demand.
         //
         // AWS supports three types of placement groups: cluster, partition, and spread:
         //
@@ -217,7 +214,8 @@ namespace Neon.Kube
         // nodes and the other for workers.  The number of master placement partitions is
         // controlled by [AwsHostingOptions.MasterPlacementPartitions] which defaults to
         // the number of master nodes in the cluster.  Doing this helps to avoid losing
-        // a majority of the master nodes which would dramatically impact cluster functionality.
+        // a majority of the master nodes with the loss of a single partition, which would
+        // dramatically impact cluster functionality.
         //
         // Worker placement partitions are controlled by [AwsOptions.WorkerPlacementGroups].
         // This defaults to one partition, which means that potentially all of the workers
@@ -1321,12 +1319,6 @@ namespace Neon.Kube
                 },
                 (controller, node) => node.Metadata.OpenEbsStorage);
             }
-        }
-
-        /// <inheritdoc/>
-        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

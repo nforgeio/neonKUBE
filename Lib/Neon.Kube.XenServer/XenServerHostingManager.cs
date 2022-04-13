@@ -427,28 +427,6 @@ namespace Neon.Kube
             }
         }
 
-        /// <inheritdoc/>
-        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
-        {
-            // Deprovisioning is easy for XenServer.  All we need to do is to turn off
-            // and remove the virtual machines.
-
-            controller.AddNodeStep("remove virtual machines",
-                (controller, node) =>
-                {
-                    node.Status = "turning off";
-
-                    var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
-                    var vm        = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
-
-                    xenClient.Machine.Shutdown(vm, turnOff: true);
-
-                    node.Status = "removing";
-
-                    xenClient.Machine.Remove(vm, keepDrives: false);
-                });
-        }
-
         /// <summary>
         /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster
         /// nodes are to be hosted by a specific XenServer.

@@ -204,33 +204,38 @@ namespace Neon.Kube
 
             if (!NetHelper.IsValidPort(ExternalPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
             }
 
             if (!NetHelper.IsValidPort(NodePort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
             }
 
             if (!NetHelper.IsValidPort(TargetPort) && TargetPort != 0)  // NOTE: [TargetPort=0] indicates that the traffic is not managed by the ingress gateway.
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
+            }
+
+            if (TargetPort > 0 && Protocol == IngressProtocol.Udp)
+            {
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] implies that traffic will be processed by the Istio gateway which does not support UDP traffic.");
             }
 
             if (AddressRules != null)
             {
                 foreach (var rule in AddressRules)
                 {
-                    rule.Validate(clusterDefinition, "ingress-rule-address");
+                    rule.Validate(clusterDefinition, Name);
                 }
             }
 
             if (TcpIdleTimeoutMinutes <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
             }
 
-            IngressHealthCheck?.Validate(clusterDefinition, $"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.IngressRules)}] ingress rule [{Name}].");
+            IngressHealthCheck?.Validate(clusterDefinition, $"Rule [{Name}]: [{nameof(NetworkOptions)}.{nameof(NetworkOptions.IngressRules)}]");
         }
     }
 }

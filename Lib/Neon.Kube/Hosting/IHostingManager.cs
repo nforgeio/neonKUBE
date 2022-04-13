@@ -110,12 +110,6 @@ namespace Neon.Kube
         void AddPostProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Adds the steps required to deprovision a cluster.
-        /// </summary>
-        /// <param name="controller"></param>
-        void AddDeprovisoningSteps(SetupController<NodeDefinition> controller);
-
-        /// <summary>
         /// Returns <c>true</c> if the hosting manage is capable of updating the upstream
         /// network router or load balancer.  Cloud based managers will return <c>true</c>
         /// whereas on-premise managers will return <c>false</c> because we don't have

@@ -130,9 +130,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract void AddDeprovisoningSteps(SetupController<NodeDefinition> controller);
-
-        /// <inheritdoc/>
         public virtual bool CanManageRouter => false;
 
         /// <inheritdoc/>
