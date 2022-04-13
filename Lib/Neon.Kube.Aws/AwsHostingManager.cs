@@ -340,57 +340,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Describes an Ubuntu AMI from the AWS Marketplace.
-        /// </summary>
-        private class AwsUbuntuImage
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
-            /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
-            /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
-            /// <param name="isPrepared">
-            /// Pass <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
-            /// for unmodified base Ubuntu images.
-            /// </param>
-            public AwsUbuntuImage(string clusterVersion, string ubuntuVersion, string ubuntuBuild, bool isPrepared)
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
-
-                this.ClusterVersion = clusterVersion;
-                this.UbuntuVersion  = ubuntuVersion;
-                this.UbuntuBuild    = ubuntuBuild;
-                this.IsPrepared     = isPrepared;
-            }
-
-            /// <summary>
-            /// Returns the neonKUBE cluster version.
-            /// </summary>
-            public string ClusterVersion { get; private set; }
-
-            /// <summary>
-            /// Returns the Ubuntu version deployed by the image.
-            /// </summary>
-            public string UbuntuVersion { get; private set; }
-
-            /// <summary>
-            /// Returns the Ubuntu build version.
-            /// </summary>
-            public string UbuntuBuild { get; private set; }
-
-            /// <summary>
-            /// Returns <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster.  This will be
-            /// <c>false</c> for unmodified base Ubuntu images.
-            /// </summary>
-            public bool IsPrepared { get; private set; }
-        }
-
-        /// <summary>
         /// <para>
         /// Abstracts the multiple AWS tag implementations into a single common
         /// implementation.
@@ -567,6 +516,32 @@ namespace Neon.Kube
         private const string neonTagKeyPrefix = "neon:";
 
         /// <summary>
+        /// Used to tag <b>neon-image tool</b> related resources so they can be managed
+        /// by this class.  The tag value will be set to "true".
+        /// </summary>
+        private const string neonImageTagKey = neonTagKeyPrefix + "image";
+
+        /// <summary>
+        /// Used to tag instance volumes and published AMIs with the image type so 
+        /// that the underlying snapshots created when the AMI is published will also 
+        /// include this tag.  This is used to identify the snapshots that need to be
+        /// deleted when the AMI is deleted.
+        /// </summary>
+        private const string neonImageTypeTagKey = neonTagKeyPrefix + "image-type";
+
+        /// <summary>
+        /// Used to tag instance volume, snapshots and published AMIs with the image 
+        /// operating system.
+        /// </summary>
+        private const string neonImageOsTagKey = neonTagKeyPrefix + "image-os";
+
+        /// <summary>
+        /// Used to tag instance volume, snapshots and published AMIs with the image 
+        /// architecture: <b>amd64</b> or <b>arm64</b>.
+        /// </summary>
+        private const string neonArchTagKey = neonTagKeyPrefix + "image-arch";
+
+        /// <summary>
         /// Used to tag resources with the cluster name.
         /// </summary>
         private const string neonClusterTagKey = neonTagKeyPrefix + "cluster";
@@ -627,11 +602,6 @@ namespace Neon.Kube
         private const int firstEgressAclRuleNumber = 2000;
 
         /// <summary>
-        /// Returns the list of supported Ubuntu images from the AWS Marketplace.
-        /// </summary>
-        private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
-
-        /// <summary>
         /// Identifies the instance VM block device for the OS disk. 
         /// </summary>
         private const string osDeviceName = "/dev/sda1";
@@ -657,18 +627,6 @@ namespace Neon.Kube
         /// Polling interval for slow operations.
         /// </summary>
         private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static AwsHostingManager()
-        {
-            ubuntuImages = new List<AwsUbuntuImage>()
-            {
-                new AwsUbuntuImage("0.1.0-alpha", "20.04", "20.04.20200729", isPrepared: false)
-            }
-            .AsReadOnly();
-        }
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -842,7 +800,7 @@ namespace Neon.Kube
 
         // These reference the AWS resources.
 
-        private string                              ami;
+        private Image                               nodeImage;
         private Group                               resourceGroup;
         private Address                             ingressAddress;
         private Address                             egressAddress;
@@ -1179,7 +1137,7 @@ namespace Neon.Kube
 
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
-            controller.AddGlobalStep("locate ami", LocateAmiAsync);
+            controller.AddGlobalStep("locate node image", LocateNodeImageAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
@@ -1954,75 +1912,58 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task LocateAmiAsync(ISetupController controller)
+        private async Task LocateNodeImageAsync(ISetupController controller)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("locate: VM AMI image");
+            // Locate the node image AMI.
+            // 
+            // ALPHA RELEASES
+            // --------------
+            // We'll use the local AMI from the current neonFORGE AWS account, 
+            // matching the tags applied by the [neon-image} tool.
+            //
+            // PRODUCTION RELEASES
+            // -------------------
+            // We'll use the matching AMI from our AWS Marketplace offering.
 
-            // $hack(jefflill):
-            //
-            // We're going to do this by querying the region for AMIs published by Canonical
-            // that satisfy somewhat fragile conditions.  This won't be a big risk after we
-            // publish our own marketplace image because we'll control things and hopefully,
-            // we won't need to build new markeplace images from base Canonical images more
-            // than a few times a year and we'll be able to debug problems if anything bad
-            // happens.  Here's how we're going to accomplish this:
-            //
-            // Here's how we're going to accomplish this:
-            //
-            //      * Filter for Canonical owned images
-            //      * Filter for x86_64 architecture
-            //      * Filter for machine images
-            //      * Filter the description for Ubuntu 20.04 images
-            //      * Filter out images with "UNSUPPORTED" in the description (daily builds)
-            //        AWS doesn't support NOT filters, so we'll need to do this here.
-            //
-            // NOTE:
-            //
-            // The image location specifies the date of the build at the end of the
-            // string, like:
-            //
-            //      099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20200729
-            //
-            // We're ignoring this for now but it might come in handy later.
+            controller.SetGlobalStepStatus("locate: node image");
 
-            var request = new DescribeImagesRequest()
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}";
+            var operatingSystem = "ubuntu-20.04";
+            var architecture    = "amd64";
+
+            if (neonKubeVersion.Prerelease != null && neonKubeVersion.Prerelease.StartsWith("alpha", StringComparison.InvariantCultureIgnoreCase))
             {
-                Owners  = new List<string>() { canonicalOwnerId },
-                Filters = new List<Filter>
+                var neonImageFilter = new List<Filter>()
                 {
-                    new Filter("architecture", new List<string>() { "x86_64" }),
-                    new Filter("image-type", new List<string>() { "machine" }),
-                    new Filter("description", new List<string>() { "Canonical, Ubuntu, 20.04 LTS*" }),
+                    new Filter() { Name = $"tag:{neonImageTagKey}", Values = new List<string>() { "true" } }
+                };
+
+                var response = await ec2Client.DescribeImagesAsync(
+                    new DescribeImagesRequest()
+                    {
+                        Filters = neonImageFilter,
+                    });
+
+                nodeImage = response.Images
+                    .Where(image => image.Name == nodeImageName &&
+                                    image.Tags.Any(tag => tag.Key == neonImageTagKey && tag.Value == "node") &&
+                                    image.Tags.Any(tag => tag.Key == neonImageOsTagKey && tag.Value == operatingSystem) &&
+                                    image.Tags.Any(tag => tag.Key == neonArchTagKey && tag.Value == architecture))
+                    .SingleOrDefault();
+
+                if (nodeImage == null)
+                {
+                    throw new FileNotFoundException($"Cannot locate the node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}] in region: [{region}]");
                 }
-            };
-
-            var response        = await ec2Client.DescribeImagesAsync(request);
-            var supportedImages = response.Images.Where(image => !image.Description.Contains("UNSUPPORTED")).ToList();
-
-            // Locate the AMI for the version of Ubuntu for the current cluster version.
-
-            var ubuntuImage = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == cluster.Definition.ClusterVersion && !img.IsPrepared);
-
-            // If this fails, we probably forgot to add the entry for a new cluster version to [ubuntuImages] above:
-
-            Covenant.Assert(ubuntuImage != null, $"Cannot locate AWS image information for cluster version [{cluster.Definition.ClusterVersion}].");
-
-            // Strip the date from the image Ubuntu build and use that to locate the AMI
-            // based on its location.
-
-            var pos       = ubuntuImage.UbuntuBuild.LastIndexOf('.');
-            var buildDate = ubuntuImage.UbuntuBuild.Substring(pos + 1);
-            var image     = supportedImages.SingleOrDefault(image => image.ImageLocation.EndsWith(buildDate));
-
-            if (image == null)
-            {
-                throw new NeonKubeException($"Cannot locate the base Ubuntu [{ubuntuImage.UbuntuBuild}] AMI for the [{region}] region.");
             }
-
-            ami = image.ImageId;
+            else
+            {
+                throw new NotImplementedException("$todo(jefflill): Implement AWS Marketplace support.");
+            }
         }
 
         /// <summary>
@@ -2893,13 +2834,24 @@ namespace Neon.Kube
                 // I'm going to address this by passing a first boot script as user-data
                 // when creating the instance, which will:
                 //
-                //      1. Install unzip (LinuxSshProxy requires this)
-                //      2. Remove [ec2-instance-connect]
-                //      3. Enable SSH password authentication
-                //      4. Rename the [ubuntu] user and home directory to [sysadmin]
-                //      5. Set the secure password for [sysadmin]
+                //      1. Configure the node's static IP address
+                //      2. Set the secure password for [sysadmin]
+                //
+                // Note that we needed to disable [cloud-init] networking when we created 
+                // the node image.  This means that we need to generate the NetPlan config
+                // ourselves for node instances.
+                //
+                // We're going to rely CIDR base + 1 being the default gateway and 
+                // [169.254.169.253] always being the AWS nameserver:
+                //
+                //      x.x.x.1             - default gateway
+                //      169.254.169.253     - AWS DNS nameserver
+                //
+                // Note that we'll override the AWS nameserver when the cluster definition
+                // explicitly specifies nameservers.
 
-                var bootScript =
+                var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
+                var bootScript       =
 $@"#!/bin/bash
 
 # To enable logging for this AWS user-data script, add ""-ex"" to the SHABANG above.
@@ -2908,47 +2860,34 @@ $@"#!/bin/bash
 #
 #   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
 #
-# WARNING: Do not leave the ""-ex"" option in production builds to avoid 
+# WARNING: Do not leave the ""-ex"" SHABANG option in production builds to avoid 
 #          leaking the secure SSH password to any logs!
 #          
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 #------------------------------------------------------------------------------
-# Install required packages.
+# Configure the node's static IP address:
 
-apt-get update
-apt-get install -yq unzip
+interface=$({netInterfacePath})
 
-#------------------------------------------------------------------------------
-# Remove: ec2-instance-connect (this could potentially cause SSH auth issues)
+rm -rf /etc/netplan/*
 
-apt-get remove -yq ec2-instance-connect
-
-#------------------------------------------------------------------------------
-# Overwrite the OpenSSH configuration with a known good one and then restart OpenSSH.
-
-sshdConfigPath=/etc/ssh/sshd_config
-
-cat <<EOF > /etc/ssh/sshd_config
-{KubeHelper.OpenSshConfig}
+cat <<EOF > /etc/netplan/50-static.yaml
+network:
+  version: 2
+  ethernets:
+    $interface:
+      dhcp4: false
+      dhcp6: false
 EOF
 
-systemctl restart ssh
+chmod 644 /etc/netplan/50-static.yaml
+netplan apply
 
 #------------------------------------------------------------------------------
 # Update the [ubuntu] user password:
 
 echo 'ubuntu:{secureSshPassword}' | chpasswd
-
-#------------------------------------------------------------------------------
-# Rename the [ubuntu] user, home directory, and group to [sysadmin]
-
-usermod -l sysadmin ubuntu
-
-mv /home/ubuntu /home/sysadmin
-usermod -d /home/sysadmin sysadmin
-
-groupmod -n sysadmin ubuntu
 ";
                 var ebsOptimized = awsOptions.DefaultEbsOptimized;
 
@@ -2968,7 +2907,7 @@ groupmod -n sysadmin ubuntu
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
-                        ImageId          = ami,
+                        ImageId          = nodeImage.ImageId,
                         InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
                         MinCount         = 1,
                         MaxCount         = 1,
