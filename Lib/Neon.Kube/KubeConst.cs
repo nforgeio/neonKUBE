@@ -63,12 +63,12 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum RAM (MiB) required for master nodes.
         /// </summary>
-        public const int MinMasterRamMiB = 4096;
+        public const int MinMasterRamMiB = 8192;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
         /// </summary>
-        public const int MinWorkerRamMiB = 4096;
+        public const int MinWorkerRamMiB = 8192;
 
         /// <summary>
         /// The minimum required network interface cards for master nodes.

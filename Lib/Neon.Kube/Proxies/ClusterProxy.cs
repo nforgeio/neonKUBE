@@ -376,32 +376,39 @@ namespace Neon.Kube
 
             HostingManager hostingManager;
 
-            if (!string.IsNullOrEmpty(nodeImageUri))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(Definition.Hosting.Environment))
             {
-                hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri, logFolder: logFolder);
-            }
-            else if (!string.IsNullOrEmpty(nodeImagePath))
-            {
-                hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath, logFolder: logFolder);
+                if (!string.IsNullOrEmpty(nodeImageUri))
+                {
+                    hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri, logFolder: logFolder);
+                }
+                else if (!string.IsNullOrEmpty(nodeImagePath))
+                {
+                    hostingManager = hostingManagerFactory.GetManagerWithNodeImageFile(this, nodeImagePath, logFolder: logFolder);
+                }
+                else
+                {
+                    switch (operation)
+                    {
+                        case Operation.Prepare:
+
+                            throw new InvalidOperationException($"One of [{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] needed to have been passed as non-NULL to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to support [{operation}].");
+
+                        case Operation.LifeCycle:
+                        case Operation.Setup:
+
+                            hostingManager = hostingManagerFactory.GetManager(this);
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+                }
             }
             else
             {
-                switch (operation)
-                {
-                    case Operation.Prepare:
-
-                        throw new InvalidOperationException($"One of [{nameof(nodeImageUri)}] or [{nameof(nodeImagePath)}] needed to have been passed as non-NULL to the [{nameof(ClusterProxy)}] constructor for [{nameof(GetHostingManager)}] to support [{operation}].");
-
-                    case Operation.LifeCycle:
-                    case Operation.Setup:
-
-                        hostingManager = hostingManagerFactory.GetManager(this);
-                        break;
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
+                hostingManager = hostingManagerFactory.GetManager(this, logFolder: logFolder);
             }
 
             if (hostingManager == null)

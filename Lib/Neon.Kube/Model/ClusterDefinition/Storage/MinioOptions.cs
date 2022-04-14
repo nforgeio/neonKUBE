@@ -111,12 +111,12 @@ namespace Neon.Kube
 
             foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.MinioInternal))
             {
-                var osDisk       = !string.IsNullOrEmpty(node.Vm?.OsDisk) ? ByteUnits.Parse(node.Vm.OsDisk) : ByteUnits.Parse(clusterDefinition.Hosting.Vm.OsDisk);
+                var osDisk       = ByteUnits.Parse(node.GetDataDiskSize(clusterDefinition));
                 var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;
 
                 if (osDisk - minioVolumes < minOsDiskAfterMinio)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] does not have enough OS disk.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true)}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] Operating System (boot) disk is too small.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true)}].");
                 }
             }
         }

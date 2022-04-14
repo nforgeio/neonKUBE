@@ -231,6 +231,83 @@ namespace Neon.Kube
         public AwsNodeOptions Aws { get; set; }
 
         /// <summary>
+        /// Returns the size of the operating system boot disk as a string with optional
+        /// <see cref="ByteUnits"/> unit suffix.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The disk size.</returns>
+        public string GetOsDiskSize(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            switch (clusterDefinition.Hosting.Environment)
+            {
+                case HostingEnvironment.Aws:
+
+                    return Aws.VolumeSize ?? clusterDefinition.Hosting.Aws.DefaultVolumeSize;
+
+                case HostingEnvironment.Azure:
+
+                    return Azure.DiskSize ?? clusterDefinition.Hosting.Azure.DefaultDiskSize;
+
+                case HostingEnvironment.BareMetal:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.Google:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.XenServer:
+
+                    return Vm.GetOsDisk(clusterDefinition).ToString();
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Returns the size of the data disk as a string with optional <see cref="ByteUnits"/> unit suffix.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The disk size or <c>null</c> when the node has no data disk.</returns>
+        public string GetDataDiskSize(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            switch (clusterDefinition.Hosting.Environment)
+            {
+                case HostingEnvironment.Aws:
+
+                    return Aws.OpenEBSVolumeSize ?? clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeSize;
+
+                case HostingEnvironment.Azure:
+
+                    return Azure.OpenEBSDiskSize ?? clusterDefinition.Hosting.Azure.DefaultOpenEBSDiskSize;
+
+                case HostingEnvironment.BareMetal:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.Google:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.XenServer:
+
+                    return Vm.GetOsDisk(clusterDefinition).ToString();
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
         /// Validates the node definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

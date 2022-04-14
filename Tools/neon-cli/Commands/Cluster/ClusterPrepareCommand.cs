@@ -254,12 +254,15 @@ OPTIONS:
                 }
             }
 
-            // Use the default node image for the hosting environment unless [--node-image-uri]
-            // or [--node-image-path] was specified.
-
-            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
             {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                // Use the default node image for the hosting environment unless [--node-image-uri]
+                // or [--node-image-path] was specified.
+
+                if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
+                {
+                    nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                }
             }
 
             // Parse any specified package cache endpoints.

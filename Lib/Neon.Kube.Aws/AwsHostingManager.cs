@@ -132,7 +132,7 @@ namespace Neon.Kube
         // The [NetworkOptions.IngressRules] can also explicitly allow or deny traffic
         // from specific source IP addresses and/or subnets.
         //
-        // We're going to use two network ACLs to try make ingress rule changes
+        // We're going to use two network ACLs to try make ingress rule changessbname
         // as non-disruptive as possible.  The idea is to update the network ACL
         // not currently in use with any rule changes and then swap the ACLs
         // so all of the rules will be applied in a single opertation (rather
@@ -176,6 +176,16 @@ namespace Neon.Kube
         // Note that we also support source address white/black listing for both
         // ingress and SSH rules and as well as destination address white/black
         // listing for general outbound cluster traffic.
+        //
+        // DHCP:
+        // -----
+        // We are not using AWS [cloud-init] to configure instance network settings
+        // (this means that we're not provisioning [DhcpOptions].  Instead, we're
+        // creating instances with a user-data boot script that configures NetPlan.
+        //
+        // Node instances will be provisioned with the standard AWS nameserver at
+        // [169.254.169.253] when no nameservers are specified in the cluster definition,
+        // otherwise we'll configure the defined nameservers.
         //
         // Managing the network load balancer and ACL rules:
         // -------------------------------------------------
@@ -757,6 +767,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private readonly TimeSpan timeout      = TimeSpan.FromMinutes(30);
+        private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(5);
+
         private ClusterProxy                        cluster;
         private string                              clusterName;
         private SetupController<NodeDefinition>     controller;
@@ -772,8 +785,6 @@ namespace Neon.Kube
         private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
-        private KubeSshKey                          sshKey;
-        private string                              secureSshPassword;
         private List<Filter>                        clusterFilter;      // Used to filter resources that belong to our cluster
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
@@ -784,7 +795,6 @@ namespace Neon.Kube
         private readonly string                     ingressAddressName;
         private readonly string                     egressAddressName;
         private readonly string                     vpcName;
-        private readonly string                     dhcpOptionName;
         private readonly string                     securityGroupName;
         private readonly string                     publicSubnetName;
         private readonly string                     nodeSubnetName;
@@ -794,7 +804,6 @@ namespace Neon.Kube
         private readonly string                     natGatewayName;
         private readonly string                     loadBalancerName;
         private readonly string                     elbName;
-        private readonly string                     keyPairName;
         private readonly string                     masterPlacementGroupName;
         private readonly string                     workerPlacementGroupName;
 
@@ -805,7 +814,6 @@ namespace Neon.Kube
         private Address                             ingressAddress;
         private Address                             egressAddress;
         private Vpc                                 vpc;
-        private DhcpOptions                         dhcpOptions;
         private SecurityGroup                       securityGroup;
         private Subnet                              publicSubnet;
         private Subnet                              nodeSubnet;
@@ -814,7 +822,6 @@ namespace Neon.Kube
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
-        private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
@@ -885,8 +892,8 @@ namespace Neon.Kube
             };
 
             // We're always going to prefix AWS resource names with the cluster name because
-            // AWS resource names have scope and because load balancer names need to be unique
-            // within an AWS account and region.
+            // AWS resource names because load balancer names need to be unique within an AWS
+            // account and region.
 
             this.prefixResourceNames = true;
 
@@ -895,7 +902,6 @@ namespace Neon.Kube
             ingressAddressName       = GetResourceName("ingress-address");
             egressAddressName        = GetResourceName("egress-address");
             vpcName                  = GetResourceName("vpc");
-            dhcpOptionName           = GetResourceName("dhcp-opt");
             securityGroupName        = GetResourceName("security-group");
             publicSubnetName         = GetResourceName("public-subnet");
             nodeSubnetName           = GetResourceName("node-subnet");
@@ -905,7 +911,6 @@ namespace Neon.Kube
             natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
-            keyPairName              = GetResourceName("ssh-keys");
             masterPlacementGroupName = GetResourceName("master-placement");
             workerPlacementGroupName = GetResourceName("worker-placement");
 
@@ -913,28 +918,6 @@ namespace Neon.Kube
             // names to the specific target group.
 
             this.nameToTargetGroup = new Dictionary<string, ElbTargetGroup>();
-
-            // Initialize the instance/node mapping dictionaries and also ensure
-            // that each node has reasonable AWS node options.
-
-            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var node in cluster.Nodes)
-            {
-                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
-
-                if (node.Metadata.Aws == null)
-                {
-                    node.Metadata.Aws = new AwsNodeOptions();
-                }
-            }
-
-            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
-
-            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
-            {
-                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
-            }
 
             // This identifies the cluster manager instance with the cluster proxy
             // so that the proxy can have the hosting manager perform some operations
@@ -1120,18 +1103,31 @@ namespace Neon.Kube
 
             this.controller = controller;
 
+            // Initialize the instance/node mapping dictionaries and also ensure
+            // that each node has reasonable AWS node options.
+
+            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
+
+                if (node.Metadata.Aws == null)
+                {
+                    node.Metadata.Aws = new AwsNodeOptions();
+                }
+            }
+
+            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
+
+            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
+            {
+                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
+            }
+
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // AWS doesn't initialize a password for new instance so we need to specify
-            // the SSH key when the instances are provisioned and then upload and enable 
-            // the SSH password ourselves.
-
-            this.secureSshPassword = clusterLogin.SshPassword;
-            this.sshKey            = clusterLogin.SshKey;
-
-            Covenant.Assert(sshKey != null);
 
             var operation = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
@@ -1143,14 +1139,13 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
                 },
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
@@ -1368,8 +1363,13 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(jefflill)");
+            // We're going to consider cluster resources to be unlimited and there's
+            // no way to check in advance anyway.
+
+            return new HostingResourceAvailability()
+            {
+                CanBeDeployed = true
+            };
         }
 
         /// <summary>
@@ -1489,20 +1489,6 @@ namespace Neon.Kube
                 }
             }
 
-            // DHCP options
-
-            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest() { Filters = clusterFilter });
-
-            await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
-            {
-                if (dhcpItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == dhcpOptionName) &&
-                    dhcpItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    dhcpOptions = dhcpItem;
-                    break;
-                }
-            }
-
             // Security Groups
 
             var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
@@ -1575,31 +1561,6 @@ namespace Neon.Kube
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
-
-            // SSH keypair
-
-            try
-            {
-                var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
-                    new DescribeKeyPairsRequest()
-                    {
-                        KeyNames = new List<string>() { keyPairName }
-                    });
-
-                keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
-            }
-            catch (AmazonServiceException e)
-            {
-                // AWS throw an exception when the named key pair doesn't exist.  We'll
-                // consider this to be normal and set [keyPairId=null].
-
-                if (e.ErrorCode != "InvalidKeyPair.NotFound")
-                {
-                    throw;
-                }
-
-                keyPairId = null;
-            }
 
             // Placement groups
 
@@ -1950,14 +1911,14 @@ namespace Neon.Kube
 
                 nodeImage = response.Images
                     .Where(image => image.Name == nodeImageName &&
-                                    image.Tags.Any(tag => tag.Key == neonImageTagKey && tag.Value == "node") &&
+                                    image.Tags.Any(tag => tag.Key == neonImageTypeTagKey && tag.Value == "node") &&
                                     image.Tags.Any(tag => tag.Key == neonImageOsTagKey && tag.Value == operatingSystem) &&
                                     image.Tags.Any(tag => tag.Key == neonArchTagKey && tag.Value == architecture))
                     .SingleOrDefault();
 
                 if (nodeImage == null)
                 {
-                    throw new FileNotFoundException($"Cannot locate the node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}] in region: [{region}]");
+                    throw new NeonKubeException($"Cannot locate the node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}] in region: [{region}]");
                 }
             }
             else
@@ -2315,45 +2276,6 @@ namespace Neon.Kube
                 vpc = vpcResponse.Vpc;
             }
 
-            // Override the default AWS DNS servers if the user has specified 
-            // custom nameservers in the cluster definition.  We'll accomplish
-            // this by creating DHCP options and associating them with the VPC.
-
-            if (networkOptions.Nameservers != null && networkOptions.Nameservers.Count > 0)
-            {
-                if (dhcpOptions == null)
-                {
-                    var sbNameservers = new StringBuilder();
-
-                    foreach (var nameserver in networkOptions.Nameservers)
-                    {
-                        sbNameservers.AppendWithSeparator(nameserver, ",");
-                    }
-
-                    var dhcpConfigurations = new List<DhcpConfiguration>()
-                    {
-                        new DhcpConfiguration() { Key = "domain-name-servers", Values = new List<string> { sbNameservers.ToString() } }
-                    };
-
-                    var dhcpOptionsResponse = await ec2Client.CreateDhcpOptionsAsync(
-                        new CreateDhcpOptionsRequest(dhcpConfigurations)
-                        {
-                            TagSpecifications = GetTagSpecifications(dhcpOptionName, ResourceType.DhcpOptions)
-                        });
-
-                    dhcpOptions = dhcpOptionsResponse.DhcpOptions;
-                }
-
-                // Associate the DHCP options with the VPC.
-
-                await ec2Client.AssociateDhcpOptionsAsync(
-                    new AssociateDhcpOptionsRequest()
-                    {
-                        VpcId         = vpc.VpcId,
-                        DhcpOptionsId = dhcpOptions.DhcpOptionsId
-                    });
-            }
-
             // Create the ALLOW-ALL security group if it doesn't exist.
 
             if (securityGroup == null)
@@ -2368,16 +2290,25 @@ namespace Neon.Kube
                     });
 
                 var securityGroupId = securityGroupResponse.GroupId;
-                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
-                await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
-                {
-                    if (securityGroupItem.GroupId == securityGroupId)
+                await NeonHelper.WaitForAsync(
+                    async () =>
                     {
-                        securityGroup = securityGroupItem;
-                        break;
-                    }
-                }
+                        var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
+
+                        await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
+                        {
+                            if (securityGroupItem.GroupId == securityGroupId)
+                            {
+                                securityGroup = securityGroupItem;
+                                break;
+                            }
+                        }
+
+                        return securityGroup != null;
+                    },
+                    timeout:      timeout,
+                    pollInterval: pollInterval);
 
                 Covenant.Assert(securityGroup != null);
 
@@ -2616,34 +2547,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Imports the SSH key pair we'll use for the node security.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ImportKeyPairAsync(ISetupController controller)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            if (keyPairId == null)
-            {
-                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
-
-                controller.SetGlobalStepStatus("import: SSH keypair");
-
-                var keyPairResponse = await ec2Client.ImportKeyPairAsync(
-                    new ImportKeyPairRequest()
-                    {
-                        KeyName           = keyPairName,
-                        PublicKeyMaterial = Convert.ToBase64String(Encoding.UTF8.GetBytes(sshKey.PublicPUB)),
-                        TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
-                    });
-
-                keyPairId = keyPairResponse.KeyPairId;
-            }
-        }
-
-        /// <summary>
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2713,6 +2616,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
@@ -2831,18 +2736,32 @@ namespace Neon.Kube
                 // SSH password by default; they use a SSH key instead.  We also want
                 // to rename the default [ubuntu] user to our standard [sysadmin].
                 //
-                // I'm going to address this by passing a first boot script as user-data
-                // when creating the instance, which will:
+                // I'm going to address this by passing a boot script as user-data when
+                // creating the instance, which will:
                 //
-                //      1. Configure the node's static IP address
-                //      2. Set the secure password for [sysadmin]
+                //      1. The script will run everytime the instance boots (because we
+                //         added the [#cloud-boothook] line but the script should only 
+                //         do anything once.  We'll touch a file the first time the script
+                //         runs and then exit the script immediately when this file exists
+                //         for subsequent restarts.
+                //
+                //         https://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-boothook
+                //
+                //      2. Set the secure password for [sysadmin].
+                //
+                //      3. Configure the node's static IP address, gateway and name servers.
+                //
+                //      4. Disable [cloud-init] network config to prevent the network
+                //         configuration from being overwritten again.
                 //
                 // Note that we needed to disable [cloud-init] networking when we created 
                 // the node image.  This means that we need to generate the NetPlan config
                 // ourselves for node instances.
                 //
                 // We're going to rely CIDR base + 1 being the default gateway and 
-                // [169.254.169.253] always being the AWS nameserver:
+                // [169.254.169.253] always being the AWS nameserver (we'll use the
+                // [169.254.169.253] nameserver when none are specified in the cluster
+                // definition.
                 //
                 //      x.x.x.1             - default gateway
                 //      169.254.169.253     - AWS DNS nameserver
@@ -2850,9 +2769,25 @@ namespace Neon.Kube
                 // Note that we'll override the AWS nameserver when the cluster definition
                 // explicitly specifies nameservers.
 
+                var sbNameServers = new StringBuilder();
+
+                if (cluster.Definition.Network.Nameservers.Count == 0)
+                {
+                    sbNameServers.Append("169.254.169.253");
+                }
+                else
+                {
+                    foreach (var nameserver in cluster.Definition.Network.Nameservers)
+                    {
+                        sbNameServers.AppendWithSeparator(nameserver, ", ");
+                    }
+                }
+
                 var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
+                var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.NodeSubnet);
                 var bootScript       =
-$@"#!/bin/bash
+$@"#cloud-boothook
+#!/bin/bash
 
 # To enable logging for this AWS user-data script, add ""-ex"" to the SHABANG above.
 # the SHEBANG above uncomment the EXEC command below.  Then each command and its
@@ -2864,6 +2799,40 @@ $@"#!/bin/bash
 #          leaking the secure SSH password to any logs!
 #          
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+#------------------------------------------------------------------------------
+# Write a file indicating that this script was executed (for debugging).
+
+mkdir -p /etc/neonkube/cloud-init
+echo $0 > /etc/neonkube/cloud-init/node-init
+date >> /etc/neonkube/cloud-init/node-init
+chmod 644 /etc/neonkube/cloud-init/node-init
+
+# Write this script's path to a file so that cluster setup can remove it.
+# This is important because we don't want to expose the SSH password we
+# set below.
+
+echo $0 > /etc/neonkube/cloud-init/init-script-path
+chmod 600 /etc/neonkube/cloud-init/init-script-path
+
+#------------------------------------------------------------------------------
+# Prevent the script from doing anything after the instance is rebooted.
+
+if [ -f /etc/neonkube/node-init ]; then
+    exit 0
+fi
+
+touch /etc/neonkube/node-init
+chmod 644 /etc/neonkube/node-init
+
+#------------------------------------------------------------------------------
+# Update the [ubuntu] user password:
+
+#################################
+# $debug(jefflill): RESTORE THIS!
+#################################
+
+# echo 'ubuntu:{clusterLogin.SshPassword}' | chpasswd
 
 #------------------------------------------------------------------------------
 # Configure the node's static IP address:
@@ -2879,15 +2848,19 @@ network:
     $interface:
       dhcp4: false
       dhcp6: false
+      addresses: [{node.Address}/{privateSubnet.PrefixLength}]
+      gateway4: {privateSubnet.FirstUsableAddress}
+      nameservers:
+        addresses: [{sbNameServers}]
 EOF
 
 chmod 644 /etc/netplan/50-static.yaml
 netplan apply
 
-#------------------------------------------------------------------------------
-# Update the [ubuntu] user password:
+# Disable [cloud-init] network configuration.
 
-echo 'ubuntu:{secureSshPassword}' | chpasswd
+mkdir -p /etc/cloud/cloud.cfg.d
+echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 ";
                 var ebsOptimized = awsOptions.DefaultEbsOptimized;
 
@@ -2915,7 +2888,6 @@ echo 'ubuntu:{secureSshPassword}' | chpasswd
                         EbsOptimized     = ebsOptimized,
                         PrivateIpAddress = node.Address.ToString(),
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
-                        KeyName          = keyPairName,
                         UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
                         {
@@ -2946,7 +2918,7 @@ echo 'ubuntu:{secureSshPassword}' | chpasswd
             // Wait for the instance to indicate that it's running.
             //
             // NOTE:
-            // ---- 
+            // -----
             // It's possible that the instance is still stopped when a previous user-data 
             // clearing operation was interrupted (below).  We'll just restart it here
             // to handle that.
@@ -3021,7 +2993,7 @@ echo 'ubuntu:{secureSshPassword}' | chpasswd
 
             //-----------------------------------------------------------------
             // Tag the EC2 volumes created for the instance.
-
+            
             node.Status = "tagging volumes";
 
             // We need to reload the instance to obtain information on its
@@ -3074,89 +3046,6 @@ echo 'ubuntu:{secureSshPassword}' | chpasswd
                     {
                         Resources = new List<string> { osVolumeMapping.Ebs.VolumeId },
                         Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.os"), new ResourceTag(neonNodeNameTagKey, node.Name))
-                    });
-            }
-
-            //-----------------------------------------------------------------
-            // We need to clear the instance user-data because it can be displayed on
-            // the AWS portal which would expose the secure SSH password.  We'll
-            // need to stop the instance first and then restart it to pick up the change.
-            //
-            // Note that we're only going to do this once.  We'll use a tag to indicate
-            // that the user-data has been cleared for each instance.
-
-            if (!awsInstance.Instance.Tags.Any(tag => tag.Key == neonNodeUserDataTagKey && tag.Value == "cleared"))
-            {
-                node.Status = "user-data: stop instance";
-
-                await ec2Client.StopInstancesAsync(
-                    new StopInstancesRequest()
-                    {
-                         InstanceIds = new List<string>() { awsInstance.InstanceId }
-                    });
-
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                            new DescribeInstanceStatusRequest()
-                            {
-                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                                IncludeAllInstances = true
-                            });
-
-                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
-                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
-
-                        return state == InstanceStateCode.Stopped;
-                    },
-                    timeout:      operationTimeout,
-                    pollInterval: operationPollInternal);
-
-                node.Status = "user-data: clear";
-
-                await ec2Client.ModifyInstanceAttributeAsync(
-                    new ModifyInstanceAttributeRequest()
-                    {
-                        InstanceId = awsInstance.InstanceId,
-                        UserData   = string.Empty
-                    });
-
-                node.Status = "user-data: restart instance";
-
-                await ec2Client.StartInstancesAsync(
-                    new StartInstancesRequest()
-                    {
-                        InstanceIds = new List<string>() { awsInstance.InstanceId }
-                    });
-
-                // Wait for the instance to report being ready.
-
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                            new DescribeInstanceStatusRequest()
-                            {
-                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                                IncludeAllInstances = true
-                            });
-
-                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
-                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
-
-                        return state == InstanceStateCode.Running;
-                    },
-                    timeout: operationTimeout,
-                    pollInterval: operationPollInternal);
-
-                // Indicate that this instance's user-data has been cleared.
-
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
-                    {
-                        Resources = new List<string>() { awsInstance.InstanceId },
-                        Tags      = new List<Ec2Tag> { new Ec2Tag(neonNodeUserDataTagKey, "cleared") }
                     });
             }
         }

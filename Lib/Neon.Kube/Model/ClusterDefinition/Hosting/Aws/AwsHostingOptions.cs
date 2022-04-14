@@ -47,7 +47,7 @@ namespace Neon.Kube
         /// </summary>
         internal const int MaxPlacementPartitions = 7;
 
-        private const string            defaultInstanceType      = "c4.xlarge";
+        private const string            defaultInstanceType      = "c5.2xlarge";
         internal const AwsVolumeType    defaultVolumeType        = AwsVolumeType.Gp2;
         private const string            defaultVolumeSize        = "128 GiB";
         internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
@@ -193,8 +193,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Identifies the default AWS instance type to be provisioned for cluster nodes that don't
-        /// specify an instance type.  This defaults to <b>c4.xlarge</b> which includes 4 virtual
-        /// cores and 7.5 GiB RAM but can be overridden for specific cluster nodes via
+        /// specify an instance type.  This defaults to <b>c5.2xlarge</b> which includes 8 virtual
+        /// cores and 16 GiB RAM but can be overridden for specific cluster nodes via
         /// <see cref="AwsNodeOptions.InstanceType"/>.
         /// </para>
         /// <note>
@@ -202,7 +202,7 @@ namespace Neon.Kube
         /// specify an instance type using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an AWS instance type that satisfies these requirements.
         /// </note>
         /// </summary>

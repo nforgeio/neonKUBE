@@ -52,8 +52,24 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
-        /// <param name="nodeImagePath">Optionally specifies the node image path (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified).</param>
+        /// <param name="nodeImageUri">
+        /// <para>
+        /// Optionally specifies the node image URI.
+        /// </para>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified for 
+        /// on-premise hypervisor based environments.  This is ignored for cloud hosting.
+        /// </note>
+        /// </param>
+        /// <param name="nodeImagePath">
+        /// <para>
+        /// Optionally specifies the node image path.
+        /// </para>
+        /// <note>
+        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified for 
+        /// on-premise hypervisor based environments.  This is ignored for cloud hosting.
+        /// </note>
+        /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
@@ -98,7 +114,12 @@ namespace Neon.Kube
             bool                        disableConsoleOutput  = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
+
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
+            }
+
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
@@ -243,7 +264,7 @@ namespace Neon.Kube
                     });
             }
 
-            controller.AddGlobalStep("generate ssh credentials",
+            controller.AddGlobalStep("ssh credentials",
                 controller =>
                 {
                     // We're going to generate a secure random password and we're going to append
@@ -264,34 +285,23 @@ namespace Neon.Kube
                     // as Hyper-V and XenServer, we're going use the [neon-init]
                     // service to mount a virtual DVD that will change the password before
                     // configuring the network on first boot.
-                    //
-                    // For bare metal, we're going to leave the password along and just use
-                    // whatever the user specified when the nodes were built out.
 
                     var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                     var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-                    if (!hostingManager.GenerateSecurePassword)
-                    {
-                        clusterLogin.SshPassword = KubeConst.SysAdminPassword;
-                        clusterLogin.Save();
-                    }
-                    else if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
-                    {
-                        controller.SetGlobalStepStatus("generate: SSH password");
+                    controller.SetGlobalStepStatus("generate: SSH password");
 
-                        clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    // Generate a secure SSH password and append a string that guarantees that
+                    // the generated password meets minimum cloud requirements.
 
-                        // Append a string that guarantees that the generated password meets
-                        // minimum cloud requirements.
+                    clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    clusterLogin.SshPassword += ".Aa0";
 
-                        clusterLogin.SshPassword += ".Aa0";
-                        clusterLogin.Save();
-                    }
+                    clusterLogin.Save();
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environments
-                    // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
+                    // like Azure don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
 
                     if (clusterLogin.SshKey == null)
@@ -318,6 +328,33 @@ namespace Neon.Kube
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
+
+            controller.AddNodeStep("delete cloud-init script",
+                (controller, node) =>
+                {
+                    // Hosting managers may use [cloud-init] to execute custom scripts
+                    // when node virtual machine first boots to configure networking and
+                    // also to set a secure SSH password.
+                    //
+                    // We need to delete this script file since it includes the SSH password.
+                    // If present, the script writes the path to itself to:
+                    //
+                    //      /etc/neonkube/cloud-init/init-script-path
+                    //
+                    // We're going to read this file if it exists and delete the script.
+
+                    var scriptPath = "/etc/neonkube/cloud-init/init-script-path";
+
+                    if (node.FileExists(scriptPath))
+                    {
+                        scriptPath = node.DownloadText(scriptPath);
+
+                        if (!string.IsNullOrEmpty(scriptPath))
+                        {
+                            node.SudoCommand("rm", "-f", scriptPath.Trim());
+                        }
+                    }
+                });
 
             controller.AddNodeStep("check image version",
                 (controller, node) =>

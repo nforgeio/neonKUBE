@@ -119,9 +119,6 @@ namespace Neon.Kube
         public virtual bool RequiresNodeAddressCheck => false;
 
         /// <inheritdoc/>
-        public virtual bool GenerateSecurePassword => true;
-
-        /// <inheritdoc/>
         public abstract void AddProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>

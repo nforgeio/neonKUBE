@@ -1015,6 +1015,11 @@ namespace Neon.Kube
                 new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
+            foreach (var node in Nodes)
+            {
+                node.Validate(this);
+            }
+
             Deployment.Validate(this);
             Storage.Validate(this);
             Security.Validate(this);
@@ -1035,7 +1040,7 @@ namespace Neon.Kube
 
             FeatureGates["RunAsGroup"] = true;
 
-            // Add any neonKUBE default feature gates unless the user specifically configures them.
+            // Add default neonKUBE feature gates when the user has not already configured them.
 
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {

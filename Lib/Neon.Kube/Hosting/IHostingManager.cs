@@ -79,11 +79,6 @@ namespace Neon.Kube
         bool RequiresNodeAddressCheck { get; }
 
         /// <summary>
-        /// Specifies whether a cryptographically random node password should be generated.
-        /// </summary>
-        bool GenerateSecurePassword { get; }
-
-        /// <summary>
         /// The maximum number of nodes that will execute provisioning steps in parallel.  This
         /// defaults to <b>5</b>.
         /// </summary>

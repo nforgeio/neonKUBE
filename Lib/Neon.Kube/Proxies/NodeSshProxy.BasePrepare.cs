@@ -526,10 +526,7 @@ var removePackagesScript =
 $@"
 set -euo pipefail
 
-cloud-init clean
-
 {KubeNodeFolder.Bin}/safe-apt-get purge -y \
-    cloud-init \
     git git-man \
     iso-codes \
     locales \

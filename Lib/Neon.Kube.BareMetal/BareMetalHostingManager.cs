@@ -153,9 +153,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool GenerateSecurePassword => true;
-
-        /// <inheritdoc/>
         public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));

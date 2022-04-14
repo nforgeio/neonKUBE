@@ -131,8 +131,13 @@ namespace Neon.Kube
         public string ServiceSubnet { get; set; } = defaultServiceSubnet;
 
         /// <summary>
-        /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
-        /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
+        /// <para>
+        /// The IP addresses of the DNS nameservers to be used by the cluster.
+        /// </para>
+        /// <para>
+        /// For cloud environments, this defaults the name servers provided by the cloud.  For on-premise
+        /// environments, this defaults to the Google Public DNS servers: <b>["8.8.8.8", "8.8.4.4" ]</b>.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
         [YamlMember(Alias = "nameservers", ApplyNamingConventions = false)]
@@ -324,9 +329,16 @@ namespace Neon.Kube
             var gateway              = (IPAddress)null;
             var premiseSubnet        = (NetworkCidr)null;
 
-            // Nameservers
+            // Nameservers:
+            //
+            // For cloud environments, we'll going to leave the nameserver list alone and possibly
+            // empty, letting the specific cloud hosting manager configure the default cloud nameserver
+            // when none are specified.
+            //
+            // For non-cloud environments, we'll set the Google Public DNS nameservers when none
+            // are specified.
 
-            Nameservers = Nameservers ?? new List<string>();
+            Nameservers ??= new List<string>();
 
             if (!isCloud && (Nameservers == null || Nameservers.Count == 0))
             {
