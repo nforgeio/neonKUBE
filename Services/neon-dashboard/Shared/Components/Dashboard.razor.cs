@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 namespace NeonDashboard.Shared.Components
 {
@@ -34,15 +37,27 @@ namespace NeonDashboard.Shared.Components
         public string CurrentDashboard { get; set; }
 
         [Parameter]
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Id { get; set; } = null;
 
         [Parameter]
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Name { get; set; } = null;
 
         [Parameter]
+        [JsonProperty(PropertyName = "Uri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "uri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Uri { get; set; } = null;
 
         [Parameter]
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "description", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Description { get; set; }
 
         /// <summary>
