@@ -109,8 +109,8 @@ OPTIONS:
                                   image file as published to our public S3 bucket for
                                   the target hosting manager.  Examples:
 
-                                      Hyper-V:   ubuntu-20.04.hyperv.vhdx
-                                      XenServer: ubuntu-20.04.xenserver.xva
+                                        Hyper-V:   ubuntu-20.04.hyperv.vhdx
+                                        XenServer: ubuntu-20.04.xenserver.xva
 
                                   NOTE: This is required for [--debug]
 
@@ -253,12 +253,15 @@ OPTIONS:
                 }
             }
 
-            // Use the default node image for the hosting environment unless [--node-image-uri]
-            // or [--node-image-path] was specified.
-
-            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
             {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                // Use the default node image for the hosting environment unless [--node-image-uri]
+                // or [--node-image-path] was specified.
+
+                if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
+                {
+                    nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                }
             }
 
             // Parse any specified package cache endpoints.

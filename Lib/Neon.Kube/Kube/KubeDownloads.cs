@@ -88,6 +88,8 @@ namespace Neon.Kube
         /// <returns>The download URI or <c>null</c>.</returns>
         public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null)
         {
+            var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
+
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
@@ -108,7 +110,7 @@ namespace Neon.Kube
                         throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
                     }
 
-                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment yet.");
+                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironmentUpper}] environment yet.");
 
                 case HostingEnvironment.HyperV:
 
@@ -134,7 +136,7 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironmentUpper}] environment.");
             }
         }
     }

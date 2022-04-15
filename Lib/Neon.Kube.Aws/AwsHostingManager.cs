@@ -1327,7 +1327,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            ConnectAwsAsync(null).WaitWithoutAggregate();
+            ConnectAwsAsync(controller).WaitWithoutAggregate();
 
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {
@@ -3189,7 +3189,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
+            // We need to add a special ingress rule for the Kubernetes API on port 6442 and
             // load balance this traffic to the master nodes.
 
             var clusterRules = new IngressRule[]
@@ -3438,8 +3438,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             await SyncContext.Clear;
 
-            await ConnectAwsAsync(null);
-            AssignExternalSshPorts(null);
+            await ConnectAwsAsync(controller);
+            AssignExternalSshPorts(controller);
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
@@ -3472,8 +3472,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             await SyncContext.Clear;
 
-            await ConnectAwsAsync(null);
-            AssignExternalSshPorts(null);
+            await ConnectAwsAsync(controller);
+            AssignExternalSshPorts(controller);
 
             var listenerPagenator = elbClient.Paginators.DescribeListeners(
                 new DescribeListenersRequest()
