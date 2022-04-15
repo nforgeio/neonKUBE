@@ -143,6 +143,17 @@ namespace Neon.Kube
         public string ApiLoadBalancer { get; set; } = null;
 
         /// <summary>
+        /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
+        /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
+        /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
+        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. Default: 250
+        /// </summary>
+        [JsonProperty(PropertyName = "MaxPodsPerNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "maxPodsPerNode", ApplyNamingConventions = false)]
+        [DefaultValue(250)]
+        public int MaxPodsPerNode { get; set; } = 250;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -210,6 +221,20 @@ namespace Neon.Kube
             if (!AllowPodsOnMasters.HasValue)
             {
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
+            }
+
+            if ((clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3) > (double)IPNetwork.Parse(clusterDefinition.Network.PodSubnet).Usable)
+            {
+                var maxPods        = decimal.ToInt32((decimal)IPNetwork.Parse(clusterDefinition.Network.PodSubnet).Usable / 2.3m);
+                var clusterPods    = clusterDefinition.Nodes.Count() * MaxPodsPerNode;
+                var maxPodsPerNode = maxPods / clusterDefinition.Nodes.Count();
+                var maxNodes       = maxPods / MaxPodsPerNode;
+
+                throw new ClusterDefinitionException(@$"[{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}={MaxPodsPerNode}] is not valid.
+[{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}={clusterDefinition.Network.PodSubnet}] supports a maximum of {maxPods} pods.
+Either expand [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
+or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
+");
             }
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystem))
