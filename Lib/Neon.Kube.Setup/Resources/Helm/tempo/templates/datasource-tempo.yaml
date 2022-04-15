@@ -1,0 +1,27 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: tempo
+spec:
+  name: Tempo
+  datasources:
+    - access: proxy
+      editable: false
+      secureJsonData:
+        httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
+      jsonData:
+        httpHeaderName1: 'X-Scope-OrgID'
+        serviceMap:
+          datasourceUid: 'prometheus'
+        httpMethod: GET
+        tracesToLogs:
+          datasourceUid: loki
+          tags:
+            - job
+            - instance
+            - pod
+            - namespace
+      name: Tempo
+      type: tempo
+      uid: tempo
+      url: http://tempo-query-frontend:3100
