@@ -13,8 +13,9 @@ spec:
       {{- include "neon-dashboard.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -36,7 +37,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "neon-dashboard.fullname" . }}
+                name: {{ include "neon-dashboard.fullname" . }}-env
           env:
             - name: SSO_CLIENT_SECRET
               valueFrom:
@@ -50,6 +51,9 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.metrics.port }}
               protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/neon-dashboard
           startupProbe:
             exec:
               command:
@@ -86,3 +90,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: neon-dashboard
