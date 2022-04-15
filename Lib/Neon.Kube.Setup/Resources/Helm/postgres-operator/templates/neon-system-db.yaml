@@ -72,8 +72,8 @@ spec:
 #  spiloRunAsUser: 101
 #  spiloRunAsGroup: 103
 #  spiloFSGroup: 103
-#  podAnnotations:
-#    annotation.key: value
+  podAnnotations:
+    sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
 #  serviceAnnotations:
 #    annotation.key: value
 #  podPriorityClassName: "spilo-pod-priority"

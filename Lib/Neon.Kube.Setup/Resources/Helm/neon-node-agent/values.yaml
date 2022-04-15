@@ -23,6 +23,9 @@ resource:
     cpu: 100m
     memory: 50Mi
 
+serviceMesh:
+  enabled: true
+
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
 logLevel: info

@@ -82,6 +82,11 @@ securityContext:
   runAsGroup: 472
   fsGroup: 472
 
+tracing:
+  enabled: true
+
+serviceMesh:
+  enabled: true
 
 extraConfigmapMounts: []
   # - name: certs-configmap

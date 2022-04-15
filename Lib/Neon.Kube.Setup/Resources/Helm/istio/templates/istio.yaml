@@ -50,6 +50,9 @@ spec:
   components:
     pilot:
       k8s:
+        env:
+          - name: "GOGC"
+            value: "25"
         priorityClassName: {{ .Values.priorityClassName }}
         resources:
           requests:
@@ -61,6 +64,9 @@ spec:
     - name: istio-ingressgateway
       enabled: true
       k8s:
+        env:
+          - name: "GOGC"
+            value: "25"
         priorityClassName: {{ .Values.priorityClassName }}
         overlays:
           - apiVersion: apps/v1
@@ -82,6 +88,10 @@ spec:
             cpu: "{{ .Values.resources.ingress.requests.cpu }}"
             memory: "{{ .Values.resources.ingress.requests.memory }}"
     cni:
+      k8s:
+        env:
+          - name: "GOGC"
+            value: "25"
       enabled: true
       namespace: kube-system
   values:

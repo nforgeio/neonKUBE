@@ -19,6 +19,7 @@ spec:
         goharbor.io/deploy-engine: Kustomization
         goharbor.io/deploy-mode: harbor
         goharbor.io/operator-version: v1.0.0
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
       labels:
         control-plane: harbor-operator
     spec:

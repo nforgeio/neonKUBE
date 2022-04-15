@@ -83,6 +83,9 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+serviceMesh:
+  enabled: true
+
 rbac:
   create: true
   pspEnabled: false

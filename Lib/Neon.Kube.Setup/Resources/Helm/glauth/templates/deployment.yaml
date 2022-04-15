@@ -15,8 +15,9 @@ spec:
       {{- include "glauth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:

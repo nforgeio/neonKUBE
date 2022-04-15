@@ -20,6 +20,9 @@ enableJsonLogging: false
 
 replicas: 1
 
+serviceMesh:
+  enabled: true
+
 # general configuration parameters
 configGeneral:
   # choose if deployment creates/updates CRDs with OpenAPIV3Validation

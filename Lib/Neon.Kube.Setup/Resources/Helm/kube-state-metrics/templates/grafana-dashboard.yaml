@@ -8,7 +8,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -56,7 +56,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -603,7 +603,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -969,7 +969,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 0,
               "fieldConfig": {
@@ -1055,7 +1055,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -1371,7 +1371,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -1554,7 +1554,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -2099,7 +2099,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -2556,7 +2556,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -2576,7 +2576,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2674,7 +2674,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2758,7 +2758,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2842,7 +2842,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2923,7 +2923,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -3314,7 +3314,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -3584,7 +3584,7 @@ spec:
             "options": [],
             "query": {
               "query": "label_values(kube_node_info, cluster)",
-              "refId": "Cortex-cluster-Variable-Query"
+              "refId": "Mimir-cluster-Variable-Query"
             },
             "refresh": 1,
             "regex": "",
@@ -3637,7 +3637,7 @@ spec:
             "options": [],
             "query": {
               "query": "label_values(kube_node_info{cluster=~\"$cluster\"}, node)",
-              "refId": "Cortex-node-Variable-Query"
+              "refId": "Mimir-node-Variable-Query"
             },
             "refresh": 1,
             "regex": "",
@@ -3693,7 +3693,7 @@ spec:
             "options": [],
             "query": {
               "query": "label_values(kube_namespace_created{cluster=~\"$cluster\"}, namespace)",
-              "refId": "Cortex-namespace-Variable-Query"
+              "refId": "Mimir-namespace-Variable-Query"
             },
             "refresh": 1,
             "regex": "",
@@ -3707,8 +3707,8 @@ spec:
           {
             "current": {
               "selected": false,
-              "text": "Cortex",
-              "value": "Cortex"
+              "text": "Mimir",
+              "value": "Mimir"
             },
             "hide": 0,
             "includeAll": false,
@@ -3718,7 +3718,7 @@ spec:
             "query": "prometheus",
             "queryValue": "",
             "refresh": 1,
-            "regex": "Cortex.*",
+            "regex": "Mimir.*",
             "skipUrlSync": false,
             "type": "datasource"
           }

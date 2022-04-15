@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         name: grafana-operator
+      annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: grafana-operator
       serviceAccount: grafana-operator
