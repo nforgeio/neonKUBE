@@ -367,7 +367,7 @@ namespace Neon.Kube
         /// <returns>The cloned <see cref="NodeSshProxy{TMetadata}"/>.</returns>
         public new NodeSshProxy<TMetadata> Clone()
         {
-            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, this.Role, SshPort);
+            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, role: Role, port: SshPort);
 
             CloneTo(clone);
 

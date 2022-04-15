@@ -631,7 +631,7 @@ namespace Neon.Kube
         /// target group to initialize and transition to healthy) can take a very long time 
         /// to complete.
         /// </summary>
-        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(15);
 
         /// <summary>
         /// Polling interval for slow operations.
@@ -1137,9 +1137,9 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
-            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddGlobalStep("ssh ports", AssignExternalSshPorts);
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
@@ -2247,6 +2247,29 @@ namespace Neon.Kube
             {
                 awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
+
+            // The cluster node proxies were created before we made the external SSH port
+            // assignments above or obtained the ingress elastic IP for the load balancer,
+            // so the node proxies will be configured with the internal node IP addresses
+            // and the standard SSH port 22.
+            //
+            // These endpoints won't work from outside of the VPC, so we'll need to update
+            // the node proxies with the cluster's load balancer address and the unique
+            // SSH port assigned to each node.
+            //
+            // It would have been nicer to construct the node proxies with the correct
+            // endpoint but we have a bit of a chicken-and-egg problem so this seems
+            // to be the easiest approach.
+
+            Covenant.Assert(ingressAddress != null);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var awsInstance = nodeNameToAwsInstance[node.Name];
+
+                node.Address = IPAddress.Parse(ingressAddress.PublicIp);
+                node.SshPort = awsInstance.ExternalSshPort;
+            }
         }
 
         /// <summary>
@@ -2584,7 +2607,7 @@ namespace Neon.Kube
 
                     if (targetHealthState == TargetHealthStateEnum.Initial)
                     {
-                        node.Status = $"target: registering...";
+                        node.Status = $"target: registering (slow)...";
                         return false;
                     }
                     else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
@@ -2818,21 +2841,17 @@ chmod 600 /etc/neonkube/cloud-init/init-script-path
 #------------------------------------------------------------------------------
 # Prevent the script from doing anything after the instance is rebooted.
 
-if [ -f /etc/neonkube/node-init ]; then
+if [ -f /etc/neonkube/cloud-init/disabled ]; then
     exit 0
 fi
 
-touch /etc/neonkube/node-init
-chmod 644 /etc/neonkube/node-init
+touch /etc/neonkube/cloud-init/disabled
+chmod 644 /etc/neonkube/cloud-init/disabled
 
 #------------------------------------------------------------------------------
-# Update the [ubuntu] user password:
+# Update the [sysadmin] user password:
 
-#################################
-# $debug(jefflill): RESTORE THIS!
-#################################
-
-# echo 'ubuntu:{clusterLogin.SshPassword}' | chpasswd
+echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
 #------------------------------------------------------------------------------
 # Configure the node's static IP address:
@@ -2886,7 +2905,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         MaxCount         = 1,
                         SubnetId         = nodeSubnet.SubnetId,
                         EbsOptimized     = ebsOptimized,
-                        PrivateIpAddress = node.Address.ToString(),
+                        PrivateIpAddress = node.Metadata.Address,
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
                         UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
@@ -2959,11 +2978,11 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                     if (InstanceStateCode.IsRunning(status.InstanceState.Code))
                     {
-                        node.Status = "starting...";
+                        node.Status = "starting (slow)...";
                     }
                     else if (InstanceStateCode.IsStopped(status.InstanceState.Code))
                     {
-                        node.Status = "restarting...";
+                        node.Status = "restarting (slow)...";
 
                         await ec2Client.StartInstancesAsync(
                             new StartInstancesRequest()
