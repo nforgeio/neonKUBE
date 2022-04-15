@@ -69,6 +69,9 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+serviceMesh:
+  enabled: true
+
 nodeSelector:
   neonkube.io/monitor.metrics-internal: 'true'
 

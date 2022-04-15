@@ -16,6 +16,8 @@ spec:
     metadata:
       labels:
         app: grafana-agent-operator
+      annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: grafana-agent-operator
       nodeSelector:

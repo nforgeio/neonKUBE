@@ -7,7 +7,7 @@ metadata:
     agent: grafana-agent
 spec:
   remoteWrite:
-    - url: http://cortex:9009/api/prom/push
+    - url: http://mimir-distributor:8080/api/v1/push
       headers:
         X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
       queueConfig:
