@@ -8,7 +8,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -118,7 +118,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": false,
               "expr": "sort_desc( sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace) )",
@@ -139,7 +139,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -232,7 +232,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -405,7 +405,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count[60m])) BY (status)",
@@ -479,7 +479,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": false,
               "expr": "sum(certmanager_http_acme_client_request_count)",
@@ -567,7 +567,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/directory\"}[60m])) BY (status)",
@@ -628,7 +628,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/cert\"}[60m])) BY (status)",
@@ -716,7 +716,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-acct\"}[60m])) BY (status)",
@@ -804,7 +804,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/order\"}[60m])) BY (status)",
@@ -892,7 +892,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-order\"}[60m])) BY (status)",
@@ -980,7 +980,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/authz-v3\"}[60m])) BY (status)",
@@ -1068,7 +1068,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/chall-v3\"}[60m])) BY (status)",
@@ -1156,7 +1156,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/finalize\"}[60m])) BY (status)",
@@ -1230,7 +1230,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(exported_namespace)",
             "error": {
@@ -1279,7 +1279,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
             "error": {
