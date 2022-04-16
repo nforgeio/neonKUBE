@@ -127,13 +127,14 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
-                                                                                                       /// <param name="disableConsoleOutput">
-                                                                                                       /// Optionally disables status output to the console.  This is typically
-                                                                                                       /// enabled for non-console applications.
-                                                                                                       /// </param>
-                                                                                                       /// <returns>The <see cref="ISetupController"/>.</returns>
-                                                                                                       /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
+        /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        
+        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
+        /// <returns>The <see cref="ISetupController"/>.</returns>
+        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
             int                 maxParallel          = 500,
@@ -165,18 +166,24 @@ namespace Neon.Kube
                 throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
             }
 
-            // Clear the log folder.
+            // Clear the log folder except for the [prepare-ok] file.
 
             if (Directory.Exists(logFolder))
             {
-                NeonHelper.DeleteFolderContents(logFolder);
+                foreach (var file in Directory.GetFiles(logFolder, "*", SearchOption.TopDirectoryOnly))
+                {
+                    if (Path.GetFileName(file) != "prepare-ok")
+                    {
+                        NeonHelper.DeleteFile(file);
+                    }
+                }
             }
             else
             {
-                Directory.CreateDirectory(logFolder);
+                throw new DirectoryNotFoundException(logFolder);
             }
 
-            // Reload the any KubeConfig file to ensure we're in-sync.
+            // Reload the any KubeConfig file to ensure we're up-to-date.
 
             KubeHelper.LoadConfig();
 
@@ -197,7 +204,9 @@ namespace Neon.Kube
 
             KubeHelper.InitContext(kubeContext);
 
-            var cluster = new ClusterProxy(
+            ClusterProxy cluster = null;
+
+            cluster = new ClusterProxy(
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
                 operation:              ClusterProxy.Operation.Setup,
                 clusterDefinition:      clusterDefinition,
@@ -267,13 +276,15 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
-            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the setup steps.
 
             controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
+
+            cluster.HostingManager.AddSetupSteps(controller);
+
             controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
@@ -305,9 +316,9 @@ namespace Neon.Kube
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+            var configureMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-            controller.AddNodeStep(configureFirstMasterStepLabel,
+            controller.AddNodeStep(configureMasterStepLabel,
                 (controller, node) =>
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest);
@@ -393,6 +404,8 @@ namespace Neon.Kube
                     },
                     (controller, node) => node.Metadata.IsWorker);
             }
+
+            cluster.HostingManager.AddPostSetupSteps(controller);
 
             // We need to dispose this after the setup controller runs.
 

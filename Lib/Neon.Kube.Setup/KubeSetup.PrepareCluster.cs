@@ -239,7 +239,6 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
             controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
-            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the cluster preparation steps.
@@ -396,12 +395,12 @@ namespace Neon.Kube
                 });
 
             controller.AddGlobalStep("neoncluster.io domain",
-                async (controller) =>
+                async controller =>
                 {
-                    controller.SetGlobalStepStatus("create: neoncluster.io subdomain for TLS");
+                    controller.SetGlobalStepStatus("create: *.neoncluster.io domain (for TLS)");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                    var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
+                    var clusterIp          = cluster.HostingManager.GetClusterAddress();
 
                     using (var jsonClient = new JsonClient())
                     {
@@ -421,6 +420,15 @@ namespace Neon.Kube
                         clusterLogin.Save();
                     }
                 });
+
+            if (KubeHelper.IsCloudEnvironment(cluster.HostingManager.HostingEnvironment))
+            {
+                controller.AddGlobalStep("SSH: block ingress",
+                    async controller =>
+                    {
+                        await cluster.HostingManager.DisableInternetSshAsync();
+                    });
+            }
 
             // Some hosting managers may have to some additional work after
             // the cluster has been otherwise prepared.

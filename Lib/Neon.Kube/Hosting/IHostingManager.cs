@@ -105,6 +105,18 @@ namespace Neon.Kube
         void AddPostProvisioningSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
+        /// Adds any steps to be performed before starting cluster setup.
+        /// </summary>
+        /// <param name="controller">The target setup controller.</param>
+        void AddSetupSteps(SetupController<NodeDefinition> controller);
+
+        /// <summary>
+        /// Adds any stps to be performed after cluster setup.
+        /// </summary>
+        /// <param name="controller">The target setup controller.</param>
+        void AddPostSetupSteps(SetupController<NodeDefinition> controller);
+
+        /// <summary>
         /// Returns <c>true</c> if the hosting manage is capable of updating the upstream
         /// network router or load balancer.  Cloud based managers will return <c>true</c>
         /// whereas on-premise managers will return <c>false</c> because we don't have
@@ -174,6 +186,15 @@ namespace Neon.Kube
         /// cluster along with the public NAT port.
         /// </remarks>
         (string Address, int Port) GetSshEndpoint(string nodeName);
+
+        /// <summary>
+        /// Returns the IP address to be used to access the cluster.  For clusters
+        /// deployed the the cloud, this will be the ingress IP address assigned to
+        /// the load balancer.  For on-premise clusters, this returns the private
+        /// IP address for the first master node.
+        /// </summary>
+        /// <returns>The cluster IP address.</returns>
+        string GetClusterAddress();
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 

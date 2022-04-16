@@ -137,12 +137,6 @@ namespace Neon.Kube
         public const string DisableImageDownload = "image-download-disabled";
 
         /// <summary>
-        /// Property name for the IP address of the cluster. This is used to create the <b>neoncluster.io</b> 
-        /// DNS subdomain pointing to the cluster.
-        /// </summary>
-        public const string ClusterIp = "cluster-ip";
-
-        /// <summary>
         /// Property name for a boolean indicating whether secrets should be redacted when logging
         /// during cluster setup.  This should be generally set to <c>true</c> for production
         /// deployments.

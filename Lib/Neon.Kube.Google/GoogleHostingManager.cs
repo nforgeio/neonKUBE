@@ -209,6 +209,12 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override string GetClusterAddress()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
             await SyncContext.Clear;

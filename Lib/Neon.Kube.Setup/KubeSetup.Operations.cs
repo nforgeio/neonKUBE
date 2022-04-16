@@ -54,7 +54,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.LogProgress(node, verb: "configure", message: "etcd ha");
+            controller.LogProgress(node, verb: "configure", message: "etcd HA");
 
             var sbHaProxyConfig = new StringBuilder();
 

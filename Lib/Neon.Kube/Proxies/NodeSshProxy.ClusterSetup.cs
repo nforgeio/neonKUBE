@@ -677,7 +677,7 @@ EOF
 
                         foreach (var line in reader.Lines())
                         {
-                            if (!line.Contains("Linux filesystem"))
+                            if (!line.EndsWith("Linux filesystem") && !line.EndsWith("Linux"))
                             {
                                 continue;
                             }

@@ -127,6 +127,16 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public virtual void AddSetupSteps(SetupController<NodeDefinition> controller)
+        {
+        }
+
+        /// <inheritdoc/>
+        public virtual void AddPostSetupSteps(SetupController<NodeDefinition> controllerd)
+        {
+        }
+
+        /// <inheritdoc/>
         public virtual bool CanManageRouter => false;
 
         /// <inheritdoc/>
@@ -152,6 +162,9 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public abstract string GetDataDisk(LinuxSshProxy node);
+
+        /// <inheritdoc/>
+        public abstract string GetClusterAddress();
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

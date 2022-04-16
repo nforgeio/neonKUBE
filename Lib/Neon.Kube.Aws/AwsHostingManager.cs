@@ -1093,16 +1093,11 @@ namespace Neon.Kube
             AssignNodeAddresses(clusterDefinition);
         }
 
-        /// <inheritdoc/>
-        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
+        /// <summary>
+        /// Initializes the node mdictionaries: <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>.
+        /// </summary>
+        private void InitializeNodeDictionaries()
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
-
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
-            this.controller = controller;
-
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
 
@@ -1124,6 +1119,19 @@ namespace Neon.Kube
             {
                 instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
             }
+        }
+
+        /// <inheritdoc/>
+        public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+            this.controller = controller;
+
+            InitializeNodeDictionaries();
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -1154,9 +1162,12 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Assert(object.ReferenceEquals(controller, this.controller));
+
+            var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             if (cluster.Definition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
             {
@@ -1168,7 +1179,7 @@ namespace Neon.Kube
                 // At this point, the data disk should be partitioned, formatted, and mounted so
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-                setupController.AddNodeStep("openebs",
+                controller.AddNodeStep("openebs",
                 async (controller, node) =>
                 {
                     node.Status = "openebs: checking";
@@ -1275,6 +1286,58 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override void AddSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            InitializeNodeDictionaries();
+
+            controller.AddGlobalStep("AWS connect",
+                async controller =>
+                {
+                    await ConnectAwsAsync(controller);
+                    await GetResourcesAsync();
+                });
+
+            controller.AddGlobalStep("SSH: allow ingress",
+                async controller =>
+                {
+                    await cluster.HostingManager.EnableInternetSshAsync();
+
+                        // We need to update the cluster node addresses and SSH ports
+                        // to match the cluster load balancer port forwarding mappings.
+
+                        foreach (var node in cluster.Nodes)
+                    {
+                        var endpoint = cluster.HostingManager.GetSshEndpoint(node.Name);
+
+                        node.Address = IPAddress.Parse(endpoint.Address);
+                        node.SshPort = endpoint.Port;
+                    }
+                });
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("SSH: block ingress",
+                async controller =>
+                {
+                    await cluster.HostingManager.DisableInternetSshAsync();
+                });
+        }
+
+        /// <inheritdoc/>
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
@@ -1354,6 +1417,12 @@ namespace Neon.Kube
             Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
 
             return unpartitonedDisks.Single();
+        }
+
+        /// <inheritdoc/>
+        public override string GetClusterAddress()
+        {
+            return cluster.FirstMaster.Address?.ToString();
         }
 
         /// <inheritdoc/>
@@ -2918,11 +2987,21 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         {
                             new BlockDeviceMapping()
                             {
-                                DeviceName = dataDeviceName,
+                                DeviceName = osDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
                                     VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
                                     VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.VolumeSize) / ByteUnits.GibiBytes),
+                                    DeleteOnTermination = true
+                                }
+                            },
+                            new BlockDeviceMapping()
+                            {
+                                DeviceName = dataDeviceName,
+                                Ebs        = new EbsBlockDevice()
+                                {
+                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.OpenEBSVolumeType),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
                                     DeleteOnTermination = true
                                 }
                             }
