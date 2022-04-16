@@ -17,6 +17,9 @@ fullnameOverride: reloader
 kubernetes:
   host: https://kubernetes.default
 
+serviceMesh:
+  enabled: true
+
 reloader:
   isArgoRollouts: false
   isOpenshift: false

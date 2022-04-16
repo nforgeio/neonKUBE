@@ -1,0 +1,28 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: mimir
+spec:
+  name: Mimir
+  datasources:
+    - name: Mimir
+      uid: mimir
+      type: prometheus
+      access: proxy
+      url: http://mimir-query-frontend:8080/prometheus
+      isDefault: true
+      version: 1
+      editable: false
+      secureJsonData:
+        httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
+      jsonData:
+        httpHeaderName1: 'X-Scope-OrgID'
+        tlsSkipVerify: true
+        timeInterval: "5s"
+{{- if .Values.tracing.enabled }}
+        exemplarTraceIdDestinations:
+          # Field with internal link pointing to data source in Grafana.
+          # datasourceUid value can be anything, but it should be unique across all defined data source uids.
+          - datasourceUid: tempo
+            name: traceID
+{{- end }}

@@ -1,0 +1,24 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: loki
+spec:
+  name: Loki
+  datasources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki-query-frontend:3100
+      secureJsonData:
+        httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
+      jsonData:
+        httpHeaderName1: 'X-Scope-OrgID'
+{{- if .Values.tracing.enabled }}
+        derivedFields:
+          - datasourceName: Tempo
+            matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
+            name: traceID
+            url: "$${__value.raw}"
+            datasourceUid: tempo
+{{- end }}

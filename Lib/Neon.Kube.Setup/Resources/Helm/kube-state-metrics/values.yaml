@@ -91,6 +91,9 @@ securityContext:
   runAsUser: 65534
   fsGroup: 65534
 
+serviceMesh:
+  enabled: true
+
 ## Specify security settings for a Container
 ## Allows overrides and additional options compared to (Pod) securityContext
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container

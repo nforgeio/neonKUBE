@@ -8,7 +8,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -104,7 +104,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "max(max_over_time(redis_uptime_in_seconds{pod=~\"$pod_name\"}[$__interval]))",
@@ -185,7 +185,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(redis_connected_clients{pod=~\"$pod_name\"})",
@@ -270,7 +270,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum((100 * (redis_memory_used_bytes{pod=~\"$pod_name\"} / redis_memory_max_bytes{pod=~\"$pod_name\"} )))",
@@ -344,7 +344,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(redis_commands_processed_total{pod=~\"$pod_name\"}[$__rate_interval])",
@@ -468,7 +468,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(irate(redis_keyspace_hits_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -485,7 +485,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(irate(redis_keyspace_misses_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -596,7 +596,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "redis_memory_used_bytes{pod=~\"$pod_name\"}",
@@ -612,7 +612,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "topk(1,redis_memory_max_bytes)",
@@ -704,7 +704,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(redis_net_input_bytes_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -718,7 +718,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(redis_net_output_bytes_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -813,7 +813,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum (redis_db_keys{pod=~\"$pod_name\"}) by (db) != 0",
@@ -883,7 +883,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum (redis_db_keys{pod=~\"$pod_name\"}) - sum (redis_db_keys_expiring{pod=~\"$pod_name\"}) ",
@@ -898,7 +898,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum (redis_db_keys_expiring{pod=~\"$pod_name\"}) ",
@@ -1064,7 +1064,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(redis_expired_keys_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -1081,7 +1081,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(redis_evicted_keys_total{pod=~\"$pod_name\"}[$__rate_interval]))",
@@ -1172,7 +1172,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "topk(5, sum(irate(redis_commands_total{pod=~\"$pod_name\"} [$__rate_interval])) by (cmd))",
@@ -1264,7 +1264,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum (redis_connected_clients{pod=~\"$pod_name\"}) by (pod)",
@@ -1310,7 +1310,7 @@ spec:
               "value": "neon-system"
             },
             "datasource": {
-              "uid": "$DS_PROMETHEUS"
+              "uid": "mimir"
             },
             "definition": "label_values(redis_up, namespace)",
             "error": {
@@ -1369,7 +1369,7 @@ spec:
               ]
             },
             "datasource": {
-              "uid": "$DS_PROMETHEUS"
+              "uid": "mimir"
             },
             "definition": "label_values(redis_up{namespace=\"$namespace\"}, pod)",
             "error": {

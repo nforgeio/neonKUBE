@@ -7,7 +7,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -58,7 +58,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -137,7 +137,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "(((count(count(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}) by (cpu))) - avg(sum by (mode)(rate(node_cpu_seconds_total{mode='idle',instance=\"$node\",job=\"$job\"}[$__rate_interval])))) * 100) / count(count(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}) by (cpu))",
@@ -155,7 +155,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Busy state of all CPU cores together (5 min average)",
           "fieldConfig": {
@@ -234,7 +234,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Busy state of all CPU cores together (15 min average)",
           "fieldConfig": {
@@ -312,7 +312,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Non available RAM memory",
           "fieldConfig": {
@@ -391,7 +391,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Used Swap",
           "fieldConfig": {
@@ -468,7 +468,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Used Root FS",
           "fieldConfig": {
@@ -546,7 +546,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Total number of CPU cores",
           "fieldConfig": {
@@ -622,7 +622,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "System uptime",
           "fieldConfig": {
@@ -698,7 +698,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Total RootFS",
           "fieldConfig": {
@@ -779,7 +779,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Total RAM",
           "fieldConfig": {
@@ -854,7 +854,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Total SWAP",
           "fieldConfig": {
@@ -930,7 +930,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -1089,7 +1089,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode=\"system\",instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1104,7 +1104,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode='user',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1119,7 +1119,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode='iowait',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1133,7 +1133,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum by (instance)(rate(node_cpu_seconds_total{mode=~\".*irq\",instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1147,7 +1147,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum (rate(node_cpu_seconds_total{mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1161,7 +1161,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='idle',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1235,7 +1235,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "decimals": 2,
           "description": "Basic memory usage",
@@ -1577,7 +1577,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_network_receive_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
@@ -1591,7 +1591,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_network_transmit_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
@@ -1746,7 +1746,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "100 - ((node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'})",
@@ -1794,7 +1794,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -1924,7 +1924,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode=\"system\",instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1938,7 +1938,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='user',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1952,7 +1952,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='nice',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1966,7 +1966,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='idle',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1980,7 +1980,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='iowait',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -1994,7 +1994,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='irq',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -2008,7 +2008,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='softirq',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -2022,7 +2022,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='steal',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -2036,7 +2036,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "sum by (mode)(rate(node_cpu_seconds_total{mode='guest',instance=\"$node\",job=\"$job\"}[$__rate_interval])) * 100",
@@ -2108,7 +2108,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "description": "",
@@ -2447,7 +2447,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
@@ -2461,7 +2461,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
@@ -2618,7 +2618,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'} - node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'}",
@@ -2859,7 +2859,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_reads_completed_total{instance=\"$node\",job=\"$job\",device=~\"$diskdevices\"}[$__rate_interval])",
@@ -2872,7 +2872,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_writes_completed_total{instance=\"$node\",job=\"$job\",device=~\"$diskdevices\"}[$__rate_interval])",
@@ -3050,7 +3050,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_read_bytes_total{instance=\"$node\",job=\"$job\",device=~\"$diskdevices\"}[$__rate_interval])",
@@ -3065,7 +3065,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_written_bytes_total{instance=\"$node\",job=\"$job\",device=~\"$diskdevices\"}[$__rate_interval])",
@@ -3222,7 +3222,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_io_time_seconds_total{instance=\"$node\",job=\"$job\",device=~\"$diskdevices\"} [$__rate_interval])",
@@ -3278,7 +3278,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -3291,7 +3291,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -3650,7 +3650,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -4028,7 +4028,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -4407,7 +4407,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -4804,7 +4804,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -5205,7 +5205,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -5617,7 +5617,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -5804,7 +5804,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -5973,7 +5973,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -6154,7 +6154,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -6333,7 +6333,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -6518,7 +6518,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -6696,7 +6696,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -6884,7 +6884,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -7063,7 +7063,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 2,
               "fieldConfig": {
@@ -7213,7 +7213,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -7317,7 +7317,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pgpgin{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7331,7 +7331,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pgpgout{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7457,7 +7457,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pswpin{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7471,7 +7471,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pswpout{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7647,7 +7647,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pgfault{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7661,7 +7661,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pgmajfault{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7675,7 +7675,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_pgfault{instance=\"$node\",job=\"$job\"}[$__rate_interval])  - rate(node_vmstat_pgmajfault{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7848,7 +7848,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_vmstat_oom_kill{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -7902,7 +7902,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -7919,7 +7919,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -8091,7 +8091,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -8236,7 +8236,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -8395,7 +8395,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -8550,7 +8550,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -8567,7 +8567,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -8818,7 +8818,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "node_processes_state{instance=\"$node\",job=\"$job\"}",
@@ -8967,7 +8967,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_forks_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9121,7 +9121,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(process_virtual_memory_bytes{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9135,7 +9135,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "process_resident_memory_max_bytes{instance=\"$node\",job=\"$job\"}",
@@ -9149,7 +9149,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(process_virtual_memory_bytes{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9163,7 +9163,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(process_virtual_memory_max_bytes{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9317,7 +9317,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "node_processes_pids{instance=\"$node\",job=\"$job\"}",
@@ -9331,7 +9331,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "node_processes_max_processes{instance=\"$node\",job=\"$job\"}",
@@ -9486,7 +9486,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_schedstat_running_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9500,7 +9500,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_schedstat_waiting_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9655,7 +9655,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "node_processes_threads{instance=\"$node\",job=\"$job\"}",
@@ -9669,7 +9669,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "expr": "node_processes_max_threads{instance=\"$node\",job=\"$job\"}",
                   "format": "time_series",
@@ -9722,7 +9722,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -9839,7 +9839,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_context_switches_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9853,7 +9853,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_intr_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -9905,7 +9905,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -10176,7 +10176,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_interrupts_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -10324,7 +10324,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_schedstat_timeslices_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -10376,7 +10376,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -10621,7 +10621,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(process_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -10673,7 +10673,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -10832,7 +10832,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -10961,7 +10961,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "node_hwmon_temp_celsius{instance=\"$node\",job=\"$job\"}",
@@ -10975,7 +10975,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "expr": "node_hwmon_temp_crit_alarm_celsius{instance=\"$node\",job=\"$job\"}",
               "format": "time_series",
@@ -10989,7 +10989,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "expr": "node_hwmon_temp_crit_celsius{instance=\"$node\",job=\"$job\"}",
               "format": "time_series",
@@ -11002,7 +11002,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "expr": "node_hwmon_temp_crit_hyst_celsius{instance=\"$node\",job=\"$job\"}",
               "format": "time_series",
@@ -11016,7 +11016,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "expr": "node_hwmon_temp_max_celsius{instance=\"$node\",job=\"$job\"}",
               "format": "time_series",
@@ -11069,7 +11069,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -11233,7 +11233,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -11378,7 +11378,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -11494,7 +11494,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_systemd_socket_accepted_connections_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -11545,7 +11545,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -11744,7 +11744,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -11968,7 +11968,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_reads_completed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -11981,7 +11981,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_writes_completed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12219,7 +12219,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_read_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12233,7 +12233,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_written_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12473,7 +12473,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_read_time_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval]) / rate(node_disk_reads_completed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12487,7 +12487,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_write_time_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval]) / rate(node_disk_writes_completed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12723,7 +12723,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_io_time_weighted_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12964,7 +12964,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_reads_merged_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -12977,7 +12977,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_writes_merged_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -13268,7 +13268,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "The number of outstanding requests at the instant the sample was taken. Incremented as requests are given to appropriate struct request_queue and decremented as they finish.",
               "fieldConfig": {
@@ -13706,7 +13706,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "expr": "rate(node_disk_discards_completed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
                   "interval": "",
@@ -13718,7 +13718,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_disk_discards_merged_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -13770,7 +13770,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -13787,7 +13787,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "decimals": 3,
               "description": "",
@@ -13959,7 +13959,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -14111,7 +14111,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -14267,7 +14267,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -14419,7 +14419,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "description": "",
               "fieldConfig": {
@@ -14583,7 +14583,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -14708,7 +14708,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_packets_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -14722,7 +14722,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_packets_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -14879,7 +14879,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_errs_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -14893,7 +14893,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_errs_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15050,7 +15050,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_drop_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15064,7 +15064,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_drop_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15221,7 +15221,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_compressed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15235,7 +15235,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_compressed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15392,7 +15392,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_multicast_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15549,7 +15549,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_fifo_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15563,7 +15563,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_fifo_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15721,7 +15721,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_receive_frame_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -15876,7 +15876,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_carrier_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -16033,7 +16033,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_network_transmit_colls_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -16083,7 +16083,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -16245,7 +16245,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -16390,7 +16390,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -16536,7 +16536,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -16682,7 +16682,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -16936,7 +16936,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_softnet_processed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -16950,7 +16950,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_softnet_dropped_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -17104,7 +17104,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "cortex"
+                    "uid": "mimir"
                   },
                   "exemplar": true,
                   "expr": "rate(node_softnet_times_squeezed_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -17156,7 +17156,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -17313,7 +17313,7 @@ spec:
           "collapsed": true,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -17330,7 +17330,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -17518,7 +17518,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -17687,7 +17687,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -17849,7 +17849,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -18016,7 +18016,7 @@ spec:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "fieldConfig": {
                 "defaults": {
@@ -18168,7 +18168,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -18301,7 +18301,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_IpExt_InOctets{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18315,7 +18315,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_IpExt_OutOctets{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18473,7 +18473,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Ip_Forwarding{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18636,7 +18636,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Icmp_InMsgs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18650,7 +18650,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Icmp_OutMsgs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18810,7 +18810,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Icmp_InErrors{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18974,7 +18974,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_InDatagrams{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -18988,7 +18988,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_OutDatagrams{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19143,7 +19143,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_InErrors{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19157,7 +19157,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_NoPorts{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19171,7 +19171,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_UdpLite_InErrors{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19183,7 +19183,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_RcvbufErrors{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19197,7 +19197,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Udp_SndbufErrors{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19363,7 +19363,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_InSegs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19378,7 +19378,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_OutSegs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19535,7 +19535,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_ListenOverflows{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19550,7 +19550,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_ListenDrops{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19565,7 +19565,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_TCPSynRetrans{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19579,7 +19579,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_RetransSegs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19591,7 +19591,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_InErrs{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19603,7 +19603,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_OutRsts{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19652,7 +19652,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -19937,7 +19937,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_SyncookiesFailed{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19952,7 +19952,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_SyncookiesRecv{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -19967,7 +19967,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_TcpExt_SyncookiesSent{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -20122,7 +20122,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_ActiveOpens{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -20136,7 +20136,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "rate(node_netstat_Tcp_PassiveOpens{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
@@ -20184,7 +20184,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "gridPos": {
             "h": 1,
@@ -20204,7 +20204,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -20353,7 +20353,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -20547,7 +20547,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "cortex"
+              "uid": "mimir"
             },
             "definition": "",
             "hide": 0,
@@ -20577,7 +20577,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(node_uname_info{job=\"$job\"}, instance)",
             "hide": 0,

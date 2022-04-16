@@ -27,7 +27,7 @@ data:
     metrics:
       global:
         remote_write:
-          - url: http://cortex:9009/api/prom/push
+          - url: http://mimir-distributor:8080/api/v1/push
             headers: 
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
@@ -117,7 +117,7 @@ data:
     logs:
       configs:
         - clients:
-            - url: http://loki:3100/loki/api/v1/push
+            - url: http://loki-distributor:3100/loki/api/v1/push
               tenant_id: {{ .Values.cluster.name | default "neonkube" }}
               backoff_config:
                 min_period: 500ms
@@ -232,6 +232,7 @@ data:
                     - __meta_kubernetes_pod_container_name
                   target_label: __path__
       positions_directory: /tmp/positions
+{{- if .Values.tracing.enabled }}
     traces:
       configs:
         - batch:
@@ -250,7 +251,7 @@ data:
                 grpc:
                   endpoint: "0.0.0.0:4317"
           remote_write:
-            - endpoint: tempo:55680
+            - endpoint: tempo-distributor:55680
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               insecure: true
@@ -304,4 +305,7 @@ data:
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
+{{- end }}
+{{- if .Values.tracing.enabled }}
   strategies.json: '{"default_strategy": {"param": 0.010, "type": "probabilistic"}}'
+{{- end }}

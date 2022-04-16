@@ -21,6 +21,9 @@ resources:
   requests:
     memory: 64Mi
 
+serviceMesh:
+  enabled: true
+
 # Authentication parameters
 ##
 auth:

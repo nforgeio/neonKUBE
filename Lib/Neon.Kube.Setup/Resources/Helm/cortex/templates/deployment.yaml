@@ -33,6 +33,7 @@ spec:
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: {{ template "cortex.serviceAccountName" . }}
     {{- if .Values.priorityClassName }}

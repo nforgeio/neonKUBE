@@ -24,6 +24,7 @@ spec:
   template:
     metadata:
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
         checksum/init-config: {{ print (include "config-redis.conf" .) (include "config-init.sh" .) (include "redis_liveness.sh" .) (include "sentinel_liveness.sh" .) | sha256sum }}
       {{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
