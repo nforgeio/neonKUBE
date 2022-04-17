@@ -459,7 +459,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a master node that is reachable via the network because it answers a ping.
+        /// Returns a master node that is reachable because it answers a ping.
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
         /// <returns>The reachable master node or <c>null</c>.</returns>
@@ -525,18 +525,6 @@ namespace Neon.Kube
             {
                 node.LogLine(message);
             }
-        }
-
-        /// <summary>
-        /// Returns the current time (UTC) for the cluster by fetching the 
-        /// time from one of the cluster masters.
-        /// </summary>
-        /// <returns>The cluster's current <see cref="DateTime"/> (UTC).</returns>
-        public DateTime GetTimeUtc()
-        {
-            var master = GetReachableMaster();
-
-            return master.GetTimeUtc();
         }
 
         /// <summary>

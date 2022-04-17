@@ -193,8 +193,12 @@ namespace Neon.Kube
         /// the load balancer.  For on-premise clusters, this returns the private
         /// IP address for the first master node.
         /// </summary>
-        /// <returns>The cluster IP address.</returns>
-        string GetClusterAddress();
+        /// <param name="nullWhenNotCloud">
+        /// Optionally specifies that <c>null</c> should be returned for non-cloud
+        /// clusters that aren't behind by a load balancer.  This defaults to <c>false</c>.
+        /// </param>
+        /// <returns>The cluster IP address or <c>null</c>.</returns>
+        string GetClusterAddress(bool nullWhenNotCloud = false);
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 

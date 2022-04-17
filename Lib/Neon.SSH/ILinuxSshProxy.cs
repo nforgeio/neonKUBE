@@ -121,7 +121,7 @@ namespace Neon.SSH
         string Name { get; }
 
         /// <summary>
-        /// The cluster private IP address to used for connecting to the remote machine.
+        /// The IP address to used for connecting to the remote machine.
         /// </summary>
         IPAddress Address { get; set; }
 

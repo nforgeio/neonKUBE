@@ -305,7 +305,7 @@ namespace Neon.Kube
             }
 
             /// <summary>
-            /// Returns the IP address of the node.
+            /// Returns the private IP address of the node.
             /// </summary>
             public string Address => Node.Address.ToString();
 
@@ -1308,10 +1308,10 @@ namespace Neon.Kube
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
 
-                        // We need to update the cluster node addresses and SSH ports
-                        // to match the cluster load balancer port forwarding mappings.
+                    // We need to update the cluster node addresses and SSH ports
+                    // to match the cluster load balancer port forwarding mappings.
 
-                        foreach (var node in cluster.Nodes)
+                    foreach (var node in cluster.Nodes)
                     {
                         var endpoint = cluster.HostingManager.GetSshEndpoint(node.Name);
 
@@ -1420,9 +1420,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetClusterAddress()
+        public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
-            return cluster.FirstMaster.Address?.ToString();
+            return ingressAddress.PublicIp;
         }
 
         /// <inheritdoc/>
@@ -2936,7 +2936,7 @@ network:
     $interface:
       dhcp4: false
       dhcp6: false
-      addresses: [{node.Address}/{privateSubnet.PrefixLength}]
+      addresses: [{node.Metadata.Address}/{privateSubnet.PrefixLength}]
       gateway4: {privateSubnet.FirstUsableAddress}
       nameservers:
         addresses: [{sbNameServers}]

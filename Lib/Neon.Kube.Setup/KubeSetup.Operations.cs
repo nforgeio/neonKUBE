@@ -103,7 +103,7 @@ backend kubernetes_masters_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {master.Name}         {master.Address}:{KubeNodePort.KubeApiServer}");
+    server {master.Name}         {master.Metadata.Address}:{KubeNodePort.KubeApiServer}");
             }
 
             sbHaProxyConfig.Append(
@@ -116,7 +116,7 @@ backend harbor_backend_http
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {n.Name}         {n.Address}:{KubeNodePort.IstioIngressHttp}");
+    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttp}");
             }
 
             sbHaProxyConfig.Append(
@@ -129,7 +129,7 @@ backend harbor_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {n.Name}         {n.Address}:{KubeNodePort.IstioIngressHttps}");
+    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttps}");
             }
 
             node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
@@ -389,6 +389,9 @@ spec:
             var sbCertSANs           = new StringBuilder();
             var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
+            sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+            sbCertSANs.AppendLine($"  - \"127.0.0.1\"");
+
             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
             {
                 controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
@@ -396,12 +399,23 @@ spec:
                 var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
 
                 sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
-                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+            }
+
+            if (cluster.Definition.Domain != null)
+            {
+                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Domain}\"");
+            }
+
+            var clusterIP = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: true);
+
+            if (clusterIP != null)
+            {
+                sbCertSANs.AppendLine($"  - \"{clusterIP}\"");
             }
 
             foreach (var node in cluster.Masters)
             {
-                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                sbCertSANs.AppendLine($"  - \"{node.Metadata.Address}\"");
                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
             }
 
@@ -509,7 +523,7 @@ mode: {kubeProxyMode}");
                     master.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            controller.LogProgress(master, verb: "initialize", message: "kubernetes");
+                            controller.LogProgress(master, verb: "reset", message: "kubernetes");
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
@@ -526,6 +540,8 @@ mode: {kubeProxyMode}");
                             //
                             // We're going to wait for the presence of the CRI-O socket here.
 
+                            controller.LogProgress(master, verb: "wait", message: "for cri-o");
+
                             const string crioSocket = "/var/run/crio/crio.sock";
 
                             NeonHelper.WaitFor(
@@ -539,14 +555,6 @@ mode: {kubeProxyMode}");
                                 },
                                 pollInterval: TimeSpan.FromSeconds(0.5),
                                 timeout:      TimeSpan.FromSeconds(60));
-
-                            // Configure the control plane's API server endpoint and initialize
-                            // the certificate SAN names to include each master IP address as well
-                            // as the HOSTNAME/ADDRESS of the API load balancer (if any).
-
-                            controller.LogProgress(master, verb: "initialize", message: "cluster");
-
-                            controller.ThrowIfCancelled();
 
                             // $note(jefflill):
                             //
@@ -565,30 +573,45 @@ mode: {kubeProxyMode}");
                             var clusterConfig  = GenerateKubernetesClusterConfig(controller, master);
                             var kubeInitScript =
 $@"
+#######################################
+# $debug(jefflill): DELETE THE LOGGING!
+#######################################
+
+echo 'init: 0' >> /home/sysadmin/init.log
+
 if ! systemctl enable kubelet.service; then
+echo 'init: 1' >> /home/sysadmin/init.log
     echo 'FAILED: systemctl enable kubelet.service' >&2
     exit 1
 fi
 
+echo 'init: 2' >> /home/sysadmin/init.log
 # The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable --cri-socket={crioSocket}; then
+echo 'init: 3' >> /home/sysadmin/init.log
     exit 0
 fi
+echo 'init: 4' >> /home/sysadmin/init.log
 
 # The remaining 6 calls specify [--ignore-preflight-errors=all] to avoid detecting
 # bogus conflicts with itself.
 
 for count in {{1..6}}
 do
+echo 'init: 5' >> /home/sysadmin/init.log
     if kubeadm init --config cluster.yaml --ignore-preflight-errors=all --cri-socket={crioSocket}; then
+echo 'init: 6' >> /home/sysadmin/init.log
         exit 0
     fi
 done
 
+echo 'init: ' >> /home/sysadmin/init.log
 echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
+                            controller.LogProgress(master, verb: "initialize", message: "kubernetes");
+
                             var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
                             // Extract the cluster join command from the response.  We'll need this to join
@@ -1742,33 +1765,44 @@ subjects:
         /// Generates a dashboard certificate.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The generated certificate.</returns>
-        public static TlsCertificate GenerateDashboardCert(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static TlsCertificate GenerateDashboardCert(ISetupController controller)
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            // We're going to tie the custom certificate to the IP addresses
-            // of the master nodes only.  This means that only these nodes
-            // can accept the traffic and also that we'd need to regenerate
-            // the certificate if we add/remove a master node.
+            // We're going to tie the custom certificate to the private IP
+            // addresses of the master nodes as well as the cluster domain
+            // plus the public ingress address for cloud deployments.
+            //
+            // This means that only these nodes can accept the traffic and also
+            // that we'd need to regenerate the certificate if we add/remove a
+            // master node.
             //
             // Here's the tracking task:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/441
 
-            var masterAddresses = new List<string>();
+            var certHostnames = new List<string>();
 
-            foreach (var masterNode in cluster.Masters)
+            foreach (var master in cluster.Masters)
             {
-                masterAddresses.Add(masterNode.Address.ToString());
+                certHostnames.Add(master.Metadata.Address);
+            }
+
+            certHostnames.Add(cluster.Definition.Domain);
+
+            var clusterAddress = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: true);
+
+            if (clusterAddress != null)
+            {
+                certHostnames.Add(clusterAddress);
             }
 
             var utcNow     = DateTime.UtcNow;
             var utc10Years = utcNow.AddYears(10);
 
             var certificate = TlsCertificate.CreateSelfSigned(
-                hostnames: masterAddresses,
+                hostnames: certHostnames,
                 validDays: (int)(utc10Years - utcNow).TotalDays,
                 issuedBy:  "kubernetes-dashboard");
 
