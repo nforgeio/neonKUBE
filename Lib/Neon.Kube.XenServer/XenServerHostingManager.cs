@@ -848,8 +848,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetClusterAddress()
+        public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
+            if (nullWhenNoLoadbalancer)
+            {
+                return null;
+            }
+
             return cluster.FirstMaster.Address?.ToString();
         }
 

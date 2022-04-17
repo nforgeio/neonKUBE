@@ -400,21 +400,21 @@ namespace Neon.Kube
                     controller.SetGlobalStepStatus("create: *.neoncluster.io domain (for TLS)");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                    var clusterIp          = cluster.HostingManager.GetClusterAddress();
+                    var clusterIp          = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: true);
 
                     using (var jsonClient = new JsonClient())
                     {
                         jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.NeonCloudHeadendUri));
 
-                        if (IPAddress.TryParse(clusterIp, out var ip))
+                        if (clusterIp != null && IPAddress.TryParse(clusterIp, out var ip))
                         {
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={clusterIp}");
                         }
                         else
                         {
-                            var hostAddress = await Dns.GetHostAddressesAsync(clusterIp.Split(':')[0]);
+                            var hostAddress = cluster.FirstMaster.Metadata.Address;
 
-                            clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={hostAddress.First()}");
+                            clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?ipAddress={hostAddress}");
                         }
 
                         clusterLogin.Save();

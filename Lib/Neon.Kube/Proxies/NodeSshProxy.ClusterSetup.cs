@@ -451,10 +451,24 @@ service ntp restart
 
             // Update the [/etc/hosts] file to resolve the new hostname.
 
-            var sbHosts = new StringBuilder();
+            // $hack(jefflill):
+            //
+            // We need to obtain the private address of the node when [TMetadata]
+            // is a [NodeDefinition] since the [Address] for cloud cluster nodes
+            // will reference the external load balancer IP.
+            //
+            // We'll use [Address] when the [TMetadata != NodeDefinition].
 
-            var nodeAddress = Address.ToString();
+            var nodeAddress    = Address.ToString();
+            var nodeDefinition = Metadata as NodeDefinition;
+
+            if (nodeDefinition != null)
+            {
+                nodeAddress = nodeDefinition.Address;
+            }
+
             var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+            var sbHosts   = new StringBuilder();
 
             sbHosts.Append(
 $@"

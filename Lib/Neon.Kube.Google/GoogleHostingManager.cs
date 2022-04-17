@@ -209,7 +209,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetClusterAddress()
+        public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
             throw new NotImplementedException();
         }
