@@ -37,19 +37,14 @@ namespace Neon.Kube
     public static class KubeMinioBucket
     {
         /// <summary>
-        /// AlertManager bucket name.
+        /// Mimir bucket name.
         /// </summary>
-        public const string AlertManager = "alertmanager";
+        public const string Mimir = "mimir-tsdb";
 
         /// <summary>
-        /// Cortex bucket name.
+        /// Mimir-ruler bucket name.
         /// </summary>
-        public const string Cortex = "cortex";
-
-        /// <summary>
-        /// Cortex-ruler bucket name.
-        /// </summary>
-        public const string CortexRuler = "cortex-ruler";
+        public const string MimirRuler = "mimir-ruler";
 
         /// <summary>
         /// Harbor bucket name.
@@ -77,9 +72,8 @@ namespace Neon.Kube
         public static readonly IReadOnlyList<string> All =
             new List<string>()
             {
-                AlertManager,
-                Cortex,
-                CortexRuler,
+                Mimir,
+                MimirRuler,
                 Harbor,
                 Loki,
                 Tempo

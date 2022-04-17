@@ -8,7 +8,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -56,7 +56,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "Cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -130,7 +130,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "Cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": " sum(problem_gauge) by (node)",
@@ -215,7 +215,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "Cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(problem_counter[$__rate_interval])) by (node)",
@@ -299,7 +299,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "Cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(problem_counter[$__rate_interval])) by (reason)",
@@ -399,7 +399,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "Cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(problem_gauge{type=~\"$problem_type\"}) by (node)",
@@ -499,7 +499,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "Cortex"
+                "uid": "mimir"
               },
               "exemplar": true,
               "expr": "sum(rate(problem_counter{reason=~\"$problem_counter_reason\"}[$__rate_interval])) by (node)",
@@ -526,7 +526,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "Cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(problem_counter,reason)",
             "error": {
@@ -578,7 +578,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "Cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(problem_counter,node)",
             "error": {
@@ -629,7 +629,7 @@ spec:
             },
             "datasource": {
               "type": "prometheus",
-              "uid": "Cortex"
+              "uid": "mimir"
             },
             "definition": "label_values(problem_gauge,type)",
             "error": {

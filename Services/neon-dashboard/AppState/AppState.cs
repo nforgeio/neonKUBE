@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.IO;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -146,19 +147,10 @@ namespace NeonDashboard
                 ClusterId = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
                 Dashboards = new List<Dashboard>();
 
-                if (string.IsNullOrEmpty(ClusterId) 
-                    || string.IsNullOrEmpty(neonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET")))
+                using (var sr = new StreamReader(neonDashboardService.GetConfigFilePath("/etc/neon-dashboard/dashboards.yaml")))
                 {
-                    Dashboards.Add(new Dashboard("loooooopie", "Loopie", $"https://loopielaundry.com/"));
-                    Dashboards.Add(new Dashboard("uwu", "UWU", $"https://www.dictionary.com/e/slang/uwu"));
-                }
-                else
-                {
-                    Dashboards.Add(new Dashboard("kubernetes", "Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{ClusterId}"));
-                    Dashboards.Add(new Dashboard("grafana", "Grafana", $"https://{ClusterDomain.Grafana}.{ClusterId}"));
-                    Dashboards.Add(new Dashboard("minio", "Minio", $"https://{ClusterDomain.Minio}.{ClusterId}"));
-                    Dashboards.Add(new Dashboard("kiali", "Kiali", $"https://{ClusterDomain.Kiali}.{ClusterId}"));
-                    Dashboards.Add(new Dashboard("harbor", "Harbor", $"https://{ClusterDomain.HarborRegistry}.{ClusterId}"));
+                    Dashboards = NeonHelper.YamlDeserialize<List<Dashboard>>(sr.ReadToEnd());
+                    Logger.LogInfo(NeonHelper.JsonSerialize(Dashboards));
                 }
 
                 DashboardFrames = new List<Dashboard>(); 

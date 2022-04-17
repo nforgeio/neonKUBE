@@ -21,6 +21,17 @@ ingress:
   registry:
     subdomain: registry
 
+components:
+  chartMuseum:
+    enabled: true
+  trivy:
+    enabled: true
+  notary:
+    enabled: true
+
+serviceMesh:
+  enabled: true
+
 # imagePullSecrets -- Reference to one or more secrets to be used when pulling images
 # <https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/>
 # For example:

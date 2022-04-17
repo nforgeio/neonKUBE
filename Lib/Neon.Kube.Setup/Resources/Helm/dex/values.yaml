@@ -29,6 +29,9 @@ fullnameOverride: "neon-sso-dex"
 # See the [API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#hostname-and-name-resolution)
 hostAliases: []
 
+serviceMesh:
+  enabled: true
+
 https:
   # -- Enable the HTTPS endpoint.
   enabled: false

@@ -870,13 +870,17 @@ systemctl enable kubelet
 
                             var valueType = value.Value.GetType();
 
-                            if (valueType == typeof(string))
+                            switch (value.Value)
                             {
-                                valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
-                            }
-                            else
-                            {
-                                valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                case string s:
+                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
+                                    break;
+                                case Boolean b:
+                                    valueOverrides.AppendWithSeparator($"--set {value.Key}=\"{value.Value.ToString().ToLower()}\"");
+                                    break;
+                                default:
+                                    valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                    break;
                             }
                         }
                     }
@@ -903,7 +907,7 @@ do
    sleep 1
 done
 ";
-                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None).EnsureSuccess();
+                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
                 });
 
             await Task.CompletedTask;

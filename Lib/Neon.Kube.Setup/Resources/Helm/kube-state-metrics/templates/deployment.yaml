@@ -33,8 +33,9 @@ spec:
         {{- if .Values.customLabels }}
 {{ toYaml .Values.customLabels | indent 8 }}
         {{- end }}
-      {{- if .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
+      {{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
       {{- end }}
     spec:

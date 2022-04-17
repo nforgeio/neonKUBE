@@ -8,7 +8,7 @@ metadata:
 spec:
   datasources:
     - inputName: "DS_PROMETHEUS"
-      datasourceName: "Cortex"
+      datasourceName: "Mimir"
   json: >
     {{`{
       "annotations": {
@@ -52,7 +52,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -126,7 +126,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -200,7 +200,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -274,7 +274,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -354,7 +354,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -415,7 +415,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -494,7 +494,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -568,7 +568,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -647,7 +647,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -725,7 +725,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -804,7 +804,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -889,7 +889,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -977,7 +977,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -1058,7 +1058,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -1136,7 +1136,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -1215,7 +1215,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fieldConfig": {
             "defaults": {
@@ -1293,7 +1293,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -1360,7 +1360,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -1434,7 +1434,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -1522,7 +1522,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -1611,7 +1611,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Total number of bytes received and sent among all MinIO server instances",
           "fieldConfig": {
@@ -1809,7 +1809,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -1893,7 +1893,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -1977,7 +1977,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2063,7 +2063,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,
@@ -2152,7 +2152,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "Number of online disks per MinIO Server",
           "fieldConfig": {
@@ -2261,7 +2261,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "description": "",
           "fieldConfig": {
@@ -2356,7 +2356,7 @@ spec:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "cortex"
+            "uid": "mimir"
           },
           "fill": 1,
           "fillGradient": 0,

@@ -24,6 +24,9 @@ podManagementPolicy: Parallel
 updateStrategy:
   type: RollingUpdate
 
+serviceMesh:
+  enabled: true
+
 cortexConfig:
   target: all,alertmanager,compactor
   auth_enabled: true
@@ -252,7 +255,7 @@ resources: {}
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "http-metrics"
-  readiness.status.sidecar.istio.io/applicationPorts: '9009,9095'
+  readiness.status.sidecar.istio.io/applicationPorts: '8080,9095'
   traffic.sidecar.istio.io/excludeInboundPorts: '2379'
   traffic.sidecar.istio.io/excludeOutboundPorts: '2379'
 

@@ -17,6 +17,7 @@ spec:
   template:
     metadata:
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
       {{- if eq .Values.configTarget "ConfigMap" }}
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       {{- else }}

@@ -145,11 +145,6 @@ namespace Neon.Kube
         public static string CoreDns = "coredns";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Cortex</b> service.
-        /// </summary>
-        public static string Cortex = "cortex";
-
-        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Dex</b> service.
         /// </summary>
         public static string Dex = "dex";
@@ -275,14 +270,99 @@ namespace Neon.Kube
         public static string Kiali = "kiali";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Loki</b> service.
+        /// Identifies the neonKUBE cluster's <b>Loki Compactor</b> service.
         /// </summary>
-        public static string Loki = "loki";
+        public static string LokiCompactor = "loki-compactor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Distributor</b> service.
+        /// </summary>
+        public static string LokiDistributor = "loki-distributor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Index Gateway</b> service.
+        /// </summary>
+        public static string LokiIndexGateway = "loki-index-gateway";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Ingester</b> service.
+        /// </summary>
+        public static string LokiIngester = "loki-ingester";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Querier</b> service.
+        /// </summary>
+        public static string LokiQuerier = "loki-querier";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Query Frontend</b> service.
+        /// </summary>
+        public static string LokiQueryFrontend = "loki-query-frontend";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Ruler</b> service.
+        /// </summary>
+        public static string LokiRuler = "loki-ruler";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki Table Manager</b> service.
+        /// </summary>
+        public static string LokiTableManager = "loki-table-manager";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Memcached</b> service.
+        /// </summary>
+        public static string Memcached = "memcached";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Metrics-Server</b> service.
         /// </summary>
         public static string MetricsServer = "metrics-server";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// </summary>
+        public static string MimirAlertmanager = "mimir-alertmanager";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Compactor</b> service.
+        /// </summary>
+        public static string MimirCompactor = "mimir-compactor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Distributor</b> service.
+        /// </summary>
+        public static string MimirDistributor = "mimir-distributor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Ingester</b> service.
+        /// </summary>
+        public static string MimirIngester = "mimir-ingester";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir OverridesExporter</b> service.
+        /// </summary>
+        public static string MimirOverridesExporter = "mimir-overrides-exporter";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Querier</b> service.
+        /// </summary>
+        public static string MimirQuerier = "mimir-querier";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Query Frontend</b> service.
+        /// </summary>
+        public static string MimirQueryFrontend = "mimir-query-frontend";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// </summary>
+        public static string MimirRuler = "mimir-ruler";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
+        /// </summary>
+        public static string MimirStoreGateway = "mimir-store-gateway";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Minio</b> service.
@@ -410,9 +490,49 @@ namespace Neon.Kube
         public static string Reloader = "reloader";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>PromTail</b> service.
+        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
         /// </summary>
-        public static string Tempo = "promtail";
+        public static string TempoAlertmanager = "tempo-alertmanager";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Compactor</b> service.
+        /// </summary>
+        public static string TempoCompactor = "tempo-compactor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Distributor</b> service.
+        /// </summary>
+        public static string TempoDistributor = "tempo-distributor";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Ingester</b> service.
+        /// </summary>
+        public static string TempoIngester = "tempo-ingester";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo OverridesExporter</b> service.
+        /// </summary>
+        public static string TempoOverridesExporter = "tempo-overrides-exporter";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Querier</b> service.
+        /// </summary>
+        public static string TempoQuerier = "tempo-querier";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Query Frontend</b> service.
+        /// </summary>
+        public static string TempoQueryFrontend = "tempo-query-frontend";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// </summary>
+        public static string TempoRuler = "tempo-ruler";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.
+        /// </summary>
+        public static string TempoStoreGateway = "tempo-store-gateway";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Redis HA</b> service.

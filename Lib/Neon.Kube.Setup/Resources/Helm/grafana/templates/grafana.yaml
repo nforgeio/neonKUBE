@@ -63,6 +63,7 @@ spec:
     labels:
       app: grafana
     annotations:
+      sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
       reloader.stakater.com/search: "true"
     envFrom:
       - secretRef:

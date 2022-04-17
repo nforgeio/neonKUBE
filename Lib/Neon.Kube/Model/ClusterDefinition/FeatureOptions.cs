@@ -60,28 +60,20 @@ namespace Neon.Kube
             public bool ChartMuseum { get; set; } = false;
 
             /// <summary>
-            /// Optionally installs the Harbor JobService.  This defaults to <c>false</c>.
+            /// Optionally installs the Harbor Notary.  This defaults to <c>false</c>.
             /// </summary>
-            [JsonProperty(PropertyName = "JobService", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "jobService", ApplyNamingConventions = false)]
+            [JsonProperty(PropertyName = "Notary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "notary", ApplyNamingConventions = false)]
             [DefaultValue(false)]
-            public bool JobService { get; set; } = false;
+            public bool Notary { get; set; } = false;
 
             /// <summary>
-            /// Optionally installs the Harbor NotaryServer.  This defaults to <c>false</c>.
+            /// Optionally installs the Harbor Trivy.  This defaults to <c>false</c>.
             /// </summary>
-            [JsonProperty(PropertyName = "NotaryServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "notaryServer", ApplyNamingConventions = false)]
+            [JsonProperty(PropertyName = "Trivy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "trivy", ApplyNamingConventions = false)]
             [DefaultValue(false)]
-            public bool NotaryServer { get; set; } = false;
-
-            /// <summary>
-            /// Optionally installs the Harbor NotarySigner.  This defaults to <c>false</c>.
-            /// </summary>
-            [JsonProperty(PropertyName = "NotarySigner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "notarySigner", ApplyNamingConventions = false)]
-            [DefaultValue(false)]
-            public bool NotarySigner { get; set; } = false;
+            public bool Trivy { get; set; } = false;
 
             /// <summary>
             /// Validates the options.
@@ -121,6 +113,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "serviceMesh", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool ServiceMesh { get; set; } = false;
+
+        /// <summary>
+        /// Optionally enables the Kiali.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Kiali", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "kiali", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Kiali { get; set; } = false;
 
         /// <summary>
         /// Optionally installs Tempo.  This defaults to <c>false</c>.
