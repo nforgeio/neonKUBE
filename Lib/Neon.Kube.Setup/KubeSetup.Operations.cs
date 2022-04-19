@@ -3503,11 +3503,11 @@ $@"- name: StorageType
                         controller.ThrowIfCancelled();
 
                         await k8s.NamespacedPodExecWithRetryAsync(
-                                    retryPolicy: podExecRetry,
+                                    retryPolicy:        podExecRetry,
                                     namespaceParameter: pod.Namespace(),
-                                    name: pod.Name(),
-                                    container: "grafana",
-                                    command: cmd);
+                                    name:               pod.Name(),
+                                    container:          "grafana",
+                                    command:            cmd);
                     });
             }
         }
@@ -3556,9 +3556,9 @@ $@"- name: StorageType
 
                             var volumesize = ByteUnits.Humanize(
                                 ByteUnits.Parse(cluster.Definition.Storage.Minio.VolumeSize),
-                                powerOfTwo: true,
+                                powerOfTwo:      true,
                                 spaceBeforeUnit: false,
-                                removeByteUnit: true);
+                                removeByteUnit:  true);
 
                             values.Add($"tenants[0].pools[0].size", volumesize);
 
