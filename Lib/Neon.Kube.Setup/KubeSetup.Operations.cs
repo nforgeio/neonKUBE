@@ -4812,7 +4812,7 @@ $@"- name: StorageType
                             Summary            = "Cluster setup complete",
                             OptionalComponents = new ClusterOptionalComponents()
                             {
-                                Cortex  = true,
+                                Mimir   = true,
                                 Grafana = true,
                                 Harbor  = true,
                                 Loki    = true,

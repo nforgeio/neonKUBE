@@ -65,7 +65,6 @@
 		<None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\cortex\templates\service-headless.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
