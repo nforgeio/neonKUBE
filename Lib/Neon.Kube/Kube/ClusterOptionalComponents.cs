@@ -65,10 +65,10 @@ namespace Neon.Kube
         public bool Loki { get; set; } = false;
 
         /// <summary>
-        /// Indicates whether <b>Cortex</b> is installed.
+        /// Indicates whether <b>Mimir</b> is installed.
         /// </summary>
-        [JsonProperty(PropertyName = "Cortex", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Mimir", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool Cortex { get; set; } = false;
+        public bool Mimir { get; set; } = false;
     }
 }
