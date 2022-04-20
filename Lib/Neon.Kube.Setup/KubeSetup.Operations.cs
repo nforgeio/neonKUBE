@@ -324,9 +324,6 @@ spec:
             await InstallOpenEbsAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallEtcdAsync(controller, master);
-
-            controller.ThrowIfCancelled();
             await InstallReloaderAsync(controller, master);
 
             controller.ThrowIfCancelled();
@@ -1372,17 +1369,39 @@ kubectl apply -f priorityclasses.yaml
                                 timeout:           clusterOpTimeout,
                                 pollInterval:      clusterOpPollInterval,
                                 cancellationToken: controller.CancellationToken);
+                        });
 
-                            // Verify that [coredns] is actually working, removing the [dnsutils] pod regardless.
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/dns-verify",
+                        async () =>
+                        {
+                            controller.LogProgress(master, verb: "verify", message: "dns");
 
-                            try
-                            {
-                                master.SudoCommand($"kubectl exec -n {KubeNamespace.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput).EnsureSuccess();
-                            }
-                            finally
-                            {
-                                await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
-                            }
+                            // Verify that [coredns] is actually working.
+
+                            await NeonHelper.WaitForAsync(
+                                async () =>
+                                {
+                                    try
+                                    {
+                                        master.SudoCommand($"kubectl exec -n {KubeNamespace.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput).EnsureSuccess();
+
+                                        return true;
+                                    }
+                                    catch
+                                    {
+                                        // restart coredns and try again.
+                                        var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+                                        await coredns.RestartAsync(k8s);
+                                        await Task.Delay(5000);
+                                        return false;
+                                    }
+                                },
+                                timeout: TimeSpan.FromSeconds(30),
+                                pollInterval: TimeSpan.FromMilliseconds(500));
+
+
+                            await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
                 });
         }
@@ -2698,72 +2717,6 @@ $@"- name: StorageType
 
                     throw new NotImplementedException($"Support for the [{cluster.Definition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
             };
-        }
-
-        /// <summary>
-        /// Installs an Etcd cluster to the monitoring namespace.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.Clear;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
-            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/monitoring-etcd",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "setup", message: "etcd (monitoring)");
-
-                    await CreateHostPathStorageClass(controller, master, "neon-internal-etcd");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add($"replicas", advice.ReplicaCount);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-
-                    if (cluster.Definition.IsDesktopBuiltIn)
-                    {
-                        values.Add($"persistentVolume.storage", "5Gi");
-                    }
-                    else
-                    {
-                        values.Add($"persistentVolume.storage", "10Gi");
-                    }
-
-                    values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit));
-                    values.Add($"priorityClassName", PriorityClass.NeonMonitor.Name);
-
-                    int i = 0;
-
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
-                    {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
-
-                    await master.InstallHelmChartAsync(controller, "etcd", releaseName: "neon-etcd", @namespace: KubeNamespace.NeonSystem, values: values);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "etcd (monitoring)");
-
-                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-etcd", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
-                });
         }
 
         /// <summary>
@@ -4474,6 +4427,9 @@ $@"- name: StorageType
 
             var values = new Dictionary<string, object>();
 
+
+            values.Add("image.organization", KubeConst.LocalClusterRegistry);
+            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
             values.Add("ingress.subdomain", ClusterDomain.Sso);
