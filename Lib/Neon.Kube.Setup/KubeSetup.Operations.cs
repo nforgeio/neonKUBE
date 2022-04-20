@@ -4467,6 +4467,7 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
