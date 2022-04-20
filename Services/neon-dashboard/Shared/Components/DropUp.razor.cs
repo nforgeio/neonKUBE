@@ -51,7 +51,6 @@ namespace NeonDashboard.Shared.Components
 		void Show()
 		{
 			HideMenu = !HideMenu;
-
 		}
 
 		void MouseIn()
