@@ -178,6 +178,73 @@ namespace Neon.Kube
                         return false;
                     }
                 },
+                timeout: TimeSpan.FromSeconds(300),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+        }
+
+        /// <summary>
+        /// Restarts a <see cref="V1DaemonSet"/>.
+        /// </summary>
+        /// <param name="daemonset">The daemonset being restarted.</param>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task RestartAsync(this V1DaemonSet daemonset, IKubernetes k8s)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            // $todo(jefflill):
+            //
+            // Fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
+
+            var generation = daemonset.Status.ObservedGeneration;
+
+            var patchStr = $@"
+{{
+    ""spec"": {{
+        ""template"": {{
+            ""metadata"": {{
+                ""annotations"": {{
+                    ""kubectl.kubernetes.io/restartedAt"": ""{DateTime.UtcNow.ToString("s")}""
+                }}
+            }}
+        }}
+    }}
+}}";
+
+            await k8s.PatchNamespacedDaemonSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), daemonset.Name(), daemonset.Namespace());
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var newDeployment = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+
+                        return newDeployment.Status.ObservedGeneration > generation;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout:      TimeSpan.FromSeconds(300),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        daemonset = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+
+                        return (daemonset.Status.CurrentNumberScheduled == daemonset.Status.NumberReady) && daemonset.Status.UpdatedNumberScheduled == null;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
                 timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
