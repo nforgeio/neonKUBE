@@ -3692,10 +3692,12 @@ $@"- name: StorageType
             tasks.Add(InstallMimirAsync(controller, master));
             tasks.Add(InstallLokiAsync(controller, master));
             tasks.Add(InstallKubeStateMetricsAsync(controller, master));
+
             if (cluster.Definition.Features.Tracing)
             {
                 tasks.Add(InstallTempoAsync(controller, master));
             }
+
             tasks.Add(InstallGrafanaAsync(controller, master));
 
             controller.LogProgress(master, verb: "wait", message: "for cluster monitoring");

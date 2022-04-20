@@ -1091,6 +1091,14 @@ namespace Neon.Kube
             }
 
             AssignNodeAddresses(clusterDefinition);
+
+            // Set the cluster definition datacenter to the target region when the
+            // user hasn't explictly specified a datacenter.
+
+            if (string.IsNullOrEmpty(clusterDefinition.Datacenter))
+            {
+                clusterDefinition.Datacenter = region.ToUpperInvariant();
+            }
         }
 
         /// <summary>
@@ -1303,7 +1311,7 @@ namespace Neon.Kube
                     await GetResourcesAsync();
                 });
 
-            controller.AddGlobalStep("SSH: port mapping",
+            controller.AddGlobalStep("SSH: port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1318,6 +1326,22 @@ namespace Neon.Kube
                         node.Address = IPAddress.Parse(endpoint.Address);
                         node.SshPort = endpoint.Port;
                     }
+                });
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("SSH: block ingress",
+                async controller =>
+                {
+                    await cluster.HostingManager.DisableInternetSshAsync();
                 });
         }
 

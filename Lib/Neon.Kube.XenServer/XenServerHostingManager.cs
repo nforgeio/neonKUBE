@@ -1069,7 +1069,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var clusterStatus = new ClusterStatus();
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {

@@ -305,11 +305,6 @@ namespace Neon.Net
         public const int PrometheusMetrics = 9762;
 
         /// <summary>
-        /// Default port for the Cortex dashboard.
-        /// </summary>
-        public const int CortexDashboard = 9009;
-
-        /// <summary>
         /// Default port for the Prometheus dashboard.
         /// </summary>
         public const int PrometheusDashboard = 9090;
@@ -433,7 +428,6 @@ namespace Neon.Net
                 new Map("postgres", Postgres),
                 new Map("neon-prometheusscrape", PrometheusMetrics),
                 new Map("grafana-dashboard", GrafanaDashboard),
-                new Map("cortex-dashboard", CortexDashboard),
                 new Map("prometheus-dashboard", PrometheusDashboard),
                 new Map("istio-envoyadmin", IstioEnvoyAdmin),
                 new Map("istio-envoyoutbound", IstioEnvoyOutbound),

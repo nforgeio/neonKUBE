@@ -782,7 +782,7 @@ namespace Neon.Kube
         /// are not allowed on locked clusters.
         /// </summary>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
         public async Task LockAsync(CancellationToken cancellationToken = default)
         {
@@ -814,7 +814,7 @@ namespace Neon.Kube
         /// are not allowed on locked clusters.
         /// </summary>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown then the proxy was created with the wrong constructor.</exception>
         public async Task UnlockAsync(CancellationToken cancellationToken = default)
         {

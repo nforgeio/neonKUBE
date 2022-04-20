@@ -49,7 +49,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter  = "DATACENTER";
         private const string        defaultProvisioner = "unknown";
         private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
@@ -537,7 +536,8 @@ namespace Neon.Kube
         public FeatureOptions Features { get; set; } = new FeatureOptions();
 
         /// <summary>
-        /// Identifies the datacenter.
+        /// Identifies the datacenter.  This defaults to empty string for on-premise clusters
+        /// or the region for clusters deployed to the cloud.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -546,8 +546,8 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "datacenter", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDatacenter)]
-        public string Datacenter { get; set; } = defaultDatacenter;
+        [DefaultValue("")]
+        public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
         /// Indicates how the cluster is being used.
@@ -1081,12 +1081,7 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
-            if (Datacenter == null)
-            {
-                throw new ClusterDefinitionException($"The [{nameof(Datacenter)}] property is required.");
-            }
-
-            if (!IsValidName(Datacenter))
+            if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
             {
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }

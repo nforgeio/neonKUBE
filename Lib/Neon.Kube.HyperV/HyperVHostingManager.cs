@@ -904,7 +904,7 @@ namespace Neon.Kube
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterStatus = new ClusterStatus()
+                    var clusterStatus = new ClusterStatus(cluster.Definition)
                     {
                         State   = ClusterState.NotFound,
                         Summary = "Cluster does not exist"
@@ -923,7 +923,7 @@ namespace Neon.Kube
                     // (after stripping off any cluster prefix) belong to the cluster and will
                     // map the actual VM states to public node states.
 
-                    var clusterStatus = new ClusterStatus();
+                    var clusterStatus = new ClusterStatus(cluster.Definition);
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
