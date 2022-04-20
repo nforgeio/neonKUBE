@@ -85,7 +85,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             var hypervisorHostPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}";

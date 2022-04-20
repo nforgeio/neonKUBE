@@ -324,7 +324,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
