@@ -66,6 +66,18 @@ namespace Neon.Kube
         public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
 
         /// <summary>
+        /// Returns the URI for the cluster manifest for a specific neonKUBE version.
+        /// </summary>
+        /// <param name="version">The neonKUBE version.</param>
+        /// <returns>The manifest URI.</returns>
+        public static string GetNeonClusterManifestUri(string version)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
+
+            return $"{NeonPublicBucketUri}/cluster-manifests/neonkube-{version}.json";
+        }
+
+        /// <summary>
         /// The GitHub repository path where public node images will be published.
         /// </summary>
         public const string PublicNodeImageRepo = "nforgeio/neonKUBE-images";

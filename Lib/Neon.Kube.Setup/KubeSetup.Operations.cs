@@ -393,7 +393,6 @@ spec:
             var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
             sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
-            sbCertSANs.AppendLine($"  - \"127.0.0.1\"");
 
             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
             {
@@ -567,50 +566,36 @@ mode: {kubeProxyMode}");
                             //      [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
                             //      [kubelet-check] Initial timeout of 40s passed.
                             //
-                            // Seems weird to claim that this may take up to 4 minutes to complete by then
-                            // fail after only 40 seconds.
+                            // After some investigation, it looks like the second line is really just
+                            // a warning and that kubeadm does continue waiting for the full 4 minutes,
+                            // but sometimes this is not long enough.
                             //
-                            // We're going to mitigate this by retrying a 7 times which combined with the
-                            // commands 40 second timeout will result in waiting 4.6 seconds for kubelet
-                            // to start (which exceeds the 4 minute limit stated above.
+                            // We're going to mitigate this by retrying 2 additional times.
 
                             var clusterConfig  = GenerateKubernetesClusterConfig(controller, master);
                             var kubeInitScript =
 $@"
-#######################################
-# $debug(jefflill): DELETE THE LOGGING!
-#######################################
-
-echo 'init: 0' >> /home/sysadmin/init.log
-
 if ! systemctl enable kubelet.service; then
-echo 'init: 1' >> /home/sysadmin/init.log
     echo 'FAILED: systemctl enable kubelet.service' >&2
     exit 1
 fi
 
-echo 'init: 2' >> /home/sysadmin/init.log
 # The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable --cri-socket={crioSocket}; then
-echo 'init: 3' >> /home/sysadmin/init.log
     exit 0
 fi
-echo 'init: 4' >> /home/sysadmin/init.log
 
 # The remaining 6 calls specify [--ignore-preflight-errors=all] to avoid detecting
 # bogus conflicts with itself.
 
-for count in {{1..6}}
+for count in {{1..2}}
 do
-echo 'init: 5' >> /home/sysadmin/init.log
     if kubeadm init --config cluster.yaml --ignore-preflight-errors=all --cri-socket={crioSocket}; then
-echo 'init: 6' >> /home/sysadmin/init.log
         exit 0
     fi
 done
 
-echo 'init: ' >> /home/sysadmin/init.log
 echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
@@ -1123,15 +1108,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(firstMaster, verb: "configure", message: "workstation");
 
-                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     // Update kubeconfig.
 
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var port       = KubeHelper.IsCloudEnvironment(cluster.Definition.Hosting.Environment) ? NetworkPorts.KubernetesApiServer : 6442 /* HAPROXY for API server */;
 
-                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
+                    configText = configText.Replace("https://kubernetes-masters:6442", $"https://{cluster.Definition.Domain}:{port}");
 
                     if (!File.Exists(kubeConfigPath))
                     {
@@ -1460,6 +1446,7 @@ kubectl apply -f priorityclasses.yaml
                            async () =>
                            {
                                nodes = await k8s.ListNodeAsync(labelSelector: "node-role.kubernetes.io/master=");
+
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
                            timeout:           TimeSpan.FromMinutes(5),
@@ -4436,6 +4423,7 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {

@@ -346,7 +346,7 @@ namespace Neon.Kube
 
             // Display the runtime for the steps after they all have been executed.
 
-            if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
+            if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running || step.State == SetupStepState.NotInvolved))
             {
                 var totalLabel    = "Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);

@@ -930,7 +930,6 @@ namespace Neon.Kube
         /// like <see cref="MachineHostingOptions"/> which require specified node IP addresses.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void ValidatePrivateNodeAddresses()
         {
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
@@ -978,7 +977,6 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate()
         {
             // Wire up the node label parents.

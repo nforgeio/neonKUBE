@@ -48,10 +48,15 @@ namespace Neon.Kube
         public const string NeonKube = "0.4.0-alpha";
 
         /// <summary>
+        /// Returns the prefix used for neonKUBE container tags.
+        /// </summary>
+        public const string NeonKubeContainerImageTagPrefix = "neonkube-";
+
+        /// <summary>
         /// Returns the container image tag for the current neonKUBE release.  This adds the
         /// <b>neonkube-</b> prefix to <see cref="NeonKube"/>.
         /// </summary>
-        public const string NeonKubeContainerImageTag = "neonkube-" + NeonKube;
+        public const string NeonKubeContainerImageTag = NeonKubeContainerImageTagPrefix + NeonKube;
 
         /// <summary>
         /// The version of Kubernetes to be installed.

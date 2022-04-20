@@ -177,8 +177,8 @@ namespace Neon.Kube
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + "storage.ephemral";
 
         /// <summary>
-        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node primary drive 
-        /// storage capacity in bytes (<see cref="ByteUnits"/>).
+        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node OS drive 
+        /// storage capacity in bytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "StorageSize", ApplyNamingConventions = false)]
@@ -590,7 +590,7 @@ namespace Neon.Kube
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageSize,                 StorageSize));
+                list.Add(new KeyValuePair<string, object>(LabelStorageSize,                 ByteUnits.Parse(StorageSize)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,                StorageLocal));
                 list.Add(new KeyValuePair<string, object>(LabelStorageHDD,                  NeonHelper.ToBoolString(StorageHDD)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,            NeonHelper.ToBoolString(StorageRedundant)));
@@ -676,7 +676,7 @@ namespace Neon.Kube
                 switch (label.Key)
                 {
                     case LabelAddress:                      Node.Address = label.Value; break;
-                    case LabelRole:                         Node.Role = label.Value; break;
+                    case LabelRole:                         Node.Role    = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
                     case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEbsStorage = NeonHelper.ParseBool(label.Value); }); break; 
 
@@ -691,13 +691,13 @@ namespace Neon.Kube
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
-                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageType>(label.Value); }); break;
+                            case LabelAzureVmSize:          Node.Azure.VmSize   = label.Value; break;
                             case LabelAzureDriveSize:       Node.Azure.DiskSize = label.Value; break;
+                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageType>(label.Value); }); break;
                         }
                         break;
 
-                    case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = label.Value; }); break;
+                    case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = ByteUnits.Parse(label.Value).ToString(); }); break;
                     case LabelStorageLocal:                 Node.Labels.StorageLocal            = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageHDD:                   Node.Labels.StorageHDD              = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageRedundant:             Node.Labels.StorageRedundant        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
@@ -714,8 +714,7 @@ namespace Neon.Kube
                     case LabelDatacenter:
                     case LabelEnvironment:
 
-                        // These labels don't currently map to node properties so
-                        // we'll ignore them.
+                        // These labels don't currently map to node properties so we'll ignore them.
 
                         break;
 
@@ -734,7 +733,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
