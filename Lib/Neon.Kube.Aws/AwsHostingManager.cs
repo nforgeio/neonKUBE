@@ -1303,13 +1303,13 @@ namespace Neon.Kube
                     await GetResourcesAsync();
                 });
 
-            controller.AddGlobalStep("SSH: allow ingress",
+            controller.AddGlobalStep("SSH: port mapping",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
 
                     // We need to update the cluster node addresses and SSH ports
-                    // to match the cluster load balancer port forwarding mappings.
+                    // to match the cluster load balancer port forward rules.
 
                     foreach (var node in cluster.Nodes)
                     {
@@ -1318,22 +1318,6 @@ namespace Neon.Kube
                         node.Address = IPAddress.Parse(endpoint.Address);
                         node.SshPort = endpoint.Port;
                     }
-                });
-        }
-
-        /// <inheritdoc/>
-        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            this.controller = controller;
-
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-
-            controller.AddGlobalStep("SSH: block ingress",
-                async controller =>
-                {
-                    await cluster.HostingManager.DisableInternetSshAsync();
                 });
         }
 
@@ -2904,8 +2888,8 @@ chmod 644 /etc/neonkube/cloud-init/node-init
 # This is important because we don't want to expose the SSH password we
 # set below.
 
-echo $0 > /etc/neonkube/cloud-init/init-script-path
-chmod 600 /etc/neonkube/cloud-init/init-script-path
+echo $0 > /etc/neonkube/cloud-init/boot-script-path
+chmod 600 /etc/neonkube/cloud-init/boot-script-path
 
 #------------------------------------------------------------------------------
 # Prevent the script from doing anything after the instance is rebooted.

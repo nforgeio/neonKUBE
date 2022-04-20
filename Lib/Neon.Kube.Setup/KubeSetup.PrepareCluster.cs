@@ -337,7 +337,7 @@ namespace Neon.Kube
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
-            controller.AddNodeStep("delete cloud-init script",
+            controller.AddNodeStep("delete boot script",
                 (controller, node) =>
                 {
                     // Hosting managers may use [cloud-init] to execute custom scripts
@@ -347,11 +347,11 @@ namespace Neon.Kube
                     // We need to delete this script file since it includes the SSH password.
                     // If present, the script writes the path to itself to:
                     //
-                    //      /etc/neonkube/cloud-init/init-script-path
+                    //      /etc/neonkube/cloud-init/boot-script-path
                     //
                     // We're going to read this file if it exists and delete the script.
 
-                    var scriptPath = "/etc/neonkube/cloud-init/init-script-path";
+                    var scriptPath = "/etc/neonkube/cloud-init/boot-script-path";
 
                     if (node.FileExists(scriptPath))
                     {
@@ -420,15 +420,6 @@ namespace Neon.Kube
                         clusterLogin.Save();
                     }
                 });
-
-            if (KubeHelper.IsCloudEnvironment(cluster.HostingManager.HostingEnvironment))
-            {
-                controller.AddGlobalStep("SSH: block ingress",
-                    async controller =>
-                    {
-                        await cluster.HostingManager.DisableInternetSshAsync();
-                    });
-            }
 
             // Some hosting managers may have to some additional work after
             // the cluster has been otherwise prepared.
