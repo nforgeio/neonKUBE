@@ -792,20 +792,20 @@ namespace Neon.Kube
 
         // These are the names we'll use for cluster AWS resources.
 
-        private readonly string                     ingressAddressName;
-        private readonly string                     egressAddressName;
-        private readonly string                     vpcName;
-        private readonly string                     securityGroupName;
-        private readonly string                     publicSubnetName;
-        private readonly string                     nodeSubnetName;
-        private readonly string                     publicRouteTableName;
-        private readonly string                     nodeRouteTableName;
-        private readonly string                     internetGatewayName;
-        private readonly string                     natGatewayName;
-        private readonly string                     loadBalancerName;
-        private readonly string                     elbName;
-        private readonly string                     masterPlacementGroupName;
-        private readonly string                     workerPlacementGroupName;
+        private string                              ingressAddressName;
+        private string                              egressAddressName;
+        private string                              vpcName;
+        private string                              securityGroupName;
+        private string                              publicSubnetName;
+        private string                              nodeSubnetName;
+        private string                              publicRouteTableName;
+        private string                              nodeRouteTableName;
+        private string                              internetGatewayName;
+        private string                              natGatewayName;
+        private string                              loadBalancerName;
+        private string                              elbName;
+        private string                              masterPlacementGroupName;
+        private string                              workerPlacementGroupName;
 
         // These reference the AWS resources.
 
@@ -1097,7 +1097,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(clusterDefinition.Datacenter))
             {
-                clusterDefinition.Datacenter = region.ToUpperInvariant();
+                clusterDefinition.Datacenter = clusterDefinition.Hosting.Aws.Region.ToUpperInvariant();
             }
         }
 
@@ -1151,7 +1151,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
             controller.AddGlobalStep("locate node image", LocateNodeImageAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
-            controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
+            controller.AddGlobalStep("elastic ip", InitializeAddressessAsync);
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
@@ -1549,8 +1549,46 @@ namespace Neon.Kube
 
             // Elastic IPs
 
-            ingressAddress = await GetElasticIpAsync(ingressAddressName);
-            egressAddress  = await GetElasticIpAsync(egressAddressName);
+            if (awsOptions.HasCustomElasticIPs)
+            {
+                var describeResponse = await ec2Client.DescribeAddressesAsync(
+                    new DescribeAddressesRequest()
+                    {
+                        AllocationIds = new List<string>()
+                         {
+                             awsOptions.ElasticIpIngressId,
+                             awsOptions.ElasticIpEgressId
+                         }
+                    });
+
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
+
+                if (ingressAddress == null)
+                {
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                }
+
+                if (egressAddress == null)
+                {
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                }
+
+                ingressAddressName = ingressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+
+                egressAddressName = egressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+            }
+            else
+            {
+                ingressAddress = await GetElasticIpAsync(ingressAddressName);
+                egressAddress  = await GetElasticIpAsync(egressAddressName);
+            }
 
             // VPC and it's default network ACL.
 
@@ -2168,77 +2206,118 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist.
+        /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist
+        /// or ensures that any existing Elastic IPs specified in the cluster definition actually exist.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateAddressesAsync(ISetupController controller)
+        private async Task InitializeAddressessAsync(ISetupController controller)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("create: elastic IP address");
-
-            if (ingressAddress == null)
+            if (awsOptions.HasCustomElasticIPs)
             {
-                var allocateResponse = await ec2Client.AllocateAddressAsync(
-                    new AllocateAddressRequest()
-                    {
-                        Domain = DomainType.Vpc
-                    });
-                
-                var addressId = allocateResponse.AllocationId;
+                controller.SetGlobalStepStatus("check: elastic IP addresses");
 
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
+                var describeResponse = await ec2Client.DescribeAddressesAsync(
+                    new DescribeAddressesRequest()
                     {
-                        Resources = new List<string>() { addressId },
-                        Tags      = GetTags<Ec2Tag>(ingressAddressName)
+                         AllocationIds = new List<string>()
+                         {
+                             awsOptions.ElasticIpIngressId,
+                             awsOptions.ElasticIpEgressId
+                         }
                     });
 
-                // Retrieve the ingress address resource.
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
 
-                var addressResponse = await ec2Client.DescribeAddressesAsync();
-
-                foreach (var addr in addressResponse.Addresses)
+                if (ingressAddress == null)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == ingressAddressName) &&
-                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                }
+
+                if (egressAddress == null)
+                {
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                }
+
+                ingressAddressName = ingressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+
+                egressAddressName = egressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+            }
+            else
+            {
+                controller.SetGlobalStepStatus("create: elastic IP addresses");
+
+                if (ingressAddress == null)
+                {
+                    var allocateResponse = await ec2Client.AllocateAddressAsync(
+                        new AllocateAddressRequest()
+                        {
+                            Domain = DomainType.Vpc
+                        });
+
+                    var addressId = allocateResponse.AllocationId;
+
+                    await ec2Client.CreateTagsAsync(
+                        new CreateTagsRequest()
+                        {
+                            Resources = new List<string>() { addressId },
+                            Tags      = GetTags<Ec2Tag>(ingressAddressName)
+                        });
+
+                    // Retrieve the ingress address resource.
+
+                    var describeResponse = await ec2Client.DescribeAddressesAsync();
+
+                    foreach (var addr in describeResponse.Addresses)
                     {
-                        ingressAddress = addr;
-                        break;
+                        if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == ingressAddressName) &&
+                            addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        {
+                            ingressAddress = addr;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (egressAddress == null)
-            {
-                var allocateResponse = await ec2Client.AllocateAddressAsync(
-                    new AllocateAddressRequest()
-                    {
-                        Domain = DomainType.Vpc
-                    });
-
-                var addressId = allocateResponse.AllocationId;
-
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
-                    {
-                        Resources = new List<string>() { addressId },
-                        Tags = GetTags<Ec2Tag>(egressAddressName)
-                    });
-
-                // Retrieve the egress address resource.
-
-                var addressResponse = await ec2Client.DescribeAddressesAsync();
-
-                foreach (var addr in addressResponse.Addresses)
+                if (egressAddress == null)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
-                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    var allocateResponse = await ec2Client.AllocateAddressAsync(
+                        new AllocateAddressRequest()
+                        {
+                            Domain = DomainType.Vpc
+                        });
+
+                    var addressId = allocateResponse.AllocationId;
+
+                    await ec2Client.CreateTagsAsync(
+                        new CreateTagsRequest()
+                        {
+                            Resources = new List<string>() { addressId },
+                            Tags      = GetTags<Ec2Tag>(egressAddressName)
+                        });
+
+                    // Retrieve the egress address resource.
+
+                    var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+                    foreach (var addr in addressResponse.Addresses)
                     {
-                        egressAddress = addr;
-                        break;
+                        if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
+                            addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        {
+                            egressAddress = addr;
+                            break;
+                        }
                     }
                 }
             }
