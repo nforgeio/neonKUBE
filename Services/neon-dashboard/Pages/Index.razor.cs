@@ -56,7 +56,7 @@ namespace NeonDashboard.Pages
         {
             if (string.IsNullOrEmpty(CurrentDashboard))
             {
-                NavigationManager.NavigateTo("kubernetes", true);
+                NavigationManager.NavigateTo("grafana", true);
             }
 
             if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard))

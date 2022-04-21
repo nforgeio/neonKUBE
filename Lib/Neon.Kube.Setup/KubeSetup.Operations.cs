@@ -3450,6 +3450,49 @@ $@"- name: StorageType
                                     command:            cmd);
                     });
             }
+
+            await master.InvokeIdempotentAsync("setup/monitoring-grafana-config",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "configure", message: "grafana");
+
+                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
+                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespace.NeonSystem);
+                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
+                    var grafanaPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+
+                    var cmd = new string[]
+                        {
+                            "/bin/bash",
+                            "-c",
+                            $@"wget -q -O- --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
+                        };
+
+                    var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy: podExecRetry,
+                                namespaceParameter: grafanaPod.Namespace(),
+                                name: grafanaPod.Name(),
+                                container: "grafana",
+                                command: cmd);
+
+                    var dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+
+                    cmd = new string[]
+                        {
+                            "/bin/bash",
+                            "-c",
+                            $@"wget -q -O- --method=PUT --body-data='{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
+                        };
+
+                    await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy: podExecRetry,
+                                namespaceParameter: grafanaPod.Namespace(),
+                                name: grafanaPod.Name(),
+                                container: "grafana",
+                                command: cmd);
+                });
         }
 
         /// <summary>

@@ -9,7 +9,8 @@
 <PageBase PageTitle="@PageTitle" />
 <CascadingValue Value="@CurrentDashboard" Name="CurrentDashboard" />
 
-@if (AppState.DashboardFrames != null){
+@if (AppState.DashboardFrames != null)
+{
   <div class="dashboard-container">
   @foreach (var dashboard in AppState.DashboardFrames)
   {

@@ -10,6 +10,7 @@ spec:
       datasourceName: "Mimir"
   json: >
     {{`{
+    {
       "annotations": {
         "list": [
           {
@@ -32,8 +33,8 @@ spec:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 2,
-      "iteration": 1649359074566,
+      "id": 9999,
+      "iteration": 1650500138187,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -785,7 +786,10 @@ spec:
       "refresh": "10s",
       "schemaVersion": 35,
       "style": "dark",
-      "tags": [],
+      "tags": [
+        "neonkube",
+        "neonkube-default-dashboard"
+      ],
       "templating": {
         "list": [
           {
@@ -923,7 +927,8 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "ZAVo6-y7z",
-      "version": 2,
+      "uid": "neonkube-default-dashboard",
+      "version": 3,
       "weekStart": ""
+    }
     }`}}
