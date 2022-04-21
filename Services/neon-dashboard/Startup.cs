@@ -77,13 +77,21 @@ namespace NeonDashboard
                     var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
                     var k8sClient  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
+                    // set config map
                     var configMap = k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
-                    var secret    = k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                    NeonDashboardService.SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
 
-                    NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", configMap.Data["CLUSTER_DOMAIN"]);
+                    // set environment
+                    var configMapEnv = k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard-env", KubeNamespace.NeonSystem).Result;
+                    foreach (var key in configMapEnv.Data.Keys)
+                    {
+                        NeonDashboardService.SetEnvironmentVariable(key, configMapEnv.Data[key]);
+                    }
+
+                    var secret    = k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
                     NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
-                    // Check dex config
+                    // Configure cluster callback url to allow local dev
                     var dexConfigMap = k8sClient.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
 
                     var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
@@ -94,7 +102,7 @@ namespace NeonDashboard
                     {
                         clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
                         dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                        k8sClient.ReplaceNamespacedConfigMapAsync(configMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
+                        k8sClient.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
                     }
                 }
                 catch (Exception ex)

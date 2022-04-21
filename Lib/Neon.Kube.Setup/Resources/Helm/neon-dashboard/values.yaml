@@ -9,7 +9,7 @@ image:
   repository: neon-dashboard
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "neonkube-0.3.0-alpha"
+  tag: null
 
 imagePullSecrets: []
 nameOverride: ""

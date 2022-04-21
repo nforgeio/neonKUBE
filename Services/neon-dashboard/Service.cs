@@ -82,6 +82,7 @@ namespace NeonDashboard
             if (NeonHelper.IsDevWorkstation)
             {
                 port = 11001;
+                SetEnvironmentVariable("LOG_LEVEL", "debug");
             }
 
             // Start the web service.
