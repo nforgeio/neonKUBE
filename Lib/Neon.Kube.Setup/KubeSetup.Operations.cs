@@ -4413,9 +4413,7 @@ $@"- name: StorageType
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
-
-            var values = new Dictionary<string, object>();
-
+            var values        = new Dictionary<string, object>();
 
             values.Add("image.organization", KubeConst.LocalClusterRegistry);
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
@@ -4425,7 +4423,6 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
