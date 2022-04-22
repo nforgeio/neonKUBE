@@ -3435,7 +3435,7 @@ $@"- name: StorageType
                         {
                             "/bin/bash",
                             "-c",
-                            $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
+                            $@"curl -X POST http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users -H 'Content-Type: application/json' -d '{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}'"
                         };
 
                         var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
@@ -3459,15 +3459,13 @@ $@"- name: StorageType
                     var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
                     var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                     var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespace.NeonSystem);
-                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
                     var grafanaPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
                     var cmd = new string[]
                         {
                             "/bin/bash",
                             "-c",
-                            $@"wget -q -O- --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
+                            $@"curl -X GET http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard -H 'Content-Type: application/json'"
                         };
 
                     var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
@@ -3483,7 +3481,7 @@ $@"- name: StorageType
                         {
                             "/bin/bash",
                             "-c",
-                            $@"wget -q -O- --method=PUT --body-data='{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
+                            $@"curl -X PUT http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}'"
                         };
 
                     await k8s.NamespacedPodExecWithRetryAsync(
