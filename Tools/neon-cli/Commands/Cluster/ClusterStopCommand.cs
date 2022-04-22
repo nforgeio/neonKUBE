@@ -61,7 +61,7 @@ Starts a stopped or paused cluster.  This is not supported by all environments.
 
 USAGE:
 
-    neon cluster stop [--turnoff] [--force]
+    neon cluster stop [--turnoff] [--force] [--nowait]
 
 OPTIONS:
 
@@ -69,13 +69,14 @@ OPTIONS:
                   a graceful shutdown.  This may cause data loss.
 
     --force     - forces cluster stop without user confirmation
+                  or verifying unlocked status
+
+    --nowait    - don't wait for the cluster to report being stopped
 
 REMARKS:
 
 This command will not work on a locked clusters as a safety measure.  The idea
 it to add some friction to avoid impacting production clusters by accident.
-
-NOTE: [--force] DOES NOT OVERRIDE THE LOCK
 
 All clusters besides neon-desktop built-in clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false] in your
@@ -88,7 +89,7 @@ cluster definition or by executing this command on your cluster:
         public override string[] Words => new string[] { "cluster", "stop" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--turnoff", "--force" };
+        public override string[] ExtendedOptions => new string[] { "--turnoff", "--force", "--nowait" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -105,6 +106,8 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
@@ -113,18 +116,20 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
-            // $todo(jefflill): Temporarily disabling this command:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1281
-
-            Console.Error.WriteLine("*** ERROR: The [neon cluster stop] command is not fully implemented yet.");
-            Program.Exit(1);
-
             var turnoff = commandLine.HasOption("--turnoff");
             var force   = commandLine.HasOption("--force");
+            var nowait  = commandLine.HasOption("--nowait");
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
+                var capabilities = cluster.Capabilities;
+
+                if ((capabilities & HostingCapabilities.Stoppable) == 0)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Cluster is not stoppable.");
+                    Program.Exit(1);
+                }
+
                 var status = await cluster.GetClusterStatusAsync();
 
                 switch (status.State)
@@ -132,37 +137,62 @@ cluster definition or by executing this command on your cluster:
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        var isLocked = await cluster.IsLockedAsync();
-
-                        if (!isLocked.HasValue)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                            Program.Exit(1);
-                        }
-
-                        if (isLocked.Value)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                            Program.Exit(1);
-                        }
-
-                        var capabilities = cluster.Capabilities;
-
-                        if ((capabilities & HostingCapabilities.Stoppable) == 0)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: Cluster is not stoppable.");
-                            Program.Exit(1);
-                        }
-
                         if (!force)
                         {
+                            var isLocked = await cluster.IsLockedAsync();
+
+                            if (!isLocked.HasValue)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                                Program.Exit(1);
+                            }
+
+                            if (isLocked.Value)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                                Program.Exit(1);
+                            }
+
                             if (!Program.PromptYesNo($"Are you sure you want to stop: {cluster.Name}?"))
                             {
                                 Program.Exit(0);
                             }
                         }
 
+                        if (turnoff)
+                        {
+                            Console.WriteLine($"Turning Off: {cluster.Name}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Stopping: {cluster.Name}...");
+                        }
+
                         await cluster.StopAsync(turnoff ? StopMode.TurnOff : StopMode.Graceful);
+
+                        // Wait for the cluster to stop.
+
+                        if (!nowait)
+                        {
+                            try
+                            {
+                                await NeonHelper.WaitForAsync(
+                                    async () =>
+                                    {
+                                        var status = await cluster.GetClusterStatusAsync();
+
+                                        return status.State == ClusterState.Off;
+                                    },
+                                    timeout:      TimeSpan.FromSeconds(300),
+                                    pollInterval: TimeSpan.FromSeconds(5));
+                            }
+                            catch (TimeoutException)
+                            {
+                                Console.WriteLine($"***ERROR: Timeout waiting for cluster to stop.");
+                                Program.Exit(1);
+                            }
+                        }
+
                         Console.WriteLine($"Cluster stopped: {cluster.Name}");
                         break;
 

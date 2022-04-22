@@ -87,6 +87,8 @@ USAGE:
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
@@ -105,6 +107,7 @@ USAGE:
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
+                        Console.WriteLine($"Unlocking: {cluster.Name}...");
                         await cluster.UnlockAsync();
                         Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
                         break;

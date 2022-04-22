@@ -382,6 +382,14 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
+        /// </summary>
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "description", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Description { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// The cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
@@ -1079,6 +1087,11 @@ namespace Neon.Kube
             if (Name.Length > 32)
             {
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+            }
+
+            if (Description != null && Description.Length > 256)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(Description)}] has more than 256 characters.");
             }
 
             if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))

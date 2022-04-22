@@ -220,10 +220,6 @@ namespace Neon.Kube
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
-            // Create the hosting manager.
-
-            this.HostingManager = GetHostingManager(hostingManagerFactory, operation, KubeHelper.LogFolder);
-
             // Initialize the cluster nodes.
 
             var nodes = new List<NodeSshProxy<NodeDefinition>>();
@@ -241,6 +237,10 @@ namespace Neon.Kube
 
             this.Nodes       = nodes;
             this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
+
+            // Create the hosting manager.
+
+            this.HostingManager = GetHostingManager(hostingManagerFactory, operation, KubeHelper.LogFolder);
         }
 
         /// <summary>

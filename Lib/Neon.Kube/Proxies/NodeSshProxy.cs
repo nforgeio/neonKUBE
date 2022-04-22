@@ -136,12 +136,7 @@ namespace Neon.Kube
                 return this.cluster;
             }
 
-            set 
-            {
-                Covenant.Assert(value.HostingManager != null);
-
-                this.cluster = value;
-            }
+            set => this.cluster = value;
         }
 
         /// <summary>

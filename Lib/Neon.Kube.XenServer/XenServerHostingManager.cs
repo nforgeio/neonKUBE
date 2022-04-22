@@ -463,7 +463,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the name to use for naming the virtual machine that will host the node.
+        /// Returns the name to use for the virtual machine that will host the node.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
@@ -478,19 +478,10 @@ namespace Neon.Kube
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The matching node definition, or <c>null</c>.</returns>
+        /// <returns>The matching node definition or <c>null</c>.</returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
-
-            // Special case the built-in neon-desktop cluster.
-
-            if (cluster.Definition.IsDesktopBuiltIn &&
-                vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase) &&
-                cluster.Definition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
-            {
-                return nodeDefinition;
-            }
 
             var prefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
 
@@ -501,7 +492,7 @@ namespace Neon.Kube
 
             var nodeName = vmName.Substring(prefix.Length);
 
-            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out nodeDefinition))
+            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
             {
                 return nodeDefinition;
             }
@@ -1068,6 +1059,7 @@ namespace Neon.Kube
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
             var clusterStatus = new ClusterStatus(cluster.Definition);
 
@@ -1122,9 +1114,9 @@ namespace Neon.Kube
             var context      = KubeHelper.Config.GetContext(contextName);
             var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
 
-            // Create a hashset with the names of nodes that have existing virtual machines.
-            // Note that the node names will be stripped of any cluster prefix in the virtual
-            // machine name.
+            // Create a hashset holding the names of nodes that have existing virtual machines
+            // and also construct a dictionary mapping the actual virtual machine names to
+            // the machine information.
 
             var existingNodes    = new HashSet<string>();
             var existingMachines = new Dictionary<string, XenVirtualMachine>(StringComparer.InvariantCultureIgnoreCase);

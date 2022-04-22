@@ -48,9 +48,10 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            Name       = clusterDefinition.Name;
-            Datacenter = clusterDefinition.Datacenter;
-            Domain     = clusterDefinition.Domain;
+            Name        = clusterDefinition.Name;
+            Description = clusterDefinition.Description;
+            Datacenter  = clusterDefinition.Datacenter;
+            Domain      = clusterDefinition.Domain;
         }
 
         /// <summary>
@@ -81,6 +82,13 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("")]
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optionally describes the cluster for humans.
+        /// </summary>
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Description { get; set; } = null;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster

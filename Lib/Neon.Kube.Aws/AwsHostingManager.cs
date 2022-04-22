@@ -40,6 +40,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
@@ -88,7 +89,7 @@ namespace Neon.Kube
         //
         // A neonKUBE AWS cluster will require provisioning these things:
         //
-        //      * VPC (virtual private cloud, equivilant to an Azure VNET)
+        //      * VPC (virtual private cloud, equivilent to an Azure VNET)
         //
         //      * Public subnet where the network load balancer, internet
         //        gateway and NAT gateway will be deployed to manage internet 
@@ -239,6 +240,9 @@ namespace Neon.Kube
         // The AWS hosting manager is designed to be able to be interrupted and restarted
         // for cluster creation as well as management of the cluster afterwards.  This works
         // by reading the current state of the cluster resources.
+
+        //---------------------------------------------------------------------
+        // Local types
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -424,91 +428,107 @@ namespace Neon.Kube
             /// <summary>
             /// The instance is provisioning or starting.
             /// </summary>
-            public static readonly int Pending = 0;
+            public const int Pending = 0;
 
             /// <summary>
             /// The instance is running.
             /// </summary>
-            public static readonly int Running = 16;
+            public const int Running = 16;
 
             /// <summary>
             /// The instance is shutting down.
             /// </summary>
-            public static readonly int ShuttingDown = 32;
+            public const int ShuttingDown = 32;
 
             /// <summary>
             /// The instance has been terminated.
             /// </summary>
-            public static readonly int Terminated = 48;
+            public const int Terminated = 48;
 
             /// <summary>
             /// The instance is stopping.
             /// </summary>
-            public static readonly int Stopping = 64;
+            public const int Stopping = 64;
 
             /// <summary>
             /// The instance has been stopped.
             /// </summary>
-            public static readonly int Stopped = 80;
+            public const int Stopped = 80;
+
+            /// <summary>
+            /// Clears the high byte of the raw code passed and returns one of the
+            /// constants above.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns>The cleaned code.</returns>
+            public static int GetCode(int rawCode)
+            {
+                return rawCode & 0x00FF;
+            }
 
             /// <summary>
             /// Determines whether the instance status passed indicates that the
             /// instance is pending.
             /// </summary>
-            /// <param name="code">The instance state code.</param>
+            /// <param name="rawCode">The raw instance state code.</param>
             /// <returns><c>true</c> for pending.</returns>
-            public static bool IsPending(int code)
+            public static bool IsPending(int rawCode)
             {
-                return (code & 0x00FF) == Pending;
+                return (rawCode & 0x00FF) == Pending;
             }
 
             /// <summary>
             /// Determines whether the instance state passed indicates that the
             /// instance is running.
             /// </summary>
-            /// <param name="code">The instance state code.</param>
+            /// <param name="rawCode">The raw instance state code.</param>
             /// <returns><c>true</c> for running.</returns>
-            public static bool IsRunning(int code)
+            public static bool IsRunning(int rawCode)
             {
-                return (code & 0x00FF) == Running;
+                return (rawCode & 0x00FF) == Running;
             }
 
             /// <summary>
             /// Determines whether the instance state passed indicates that the
             /// instance is stopping.
             /// </summary>
-            /// <param name="code">The instance state code.</param>
+            /// <param name="rawCode">The raw instance state code.</param>
             /// <returns><c>true</c> for stopping.</returns>
-            public static bool IsStopping(int code)
+            public static bool IsStopping(int rawCode)
             {
-                return (code & 0x00FF) == Stopping;
+                return (rawCode & 0x00FF) == Stopping;
             }
 
             /// <summary>
             /// Determines whether the instance status passed indicates that the
             /// instance is stopped.
             /// </summary>
-            /// <param name="code">The instance state code.</param>
+            /// <param name="rawCode">The raw instance state code.</param>
             /// <returns><c>true</c> for stopped.</returns>
-            public static bool IsStopped(int code)
+            public static bool IsStopped(int rawCode)
             {
-                return (code & 0x00FF) == Stopping;
+                return (rawCode & 0x00FF) == Stopping;
             }
 
             /// <summary>
             /// Determines whether the instance status passed indicates that the
             /// instance is terminated.
             /// </summary>
-            /// <param name="code">The instance state code.</param>
+            /// <param name="rawCode">The raw instance state code.</param>
             /// <returns><c>true</c> for terminated.</returns>
-            public static bool IsTerminated(int code)
+            public static bool IsTerminated(int rawCode)
             {
-                return (code & 0x00FF) == Terminated;
+                return (rawCode & 0x00FF) == Terminated;
             }
         }
 
         //---------------------------------------------------------------------
         // Static members
+
+        /// <summary>
+        /// Used to limit how many threads will be created by parallel operations.
+        /// </summary>
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
 
         /// <summary>
         /// Specifies the owner ID to use when querying for Canonical AMIs 
@@ -776,7 +796,6 @@ namespace Neon.Kube
         private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
-        private bool                                prefixResourceNames;
         private AwsHostingOptions                   awsOptions;
         private NetworkOptions                      networkOptions;
         private BasicAWSCredentials                 awsCredentials;
@@ -891,12 +910,6 @@ namespace Neon.Kube
                 }
             };
 
-            // We're always going to prefix AWS resource names with the cluster name because
-            // AWS resource names because load balancer names need to be unique within an AWS
-            // account and region.
-
-            this.prefixResourceNames = true;
-
             // Initialize the cluster resource names.
 
             ingressAddressName       = GetResourceName("ingress-address");
@@ -924,6 +937,10 @@ namespace Neon.Kube
             // like managing the SSH port mappings on the load balancer.
 
             cluster.HostingManager = this;
+
+            // Initialize the mappings between node and AWS instanc information.
+
+            InitializeNodeDictionaries();
         }
 
         /// <inheritdoc/>
@@ -1000,14 +1017,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
 
-            if (prefixResourceNames)
-            {
-                return $"{clusterName}.{resourceName}";
-            }
-            else
-            {
-                return $"{resourceName}";
-            }
+            return $"{clusterName}.{resourceName}";
         }
 
         /// <summary>
@@ -1138,8 +1148,6 @@ namespace Neon.Kube
             var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             this.controller = controller;
-
-            InitializeNodeDictionaries();
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -1302,13 +1310,10 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            InitializeNodeDictionaries();
-
             controller.AddGlobalStep("AWS connect",
                 async controller =>
                 {
                     await ConnectAwsAsync(controller);
-                    await GetResourcesAsync();
                 });
 
             controller.AddGlobalStep("SSH: port mappings",
@@ -1459,14 +1464,13 @@ namespace Neon.Kube
         /// even if an connection has already been established.
         /// </note>
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Optionally specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConnectAwsAsync(ISetupController controller)
+        private async Task ConnectAwsAsync(ISetupController controller = null)
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("connect: AWS");
+            controller?.SetGlobalStepStatus("connect: AWS");
 
             if (isConnected)
             {
@@ -1531,12 +1535,6 @@ namespace Neon.Kube
             if (resourceGroup != null)
             {
                 // Ensure that the group was created exclusively for the cluster.
-                //
-                // For AWS, we're going to require that the resource group be restricted
-                // to just cluster resources.  This is different from what we do for Azure
-                // to reduce complexity and because there's less of a need for including
-                // non-cluster resources in the group because AWS supports nested resource
-                // groups.
 
                 var groupQueryResponse = await rgClient.GetGroupQueryAsync(
                     new GetGroupQueryRequest()
@@ -3683,21 +3681,568 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
         }
 
+        /// <summary>
+        /// Returns the name to use for the virtual machine that will host the node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDefinition node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+        }
+
+        /// <summary>
+        /// Converts a virtual machine name to the matching node definition.
+        /// </summary>
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The matching node definition or <c>null</c>.</returns>
+        private NodeDefinition VmNameToNodeDefinition(string vmName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+
+            var prefix = $"{clusterName}.";
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            var nodeName = vmName.Substring(prefix.Length);
+
+            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            {
+                return nodeDefinition;
+            }
+
+            return null;
+        }
+
         //---------------------------------------------------------------------
         // Cluster life-cycle methods
 
-        /// <inheritdoc/>
-        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
+        // $note(jefflill):
+        //
+        // AWS supports pausing instances but only for instances running on a limited number
+        // of instance types and only when running Amazon Linux, so we're not going to support
+        // pausing on AWS.
 
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
+
+        /// <inheritdoc/>
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            var clusterStatus = new ClusterStatus(cluster.Definition);
+
             if (timeout <= TimeSpan.Zero)
             {
                 timeout = DefaultStatusTimeout;
             }
 
-            throw new NotImplementedException("$todo(jefflill)");
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // We're going to infer the cluster provisiong status by examining the
+            // cluster login and the state of the VMs deployed to AWS.
+
+            var contextName  = $"root@{cluster.Definition.Name}";
+            var context      = KubeHelper.Config.GetContext(contextName);
+            var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
+
+            // Create a hashset with the names of the nodes that map to deployed AWS
+            // machine instances.
+
+            var existingNodes = new HashSet<string>();
+
+            foreach (var item in instanceNameToAwsInstance)
+            {
+                var nodeDefinition = VmNameToNodeDefinition(item.Key);
+
+                if (nodeDefinition != null)
+                {
+                    existingNodes.Add(nodeDefinition.Name);
+                }
+            }
+
+            // Build the cluster status.
+
+            if (context == null && clusterLogin == null)
+            {
+                // The Kubernetes context for this cluster doesn't exist, so we know that any
+                // virtual machines with names matching the virtual machines that would be
+                // provisioned for the cluster definition are conflicting.
+
+                clusterStatus.State   = ClusterState.NotFound;
+                clusterStatus.Summary = "Cluster does not exist";
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    clusterStatus.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                }
+
+                return clusterStatus;
+            }
+            else
+            {
+                // We're going to assume that all virtual machines that match cluster node names
+                // (after stripping off any cluster prefix) belong to the cluster and will
+                // map the actual VM states to public node states.
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    var nodeState = ClusterNodeState.NotProvisioned;
+
+                    if (existingNodes.Contains(node.Name))
+                    {
+                        if (nodeNameToAwsInstance.TryGetValue(node.Name, out var awsInstance))
+                        {
+                            switch (InstanceStateCode.GetCode(awsInstance.Instance.State.Code))
+                            {
+                                case InstanceStateCode.Pending:
+
+                                    nodeState = ClusterNodeState.Starting;
+                                    break;
+                                    
+                                case InstanceStateCode.Running:
+
+                                    nodeState = ClusterNodeState.Running;
+                                    break;
+
+                                case InstanceStateCode.Stopping:
+                                case InstanceStateCode.ShuttingDown:
+
+                                    // We don't currently have a status for stopping a node so we'll
+                                    // consider it to be running because technically, it still is.
+
+                                    nodeState = ClusterNodeState.Running;
+                                    break;
+
+                                case InstanceStateCode.Stopped:
+
+                                    nodeState = ClusterNodeState.Off;
+                                    break;
+
+                                case InstanceStateCode.Terminated:
+
+                                    nodeState = ClusterNodeState.NotProvisioned;
+                                    break;
+
+                                default:
+
+                                    throw new NotImplementedException();
+                            }
+                        }
+                    }
+
+                    clusterStatus.Nodes.Add(node.Name, nodeState);
+                }
+
+                // We're going to examine the node states from the AWS perspective and
+                // short-circuit the Kubernetes level cluster health check when the cluster
+                // nodes are not provisioned, are paused or appear to be transitioning
+                // between starting, stopping, or paused states.
+
+                var commonNodeState = clusterStatus.Nodes.Values.First();
+
+                foreach (var nodeState in clusterStatus.Nodes.Values)
+                {
+                    if (nodeState != commonNodeState)
+                    {
+                        // Nodes have differing states so we're going to consider the cluster
+                        // to be transitioning.
+
+                        clusterStatus.State   = ClusterState.Transitioning;
+                        clusterStatus.Summary = "Cluster is transitioning";
+                        break;
+                    }
+                }
+
+                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                {
+                    clusterStatus.State   = ClusterState.Configuring;
+                    clusterStatus.Summary = "Cluster is partially configured";
+                }
+                else if (clusterStatus.State != ClusterState.Transitioning)
+                {
+                    // If we get here then all of the nodes have the same state so
+                    // we'll use that common state to set the overall cluster state.
+
+                    switch (commonNodeState)
+                    {
+                        case ClusterNodeState.Starting:
+
+                            clusterStatus.State   = ClusterState.Unhealthy;
+                            clusterStatus.Summary = "Cluster is starting";
+                            break;
+
+                        case ClusterNodeState.Running:
+
+                            clusterStatus.State   = ClusterState.Configured;
+                            clusterStatus.Summary = "Cluster is configured";
+                            break;
+
+                        case ClusterNodeState.Paused:
+                        case ClusterNodeState.Off:
+
+                            clusterStatus.State   = ClusterState.Off;
+                            clusterStatus.Summary = "Cluster is turned off";
+                            break;
+
+                        case ClusterNodeState.NotProvisioned:
+
+                            clusterStatus.State   = ClusterState.NotFound;
+                            clusterStatus.Summary = "Cluster is not found.";
+                            break;
+
+                        case ClusterNodeState.Unknown:
+                        default:
+
+                            clusterStatus.State   = ClusterState.NotFound;
+                            clusterStatus.Summary = "Cluster not found";
+                            break;
+                    }
+                }
+
+                if (clusterStatus.State == ClusterState.Off)
+                {
+                    clusterStatus.Summary = "Cluster is turned off";
+
+                    return clusterStatus;
+                }
+
+                return clusterStatus;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override async Task StartClusterAsync()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // We just need to start any running instances.
+
+            var instanceIds = nodeNameToAwsInstance
+                .Values
+                .Select(awsInstance => awsInstance.InstanceId)
+                .ToList();
+
+            await ec2Client.StartInstancesAsync(new StartInstancesRequest(instanceIds));
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // We just need to stop any running instances.
+
+            var instanceIds = nodeNameToAwsInstance
+                .Values
+                .Select(awsInstance => awsInstance.InstanceId)
+                .ToList();
+
+            await ec2Client.StopInstancesAsync(new StopInstancesRequest(instanceIds) { Force = stopMode == StopMode.TurnOff });
+        }
+
+        /// <inheritdoc/>
+        public override async Task RemoveClusterAsync(bool removeOrphans = false)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // Here's how we're going to do this:
+            //
+            //      1. Terminate all cluster instances
+            //      2. Remove the load balancer
+            //      3. Remove all target groups
+            //      4. Remove the NAT gateway and the route tables
+            //      5. Remove resources referenced by the VPC
+            //      6. Remove the VPC
+            //      7. Release Elastic IPs created with the cluster
+            //      8. Remove the resource group
+            //
+            // Note that these resources need to be deleted in this order to unwind
+            // any dependencies and also that we're going to retry [DependencyViolation]
+            // failures because some resources take some time to be actually removed
+            // and we're also going to retry for network related problems.
+
+            var transientDetector = new Func<Exception, bool>(
+                e =>
+                {
+                    var ec2Exception = e as AmazonEC2Exception;
+
+                    if (ec2Exception != null)
+                    {
+                        if (ec2Exception.ErrorCode == "DependencyViolation")
+                        {
+                            return true;
+                        }
+
+                        if (e.InnerException != null)
+                        {
+                            return Retry.TransientDetector.NetworkOrHttp(e.InnerException);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+
+                    return Retry.TransientDetector.NetworkOrHttp(e);
+                });
+
+            var retry = new LinearRetryPolicy(transientDetector, retryInterval: TimeSpan.FromSeconds(5), timeout: TimeSpan.FromSeconds(900));
+
+            var instanceIds = instanceNameToAwsInstance.Values
+                .Where(value => value.InstanceId != null)
+                .Select(value => value.Instance.InstanceId)
+                .ToList();
+
+            //-----------------------------------------------------------------
+            // Step #1: Terminate all cluster instances
+
+            if (instanceIds.Count > 0)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.TerminateInstancesAsync(new TerminateInstancesRequest(instanceIds)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step #2: Remove the load balancer
+
+            if (loadBalancer != null)
+            {
+                await retry.InvokeAsync(async () => await elbClient.DeleteLoadBalancerAsync(new DeleteLoadBalancerRequest() { LoadBalancerArn = loadBalancer.LoadBalancerArn }));
+            }
+
+            //-----------------------------------------------------------------
+            // Step #3: Remove all of the target groups
+
+            await Parallel.ForEachAsync(nameToTargetGroup.Values, parallelOptions,
+                async (targetGroup, cancellationToken) =>
+                {
+                    await retry.InvokeAsync(async () => await elbClient.DeleteTargetGroupAsync(new DeleteTargetGroupRequest() { TargetGroupArn = targetGroup.TargetGroupArn }));
+                });
+
+            //-----------------------------------------------------------------
+            // Step #4: Remove the NAT gateway
+
+            if (ingressAddress != null && ingressAddress.AssociationId != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            await ec2Client.DisassociateAddressAsync(
+                                new DisassociateAddressRequest()
+                                {
+                                    AssociationId = ingressAddress.AssociationId
+                                });
+                        }
+                        catch (AmazonEC2Exception e)
+                        {
+                            // $hack(jefflill):
+                            //
+                            // We're seeing these exceptions when it looks like the 
+                            // address was actually disassociated, so we're going to
+                            // ignore this.
+
+                            if (e.ErrorCode != "AuthFailure")
+                            {
+                                throw;
+                            }
+                        }
+                    });
+            }
+
+            if (egressAddress != null && egressAddress.AssociationId != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await retry.InvokeAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    await ec2Client.DisassociateAddressAsync(
+                                        new DisassociateAddressRequest()
+                                        {
+                                            AssociationId = egressAddress.AssociationId
+                                        });
+                                }
+                                catch (AmazonEC2Exception e)
+                                {
+                                    // $hack(jefflill):
+                                    //
+                                    // We're seeing these exceptions when it looks like the 
+                                    // address was actually disassociated, so we're going to
+                                    // ignore this.
+
+                                    if (e.ErrorCode != "AuthFailure")
+                                    {
+                                        throw;
+                                    }
+                                }
+                            });
+                    });
+            }
+
+            if (natGateway != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeleteNatGatewayAsync(new DeleteNatGatewayRequest() { NatGatewayId = natGateway.NatGatewayId }));
+            }
+
+            //-----------------------------------------------------------------
+            // Step #5: Remove resources referenced by the VPC:
+            //
+            //      Internet Gateway
+            //      Node Subnet
+            //      Public Subnet
+            //      Security Group
+            //      Node Route Table
+            //      Public Route Table
+
+            if (internetGateway != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DetachInternetGatewayAsync(
+                            new DetachInternetGatewayRequest()
+                            {
+                                VpcId = vpc.VpcId,
+                                InternetGatewayId = internetGateway.InternetGatewayId
+                            });
+                    });
+
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteInternetGatewayAsync(
+                            new DeleteInternetGatewayRequest()
+                            { 
+                                InternetGatewayId = internetGateway.InternetGatewayId 
+                            });
+                    });
+            }
+
+            if (nodeSubnet != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSubnetAsync(
+                            new DeleteSubnetRequest
+                            {
+                                SubnetId = nodeSubnet.SubnetId
+                            });
+                    });
+            }
+
+            if (publicSubnet != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSubnetAsync(
+                            new DeleteSubnetRequest
+                            {
+                                SubnetId = publicSubnet.SubnetId
+                            });
+                    });
+            }
+
+            if (securityGroup != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSecurityGroupAsync(
+                            new DeleteSecurityGroupRequest
+                            {
+                                GroupId = securityGroup.GroupId
+                            });
+                    });
+            }
+
+            if (nodeRouteTable != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteRouteTableAsync(
+                            new DeleteRouteTableRequest()
+                            {
+                                RouteTableId = nodeRouteTable.RouteTableId
+                            });
+                    });
+            }
+
+            if (publicRouteTable != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteRouteTableAsync(
+                            new DeleteRouteTableRequest()
+                            {
+                                RouteTableId = publicRouteTable.RouteTableId
+                            });
+                    });
+            }
+
+            //-----------------------------------------------------------------
+            // Step #6: Remove the VPC
+
+            if (vpc != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeleteVpcAsync(new DeleteVpcRequest(vpc.VpcId)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step #7: Release Elastic IPs created for the cluster
+
+            if (!cluster.Definition.Hosting.Aws.HasCustomElasticIPs)
+            {
+                if (ingressAddress != null)
+                {
+                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = ingressAddress.AllocationId }));
+                }
+
+                if (egressAddress != null)
+                {
+                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = egressAddress.AllocationId }));
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Step #8: Remove the resource group
+
+            if (resourceGroup != null)
+            {
+                await retry.InvokeAsync(async () => await rgClient.DeleteGroupAsync(new DeleteGroupRequest() { Group = resourceGroup.GroupArn }));
+            }
         }
     }
 }
