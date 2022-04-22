@@ -908,6 +908,14 @@ namespace Neon.Kube
             }
 
             AssignNodeAddresses(clusterDefinition);
+
+            // Set the cluster definition datacenter to the target region when the
+            // user hasn't explictly specified a datacenter.
+
+            if (string.IsNullOrEmpty(clusterDefinition.Datacenter))
+            {
+                clusterDefinition.Datacenter = region.ToUpperInvariant();
+            }
         }
 
         /// <inheritdoc/>

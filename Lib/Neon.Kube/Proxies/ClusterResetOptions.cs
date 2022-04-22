@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Resets <b>Minio</b> by removing any custom buckets.  Note that existing
-        /// buckets holding Harbor, Loki, or Cortex information will remain unchanged when
+        /// buckets holding Harbor, Loki, or Mirmir information will remain unchanged when
         /// this is enabled.  The <see cref="ResetHarbor"/>, <see cref="ResetMonitoring"/>, 
         /// options control clearing of the related Minio data when enabled.
         /// </para>

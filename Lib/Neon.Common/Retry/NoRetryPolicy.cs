@@ -53,6 +53,9 @@ namespace Neon.Retry
         public TimeSpan? Timeout => null;
 
         /// <inheritdoc/>
+        public event Action<RetryTransientArgs> OnTransient;
+
+        /// <inheritdoc/>
         public IRetryPolicy Clone(Func<Exception, bool> transientDetector = null)
         {
             // This class is invariant and doesn't use a transient detector

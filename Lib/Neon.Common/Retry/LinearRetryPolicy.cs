@@ -66,15 +66,41 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        public LinearRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+        /// operation should be attempted up to <b>5</b> times, unless a <see cref="Timeout"/> is
+        /// specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+        /// will be honored.
+        /// </para>
+        /// <para>
+        /// When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="Timeout"/> 
+        /// is passed, then both <paramref name="maxAttempts"/> and <see cref="Timeout"/> will be honored,
+        /// with retries stopping when either are exceeded.
+        /// </para>
+        /// </remarks>
+        public LinearRetryPolicy(
+            Func<Exception, bool>   transientDetector = null, 
+            int                     maxAttempts       = -1, 
+            TimeSpan?               retryInterval     = null, 
+            TimeSpan?               timeout           = null, 
+            string                  sourceModule      = null)
+
             : base(sourceModule, timeout)
         {
-            Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
             Covenant.Requires<ArgumentException>(retryInterval == null || retryInterval >= TimeSpan.Zero, nameof(retryInterval));
 
             this.transientDetector = transientDetector ?? (e => true);
-            this.MaxAttempts       = maxAttempts;
             this.RetryInterval     = retryInterval ?? TimeSpan.FromSeconds(1);
+
+            if (maxAttempts < 0)
+            {
+                MaxAttempts = timeout == null ? RetryPolicy.DefaultMaxAttempts : int.MaxValue;
+            }
+            else
+            {
+                MaxAttempts = maxAttempts;
+            }
         }
 
         /// <summary>
@@ -85,7 +111,25 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
-        public LinearRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+        /// operation should be attempted up to <b>5</b> times, unless a <see cref="Timeout"/> is
+        /// specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+        /// will be honored.
+        /// </para>
+        /// <para>
+        /// When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="Timeout"/> 
+        /// is passed, then both <paramref name="maxAttempts"/> and <see cref="Timeout"/> will be honored,
+        /// with retries stopping when either are exceeded.
+        /// </para>
+        /// </remarks>
+        public LinearRetryPolicy(
+            Type        exceptionType, 
+            int         maxAttempts   = -1, 
+            TimeSpan?   retryInterval = null, 
+            TimeSpan?   timeout       = null, 
+            string      sourceModule  = null)
             : this
             (
                 e => TransientDetector.MatchException(e, exceptionType),
@@ -106,7 +150,25 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        public LinearRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+        /// operation should be attempted up to <b>5</b> times, unless a <see cref="Timeout"/> is
+        /// specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+        /// will be honored.
+        /// </para>
+        /// <para>
+        /// When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="Timeout"/> 
+        /// is passed, then both <paramref name="maxAttempts"/> and <see cref="Timeout"/> will be honored,
+        /// with retries stopping when either are exceeded.
+        /// </para>
+        /// </remarks>
+        public LinearRetryPolicy(
+            Type[]      exceptionTypes, 
+            int         maxAttempts   = -1, 
+            TimeSpan?   retryInterval = null, 
+            TimeSpan?   timeout       = null, 
+            string      sourceModule  = null)
             : this
             (
                 e =>
@@ -179,7 +241,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    if (++attempts >= MaxAttempts || adjustedDelay <= TimeSpan.Zero || !transientDetector(e))
                     {
                         throw;
                     }
@@ -208,7 +270,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    if (++attempts >= MaxAttempts || adjustedDelay <= TimeSpan.Zero || !transientDetector(e))
                     {
                         throw;
                     }
@@ -236,7 +298,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    if (++attempts >= MaxAttempts || adjustedDelay <= TimeSpan.Zero || !transientDetector(e))
                     {
                         throw;
                     }
@@ -263,7 +325,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    if (++attempts >= MaxAttempts || adjustedDelay <= TimeSpan.Zero || !transientDetector(e))
                     {
                         throw;
                     }

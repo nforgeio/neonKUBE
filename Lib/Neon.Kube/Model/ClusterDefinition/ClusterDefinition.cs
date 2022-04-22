@@ -49,7 +49,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter  = "DATACENTER";
         private const string        defaultProvisioner = "unknown";
         private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
@@ -383,6 +382,14 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
+        /// </summary>
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "description", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Description { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// The cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
         /// for your cluster by default when this is not set.
@@ -537,7 +544,8 @@ namespace Neon.Kube
         public FeatureOptions Features { get; set; } = new FeatureOptions();
 
         /// <summary>
-        /// Identifies the datacenter.
+        /// Identifies the datacenter.  This defaults to empty string for on-premise clusters
+        /// or the region for clusters deployed to the cloud.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -546,8 +554,8 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "datacenter", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDatacenter)]
-        public string Datacenter { get; set; } = defaultDatacenter;
+        [DefaultValue("")]
+        public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
         /// Indicates how the cluster is being used.
@@ -1081,12 +1089,12 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
-            if (Datacenter == null)
+            if (Description != null && Description.Length > 256)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Datacenter)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(Description)}] has more than 256 characters.");
             }
 
-            if (!IsValidName(Datacenter))
+            if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
             {
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }

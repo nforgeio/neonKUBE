@@ -87,6 +87,14 @@ namespace Neon.Retry
         /// <param name="action">The synchronous action to be performed.</param>
         /// <returns>The action result.</returns>
         TResult Invoke<TResult>(Func<TResult> action);
+
+        /// <summary>
+        /// Used to intercept and handle logging for transient exceptions detected by
+        /// a retry policy.  Handlers can set <see cref="RetryTransientArgs.Handled"/>
+        /// in the argument passed to prevent subsequent handlers from being invoked
+        /// and also prevent the transient exception from being logged.
+        /// </summary>
+        event Action<RetryTransientArgs> OnTransient;
     }
 
     [ContractClassFor(typeof(IRetryPolicy))]
@@ -124,5 +132,7 @@ namespace Neon.Retry
 
             return default(TResult);
         }
+
+        public event Action<RetryTransientArgs> OnTransient;
     }
 }
