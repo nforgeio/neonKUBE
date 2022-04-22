@@ -33,6 +33,11 @@ namespace Neon.Retry
     /// </summary>
     public abstract class RetryPolicy : IRetryPolicy
     {
+        /// <summary>
+        /// The default number of times an operation should be attempted for transient exceptions.
+        /// </summary>
+        public const int DefaultMaxAttempts = 5;
+
         private INeonLogger log;
         private DateTime    sysDeadline;
 
