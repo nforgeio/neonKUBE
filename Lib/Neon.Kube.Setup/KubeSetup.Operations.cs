@@ -3686,10 +3686,12 @@ $@"- name: StorageType
             tasks.Add(InstallMimirAsync(controller, master));
             tasks.Add(InstallLokiAsync(controller, master));
             tasks.Add(InstallKubeStateMetricsAsync(controller, master));
+
             if (cluster.Definition.Features.Tracing)
             {
                 tasks.Add(InstallTempoAsync(controller, master));
             }
+
             tasks.Add(InstallGrafanaAsync(controller, master));
 
             controller.LogProgress(master, verb: "wait", message: "for cluster monitoring");
@@ -4452,9 +4454,7 @@ $@"- name: StorageType
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
-
-            var values = new Dictionary<string, object>();
-
+            var values        = new Dictionary<string, object>();
 
             values.Add("image.organization", KubeConst.LocalClusterRegistry);
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);

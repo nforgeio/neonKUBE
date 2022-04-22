@@ -78,7 +78,8 @@ namespace TestCommon
         {
             var policy = new ExponentialRetryPolicy(TransientDetector, sourceModule: "test");
 
-            Assert.Equal(5, policy.MaxAttempts);
+            Assert.Equal(RetryPolicy.DefaultMaxAttempts, policy.MaxAttempts);
+            Assert.Null(policy.Timeout);
             Assert.Equal(TimeSpan.FromSeconds(1), policy.InitialRetryInterval);
             Assert.Equal(TimeSpan.FromHours(24), policy.MaxRetryInterval);
         }
@@ -466,10 +467,10 @@ namespace TestCommon
         [Fact]
         public async Task Timeout()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(1.5));
+            var policy = new ExponentialRetryPolicy(TransientDetector, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(1.5));
             var times  = new List<DateTime>();
 
-            Assert.Equal(6, policy.MaxAttempts);
+            Assert.Equal(int.MaxValue, policy.MaxAttempts);
             Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
@@ -487,7 +488,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(6, times.Count);
+            Assert.Equal(3, times.Count);
 
             // Additional test to verify this serious problem is fixed:
             //
@@ -500,7 +501,6 @@ namespace TestCommon
 
             times.Clear();
 
-            Assert.Equal(6, policy.MaxAttempts);
             Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
@@ -518,7 +518,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(6, times.Count);
+            Assert.Equal(3, times.Count);
         }
     }
 }

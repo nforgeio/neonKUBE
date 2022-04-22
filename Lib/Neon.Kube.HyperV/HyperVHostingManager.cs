@@ -564,7 +564,7 @@ namespace Neon.Kube
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The matching node definition, or <c>null</c>.</returns>
+        /// <returns>The matching node definition or <c>null</c>.</returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
@@ -862,6 +862,7 @@ namespace Neon.Kube
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             using (var hyperV = new HyperVProxy())
             {
@@ -877,9 +878,9 @@ namespace Neon.Kube
                 var context      = KubeHelper.Config.GetContext(contextName);
                 var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
 
-                // Create a hashset with the names of nodes that have existing virtual machines.
-                // Note that the node names will be stripped of any cluster prefix in the virtual
-                // machine name.
+                // Create a hashset with the names of the nodes that map to deployed Hyper-V
+                // virtual machines.  Wre're also going to create a dictionary mapping the
+                // mapping existing virtual machine names to the machine information.
 
                 var existingNodes    = new HashSet<string>();
                 var existingMachines = new Dictionary<string, VirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
@@ -904,7 +905,7 @@ namespace Neon.Kube
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterStatus = new ClusterStatus()
+                    var clusterStatus = new ClusterStatus(cluster.Definition)
                     {
                         State   = ClusterState.NotFound,
                         Summary = "Cluster does not exist"
@@ -920,10 +921,10 @@ namespace Neon.Kube
                 else
                 {
                     // We're going to assume that all virtual machines that match cluster node names
-                    // (after stripping off any cluster prefix) belong to the cluster and will
-                    // map the actual VM states to public node states.
+                    // (after stripping off any cluster prefix) belong to the cluster and we'll map
+                    // zxthe actual VM states to public node states.
 
-                    var clusterStatus = new ClusterStatus();
+                    var clusterStatus = new ClusterStatus(cluster.Definition);
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {

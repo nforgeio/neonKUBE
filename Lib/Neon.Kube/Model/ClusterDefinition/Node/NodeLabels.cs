@@ -522,7 +522,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>neonkube.io/monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
-        /// that Cortex metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// that Mimir metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
         [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
@@ -530,7 +530,7 @@ namespace Neon.Kube
         public bool Metrics { get; set; } = false;
 
         /// <summary>
-        /// <b>neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
+        /// <b>neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Mirmir
         /// metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]

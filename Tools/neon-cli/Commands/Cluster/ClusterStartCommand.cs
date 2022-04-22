@@ -61,11 +61,18 @@ Starts a stopped or paused cluster.  This is not supported by all environments.
 
 USAGE:
 
-    neon cluster start
+    neon cluster start [--nowait]
+
+OPTIONS:
+
+    --nowait    - don't wait for the cluster to report being stopped
 
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "start" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--nowait" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -90,6 +97,8 @@ USAGE:
                 Program.Exit(1);
             }
 
+            var nowait = commandLine.HasOption("--nowait");
+
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
                 var status       = await cluster.GetClusterStatusAsync();
@@ -106,13 +115,38 @@ USAGE:
                             Program.Exit(1);
                         }
 
+                        Console.WriteLine($"Starting: {cluster.Name}...");
                         await cluster.StartAsync();
+
+                        // Wait for the cluster to start.
+
+                        if (!nowait)
+                        {
+                            try
+                            {
+                                await NeonHelper.WaitForAsync(
+                                    async () =>
+                                    {
+                                        var status = await cluster.GetClusterStatusAsync();
+
+                                        return status.State == ClusterState.Healthy;
+                                    },
+                                    timeout:      TimeSpan.FromSeconds(300),
+                                    pollInterval: TimeSpan.FromSeconds(5));
+                            }
+                            catch (TimeoutException)
+                            {
+                                Console.WriteLine($"***ERROR: Timeout waiting for cluster to report being healthy.");
+                                Program.Exit(1);
+                            }
+                        }
+
                         Console.WriteLine($"Cluster started: {cluster.Name}");
                         break;
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not stopped or paused.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster appears to be running.");
                         Program.Exit(1);
                         break;
                 }

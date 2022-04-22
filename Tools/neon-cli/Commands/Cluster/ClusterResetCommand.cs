@@ -65,7 +65,8 @@ USAGE:
 
 OPTIONS:
 
-    --force             - forces cluster reset without user confirmation
+    --force              - forces cluster stop without user confirmation
+                           or verifying unlocked status
 
     --crio              - resets referenced container registeries to the 
                           cluster definition specifications and removes
@@ -123,8 +124,6 @@ NOTE:
 This command will not work on a locked clusters as a safety measure.  The idea
 it to add some friction to avoid impacting production clusters by accident.
 
-NOTE: [--force] DOES NOT OVERRIDE THE LOCK
-
 All clusters besides neon-desktop built-in clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false] in your
 cluster definition or by executing this command on your cluster:
@@ -152,6 +151,8 @@ cluster definition or by executing this command on your cluster:
                 Help();
                 Program.Exit(0);
             }
+
+            Console.WriteLine();
 
             var context = KubeHelper.CurrentContext;
 
@@ -196,40 +197,58 @@ cluster definition or by executing this command on your cluster:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var isLocked = await cluster.IsLockedAsync();
+                var status = await cluster.GetClusterStatusAsync();
 
-                if (!isLocked.HasValue)
+                switch (status.State)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                    Program.Exit(1);
+                    case ClusterState.Healthy:
+                    case ClusterState.Unhealthy:
+
+                        if (!force)
+                        {
+                            var isLocked = await cluster.IsLockedAsync();
+
+                            if (!isLocked.HasValue)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                                Program.Exit(1);
+                            }
+
+                            if (isLocked.Value)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                                Program.Exit(1);
+                            }
+
+                            if (!Program.PromptYesNo($"Are you sure you want to reset: {cluster.Name}?"))
+                            {
+                                Program.Exit(0);
+                            }
+                        }
+
+                        Console.WriteLine("Resetting cluster (this may take a while)...");
+
+                        await cluster.ResetAsync(
+                            new ClusterResetOptions()
+                            {
+                                KeepNamespaces  = keepNamespaces,
+                                ResetCrio       = crio,
+                                ResetAuth       = auth,
+                                ResetHarbor     = harbor,
+                                ResetMinio      = minio,
+                                ResetMonitoring = monitoring
+                            },
+                            progressMessage => Console.WriteLine(progressMessage));
+
+                        Console.WriteLine($"Cluster has been reset: {cluster.Name}");
+                        break;
+
+                    default:
+
+                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
+                        Program.Exit(1);
+                        break;
                 }
-
-                if (isLocked.Value)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                    Program.Exit(1);
-                }
-
-                if (!force && !Program.PromptYesNo($"Are you sure you want to reset: {cluster.Name}?"))
-                {    
-                    Program.Exit(0);
-                }
-
-                Console.WriteLine("Resetting cluster (this may take a while)...");
-
-                await cluster.ResetAsync(
-                    new ClusterResetOptions()
-                    {
-                        KeepNamespaces  = keepNamespaces,
-                        ResetCrio       = crio,
-                        ResetAuth       = auth,
-                        ResetHarbor     = harbor,
-                        ResetMinio      = minio,
-                        ResetMonitoring = monitoring
-                    },
-                    progressMessage => Console.WriteLine(progressMessage));
-
-                Console.WriteLine($"Cluster reset is complete: {cluster.Name}");
             }
         }
     }
