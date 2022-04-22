@@ -90,14 +90,37 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public abstract TResult Invoke<TResult>(Func<TResult> action);
 
+        /// <inheritdoc/>
+        public event Action<RetryTransientArgs> OnTransient;
+
         /// <summary>
-        /// Logs a transient exception that will be retried if logging
-        /// is enabled.
+        /// Handles logging of transient exceptions by invoking any <see cref="OnTransient"/>
+        /// event handlers and then logging the transient exception when none of the handlers
+        /// indicated that they handled the event.
         /// </summary>
-        /// <param name="e">The exception.</param>
+        /// <param name="e">The transient exception.</param>
         protected void LogTransient(Exception e)
         {
-            log?.LogTransient(e);
+            if (OnTransient == null)
+            {
+                log?.LogTransient(e);
+            }
+            else
+            {
+                var args = new RetryTransientArgs(e);
+
+                foreach (var handler in OnTransient.GetInvocationList())
+                {
+                    handler.DynamicInvoke(args);
+
+                    if (args.Handled)
+                    {
+                        return;
+                    }
+                }
+
+                log?.LogTransient(e);
+            }
         }
 
         /// <summary>

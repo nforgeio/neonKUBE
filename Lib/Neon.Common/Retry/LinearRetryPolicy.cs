@@ -66,7 +66,13 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        public LinearRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        public LinearRetryPolicy(
+            Func<Exception, bool>   transientDetector = null, 
+            int                     maxAttempts       = 5, 
+            TimeSpan?               retryInterval     = null, 
+            TimeSpan?               timeout           = null, 
+            string                  sourceModule      = null)
+
             : base(sourceModule, timeout)
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
@@ -85,7 +91,12 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
-        public LinearRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        public LinearRetryPolicy(
+            Type        exceptionType, 
+            int         maxAttempts   = 5, 
+            TimeSpan?   retryInterval = null, 
+            TimeSpan?   timeout       = null, 
+            string      sourceModule  = null)
             : this
             (
                 e => TransientDetector.MatchException(e, exceptionType),
@@ -106,7 +117,12 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        public LinearRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
+        public LinearRetryPolicy(
+            Type[]      exceptionTypes, 
+            int         maxAttempts   = 5, 
+            TimeSpan?   retryInterval = null, 
+            TimeSpan?   timeout       = null, 
+            string      sourceModule  = null)
             : this
             (
                 e =>
