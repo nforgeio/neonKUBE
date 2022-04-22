@@ -67,7 +67,7 @@ pluginsInit:
 image:
   organization: neon-registry.node.local
   repository: grafana-grafana
-  tag: 8.4.4
+  tag: 8.5.0-ubuntu
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -78,9 +78,9 @@ image:
   #   - myRegistrKeySecretName
 
 securityContext:
-  runAsUser: 472
-  runAsGroup: 472
-  fsGroup: 472
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
 tracing:
   enabled: true

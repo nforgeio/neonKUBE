@@ -9,7 +9,7 @@ spec:
     server:
       root_url: "https://grafana.{{ .Values.cluster.domain }}"
     feature_toggles:
-      enable: recordedQueries tempoSearch
+      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard 
     security:
       disable_brute_force_login_protection: true
       cookie_secure: true
