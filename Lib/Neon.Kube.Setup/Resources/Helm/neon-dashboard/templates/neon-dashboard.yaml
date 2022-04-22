@@ -10,7 +10,6 @@ spec:
       datasourceName: "Mimir"
   json: >
     {{`{
-    {
       "annotations": {
         "list": [
           {
@@ -930,5 +929,4 @@ spec:
       "uid": "neonkube-default-dashboard",
       "version": 3,
       "weekStart": ""
-    }
     }`}}
