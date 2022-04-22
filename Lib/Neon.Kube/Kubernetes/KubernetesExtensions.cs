@@ -658,7 +658,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
-            var pods = (await k8s.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: labelSelector)).Items;
+            var pods = (await k8s.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
             var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
 
             if (pod == null)
