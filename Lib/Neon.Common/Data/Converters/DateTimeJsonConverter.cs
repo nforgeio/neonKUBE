@@ -51,7 +51,7 @@ namespace Neon.Data
         /// <inheritdoc/>
         public override DateTime ReadJson(JsonReader reader, Type objectType, DateTime existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return (DateTime)reader.Value;
+            return DateTime.Parse((string)reader.Value);
         }
 
         /// <inheritdoc/>
