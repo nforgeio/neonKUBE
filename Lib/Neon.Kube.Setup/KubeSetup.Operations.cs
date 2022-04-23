@@ -348,10 +348,10 @@ spec:
             await InstallHarborAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallMonitoringAsync(controller);
+            await InstallNeonDashboardAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallNeonDashboardAsync(controller, master);
+            await InstallMonitoringAsync(controller);
 
             // Install the cluster operators and any required custom resources.
             //
@@ -3465,7 +3465,7 @@ $@"- name: StorageType
                         {
                             "/bin/bash",
                             "-c",
-                            $@"curl -X GET http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard -H 'Content-Type: application/json'"
+                            $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
                         };
 
                     var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
@@ -3481,7 +3481,7 @@ $@"- name: StorageType
                         {
                             "/bin/bash",
                             "-c",
-                            $@"curl -X PUT http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}'"
+                            $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
                         };
 
                     await k8s.NamespacedPodExecWithRetryAsync(
