@@ -38,6 +38,9 @@ data:
         external_labels:
           cluster: {{ .Values.cluster.name }}
           node: ${HOSTNAME}
+          datacenter: {{ .Values.cluster.datacenter }}
+          neonkube_version: {{ .Values.cluster.version }}
+          hosting_environment: {{ .Values.cluster.hostingEnvironment }}
         scrape_interval: {{ .Values.metrics.global.scrapeInterval | default "60s" }}
       wal_directory: /var/lib/agent/data
       wal_cleanup_age: 15m

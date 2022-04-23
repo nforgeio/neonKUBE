@@ -14,7 +14,10 @@ spec:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -32,12 +35,36 @@ spec:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 9999,
-      "iteration": 1650500138187,
+      "id": 10,
+      "iteration": 1650672332886,
       "links": [],
       "liveNow": false,
       "panels": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 14,
+          "options": {
+            "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>${cluster}</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>${datacenter}</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>${hosting_environment}</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>${neonkube_version}</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
+            "mode": "html"
+          },
+          "pluginVersion": "8.5.0",
+          "title": "Panel Title",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -66,7 +93,7 @@ spec:
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 0
+            "y": 8
           },
           "id": 7,
           "options": {
@@ -83,7 +110,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "8.5.0",
           "targets": [
             {
               "datasource": {
@@ -103,6 +130,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -131,7 +162,7 @@ spec:
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 0
+            "y": 8
           },
           "id": 9,
           "options": {
@@ -148,7 +179,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "8.5.0",
           "targets": [
             {
               "datasource": {
@@ -168,6 +199,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -196,7 +231,7 @@ spec:
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 0
+            "y": 8
           },
           "id": 6,
           "options": {
@@ -213,7 +248,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "8.5.0",
           "targets": [
             {
               "datasource": {
@@ -233,6 +268,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -261,7 +300,7 @@ spec:
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 0
+            "y": 8
           },
           "id": 8,
           "options": {
@@ -278,7 +317,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "8.5.0",
           "targets": [
             {
               "datasource": {
@@ -298,6 +337,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -353,7 +396,7 @@ spec:
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 4
+            "y": 12
           },
           "id": 4,
           "options": {
@@ -389,6 +432,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -469,7 +516,7 @@ spec:
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 12
+            "y": 20
           },
           "id": 12,
           "options": {
@@ -506,6 +553,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -561,7 +612,7 @@ spec:
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 28
           },
           "id": 10,
           "options": {
@@ -598,6 +649,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -653,7 +708,7 @@ spec:
             "h": 6,
             "w": 24,
             "x": 0,
-            "y": 29
+            "y": 37
           },
           "id": 11,
           "options": {
@@ -689,6 +744,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -744,7 +803,7 @@ spec:
             "h": 12,
             "w": 24,
             "x": 0,
-            "y": 35
+            "y": 43
           },
           "id": 2,
           "options": {
@@ -783,19 +842,15 @@ spec:
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 35,
+      "schemaVersion": 36,
       "style": "dark",
-      "tags": [
-        "neonkube",
-        "neonkube-default-dashboard"
-      ],
+      "tags": [],
       "templating": {
         "list": [
           {
-            "current": {
-              "selected": false,
-              "text": "sorse-tiny-2",
-              "value": "sorse-tiny-2"
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
             },
             "definition": "label_values(kube_node_info, cluster)",
             "hide": 0,
@@ -814,14 +869,9 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
             },
             "definition": "label_values(kube_node_info, node)",
             "hide": 0,
@@ -840,14 +890,9 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
             },
             "definition": "label_values(kube_namespace_created{cluster=~\"$cluster\"}, namespace)",
             "hide": 0,
@@ -866,14 +911,9 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
             },
             "definition": "label_values(container_memory_usage_bytes{cluster=~\"$cluster\"}, container)",
             "hide": 0,
@@ -892,14 +932,9 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
             },
             "definition": "label_values(container_memory_usage_bytes{cluster=~\"$cluster\", container=~\"$container\"}, pod)",
             "hide": 0,
@@ -916,17 +951,80 @@ spec:
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
+            },
+            "definition": "label_values(node_os_info, datacenter)",
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "datacenter",
+            "options": [],
+            "query": {
+              "query": "label_values(node_os_info, datacenter)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
+            },
+            "definition": "label_values(node_os_info, hosting_environment)",
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "hosting_environment",
+            "options": [],
+            "query": {
+              "query": "label_values(node_os_info, hosting_environment)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "mimir"
+            },
+            "definition": "label_values(node_os_info, neonkube_version)",
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "neonkube_version",
+            "options": [],
+            "query": {
+              "query": "label_values(node_os_info, neonkube_version)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query"
           }
         ]
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-5m",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "neonkube-default-dashboard",
-      "version": 3,
+      "uid": "hwMmfcQ7z",
+      "version": 4,
       "weekStart": ""
     }`}}
