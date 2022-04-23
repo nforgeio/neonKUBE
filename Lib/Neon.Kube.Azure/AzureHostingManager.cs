@@ -299,7 +299,6 @@ namespace Neon.Kube
             /// <summary>
             /// Constructor.
             /// </summary>
-            /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
             /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
             /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
             /// <param name="vmGen">Specifies the Azure image generation (1 or 2).</param>
@@ -309,26 +308,19 @@ namespace Neon.Kube
             /// for unmodified base Ubuntu images.
             /// <param name="imageRef">Specifies the Azure VM image reference.</param>
             /// </param>
-            public AzureUbuntuImage(string clusterVersion, string ubuntuVersion, string ubuntuBuild, int vmGen, bool isPrepared, ImageReference imageRef)
+            public AzureUbuntuImage(string ubuntuVersion, string ubuntuBuild, int vmGen, bool isPrepared, ImageReference imageRef)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
                 Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
                 Covenant.Requires<ArgumentNullException>(imageRef != null, nameof(imageRef));
 
-                this.ClusterVersion = clusterVersion;
                 this.UbuntuVersion  = ubuntuVersion;
                 this.UbuntuBuild    = ubuntuBuild;
                 this.VmGen          = vmGen;
                 this.IsPrepared     = isPrepared;
                 this.ImageRef       = imageRef;
             }
-
-            /// <summary>
-            /// Returns the neonKUBE cluster version.
-            /// </summary>
-            public string ClusterVersion { get; private set; }
 
             /// <summary>
             /// Returns the Ubuntu version deployed by the image.
@@ -425,9 +417,9 @@ namespace Neon.Kube
         private const string neonNodeSshPortTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
-        /// Returns the list of supported Ubuntu images from the Azure Marketplace.
+        /// Information about the base Ubuntu image.
         /// </summary>
-        private static IReadOnlyList<AzureUbuntuImage> ubuntuImages;
+        private static AzureUbuntuImage ubuntuImage;
 
         /// <summary>
         /// Returns the list of Azure VM size name <see cref="Regex"/> patterns
@@ -460,31 +452,19 @@ namespace Neon.Kube
             // This list will need to be updated as new cluster versions
             // are supported.             
 
-            ubuntuImages = new List<AzureUbuntuImage>()
-            {
-                new AzureUbuntuImage("0.1.0-alpha", "20.04", "20.04.202007290", vmGen: 1, isPrepared: false,
-                    new ImageReference()
-                    {
-                        Publisher = "Canonical",
-                        Offer     = "0001-com-ubuntu-server-focal",
-                        Sku       = "20_04-lts",
-                        Version   = "20.04.202007290"
-                    }),
-
-                new AzureUbuntuImage("0.1.0-alpha", "20.04", "20.04.202007290s", vmGen: 2, isPrepared: false,
+            ubuntuImage = 
+                new AzureUbuntuImage("20.04", "20.04.202007290s", vmGen: 2, isPrepared: false,
                     new ImageReference()
                     {
                         Publisher = "Canonical",
                         Offer     = "0001-com-ubuntu-server-focal",
                         Sku       = "20_04-lts-gen2",
                         Version   = "20.04.202007290"
-                    })
-            }
-            .AsReadOnly();
+                    });
 
             // IMPORTANT:
             //
-            // This should be updated periodically as Azure adds new VM sizes
+            // This needs to be updated periodically as Azure adds new VM sizes
             // that support Gen2 images.
             //
             //      https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2#generation-2-vm-sizes
@@ -578,29 +558,6 @@ namespace Neon.Kube
         {
             // We don't have to do anything here because the assembly is loaded
             // as a byproduct of calling this method.
-        }
-
-        /// <summary>
-        /// Returns the base Azure Ubuntu image to use for the specified neonKUBE cluster version.
-        /// </summary>
-        /// <param name="clusterVersion">The neonKUBE cluster version.</param>
-        /// <param name="vmGen">The Azure VM generation (1 or 2).</param>
-        /// <returns>The Azure base image reference.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if no base image can be located.</exception>
-        private static ImageReference GetBaseUbuntuImage(string clusterVersion, int vmGen)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
-            Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
-
-            var image = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == clusterVersion &&
-                                                           !img.IsPrepared &&
-                                                           img.VmGen == vmGen);
-            if (image == null)
-            {
-                throw new KeyNotFoundException($"Cannot locate a base Azure Ubuntu image for cluster version [{clusterVersion}].");
-            }
-
-            return image.ImageRef;
         }
 
         /// <summary>
@@ -1711,7 +1668,7 @@ namespace Neon.Kube
                 }
             }
 
-            var imageRef = GetBaseUbuntuImage(cluster.Definition.ClusterVersion, vmGen: vmGen.Value);
+            var imageRef = ubuntuImage.ImageRef;
 
             azureNode.Vm = azure.VirtualMachines
                 .Define(azureNode.VmName)
