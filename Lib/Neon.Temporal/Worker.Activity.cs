@@ -392,10 +392,6 @@ namespace Neon.Temporal
             {
                 await Client.ProxyReplyAsync(request, reply);
             }
-            else
-            {
-                log.LogError($"Client is null during {reply.Type} workerid: {reply.WorkerId}");
-            }
         }
 
         /// <summary>
