@@ -316,6 +316,16 @@ plugins:
   - grafana-strava-datasource
   - thalysantana-appcenter-datasource
   - grafana-athena-datasource
+  - gapit-htmlgraphics-panel
+  - boazreicher-mosaicplot-panel
+  - marcusolsson-hexmap-panel
+  - hadesarchitect-cassandra-datasource
+  - grafana-github-datasource
+  - fifemon-graphql-datasource
+  - grafana-googlesheets-datasource
+  - grafana-timestream-datasource
+  - grafana-polystat-panel
+  - grafana-salesforce-datasource
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
