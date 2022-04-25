@@ -1645,30 +1645,7 @@ namespace Neon.Kube
 
             var azureNodeOptions = azureNode.Node.Metadata.Azure;
             var azureStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
-
-            // We're going to favor Gen2 images if the VM size supports that and the
-            // user has not overridden the VM generation for the node.
-
-            var vmGen = azureNodeOptions.VmGen;
-
-            if (!vmGen.HasValue)
-            {
-                foreach (var regex in gen2VmSizeAllowedRegex)
-                {
-                    if (regex.Match(node.Metadata.Azure.VmSize).Success)
-                    {
-                        vmGen = 2;  // Gen2 is supported 
-                        break;
-                    }
-                }
-
-                if (!vmGen.HasValue)
-                {
-                    vmGen = 1;      // Gen2 is not supported 
-                }
-            }
-
-            var imageRef = ubuntuImage.ImageRef;
+            var imageRef         = ubuntuImage.ImageRef;
 
             azureNode.Vm = azure.VirtualMachines
                 .Define(azureNode.VmName)
