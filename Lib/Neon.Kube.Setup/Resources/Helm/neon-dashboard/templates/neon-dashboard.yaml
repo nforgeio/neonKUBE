@@ -53,7 +53,7 @@ spec:
           },
           "id": 14,
           "options": {
-            "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>${cluster}</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>${datacenter}</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>${hosting_environment}</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>${neonkube_version}</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
+            "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>`}}{{ .Values.cluster.name }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>`}}{{ .Values.cluster.datacenter }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>`}}{{ .Values.cluster.hostingEnvironment }}{{`</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>`}}{{ .Values.cluster.version }}{{`</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
             "mode": "html"
           },
           "pluginVersion": "8.5.0",
@@ -1024,7 +1024,7 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "hwMmfcQ7z",
+      "uid": "neonkube-default-dashboard",
       "version": 4,
       "weekStart": ""
     }`}}
