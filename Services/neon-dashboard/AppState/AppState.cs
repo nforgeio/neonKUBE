@@ -220,5 +220,10 @@ namespace NeonDashboard
         {
             Logger.LogError(e);
         }
+
+        public Dashboard GetCurrentDashboard(string dashboardId)
+        {
+            return Dashboards.Where(d => d.Id == dashboardId).FirstOrDefault();
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace NeonDashboard.Shared.Components
 		public string Title { get; set; } = "Name";
 
 		[Parameter]
-		public string Active { get; set; } = "Loading";
+		public Dashboard Active { get; set; }
 
 		[Parameter]
 		public string Icon { get; set; }
@@ -62,5 +62,7 @@ namespace NeonDashboard.Shared.Components
 		{
 			HideMenu = true;
 		}
+
+
     }
 }
