@@ -2735,6 +2735,9 @@ $@"- name: StorageType
 
                     values.Add($"cluster.name", cluster.Definition.Name);
                     values.Add($"cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
+                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
 
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
