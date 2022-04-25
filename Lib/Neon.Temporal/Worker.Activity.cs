@@ -388,7 +388,10 @@ namespace Neon.Temporal
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
             }
 
-            await Client.ProxyReplyAsync(request, reply);
+            if (Client != null)
+            {
+                await Client.ProxyReplyAsync(request, reply);
+            }
         }
 
         /// <summary>
