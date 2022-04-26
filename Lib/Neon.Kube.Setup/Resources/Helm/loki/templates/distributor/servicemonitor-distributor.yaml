@@ -25,7 +25,7 @@ spec:
     matchLabels:
       {{- include "loki.distributorSelectorLabels" $ | nindent 6 }}
   endpoints:
-    - port: http
+    - port: http-metrics
       {{- with .interval }}
       interval: {{ . }}
       {{- end }}

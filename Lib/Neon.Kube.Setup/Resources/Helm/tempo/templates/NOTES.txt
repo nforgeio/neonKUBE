@@ -15,6 +15,3 @@ Installed components:
 {{- if .Values.memcached.enabled }}
 * memcached
 {{- end }}
-{{- if .Values.gateway.enabled }}
-* gateway
-{{- end }}

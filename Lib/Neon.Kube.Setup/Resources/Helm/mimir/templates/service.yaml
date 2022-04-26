@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "mimir.fullname" . }}
+  labels:
+    {{- include "mimir.labels" . | nindent 4 }}
+    {{- with .Values.istio.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.istio.service.annotations | nindent 4 }}
+spec:
+  type: {{ .Values.istio.service.type }}
+  {{- with .Values.istio.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  ports:
+    - name: http-metric
+      port: {{ .Values.istio.service.port }}
+      targetPort: http-metric
+      {{- if and (eq "NodePort" .Values.istio.service.type) .Values.istio.service.nodePort }}
+      nodePort: {{ .Values.istio.service.nodePort }}
+      {{- end }}
+      protocol: TCP
+  selector:
+    {{- include "mimir.labels" . | nindent 4 }}

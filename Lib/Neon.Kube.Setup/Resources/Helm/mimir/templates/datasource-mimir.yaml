@@ -1,7 +1,12 @@
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDataSource
 metadata:
-  name: mimir
+  name: {{ template "mimir.fullname" . }}
+  labels:
+    app: {{ template "mimir.name" . }}
+    chart: {{ template "mimir.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 spec:
   name: Mimir
   datasources:
@@ -9,13 +14,15 @@ spec:
       uid: mimir
       type: prometheus
       access: proxy
-      url: http://mimir-query-frontend:8080/prometheus
+      url: http://mimir/prometheus
       isDefault: true
       version: 1
       editable: false
       secureJsonData:
         httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
       jsonData:
+        manageAlerts: true
+        alertmanagerUid: 'mimirAlertmanager'
         httpHeaderName1: 'X-Scope-OrgID'
         tlsSkipVerify: true
         timeInterval: "5s"

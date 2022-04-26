@@ -50,6 +50,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
         traffic.sidecar.istio.io/excludeInboundPorts: "7946"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "7946"
         {{- if .Values.useExternalConfig }}
         checksum/config: {{ .Values.externalConfigVersion }}
         {{- else }}
@@ -84,6 +85,9 @@ spec:
         - name: config
           secret:
             secretName: {{ .Values.externalConfigSecretName }}
+        - name: config-fallback
+          secret:
+            secretName: {{ .Values.externalConfigSecretName }}-alertmanager
         - name: runtime-config
           configMap:
             name: {{ template "mimir.fullname" . }}-runtime
@@ -91,6 +95,8 @@ spec:
         - name: storage
           emptyDir: {}
         {{- end }}
+        - name: alertmanager
+          emptyDir: {}
         - name: tmp
           emptyDir: {}
         {{- if .Values.alertmanager.extraVolumes }}
@@ -117,6 +123,8 @@ spec:
             {{- end }}
             - name: config
               mountPath: /etc/mimir
+            - name: config-fallback
+              mountPath: /etc/mimir-alertmanager
             - name: runtime-config
               mountPath: /var/mimir
             - name: storage
@@ -125,6 +133,8 @@ spec:
               subPath: {{ .Values.alertmanager.persistentVolume.subPath }}
               {{- else }}
               {{- end }}
+            - name: alertmanager
+              mountPath: /alertmanager
             - name: tmp
               mountPath: /tmp
           ports:

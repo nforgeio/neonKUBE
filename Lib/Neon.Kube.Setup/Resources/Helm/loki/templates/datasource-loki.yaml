@@ -9,11 +9,13 @@ spec:
       uid: loki
       type: loki
       access: proxy
-      url: http://loki-query-frontend:3100
+      url: http://loki
       secureJsonData:
         httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
       jsonData:
         httpHeaderName1: 'X-Scope-OrgID'
+        manageAlerts: true
+        alertmanagerUid: 'mimirAlertmanager'
 {{- if .Values.tracing.enabled }}
         derivedFields:
           - datasourceName: Tempo

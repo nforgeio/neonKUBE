@@ -25,6 +25,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
         traffic.sidecar.istio.io/excludeInboundPorts: "7946"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "7946"
 {{- if .Values.useExternalConfig }}
         checksum/config: {{ .Values.externalConfigVersion }}
 {{- else }}
@@ -73,6 +74,8 @@ spec:
               subPath: {{ .Values.ruler.persistence.subPath }}
             - name: active-queries
               mountPath: /active-query-tracker
+            - name: tmp
+              mountPath: /rules
           ports:
             - name: http-metrics
               containerPort: {{ include "mimir.serverHttpListenPort" . }}
@@ -115,4 +118,6 @@ spec:
         - name: storage
           emptyDir: {}
         - name: active-queries
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}

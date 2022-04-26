@@ -1,0 +1,60 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: loki
+  namespace: neon-monitor
+spec:
+  hosts:
+    - {{ template "loki.name" . }}
+  http:
+    - match:
+        - uri:
+            prefix: /api/prom/push
+        - uri:
+            prefix: /loki/api/v1/push
+      name: {{ include "loki.distributorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.distributorFullname" . }}
+            port:
+              number: 3100
+    - match:
+        - uri:
+            prefix: /ruler
+        - uri:
+            prefix: /loki/api/v1/rules
+        - uri:
+            prefix: /prometheus/api/v1/alerts
+        - uri:
+            prefix: /prometheus/api/v1/rules
+        - uri:
+            prefix: /api/prom/rules
+        - uri:
+            prefix: /api/prom/alerts
+      name: {{ include "loki.rulerFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.rulerFullname" . }}
+            port:
+              number: 3100
+    - match:
+        - uri:
+            prefix: /loki/api/v1/query
+        - uri:
+            prefix: /loki/api/v1/query_range
+        - uri:
+            prefix: /loki/api/v1/label
+        - uri:
+            prefix: /loki/api/v1/labels
+        - uri:
+            prefix: /api/prom/tail
+        - uri:
+            prefix: /loki/api/v1/tail
+        - uri:
+            prefix: /
+      name: {{ include "loki.queryFrontendFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.queryFrontendFullname" . }}
+            port:
+              number: 3100

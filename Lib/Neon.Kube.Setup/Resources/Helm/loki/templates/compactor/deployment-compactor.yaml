@@ -18,6 +18,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
         traffic.sidecar.istio.io/excludeInboundPorts: "7946"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "7946"
         checksum/config: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- with .Values.loki.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -58,7 +59,7 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           ports:
-            - name: http
+            - name: http-metrics
               containerPort: 3100
               protocol: TCP
           {{- with .Values.compactor.extraEnv }}

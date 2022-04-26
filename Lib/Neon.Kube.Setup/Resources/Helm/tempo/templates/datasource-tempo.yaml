@@ -12,10 +12,17 @@ spec:
       jsonData:
         httpHeaderName1: 'X-Scope-OrgID'
         serviceMap:
-          datasourceUid: 'prometheus'
+          datasourceUid: 'mimir'
+        lokiSearch:
+          datasourceUid: 'loki'
         httpMethod: GET
+        nodeGraph:
+          enabled: true
+        tlsSkipVerify: true
         tracesToLogs:
           datasourceUid: loki
+          filterBySpanID: true
+          filterByTraceID: true
           tags:
             - job
             - instance

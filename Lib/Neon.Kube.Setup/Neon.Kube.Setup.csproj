@@ -70,6 +70,8 @@
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
 		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\loki\templates\service.yaml" />
+		<None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />
 		<None Remove="Resources\Helm\memcached\templates\dashboard.yaml" />
 		<None Remove="Resources\Helm\memcached\templates\_affinities.tpl" />
 		<None Remove="Resources\Helm\memcached\templates\_capabilities.tpl" />
@@ -83,6 +85,7 @@
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\config-dashboard.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\datasource-mimir-alertmanager.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\overrides-exporter\overrides-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\querier\queries-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\reads-dashboard.yaml" />
@@ -91,10 +94,13 @@
 		<None Remove="Resources\Helm\mimir\templates\rollout-progress-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\ruler\ruler-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\scaling-dashboard.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\secret-alertmanager.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\service.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\slow-queries-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\store-gateway\object-storage-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\tenants-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\top-tenants-dashboard.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\virtualService.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\writes-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\writes-networking-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\writes-resources-dashboard.yaml" />
@@ -119,6 +125,8 @@
 		<None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\redis-ha\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\tempo\templates\service.yaml" />
+		<None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
 	</ItemGroup>
 
 	<ItemGroup>

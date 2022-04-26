@@ -38,7 +38,7 @@ loki:
   readinessProbe:
     httpGet:
       path: /ready
-      port: http
+      port: http-metrics
     initialDelaySeconds: 30
     timeoutSeconds: 1
   image:
@@ -178,8 +178,7 @@ loki:
         local:
           directory: /etc/loki/rules
       rule_path: /tmp/loki/scratch
-      alertmanager_url: https://alertmanager.xx
-      external_url: https://alertmanager.xx
+      alertmanager_url: dnssrvnoa+http://_http-metrics._tcp.mimir-alertmanager-headless.neon-monitor.svc.cluster.local:8080/alertmanager
 
   # -- Check https://grafana.com/docs/loki/latest/configuration/#schema_config for more info on how to configure schemas
   schemaConfig:
@@ -705,248 +704,21 @@ tableManager:
   # -- Tolerations for table-manager pods
   tolerations: []
 
-# Configuration for the gateway
-gateway:
-  # -- Specifies whether the gateway should be enabled
-  enabled: false
-  # -- Number of replicas for the gateway
-  replicas: 1
-  # -- Enable logging of 2xx and 3xx HTTP requests
-  verboseLogging: true
-  autoscaling:
-    # -- Enable autoscaling for the gateway
-    enabled: false
-    # -- Minimum autoscaling replicas for the gateway
-    minReplicas: 1
-    # -- Maximum autoscaling replicas for the gateway
-    maxReplicas: 3
-    # -- Target CPU utilisation percentage for the gateway
-    targetCPUUtilizationPercentage: 60
-    # -- Target memory utilisation percentage for the gateway
-    targetMemoryUtilizationPercentage:
-  # -- See `kubectl explain deployment.spec.strategy` for more,
-  # ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
-  deploymentStrategy:
-    type: RollingUpdate
-  image:
-    # -- The Docker registry for the gateway image
-    registry: docker.io
-    # -- The gateway image repository
-    repository: nginxinc/nginx-unprivileged
-    # -- The gateway image tag
-    tag: 1.19-alpine
-    # -- The gateway image pull policy
-    pullPolicy: IfNotPresent
-  # -- The name of the PriorityClass for gateway pods
-  priorityClassName: null
-  # -- Labels for gateway pods
-  podLabels: {}
-  # -- Annotations for gateway pods
-  podAnnotations: {}
-  # -- Additional CLI args for the gateway
-  extraArgs: []
-  # -- Environment variables to add to the gateway pods
-  extraEnv: []
-  # -- Environment variables from secrets or configmaps to add to the gateway pods
-  extraEnvFrom: []
-  # -- Volumes to add to the gateway pods
-  extraVolumes: []
-  # -- Volume mounts to add to the gateway pods
-  extraVolumeMounts: []
-  # -- The SecurityContext for gateway containers
-  podSecurityContext:
-    fsGroup: 101
-    runAsGroup: 101
-    runAsNonRoot: true
-    runAsUser: 101
-  # -- The SecurityContext for gateway containers
-  containerSecurityContext:
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-        - ALL
-    allowPrivilegeEscalation: false
-  # -- Resource requests and limits for the gateway
-  resources: {}
-  # -- Containers to add to the gateway pods
-  extraContainers: []
-  # -- Grace period to allow the gateway to shutdown before it is killed
-  terminationGracePeriodSeconds: 30
-  # -- Affinity for gateway pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
-  affinity: |
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "loki.gatewaySelectorLabels" . | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                {{- include "loki.gatewaySelectorLabels" . | nindent 12 }}
-            topologyKey: failure-domain.beta.kubernetes.io/zone
-  # -- Node selector for gateway pods
-  nodeSelector: {}
-  # -- Tolerations for gateway pods
-  tolerations: []
-  # Gateway service configuration
+# Configuration for istio gateway
+istio:
   service:
-    # -- Port of the gateway service
+    # -- Port of the nginx service
     port: 80
-    # -- Type of the gateway service
+    # -- Type of the nginx service
     type: ClusterIP
-    # -- ClusterIP of the gateway service
+    # -- ClusterIP of the nginx service
     clusterIP: null
     # -- Node port if service type is NodePort
     nodePort: null
-    # -- Load balancer IPO address if service type is LoadBalancer
-    loadBalancerIP: null
-    # -- Annotations for the gateway service
+    # -- Annotations for the nginx service
     annotations: {}
-    # -- Labels for gateway service
+    # -- Labels for nginx service
     labels: {}
-  # Gateway ingress configuration
-  ingress:
-    # -- Specifies whether an ingress for the gateway should be created
-    enabled: false
-    # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
-    # ingressClassName: nginx
-    # -- Annotations for the gateway ingress
-    annotations: {}
-    # -- Hosts configuration for the gateway ingress
-    hosts:
-      - host: gateway.loki.example.com
-        paths:
-          - path: /
-            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
-            # pathType: Prefix
-    # -- TLS configuration for the gateway ingress
-    tls:
-      - secretName: loki-gateway-tls
-        hosts:
-          - gateway.loki.example.com
-  # Basic auth configuration
-  basicAuth:
-    # -- Enables basic authentication for the gateway
-    enabled: false
-    # -- The basic auth username for the gateway
-    username: null
-    # -- The basic auth password for the gateway
-    password: null
-    # -- Uses the specified username and password to compute a htpasswd using Sprig's `htpasswd` function.
-    # The value is templated using `tpl`. Override this to use a custom htpasswd, e.g. in case the default causes
-    # high CPU load.
-    htpasswd: >-
-      {{ htpasswd (required "'gateway.basicAuth.username' is required" .Values.gateway.basicAuth.username) (required "'gateway.basicAuth.password' is required" .Values.gateway.basicAuth.password) }}
-    # -- Existing basic auth secret to use. Must contain '.htpasswd'
-    existingSecret: null
-  # Configures the readiness probe for the gateway
-  readinessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 15
-    timeoutSeconds: 1
-  nginxConfig:
-    # -- NGINX log format
-    logFormat: |-
-      main '$remote_addr - $remote_user [$time_local]  $status '
-              '"$request" $body_bytes_sent "$http_referer" '
-              '"$http_user_agent" "$http_x_forwarded_for"';
-    # -- Allows appending custom configuration to the server block
-    serverSnippet: ""
-    # -- Allows appending custom configuration to the http block
-    httpSnippet: ""
-    # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
-    # @default -- See values.yaml
-    file: |
-      worker_processes  5;  ## Default: 1
-      error_log  /dev/stderr;
-      pid        /tmp/nginx.pid;
-      worker_rlimit_nofile 8192;
-
-      events {
-        worker_connections  4096;  ## Default: 1024
-      }
-
-      http {
-        client_body_temp_path /tmp/client_temp;
-        proxy_temp_path       /tmp/proxy_temp_path;
-        fastcgi_temp_path     /tmp/fastcgi_temp;
-        uwsgi_temp_path       /tmp/uwsgi_temp;
-        scgi_temp_path        /tmp/scgi_temp;
-
-        default_type application/octet-stream;
-        log_format   {{ .Values.gateway.nginxConfig.logFormat }}
-
-        {{- if .Values.gateway.verboseLogging }}
-        access_log   /dev/stderr  main;
-        {{- else }}
-
-        map $status $loggable {
-          ~^[23]  0;
-          default 1;
-        }
-        access_log   /dev/stderr  main  if=$loggable;
-        {{- end }}
-
-        sendfile     on;
-        tcp_nopush   on;
-        resolver {{ .Values.global.dnsService }}.{{ .Values.global.dnsNamespace }}.svc.{{ .Values.global.clusterDomain }};
-
-        {{- with .Values.gateway.nginxConfig.httpSnippet }}
-        {{ . | nindent 2 }}
-        {{- end }}
-
-        server {
-          listen             8080;
-
-          {{- if .Values.gateway.basicAuth.enabled }}
-          auth_basic           "Loki";
-          auth_basic_user_file /etc/nginx/secrets/.htpasswd;
-          {{- end }}
-
-          location = / {
-            return 200 'OK';
-            auth_basic off;
-          }
-
-          location = /api/prom/push {
-            proxy_pass       http://{{ include "loki.distributorFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-          }
-
-          location = /api/prom/tail {
-            proxy_pass       http://{{ include "loki.querierFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-          }
-
-          location ~ /api/prom/.* {
-            proxy_pass       http://{{ include "loki.queryFrontendFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-          }
-
-          location = /loki/api/v1/push {
-            proxy_pass       http://{{ include "loki.distributorFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-          }
-
-          location = /loki/api/v1/tail {
-            proxy_pass       http://{{ include "loki.querierFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-          }
-
-          location ~ /loki/api/.* {
-            proxy_pass       http://{{ include "loki.queryFrontendFullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-          }
-
-          {{- with .Values.gateway.nginxConfig.serverSnippet }}
-          {{ . | nindent 4 }}
-          {{- end }}
-        }
-      }
 
 # Configuration for the compactor
 compactor:
