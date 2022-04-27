@@ -602,8 +602,8 @@ rm -rf /var/lib/dhcp/*
 
 # Filesystem cleaning
 
-{fstrim}
 {fsZero}
+{fstrim}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }
