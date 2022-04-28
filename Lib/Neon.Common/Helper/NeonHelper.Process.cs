@@ -45,7 +45,7 @@ namespace Neon.Common
         /// </para>
         /// <para>
         /// For Windows, the <see cref="Process.Start(ProcessStartInfo)"/> method does not 
-        /// search the PATH for the application.  This method attempts to convert the program
+        /// search the PATH for the application so this method attempts to convert the program
         /// file name into a fully qualified path by actually searching the PATH.
         /// </para>
         /// <para>
@@ -236,7 +236,15 @@ namespace Neon.Common
         /// <summary>
         /// Forks a child process that will run in parallel with the current process.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <returns>The <see cref="Process"/> information.</returns>
         public static Process Fork(string path, params object[] args)
@@ -263,7 +271,15 @@ namespace Neon.Common
         /// Starts a process with an array of arguments to run an executable file and
         /// then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -301,7 +317,15 @@ namespace Neon.Common
         /// <summary>
         /// Starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -468,7 +492,15 @@ namespace Neon.Common
         /// Asynchronously starts a process to run an executable file with an array of
         /// arguments and then and waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -508,7 +540,15 @@ namespace Neon.Common
         /// <summary>
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -616,7 +656,15 @@ namespace Neon.Common
         /// Starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -680,7 +728,15 @@ namespace Neon.Common
         /// Starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -846,7 +902,15 @@ namespace Neon.Common
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Maximum time to wait for the process to complete or <c>null</c> to wait
@@ -902,7 +966,15 @@ namespace Neon.Common
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Maximum time to wait for the process to complete or <c>null</c> to wait
