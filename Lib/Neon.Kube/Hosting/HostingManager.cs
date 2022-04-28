@@ -71,11 +71,14 @@ namespace Neon.Kube
         {
             // AWS EC2 backed block devices shouldn't be zeroed because that will
             // actually make snapshots and thus AMIs created from the snapshots
-            // bigger.
+            // bigger and initially slower to boot.
             //
             // https://aws.amazon.com/blogs/apn/how-to-build-sparse-ebs-volumes-for-fun-and-easy-snapshotting/
+            //
+            // The same thing will happen on other cloud environments with sparse
+            // page blobs, so we'll disable this for all clouds.
 
-            return environment != HostingEnvironment.Aws;
+            return !KubeHelper.IsCloudEnvironment(environment);
         }
 
         //---------------------------------------------------------------------

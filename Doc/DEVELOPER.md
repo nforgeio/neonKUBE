@@ -114,7 +114,7 @@ Follow the steps below to configure a development or test workstation:
       * **Indent Size** = 4
       * Select **Insert Spaces**
 
-14: Install Git Extensions:
+14: *Optional/maintainers:* Install Git Extensions:
 
     * Start Visual Studio
     * Select **Extensions/Manage Extensions**
