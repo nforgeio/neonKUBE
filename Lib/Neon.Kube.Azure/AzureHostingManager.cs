@@ -2236,5 +2236,7 @@ namespace Neon.Kube
 
             throw new NotImplementedException("$todo(jefflill)");
         }
+
+        // $todo(jefflill): Include in delete resource group: "Microsoft.Compute/virtualMachines"
     }
 }
