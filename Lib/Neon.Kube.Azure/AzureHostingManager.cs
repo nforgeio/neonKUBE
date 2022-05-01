@@ -1541,6 +1541,14 @@ namespace Neon.Kube
                         .Create();
 
                 clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
+
+                // Set [ClusterDefinition.PublicAddresses] to the public IP if the
+                // user hasn't specified any addresses.
+
+                if (cluster.Definition.PublicAddresses.Count == 0)
+                {
+                    cluster.Definition.PublicAddresses.Add(publicAddress.IPAddress);
+                }
             }
         }
 

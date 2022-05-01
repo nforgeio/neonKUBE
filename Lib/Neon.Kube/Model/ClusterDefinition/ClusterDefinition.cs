@@ -240,9 +240,10 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
 
-            // The domain isn't important to [ClusterFixture].
+            // The domain amd public addresses aren't important to [ClusterFixture].
 
-            definition.Domain = null;
+            definition.Domain          = null;
+            definition.PublicAddresses = null;
 
             // Ensure that computed peroperties are set.
 
@@ -416,6 +417,28 @@ namespace Neon.Kube
         [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Domain { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the public IP addresses for the cluster.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// For cloud clusters, this will default to the public IP address assigned to the cluster
+        /// load balancer and for on-premise clusters, this defaults to the IP addresses assigned
+        /// to the master nodes.
+        /// </para>
+        /// <para>
+        /// This can also be specified explicitly here in the cluster definition.  This is useful
+        /// for things like documenting the public IP address for a router that directs traffic
+        /// into the cluster.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> PublicAddresses { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the semantic version of the neonKUBE cluster being created.
@@ -1051,6 +1074,32 @@ namespace Neon.Kube
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {
                 FeatureGates["EphemeralContainers"] = true;
+            }
+
+            // Validate/initialize the public addresses.
+
+            PublicAddresses ??= new List<string>();
+
+            PublicAddresses = PublicAddresses
+                .Where(address => !string.IsNullOrEmpty(address))
+                .ToList();
+
+            foreach (var address in PublicAddresses)
+            {
+                if (!IPAddress.TryParse(address, out var ip))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(PublicAddresses)}={address}] is not a valid IPv4 address.");
+                }
+            }
+
+            if (PublicAddresses.Count == 0 && !KubeHelper.IsCloudEnvironment(Hosting.Environment))
+            {
+                // Default to the master node addresses for non-cloud environments.
+
+                foreach (var node in SortedMasterNodes)
+                {
+                    PublicAddresses.Add(node.Address);
+                }
             }
 
             // Validate the NTP time sources.

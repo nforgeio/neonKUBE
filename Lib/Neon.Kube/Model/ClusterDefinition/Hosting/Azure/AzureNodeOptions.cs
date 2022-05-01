@@ -50,11 +50,11 @@ namespace Neon.Kube
         /// This defaults to <see cref="AzureHostingOptions.DefaultVmSize"/>.
         /// </para>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes.  You must
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>

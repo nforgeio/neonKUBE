@@ -48,10 +48,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            Name        = clusterDefinition.Name;
-            Description = clusterDefinition.Description;
-            Datacenter  = clusterDefinition.Datacenter;
-            Domain      = clusterDefinition.Domain;
+            Name            = clusterDefinition.Name;
+            Description     = clusterDefinition.Description;
+            Datacenter      = clusterDefinition.Datacenter;
+            Domain          = clusterDefinition.Domain;
+            PublicAddresses = clusterDefinition.PublicAddresses;
         }
 
         /// <summary>
@@ -105,6 +106,25 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("")]
         public string Domain { get; set; } = string.Empty;
+
+        /// <summary>
+        /// <para>
+        /// Lists the IP addresses that can be used to communicate with the cluster.
+        /// </para>
+        /// <para>
+        /// For cloud deployed clusters, this will be configured by default with the public IP
+        /// address assigned to the cluster load balancer.  For on-premis clusters, this will
+        /// be set to the IP addresses of the master nodes by default.
+        /// </para>
+        /// <para>
+        /// Users may also customize this by setting IP addresses in the cluster definition.
+        /// This is often done for clusters behind a router mapping the public IP address
+        /// to the LAN address for cluster nodes.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<string> PublicAddresses { get; set; } = null;
 
         /// <summary>
         /// Maps node names to their provisioning states.

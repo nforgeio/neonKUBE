@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string                defaultVmSize             = "Standard_A3";
+        private const string                defaultVmSize             = "Standard_D4as_v4";
         internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
         private const string                defaultDiskSize           = "128 GiB";
         internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
@@ -270,15 +270,15 @@ namespace Neon.Kube
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
         /// </para>
         /// <note>
-        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM but
-        /// you can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
+        /// This defaults to <b>Standard_D4as_v4</b> which includes includes 4 virtual CPUs and 16 GiB RAM.
+        /// You can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
         /// </note>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes.  You must
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
