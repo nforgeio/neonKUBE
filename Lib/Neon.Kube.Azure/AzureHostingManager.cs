@@ -364,6 +364,11 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Used to limit how many threads will be created by parallel operations.
+        /// </summary>
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+
+        /// <summary>
         /// The first NSG rule priority to use for ingress rules.
         /// </summary>
         private const int firstIngressNsgRulePriority = 1000;
@@ -1114,23 +1119,6 @@ namespace Neon.Kube
             return publicAddress.IPAddress;
         }
 
-        /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
-        {
-            await SyncContext.Clear;
-
-            // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1544
-
-            await ConnectAzureAsync();
-
-            return new HostingResourceAvailability()
-            {
-                CanBeDeployed = true
-            };
-        }
-
         /// <summary>
         /// <para>
         /// Connects to Azure if we're not already connected.
@@ -1306,7 +1294,6 @@ namespace Neon.Kube
             controller.SetGlobalStepStatus("verify: Azure region and VM image availability");
 
             var regionName   = cluster.Definition.Hosting.Azure.Region;
-            var vmSizes      = await azure.VirtualMachines.Sizes.ListByRegionAsync(regionName);
             var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
             var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -1335,6 +1322,12 @@ namespace Neon.Kube
 
                     throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{regionName}] Azure region.");
                 }
+
+                // $todo(jefflill):
+                //
+                // We don't currently ensure that all VM sizes required by the cluster are AMD64 compatible.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1545
 
                 switch (node.Metadata.Role)
                 {
@@ -1391,7 +1384,6 @@ namespace Neon.Kube
 
                 node.Metadata.Labels.ComputeCores     = vmSize.NumberOfCores;
                 node.Metadata.Labels.ComputeRam       = vmSize.MemoryInMB;
-
                 node.Metadata.Labels.StorageSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
                 node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
                 node.Metadata.Labels.StorageEphemeral = false;
@@ -1707,7 +1699,7 @@ namespace Neon.Kube
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
-                await UpdateIngressEgressRulesAsync();
+                UpdateIngressEgressRules();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -1728,8 +1720,7 @@ namespace Neon.Kube
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private void UpdateIngressEgressRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
@@ -2249,17 +2240,351 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
 
+
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
+            await SyncContext.Clear;
+
+            var regionName = azureOptions.Region;
+
+            await ConnectAzureAsync();
+
+            // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1544
+
+            // Verify that the region exists and is available to the current subscription.
+
+            var subscription = await azure.Subscriptions.GetByIdAsync(azureOptions.SubscriptionId);
+            var location     = subscription.ListLocations().SingleOrDefault(location => location.Name.Equals(azureOptions.Region, StringComparison.InvariantCultureIgnoreCase));
+
+            if (location == null)
+            {
+                var constraint =
+                    new HostingResourceConstraint()
+                    {
+                        ResourceType = HostingConstrainedResourceType.VmHost,
+                        Details      = $"Azure region [{regionName}] not found or available.",
+                        Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
+                    };
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints   = 
+                        new Dictionary<string, List<HostingResourceConstraint>>()
+                        {
+                            { $"AWS/{regionName}", new List<HostingResourceConstraint>() { constraint } }
+                        }
+                };
+            }
+
+            // Verify that the instance types required by the cluster are available in the region.
+
+            // $todo(jefflill):
+            //
+            // We don't currently:
+            // 
+            //      * ensure that all VM sizes required by the cluster
+            //      * VM sizes are AMD64 compatible
+            //      * VM is compatible with the storage tier specified for each node
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1545
+
+            var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
+            var constraints  = new List<HostingResourceConstraint>();
+
+            foreach (var vmSize in await azure.VirtualMachines.Sizes.ListByRegionAsync(regionName))
+            {
+                nameToVmSize[vmSize.Name] = vmSize;
+            }
+
+            foreach (var vmSku in await azure.ComputeSkus.ListByRegionAsync(regionName))
+            {
+                nameToVmSku[vmSku.Name.Value] = vmSku;
+            }
+
+            var clusterVmSizes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var vmSize = node.Metadata.Azure.VmSize;
+
+                if (!clusterVmSizes.Contains(vmSize))
+                {
+                    clusterVmSizes.Add(vmSize);
+                }
+            }
+
+            foreach (var vmSize in clusterVmSizes)
+            {
+                if (!nameToVmSize.TryGetValue(vmSize, out var vmSizeInfo))
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"VM Size [{vmSize}] is not available in Azure region [{regionName}].",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Azure.VmSize == vmSize)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+
+                    continue;
+                }
+            }
+
+            if (constraints.Count == 0)
+            {
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = true
+                };
+            }
+            else
+            {
+                var constraintDictionary = new Dictionary<string, List<HostingResourceConstraint>>();
+
+                constraintDictionary.Add($"AWS/{regionName}", constraints);
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints = constraintDictionary
+                };
+            }
+        }
+
+        /// <inheritdoc/>
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        {
+            var clusterStatus = new ClusterStatus(cluster.Definition);
+
             if (timeout <= TimeSpan.Zero)
             {
                 timeout = DefaultStatusTimeout;
             }
 
-            throw new NotImplementedException("$todo(jefflill)");
+            await ConnectAzureAsync();
+
+            // We're going to infer the cluster provisiong status by examining the
+            // cluster login and the state of the VMs deployed to AWS.
+
+            var contextName  = $"root@{cluster.Definition.Name}";
+            var context      = KubeHelper.Config.GetContext(contextName);
+            var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
+
+            // Create a hashset with the names of the nodes that map to deployed AWS
+            // machine instances.
+
+            var existingNodes = new HashSet<string>();
+
+            foreach (var item in nameToVm)
+            {
+                var nodeDefinition = cluster.Definition.NodeDefinitions[item.Key];
+
+                if (nodeDefinition != null)
+                {
+                    existingNodes.Add(nodeDefinition.Name);
+                }
+            }
+
+            // Build the cluster status.
+
+            if (context == null && clusterLogin == null)
+            {
+                // The Kubernetes context for this cluster doesn't exist, so we know that any
+                // virtual machines with names matching the virtual machines that would be
+                // provisioned for the cluster definition are conflicting.
+
+                clusterStatus.State   = ClusterState.NotFound;
+                clusterStatus.Summary = "Cluster does not exist";
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    clusterStatus.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                }
+
+                return clusterStatus;
+            }
+            else
+            {
+                // We're going to assume that all virtual machines in the cluster's resource group
+                // belong to the cluster and we'll map the actual VM states to public node states.
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    var nodePowerState = ClusterNodeState.NotProvisioned;
+
+                    if (existingNodes.Contains(node.Name))
+                    {
+                        if (nameToVm.TryGetValue(node.Name, out var azureVm))
+                        {
+                            var powerState = azureVm.Vm.PowerState;
+
+                            if (powerState == PowerState.Starting)
+                            {
+                                nodePowerState = ClusterNodeState.Starting;
+                            }
+                            else if (powerState == PowerState.Running)
+                            {
+                                nodePowerState = ClusterNodeState.Running;
+                            }
+                            else if (powerState == PowerState.Stopping)
+                            {
+                                // We don't currently have a status for stopping a node so we'll
+                                // consider it to be running because technically, it still is.
+
+                                nodePowerState = ClusterNodeState.Running;
+                            }
+                            else if (powerState == PowerState.Stopped)
+                            {
+                                nodePowerState = ClusterNodeState.Off;
+                            }
+                            else if (powerState == PowerState.Deallocating)
+                            {
+                                // We don't currently have a status for terminating a node so we'll
+                                // consider it to be running because technically, it still is.
+
+                                nodePowerState = ClusterNodeState.Running;
+                            }
+                            else if (powerState == PowerState.Deallocated)
+                            {
+                                nodePowerState = ClusterNodeState.NotProvisioned;
+                            }
+                            else
+                            {
+                                Covenant.Assert(false, $"Unexpected node instance status: [{powerState}]");
+                            }
+                        }
+                    }
+
+                    clusterStatus.Nodes.Add(node.Name, nodePowerState);
+                }
+
+                // We're going to examine the node states from the AWS perspective and
+                // short-circuit the Kubernetes level cluster health check when the cluster
+                // nodes are not provisioned, are paused or appear to be transitioning
+                // between starting, stopping, or paused states.
+
+                var commonNodeState = clusterStatus.Nodes.Values.First();
+
+                foreach (var nodeState in clusterStatus.Nodes.Values)
+                {
+                    if (nodeState != commonNodeState)
+                    {
+                        // Nodes have differing states so we're going to consider the cluster
+                        // to be transitioning.
+
+                        clusterStatus.State   = ClusterState.Transitioning;
+                        clusterStatus.Summary = "Cluster is transitioning";
+                        break;
+                    }
+                }
+
+                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                {
+                    clusterStatus.State   = ClusterState.Configuring;
+                    clusterStatus.Summary = "Cluster is partially configured";
+                }
+                else if (clusterStatus.State != ClusterState.Transitioning)
+                {
+                    // If we get here then all of the nodes have the same state so
+                    // we'll use that common state to set the overall cluster state.
+
+                    switch (commonNodeState)
+                    {
+                        case ClusterNodeState.Starting:
+
+                            clusterStatus.State   = ClusterState.Unhealthy;
+                            clusterStatus.Summary = "Cluster is starting";
+                            break;
+
+                        case ClusterNodeState.Running:
+
+                            clusterStatus.State   = ClusterState.Configured;
+                            clusterStatus.Summary = "Cluster is configured";
+                            break;
+
+                        case ClusterNodeState.Paused:
+                        case ClusterNodeState.Off:
+
+                            clusterStatus.State   = ClusterState.Off;
+                            clusterStatus.Summary = "Cluster is turned off";
+                            break;
+
+                        case ClusterNodeState.NotProvisioned:
+
+                            clusterStatus.State   = ClusterState.NotFound;
+                            clusterStatus.Summary = "Cluster is not found.";
+                            break;
+
+                        case ClusterNodeState.Unknown:
+                        default:
+
+                            clusterStatus.State   = ClusterState.NotFound;
+                            clusterStatus.Summary = "Cluster not found";
+                            break;
+                    }
+                }
+
+                if (clusterStatus.State == ClusterState.Off)
+                {
+                    clusterStatus.Summary = "Cluster is turned off";
+
+                    return clusterStatus;
+                }
+
+                return clusterStatus;
+            }
         }
 
-        // $todo(jefflill): Include in delete resource group: "Microsoft.Compute/virtualMachines"
+        /// <inheritdoc/>
+        public override async Task StartClusterAsync()
+        {
+            // We're going to signal all cluster VMs to start.
+
+            await ConnectAzureAsync();
+
+            await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
+                async (node, cancellationToken) =>
+                {
+                    var vm = nameToVm[node.Name];
+
+                    await azure.VirtualMachines.StartAsync(resourceGroupName, vm.Name, cancellationToken);
+                });
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
+        {
+            // We're going to signal all cluster VMs to stop.
+
+            // $todo(jefflill): Note that the fluent SDK doesn't appear to support forced shutdown:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1546
+
+            await ConnectAzureAsync();
+
+            await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
+                async (node, cancellationToken) =>
+                {
+                    var vm = nameToVm[node.Name];
+
+                    await azure.VirtualMachines.PowerOffAsync(resourceGroupName, vm.Name, cancellationToken);
+                });
+        }
+
+        /// <inheritdoc/>
+        public override async Task RemoveClusterAsync(bool removeOrphans = false)
+        {
+            // We just need to delete the cluster resource group and everything within it.
+
+            await ConnectAzureAsync();
+            await azure.ResourceGroups.DeleteByNameAsync(resourceGroupName, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
+        }
     }
 }
