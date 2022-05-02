@@ -74,20 +74,20 @@ namespace Neon.Kube
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
+        /// Client/Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
         /// </summary>
-        [JsonProperty(PropertyName = "AppId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "appId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string AppId { get; set; }
+        public string ClientId { get; set; }
 
         /// <summary>
-        /// Password generated when creating the neon tool's Azure service principal.
+        /// ClientSecret/AppPassword generated when creating the neon tool's Azure service principal.
         /// </summary>
-        [JsonProperty(PropertyName = "AppPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "appPassword", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClientSecret", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientSecret", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string AppPassword { get; set; }
+        public string ClientSecret { get; set; }
 
         /// <summary>
         /// Identifies the target Azure region (e.g. <b>westus</b>).
@@ -98,8 +98,17 @@ namespace Neon.Kube
         public string Region { get; set; }
 
         /// <summary>
+        /// <para>
         /// Azure resource group where all cluster components are to be provisioned.  This defaults
         /// to "neon-" plus the cluster name but can be customized as required.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// <b>IMPORTANT:</b> Everything in this resource group will be deleted when the cluster is
+        /// removed.  This means that you must be very careful when adding other resources to this
+        /// group because these will be deleted as well.
+        /// </para>
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
@@ -400,14 +409,14 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(TenantId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(AppId))
+            if (string.IsNullOrEmpty(ClientId))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(AppId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(AppPassword))
+            if (string.IsNullOrEmpty(ClientSecret))
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(AppPassword)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientSecret)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
@@ -527,8 +536,8 @@ namespace Neon.Kube
         {
             SubscriptionId = null;
             TenantId       = null;
-            AppId          = null;
-            AppPassword    = null;
+            ClientId       = null;
+            ClientSecret   = null;
         }
     }
 }
