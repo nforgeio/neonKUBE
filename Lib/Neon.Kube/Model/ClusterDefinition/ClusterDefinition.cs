@@ -454,7 +454,7 @@ namespace Neon.Kube
         /// <para>
         /// Optionally specifies custom tags that will be attached to cluster resources in cloud
         /// hosting environments.  These tags are intended to help you manage your cloud resources
-        /// as well as help originize you cost reporting.
+        /// as well as help organize your cost reporting.
         /// </para>
         /// <note>
         /// Currently, this is only supported for clusters deployed to AWS, Azure or Google Cloud.

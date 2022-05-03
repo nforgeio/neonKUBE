@@ -290,76 +290,6 @@ namespace Neon.Kube
             DisableSsh = 0x0004,
         }
 
-        /// <summary>
-        /// Describes an Ubuntu image from the Azure marketplace.
-        /// </summary>
-        private class AzureUbuntuImage
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
-            /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
-            /// <param name="vmGen">Specifies the Azure image generation (1 or 2).</param>
-            /// <param name="isPrepared">
-            /// Pass <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
-            /// for unmodified base Ubuntu images.
-            /// <param name="imageRef">Specifies the Azure VM image reference.</param>
-            /// </param>
-            public AzureUbuntuImage(string ubuntuVersion, string ubuntuBuild, int vmGen, bool isPrepared, ImageReference imageRef)
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
-                Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
-                Covenant.Requires<ArgumentNullException>(imageRef != null, nameof(imageRef));
-
-                this.UbuntuVersion  = ubuntuVersion;
-                this.UbuntuBuild    = ubuntuBuild;
-                this.VmGen          = vmGen;
-                this.IsPrepared     = isPrepared;
-                this.ImageRef       = imageRef;
-            }
-
-            /// <summary>
-            /// Returns the Ubuntu version deployed by the image.
-            /// </summary>
-            public string UbuntuVersion { get; private set; }
-
-            /// <summary>
-            /// Returns the Ubuntu build version.
-            /// </summary>
-            public string UbuntuBuild { get; private set; }
-
-            /// <summary>
-            /// <para>
-            /// Returns the Azure VM image type.  Gen1 images use the older BIOS boot
-            /// mechanism and use IDE to access the disks.  Gen2 images use UEFI
-            /// to boot and use SCSI to access the disks.  Gen2 images allow OS
-            /// disks creater than 2TiB but do not support disk encryption.  Gen2
-            /// VMs will likely run faster as well because they support accelerated
-            /// networking.
-            /// </para>
-            /// <note>
-            /// Most VM sizes can deploy using Gen1 or Gen2 images but this is
-            /// not always the case.
-            /// </note>
-            /// </summary>
-            public int VmGen { get; private set; }
-
-            /// <summary>
-            /// Returns <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster.  This will be
-            /// <c>false</c> for unmodified base Ubuntu images.
-            /// </summary>
-            public bool IsPrepared { get; private set; }
-
-            /// <summary>
-            /// Returns the Azure image reference.
-            /// </summary>
-            public ImageReference ImageRef { get; private set; }
-        }
-
         //---------------------------------------------------------------------
         // Static members
 
@@ -421,11 +351,6 @@ namespace Neon.Kube
         private const string neonNodeSshPortTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
-        /// Information about the base Ubuntu image.
-        /// </summary>
-        private static AzureUbuntuImage ubuntuImage;
-
-        /// <summary>
         /// Returns the list of Azure VM size name <see cref="Regex"/> patterns
         /// for VMs that are known to be <b>compatible</b> with Gen2 VM images.
         /// </summary>
@@ -451,21 +376,6 @@ namespace Neon.Kube
         /// </summary>
         static AzureHostingManager()
         {
-            // IMPORTANT: 
-            //
-            // This list will need to be updated as new cluster versions
-            // are supported.             
-
-            ubuntuImage = 
-                new AzureUbuntuImage("20.04", "20.04.202007290s", vmGen: 2, isPrepared: false,
-                    new ImageReference()
-                    {
-                        Publisher = "Canonical",
-                        Offer     = "0001-com-ubuntu-server-focal",
-                        Sku       = "20_04-lts-gen2",
-                        Version   = "20.04.202007290"
-                    });
-
             // IMPORTANT:
             //
             // This needs to be updated periodically as Azure adds new VM sizes
@@ -630,18 +540,16 @@ namespace Neon.Kube
         private string                                  clusterName;
         private SetupController<NodeDefinition>         controller;
         private string                                  clusterEnvironment;
-        private string                                  nodeUsername;
-        private string                                  nodePassword;
         private HostingOptions                          hostingOptions;
         private CloudOptions                            cloudOptions;
         private bool                                    prefixResourceNames;
         private AzureHostingOptions                     azureOptions;
         private AzureCredentials                        azureCredentials;
-        private string                                  secureSshPassword;
         private NetworkOptions                          networkOptions;
         private string                                  region;
         private IAzure                                  azure;
         private readonly Dictionary<string, AzureVm>    nameToVm;
+        private IGalleryImageVersion                    nodeImageVersion;
 
         // These names will be used to identify the cluster resources.
 
@@ -709,9 +617,9 @@ namespace Neon.Kube
                 case TriState.Default:
 
                     // Default to FALSE for Azure because all resource names
-                    // will be scoped to a resource group.
+                    // will be scoped to the cluster resource group.
 
-                    this.prefixResourceNames = true;
+                    this.prefixResourceNames = false;
                     break;
 
                 case TriState.True:
@@ -927,25 +835,18 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(AzureHostingManager)}] was created with the wrong constructor.");
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
-            this.controller        = controller;
-            this.secureSshPassword = clusterLogin.SshPassword;
+            this.controller = controller;
 
             // We need to ensure that the cluster has at least one ingress node.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // Update the node credentials.
-
-            this.nodeUsername = KubeConst.SysAdminUser;
-            this.nodePassword = secureSshPassword;
-
             // Initialize and run the [SetupController].
 
             var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
 
-            controller.AddGlobalStep("Azure connect", state => ConnectAzureAsync());
+            controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
+            controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
             controller.AddGlobalStep("resource group", state => CreateResourceGroup());
             controller.AddGlobalStep("availability sets", state => CreateAvailabilitySetsAsync());
@@ -994,7 +895,9 @@ namespace Neon.Kube
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                    var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVmAsync);
@@ -1012,7 +915,7 @@ namespace Neon.Kube
                 // We need to add any required OpenEBS cStor disks after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
                 // when the VM is initially created, the disk setup scripts executed during prepare
-                // won't be able to distinguish between the two disk.
+                // won't be able to distinguish between the two disks.
                 //
                 // At this point, the data disk should be partitioned, formatted, and mounted so
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
@@ -1137,7 +1040,7 @@ namespace Neon.Kube
                 return;
             }
 
-            controller.SetGlobalStepStatus("connect: Azure");
+            controller?.SetGlobalStepStatus("connect: Azure");
 
             var environment = AzureEnvironment.AzureGlobalCloud;
 
@@ -1189,8 +1092,8 @@ namespace Neon.Kube
                         ClientId     = azureOptions.ClientId,
                         ClientSecret = azureOptions.ClientSecret
                     },
-                azureOptions.TenantId,
-                environment);
+                    tenantId:    azureOptions.TenantId,
+                    environment: environment);
 
             azure = Azure.Configure()
                 .Authenticate(azureCredentials)
@@ -1198,7 +1101,7 @@ namespace Neon.Kube
 
             // Load references to any existing cluster resources.
 
-            await GetResourcesAsync();
+           await GetResourcesAsync();
         }
 
         /// <summary>
@@ -1275,6 +1178,54 @@ namespace Neon.Kube
                 }
 
                 nameToVm[nodeName].ExternalSshPort = sshPort;
+            }
+        }
+
+        /// <summary>
+        /// Locates the node virtual machine image to be used to provision the cluster.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task LocateNodeImageAsync()
+        {
+            // $todo(jefflill):
+            //
+            // This is currently hardcoded to locate the current node image from our
+            // private development image gallery.  We'll need to modify this to reference
+            // our marketplace image and perhaps optionally use the development gallery.
+
+            const string galleryResourceGroupName = "neonkube-images";
+            const string galleryName              = "neonkube.images";
+
+            var gallery = (await azure.Galleries.ListByResourceGroupAsync(galleryResourceGroupName)).SingleOrDefault(gallery => gallery.Name == galleryName);
+
+            if (gallery == null)
+            {
+                throw new NeonKubeException($"Gallery [{galleryName}] not found in resource group: {galleryResourceGroupName}");
+            }
+
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var nodeImageName   = "neonkube-node";
+
+            if (neonKubeVersion.Prerelease != null)
+            {
+                nodeImageName += $"-{neonKubeVersion.Prerelease}";
+            }
+
+            var nodeImage = (await azure.GalleryImages.ListByGalleryAsync(gallery.ResourceGroupName, gallery.Name)).SingleOrDefault(image => image.Name == nodeImageName);
+
+            if (nodeImage == null)
+            {
+                throw new NeonKubeException($"Node image [{nodeImageName}] not found in image gallery: {galleryResourceGroupName}:{galleryName}");
+            }
+
+            var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
+
+            nodeImageVersion = (await azure.GalleryImageVersions.ListByGalleryImageAsync(gallery.ResourceGroupName, gallery.Name, nodeImage.Name))
+                .SingleOrDefault(imageVersion => imageVersion.Name == nodeImageVersionName);
+
+            if (nodeImageVersion == null)
+            {
+                throw new NeonKubeException($"Node image version [{nodeImageVersionName}] not found in image: {galleryResourceGroupName}:{galleryName}/{nodeImageName}");
             }
         }
 
@@ -1654,24 +1605,49 @@ namespace Neon.Kube
 
             node.Status = "create: virtual machine";
 
+            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var azureNodeOptions = azureNode.Node.Metadata.Azure;
             var azureStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
-            var imageRef         = ubuntuImage.ImageRef;
+            var diskSize         = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
+            var dataDiskSize     = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes);
 
-            azureNode.Vm = await azure.VirtualMachines
-                .Define(azureNode.VmName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroupName)
-                .WithExistingPrimaryNetworkInterface(azureNode.Nic)
-                .WithSpecificLinuxImageVersion(imageRef)
-                .WithRootUsername(nodeUsername)
-                .WithRootPassword(nodePassword)
-                .WithComputerName("ubuntu")
-                .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes), dataDiskLun, CachingTypes.ReadOnly, azureStorageType)
-                .WithSize(node.Metadata.Azure.VmSize)
-                .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
-                .CreateAsync();
+            if (dataDiskSize > 0)
+            {
+                azureNode.Vm = await azure.VirtualMachines
+                    .Define(azureNode.VmName)
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroupName)
+                    .WithExistingPrimaryNetworkInterface(azureNode.Nic)
+                    .WithLinuxGalleryImageVersion(nodeImageVersion.Id)
+                    .WithRootUsername(KubeConst.SysAdminUser)
+                    .WithRootPassword(clusterLogin.SshPassword)
+                    .WithComputerName("ubuntu")
+                    .WithNewDataDisk(dataDiskSize, dataDiskLun, CachingTypes.ReadOnly, azureStorageType)    // Adding the optional data disk here
+                    .WithOSDiskStorageAccountType(azureStorageType)
+                    .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
+                    .WithSize(node.Metadata.Azure.VmSize)
+                    .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
+                    .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
+                    .CreateAsync();
+            }
+            else
+            {
+                azureNode.Vm = await azure.VirtualMachines
+                    .Define(azureNode.VmName)
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroupName)
+                    .WithExistingPrimaryNetworkInterface(azureNode.Nic)
+                    .WithLinuxGalleryImageVersion(nodeImageVersion.Id)
+                    .WithRootUsername(KubeConst.SysAdminUser)
+                    .WithRootPassword(clusterLogin.SshPassword)
+                    .WithComputerName("ubuntu")
+                    .WithOSDiskStorageAccountType(azureStorageType)
+                    .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
+                    .WithSize(node.Metadata.Azure.VmSize)
+                    .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
+                    .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
+                    .CreateAsync();
+            }
         }
 
         /// <summary>

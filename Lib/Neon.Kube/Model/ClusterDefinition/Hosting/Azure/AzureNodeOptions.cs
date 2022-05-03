@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -122,7 +122,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
