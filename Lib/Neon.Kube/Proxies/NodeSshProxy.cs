@@ -520,21 +520,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs any security related updates on the node.  These are
-        /// the <b>unattended updates</b>.
-        /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void PatchLinux(HostingEnvironment hostingEnvironment)
-        {
-            SudoCommand("unattended-upgrade");
-        }
-
-        /// <summary>
-        /// Updates the node by applying all outstanding package updates but without 
+        /// Patches Linux on the node applying all outstanding package updates but without 
         /// upgrading the Linux distribution.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void UpdateLinux(HostingEnvironment hostingEnvironment)
+        public void UpdateLinux()
         {
             SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
             SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
@@ -543,10 +532,12 @@ namespace Neon.Kube
         /// <summary>
         /// Upgrades the Linux distribution on the node.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void UpgradeLinux(HostingEnvironment hostingEnvironment)
+        public void UpgradeLinuxDistribution()
         {
-            // $todo(jefflill): We haven't actually tested this yet.
+            // $todo(jefflill):
+            //
+            // We haven't actually tested this yet.  Seems like we'll probably need to
+            // reboot the node and report that to the caller.
 
             SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
             SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
