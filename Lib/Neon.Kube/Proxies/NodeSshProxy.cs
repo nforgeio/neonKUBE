@@ -525,8 +525,8 @@ namespace Neon.Kube
         /// </summary>
         public void UpdateLinux()
         {
-            SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
-            SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
         /// <summary>
