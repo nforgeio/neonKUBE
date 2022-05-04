@@ -222,7 +222,7 @@ namespace Neon.Kube
         /// <para>
         /// Azure automatically distributes VMs across the specified number of update
         /// domains and when it's necessary to perform planned maintenance on the underlying
-        /// hardware or to relocate a VM to another host, Azure gaurantees that it will
+        /// hardware or to relocate a VM to another host, Azure guarantees that it will
         /// reboot hosts in only one update domain at a time and then wait 30 minutes between
         /// update domains to give the application a chance to stablize.
         /// </para>

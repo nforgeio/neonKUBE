@@ -231,9 +231,9 @@ namespace Neon.Kube
             public string VmName => hostingManager.GetResourceName("vm", Node.Name);
 
             /// <summary>
-            /// Returns the IP address of the node.
+            /// Returns the private IP address of the node.
             /// </summary>
-            public string Address => Node.Address.ToString();
+            public string Address => Node.Metadata.Address;
 
             /// <summary>
             /// The associated Azure VM.
@@ -853,7 +853,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroupsAsync());
             controller.AddGlobalStep("virtual network", state => CreateVirtualNetworkAsync());
             controller.AddGlobalStep("public address", state => CreatePublicAddressAsync());
-            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
+            controller.AddGlobalStep("ssh config", ConfigureNodeSsh, quiet: true);
             controller.AddGlobalStep("load balancer", state => CreateLoadBalancerAsync());
             controller.AddGlobalStep("listing virtual machines",
                 state =>
@@ -901,8 +901,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVmAsync);
-            controller.AddGlobalStep("internet routing", state => UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            controller.AddNodeStep("configure nodes", ConfigureNode);
+            controller.AddGlobalStep("internet access", state => UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
         }
 
         /// <inheritdoc/>
@@ -941,6 +940,55 @@ namespace Neon.Kube
                 },
                 (controller, node) => node.Metadata.OpenEbsStorage);
             }
+        }
+
+        /// <inheritdoc/>
+        public override void AddSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("AZURE connect",
+                async controller =>
+                {
+                    await ConnectAzureAsync();
+                });
+
+            controller.AddGlobalStep("SSH: port mappings",
+                async controller =>
+                {
+                    await cluster.HostingManager.EnableInternetSshAsync();
+
+                    // We need to update the cluster node addresses and SSH ports
+                    // to match the cluster load balancer port forward rules.
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        var endpoint = cluster.HostingManager.GetSshEndpoint(node.Name);
+
+                        node.Address = IPAddress.Parse(endpoint.Address);
+                        node.SshPort = endpoint.Port;
+                    }
+                });
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("SSH: block ingress",
+                async controller =>
+                {
+                    await cluster.HostingManager.DisableInternetSshAsync();
+                });
         }
 
         /// <inheritdoc/>
@@ -1036,7 +1084,6 @@ namespace Neon.Kube
         {
             if (azure != null)
             {
-                await GetResourcesAsync();
                 return;
             }
 
@@ -1177,7 +1224,12 @@ namespace Neon.Kube
                     throw new NeonKubeException($"Corrupted VM: [{vm.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
                 }
 
-                nameToVm[nodeName].ExternalSshPort = sshPort;
+                var azureVm = nameToVm[nodeName];
+
+                azureVm.AvailabilitySetName = (await azure.AvailabilitySets.GetByIdAsync(vm.AvailabilitySetId)).Name;
+                azureVm.Nic                 = await azure.NetworkInterfaces.GetByIdAsync(vm.NetworkInterfaceIds.First());
+                azureVm.Vm                  = vm;
+                azureVm.ExternalSshPort     = sshPort;
             }
         }
 
@@ -1505,27 +1557,67 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Assigns external SSH ports to Azure VM records that don't already have one.  Note
-        /// that we're not actually going to write the VM tags here; we'll do that when we
-        /// actually create any new VMs.
+        /// Assigns external SSH ports to AWS instance records that don't already have one and update
+        /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
+        /// that we're not actually going to write the instance tags here; we'll do that when we
+        /// actually create any new instances.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        private void AssignExternalSshPorts(ISetupController controller)
+        private void ConfigureNodeSsh(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            // $todo(jefflill):
-            //
-            // This simply does static port assignments.  We don't currently handle clusters
-            // that add/remove nodes after the cluster has been deployed.
+            // Create a table with the currently allocated external SSH ports.
 
-            controller.SetGlobalStepStatus("assign: load balancer SSH ports");
+            var allocatedPorts = new HashSet<int>();
 
-            var nextExternalSshPort = cluster.Definition.Network.FirstExternalSshPort;
-
-            foreach (var azureVm in SortedMasterThenWorkerNodes)
+            foreach (var azureVm in nameToVm.Values.Where(azureVm => azureVm.ExternalSshPort != 0))
             {
-                azureVm.ExternalSshPort = nextExternalSshPort;
+                allocatedPorts.Add(azureVm.ExternalSshPort);
+            }
+
+            // Create a list of unallocated external SSH ports.
+
+            var unallocatedPorts = new List<int>();
+
+            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.LastExternalSshPort; port++)
+            {
+                if (!allocatedPorts.Contains(port))
+                {
+                    unallocatedPorts.Add(port);
+                }
+            }
+
+            // Assign unallocated external SSH ports to nodes that don't already have one.
+
+            var nextUnallocatedPortIndex = 0;
+
+            foreach (var azureVm in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            {
+                azureVm.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
+            }
+
+            // The cluster node proxies were created before we made the external SSH port
+            // assignments above or obtained the ingress elastic IP for the load balancer,
+            // so the node proxies will be configured with the internal node IP addresses
+            // and the standard SSH port 22.
+            //
+            // These endpoints won't work from outside of the VPC, so we'll need to update
+            // the node proxies with the cluster's load balancer address and the unique
+            // SSH port assigned to each node.
+            //
+            // It would have been nicer to construct the node proxies with the correct
+            // endpoint but we have a bit of a chicken-and-egg problem so this seems
+            // to be the easiest approach.
+
+            Covenant.Assert(publicAddress != null);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var azureVm = nameToVm[node.Name];
+
+                node.Address = IPAddress.Parse(publicAddress.IPAddress);
+                node.SshPort = azureVm.ExternalSshPort;
             }
         }
 
@@ -1611,6 +1703,50 @@ namespace Neon.Kube
             var diskSize         = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
             var dataDiskSize     = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes);
 
+            //-----------------------------------------------------------------
+            // We need deploy a script that runs when the VM boots to: 
+            //
+            //      1. Install unzip ([LinuxSshProxy] requires this)
+            //      2. Enable SSH password authentication (with known good SSH config)
+            //      3. Set the secure password for [sysadmin]
+
+            var bootScript =
+$@"#cloud-boothook
+#!/bin/bash
+
+# To enable logging for this Azure custom-data script, add ""-ex"" to the SHABANG above.
+# the SHEBANG above and uncomment the [exec] command below.  Then each command and its
+# output to be logged and can be viewable in the AWS portal.
+#
+#   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
+#
+# WARNING: Do not leave the ""-ex"" SHABANG option in production builds to avoid 
+#          leaking the secure SSH password to any logs!
+#          
+# exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+#------------------------------------------------------------------------------
+# Write a file indicating that this script was executed (for debugging).
+
+mkdir -p /etc/neonkube/cloud-init
+echo $0 > /etc/neonkube/cloud-init/node-init
+date >> /etc/neonkube/cloud-init/node-init
+chmod 644 /etc/neonkube/cloud-init/node-init
+
+# Write this script's path to a file so that cluster setup can remove it.
+# This is important because we don't want to expose the SSH password we
+# set below.
+
+echo $0 > /etc/neonkube/cloud-init/boot-script-path
+chmod 600 /etc/neonkube/cloud-init/boot-script-path
+
+#------------------------------------------------------------------------------
+# Update the [sysadmin] user password:
+
+echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
+";
+            var encodedBootScript = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
+
             if (dataDiskSize > 0)
             {
                 azureNode.Vm = await azure.VirtualMachines
@@ -1622,7 +1758,8 @@ namespace Neon.Kube
                     .WithRootUsername(KubeConst.SysAdminUser)
                     .WithRootPassword(clusterLogin.SshPassword)
                     .WithComputerName("ubuntu")
-                    .WithNewDataDisk(dataDiskSize, dataDiskLun, CachingTypes.ReadOnly, azureStorageType)    // Adding the optional data disk here
+                    .WithCustomData(encodedBootScript)
+                    .WithNewDataDisk(dataDiskSize, dataDiskLun, CachingTypes.ReadOnly, azureStorageType)    // <-- adding the optional data disk here
                     .WithOSDiskStorageAccountType(azureStorageType)
                     .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
                     .WithSize(node.Metadata.Azure.VmSize)
@@ -1641,6 +1778,7 @@ namespace Neon.Kube
                     .WithRootUsername(KubeConst.SysAdminUser)
                     .WithRootPassword(clusterLogin.SshPassword)
                     .WithComputerName("ubuntu")
+                    .WithCustomData(encodedBootScript)
                     .WithOSDiskStorageAccountType(azureStorageType)
                     .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
                     .WithSize(node.Metadata.Azure.VmSize)
@@ -1648,21 +1786,6 @@ namespace Neon.Kube
                     .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
                     .CreateAsync();
             }
-        }
-
-        /// <summary>
-        /// Performs some basic node initialization.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="node">The target node.</param>
-        private void ConfigureNode(ISetupController controller, NodeSshProxy<NodeDefinition> node)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            node.WaitForBoot();
-
-            node.Status = "install: packages";
-            node.SudoCommand("safe-apt-get install -yq unzip", RunOptions.FaultOnError);
         }
 
         /// <summary>

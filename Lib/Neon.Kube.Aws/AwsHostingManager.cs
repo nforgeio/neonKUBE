@@ -1163,7 +1163,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            controller.AddGlobalStep("ssh ports", AssignExternalSshPorts);
+            controller.AddGlobalStep("ssh config", ConfigureNodeSsh);
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
@@ -1174,7 +1174,7 @@ namespace Neon.Kube
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            controller.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet access", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
         }
 
         /// <inheritdoc/>
@@ -2347,12 +2347,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have one.  Note
+        /// Assigns external SSH ports to AWS instance records that don't already have one and update
+        /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
         /// that we're not actually going to write the instance tags here; we'll do that when we
         /// actually create any new instances.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        private void AssignExternalSshPorts(ISetupController controller)
+        private void ConfigureNodeSsh(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -3606,7 +3607,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await SyncContext.Clear;
 
             await ConnectAwsAsync(controller);
-            AssignExternalSshPorts(controller);
+            ConfigureNodeSsh(controller);
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
@@ -3640,7 +3641,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await SyncContext.Clear;
 
             await ConnectAwsAsync(controller);
-            AssignExternalSshPorts(controller);
+            ConfigureNodeSsh(controller);
 
             var listenerPagenator = elbClient.Paginators.DescribeListeners(
                 new DescribeListenersRequest()
