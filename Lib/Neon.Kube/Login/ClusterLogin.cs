@@ -125,6 +125,22 @@ namespace Neon.Kube
         public string DashboardCertificate { get; set; }
 
         /// <summary>
+        /// The root single sign-on (SSO) cluster username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoUsername { get; set; }
+
+        /// <summary>
+        /// The root single sign-on (SSO) cluster password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoPassword { get; set; }
+
+        /// <summary>
         /// The SSH root username.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -169,22 +185,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubeSshKey SshKey { get; set; }
-
-        /// <summary>
-        /// The root single sign-on (SSO) cluster username.
-        /// </summary>
-        [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SsoUsername { get; set; }
-
-        /// <summary>
-        /// The root single sign-on (SSO) cluster password.
-        /// </summary>
-        [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SsoPassword { get; set; }
 
         /// <summary>
         /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
