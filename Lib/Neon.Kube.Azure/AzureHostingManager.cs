@@ -15,6 +15,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// $note(jefflill):
+//
+// The fluent SDK is hard to use for programatically determined configuration
+// but I think we can drop all of that and simply manipulate the [inner] property
+// of these resources directly and then apply the changes.  The current code
+// is a bit of a mess, but it'll be OK for cluster deployment.
+//
+// This would dramatically simplify things and also allow us to perform some
+// operations in one go instead of multiple operations.  This will be more
+// important when we support dynamically adding and removing nodes in the
+// cluster.
+//
+// That being said, we should probably just upgrade to the new API.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -920,25 +934,25 @@ namespace Neon.Kube
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
                 controller.AddNodeStep("openebs",
-                (controller, node) =>
-                {
-                    var azureNode          = nameToVm[node.Name];
-                    var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
-
-                    node.Status = "openebs: checking";
-
-                    if (azureNode.Vm.DataDisks.Count < 1)   // Note that the OS disk doesn't count.
+                    async (controller, node) =>
                     {
-                        node.Status = "openebs: add cStor disk";
+                        var azureNode          = nameToVm[node.Name];
+                        var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
 
-                        azureNode.Vm
-                            .Update()
-                            .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
-                            .WithTags(GetTags())
-                            .Apply();
-                    }
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+                        node.Status = "openebs: checking";
+
+                        if (azureNode.Vm.DataDisks.Count < 1)   // Note that the OS disk doesn't count.
+                        {
+                            node.Status = "openebs: cStor disk";
+
+                            await azureNode.Vm
+                                .Update()
+                                .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
+                                .WithTags(GetTags())
+                                .ApplyAsync();
+                        }
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
             }
         }
 
@@ -1294,7 +1308,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task VerifyRegionAndVmSizesAsync()
         {
-            controller.SetGlobalStepStatus("verify: Azure region and VM image availability");
+            controller.SetGlobalStepStatus("verify: Azure region and VM size availability");
 
             var regionName   = cluster.Definition.Hosting.Azure.Region;
             var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
@@ -1657,10 +1671,10 @@ namespace Neon.Kube
                     .WithTags(GetTags())
                     .CreateAsync();
 
-                loadBalancer = loadBalancer.Update()
+                loadBalancer = await loadBalancer.Update()
                     .WithoutLoadBalancingRule("dummy")
                     .WithTags(GetTags())
-                    .Apply();
+                    .ApplyAsync();
             }
         }
 
@@ -1798,7 +1812,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
-                UpdateIngressEgressRules();
+                await UpdateIngressEgressRulesAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -1819,8 +1833,24 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
-        private void UpdateIngressEgressRules()
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateIngressEgressRulesAsync()
         {
+            // $note(jefflill):
+            //
+            // I really wanted to apply changes to the load balancer backend configuration
+            // in one go so these changes would be atomic.  But this doesn't seem to work,
+            // only one of the master or ingress backends appear to be able to be updated
+            // simultaneously.
+            //
+            // This isn't really an issue for cluster setup but it may be a problem when
+            // we support adding and removing nodes from an existing cluster (although
+            // I suspect that will be OK too).
+            //
+            // We may be able to address this by editing the inner load balancer update
+            // properties directly (like we do when enabling TCP reset) or when we switch
+            // from the Azure Fluent SDK to the current SDK.
+
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
@@ -1856,40 +1886,92 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // Rebuild the [ingress-nodes] backend pool. 
             //
             // Note that we're going to add these VMs to the backend set one at a time
-            // because the API only works when the VMs being added in a batch are in 
-            // the same availability set.  Masters and workers are located within
+            // because the API only works when the VMs being added in a batch are all
+            // in the same availability set.  Masters and workers are located within
             // different sets by default.
 
-            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerIngressBackendName);
+            var ingressBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerIngressBackendName);
 
-            backendUpdater.WithoutExistingVirtualMachines();
+            if (loadBalancer.Backends.TryGetValue(loadbalancerIngressBackendName, out var ingressBackend))
+            {
+                // Remove any existing VMs for nodes that no longer exist or are not
+                // currently labeled for ingress from the pool.
+
+                var vms = new List<IVirtualMachine>();
+
+                await Parallel.ForEachAsync(ingressBackend.GetVirtualMachineIds(), parallelOptions,
+                    async (vmId, cancellationToken) =>
+                    {
+                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
+                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
+
+                        if (node == null || !node.Metadata.Ingress)
+                        {
+                            lock (vms)
+                            {
+                                vms.Add(vm);
+                            }
+                        }
+                    });
+
+                if (vms.Count > 0)
+                {
+                    ingressBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
+                }
+            }
 
             foreach (var ingressNode in nameToVm.Values.Where(node => node.Metadata.Ingress))
             {
-                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
+                ingressBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
             }
 
-            loadBalancerUpdater = backendUpdater.Parent();
-            loadBalancer        = loadBalancerUpdater.Apply();
-            loadBalancerUpdater = loadBalancer.Update();
+            loadBalancer = await ingressBackendUpdater.Parent().ApplyAsync();
 
             // Rebuild the [master-nodes] backend pool.
 
-            backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerMasterBackendName);
+            loadBalancerUpdater = loadBalancer.Update();
 
-            backendUpdater.WithoutExistingVirtualMachines();
+            var masterBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerMasterBackendName);
+
+            if (loadBalancer.Backends.TryGetValue(loadbalancerMasterBackendName, out var masterBackend))
+            {
+                // Remove any existing VMs for nodes that no longer exist or are not
+                // a master node.
+
+                var vms = new List<IVirtualMachine>();
+
+                await Parallel.ForEachAsync(masterBackend.GetVirtualMachineIds(), parallelOptions,
+                    async (vmId, cancellationToken) =>
+                    {
+                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
+                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
+
+                        if (node == null || !node.Metadata.IsMaster)
+                        {
+                            lock (vms)
+                            {
+                                vms.Add(vm);
+                            }
+                        }
+                    });
+
+                if (vms.Count > 0)
+                {
+                    masterBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
+                }
+            }
 
             foreach (var masterNode in nameToVm.Values.Where(node => node.Metadata.IsMaster))
             {
-                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { masterNode.Vm });
+                masterBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { masterNode.Vm });
             }
 
-            loadBalancerUpdater = backendUpdater.Parent();
-            loadBalancer        = loadBalancerUpdater.Apply();
-            loadBalancerUpdater = loadBalancer.Update();
+            loadBalancer = await masterBackendUpdater.Parent().ApplyAsync();
 
             //-----------------------------------------------------------------
             // Cluster ingress load balancing rules
+
+            loadBalancerUpdater = loadBalancer.Update();
 
             // Remove all existing cluster ingress rules.
 
@@ -1905,8 +1987,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            // We also need to remove any existing load balancer ingress related health probes.  We'll 
-            // recreate these as necessary below.
+            // We also need to remove any existing load balancer ingress related health probes.
+            // We'll recreate these below as necessary.
 
             foreach (var probe in loadBalancer.HttpProbes.Values
                 .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
@@ -1972,23 +2054,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     .WithIdleTimeoutInMinutes(tcpTimeout)
                     .Attach();
             }
-
-            loadBalancer        = loadBalancerUpdater.Apply();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support the property yet.
-
-            foreach (var ingressRule in ingressRules)
-            {
-                var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
-                var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                lbRule.EnableTcpReset = ingressRule.IdleTcpReset;
-            }
-
-            loadBalancer        = loadBalancerUpdater.Apply();
-            loadBalancerUpdater = loadBalancer.Update();
 
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
             //
@@ -2104,8 +2169,26 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             // Apply the updates.
 
-            loadBalancer = loadBalancerUpdater.Apply();
-            subnetNsg    = subnetNsgUpdater.Apply();
+            loadBalancer = await loadBalancerUpdater.ApplyAsync();
+            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
+
+            // We need to set [EnableTcpReset] for the load balancer rules separately because
+            // the Fluent API doesn't support this property yet.
+            //
+            // It's a bit unfortunate that we can't apply these changes when we updated the
+            // load balancer above, but this shouldn't be a big deal.
+
+            loadBalancerUpdater = loadBalancer.Update();
+
+            foreach (var ingressRule in ingressRules)
+            {
+                var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
+                var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
+
+                lbRule.EnableTcpReset = ingressRule.IdleTcpReset;
+            }
+
+            await loadBalancerUpdater.ApplyAsync();
         }
 
         /// <summary>
@@ -2133,7 +2216,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
             loadBalancerUpdater = loadBalancer.Update();
 
             // Add the SSH NAT rules for each node.  Note that we need to do this in three steps:
@@ -2155,7 +2238,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     .Attach();
             }
 
-            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
             loadBalancerUpdater = loadBalancer.Update();
 
             // We need to set [EnableTcpReset] for the load balancer rules separately because
@@ -2169,17 +2252,27 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 natRule.EnableTcpReset = true;
             }
 
-            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
             loadBalancerUpdater = loadBalancer.Update();
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
+                var sshRuleName = $"{publicSshRulePrefix}{azureNode.Name}";
+                var nicUpdater  = azureNode.Nic
+                    .Update()
+                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, sshRuleName);
 
-                azureNode.Nic = azureNode.Nic.Update()
-                    .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerIngressBackendName)
-                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName)
-                    .Apply();
+                if (azureNode.IsMaster)
+                {
+                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerMasterBackendName);
+                }
+
+                if (azureNode.Node.Metadata.Ingress)
+                {
+                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerIngressBackendName);
+                }
+
+                azureNode.Nic = await nicUpdater.ApplyAsync();
             }
 
             // Add NSG rules so that the public SSH NAT rules can actually route traffic to the nodes.
@@ -2317,7 +2410,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
             loadBalancerUpdater = loadBalancer.Update();
 
             // Remove all of the SSH NAT related NSG rules.
