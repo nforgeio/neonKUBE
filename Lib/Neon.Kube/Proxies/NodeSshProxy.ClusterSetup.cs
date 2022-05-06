@@ -849,7 +849,7 @@ systemctl enable kubelet
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "helm install", message: progressMessage ?? releaseName);
+                    controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
                     var valueOverrides = new StringBuilder();
 
