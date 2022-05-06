@@ -267,7 +267,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "security updates");
+                    controller.LogProgress(this, verb: "setup", message: "linux patches");
                     UpdateLinux();
                 });
         }
