@@ -1674,6 +1674,11 @@ ln -s /usr/bin/podman /bin/docker
 
 set +e      # Don't exit if the next command fails
 apt-mark hold podman
+
+# CRI-O appears to come with some Kubernetes related images pre-installed.
+# We're going to remove these to save some disk space.
+
+podman image rm --all --force
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
