@@ -176,7 +176,7 @@ namespace Neon.Kube
         /// <para>
         /// Optionally controls whether the cluster router or load balancer sends a TCP RESET
         /// packet to both ends of a TCP connection that has been idle for longer than
-        /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>false</c>.
+        /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
         /// At this point, this property is supported only in cloud environments where we
@@ -186,8 +186,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "IdleTcpReset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "idleTcpReset", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool IdleTcpReset { get; set; } = false;
+        [DefaultValue(true)]
+        public bool IdleTcpReset { get; set; } = true;
 
         /// <summary>
         /// Validates the options.

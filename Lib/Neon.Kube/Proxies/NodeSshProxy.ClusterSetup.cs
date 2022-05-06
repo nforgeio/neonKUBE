@@ -701,18 +701,18 @@ EOF
                             var fields    = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                             var sizeField = fields[1];
                             var sizeUnit  = sizeField.Last();
-                            var rawSize   = long.Parse(sizeField.Substring(0, sizeField.Length - 1));
+                            var rawSize   = decimal.Parse(sizeField.Substring(0, sizeField.Length - 1));
 
                             switch (sizeUnit)
                             {
                                 case 'G':
 
-                                    diskSize = rawSize * (long)ByteUnits.GibiBytes;
+                                    diskSize = (long)(rawSize * ByteUnits.GibiBytes);
                                     break;
 
                                 case 'T':
 
-                                    diskSize = rawSize * (long)ByteUnits.GibiBytes;
+                                    diskSize = (long)(rawSize * ByteUnits.TebiBytes);
                                     break;
 
                                 default:

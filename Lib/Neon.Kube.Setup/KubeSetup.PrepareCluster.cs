@@ -263,7 +263,7 @@ namespace Neon.Kube
                     });
             }
 
-            controller.AddGlobalStep("ssh credentials",
+            controller.AddGlobalStep("ssh/sso credentials",
                 controller =>
                 {
                     // We're going to generate a secure random password and we're going to append
@@ -296,8 +296,6 @@ namespace Neon.Kube
                     clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                     clusterLogin.SshPassword += ".Aa0";
 
-                    clusterLogin.Save();
-
                     // We're also going to generate the server's SSH key here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environments
                     // like Azure don't allow SSH password authentication by default, so we'll need the SSH key
@@ -307,30 +305,32 @@ namespace Neon.Kube
                     {
                         // Generate a 2048 bit SSH key pair.
 
-                        controller.SetGlobalStepStatus("generate: SSH key pair");
+                        controller.SetGlobalStepStatus("generate: SSH client key pair");
 
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
-                        clusterLogin.Save();
+                    }
+
+                    // We also need to generate the root SSO password when necessary and add this
+                    // to the cluster login.
+
+                    controller.SetGlobalStepStatus("generate: SSO password");
+                    
+                    clusterLogin.SsoUsername = "root";
+                    clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+
+                    clusterLogin.Save();
+
+                    // Update node proxies with the generated SSH credentials.
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        node.UpdateCredentials(clusterLogin.SshCredentials);
                     }
                 });
-
-            // We also need to generate the root SSO password when necessary and add this
-            // to the cluster login.
-
-            clusterLogin.SsoUsername = "root";
-            clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
-            clusterLogin.Save();
 
             // Have the hosting manager add any custom proviosioning steps.
 
             hostingManager.AddProvisioningSteps(controller);
-
-            // Update node proxies with the generated SSH credentials.
-
-            foreach (var node in cluster.Nodes)
-            {
-                node.UpdateCredentials(clusterLogin.SshCredentials);
-            }
 
             // Add the provisioning steps.
 
