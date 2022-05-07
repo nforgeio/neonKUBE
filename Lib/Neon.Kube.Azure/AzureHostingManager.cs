@@ -1839,8 +1839,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // $note(jefflill):
             //
             // I really wanted to apply changes to the load balancer backend configuration
-            // in one go so these changes would be atomic.  But this doesn't seem to work,
-            // only one of the master or ingress backends appear to be able to be updated
+            // in one go so these changes would be atomic, but this doesn't seem to work.
+            // Only one of the master or ingress backends appear to be able to be updated
             // simultaneously.
             //
             // This isn't really an issue for cluster setup but it may be a problem when
@@ -1916,7 +1916,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 if (vms.Count > 0)
                 {
-                    ingressBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
+                     ingressBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
                 }
             }
 
