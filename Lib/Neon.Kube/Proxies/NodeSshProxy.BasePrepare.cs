@@ -90,7 +90,7 @@ namespace Neon.Kube
 
             if (upgradeLinux)
             {
-                BaseUpgradeLinux(controller);
+                BaseUpgradeLinuxDistribution(controller);
             }
         }
 
@@ -264,14 +264,11 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "security updates");
-
-                    PatchLinux(hostingEnvironment);
+                    controller.LogProgress(this, verb: "setup", message: "linux patches");
+                    UpdateLinux();
                 });
         }
 
@@ -284,14 +281,11 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
             InvokeIdempotent("base/update-linux",
                 () =>
                 {
                     controller.LogProgress(this, verb: "setup", message: "linux security patches");
-
-                    UpdateLinux(hostingEnvironment);
+                    UpgradeLinuxDistribution();
                 });
         }
 
@@ -299,18 +293,15 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         /// Updates the Linux distribution.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void BaseUpgradeLinux(ISetupController controller)
+        public void BaseUpgradeLinuxDistribution(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("base/upgrade-linux",
                 () =>
                 {
                     controller.LogProgress(this, verb: "upgrade", message: "linux distribution");
-
-                    UpgradeLinux(hostingEnvironment);
+                    UpgradeLinuxDistribution();
                 });
         }
 

@@ -585,7 +585,7 @@ namespace Neon.Kube
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,             Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,        Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,          Node.Azure.DiskSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,          ByteUnits.Parse(Node.Azure.DiskSize)));
                 }
 
                 // Standard labels from this class.

@@ -2842,13 +2842,14 @@ rm -rf /etc/neon-init/*
 
                 var resetScript =
 @"
-set -euo pipefail
-
 mkdir -p /etc/neon-init
 
 rm -rf /etc/netplan/*
-cp -r /etc/neon-init/netplan-backup/* /etc/netplan
-rm -r /etc/neon-init/netplan-backup
+
+if [ -d /etc/neon-init/netplan-backup ]; then
+    cp -r /etc/neon-init/netplan-backup/* /etc/netplan
+    rm -r /etc/neon-init/netplan-backup
+fi
 
 rm -rf /etc/neon-init/*
 ";

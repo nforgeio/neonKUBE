@@ -1163,7 +1163,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            controller.AddGlobalStep("ssh ports", AssignExternalSshPorts);
+            controller.AddGlobalStep("ssh config", ConfigureNodeSsh);
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
@@ -1174,7 +1174,7 @@ namespace Neon.Kube
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            controller.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet access", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
         }
 
         /// <inheritdoc/>
@@ -1436,22 +1436,6 @@ namespace Neon.Kube
         public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
             return ingressAddress.PublicIp;
-        }
-
-        /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
-            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
-
-            // We're going to consider cluster resources to be unlimited and there's
-            // no way to check in advance anyway.
-
-            return new HostingResourceAvailability()
-            {
-                CanBeDeployed = true
-            };
         }
 
         /// <summary>
@@ -1902,7 +1886,7 @@ namespace Neon.Kube
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;
 
-            // Verify that the zone and (implicitly the region) exist.
+            // Verify that the zone and (implicitly) the region exist.
 
             var regionsResponse = await ec2Client.DescribeRegionsAsync(new DescribeRegionsRequest());
 
@@ -1911,7 +1895,8 @@ namespace Neon.Kube
                 throw new NeonKubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
             }
 
-            // Verify that the instance types required by the cluster are available in the region.
+            // Verify that the instance types required by the cluster are available in the region
+            // and also that all instance types support the [x86_64].
 
             var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
             var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
@@ -1932,7 +1917,7 @@ namespace Neon.Kube
 
                 if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
                 {
-                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported.  neonKUBE requires an x86_64 CPU.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which does not support the [x86_64] architecture.");
                 }
 
                 switch (node.Metadata.Role)
@@ -1972,7 +1957,6 @@ namespace Neon.Kube
 
                 node.Metadata.Labels.ComputeCores     = instanceTypeInfo.VCpuInfo.DefaultVCpus;
                 node.Metadata.Labels.ComputeRam       = (int)instanceTypeInfo.MemoryInfo.SizeInMiB;
-
                 node.Metadata.Labels.StorageSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
                 node.Metadata.Labels.StorageHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
                 node.Metadata.Labels.StorageEphemeral = false;
@@ -2363,12 +2347,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have one.  Note
+        /// Assigns external SSH ports to AWS instance records that don't already have one and update
+        /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
         /// that we're not actually going to write the instance tags here; we'll do that when we
         /// actually create any new instances.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        private void AssignExternalSshPorts(ISetupController controller)
+        private void ConfigureNodeSsh(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -3622,7 +3607,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await SyncContext.Clear;
 
             await ConnectAwsAsync(controller);
-            AssignExternalSshPorts(controller);
+            ConfigureNodeSsh(controller);
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
@@ -3656,7 +3641,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await SyncContext.Clear;
 
             await ConnectAwsAsync(controller);
-            AssignExternalSshPorts(controller);
+            ConfigureNodeSsh(controller);
 
             var listenerPagenator = elbClient.Paginators.DescribeListeners(
                 new DescribeListenersRequest()
@@ -3731,6 +3716,125 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
 
+
+        /// <inheritdoc/>
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            await SyncContext.Clear;
+
+            // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1544
+
+            var regionName = awsOptions.Region;
+            var zoneName   = awsOptions.AvailabilityZone;
+
+            await ConnectAwsAsync();
+
+            // Verify that the zone and (implicitly) the region exist.
+
+            var regionsResponse = await ec2Client.DescribeRegionsAsync(new DescribeRegionsRequest());
+
+            if (!regionsResponse.Regions.Any(region => region.RegionName.Equals(regionName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var constraint =
+                    new HostingResourceConstraint()
+                    {
+                        ResourceType = HostingConstrainedResourceType.VmHost,
+                        Details      = $"AWS region [{regionName}] not found or available.",
+                        Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
+                    };
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints   = 
+                        new Dictionary<string, List<HostingResourceConstraint>>()
+                        {
+                            { $"AWS/{regionName}", new List<HostingResourceConstraint>() { constraint } }
+                        }
+                };
+            }
+
+            // Verify that the instance types required by the cluster are available in the region
+            // and also that all instance types support the [x86_64] architecture.
+
+            var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
+            var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
+            var constraints            = new List<HostingResourceConstraint>();
+
+            await foreach (var instanceTypeInfo in instanceTypePaginator.InstanceTypes)
+            {
+                nameToInstanceTypeInfo[instanceTypeInfo.InstanceType] = instanceTypeInfo;
+            }
+
+            var instanceTypes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var nodeInstanceType = node.Metadata.Aws.InstanceType;
+
+                if (!instanceTypes.Contains(nodeInstanceType))
+                {
+                    instanceTypes.Add(nodeInstanceType);
+                }
+            }
+
+            foreach (var instanceType in instanceTypes)
+            {
+                if (!nameToInstanceTypeInfo.TryGetValue(instanceType, out var instanceTypeInfo))
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"Instance type [{instanceType}] is not available in AWS region [{regionName}].",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Aws.InstanceType == instanceType)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+
+                    continue;
+                }
+
+                if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"Instance type [{instanceType}] does not support the [x86_64] architecture.",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Aws.InstanceType == instanceType)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+
+                    continue;
+                }
+            }
+
+            if (constraints.Count == 0)
+            {
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = true
+                };
+            }
+            else
+            {
+                var constraintDictionary = new Dictionary<string, List<HostingResourceConstraint>>();
+
+                constraintDictionary.Add($"AWS/{regionName}", constraints);
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints   = constraintDictionary
+                };
+            }
+        }
         /// <inheritdoc/>
         public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
@@ -3743,8 +3847,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             {
                 timeout = DefaultStatusTimeout;
             }
-
-            // Connect to AWS and read any cluster resources.
 
             await ConnectAwsAsync();
 
@@ -3791,7 +3893,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             else
             {
                 // We're going to assume that all virtual machines that match cluster node names
-                // (after stripping off any cluster prefix) belong to the cluster and will
+                // (after stripping off any cluster prefix) belong to the cluster and we'll
                 // map the actual VM states to public node states.
 
                 foreach (var node in cluster.Definition.NodeDefinitions.Values)
@@ -3802,7 +3904,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     {
                         if (nodeNameToAwsInstance.TryGetValue(node.Name, out var awsInstance))
                         {
-                            switch (InstanceStateCode.GetCode(awsInstance.Instance.State.Code))
+                            var stateCode = InstanceStateCode.GetCode(awsInstance.Instance.State.Code);
+
+                            switch (stateCode)
                             {
                                 case InstanceStateCode.Pending:
 
@@ -3835,7 +3939,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                                 default:
 
-                                    throw new NotImplementedException();
+                                    Covenant.Assert(false, $"Unexpected node instance status: [{stateCode}]");
+                                    break;
                             }
                         }
                     }
@@ -3930,10 +4035,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             await ConnectAwsAsync();
 
-            // We just need to start any running instances.
+            // We just need to start all instances.
 
-            var instanceIds = nodeNameToAwsInstance
-                .Values
+            var instanceIds = nodeNameToAwsInstance.Values
                 .Select(awsInstance => awsInstance.InstanceId)
                 .ToList();
 
@@ -3950,10 +4054,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             await ConnectAwsAsync();
 
-            // We just need to stop any running instances.
+            // We just need to stop all cluster instances.
 
-            var instanceIds = nodeNameToAwsInstance
-                .Values
+            var instanceIds = nodeNameToAwsInstance.Values
                 .Select(awsInstance => awsInstance.InstanceId)
                 .ToList();
 

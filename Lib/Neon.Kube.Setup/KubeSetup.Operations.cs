@@ -590,7 +590,7 @@ if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; th
     exit 0
 fi
 
-# The remaining 6 calls specify [--ignore-preflight-errors=all] to avoid detecting
+# The additional two calls specify [--ignore-preflight-errors=all] to avoid detecting
 # bogus conflicts with itself.
 
 for count in {{1..2}}
