@@ -735,7 +735,7 @@ EOF
 $@"
 set -euo pipefail
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --cni-conf-dir=/etc/cni/net.d --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf --image-gc-low-threshold={imageLowGcThreshold} --image-gc-high-threshold={imageHighGcThreshold} > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--feature-gates=\""AllAlpha=false\"" --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf --image-gc-low-threshold={imageLowGcThreshold} --image-gc-high-threshold={imageHighGcThreshold} > /etc/default/kubelet
 systemctl daemon-reload
 systemctl restart kubelet
 systemctl enable kubelet

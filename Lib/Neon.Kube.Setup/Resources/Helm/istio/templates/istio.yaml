@@ -95,6 +95,8 @@ spec:
       enabled: true
       namespace: kube-system
   values:
+    sidecarInjectorWebhook:
+      enableNamespacesByDefault: true
     global:
       istioNamespace: {{ .Release.Namespace }}
       logging:

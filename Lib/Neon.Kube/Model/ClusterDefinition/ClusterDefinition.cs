@@ -497,12 +497,6 @@ namespace Neon.Kube
         ///     </para>
         ///     </description>
         /// </item>
-        /// <item>
-        ///     <term><b>RunAsGroup</b></term>
-        ///     <description>
-        ///     <b>REQUIRED:</b> Allows pods processes to run in a specific security group.
-        ///     </description>
-        /// </item>
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -1064,10 +1058,6 @@ namespace Neon.Kube
             // Have the hosting manager perform its own validation.
 
             new HostingManagerFactory().Validate(this);
-
-            // Configure the required features.
-
-            FeatureGates["RunAsGroup"] = true;
 
             // Add default neonKUBE feature gates when the user has not already configured them.
 

@@ -27,6 +27,8 @@ spec:
           env:
             - name: GROUP_NAME
               value: "acme.neoncloud.io"
+            - name: HEADEND_URL
+              value: "https://headend.neoncloud.io/"
           ports:
             - name: https
               containerPort: 443

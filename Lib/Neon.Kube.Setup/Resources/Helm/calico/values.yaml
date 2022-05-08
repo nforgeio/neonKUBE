@@ -6,16 +6,16 @@ images:
   organization: neon-registry.node.local
   node:
     repository: calico-node
-    tag: v3.20.0
+    tag: v3.22.2
   cni:
     repository: calico-cni
-    tag: v3.20.0
+    tag: v3.22.2
   kubeControllers:
     repository: calico-kube-controllers
-    tag: v3.20.0
+    tag: v3.22.2
   pod2Daemon:
     repository: calico-pod2daemon-flexvol
-    tag: v3.20.0
+    tag: v3.22.2
 
 ipv4PoolCidr: "10.254.0.0/16"
 
