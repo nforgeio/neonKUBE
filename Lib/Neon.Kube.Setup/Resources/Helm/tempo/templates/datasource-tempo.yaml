@@ -13,8 +13,6 @@ spec:
         httpHeaderName1: 'X-Scope-OrgID'
         serviceMap:
           datasourceUid: 'mimir'
-        lokiSearch:
-          datasourceUid: 'loki'
         httpMethod: GET
         nodeGraph:
           enabled: true
@@ -23,6 +21,7 @@ spec:
           datasourceUid: loki
           filterBySpanID: true
           filterByTraceID: true
+          lokiSearch: true
           tags:
             - job
             - instance

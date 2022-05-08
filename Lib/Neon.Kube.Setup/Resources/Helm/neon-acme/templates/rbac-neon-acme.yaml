@@ -18,10 +18,9 @@ rules:
   - apiGroups:
       - ''
     resources:
-      - 'secrets'
+      - secrets
     verbs:
-      - 'get'
-
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -109,4 +108,37 @@ subjects:
   - apiGroup: ""
     kind: ServiceAccount
     name: cert-manager
+    namespace: neon-ingress
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neon-acme
+  labels:
+    app: neon-acme
+rules:
+  - apiGroups:
+      - flowcontrol.apiserver.k8s.io
+    resources:
+      - prioritylevelconfigurations
+      - flowschemas
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neon-acme
+  labels:
+    app: neon-acme
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: neon-acme
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: neon-acme
     namespace: neon-ingress

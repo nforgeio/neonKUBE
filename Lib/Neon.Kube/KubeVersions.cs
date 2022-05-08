@@ -45,7 +45,7 @@ namespace Neon.Kube
         /// pre-preleases for the same version.
         /// </note>
         /// </summary>
-        public const string NeonKube = "0.4.0-alpha";
+        public const string NeonKube = "0.5.0-alpha";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string Kubernetes = "1.21.4";
+        public const string Kubernetes = "1.24.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -109,7 +109,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public const string Crio = "1.21.4";
+        public const string Crio = "1.23.2";
 
         /// <summary>
         /// The version of Calico to install.
@@ -164,7 +164,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of pause image to be installed.
         /// </summary>
-        public const string Pause = "3.4.1";
+        public const string Pause = "3.7";
 
         /// <summary>
         /// The version of busybox image to be installed.
