@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string Kubernetes = "1.23.6";
+        public const string Kubernetes = "1.24.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -164,7 +164,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of pause image to be installed.
         /// </summary>
-        public const string Pause = "3.4.1";
+        public const string Pause = "3.7";
 
         /// <summary>
         /// The version of busybox image to be installed.

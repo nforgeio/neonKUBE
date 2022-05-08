@@ -15,16 +15,18 @@ rules:
       - watch
       - list
       - get
-  # Pods are queried to check for existence.
+  # Pods are watched to check for existence as part of IPAM controller.
   - apiGroups: [""]
     resources:
       - pods
     verbs:
       - get
-  # IPAM resources are manipulated when nodes are deleted.
+      - list
+      - watch
+  # IPAM resources are manipulated in response to node and block updates, as well as periodic triggers.
   - apiGroups: ["crd.projectcalico.org"]
     resources:
-      - ippools
+      - ipreservations
     verbs:
       - list
   - apiGroups: ["crd.projectcalico.org"]
@@ -38,6 +40,14 @@ rules:
       - create
       - update
       - delete
+      - watch
+  # Pools are watched to maintain a mapping of blocks to IP pools.
+  - apiGroups: ["crd.projectcalico.org"]
+    resources:
+      - ippools
+    verbs:
+      - list
+      - watch
   # kube-controllers manages hostendpoints.
   - apiGroups: ["crd.projectcalico.org"]
     resources:
@@ -54,8 +64,10 @@ rules:
       - clusterinformations
     verbs:
       - get
+      - list
       - create
       - update
+      - watch
   # KubeControllersConfiguration is where it gets its config
   - apiGroups: ["crd.projectcalico.org"]
     resources:
@@ -102,6 +114,14 @@ rules:
       - namespaces
     verbs:
       - get
+  # EndpointSlices are used for Service-based network policy rule
+  # enforcement.
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs:
+      - watch 
+      - list
   - apiGroups: [""]
     resources:
       - endpoints
@@ -133,13 +153,6 @@ rules:
     verbs:
       - watch
       - list
-  # Watch for changes to Kubernetes EndpointSlices.
-  - apiGroups: ["discovery.k8s.io"]
-    resources:
-      - endpointslices
-    verbs:
-      - watch
-      - list
   # Used by Calico for policy information.
   - apiGroups: [""]
     resources:
@@ -164,6 +177,7 @@ rules:
       - globalbgpconfigs
       - bgpconfigurations
       - ippools
+      - ipreservations
       - ipamblocks
       - globalnetworkpolicies
       - globalnetworksets
@@ -172,6 +186,7 @@ rules:
       - clusterinformations
       - hostendpoints
       - blockaffinities
+      - caliconodestatuses
     verbs:
       - get
       - list
@@ -184,6 +199,12 @@ rules:
       - clusterinformations
     verbs:
       - create
+      - update
+  # Calico must update some CRDs.
+  - apiGroups: [ "crd.projectcalico.org" ]
+    resources:
+      - caliconodestatuses
+    verbs:
       - update
   # Calico stores some configuration information on the node.
   - apiGroups: [""]
@@ -232,6 +253,7 @@ rules:
       - daemonsets
     verbs:
       - get
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

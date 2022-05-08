@@ -369,5 +369,10 @@ namespace Neon.Kube
         /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
         /// </summary>
         public const string MinimumOsDiskAfterMinio = "40 GiB";
+
+        /// <summary>
+        /// The CIR-O socket.
+        /// </summary>
+        public const string CrioSocket = "/var/run/crio/crio.sock";
     }
 }

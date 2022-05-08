@@ -18,9 +18,8 @@ spec:
         alertmanagerUid: 'mimirAlertmanager'
 {{- if .Values.tracing.enabled }}
         derivedFields:
-          - datasourceName: Tempo
+          - datasourceUid: tempo
             matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
             name: traceID
             url: "$${__value.raw}"
-            datasourceUid: tempo
 {{- end }}
