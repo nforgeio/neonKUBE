@@ -1316,7 +1316,7 @@ namespace Neon.Kube
                     await ConnectAwsAsync(controller);
                 });
 
-            controller.AddGlobalStep("SSH: port mappings",
+            controller.AddGlobalStep("ssh: port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1343,7 +1343,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("SSH: block ingress",
+            controller.AddGlobalStep("ssh: block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
