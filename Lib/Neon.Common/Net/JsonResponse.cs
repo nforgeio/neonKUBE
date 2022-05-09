@@ -71,10 +71,10 @@ namespace Neon.Net
             this.RequestMethod = requestMethod;
             this.HttpResponse  = httpRespose;
 
-            if (httpRespose.Content.Headers.ContentType != null
-                && jsonContent
-                && responseText != null
-                && responseText.Length > 0)
+            if (httpRespose.Content.Headers.ContentType != null &&
+                jsonContent &&
+                responseText != null &&
+                responseText.Length > 0)
             {
                 this.JsonText = responseText;
             }
