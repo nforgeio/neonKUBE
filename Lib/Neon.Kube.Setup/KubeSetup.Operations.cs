@@ -1552,18 +1552,7 @@ kubectl apply -f priorityclasses.yaml
             var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
 
             controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/ingress-namespace",
-                async () =>
-                {
-                    await k8s.CreateNamespaceAsync(
-                        new V1Namespace()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = KubeNamespace.NeonIngress
-                            }
-                        });
-                });
+            await CreateNamespaceAsync(controller, master, KubeNamespace.NeonIngress, false);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/ingress",
