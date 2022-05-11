@@ -112,7 +112,8 @@
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
-		<None Remove="Resources\Helm\neon-dashboard\templates\config-env.yaml" />
+		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrole.yaml" />
+		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrolebinding.yaml" />
 		<None Remove="Resources\Helm\neon-dashboard\templates\configmap.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\.helmignore" />
 		<None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
