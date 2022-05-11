@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboard = "2.3.1";
+        public const string KubernetesDashboard = "2.5.1";
 
         /// <summary>
         /// The version of the Kubernetes dashboard metrics scraper to be installed.
@@ -114,7 +114,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Calico to install.
         /// </summary>
-        public const string Calico = "3.16";
+        public const string Calico = "3.22.2";
 
         /// <summary>
         /// The version of dnsutils to install.
