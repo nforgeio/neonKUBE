@@ -105,7 +105,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "non-interactive tty");
+                    controller.LogProgress(this, verb: "configure", message: "tty");
 
                     // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
                     // we haven't installed [zip/unzip] yet so we can't use a command bundle.
@@ -267,30 +267,13 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "linux patches");
+                    controller.LogProgress(this, verb: "patch", message: "linux");
                     UpdateLinux();
                 });
         }
 
         /// <summary>
-        /// Updates Linux by applying all outstanding package updates but without 
-        /// upgrading the Linux distribution.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void BaseUpdateLinux(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            InvokeIdempotent("base/update-linux",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "linux security patches");
-                    UpgradeLinuxDistribution();
-                });
-        }
-
-        /// <summary>
-        /// Updates the Linux distribution.
+        /// Upgrades the Linux distribution on the node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void BaseUpgradeLinuxDistribution(ISetupController controller)
