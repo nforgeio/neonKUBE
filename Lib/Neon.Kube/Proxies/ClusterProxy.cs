@@ -872,8 +872,8 @@ namespace Neon.Kube
         /// Determines the status of a cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
-        /// <returns>The <see cref="ClusterStatus"/>.</returns>
-        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        /// <returns>The <see cref="ClusterInfo"/>.</returns>
+        public async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -889,7 +889,6 @@ namespace Neon.Kube
                 var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
 
                 clusterStatus.Summary            = kubeClusterStatus.Summary;
-                clusterStatus.OptionalComponents = kubeClusterStatus.OptionalComponents;
 
                 switch (kubeClusterStatus.State)
                 {

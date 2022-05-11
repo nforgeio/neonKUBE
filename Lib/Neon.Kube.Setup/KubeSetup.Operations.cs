@@ -5222,24 +5222,42 @@ $@"- name: StorageType
                 async () =>
                 {
                     var clusterStatusMap = new TypeSafeConfigMap<KubeClusterHealth>(
-                        name:       KubeConfigMapName.ClusterStatus,
+                        name: KubeConfigMapName.ClusterHealth,
                         @namespace: KubeNamespace.NeonStatus,
-                        config:     new KubeClusterHealth()
+                        config: new KubeClusterHealth()
                         {
-                            Version            = KubeVersions.NeonKube,
-                            State              = KubeClusterState.Healthy,
-                            Summary            = "Cluster setup complete",
-                            OptionalComponents = new ClusterOptionalComponents()
-                            {
-                                Mimir   = true,
-                                Grafana = true,
-                                Harbor  = true,
-                                Loki    = true,
-                                Minio   = true
-                            }
+                            Version = KubeVersions.NeonKube,
+                            State   = KubeClusterState.Healthy,
+                            Summary = "Cluster setup complete"
                         });
 
                     await k8s.CreateNamespacedConfigMapAsync(clusterStatusMap.ConfigMap, KubeNamespace.NeonStatus);
+                    
+                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
+                        name: KubeConfigMapName.ClusterInfo,
+                        @namespace: KubeNamespace.NeonStatus,
+                        config: new ClusterInfo()
+                        {
+                            ClusterVersion     = KubeVersions.NeonKube,
+                            IsLocked           = cluster.Definition.IsLocked,
+                            State              = ClusterState.Healthy,
+                            Name               = cluster.Definition.Name,
+                            Description        = cluster.Definition.Description,
+                            HostingEnvironment = cluster.Definition.Hosting.Environment,
+                            Datacenter         = cluster.Definition.Datacenter,
+                            Domain             = cluster.Definition.Domain,
+                            PublicAddresses    = cluster.Definition.PublicAddresses,
+                            OptionalComponents = new ClusterOptionalComponents()
+                            {
+                                Mimir = true,
+                                Grafana = true,
+                                Harbor = true,
+                                Loki = true,
+                                Minio = true
+                            }
+                        });
+
+                    await k8s.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
 
                     var clusterLockedMap = new TypeSafeConfigMap<KubeClusterLock>(
                         name:       KubeConfigMapName.ClusterLock,

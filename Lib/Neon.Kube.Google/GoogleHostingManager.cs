@@ -232,7 +232,7 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             if (timeout <= TimeSpan.Zero)
             {

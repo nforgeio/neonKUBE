@@ -328,7 +328,7 @@ namespace Neon.Kube
         public abstract Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <inheritdoc/>
-        public abstract Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
+        public abstract Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync()

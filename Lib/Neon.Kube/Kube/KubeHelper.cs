@@ -3007,7 +3007,7 @@ TCPKeepAlive yes
                 try
                 {
                     var configMap = await k8s.ReadNamespacedConfigMapAsync(
-                        name:               KubeConfigMapName.ClusterStatus,
+                        name:               KubeConfigMapName.ClusterHealth,
                         namespaceParameter: KubeNamespace.NeonStatus,
                         cancellationToken:  cancellationToken);
 

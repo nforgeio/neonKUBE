@@ -37,12 +37,20 @@ namespace Neon.Kube
     public static class KubeConfigMapName
     {
         /// <summary>
-        /// Identifes the neonKUBE configmap used to report cluster status.  This configmap is
+        /// Identifes the neonKUBE configmap used to report cluster health.  This configmap is
         /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
         /// created during cluster setup and is maintained by the neon-cluster-operator
         /// thereafter.
         /// </summary>
-        public const string ClusterStatus = "cluster-status";
+        public const string ClusterHealth = "cluster-health";
+
+        /// <summary>
+        /// Identifes the neonKUBE configmap used to report cluster info.  This configmap is
+        /// located in the <see cref="KubeNamespace.NeonStatus"/> namespace and is initially
+        /// created during cluster setup and is maintained by the neon-cluster-operator
+        /// thereafter.
+        /// </summary>
+        public const string ClusterInfo = "cluster-info";
 
         /// <summary>
         /// <para>

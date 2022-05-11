@@ -2551,9 +2551,9 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            var clusterStatus = new ClusterStatus(cluster.Definition);
+            var clusterStatus = new ClusterInfo(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {

@@ -3836,12 +3836,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
         }
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterStatus(cluster.Definition);
+            var clusterStatus = new ClusterInfo(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {

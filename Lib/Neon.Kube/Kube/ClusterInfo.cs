@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterStatus.cs
+// FILE:	    ClusterInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,12 +30,12 @@ namespace Neon.Kube
     /// <summary>
     /// Holds details about a cluster's state.
     /// </summary>
-    public class ClusterStatus
+    public class ClusterInfo
     {
         /// <summary>
         /// Default constructor used for deserializion.
         /// </summary>
-        public ClusterStatus()
+        public ClusterInfo()
         {
         }
 
@@ -44,7 +44,7 @@ namespace Neon.Kube
         /// cluster definition.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        public ClusterStatus(ClusterDefinition clusterDefinition)
+        public ClusterInfo(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// <summary>
         /// Describes the overall state of a cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(ClusterState.Unknown)]
         public ClusterState State { get; set; } = ClusterState.Unknown;
 
@@ -90,6 +90,22 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Description { get; set; } = null;
+
+        /// <summary>
+        /// Identifies the cloud or other hosting platform.
+        /// definition. 
+        /// </summary>
+        [JsonProperty(PropertyName = "HostingEnvironment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(HostingEnvironment.Unknown)]
+        public HostingEnvironment HostingEnvironment { get; set; } = HostingEnvironment.Unknown;
+
+        /// <summary>
+        /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Environment"/>.
+        /// definition. 
+        /// </summary>
+        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("")]
+        public string Environment { get; set; } = string.Empty;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster

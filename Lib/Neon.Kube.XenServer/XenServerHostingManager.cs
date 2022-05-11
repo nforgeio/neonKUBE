@@ -1056,12 +1056,12 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterStatus(cluster.Definition);
+            var clusterStatus = new ClusterInfo(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {

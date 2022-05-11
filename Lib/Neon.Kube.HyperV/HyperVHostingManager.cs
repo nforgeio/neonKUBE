@@ -859,7 +859,7 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
@@ -905,7 +905,7 @@ namespace Neon.Kube
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterStatus = new ClusterStatus(cluster.Definition)
+                    var clusterStatus = new ClusterInfo(cluster.Definition)
                     {
                         State   = ClusterState.NotFound,
                         Summary = "Cluster does not exist"
@@ -924,7 +924,7 @@ namespace Neon.Kube
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
                     // zxthe actual VM states to public node states.
 
-                    var clusterStatus = new ClusterStatus(cluster.Definition);
+                    var clusterStatus = new ClusterInfo(cluster.Definition);
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
