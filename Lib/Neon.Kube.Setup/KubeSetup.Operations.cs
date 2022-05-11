@@ -348,6 +348,9 @@ spec:
             await InstallHarborAsync(controller, master);
 
             controller.ThrowIfCancelled();
+            await WriteClusterInfoAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallNeonDashboardAsync(controller, master);
 
             controller.ThrowIfCancelled();
@@ -5203,7 +5206,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Writes the <see cref="KubeConfigMapName.ClusterStatus"/> and <see cref="KubeConfigMapName.ClusterLock"/> 
+        /// Writes the <see cref="KubeConfigMapName.ClusterHealth"/> and <see cref="KubeConfigMapName.ClusterLock"/> 
         /// config maps to the <see cref="KubeNamespace.NeonStatus"/> namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -5216,7 +5219,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            var k8s = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/cluster-configmaps",
                 async () =>
@@ -5227,26 +5230,57 @@ $@"- name: StorageType
                         config: new KubeClusterHealth()
                         {
                             Version = KubeVersions.NeonKube,
-                            State   = KubeClusterState.Healthy,
+                            State = KubeClusterState.Healthy,
                             Summary = "Cluster setup complete"
                         });
 
                     await k8s.CreateNamespacedConfigMapAsync(clusterStatusMap.ConfigMap, KubeNamespace.NeonStatus);
-                    
+
+                    var clusterLockedMap = new TypeSafeConfigMap<KubeClusterLock>(
+                        name: KubeConfigMapName.ClusterLock,
+                        @namespace: KubeNamespace.NeonStatus,
+                        config: new KubeClusterLock()
+                        {
+                            IsLocked = cluster.Definition.IsLocked
+                        });
+
+                    await k8s.CreateNamespacedConfigMapAsync(clusterLockedMap.ConfigMap, KubeNamespace.NeonStatus);
+                });
+        }
+
+        /// <summary>
+        /// Writes the <see cref="KubeConfigMapName.ClusterInfo"/>
+        /// config map to the <see cref="KubeNamespace.NeonStatus"/> namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task WriteClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s = GetK8sClient(controller);
+
+            await master.InvokeIdempotentAsync("setup/cluster-info",
+                async () =>
+                {
                     var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
                         name: KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
                         config: new ClusterInfo()
                         {
-                            ClusterVersion     = KubeVersions.NeonKube,
-                            IsLocked           = cluster.Definition.IsLocked,
-                            State              = ClusterState.Healthy,
-                            Name               = cluster.Definition.Name,
-                            Description        = cluster.Definition.Description,
+                            ClusterVersion = KubeVersions.NeonKube,
+                            IsLocked = cluster.Definition.IsLocked,
+                            State = ClusterState.Healthy,
+                            Name = cluster.Definition.Name,
+                            Description = cluster.Definition.Description,
                             HostingEnvironment = cluster.Definition.Hosting.Environment,
-                            Datacenter         = cluster.Definition.Datacenter,
-                            Domain             = cluster.Definition.Domain,
-                            PublicAddresses    = cluster.Definition.PublicAddresses,
+                            Datacenter = cluster.Definition.Datacenter,
+                            Domain = cluster.Definition.Domain,
+                            PublicAddresses = cluster.Definition.PublicAddresses,
                             OptionalComponents = new ClusterOptionalComponents()
                             {
                                 Mimir = true,
@@ -5258,16 +5292,6 @@ $@"- name: StorageType
                         });
 
                     await k8s.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
-
-                    var clusterLockedMap = new TypeSafeConfigMap<KubeClusterLock>(
-                        name:       KubeConfigMapName.ClusterLock,
-                        @namespace: KubeNamespace.NeonStatus,
-                        config:     new KubeClusterLock()
-                        {
-                            IsLocked = cluster.Definition.IsLocked
-                        });
-
-                    await k8s.CreateNamespacedConfigMapAsync(clusterLockedMap.ConfigMap, KubeNamespace.NeonStatus);
                 });
         }
 
