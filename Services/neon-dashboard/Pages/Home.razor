@@ -1,0 +1,15 @@
+﻿@*-----------------------------------------------------------------------------
+// FILE:	    Index.razor
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
+
+@page "/neonkube"
+@inherits PageBase
+
+<PageBase PageTitle="@PageTitle" />
+
+<h1>Hello, world!</h1>
+
+<p>Cluster Version: @clusterInfo.ClusterVersion</p>
+<p>DataCenter: @clusterInfo.Datacenter</p>
+<p>Hosting Environment: @clusterInfo.HostingEnvironment</p>

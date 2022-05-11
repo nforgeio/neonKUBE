@@ -24,7 +24,7 @@ namespace NeonDashboard.Shared.Components
         public Dashboard(
             string id,
             string name,
-            string uri, 
+            string uri = null, 
             string description = null)
         {
             Id          = id;

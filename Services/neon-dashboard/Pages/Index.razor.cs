@@ -56,10 +56,10 @@ namespace NeonDashboard.Pages
         {
             if (string.IsNullOrEmpty(CurrentDashboard))
             {
-                NavigationManager.NavigateTo("grafana", true);
+                NavigationManager.NavigateTo("neonkube", true);
             }
 
-            if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard))
+            if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard && d.Id != "neonkube"))
             {
                 var dashboard = AppState.Dashboards.Where(d => d.Id == CurrentDashboard).FirstOrDefault();
                 if (dashboard != null)
@@ -70,9 +70,14 @@ namespace NeonDashboard.Pages
 
             AppState.CurrentDashboard = CurrentDashboard;
 
-            if (!string.IsNullOrEmpty(CurrentDashboard))
+            if (!string.IsNullOrEmpty(CurrentDashboard) && httpContextAccessor.HttpContext.Request.HttpContext.WebSockets.IsWebSocketRequest)
             {
+                PageTitle = $"{AppState.NeonDashboardService.ClusterInfo.Name} - {AppState.GetCurrentDashboard(CurrentDashboard).Name}";
                 Program.Service.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
+            }
+            else
+            {
+                PageTitle = $"{AppState.NeonDashboardService.ClusterInfo.Name}";
             }
 
             AppState.NotifyDashboardChanged();

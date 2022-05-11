@@ -48,6 +48,7 @@ namespace NeonDashboard
     {
         public IConfiguration Configuration { get; }
         public Service NeonDashboardService;
+        public KubernetesWithRetry k8s;
         public static Dictionary<string, string> Svgs;
         /// <summary>
         /// Constructor.
@@ -75,24 +76,17 @@ namespace NeonDashboard
                 try
                 {
                     var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
-                    var k8sClient  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+                    k8s  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
                     // set config map
-                    var configMap = k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
+                    var configMap = k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
                     NeonDashboardService.SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
 
-                    // set environment
-                    var configMapEnv = k8sClient.ReadNamespacedConfigMapAsync("neon-dashboard-env", KubeNamespace.NeonSystem).Result;
-                    foreach (var key in configMapEnv.Data.Keys)
-                    {
-                        NeonDashboardService.SetEnvironmentVariable(key, configMapEnv.Data[key]);
-                    }
-
-                    var secret    = k8sClient.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                    var secret    = k8s.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
                     NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
                     // Configure cluster callback url to allow local dev
-                    var dexConfigMap = k8sClient.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                    var dexConfigMap = k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
 
                     var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
                     var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
@@ -102,7 +96,7 @@ namespace NeonDashboard
                     {
                         clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
                         dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                        k8sClient.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
+                        k8s.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
                     }
                 }
                 catch (Exception ex)
@@ -110,6 +104,13 @@ namespace NeonDashboard
                     NeonDashboardService.Log.LogError(ex);
                 }
             }
+            else
+            {
+                k8s = new KubernetesWithRetry(KubernetesClientConfiguration.InClusterConfig());
+            }
+
+            var configmap = k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus).Result;
+            NeonDashboardService.ClusterInfo = (new TypeSafeConfigMap<ClusterInfo>(configmap)).Config;
 
             services.AddServerSideBlazor();
 
@@ -127,7 +128,7 @@ namespace NeonDashboard
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
-                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
+                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
                 //options.GetClaimsFromUserInfoEndpoint = true;
                 options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;

@@ -35,6 +35,11 @@ namespace NeonDashboard
         private IWebHost webHost;
 
         /// <summary>
+        /// Neon cluster info.
+        /// </summary>
+        public ClusterInfo ClusterInfo;
+
+        /// <summary>
         /// Session cookie name.
         /// </summary>
         public const string sessionCookieName = ".NeonKUBE.Dashboard.Session.Cookie";

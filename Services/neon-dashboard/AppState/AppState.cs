@@ -144,12 +144,14 @@ namespace NeonDashboard
 
             if (Dashboards == null || Dashboards.Count == 0)
             {
-                ClusterId = neonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN");
+                ClusterId = neonDashboardService.ClusterInfo.Domain;
                 Dashboards = new List<Dashboard>();
+                Dashboards.Add(new Dashboard("neonkube", "neonKUBE"));
 
                 using (var sr = new StreamReader(neonDashboardService.GetConfigFilePath("/etc/neon-dashboard/dashboards.yaml")))
                 {
-                    Dashboards = NeonHelper.YamlDeserialize<List<Dashboard>>(sr.ReadToEnd());
+                    var dashboards = NeonHelper.YamlDeserialize<List<Dashboard>>(sr.ReadToEnd());
+                    Dashboards = Dashboards.Concat(dashboards).ToList();
                     Logger.LogInfo(NeonHelper.JsonSerialize(Dashboards));
                 }
 
