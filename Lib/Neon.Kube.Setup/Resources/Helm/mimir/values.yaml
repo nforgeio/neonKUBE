@@ -228,7 +228,8 @@ alertmanager:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -386,7 +387,8 @@ distributor:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -461,7 +463,8 @@ ingester:
 
   podManagementPolicy: Parallel
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
   annotations: {}
 
@@ -595,7 +598,8 @@ overrides_exporter:
 
   extraContainers: []
   extraVolumes: []
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
   tolerations: []
   terminationGracePeriodSeconds: 60
@@ -628,7 +632,8 @@ ruler:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
   annotations: {}
   persistence:
@@ -700,7 +705,8 @@ querier:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -783,7 +789,8 @@ query_frontend:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -856,7 +863,8 @@ store_gateway:
   podDisruptionBudget:
     maxUnavailable: 1
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -968,7 +976,8 @@ compactor:
   # Pod Disruption Budget
   podDisruptionBudget: {}
 
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
