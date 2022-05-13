@@ -50,13 +50,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Azure.Management.Compute" Version="54.0.0" />
-		<PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.38.1" />
-		<PackageReference Include="Microsoft.Azure.Management.Network" Version="21.0.0" />
-		<PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.38.1" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
@@ -68,6 +61,14 @@
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Azure.Identity" Version="1.6.0" />
+	  <PackageReference Include="Azure.ResourceManager" Version="1.0.0" />
+	  <PackageReference Include="Azure.ResourceManager.Compute" Version="1.0.0-beta.8" />
+	  <PackageReference Include="Azure.ResourceManager.Network" Version="1.0.0-beta.7" />
+	  <PackageReference Include="Azure.ResourceManager.Storage" Version="1.0.0-beta.8" />
 	</ItemGroup>
 
 </Project>

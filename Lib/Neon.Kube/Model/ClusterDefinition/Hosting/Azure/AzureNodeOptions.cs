@@ -75,13 +75,23 @@ namespace Neon.Kube
         /// <see cref="AzureStorageType.StandardHDD"/> specifies relatively slow rotating hard drives,
         /// <see cref="AzureStorageType.StandardSSD"/> specifies standard SSD based drives,
         /// <see cref="AzureStorageType.PremiumSSD"/> specifies fast SSD based drives, and finally
-        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.  Azure recommends that
-        /// most production VMs deploy with SSDs.
+        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.
+        /// <note>
+        /// Azure recommends that most production VMs deploy with SSDs.
+        /// </note>
         /// </para>
         /// <note>
+        /// <para>
         /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
         /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
         /// for more information.
+        /// </para>
+        /// <para>
+        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
+        /// neonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
+        /// <see cref="AzureStorageType.UltraSSD"/>.
+        /// </para>
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "StorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
