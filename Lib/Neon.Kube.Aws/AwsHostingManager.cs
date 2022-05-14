@@ -3331,7 +3331,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerRulesAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -3351,7 +3351,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerRulesAsync()
         {
             await SyncContext.Clear;
 
