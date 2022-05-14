@@ -1032,9 +1032,9 @@ namespace Neon.Kube
 
                     // Note that we're going to limit the number commands in-flight so that
                     // we don't consume too much RAM (for thread stacks) here on the client
-                    // as well as not overloading the master.
+                    // as well as not overloading the master node.
 
-                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 8 };
+                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
 
                     Parallel.ForEach(resetNamespaces, parallelOptions,
                         @namespace =>

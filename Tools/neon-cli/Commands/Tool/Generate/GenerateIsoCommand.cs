@@ -32,7 +32,6 @@ using Newtonsoft.Json;
 using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
-using Microsoft.Azure.Management.ContainerRegistry.Fluent.Models;
 
 namespace NeonCli
 {

@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -1190,7 +1190,7 @@ namespace Neon.Kube
 
                 if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
                 {
-                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), parallelOptions,
                         vm =>
                         {
                             hyperv.RemoveVm(vm.Name);

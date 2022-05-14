@@ -528,7 +528,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Specifies the owner ID to use when querying for Canonical AMIs 

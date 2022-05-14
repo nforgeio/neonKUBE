@@ -51,6 +51,12 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Maximum number of async operations that hosting managers should perform
+        /// in parallel.
+        /// </summary>
+        protected const int MaxAsyncParallelHostingOperations = 25;
+
+        /// <summary>
         /// Determines whether the hosting environment supports <b>fstrim</b>.
         /// </summary>
         /// <param name="environment">Specifies the hosting environment.</param>

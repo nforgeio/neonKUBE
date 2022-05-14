@@ -275,6 +275,11 @@ namespace Neon.Kube
             /// the cluster and is persisted as tag for each Azure VM.
             /// </summary>
             public int ExternalSshPort { get; set; }
+
+            /// <summary>
+            /// The cluster node provisioning/power state.
+            /// </summary>
+            public ClusterNodeState State { get; set; }
         }
 
         /// <summary>
@@ -494,7 +499,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// The first NSG rule priority to use for ingress rules.
@@ -1488,6 +1493,81 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Queries Azure for the provisoning/power status for all known cluster nodes.  This updates
+        /// the <see cref="nameToVm"/> dictionary values.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task GetClusterVmStatuses()
+        {
+            Covenant.Assert(azure != null);
+            Covenant.Assert(nameToVm != null);
+
+            // Unforunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
+            // so we need to query for each VM state individually.  We'll do this in parallel to speed thinbgs up.
+            //
+            // We'll be querying for each VM for its [InstanceView] and examine it's current status:
+            //
+            //      https://docs.microsoft.com/en-us/azure/virtual-machines/states-billing
+            //
+            // and then convert that to our [ClusterNodeState].
+
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
+                {
+                    var instanceView = (await azureVm.Vm.InstanceViewAsync()).Value;
+                    var latestStatus = instanceView.Statuses
+                        .Where(status => status.Code.StartsWith("PowerState/"))
+                        .OrderByDescending(status => status.Time)
+                        .FirstOrDefault();
+
+                    if (latestStatus == null)
+                    {
+                        azureVm.State = ClusterNodeState.Off;
+                    }
+                    else
+                    {
+                        switch (latestStatus.Code)
+                        {
+                            case "PowerState/Starting":
+
+                                azureVm.State = ClusterNodeState.Starting;
+                                break;
+
+                            case "PowerState/Running":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Stopping":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Stopped":
+
+                                azureVm.State = ClusterNodeState.Off;
+                                break;
+
+                            case "PowerState/Deallocating":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Deallocated":
+
+                                azureVm.State = ClusterNodeState.NotProvisioned;
+                                break;
+
+                            default:
+
+                                azureVm.State = ClusterNodeState.Unknown;
+                                break;
+                        }
+                    }
+                });
+        }
+
+        /// <summary>
         /// Locates the node virtual machine image to be used to provision the cluster.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2246,8 +2326,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     });
             }
 
-            //################################################################
-
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
@@ -2259,7 +2337,9 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var priority = firstIngressNsgRulePriority;
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
+            var nsgSubnetData                  = new NetworkSecurityGroupData();
+            var priority                       = firstIngressNsgRulePriority;
 
             foreach (var ingressRule in ingressRules)
             {
@@ -2271,15 +2351,19 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                     var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
 
-                    subnetNsgUpdater.DefineRule(ruleName)
-                        .AllowInbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAnyAddress()
-                        .ToPort(ingressRule.NodePort)
-                        .WithProtocol(ruleProtocol)
-                        .WithPriority(priority++)
-                        .Attach();
+                    nsgSubnetData.SecurityRules.Add(
+                        new SecurityRuleData()
+                        {
+                            Name                     = ruleName,
+                            Access                   = SecurityRuleAccess.Allow,
+                            Direction                = SecurityRuleDirection.Inbound,
+                            SourceAddressPrefix      = "0.0.0.0/0",
+                            SourcePortRange          = "*",
+                            DestinationAddressPrefix = "0.0.0.0/0",
+                            DestinationPortRange     = ingressRule.NodePort.ToString(),
+                            Protocol                 = ruleProtocol,
+                            Priority                 = priority++
+                        });;
                 }
                 else
                 {
@@ -2292,96 +2376,29 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     foreach (var addressRule in ingressRule.AddressRules)
                     {
                         var multipleAddresses = ingressRule.AddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}"
-                                                                  : $"{ingressRulePrefix}{ingressRule.Name}";
-                        switch (addressRule.Action)
-                        {
-                            case AddressRuleAction.Allow:
+                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}" : $"{ingressRulePrefix}{ingressRule.Name}";
 
-                                if (addressRule.IsAny)
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .AllowInbound()
-                                        .FromAnyAddress()
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                else
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .AllowInbound()
-                                        .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                break;
-
-                            case AddressRuleAction.Deny:
-
-                                if (addressRule.IsAny)
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .DenyInbound()
-                                        .FromAnyAddress()
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                else
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .DenyInbound()
-                                        .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                break;
-
-                            default:
-
-                                throw new NotImplementedException();
-                        }
+                        nsgSubnetData.SecurityRules.Add(
+                            new SecurityRuleData() 
+                            { 
+                                Name                     = ruleName, 
+                                Direction                = SecurityRuleDirection.Inbound,
+                                Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                                SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                                SourcePortRange          = "*",
+                                DestinationAddressPrefix = "0.0.0.0/0",
+                                DestinationPortRange     = ingressRule.NodePort.ToString(),
+                                Protocol                 = ruleProtocol,
+                                Priority                 = priority++ 
+                            });
                     }
                 }
             }
 
             // Apply the updates.
 
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
-
-            // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support this property yet.
-            //
-            // It's a bit unfortunate that we can't apply these changes when we updated the
-            // load balancer above, but this shouldn't be a big deal.
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            foreach (var ingressRule in ingressRules)
-            {
-                var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
-                var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                lbRule.EnableTcpReset = ingressRule.IdleTcpReset;
-            }
-
-            await loadBalancerUpdater.ApplyAsync();
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
         }
 
         /// <summary>
@@ -2392,83 +2409,59 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshRulesAsync()
         {
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
+            var loadBalancerData               = loadBalancer.Data;
+            var nsgSubnetData                  = subnetNsg.Data;
 
-            // Remove all existing load balancer public SSH related NAT rules.
+            // Remove all existing SSH related load balancer NAT and NSG rules.
 
-            foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            var natDeleteRules = loadBalancerData.InboundNatRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            foreach (var rule in natDeleteRules)
             {
-                loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
+                loadBalancerData.InboundNatRules.Remove(rule);
             }
 
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            var nsgDeleteRules = nsgSubnetData.SecurityRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            foreach (var rule in nsgDeleteRules)
             {
-                subnetNsgUpdater.WithoutRule(rule.Name);
+                nsgSubnetData.SecurityRules.Remove(rule);
             }
 
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
+            // Add SSH NAT rules for each node.
 
-            // Add the SSH NAT rules for each node.  Note that we need to do this in three steps:
+            foreach (var azureNode in SortedMasterThenWorkerNodes)
+            {
+                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
+
+                var natRule = new InboundNatRuleData()
+                {
+                    Name                 = ruleName,
+                    Protocol             = TransportProtocol.Tcp,
+                    FrontendPort         = azureNode.ExternalSshPort,
+                    BackendPort          = NetworkPorts.SSH,
+                    EnableTcpReset       = true,
+                    IdleTimeoutInMinutes = 30,      // Maximum Azure idle timeout
+                    EnableFloatingIP     = false,
+                };
+
+                natRule.BackendIPConfiguration.Name             = $"{ruleName}-nat";
+                natRule.BackendIPConfiguration.Primary          = true;
+                natRule.BackendIPConfiguration.PrivateIPAddress = azureNode.Address;
+                natRule.BackendIPConfiguration.Subnet           = new SubnetData() { Name = subnetName };
+
+                loadBalancerData.InboundNatRules.Add(natRule);
+            }
+
+            // Add NSG rules so that the public Kubernetes API and SSH NAT rules can actually route
+            // traffic to the nodes.
             //
-            //      1. Add the NAT rule to the load balancer
-            //      2. Enable TCP Reset for connections that are idle for too long
-            //      3. Tie the node VM's NIC to the rule
-
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
-            {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
-
-                loadBalancerUpdater.DefineInboundNatRule(ruleName)
-                    .WithProtocol(TransportProtocol.Tcp)
-                    .FromExistingPublicIPAddress(publicAddress)
-                    .FromFrontendPort(azureNode.ExternalSshPort)
-                    .ToBackendPort(NetworkPorts.SSH)
-                    .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
-                    .Attach();
-            }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support the property (yet?).
-
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
-            {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
-                var natRule  = loadBalancer.Inner.InboundNatRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                natRule.EnableTcpReset = true;
-            }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
-            {
-                var sshRuleName = $"{publicSshRulePrefix}{azureNode.Name}";
-                var nicUpdater  = azureNode.Nic
-                    .Update()
-                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, sshRuleName);
-
-                if (azureNode.IsMaster)
-                {
-                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerMasterBackendName);
-                }
-
-                if (azureNode.Node.Metadata.Ingress)
-                {
-                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerIngressBackendName);
-                }
-
-                azureNode.Nic = await nicUpdater.ApplyAsync();
-            }
-
-            // Add NSG rules so that the public SSH NAT rules can actually route traffic to the nodes.
             // To keep things simple, we're going to generate a separate rule for each source
             // address restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
@@ -2484,15 +2477,18 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 var ruleName = $"{publicSshRulePrefix}{ruleIndex++}";
 
-                subnetNsgUpdater.DefineRule(ruleName)
-                    .AllowInbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToPort(NetworkPorts.SSH)
-                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                    .WithPriority(priority++)
-                    .Attach();
+                nsgSubnetData.SecurityRules.Add(
+                    new SecurityRuleData()
+                    {
+                        Name                     = ruleName,
+                        Access                   = SecurityRuleAccess.Allow,
+                        Direction                = SecurityRuleDirection.Inbound,
+                        SourceAddressPrefix      = "0.0.0.0/0",
+                        SourcePortRange          = "*",
+                        DestinationAddressPrefix = "0.0.0.0/0",
+                        DestinationPortRange     = "*",
+                        Protocol                 = SecurityRuleProtocol.Tcp
+                    });
             }
             else
             {
@@ -2505,77 +2501,27 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 foreach (var addressRule in networkOptions.ManagementAddressRules)
                 {
                     var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
-                    var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{ruleIndex++}-{addressRuleIndex++}"
-                                                              : $"{publicSshRulePrefix}{ruleIndex++}";
-                    switch (addressRule.Action)
-                    {
-                        case AddressRuleAction.Allow:
+                    var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{ruleIndex++}-{addressRuleIndex++}" : $"{publicSshRulePrefix}{ruleIndex++}";
 
-                            if (addressRule.IsAny)
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .AllowInbound()
-                                    .FromAnyAddress()
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            else
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .AllowInbound()
-                                    .FromAddress(addressRule.AddressOrSubnet)
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            break;
-
-                        case AddressRuleAction.Deny:
-
-                            if (addressRule.IsAny)
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .DenyInbound()
-                                    .FromAnyAddress()
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            else
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .DenyInbound()
-                                    .FromAddress(addressRule.AddressOrSubnet)
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            break;
-
-                        default:
-
-                            throw new NotImplementedException();
-                    }
+                    nsgSubnetData.SecurityRules.Add(
+                        new SecurityRuleData()
+                        {
+                            Name                     = ruleName,
+                            Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                            Direction                = SecurityRuleDirection.Inbound,
+                            SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                            SourcePortRange          = "*",
+                            DestinationAddressPrefix = "0.0.0.0/0",
+                            DestinationPortRange     = "*",
+                            Protocol                 = SecurityRuleProtocol.Tcp
+                        });
                 }
             }
 
             // Apply the updates.
 
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
         }
 
         /// <summary>
@@ -2586,37 +2532,35 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshRulesAsync()
         {
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
+            var loadBalancerData               = loadBalancer.Data;
+            var nsgSubnetData                  = subnetNsg.Data;
 
-            // Remove all existing load balancer public SSH related NAT rules.
+            // Remove all existing SSH related load balancer NAT and NSG rules.
 
-            foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            var natDeleteRules = loadBalancerData.InboundNatRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            foreach (var rule in natDeleteRules)
             {
-                loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
+                loadBalancerData.InboundNatRules.Remove(rule);
             }
 
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            var nsgDeleteRules = nsgSubnetData.SecurityRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            foreach (var rule in nsgDeleteRules)
             {
-                subnetNsgUpdater.WithoutRule(rule.Name);
-            }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // Remove all of the SSH NAT related NSG rules.
-
-            foreach (var nsgRule in subnetNsg.SecurityRules.Values)
-            {
-                subnetNsgUpdater.WithoutRule(nsgRule.Name);
+                nsgSubnetData.SecurityRules.Remove(rule);
             }
 
             // Apply the changes.
 
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
         }
 
         //---------------------------------------------------------------------
@@ -2624,7 +2568,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
-
 
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
@@ -2635,14 +2578,13 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            // NOTE: We're deferring checking quotas and current utilization for Azure at this time:
+            // $todo(jefflill): We're deferring checking quotas and current utilization for Azure:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1544
 
             // Verify that the region exists and is available to the current subscription.
 
-            var subscription = await azure.Subscriptions.GetByIdAsync(azureOptions.SubscriptionId);
-            var location     = subscription.ListLocations().SingleOrDefault(location => location.Name.Equals(azureOptions.Region, StringComparison.InvariantCultureIgnoreCase));
+            var location = (await subscription.GetAvailableLocationsAsync()).Value.SingleOrDefault(location => location.Name.Equals(regionName));
 
             if (location == null)
             {
@@ -2650,7 +2592,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     new HostingResourceConstraint()
                     {
                         ResourceType = HostingConstrainedResourceType.VmHost,
-                        Details      = $"Azure region [{regionName}] not found or available.",
+                        Details      = $"Azure region [{regionName}] is not available to the subscription or does not exist.",
                         Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
                     };
 
@@ -2671,26 +2613,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             //
             // We don't currently:
             // 
-            //      * ensure that all VM sizes required by the cluster
-            //      * VM sizes are AMD64 compatible
+            //      * Ensure that all VM sizes required by the cluster VM sizes are AMD64 compatible
             //      * VM is compatible with the storage tier specified for each node
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1545
 
             await LoadVmSizeMetadataAsync();
 
-            var constraints  = new List<HostingResourceConstraint>();
-
-            foreach (var vmSize in await azure.VirtualMachines.Sizes.ListByRegionAsync(regionName))
-            {
-                nameToVmSku[vmSize.Name] = vmSize;
-            }
-
-            foreach (var vmSku in await azure.ComputeSkus.ListByRegionAsync(regionName))
-            {
-                nameToVmSku[vmSku.Name.Value] = vmSku;
-            }
-
+            var constraints    = new List<HostingResourceConstraint>();
             var clusterVmSizes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var node in cluster.Nodes)
@@ -2800,6 +2730,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 // We're going to assume that all virtual machines in the cluster's resource group
                 // belong to the cluster and we'll map the actual VM states to public node states.
 
+                var virtualMachineCollection = resourceGroup.GetVirtualMachines();
+
                 foreach (var node in cluster.Definition.NodeDefinitions.Values)
                 {
                     var nodePowerState = ClusterNodeState.NotProvisioned;
@@ -2808,42 +2740,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     {
                         if (nameToVm.TryGetValue(node.Name, out var azureVm))
                         {
-                            var powerState = azureVm.Vm.PowerState;
-
-                            if (powerState == PowerState.Starting)
-                            {
-                                nodePowerState = ClusterNodeState.Starting;
-                            }
-                            else if (powerState == PowerState.Running)
-                            {
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Stopping)
-                            {
-                                // We don't currently have a status for stopping a node so we'll
-                                // consider it to be running because technically, it still is.
-
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Stopped)
-                            {
-                                nodePowerState = ClusterNodeState.Off;
-                            }
-                            else if (powerState == PowerState.Deallocating)
-                            {
-                                // We don't currently have a status for terminating a node so we'll
-                                // consider it to be running because technically, it still is.
-
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Deallocated)
-                            {
-                                nodePowerState = ClusterNodeState.NotProvisioned;
-                            }
-                            else
-                            {
-                                Covenant.Assert(false, $"Unexpected node instance status: [{powerState}]");
-                            }
+                            nodePowerState = azureVm.State;
                         }
                     }
 
@@ -2937,9 +2834,9 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
-                    var vm = nameToVm[node.Name];
+                    var azureVm = nameToVm[node.Name];
 
-                    await azure.VirtualMachines.StartAsync(resourceGroupName, vm.Name, cancellationToken);
+                    await azureVm.Vm.RestartAsync(WaitUntil.Completed);
                 });
         }
 
@@ -2957,9 +2854,9 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
-                    var vm = nameToVm[node.Name];
+                    var azureVm = nameToVm[node.Name];
 
-                    await azure.VirtualMachines.PowerOffAsync(resourceGroupName, vm.Name, cancellationToken);
+                    await azureVm.Vm.PowerOffAsync(WaitUntil.Completed, skipShutdown: stopMode != StopMode.Graceful);
                 });
         }
 
@@ -2969,7 +2866,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // We just need to delete the cluster resource group and everything within it.
 
             await ConnectAzureAsync();
-            await azure.ResourceGroups.DeleteByNameAsync(resourceGroupName, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
+            await resourceGroup.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
         }
     }
 }
