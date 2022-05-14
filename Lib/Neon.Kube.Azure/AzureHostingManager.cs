@@ -15,20 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $note(jefflill):
-//
-// The fluent SDK is hard to use for programatically determined configuration
-// but I think we can drop all of that and simply manipulate the [inner] property
-// of these resources directly and then apply the changes.  The current code
-// is a bit of a mess, but it'll be OK for cluster deployment.
-//
-// This would dramatically simplify things and also allow us to perform some
-// operations in one go instead of multiple operations.  This will be more
-// important when we support dynamically adding and removing nodes in the
-// cluster.
-//
-// That being said, we should probably just upgrade to the new API.
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -75,6 +61,7 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using IPVersion              = Azure.ResourceManager.Network.Models.IPVersion;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Neon.Kube
 {
@@ -2092,7 +2079,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerRulesAsync();
             }
 
             if ((operations & NetworkOperations.AllowNodeSsh) != 0)
@@ -2109,50 +2096,73 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         }
 
         /// <summary>
+        /// Returns the ID for a load balancer child resource.
+        /// </summary>
+        /// <param name="childResourceType">Specifies the child resource type.</param>
+        /// <param name="childResourceName">Specifies the child resource name.</param>
+        /// <returns>The child resource ID.</returns>
+        private ResourceIdentifier GetChildLoadBalancerResourceId(string childResourceType, string childResourceName)
+        {
+            return new ResourceIdentifier($"/subscriptions/{subscription.Id}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/loadBalancers/{loadbalancerName}/{childResourceType}/{childResourceName}");
+        }
+
+        /// <summary>
         /// Updates the load balancer and network security rules to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerRulesAsync()
         {
             // $note(jefflill):
             //
-            // I really wanted to apply changes to the load balancer backend configuration
-            // in one go so these changes would be atomic, but this doesn't seem to work.
-            // Only one of the master or ingress backends appear to be able to be updated
-            // simultaneously.
+            // I couldn't find any SDK documentation or examples explaining how to manage load balancers
+            // using the new SDK.  The best thing I could find is this unit test:
             //
-            // This isn't really an issue for cluster setup but it may be a problem when
-            // we support adding and removing nodes from an existing cluster (although
-            // I suspect that will be OK too).
+            //      https://github.com/Azure/azure-sdk-for-net/blob/a613ce4a2a8ea7fed6e95b01cffdba905ba61013/sdk/network/Azure.ResourceManager.Network/tests/Tests/LoadBalancerTests.cs
             //
-            // We may be able to address this by editing the inner load balancer update
-            // properties directly (like we do when enabling TCP reset) or when we switch
-            // from the Azure Fluent SDK to the current SDK.
+            // Unfortunately, this test seems somewhat out-of-date, but was close enough to help figure
+            // out how this works.
 
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            var loadBalancerCollection = resourceGroup.GetLoadBalancers();
+            var loadBalancerData       = new LoadBalancerData()
+            {
+                 Location = azureLocation,
+                 Sku      = loadBalancer.Data.Sku
+            };
 
-            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
-            // load balance this traffic to the master nodes.
+            // We need to add a special ingress rule for the Kubernetes API on it's standard
+            // port 6443 and load balance this traffic to the master nodes.
 
             var clusterRules = new IngressRule[]
+            {
+                new IngressRule()
                 {
-                    new IngressRule()
-                    {
-                        Name                  = "kubernetes-api",
-                        Protocol              = IngressProtocol.Tcp,
-                        ExternalPort          = NetworkPorts.KubernetesApiServer,
-                        NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
-                        AddressRules          = networkOptions.ManagementAddressRules,
-                        IdleTcpReset          = true,
-                        TcpIdleTimeoutMinutes = 5
-                    }
-                };
+                    Name                  = "kubernetes-api",
+                    Protocol              = IngressProtocol.Tcp,
+                    ExternalPort          = NetworkPorts.KubernetesApiServer,
+                    NodePort              = NetworkPorts.KubernetesApiServer,
+                    Target                = IngressRuleTarget.Neon,
+                    AddressRules          = networkOptions.ManagementAddressRules,
+                    IdleTcpReset          = true,
+                    TcpIdleTimeoutMinutes = 5
+                }
+            };
 
             var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
+
+            //-----------------------------------------------------------------
+            // Frontend configuration:
+
+            var frontendConfigurationData =
+                new FrontendIPConfigurationData()
+                {
+                    Name            = loadbalancerFrontendName,
+                    PublicIPAddress = publicAddress.Data,
+                    Subnet          = vnet.Data.Subnets[0]
+                };
+
+            loadBalancerData.FrontendIPConfigurations.Add(frontendConfigurationData);
 
             //-----------------------------------------------------------------
             // Backend pools:
@@ -2163,131 +2173,24 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // Rebuild the [ingress-nodes] backend pool. 
-            //
-            // Note that we're going to add these VMs to the backend set one at a time
-            // because the API only works when the VMs being added in a batch are all
-            // in the same availability set.  Masters and workers are located within
-            // different sets by default.
+            // Create the backend pools.
 
-            var ingressBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerIngressBackendName);
-
-            if (loadBalancer.Backends.TryGetValue(loadbalancerIngressBackendName, out var ingressBackend))
-            {
-                // Remove any existing VMs for nodes that no longer exist or are not
-                // currently labeled for ingress from the pool.
-
-                var vms = new List<IVirtualMachine>();
-
-                await Parallel.ForEachAsync(ingressBackend.GetVirtualMachineIds(), parallelOptions,
-                    async (vmId, cancellationToken) =>
-                    {
-                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
-                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
-
-                        if (node == null || !node.Metadata.Ingress)
-                        {
-                            lock (vms)
-                            {
-                                vms.Add(vm);
-                            }
-                        }
-                    });
-
-                if (vms.Count > 0)
+            var masterBackendPoolData =
+                new BackendAddressPoolData()
                 {
-                    ingressBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
-                }
-            }
+                    Name = loadbalancerMasterBackendName
+                };
 
-            foreach (var ingressNode in nameToVm.Values.Where(node => node.Metadata.Ingress))
-            {
-                ingressBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
-            }
-
-            loadBalancer = await ingressBackendUpdater.Parent().ApplyAsync();
-
-            // Rebuild the [master-nodes] backend pool.
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            var masterBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerMasterBackendName);
-
-            if (loadBalancer.Backends.TryGetValue(loadbalancerMasterBackendName, out var masterBackend))
-            {
-                // Remove any existing VMs for nodes that no longer exist or are not
-                // a master node.
-
-                var vms = new List<IVirtualMachine>();
-
-                await Parallel.ForEachAsync(masterBackend.GetVirtualMachineIds(), parallelOptions,
-                    async (vmId, cancellationToken) =>
-                    {
-                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
-                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
-
-                        if (node == null || !node.Metadata.IsMaster)
-                        {
-                            lock (vms)
-                            {
-                                vms.Add(vm);
-                            }
-                        }
-                    });
-
-                if (vms.Count > 0)
+            var ingressBackendPoolData =
+                new BackendAddressPoolData()
                 {
-                    masterBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
-                }
-            }
+                    Name = loadbalancerIngressBackendName
+                };
 
-            foreach (var masterNode in nameToVm.Values.Where(node => node.Metadata.IsMaster))
-            {
-                masterBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { masterNode.Vm });
-            }
-
-            loadBalancer = await masterBackendUpdater.Parent().ApplyAsync();
+            loadBalancerData.BackendAddressPools.Add(masterBackendPoolData);
+            loadBalancerData.BackendAddressPools.Add(ingressBackendPoolData);
 
             //-----------------------------------------------------------------
-            // Cluster ingress load balancing rules
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // Remove all existing cluster ingress rules.
-
-            foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
-            }
-
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                subnetNsgUpdater.WithoutRule(rule.Name);
-            }
-
-            // We also need to remove any existing load balancer ingress related health probes.
-            // We'll recreate these below as necessary.
-
-            foreach (var probe in loadBalancer.HttpProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
-            foreach (var probe in loadBalancer.HttpsProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
-            foreach (var probe in loadBalancer.TcpProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
             // Add the load balancer ingress rules and health probes.
 
             var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
@@ -2297,15 +2200,19 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 var probeName   = $"{ingressRulePrefix}{ingressRule.Name}";
                 var healthCheck = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
-                loadBalancerUpdater.DefineTcpProbe(probeName)
-                    .WithPort(ingressRule.NodePort)
-                    .WithIntervalInSeconds(healthCheck.IntervalSeconds)
-                    .WithNumberOfProbes(healthCheck.ThresholdCount)
-                    .Attach();
+                loadBalancerData.Probes.Add(
+                    new ProbeData()
+                    {
+                        Name              = probeName,
+                        Protocol          = ProbeProtocol.Tcp,
+                        Port              = ingressRule.NodePort,
+                        IntervalInSeconds = healthCheck.IntervalSeconds,
+                        NumberOfProbes    = healthCheck.ThresholdCount
+                    });
 
-                var ruleName    = $"{ingressRulePrefix}{ingressRule.Name}";
-                var tcpTimeout  = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
-                var backendName = (string)null;
+                var ruleName       = $"{ingressRulePrefix}{ingressRule.Name}";
+                var tcpIdleTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
+                var backendName    = (string)null;
 
                 switch (ingressRule.Target)
                 {
@@ -2324,16 +2231,22 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         throw new NotImplementedException();
                 }
 
-                loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
-                    .WithProtocol(ToTransportProtocol(ingressRule.Protocol))
-                    .FromExistingPublicIPAddress(publicAddress)
-                    .FromFrontendPort(ingressRule.ExternalPort)
-                    .ToBackend(backendName)
-                    .ToBackendPort(ingressRule.NodePort)
-                    .WithProbe(probeName)
-                    .WithIdleTimeoutInMinutes(tcpTimeout)
-                    .Attach();
+                loadBalancerData.LoadBalancingRules.Add(
+                    new LoadBalancingRuleData()
+                    {
+                        Name                      = ruleName,
+                        FrontendIPConfigurationId = GetChildLoadBalancerResourceId("frontendIPConfigurations", loadbalancerFrontendName),
+                        BackendAddressPoolId      = GetChildLoadBalancerResourceId("backendAddressPools", backendName),
+                        ProbeId                   = GetChildLoadBalancerResourceId("probes", probeName),
+                        Protocol                  = ToTransportProtocol(ingressRule.Protocol),
+                        FrontendPort              = ingressRule.ExternalPort,
+                        BackendPort               = ingressRule.NodePort,
+                        IdleTimeoutInMinutes      = tcpIdleTimeout,
+                        EnableFloatingIP          = false
+                    });
             }
+
+            //################################################################
 
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
             //
