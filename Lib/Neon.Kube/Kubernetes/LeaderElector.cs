@@ -28,6 +28,7 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 
 using StockLeaderElector        = k8s.LeaderElection.LeaderElector;
 using StockLeaderElectionConfig = k8s.LeaderElection.LeaderElectionConfig;
