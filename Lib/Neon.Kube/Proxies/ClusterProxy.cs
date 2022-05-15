@@ -591,6 +591,8 @@ namespace Neon.Kube
             IRetryPolicy        retryPolicy       = null,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
             {
@@ -637,6 +639,7 @@ namespace Neon.Kube
             IRetryPolicy        retryPolicy       = null,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(psqlCommand), nameof(psqlCommand));
 

@@ -151,12 +151,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task UpdateInternetRoutingAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public virtual async Task EnableInternetSshAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 

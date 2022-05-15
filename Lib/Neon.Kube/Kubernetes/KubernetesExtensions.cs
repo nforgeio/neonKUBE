@@ -655,6 +655,7 @@ namespace Neon.Kube
             string              namespaceParameter,
             string              labelSelector)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
@@ -747,6 +748,7 @@ namespace Neon.Kube
             string[]            command,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(retryPolicy != null, nameof(retryPolicy));
 
             return await retryPolicy.InvokeAsync(

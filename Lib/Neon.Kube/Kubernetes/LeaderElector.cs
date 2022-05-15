@@ -246,6 +246,7 @@ namespace Neon.Kube
         /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
         public async Task RunAsync()
         {
+            await SyncContext.Clear;
             EnsureNotDisposed();
 
             try

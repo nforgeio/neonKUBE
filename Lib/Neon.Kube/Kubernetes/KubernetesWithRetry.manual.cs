@@ -169,6 +169,7 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.Clear;
             await k8s.WaitForDaemonsetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
     }
