@@ -1196,108 +1196,108 @@ namespace Neon.Kube
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
                 controller.AddNodeStep("openebs",
-                async (controller, node) =>
-                {
-                    node.Status = "openebs: checking";
-
-                    var volumeName        = GetResourceName($"{node.Name}-openebs");
-                    var awsInstance       = nodeNameToAwsInstance[node.Name];
-                    var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-                    var volume            = (Volume)null;
-
-                    // Check if we've already created the volume.
-
-                    await foreach (var volumeItem in volumePagenator.Volumes)
+                    async (controller, node) =>
                     {
-                        if (volumeItem.State != VolumeState.Deleting && 
-                            volumeItem.State != VolumeState.Deleted &&
-                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                            volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        node.Status = "openebs: checking";
+
+                        var volumeName        = GetResourceName($"{node.Name}-openebs");
+                        var awsInstance       = nodeNameToAwsInstance[node.Name];
+                        var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                        var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+                        var volume            = (Volume)null;
+
+                        // Check if we've already created the volume.
+
+                        await foreach (var volumeItem in volumePagenator.Volumes)
                         {
-                            volume = volumeItem;
-                            break;
-                        }
-                    }
-
-                    // Create the volume if it doesn't exist.
-
-                    if (volume == null)
-                    {
-                        node.Status = "openebs: create cStor volume";
-
-                        var volumeResponse = await ec2Client.CreateVolumeAsync(
-                            new CreateVolumeRequest()
+                            if (volumeItem.State != VolumeState.Deleting && 
+                                volumeItem.State != VolumeState.Deleted &&
+                                volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                             {
-                                AvailabilityZone   = availabilityZone,
-                                VolumeType         = openEBSVolumeType,
-                                Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
-                                MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
-                            });
-
-                        volume = volumeResponse.Volume;
-                    }
-
-                    // Wait for the volume to become available.
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            node.Status = "openebs: waiting for cStor volume...";
-
-                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-
-                            await foreach (var volumeItem in volumePagenator.Volumes)
-                            {
-                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                                {
-                                    volume = volumeItem;
-                                    break;
-                                }
+                                volume = volumeItem;
+                                break;
                             }
+                        }
 
-                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
-                        },
-                        timeout:      operationTimeout,
-                        pollInterval: operationPollInternal);
+                        // Create the volume if it doesn't exist.
 
-                    // Attach the volume to the VM if it's not already attached.
-
-                    if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
-                    {
-                        await ec2Client.AttachVolumeAsync(
-                            new AttachVolumeRequest()
-                            {
-                                VolumeId   = volume.VolumeId,
-                                InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName,
-                            });
-                    }
-
-                    // AWS defaults to deleting volumes on termination only for the
-                    // volumes created along with the new instance.  We want the 
-                    // OpenEBS cStor volume to be deleted as well.
-
-                    await ec2Client.ModifyInstanceAttributeAsync(
-                        new ModifyInstanceAttributeRequest()
+                        if (volume == null)
                         {
-                            InstanceId          = awsInstance.InstanceId,
-                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
-                            {
-                                new InstanceBlockDeviceMappingSpecification()
+                            node.Status = "openebs: create cStor volume";
+
+                            var volumeResponse = await ec2Client.CreateVolumeAsync(
+                                new CreateVolumeRequest()
                                 {
-                                    DeviceName = openEBSDeviceName,
-                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    AvailabilityZone   = availabilityZone,
+                                    VolumeType         = openEBSVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    MultiAttachEnabled = false,
+                                    TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
+                                });
+
+                            volume = volumeResponse.Volume;
+                        }
+
+                        // Wait for the volume to become available.
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                node.Status = "openebs: waiting for cStor volume...";
+
+                                var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+
+                                await foreach (var volumeItem in volumePagenator.Volumes)
+                                {
+                                    if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                        volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                                     {
-                                        DeleteOnTermination = true,
+                                        volume = volumeItem;
+                                        break;
                                     }
                                 }
-                            }
-                        });
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+
+                                return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
+                            },
+                            timeout:      operationTimeout,
+                            pollInterval: operationPollInternal);
+
+                        // Attach the volume to the VM if it's not already attached.
+
+                        if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
+                        {
+                            await ec2Client.AttachVolumeAsync(
+                                new AttachVolumeRequest()
+                                {
+                                    VolumeId   = volume.VolumeId,
+                                    InstanceId = awsInstance.InstanceId,
+                                    Device     = openEBSDeviceName,
+                                });
+                        }
+
+                        // AWS defaults to deleting volumes on termination only for the
+                        // volumes created along with the new instance.  We want the 
+                        // OpenEBS cStor volume to be deleted as well.
+
+                        await ec2Client.ModifyInstanceAttributeAsync(
+                            new ModifyInstanceAttributeRequest()
+                            {
+                                InstanceId          = awsInstance.InstanceId,
+                                BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                                {
+                                    new InstanceBlockDeviceMappingSpecification()
+                                    {
+                                        DeviceName = openEBSDeviceName,
+                                        Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                        {
+                                            DeleteOnTermination = true,
+                                        }
+                                    }
+                                }
+                            });
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
             }
         }
 
