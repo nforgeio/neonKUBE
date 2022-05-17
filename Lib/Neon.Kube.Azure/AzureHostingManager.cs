@@ -629,6 +629,16 @@ namespace Neon.Kube
         private const int openEBSDiskLun = 2;
 
         /// <summary>
+        /// Minimum Azure supported TCP reset idle timeout in minutes.
+        /// </summary>
+        private const int minAzureTcpIdleTimeoutMinutes = 4;
+
+        /// <summary>
+        /// Maximum Azure supported TCP reset idle timeout in minutes.
+        /// </summary>
+        private const int maxAzureTcpIdleTimeoutMinutes = 30;
+
+        /// <summary>
         /// Static constructor.
         /// </summary>
         static AzureHostingManager()
@@ -2300,32 +2310,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         }
 
         /// <summary>
-        /// $hack(jefflill): Remove when no longer necessary.
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="id"></param>
-        private void Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(LoadBalancerBackendAddress address, ResourceIdentifier id)
-        {
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
-
-            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
-
-            // The property is read-only, so we need to set the backing field.
-
-            var field = address.GetType().GetField("<NetworkInterfaceIPConfiguration>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            Covenant.Assert(field != null);
-
-            if (field.GetValue(address) == null)
-            {
-                field.SetValue(address, new WritableSubResource());
-            }
-
-            address.NetworkInterfaceIPConfigurationId = id;
-        }
-
-        /// <summary>
         /// <para>
         /// Updates the load balancer and network security rules to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
@@ -2359,7 +2343,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             var frontendConfigurationData =
                 new FrontendIPConfigurationData()
                 {
-                    Name = loadbalancerFrontendName,
+                    Name            = loadbalancerFrontendName,
                     PublicIPAddress = publicAddress.Data
                 };
 
@@ -2368,55 +2352,47 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             //-----------------------------------------------------------------
             // Backend pools:
+            //
+            // Add the virtual machine NICs to the backend pools as required.
 
-            var masterBackendPoolData =
-                new BackendAddressPoolData()
+            var nicCollection          = resourceGroup.GetNetworkInterfaces();
+            var masterBackendPoolData  = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerMasterBackendName, StringComparison.InvariantCultureIgnoreCase));
+            var ingressBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
+
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
                 {
-                    Name = loadbalancerMasterBackendName
-                };
+                    var ipConfiguration        = azureVm.Nic.Data.IPConfigurations.First();
+                    var nicBackendAddressPools = ipConfiguration.LoadBalancerBackendAddressPools;
+                    var changed                = false;
 
-            var ingressBackendPoolData =
-                new BackendAddressPoolData()
-                {
-                    Name = loadbalancerIngressBackendName
-                };
+                    if (azureVm.IsMaster && !nicBackendAddressPools.Any(pool => pool.Id == masterBackendPoolData.Id))
+                    {
+                        changed = true;
 
-            foreach (var azureVm in nameToVm.Values)
-            {
-                var nicIpConfigId = azureVm.Nic.GetNetworkInterfaceIPConfigurations().First().Id;
+                        nicBackendAddressPools.Add(
+                            new BackendAddressPoolData()
+                            {
+                                Id = masterBackendPoolData.Id
+                            });
+                    }
 
-                if (azureVm.IsMaster)
-                {
-                    var backendAddress = 
-                        new LoadBalancerBackendAddress()
-                        {
-                            Name                              = azureVm.Name,
-                            // NetworkInterfaceIPConfigurationId = nicIpConfigId                                            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
-                        };
+                    if (azureVm.Metadata.Ingress && !nicBackendAddressPools.Any(pool => pool.Id == ingressBackendPoolData.Id))
+                    {
+                        changed = true;
 
-                    Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(backendAddress, nicIpConfigId);    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+                        nicBackendAddressPools.Add(
+                            new BackendAddressPoolData()
+                            {
+                                Id = ingressBackendPoolData.Id
+                            });
+                    }
 
-                    masterBackendPoolData.LoadBalancerBackendAddresses.Add(backendAddress);
-                }
-
-                if (azureVm.Metadata.Ingress)
-                {
-                    var backendAddress =
-                        new LoadBalancerBackendAddress()
-                        {
-                            Name                              = azureVm.Name,
-                            // NetworkInterfaceIPConfigurationId = nicIpConfigId                                            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
-                        };
-
-                    Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(backendAddress, nicIpConfigId);    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
-
-                    ingressBackendPoolData.LoadBalancerBackendAddresses.Add(backendAddress);
-                }
-            }
-
-            loadBalancer.Data.BackendAddressPools.Clear();
-            loadBalancer.Data.BackendAddressPools.Add(masterBackendPoolData);
-            loadBalancer.Data.BackendAddressPools.Add(ingressBackendPoolData);
+                    if (changed)
+                    {
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
+                    }
+                });
 
             //-----------------------------------------------------------------
             // Add the load balancer ingress rules and health probes.
@@ -2435,7 +2411,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     Target                = IngressRuleTarget.Neon,
                     AddressRules          = networkOptions.ManagementAddressRules,
                     IdleTcpReset          = true,
-                    TcpIdleTimeoutMinutes = 5
+                    TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
                 }
             };
 
@@ -2490,7 +2466,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             {
                 var probeName      = $"{ingressRulePrefix}{ingressRule.Name}";
                 var ruleName       = $"{ingressRulePrefix}{ingressRule.Name}";
-                var tcpIdleTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
+                var tcpIdleTimeout = Math.Min(Math.Max(minAzureTcpIdleTimeoutMinutes, ingressRule.TcpIdleTimeoutMinutes), maxAzureTcpIdleTimeoutMinutes);
                 var backendPoolId  = (string)null;
 
                 switch (ingressRule.Target)
@@ -2520,6 +2496,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         Protocol                  = ToTransportProtocol(ingressRule.Protocol),
                         FrontendPort              = ingressRule.ExternalPort,
                         BackendPort               = ingressRule.NodePort,
+                        EnableTcpReset            = ingressRule.IdleTcpReset,
                         IdleTimeoutInMinutes      = tcpIdleTimeout,
                         EnableFloatingIP          = false
                     });
@@ -2597,34 +2574,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
             loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
-
-#if DISABLED
-            // Associate the virtual machine NICs with the load balancer backend pools.
-
-            var nicCollection      = resourceGroup.GetNetworkInterfaces();
-            var backendPools       = loadBalancer.GetBackendAddressPools();
-            var masterBackendPool  = (await backendPools.GetAsync(loadbalancerMasterBackendName)).Value;
-            var ingressBackendPool = (await backendPools.GetAsync(loadbalancerIngressBackendName)).Value;
-
-            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
-                async (azureVm, cancellationToken) =>
-                {
-                    var nic             = azureVm.Nic;
-                    var ipConfiguration = nic.Data.IPConfigurations.First();
-
-                    if (azureVm.IsMaster)
-                    {
-                        ipConfiguration.LoadBalancerBackendAddressPools.Add(masterBackendPool.Data);
-                    }
-
-                    if (azureVm.Metadata.Ingress)
-                    {
-                        ipConfiguration.LoadBalancerBackendAddressPools.Add(ingressBackendPool.Data);
-                    }
-
-                    await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, primaryNicName, azureVm.Nic.Data);
-                });
-#endif
         }
 
         /// <summary>
@@ -2662,7 +2611,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 nsgSubnetData.SecurityRules.Remove(rule);
             }
 
-            // Add SSH NAT rules for each node.
+            // Add SSH NAT rules for each node.  Note that we need to do this
+            // from the individual vitrual machine NICs.
 
             foreach (var azureVm in SortedMasterThenWorkerNodes)
             {
@@ -2675,8 +2625,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     FrontendPort         = azureVm.ExternalSshPort,
                     BackendPort          = NetworkPorts.SSH,
                     EnableTcpReset       = true,
-                    IdleTimeoutInMinutes = 30,      // Maximum Azure idle timeout
-                    EnableFloatingIP     = false,
+                    IdleTimeoutInMinutes = maxAzureTcpIdleTimeoutMinutes,
+                    EnableFloatingIP     = false
                 };
 
                 natRule.BackendIPConfiguration.Name             = $"{ruleName}-nat";
@@ -2715,7 +2665,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         SourcePortRange          = "*",
                         DestinationAddressPrefix = "0.0.0.0/0",
                         DestinationPortRange     = "*",
-                        Protocol                 = SecurityRuleProtocol.Tcp
+                        Protocol                 = SecurityRuleProtocol.Tcp,
+                        Priority                 = priority++
                     });
             }
             else
@@ -2741,7 +2692,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                             SourcePortRange          = "*",
                             DestinationAddressPrefix = "0.0.0.0/0",
                             DestinationPortRange     = "*",
-                            Protocol                 = SecurityRuleProtocol.Tcp
+                            Protocol                 = SecurityRuleProtocol.Tcp,
+                            Priority                 = priority++
                         });
                 }
             }
