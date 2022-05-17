@@ -82,10 +82,6 @@ namespace Neon.Kube
     /// to a new Azure environment unknown to the current neonKUBE release or other
     /// private/internal Azure clouds.
     /// </para>
-    /// <para><see cref="Endpoint"/></para>
-    /// <para><see cref="ResourceManagerEndpoint"/></para>
-    /// <para><see cref="GraphEndpoint"/></para>
-    /// <para><see cref="ManagementEnpoint"/></para>
     /// </remarks>
     public class AzureCloudEnvironment
     {
