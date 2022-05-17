@@ -1458,7 +1458,7 @@ namespace Neon.Kube
 
             if (isConnected)
             {
-                await GetResourcesAsync();
+                await LoadResourcesAsync();
                 return;
             }
 
@@ -1488,14 +1488,14 @@ namespace Neon.Kube
 
             // Load information about any existing cluster resources.
 
-            await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Loads information about cluster related resources already provisioned to AWS.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
             await SyncContext.Clear;
 
@@ -3331,7 +3331,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
-                await UpdateLoadBalancerRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -3346,12 +3346,17 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <summary>
+        /// <para>
         /// Updates the load balancer and network ACLs to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateLoadBalancerRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
             await SyncContext.Clear;
 
