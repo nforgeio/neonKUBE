@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -61,6 +62,7 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using System.Runtime.Serialization;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Neon.Kube
 {
@@ -192,6 +194,14 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Private types
+
+        /// <summary>
+        /// Defines common resource type names used for configuring a load balancer.
+        /// </summary>
+        private static class LoadbalancerResourceTypes
+        {
+            public const string FrontendIPConfigurations = "frontendIPConfigurations";
+        }
 
         /// <summary>
         /// Relates cluster node information to an Azure VM.
@@ -813,6 +823,7 @@ namespace Neon.Kube
         private readonly string                             publicAddressName;
         private readonly string                             vnetName;
         private readonly string                             subnetName;
+        private readonly string                             primaryNicName;
         private readonly string                             proximityPlacementGroupName;
         private readonly string                             loadbalancerName;
         private readonly string                             loadbalancerFrontendName;
@@ -827,6 +838,7 @@ namespace Neon.Kube
         private IPAddress                                   clusterAddress;
         private VirtualNetworkResource                      vnet;
         private SubnetData                                  subnet;
+        private FrontendIPConfigurationResource             frontendIPConfiguration;
         private LoadBalancerResource                        loadBalancer;
         private ProximityPlacementGroupResource             proximityPlacementGroup;
         private Dictionary<string, AvailabilitySetResource> nameToAvailabilitySet;
@@ -902,8 +914,9 @@ namespace Neon.Kube
             this.publicAddressName              = GetResourceName("pip", "cluster", true);
             this.vnetName                       = GetResourceName("vnet", "cluster", true);
             this.subnetName                     = GetResourceName("snet", "cluster", true);
+            this.primaryNicName                 = "primary";
             this.proximityPlacementGroupName    = GetResourceName("ppg", "cluster", true);
-            this.loadbalancerName               = GetResourceName("lbe", "cluster", true);
+            this.loadbalancerName               = GetResourceName("lbe", "public", true);
             this.subnetNsgName                  = GetResourceName("nsg", "subnet");
             this.loadbalancerFrontendName       = "ingress";
             this.loadbalancerIngressBackendName = "ingress-nodes";
@@ -1145,7 +1158,7 @@ namespace Neon.Kube
                             break;  // Not a cluster VM
                         }
 
-                        if (!nameToVm.TryGetValue(nodeName, out var azureNode))
+                        if (!nameToVm.TryGetValue(nodeName, out var azureVm))
                         {
                             // $todo(jefflill):
                             //
@@ -1159,12 +1172,12 @@ namespace Neon.Kube
                             break;
                         }
 
-                        azureNode.Vm = vm;
+                        azureVm.Vm = vm;
 
-                        var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First(nic => nic.Primary.Value);
+                        var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
                         var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
 
-                        azureNode.Nic = await nicResource.GetAsync();
+                        azureVm.Nic = await nicResource.GetAsync();
                     }
                 },
                 quiet: true);
@@ -1200,9 +1213,9 @@ namespace Neon.Kube
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
-                        var azureNode          = nameToVm[node.Name];
-                        var vm                 = azureNode.Vm;
-                        var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
+                        var azureVm          = nameToVm[node.Name];
+                        var vm                 = azureVm.Vm;
+                        var openEBSStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEBSStorageType);
 
                         node.Status = "openebs: checking";
 
@@ -1227,7 +1240,7 @@ namespace Neon.Kube
                                     DeleteOption = DiskDeleteOptionTypes.Delete
                                 });
 
-                            azureNode.Vm = (await vm.UpdateAsync(WaitUntil.Completed, vmPatch)).Value;
+                            azureVm.Vm = (await vm.UpdateAsync(WaitUntil.Completed, vmPatch)).Value;
                         }
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
@@ -1440,14 +1453,14 @@ namespace Neon.Kube
 
             // Load references to any existing cluster resources.
 
-            await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Retrieves references to any cluster resources.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
             await SyncContext.Clear;
 
@@ -1543,7 +1556,7 @@ namespace Neon.Kube
                 azureVm.Vm                  = vm;
                 azureVm.AvailabilitySetName = (await azure.GetAvailabilitySetResource(vm.Data.AvailabilitySetId).GetAsync()).Value.Data.Name;
 
-                var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First(nic => nic.Primary.Value);
+                var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
                 var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
 
                 azureVm.Nic                 = await nicResource.GetAsync();
@@ -1842,18 +1855,18 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            foreach (var azureNode in nameToVm.Values)
+            foreach (var azureVm in nameToVm.Values)
             {
-                azureNode.AvailabilitySetName = GetResourceName("avail", azureNode.Metadata.Labels.PhysicalAvailabilitySet);
+                azureVm.AvailabilitySetName = GetResourceName("avail", azureVm.Metadata.Labels.PhysicalAvailabilitySet);
 
-                if (nameToAvailabilitySet.ContainsKey(azureNode.AvailabilitySetName))
+                if (nameToAvailabilitySet.ContainsKey(azureVm.AvailabilitySetName))
                 {
                     continue;   // The availability set already exists.
                 }
 
                 // Create the availability set.
 
-                controller.SetGlobalStepStatus($"create: availability set: {azureNode.AvailabilitySetName}");
+                controller.SetGlobalStepStatus($"create: availability set: {azureVm.AvailabilitySetName}");
 
                 var availabilitySetCollection = resourceGroup.GetAvailabilitySets();
                 var availabilitySetData       =
@@ -1869,9 +1882,9 @@ namespace Neon.Kube
                     availabilitySetData.ProximityPlacementGroupId = proximityPlacementGroup.Id;
                 }
 
-                var availabilitySet = (await availabilitySetCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureNode.AvailabilitySetName, WithTags(availabilitySetData))).Value;
+                var availabilitySet = (await availabilitySetCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.AvailabilitySetName, WithTags(availabilitySetData))).Value;
 
-                nameToAvailabilitySet.Add(azureNode.AvailabilitySetName, availabilitySet);
+                nameToAvailabilitySet.Add(azureVm.AvailabilitySetName, availabilitySet);
             }
         }
 
@@ -2092,47 +2105,47 @@ namespace Neon.Kube
 
             await LoadVmSizeMetadataAsync();
 
-            var azureNode = nameToVm[node.Name];
+            var azureVm = nameToVm[node.Name];
 
-            if (azureNode.Vm != null)
+            if (azureVm.Vm != null)
             {
                 // The VM already exists.
 
                 return;
             }
 
-            if (!nameToVmSku.TryGetValue(azureNode.VmSize, out var vmSku))
+            if (!nameToVmSku.TryGetValue(azureVm.VmSize, out var vmSku))
             {
-                throw new NeonKubeException($"VM size [{azureNode.VmSize}] is not available at [{region}]."); 
+                throw new NeonKubeException($"VM size [{azureVm.VmSize}] is not available at [{region}].");
             }
 
             node.Status = "create: NIC";
 
             var nicCollection = resourceGroup.GetNetworkInterfaces();
-            var nicData       = new NetworkInterfaceData()
+            var nicData = new NetworkInterfaceData()
             {
-                 Location                    = azureLocation,
-                 NicType                     = NetworkInterfaceNicType.Standard,
-                 NetworkSecurityGroup        = subnetNsg.Data,
-                 EnableAcceleratedNetworking = vmSku.AcceleratedNetworking
+                Location                    = azureLocation,
+                NicType                     = NetworkInterfaceNicType.Standard,
+                NetworkSecurityGroup        = subnetNsg.Data,
+                EnableAcceleratedNetworking = vmSku.AcceleratedNetworking
             };
 
             nicData.IPConfigurations.Add(
                 new NetworkInterfaceIPConfigurationData()
                 {
-                    Name                      = "primary",
+                    Name                      = primaryNicName,
                     Primary                   = true,
                     Subnet                    = subnet,
-                    PrivateIPAddress          = azureNode.Address,
+                    PrivateIPAddress          = azureVm.Address,
                     PrivateIPAllocationMethod = IPAllocationMethod.Static
                 });
 
-            azureNode.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureNode.Node.Name), WithNetworkTags(nicData))).Value;
+            azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureVm.Node.Name), WithNetworkTags(nicData))).Value;
 
             node.Status = "create: virtual machine";
 
             var clusterLogin         = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var azureNodeOptions     = azureNode.Node.Metadata.Azure;
+            var azureNodeOptions     = azureVm.Node.Metadata.Azure;
             var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
             var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
             var diskSize             = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
@@ -2185,7 +2198,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             {
                 HardwareProfile = new HardwareProfile()
                 {
-                    VmSize = azureNode.VmSize 
+                    VmSize = azureVm.VmSize
                 },
                 OSProfile = new OSProfile()
                 {
@@ -2195,11 +2208,11 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 },
                 NetworkProfile    = new NetworkProfile(),
                 StorageProfile    = new StorageProfile(),
-                AvailabilitySetId = nameToAvailabilitySet[azureNode.AvailabilitySetName].Id,
+                AvailabilitySetId = nameToAvailabilitySet[azureVm.AvailabilitySetName].Id,
                 UserData          = encodedBootScript
             };
 
-            virtualMachineData.NetworkProfile.NetworkInterfaces.Add(new NetworkInterfaceReference() { Id = azureNode.Nic.Id });
+            virtualMachineData.NetworkProfile.NetworkInterfaces.Add(new NetworkInterfaceReference() { Id = azureVm.Nic.Id });
 
             if (proximityPlacementGroup != null)
             {
@@ -2207,13 +2220,13 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             }
 
             virtualMachineData.StorageProfile.ImageReference = new ImageReference()
-            { 
-                Id = nodeImageVersion.Id 
+            {
+                Id = nodeImageVersion.Id
             };
 
             virtualMachineData.StorageProfile.OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
             {
-                ManagedDisk  = new ManagedDiskParameters()
+                ManagedDisk = new ManagedDiskParameters()
                 {
                     StorageAccountType = azureOSStorageType
                 },
@@ -2238,9 +2251,13 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     });
             }
 
-            var nodeNameTag = new ResourceTag(neonNodeNameTagKey, node.Name);
+            var nodeTags = new ResourceTag[]
+            {
+                new ResourceTag(neonNodeNameTagKey, node.Name),
+                new ResourceTag(neonNodeSshPortTagKey, azureVm.ExternalSshPort.ToString()),
+            };
 
-            azureNode.Vm = (await virtualMachineCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureNode.VmName, WithTags(virtualMachineData, nodeNameTag))).Value;
+            azureVm.Vm = (await virtualMachineCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.VmName, WithTags(virtualMachineData, nodeTags))).Value;
         }
 
         /// <summary>
@@ -2255,7 +2272,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
-                await UpdateLoadBalancerRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
             if ((operations & NetworkOperations.AllowNodeSsh) != 0)
@@ -2283,33 +2300,128 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         }
 
         /// <summary>
+        /// $hack(jefflill): Remove when no longer necessary.
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="id"></param>
+        private void Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(LoadBalancerBackendAddress address, ResourceIdentifier id)
+        {
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
+
+            // The property is read-only, so we need to set the backing field.
+
+            var field = address.GetType().GetField("<NetworkInterfaceIPConfiguration>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            Covenant.Assert(field != null);
+
+            if (field.GetValue(address) == null)
+            {
+                field.SetValue(address, new WritableSubResource());
+            }
+
+            address.NetworkInterfaceIPConfigurationId = id;
+        }
+
+        /// <summary>
+        /// <para>
         /// Updates the load balancer and network security rules to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateLoadBalancerRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
             await SyncContext.Clear;
+            Covenant.Assert(loadBalancer != null, "LoadBalancer is not loaded.");
 
-            // $note(jefflill):
-            //
-            // I couldn't find any SDK documentation or examples explaining how to manage load balancers
-            // using the new SDK.  The best thing I could find is this unit test:
-            //
-            //      https://github.com/Azure/azure-sdk-for-net/blob/a613ce4a2a8ea7fed6e95b01cffdba905ba61013/sdk/network/Azure.ResourceManager.Network/tests/Tests/LoadBalancerTests.cs
-            //
-            // Unfortunately, this test seems somewhat out-of-date, but was close enough to help figure
-            // out how this works.
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var frontendCollection             = loadBalancer.GetFrontendIPConfigurations();
+            var backendCollection              = loadBalancer.GetBackendAddressPools();
+            var probeCollection                = loadBalancer.GetProbes();
 
-            var loadBalancerCollection = resourceGroup.GetLoadBalancers();
-            var loadBalancerData       = new LoadBalancerData()
+            // Ensure that we actually have some nodes labeled for ingress when the cluster
+            // defines some ingress rules and then ensure that the load balancer's backend
+            // pool includes those node VMs.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            //-----------------------------------------------------------------
+            // Frontend configuration:
+
+            var frontendConfigurationData =
+                new FrontendIPConfigurationData()
+                {
+                    Name = loadbalancerFrontendName,
+                    PublicIPAddress = publicAddress.Data
+                };
+
+            loadBalancer.Data.FrontendIPConfigurations.Clear();
+            loadBalancer.Data.FrontendIPConfigurations.Add(frontendConfigurationData);
+
+            //-----------------------------------------------------------------
+            // Backend pools:
+
+            var masterBackendPoolData =
+                new BackendAddressPoolData()
+                {
+                    Name = loadbalancerMasterBackendName
+                };
+
+            var ingressBackendPoolData =
+                new BackendAddressPoolData()
+                {
+                    Name = loadbalancerIngressBackendName
+                };
+
+            foreach (var azureVm in nameToVm.Values)
             {
-                 Location = azureLocation,
-                 Sku      = loadBalancer.Data.Sku
-            };
+                var nicIpConfigId = azureVm.Nic.GetNetworkInterfaceIPConfigurations().First().Id;
 
-            // We need to add a special ingress rule for the Kubernetes API on it's standard
+                if (azureVm.IsMaster)
+                {
+                    var backendAddress = 
+                        new LoadBalancerBackendAddress()
+                        {
+                            Name                              = azureVm.Name,
+                            // NetworkInterfaceIPConfigurationId = nicIpConfigId                                            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+                        };
+
+                    Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(backendAddress, nicIpConfigId);    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+
+                    masterBackendPoolData.LoadBalancerBackendAddresses.Add(backendAddress);
+                }
+
+                if (azureVm.Metadata.Ingress)
+                {
+                    var backendAddress =
+                        new LoadBalancerBackendAddress()
+                        {
+                            Name                              = azureVm.Name,
+                            // NetworkInterfaceIPConfigurationId = nicIpConfigId                                            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+                        };
+
+                    Hack_SetLoadBalancerBackendAddress_NetworkInterfaceIPConfigurationId(backendAddress, nicIpConfigId);    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1557
+
+                    ingressBackendPoolData.LoadBalancerBackendAddresses.Add(backendAddress);
+                }
+            }
+
+            loadBalancer.Data.BackendAddressPools.Clear();
+            loadBalancer.Data.BackendAddressPools.Add(masterBackendPoolData);
+            loadBalancer.Data.BackendAddressPools.Add(ingressBackendPoolData);
+
+            //-----------------------------------------------------------------
+            // Add the load balancer ingress rules and health probes.
+
+            // We need to add a special ingress rule for the Kubernetes API on its standard
             // port 6443 and load balance this traffic to the master nodes.
 
             var clusterRules = new IngressRule[]
@@ -2327,58 +2439,19 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 }
             };
 
-            var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
-
-            //-----------------------------------------------------------------
-            // Frontend configuration:
-
-            var frontendConfigurationData =
-                new FrontendIPConfigurationData()
-                {
-                    Name            = loadbalancerFrontendName,
-                    PublicIPAddress = publicAddress.Data,
-                    Subnet          = vnet.Data.Subnets[0]
-                };
-
-            loadBalancerData.FrontendIPConfigurations.Add(frontendConfigurationData);
-
-            //-----------------------------------------------------------------
-            // Backend pools:
-
-            // Ensure that we actually have some nodes marked for ingress when the cluster
-            // defines some ingress rules and then ensure that the load balancer's backend
-            // pool includes those node VMs.
-
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
-
-            // Create the backend pools.
-
-            var masterBackendPoolData =
-                new BackendAddressPoolData()
-                {
-                    Name = loadbalancerMasterBackendName
-                };
-
-            var ingressBackendPoolData =
-                new BackendAddressPoolData()
-                {
-                    Name = loadbalancerIngressBackendName
-                };
-
-            loadBalancerData.BackendAddressPools.Add(masterBackendPoolData);
-            loadBalancerData.BackendAddressPools.Add(ingressBackendPoolData);
-
-            //-----------------------------------------------------------------
-            // Add the load balancer ingress rules and health probes.
-
+            var ingressRules       = networkOptions.IngressRules.Union(clusterRules).ToArray();
             var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
+
+            // Create a probe for each ingress rule.
+
+            loadBalancer.Data.Probes.Clear();
 
             foreach (var ingressRule in ingressRules)
             {
                 var probeName   = $"{ingressRulePrefix}{ingressRule.Name}";
                 var healthCheck = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
-                loadBalancerData.Probes.Add(
+                loadBalancer.Data.Probes.Add(
                     new ProbeData()
                     {
                         Name              = probeName,
@@ -2387,21 +2460,49 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         IntervalInSeconds = healthCheck.IntervalSeconds,
                         NumberOfProbes    = healthCheck.ThresholdCount
                     });
+            }
 
+            // We need to update the load balancer so we can obtain the IDs for the frontend, the
+            // backend pools, as well as the health probes for each ingress rule.
+
+            var nameToFrontEndId    = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToBackEndPoolId = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToProbeId       = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, loadBalancer.Data)).Value;
+
+            foreach (var frontEnd in loadBalancer.Data.FrontendIPConfigurations)
+            {
+                nameToFrontEndId.Add(frontEnd.Name, frontEnd.Id);
+            }
+
+            foreach (var backEndPool in loadBalancer.Data.BackendAddressPools)
+            {
+                nameToBackEndPoolId.Add(backEndPool.Name, backEndPool.Id);
+            }
+
+            foreach (var probe in loadBalancer.Data.Probes)
+            {
+                nameToProbeId.Add(probe.Name, probe.Id);
+            }
+
+            foreach (var ingressRule in ingressRules)
+            {
+                var probeName      = $"{ingressRulePrefix}{ingressRule.Name}";
                 var ruleName       = $"{ingressRulePrefix}{ingressRule.Name}";
                 var tcpIdleTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
-                var backendName    = (string)null;
+                var backendPoolId  = (string)null;
 
                 switch (ingressRule.Target)
                 {
                     case IngressRuleTarget.User:
 
-                        backendName = loadbalancerIngressBackendName;
+                        backendPoolId = nameToBackEndPoolId[loadbalancerIngressBackendName];
                         break;
 
                     case IngressRuleTarget.Neon:
 
-                        backendName = loadbalancerMasterBackendName;
+                        backendPoolId = nameToBackEndPoolId[loadbalancerMasterBackendName];
                         break;
 
                     default:
@@ -2409,13 +2510,13 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         throw new NotImplementedException();
                 }
 
-                loadBalancerData.LoadBalancingRules.Add(
+                loadBalancer.Data.LoadBalancingRules.Add(
                     new LoadBalancingRuleData()
                     {
                         Name                      = ruleName,
-                        FrontendIPConfigurationId = GetChildLoadBalancerResourceId("frontendIPConfigurations", loadbalancerFrontendName),
-                        BackendAddressPoolId      = GetChildLoadBalancerResourceId("backendAddressPools", backendName),
-                        ProbeId                   = GetChildLoadBalancerResourceId("probes", probeName),
+                        FrontendIPConfigurationId = new ResourceIdentifier(nameToFrontEndId.Values.First()),
+                        BackendAddressPoolId      = new ResourceIdentifier(backendPoolId),
+                        ProbeId                   = new ResourceIdentifier(nameToProbeId[probeName]),
                         Protocol                  = ToTransportProtocol(ingressRule.Protocol),
                         FrontendPort              = ingressRule.ExternalPort,
                         BackendPort               = ingressRule.NodePort,
@@ -2435,9 +2536,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
-            var nsgSubnetData                  = new NetworkSecurityGroupData() { Location = azureLocation };
-            var priority                       = firstIngressNsgRulePriority;
+            var nsgSubnetData = new NetworkSecurityGroupData() { Location = azureLocation };
+            var priority      = firstIngressNsgRulePriority;
 
             foreach (var ingressRule in ingressRules)
             {
@@ -2493,10 +2593,38 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 }
             }
 
-            // Apply the updates.
+            // Update the load balancer and subnet security group.
 
             subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
-            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
+
+#if DISABLED
+            // Associate the virtual machine NICs with the load balancer backend pools.
+
+            var nicCollection      = resourceGroup.GetNetworkInterfaces();
+            var backendPools       = loadBalancer.GetBackendAddressPools();
+            var masterBackendPool  = (await backendPools.GetAsync(loadbalancerMasterBackendName)).Value;
+            var ingressBackendPool = (await backendPools.GetAsync(loadbalancerIngressBackendName)).Value;
+
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
+                {
+                    var nic             = azureVm.Nic;
+                    var ipConfiguration = nic.Data.IPConfigurations.First();
+
+                    if (azureVm.IsMaster)
+                    {
+                        ipConfiguration.LoadBalancerBackendAddressPools.Add(masterBackendPool.Data);
+                    }
+
+                    if (azureVm.Metadata.Ingress)
+                    {
+                        ipConfiguration.LoadBalancerBackendAddressPools.Add(ingressBackendPool.Data);
+                    }
+
+                    await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, primaryNicName, azureVm.Nic.Data);
+                });
+#endif
         }
 
         /// <summary>
@@ -2536,15 +2664,15 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             // Add SSH NAT rules for each node.
 
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
+            foreach (var azureVm in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
 
                 var natRule = new InboundNatRuleData()
                 {
                     Name                 = ruleName,
                     Protocol             = TransportProtocol.Tcp,
-                    FrontendPort         = azureNode.ExternalSshPort,
+                    FrontendPort         = azureVm.ExternalSshPort,
                     BackendPort          = NetworkPorts.SSH,
                     EnableTcpReset       = true,
                     IdleTimeoutInMinutes = 30,      // Maximum Azure idle timeout
@@ -2553,7 +2681,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 natRule.BackendIPConfiguration.Name             = $"{ruleName}-nat";
                 natRule.BackendIPConfiguration.Primary          = true;
-                natRule.BackendIPConfiguration.PrivateIPAddress = azureNode.Address;
+                natRule.BackendIPConfiguration.PrivateIPAddress = azureVm.Address;
                 natRule.BackendIPConfiguration.Subnet           = subnet;
 
                 loadBalancerData.InboundNatRules.Add(natRule);
