@@ -2504,7 +2504,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
-            // This is possible because NSGs rules allow a comma separated list of IP addresses
+            // This is possible because NSG rules allow a comma separated list of IP addresses
             // or subnets to be specified.
             //
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
@@ -2593,38 +2593,53 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             var nicCollection                  = resourceGroup.GetNetworkInterfaces();
             var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
 
-            // Add SSH NAT rules for each node.  Note that we need to do this
-            // from the individual virtual machine NICs.
+            // Add SSH NAT rules for each node.  We need to do this in two stes:
+            //
+            //      1. Create the inbound NAT rules on the load balancer (if they don't already exist)
+            //
+            //      2. Iterate through the virtual machine NICs and add the associated rule ID to
+            //         each NIC's frontend configuration.
 
             var ingressBackendPool = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
             var inboundNatRules    = loadBalancer.Data.InboundNatRules;
 
-            await Parallel.ForEachAsync(SortedMasterThenWorkerNodes, parallelOptions,
-                async (azureVm, cancellationToken) =>
+            foreach (var azureVm in nameToVm.Values)
+            {
+                var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
+
+                // Add the SSH NAT rule if it doesn't already exist.
+
+                if (!loadBalancer.Data.InboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    var ingressBackendPool = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
-                    var ipConfiguration    = azureVm.Nic.Data.IPConfigurations.First();
-                    var ruleName           = $"{publicSshRulePrefix}{azureVm.Name}";
-
-                    // Add the SSH NAT rule if it doesn't already exist.
-
-                    if (!ipConfiguration.LoadBalancerInboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
-                    {
-                        var ruleData = new InboundNatRuleData()
+                    loadBalancer.Data.InboundNatRules.Add(
+                        new InboundNatRuleData()
                         {
                             Name                      = ruleName,
-                            FrontendIPConfigurationId = new ResourceIdentifier(ipConfiguration.Id),
+                            FrontendIPConfigurationId = new ResourceIdentifier(loadBalancer.Data.FrontendIPConfigurations.Single().Id),
                             Protocol                  = TransportProtocol.Tcp,
                             FrontendPort              = azureVm.ExternalSshPort,
                             BackendPort               = NetworkPorts.SSH,
                             EnableTcpReset            = true,
                             IdleTimeoutInMinutes      = maxAzureTcpIdleTimeoutMinutes,
                             EnableFloatingIP          = false
-                        };
+                        });
+                }
+            }
 
-                        ipConfiguration.LoadBalancerInboundNatRules.Add(ruleData);
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, loadBalancer.Data)).Value;
 
-                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
+                {
+                    var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
+                    var ruleName          = $"{publicSshRulePrefix}{azureVm.Name}";
+                    var rule              = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
+
+                    if (rule != null && !vmIpConfiguration.LoadBalancerInboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        vmIpConfiguration.LoadBalancerInboundNatRules.Add(rule);
+
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Name, azureVm.Nic.Data)).Value;
                     }
                 });
 
@@ -2634,7 +2649,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // To keep things simple, we're going to generate a separate rule for each source
             // address restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
-            // This would be possible because NSGs rules allow a comma separated list of IP addresses
+            // This would be possible because NSG rules allow a comma separated list of IP addresses
             // or subnets to be specified.
 
             var priority  = firstSshNsgRulePriority;
