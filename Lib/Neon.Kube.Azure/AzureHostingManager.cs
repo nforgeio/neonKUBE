@@ -2338,19 +2338,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             //-----------------------------------------------------------------
-            // Frontend configuration:
-
-            var frontendConfigurationData =
-                new FrontendIPConfigurationData()
-                {
-                    Name            = loadbalancerFrontendName,
-                    PublicIPAddress = publicAddress.Data
-                };
-
-            loadBalancer.Data.FrontendIPConfigurations.Clear();
-            loadBalancer.Data.FrontendIPConfigurations.Add(frontendConfigurationData);
-
-            //-----------------------------------------------------------------
             // Backend pools:
             //
             // Add the virtual machine NICs to the backend pools as required.
@@ -2394,6 +2381,10 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     }
                 });
 
+            // Reload the load balancer to pick up the changes.
+
+            loadBalancer = await loadBalancer.GetAsync();
+
             //-----------------------------------------------------------------
             // Add the load balancer ingress rules and health probes.
 
@@ -2427,15 +2418,18 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 var probeName   = $"{ingressRulePrefix}{ingressRule.Name}";
                 var healthCheck = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
-                loadBalancer.Data.Probes.Add(
-                    new ProbeData()
-                    {
-                        Name              = probeName,
-                        Protocol          = ProbeProtocol.Tcp,
-                        Port              = ingressRule.NodePort,
-                        IntervalInSeconds = healthCheck.IntervalSeconds,
-                        NumberOfProbes    = healthCheck.ThresholdCount
-                    });
+                if (!loadBalancer.Data.Probes.Any(probe => probe.Name.Equals(probeName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    loadBalancer.Data.Probes.Add(
+                        new ProbeData()
+                        {
+                            Name              = probeName,
+                            Protocol          = ProbeProtocol.Tcp,
+                            Port              = ingressRule.NodePort,
+                            IntervalInSeconds = healthCheck.IntervalSeconds,
+                            NumberOfProbes    = healthCheck.ThresholdCount
+                        });
+                }
             }
 
             // We need to update the load balancer so we can obtain the IDs for the frontend, the
@@ -2486,20 +2480,23 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         throw new NotImplementedException();
                 }
 
-                loadBalancer.Data.LoadBalancingRules.Add(
-                    new LoadBalancingRuleData()
-                    {
-                        Name                      = ruleName,
-                        FrontendIPConfigurationId = new ResourceIdentifier(nameToFrontEndId.Values.First()),
-                        BackendAddressPoolId      = new ResourceIdentifier(backendPoolId),
-                        ProbeId                   = new ResourceIdentifier(nameToProbeId[probeName]),
-                        Protocol                  = ToTransportProtocol(ingressRule.Protocol),
-                        FrontendPort              = ingressRule.ExternalPort,
-                        BackendPort               = ingressRule.NodePort,
-                        EnableTcpReset            = ingressRule.IdleTcpReset,
-                        IdleTimeoutInMinutes      = tcpIdleTimeout,
-                        EnableFloatingIP          = false
-                    });
+                if (!loadBalancer.Data.LoadBalancingRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    loadBalancer.Data.LoadBalancingRules.Add(
+                        new LoadBalancingRuleData()
+                        {
+                            Name                      = ruleName,
+                            FrontendIPConfigurationId = new ResourceIdentifier(nameToFrontEndId.Values.First()),
+                            BackendAddressPoolId      = new ResourceIdentifier(backendPoolId),
+                            ProbeId                   = new ResourceIdentifier(nameToProbeId[probeName]),
+                            Protocol                  = ToTransportProtocol(ingressRule.Protocol),
+                            FrontendPort              = ingressRule.ExternalPort,
+                            BackendPort               = ingressRule.NodePort,
+                            EnableTcpReset            = ingressRule.IdleTcpReset,
+                            IdleTimeoutInMinutes      = tcpIdleTimeout,
+                            EnableFloatingIP          = false
+                        });
+                }
             }
 
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
@@ -2513,7 +2510,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var nsgSubnetData = new NetworkSecurityGroupData() { Location = azureLocation };
+            var subnetNsgData = new NetworkSecurityGroupData() { Location = azureLocation };
             var priority      = firstIngressNsgRulePriority;
 
             foreach (var ingressRule in ingressRules)
@@ -2526,19 +2523,22 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                     var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
 
-                    nsgSubnetData.SecurityRules.Add(
-                        new SecurityRuleData()
-                        {
-                            Name                     = ruleName,
-                            Access                   = SecurityRuleAccess.Allow,
-                            Direction                = SecurityRuleDirection.Inbound,
-                            SourceAddressPrefix      = "0.0.0.0/0",
-                            SourcePortRange          = "*",
-                            DestinationAddressPrefix = "0.0.0.0/0",
-                            DestinationPortRange     = ingressRule.NodePort.ToString(),
-                            Protocol                 = ruleProtocol,
-                            Priority                 = priority++
-                        });
+                    if (!subnetNsgData.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        subnetNsgData.SecurityRules.Add(
+                            new SecurityRuleData()
+                            {
+                                Name                     = ruleName,
+                                Access                   = SecurityRuleAccess.Allow,
+                                Direction                = SecurityRuleDirection.Inbound,
+                                SourceAddressPrefix      = "0.0.0.0/0",
+                                SourcePortRange          = "*",
+                                DestinationAddressPrefix = "0.0.0.0/0",
+                                DestinationPortRange     = ingressRule.NodePort.ToString(),
+                                Protocol                 = ruleProtocol,
+                                Priority                 = priority++
+                            });
+                    }
                 }
                 else
                 {
@@ -2553,26 +2553,29 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         var multipleAddresses = ingressRule.AddressRules.Count > 1;
                         var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}" : $"{ingressRulePrefix}{ingressRule.Name}";
 
-                        nsgSubnetData.SecurityRules.Add(
-                            new SecurityRuleData() 
-                            { 
-                                Name                     = ruleName, 
-                                Direction                = SecurityRuleDirection.Inbound,
-                                Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
-                                SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
-                                SourcePortRange          = "*",
-                                DestinationAddressPrefix = "0.0.0.0/0",
-                                DestinationPortRange     = ingressRule.NodePort.ToString(),
-                                Protocol                 = ruleProtocol,
-                                Priority                 = priority++ 
-                            });
+                        if (!subnetNsgData.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            subnetNsgData.SecurityRules.Add(
+                                new SecurityRuleData() 
+                                { 
+                                    Name                     = ruleName, 
+                                    Direction                = SecurityRuleDirection.Inbound,
+                                    Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                                    SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                                    SourcePortRange          = "*",
+                                    DestinationAddressPrefix = "0.0.0.0/0",
+                                    DestinationPortRange     = ingressRule.NodePort.ToString(),
+                                    Protocol                 = ruleProtocol,
+                                    Priority                 = priority++ 
+                                });
+                        }
                     }
                 }
             }
 
             // Update the load balancer and subnet security group.
 
-            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsgData))).Value;
             loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
         }
 
@@ -2587,55 +2590,43 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await SyncContext.Clear;
 
             var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var nicCollection                  = resourceGroup.GetNetworkInterfaces();
             var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
-            var loadBalancerData               = loadBalancer.Data;
-            var nsgSubnetData                  = subnetNsg.Data;
-
-            // Remove all existing SSH related load balancer NAT and NSG rules.
-
-            var natDeleteRules = loadBalancerData.InboundNatRules
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
-                .ToArray();
-
-            foreach (var rule in natDeleteRules)
-            {
-                loadBalancerData.InboundNatRules.Remove(rule);
-            }
-
-            var nsgDeleteRules = nsgSubnetData.SecurityRules
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
-                .ToArray();
-
-            foreach (var rule in nsgDeleteRules)
-            {
-                nsgSubnetData.SecurityRules.Remove(rule);
-            }
 
             // Add SSH NAT rules for each node.  Note that we need to do this
-            // from the individual vitrual machine NICs.
+            // from the individual virtual machine NICs.
 
-            foreach (var azureVm in SortedMasterThenWorkerNodes)
-            {
-                var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
+            var ingressBackendPool = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
+            var inboundNatRules    = loadBalancer.Data.InboundNatRules;
 
-                var natRule = new InboundNatRuleData()
+            await Parallel.ForEachAsync(SortedMasterThenWorkerNodes, parallelOptions,
+                async (azureVm, cancellationToken) =>
                 {
-                    Name                 = ruleName,
-                    Protocol             = TransportProtocol.Tcp,
-                    FrontendPort         = azureVm.ExternalSshPort,
-                    BackendPort          = NetworkPorts.SSH,
-                    EnableTcpReset       = true,
-                    IdleTimeoutInMinutes = maxAzureTcpIdleTimeoutMinutes,
-                    EnableFloatingIP     = false
-                };
+                    var ingressBackendPool = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
+                    var ipConfiguration    = azureVm.Nic.Data.IPConfigurations.First();
+                    var ruleName           = $"{publicSshRulePrefix}{azureVm.Name}";
 
-                natRule.BackendIPConfiguration.Name             = $"{ruleName}-nat";
-                natRule.BackendIPConfiguration.Primary          = true;
-                natRule.BackendIPConfiguration.PrivateIPAddress = azureVm.Address;
-                natRule.BackendIPConfiguration.Subnet           = subnet;
+                    // Add the SSH NAT rule if it doesn't already exist.
 
-                loadBalancerData.InboundNatRules.Add(natRule);
-            }
+                    if (!ipConfiguration.LoadBalancerInboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        var ruleData = new InboundNatRuleData()
+                        {
+                            Name                      = ruleName,
+                            FrontendIPConfigurationId = new ResourceIdentifier(ipConfiguration.Id),
+                            Protocol                  = TransportProtocol.Tcp,
+                            FrontendPort              = azureVm.ExternalSshPort,
+                            BackendPort               = NetworkPorts.SSH,
+                            EnableTcpReset            = true,
+                            IdleTimeoutInMinutes      = maxAzureTcpIdleTimeoutMinutes,
+                            EnableFloatingIP          = false
+                        };
+
+                        ipConfiguration.LoadBalancerInboundNatRules.Add(ruleData);
+
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
+                    }
+                });
 
             // Add NSG rules so that the public Kubernetes API and SSH NAT rules can actually route
             // traffic to the nodes.
@@ -2655,19 +2646,22 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 var ruleName = $"{publicSshRulePrefix}{ruleIndex++}";
 
-                nsgSubnetData.SecurityRules.Add(
-                    new SecurityRuleData()
-                    {
-                        Name                     = ruleName,
-                        Access                   = SecurityRuleAccess.Allow,
-                        Direction                = SecurityRuleDirection.Inbound,
-                        SourceAddressPrefix      = "0.0.0.0/0",
-                        SourcePortRange          = "*",
-                        DestinationAddressPrefix = "0.0.0.0/0",
-                        DestinationPortRange     = "*",
-                        Protocol                 = SecurityRuleProtocol.Tcp,
-                        Priority                 = priority++
-                    });
+                if (!subnetNsg.Data.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    subnetNsg.Data.SecurityRules.Add(
+                        new SecurityRuleData()
+                        {
+                            Name                     = ruleName,
+                            Access                   = SecurityRuleAccess.Allow,
+                            Direction                = SecurityRuleDirection.Inbound,
+                            SourceAddressPrefix      = "0.0.0.0/0",
+                            SourcePortRange          = "*",
+                            DestinationAddressPrefix = "0.0.0.0/0",
+                            DestinationPortRange     = "*",
+                            Protocol                 = SecurityRuleProtocol.Tcp,
+                            Priority                 = priority++
+                        });
+                }
             }
             else
             {
@@ -2682,26 +2676,29 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
                     var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{ruleIndex++}-{addressRuleIndex++}" : $"{publicSshRulePrefix}{ruleIndex++}";
 
-                    nsgSubnetData.SecurityRules.Add(
-                        new SecurityRuleData()
-                        {
-                            Name                     = ruleName,
-                            Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
-                            Direction                = SecurityRuleDirection.Inbound,
-                            SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
-                            SourcePortRange          = "*",
-                            DestinationAddressPrefix = "0.0.0.0/0",
-                            DestinationPortRange     = "*",
-                            Protocol                 = SecurityRuleProtocol.Tcp,
-                            Priority                 = priority++
-                        });
+                    if (!subnetNsg.Data.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        subnetNsg.Data.SecurityRules.Add(
+                            new SecurityRuleData()
+                            {
+                                Name                     = ruleName,
+                                Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                                Direction                = SecurityRuleDirection.Inbound,
+                                SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                                SourcePortRange          = "*",
+                                DestinationAddressPrefix = "0.0.0.0/0",
+                                DestinationPortRange     = "*",
+                                Protocol                 = SecurityRuleProtocol.Tcp,
+                                Priority                 = priority++
+                            });
+                    }
                 }
             }
 
             // Apply the updates.
 
-            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
-            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsg.Data))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
         }
 
         /// <summary>
@@ -2716,33 +2713,34 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
             var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
-            var loadBalancerData               = loadBalancer.Data;
-            var nsgSubnetData                  = subnetNsg.Data;
 
             // Remove all existing SSH related load balancer NAT and NSG rules.
 
-            var natDeleteRules = loadBalancerData.InboundNatRules
+            var natDeleteRules = loadBalancer.Data.InboundNatRules
                 .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
                 .ToArray();
 
             foreach (var rule in natDeleteRules)
             {
-                loadBalancerData.InboundNatRules.Remove(rule);
+                loadBalancer.Data.InboundNatRules.Remove(rule);
             }
 
-            var nsgDeleteRules = nsgSubnetData.SecurityRules
+            var nsgDeleteRules = subnetNsg.Data.SecurityRules
                 .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
                 .ToArray();
 
-            foreach (var rule in nsgDeleteRules)
+            if (nsgDeleteRules.Length > 0)
             {
-                nsgSubnetData.SecurityRules.Remove(rule);
+                foreach (var rule in nsgDeleteRules)
+                {
+                    subnetNsg.Data.SecurityRules.Remove(rule);
+                }
+
+                // Apply the changes.
+
+                subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsg.Data))).Value;
+                loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
             }
-
-            // Apply the changes.
-
-            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgSubnetData))).Value;
-            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
         }
 
         //---------------------------------------------------------------------
