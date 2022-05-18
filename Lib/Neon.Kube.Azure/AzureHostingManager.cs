@@ -2532,7 +2532,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                 Direction                = SecurityRuleDirection.Inbound,
                                 SourceAddressPrefix      = "0.0.0.0/0",
                                 SourcePortRange          = "*",
-                                DestinationAddressPrefix = "0.0.0.0/0",
+                                DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
                                 DestinationPortRange     = ingressRule.NodePort.ToString(),
                                 Protocol                 = ruleProtocol,
                                 Priority                 = priority++
@@ -2562,7 +2562,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                     Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
                                     SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
                                     SourcePortRange          = "*",
-                                    DestinationAddressPrefix = "0.0.0.0/0",
+                                    DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
                                     DestinationPortRange     = ingressRule.NodePort.ToString(),
                                     Protocol                 = ruleProtocol,
                                     Priority                 = priority++ 
@@ -2670,7 +2670,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                             Direction                = SecurityRuleDirection.Inbound,
                             SourceAddressPrefix      = "0.0.0.0/0",
                             SourcePortRange          = "*",
-                            DestinationAddressPrefix = "0.0.0.0/0",
+                            DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
                             DestinationPortRange     = "*",
                             Protocol                 = SecurityRuleProtocol.Tcp,
                             Priority                 = priority++
@@ -2700,7 +2700,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                 Direction                = SecurityRuleDirection.Inbound,
                                 SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
                                 SourcePortRange          = "*",
-                                DestinationAddressPrefix = "0.0.0.0/0",
+                                DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
                                 DestinationPortRange     = "*",
                                 Protocol                 = SecurityRuleProtocol.Tcp,
                                 Priority                 = priority++
