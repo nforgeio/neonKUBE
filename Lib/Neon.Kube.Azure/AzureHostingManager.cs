@@ -29,6 +29,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -61,8 +62,6 @@ using Neon.Time;
 
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
-using System.Runtime.Serialization;
-using Azure.ResourceManager.Resources.Models;
 
 namespace Neon.Kube
 {
@@ -2132,7 +2131,7 @@ namespace Neon.Kube
             node.Status = "create: NIC";
 
             var nicCollection = resourceGroup.GetNetworkInterfaces();
-            var nicData = new NetworkInterfaceData()
+            var nicData       = new NetworkInterfaceData()
             {
                 Location                    = azureLocation,
                 NicType                     = NetworkInterfaceNicType.Standard,
@@ -2399,7 +2398,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     Protocol              = IngressProtocol.Tcp,
                     ExternalPort          = NetworkPorts.KubernetesApiServer,
                     NodePort              = NetworkPorts.KubernetesApiServer,
-                    Target                = IngressRuleTarget.Neon,
+                    Target                = IngressRuleTarget.Masters,
                     AddressRules          = networkOptions.ManagementAddressRules,
                     IdleTcpReset          = true,
                     TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
@@ -2465,12 +2464,12 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
                         backendPoolId = nameToBackEndPoolId[loadbalancerIngressBackendName];
                         break;
 
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
                         backendPoolId = nameToBackEndPoolId[loadbalancerMasterBackendName];
                         break;
