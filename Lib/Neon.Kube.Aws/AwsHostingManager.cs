@@ -3373,7 +3373,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApiServer,
                         NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
+                        Target                = IngressRuleTarget.Masters,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -3442,12 +3442,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
                         targetNodes = targetMasterNodes;
                         break;
 
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
                         targetNodes = targetIngressNodes;
                         break;
@@ -3543,8 +3543,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.Ingress:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;

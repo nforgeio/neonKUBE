@@ -108,11 +108,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Identifies which group of cluster nodes will receive the network traffic
-        /// from this rule.  This defaults to <see cref="IngressRuleTarget.User"/>.
+        /// from this rule.  This defaults to <see cref="IngressRuleTarget.Ingress"/>.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.User;
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.Ingress;
 
         /// <summary>
         /// <para>
