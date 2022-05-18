@@ -1310,13 +1310,13 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("AWS connect",
+            controller.AddGlobalStep("connect aws",
                 async controller =>
                 {
                     await ConnectAwsAsync(controller);
                 });
 
-            controller.AddGlobalStep("ssh: port mappings",
+            controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1343,7 +1343,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("ssh: block ingress",
+            controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
@@ -3323,7 +3323,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { vpc.VpcId },
-                        Tags = vpc.Tags
+                        Tags      = vpc.Tags
                     });
             }
 

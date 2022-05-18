@@ -847,7 +847,6 @@ namespace Neon.Kube
         private IPAddress                                   clusterAddress;
         private VirtualNetworkResource                      vnet;
         private SubnetData                                  subnet;
-        private FrontendIPConfigurationResource             frontendIPConfiguration;
         private LoadBalancerResource                        loadBalancer;
         private ProximityPlacementGroupResource             proximityPlacementGroup;
         private Dictionary<string, AvailabilitySetResource> nameToAvailabilitySet;
@@ -1265,13 +1264,13 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("AZURE connect",
+            controller.AddGlobalStep("connect azure",
                 async controller =>
                 {
                     await ConnectAzureAsync();
                 });
 
-            controller.AddGlobalStep("ssh: port mappings",
+            controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1298,7 +1297,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("ssh: block ingress",
+            controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
@@ -2286,13 +2285,13 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             if ((operations & NetworkOperations.AllowNodeSsh) != 0)
             {
-                controller.SetGlobalStepStatus("add: SSH rules");
+                controller.SetGlobalStepStatus("add ssh rules");
                 await AddSshRulesAsync();
             }
 
             if ((operations & NetworkOperations.DenyNodeSsh) != 0)
             {
-                controller.SetGlobalStepStatus("remove: SSH rules");
+                controller.SetGlobalStepStatus("remove ssh rules");
                 await RemoveSshRulesAsync();
             }
         }
@@ -2380,7 +2379,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     }
                 });
 
-            // Reload the load balancer to pick up the changes.
+            // Reload the load balancer to pick up any changes.
 
             loadBalancer = await loadBalancer.GetAsync();
 
@@ -2532,7 +2531,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                 Direction                = SecurityRuleDirection.Inbound,
                                 SourceAddressPrefix      = "0.0.0.0/0",
                                 SourcePortRange          = "*",
-                                DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
+                                DestinationAddressPrefix = subnet.AddressPrefix,
                                 DestinationPortRange     = ingressRule.NodePort.ToString(),
                                 Protocol                 = ruleProtocol,
                                 Priority                 = priority++
@@ -2562,7 +2561,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                     Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
                                     SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
                                     SourcePortRange          = "*",
-                                    DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
+                                    DestinationAddressPrefix = subnet.AddressPrefix,
                                     DestinationPortRange     = ingressRule.NodePort.ToString(),
                                     Protocol                 = ruleProtocol,
                                     Priority                 = priority++ 
@@ -2632,11 +2631,21 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 async (azureVm, cancellationToken) =>
                 {
                     var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
-                    var ruleName          = $"{publicSshRulePrefix}{azureVm.Name}";
-
+                    var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
                     var rule = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
 
-                    if (rule != null && !vmIpConfiguration.LoadBalancerInboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    if (rule != null && !vmIpConfiguration.LoadBalancerInboundNatRules
+                        .Any(rule =>
+                        {
+                            // $note(jefflill):
+                            //
+                            // Only the [rule.Id] property is set here so we need to extract the
+                            // rule name from the ID.
+
+                            var ruleId = new ResourceIdentifier(rule.Id);
+
+                            return ruleId.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase);
+                        }))
                     {
                         vmIpConfiguration.LoadBalancerInboundNatRules.Add(rule);
 
@@ -2674,7 +2683,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                             Direction                = SecurityRuleDirection.Inbound,
                             SourceAddressPrefix      = "0.0.0.0/0",
                             SourcePortRange          = "*",
-                            DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
+                            DestinationAddressPrefix = subnet.AddressPrefix,
                             DestinationPortRange     = "*",
                             Protocol                 = SecurityRuleProtocol.Tcp,
                             Priority                 = priority++
@@ -2704,7 +2713,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                                 Direction                = SecurityRuleDirection.Inbound,
                                 SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
                                 SourcePortRange          = "*",
-                                DestinationAddressPrefix = $"0.0.0.0/{NetworkPorts.SSH}",
+                                DestinationAddressPrefix = subnet.AddressPrefix,
                                 DestinationPortRange     = "*",
                                 Protocol                 = SecurityRuleProtocol.Tcp,
                                 Priority                 = priority++
