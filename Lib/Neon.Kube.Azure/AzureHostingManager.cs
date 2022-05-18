@@ -2592,15 +2592,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             var nicCollection                  = resourceGroup.GetNetworkInterfaces();
             var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
 
-            // Add SSH NAT rules for each node.  We need to do this in two stes:
+            // Add SSH NAT rules for each node.  We need to do this in two steps:
             //
             //      1. Create the inbound NAT rules on the load balancer (if they don't already exist)
             //
             //      2. Iterate through the virtual machine NICs and add the associated rule ID to
             //         each NIC's frontend configuration.
 
-            var ingressBackendPool = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
-            var inboundNatRules    = loadBalancer.Data.InboundNatRules;
+            // STEP 1: Create the inbound NAT rules on the load balancer (if they don't already exist)
 
             foreach (var azureVm in nameToVm.Values)
             {
@@ -2627,20 +2626,25 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, loadBalancer.Data)).Value;
 
+            // STEP 2: Add each inbound NAT rule to the associated VM NIC's IP configuration.
+
             await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
                     var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
                     var ruleName          = $"{publicSshRulePrefix}{azureVm.Name}";
-                    var rule              = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
+
+                    var rule = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
 
                     if (rule != null && !vmIpConfiguration.LoadBalancerInboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         vmIpConfiguration.LoadBalancerInboundNatRules.Add(rule);
 
-                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Name, azureVm.Nic.Data)).Value;
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
                     }
                 });
+
+            loadBalancer = await loadBalancer.GetAsync();   // Fetch any NAT rule updates.
 
             // Add NSG rules so that the public Kubernetes API and SSH NAT rules can actually route
             // traffic to the nodes.
