@@ -249,8 +249,8 @@ namespace Neon.Kube
         /// about the infrastructor provisioned for the cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
-        /// <returns>The <see cref="ClusterInfo"/>.</returns>
-        Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default);
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <summary>
         /// <para>

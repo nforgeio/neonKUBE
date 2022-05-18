@@ -528,7 +528,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Specifies the owner ID to use when querying for Canonical AMIs 
@@ -1196,108 +1196,108 @@ namespace Neon.Kube
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
                 controller.AddNodeStep("openebs",
-                async (controller, node) =>
-                {
-                    node.Status = "openebs: checking";
-
-                    var volumeName        = GetResourceName($"{node.Name}-openebs");
-                    var awsInstance       = nodeNameToAwsInstance[node.Name];
-                    var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-                    var volume            = (Volume)null;
-
-                    // Check if we've already created the volume.
-
-                    await foreach (var volumeItem in volumePagenator.Volumes)
+                    async (controller, node) =>
                     {
-                        if (volumeItem.State != VolumeState.Deleting && 
-                            volumeItem.State != VolumeState.Deleted &&
-                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                            volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        node.Status = "openebs: checking";
+
+                        var volumeName        = GetResourceName($"{node.Name}-openebs");
+                        var awsInstance       = nodeNameToAwsInstance[node.Name];
+                        var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                        var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+                        var volume            = (Volume)null;
+
+                        // Check if we've already created the volume.
+
+                        await foreach (var volumeItem in volumePagenator.Volumes)
                         {
-                            volume = volumeItem;
-                            break;
-                        }
-                    }
-
-                    // Create the volume if it doesn't exist.
-
-                    if (volume == null)
-                    {
-                        node.Status = "openebs: create cStor volume";
-
-                        var volumeResponse = await ec2Client.CreateVolumeAsync(
-                            new CreateVolumeRequest()
+                            if (volumeItem.State != VolumeState.Deleting && 
+                                volumeItem.State != VolumeState.Deleted &&
+                                volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                             {
-                                AvailabilityZone   = availabilityZone,
-                                VolumeType         = openEBSVolumeType,
-                                Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
-                                MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
-                            });
-
-                        volume = volumeResponse.Volume;
-                    }
-
-                    // Wait for the volume to become available.
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            node.Status = "openebs: waiting for cStor volume...";
-
-                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-
-                            await foreach (var volumeItem in volumePagenator.Volumes)
-                            {
-                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                                {
-                                    volume = volumeItem;
-                                    break;
-                                }
+                                volume = volumeItem;
+                                break;
                             }
+                        }
 
-                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
-                        },
-                        timeout:      operationTimeout,
-                        pollInterval: operationPollInternal);
+                        // Create the volume if it doesn't exist.
 
-                    // Attach the volume to the VM if it's not already attached.
-
-                    if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
-                    {
-                        await ec2Client.AttachVolumeAsync(
-                            new AttachVolumeRequest()
-                            {
-                                VolumeId   = volume.VolumeId,
-                                InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName,
-                            });
-                    }
-
-                    // AWS defaults to deleting volumes on termination only for the
-                    // volumes created along with the new instance.  We want the 
-                    // OpenEBS cStor volume to be deleted as well.
-
-                    await ec2Client.ModifyInstanceAttributeAsync(
-                        new ModifyInstanceAttributeRequest()
+                        if (volume == null)
                         {
-                            InstanceId          = awsInstance.InstanceId,
-                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
-                            {
-                                new InstanceBlockDeviceMappingSpecification()
+                            node.Status = "openebs: create cStor volume";
+
+                            var volumeResponse = await ec2Client.CreateVolumeAsync(
+                                new CreateVolumeRequest()
                                 {
-                                    DeviceName = openEBSDeviceName,
-                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    AvailabilityZone   = availabilityZone,
+                                    VolumeType         = openEBSVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    MultiAttachEnabled = false,
+                                    TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
+                                });
+
+                            volume = volumeResponse.Volume;
+                        }
+
+                        // Wait for the volume to become available.
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                node.Status = "openebs: waiting for cStor volume...";
+
+                                var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+
+                                await foreach (var volumeItem in volumePagenator.Volumes)
+                                {
+                                    if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                        volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                                     {
-                                        DeleteOnTermination = true,
+                                        volume = volumeItem;
+                                        break;
                                     }
                                 }
-                            }
-                        });
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+
+                                return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
+                            },
+                            timeout:      operationTimeout,
+                            pollInterval: operationPollInternal);
+
+                        // Attach the volume to the VM if it's not already attached.
+
+                        if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
+                        {
+                            await ec2Client.AttachVolumeAsync(
+                                new AttachVolumeRequest()
+                                {
+                                    VolumeId   = volume.VolumeId,
+                                    InstanceId = awsInstance.InstanceId,
+                                    Device     = openEBSDeviceName,
+                                });
+                        }
+
+                        // AWS defaults to deleting volumes on termination only for the
+                        // volumes created along with the new instance.  We want the 
+                        // OpenEBS cStor volume to be deleted as well.
+
+                        await ec2Client.ModifyInstanceAttributeAsync(
+                            new ModifyInstanceAttributeRequest()
+                            {
+                                InstanceId          = awsInstance.InstanceId,
+                                BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                                {
+                                    new InstanceBlockDeviceMappingSpecification()
+                                    {
+                                        DeviceName = openEBSDeviceName,
+                                        Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                        {
+                                            DeleteOnTermination = true,
+                                        }
+                                    }
+                                }
+                            });
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
             }
         }
 
@@ -1310,13 +1310,13 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("AWS connect",
+            controller.AddGlobalStep("connect aws",
                 async controller =>
                 {
                     await ConnectAwsAsync(controller);
                 });
 
-            controller.AddGlobalStep("ssh: port mappings",
+            controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1343,7 +1343,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("ssh: block ingress",
+            controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
@@ -1458,7 +1458,7 @@ namespace Neon.Kube
 
             if (isConnected)
             {
-                await GetResourcesAsync();
+                await LoadResourcesAsync();
                 return;
             }
 
@@ -1488,14 +1488,14 @@ namespace Neon.Kube
 
             // Load information about any existing cluster resources.
 
-            await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Loads information about cluster related resources already provisioned to AWS.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
             await SyncContext.Clear;
 
@@ -3323,7 +3323,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { vpc.VpcId },
-                        Tags = vpc.Tags
+                        Tags      = vpc.Tags
                     });
             }
 
@@ -3331,7 +3331,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -3346,12 +3346,17 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <summary>
+        /// <para>
         /// Updates the load balancer and network ACLs to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
             await SyncContext.Clear;
 
@@ -3368,7 +3373,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApiServer,
                         NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
+                        Target                = IngressRuleTarget.Masters,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -3437,12 +3442,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
                         targetNodes = targetMasterNodes;
                         break;
 
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
                         targetNodes = targetIngressNodes;
                         break;
@@ -3538,8 +3543,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.Ingress:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;
@@ -3836,12 +3841,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
         }
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterInfo(cluster.Definition);
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {

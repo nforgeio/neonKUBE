@@ -28,6 +28,7 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 
 using StockLeaderElector        = k8s.LeaderElection.LeaderElector;
 using StockLeaderElectionConfig = k8s.LeaderElection.LeaderElectionConfig;
@@ -246,6 +247,7 @@ namespace Neon.Kube
         /// <exception cref="ObjectDisposedException">Thrown when the instance is disposed.</exception>
         public async Task RunAsync()
         {
+            await SyncContext.Clear;
             EnsureNotDisposed();
 
             try

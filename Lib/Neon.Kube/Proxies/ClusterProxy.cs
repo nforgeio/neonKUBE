@@ -591,6 +591,8 @@ namespace Neon.Kube
             IRetryPolicy        retryPolicy       = null,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
             {
@@ -637,6 +639,7 @@ namespace Neon.Kube
             IRetryPolicy        retryPolicy       = null,
             CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(database), nameof(database));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(psqlCommand), nameof(psqlCommand));
 
@@ -872,8 +875,8 @@ namespace Neon.Kube
         /// Determines the status of a cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
-        /// <returns>The <see cref="ClusterInfo"/>.</returns>
-        public async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        /// <returns>The <see cref="ClusterStatus"/>.</returns>
+        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1031,9 +1034,9 @@ namespace Neon.Kube
 
                     // Note that we're going to limit the number commands in-flight so that
                     // we don't consume too much RAM (for thread stacks) here on the client
-                    // as well as not overloading the master.
+                    // as well as not overloading the master node.
 
-                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 8 };
+                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
 
                     Parallel.ForEach(resetNamespaces, parallelOptions,
                         @namespace =>

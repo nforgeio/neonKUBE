@@ -292,6 +292,21 @@ namespace Neon.Kube
         /// This defaults to <see cref="AzureStorageType.StandardSSD"/> and be
         /// overridden for specific cluster nodes via <see cref="AzureNodeOptions.StorageType"/>.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
+        /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
+        /// for more information.
+        /// </para>
+        /// <para>
+        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
+        /// neonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
+        /// <see cref="AzureStorageType.UltraSSD"/>.
+        /// </para>
+        /// </note>
+        /// </remarks>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageType)]

@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -1056,12 +1056,12 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterInfo(cluster.Definition);
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -1434,10 +1434,10 @@ namespace Neon.Kube
 
             if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
             {
-                Parallel.ForEach(xenClients, new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                Parallel.ForEach(xenClients, parallelOptions,
                     xenClient =>
                     {
-                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), parallelOptions,
                             vm =>
                             {
                                 xenClient.Machine.Remove(vm, keepDrives: false);

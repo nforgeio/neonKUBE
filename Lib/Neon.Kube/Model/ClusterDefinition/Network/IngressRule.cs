@@ -45,6 +45,13 @@ namespace Neon.Kube
     public class IngressRule
     {
         /// <summary>
+        /// The default TCP idle timeout in minutes.  TCP connections managed by a rule
+        /// will be reset when the idle timeout is exceeded and <see cref="IdleTcpReset"/>
+        /// is set to <c>true</c>.
+        /// </summary>
+        public const int DefaultTcpIdleTimeoutMinutes = 4;
+
+        /// <summary>
         /// The name of the ingress rule.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -101,11 +108,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Identifies which group of cluster nodes will receive the network traffic
-        /// from this rule.  This defaults to <see cref="IngressRuleTarget.User"/>.
+        /// from this rule.  This defaults to <see cref="IngressRuleTarget.Ingress"/>.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.User;
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.Ingress;
 
         /// <summary>
         /// <para>
@@ -146,7 +153,7 @@ namespace Neon.Kube
         /// <see cref="IngressProtocol.Http"/>, <see cref="IngressProtocol.Https"/>, and
         /// <see cref="IngressProtocol.Tcp"/>.  Inbound TCP connections that have no network
         /// traffic going either way will be closed by supported load balancers or routers.
-        /// This defaults to <b>4 minutes</b>.
+        /// This defaults to <see cref="DefaultTcpIdleTimeoutMinutes"/> (<b>4 minutes</b>).
         /// </para>
         /// <note>
         /// <para>
@@ -162,8 +169,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "TcpIdleTimeoutMinutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "tcpIdleTimeoutMinutes", ApplyNamingConventions = false)]
-        [DefaultValue(4)]
-        public int TcpIdleTimeoutMinutes { get; set; } = 4;
+        [DefaultValue(DefaultTcpIdleTimeoutMinutes)]
+        public int TcpIdleTimeoutMinutes { get; set; } = DefaultTcpIdleTimeoutMinutes;
 
         /// <summary>
         /// Returns <see cref="TcpIdleTimeoutMinutes"/> as a <see cref="TimeSpan"/>.

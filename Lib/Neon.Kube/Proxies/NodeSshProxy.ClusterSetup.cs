@@ -37,6 +37,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Newtonsoft.Json;
@@ -792,6 +793,7 @@ systemctl enable kubelet
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
 

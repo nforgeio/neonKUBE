@@ -5267,10 +5267,10 @@ $@"- name: StorageType
             await master.InvokeIdempotentAsync("setup/cluster-info",
                 async () =>
                 {
-                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
+                    var clusterInfoMap = new TypeSafeConfigMap<ClusterStatus>(
                         name: KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        config: new ClusterInfo()
+                        config: new ClusterStatus()
                         {
                             ClusterVersion = KubeVersions.NeonKube,
                             IsLocked = cluster.Definition.IsLocked,

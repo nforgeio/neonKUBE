@@ -296,7 +296,7 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.None;
 
         /// <inheritdoc/>
-        public override Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             if (timeout <= TimeSpan.Zero)
             {

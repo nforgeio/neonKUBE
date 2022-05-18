@@ -15,20 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $note(jefflill):
-//
-// The fluent SDK is hard to use for programatically determined configuration
-// but I think we can drop all of that and simply manipulate the [inner] property
-// of these resources directly and then apply the changes.  The current code
-// is a bit of a mess, but it'll be OK for cluster deployment.
-//
-// This would dramatically simplify things and also allow us to perform some
-// operations in one go instead of multiple operations.  This will be more
-// important when we support dynamically adding and removing nodes in the
-// cluster.
-//
-// That being said, we should probably just upgrade to the new API.
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,19 +28,24 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Azure.Management.Compute.Fluent;
-using Microsoft.Azure.Management.Compute.Fluent.Models;
-using Microsoft.Azure.Management.Fluent;
-using Microsoft.Azure.Management.Network.Fluent;
-using Microsoft.Azure.Management.Network.Fluent.Models;
-using Microsoft.Azure.Management.ResourceManager.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
+using Azure;
+using Azure.Core;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Compute;
+using Azure.ResourceManager.Compute.Models;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Network;
+using Azure.ResourceManager.Network.Models;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Storage;
 
 using Newtonsoft;
 using Newtonsoft.Json;
@@ -69,9 +60,8 @@ using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 
-using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
-using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
-using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
+using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
+using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 
 namespace Neon.Kube
 {
@@ -175,11 +165,11 @@ namespace Neon.Kube
         // images published to Azure .  No9de images are preprovisioned with all of
         // the software required, making cluster setup much faster and reliable.
         //
-        // Node instance and disk types and sizes are specified by the 
+        // Node virtual machine and disk types and sizes are specified by the 
         // [NodeDefinition.Azure] property.  VM sizes are specified using standard Azure
         // size names, disk type is an enum and disk sizes are specified via strings
         // including optional [ByteUnits].  Provisioning will need to verify that the
-        // requested instance and drive types are actually available in the target Azure
+        // requested VM and drive sizes are actually available in the target Azure
         // region and will also need to map the disk size specified by the user to the
         // closest matching Azure disk size greater than or equal to the requested size.
         //
@@ -203,6 +193,14 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Private types
+
+        /// <summary>
+        /// Defines common resource type names used for configuring a load balancer.
+        /// </summary>
+        private static class LoadbalancerResourceTypes
+        {
+            public const string FrontendIPConfigurations = "frontendIPConfigurations";
+        }
 
         /// <summary>
         /// Relates cluster node information to an Azure VM.
@@ -250,14 +248,19 @@ namespace Neon.Kube
             public string Address => Node.Metadata.Address;
 
             /// <summary>
-            /// The associated Azure VM.
+            /// Returns the Azure VM size name (AKA SKU) for the node.
             /// </summary>
-            public IVirtualMachine Vm { get; set; }
+            public string VmSize => Node.Metadata.Azure.VmSize;
 
             /// <summary>
-            /// The node's network interface.
+            /// The associated Azure VM.
             /// </summary>
-            public INetworkInterface Nic { get; set; }
+            public VirtualMachineResource Vm { get; set; }
+
+            /// <summary>
+            /// References the node's network interface.
+            /// </summary>
+            public NetworkInterfaceResource Nic { get; set; }
 
             /// <summary>
             /// Returns <c>true</c> if the node is a master.
@@ -280,6 +283,11 @@ namespace Neon.Kube
             /// the cluster and is persisted as tag for each Azure VM.
             /// </summary>
             public int ExternalSshPort { get; set; }
+
+            /// <summary>
+            /// The cluster node provisioning/power state.
+            /// </summary>
+            public ClusterNodeState State { get; set; }
         }
 
         /// <summary>
@@ -296,12 +304,246 @@ namespace Neon.Kube
             /// <summary>
             /// Enable external SSH to the cluster nodes.
             /// </summary>
-            EnableSsh = 0x0002,
+            AllowNodeSsh = 0x0002,
 
             /// <summary>
             /// Disable external SSH to the cluster nodes.
             /// </summary>
-            DisableSsh = 0x0004,
+            DenyNodeSsh = 0x0004,
+        }
+
+        /// <summary>
+        /// Enumerates the known Azure CPU virtual machine architectures.
+        /// </summary>
+        private enum CpuArchitecture
+        {
+            /// <summary>
+            /// Unknown or unexpected architecture.
+            /// </summary>
+            Unknown = 0,
+
+            /// <summary>
+            /// AMD64
+            /// </summary>
+            [EnumMember(Value = "x64")]
+            Amd64,
+
+            /// <summary>
+            /// ARM64
+            /// </summary>
+            [EnumMember(Value = "arm64")]
+            Arm64
+        }
+
+        /// <summary>
+        /// Wraps a <see cref="ResourceSku"/>, adding type-safe properties to access
+        /// the SKU capabilities.
+        /// </summary>
+        private class VmSku
+        {
+            private ResourceSku sku;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="sku">The <see cref="ResourceSku"/> being wrapped.</param>
+            public VmSku(ResourceSku sku)
+            {
+                Covenant.Requires<ArgumentNullException>(sku != null, nameof(sku));
+
+                this.sku = sku;
+
+                // Extract the capabilities.
+
+                foreach (var capability in sku.Capabilities)
+                {
+                    switch (capability.Name)
+                    {
+                        case "CpuArchitectureType":
+
+                            if (!NeonHelper.TryParse<CpuArchitecture>(capability.Value, out var cpuArchitecture))
+                            {
+                                cpuArchitecture = CpuArchitecture.Unknown;
+                            }
+
+                            this.CpuArchitecture = cpuArchitecture;
+                            break;
+
+                        case "vCPUs":
+
+                            this.VirtualCpus = int.Parse(capability.Value);
+                            break;
+
+                        case "HyperVGenerations":
+
+                            var generations = capability.Value.Split(',', StringSplitOptions.TrimEntries);
+
+                            this.HypervGen1 = generations.Contains("V1");
+                            this.HypervGen2 = generations.Contains("V2");
+                            break;
+
+                        case "PremiumIO":
+
+                            this.PremiumIO = NeonHelper.ParseBool(capability.Value);
+                            break;
+
+                        case "EphemeralOSDiskSupported":
+
+                            this.EphemeralOSDiskSupported = NeonHelper.ParseBool(capability.Value);
+                            break;
+
+                        case "MemoryGB":
+
+                            this.MemoryGiB = decimal.Parse(capability.Value);
+                            break;
+
+                        case "AcceleratedNetworkingEnabled":
+
+                            this.AcceleratedNetworking = NeonHelper.ParseBool(capability.Value);
+                            break;
+
+                        case "MaxDataDiskCount":
+
+                            this.MaxDataDisks = int.Parse(capability.Value);
+                            break;
+
+                        case "MaxNetworkInterfaces":
+
+                            this.MaxNetworkInterfaces = int.Parse(capability.Value);
+                            break;
+                    }
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Native properties
+
+            /// <summary>
+            /// Returns the SKU name.
+            /// </summary>
+            public string Name => sku.Name;
+
+            /// <summary>
+            /// Returns the SKU tier.
+            /// </summary>
+            public string Tier => sku.Tier;
+
+            /// <summary>
+            /// Returns the SKU size.
+            /// </summary>
+            public string Size => sku.Size;
+
+            /// <summary>
+            /// Returns the SKU family.
+            /// </summary>
+            public string Family => sku.Family;
+
+            /// <summary>
+            /// Returns the kind of resources supported by this SKU.
+            /// </summary>
+            public string Kind => sku.Kind;
+
+            /// <summary>
+            /// Specifies the number of virtual machines in the scale set.
+            /// </summary>
+            public ResourceSkuCapacity Capacity => sku.Capacity;
+
+            /// <summary>
+            /// Lists the locations where the SKU is available.
+            /// </summary>
+            public IReadOnlyList<string> Locations => sku.Locations;
+
+            /// <summary>
+            /// Lists the locations and availability zones in those locations where
+            /// the SKU is available.
+            /// </summary>
+            public IReadOnlyList<ResourceSkuLocationInfo> LocationInfo => sku.LocationInfo;
+
+            /// <summary>
+            /// Lists the API versions that support this SKU.
+            /// </summary>
+            public IReadOnlyList<string> ApiVersions => sku.ApiVersions;
+
+            /// <summary>
+            /// Returns pricing information for the SKU.
+            /// </summary>
+            public IReadOnlyList<ResourceSkuCosts> Costs => sku.Costs;
+
+            /// <summary>
+            /// Returns a dictionary of SKU capabilities.
+            /// </summary>
+            public IReadOnlyList<ResourceSkuCapabilities> Capabilities => sku.Capabilities;
+
+            /// <summary>
+            /// Lists the restrictions preventing this SKU from being used.  This will be
+            /// empty when there are no restrictions.
+            /// </summary>
+            public IReadOnlyList<ResourceSkuRestrictions> Restrictions => sku.Restrictions;
+
+            //-----------------------------------------------------------------
+            // Extended properties
+
+            /// <summary>
+            /// Indicates whether use of this SKU is restricted.  See <see cref="Restrictions"/> for more information.
+            /// </summary>
+            public bool IsRestricted => Restrictions.Count > 0;
+
+            /// <summary>
+            /// Identifies the CPU architecture.
+            /// </summary>
+            public CpuArchitecture CpuArchitecture { get; }
+
+            /// <summary>
+            /// <para>
+            /// Returns the number of virtual CPUs for the SKU.
+            /// </para>
+            /// <note>
+            /// The number of virtual CPUs may be larger than the number of virtual cores for
+            /// a virtual machine SKU.  For example, most modern AMD64 based SKUs support
+            /// hyper-threading which effectively results in 2 virtual CPUs per core.
+            /// </note>
+            /// </summary>
+            public int VirtualCpus { get; }
+
+            /// <summary>
+            /// Indicates whether the SKU supports HyperV Gen1 images.
+            /// </summary>
+            public bool HypervGen1 { get; }
+
+            /// <summary>
+            /// Indicates whether the SKU supports HyperV Gen2 images.
+            /// </summary>
+            public bool HypervGen2 { get; }
+
+            /// <summary>
+            /// Indicates whether the SKU supports premium I/O.
+            /// </summary>
+            public bool PremiumIO { get; }
+
+            /// <summary>
+            /// Indicates whether the SKU supports ephemeral OS disks.
+            /// </summary>
+            public bool EphemeralOSDiskSupported { get; }
+
+            /// <summary>
+            /// Returns the SKU RAM in GiB.
+            /// </summary>
+            public decimal MemoryGiB { get; }
+
+            /// <summary>
+            /// Indicates whether the SKU supports accelerated networking.
+            /// </summary>
+            public bool AcceleratedNetworking { get; }
+
+            /// <summary>
+            /// Returns the maximum number of additional data disks that can be attached to the SKU.
+            /// </summary>
+            public int MaxDataDisks { get; }
+
+            /// <summary>
+            /// Returns the maximum number of network interfaces that can be attached to the SKU.
+            /// </summary>
+            public int MaxNetworkInterfaces { get; }
         }
 
         //---------------------------------------------------------------------
@@ -310,7 +552,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// The first NSG rule priority to use for ingress rules.
@@ -359,7 +601,7 @@ namespace Neon.Kube
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
-        /// Used to tag instances resources with the external SSH port to be used to 
+        /// Used to tag virtual machines with the external SSH port to be used to 
         /// establish a SSH connection to the instance.
         /// </summary>
         private const string neonNodeSshPortTagKey = neonTagKeyPrefix + "node.ssh-port";
@@ -384,6 +626,16 @@ namespace Neon.Kube
         /// Logical unit number for a node's optional OpenEBS cStor disk.
         /// </summary>
         private const int openEBSDiskLun = 2;
+
+        /// <summary>
+        /// Minimum Azure supported TCP reset idle timeout in minutes.
+        /// </summary>
+        private const int minAzureTcpIdleTimeoutMinutes = 4;
+
+        /// <summary>
+        /// Maximum Azure supported TCP reset idle timeout in minutes.
+        /// </summary>
+        private const int maxAzureTcpIdleTimeoutMinutes = 30;
 
         /// <summary>
         /// Static constructor.
@@ -534,15 +786,22 @@ namespace Neon.Kube
         /// Converts a <see cref="AzureStorageType"/> to the underlying Azure storage type.
         /// </summary>
         /// <param name="azureStorageType">The input storage type.</param>
+        /// <param name="osDisk">Optionally indicates that the target disk will be used as the operating system boot disk.</param>
         /// <returns>The underlying Azure storage type.</returns>
-        private static StorageAccountTypes ToAzureStorageType(AzureStorageType azureStorageType)
+        /// <remarks>
+        /// Azure does not currently support booting the virtual machine operating system from
+        /// a <see cref="AzureStorageType.UltraSSD"/> disk.  Pass <paramref name="osDisk"/> as <c>true</c>
+        /// for OS disks and then this method will return the next best storage type <see cref="AzureStorageType.PremiumSSD"/>
+        /// for this case.
+        /// </remarks>
+        private static StorageAccountTypes ToAzureStorageType(AzureStorageType azureStorageType, bool osDisk = false)
         {
             switch (azureStorageType)
             {
                 case AzureStorageType.PremiumSSD:   return StorageAccountTypes.PremiumLRS;
                 case AzureStorageType.StandardHDD:  return StorageAccountTypes.StandardLRS;
                 case AzureStorageType.StandardSSD:  return StorageAccountTypes.StandardSSDLRS;
-                case AzureStorageType.UltraSSD:     return StorageAccountTypes.UltraSSDLRS;
+                case AzureStorageType.UltraSSD:     return osDisk ? StorageAccountTypes.PremiumLRS : StorageAccountTypes.UltraSSDLRS;
                 default:                            throw new NotImplementedException();
             }
         }
@@ -550,43 +809,48 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                            cluster;
-        private string                                  clusterName;
-        private SetupController<NodeDefinition>         controller;
-        private string                                  clusterEnvironment;
-        private HostingOptions                          hostingOptions;
-        private CloudOptions                            cloudOptions;
-        private bool                                    prefixResourceNames;
-        private AzureHostingOptions                     azureOptions;
-        private AzureCredentials                        azureCredentials;
-        private NetworkOptions                          networkOptions;
-        private string                                  region;
-        private IAzure                                  azure;
-        private readonly Dictionary<string, AzureVm>    nameToVm;
-        private IGalleryImageVersion                    nodeImageVersion;
+        private ClusterProxy                                cluster;
+        private string                                      clusterName;
+        private SetupController<NodeDefinition>             controller;
+        private string                                      clusterEnvironment;
+        private HostingOptions                              hostingOptions;
+        private CloudOptions                                cloudOptions;
+        private bool                                        prefixResourceNames;
+        private AzureHostingOptions                         azureOptions;
+        private NetworkOptions                              networkOptions;
+        private string                                      region;
+        private AzureLocation                               azureLocation;
+        private ArmClient                                   azure;
+        private SubscriptionResource                        subscription;
+        private GalleryImageVersionResource                 nodeImageVersion;
+        private readonly Dictionary<string, AzureVm>        nameToVm;
+        private Dictionary<string, VmSku>                   nameToVmSku;
 
         // These names will be used to identify the cluster resources.
 
-        private readonly string                         resourceGroupName;
-        private readonly string                         publicAddressName;
-        private readonly string                         vnetName;
-        private readonly string                         subnetName;
-        private readonly string                         proximityPlacementGroupName;
-        private readonly string                         loadbalancerName;
-        private readonly string                         loadbalancerFrontendName;
-        private readonly string                         loadbalancerIngressBackendName;
-        private readonly string                         loadbalancerMasterBackendName;
-        private readonly string                         subnetNsgName;
+        private readonly string                             resourceGroupName;
+        private readonly string                             publicAddressName;
+        private readonly string                             vnetName;
+        private readonly string                             subnetName;
+        private readonly string                             primaryNicName;
+        private readonly string                             proximityPlacementGroupName;
+        private readonly string                             loadbalancerName;
+        private readonly string                             loadbalancerFrontendName;
+        private readonly string                             loadbalancerIngressBackendName;
+        private readonly string                             loadbalancerMasterBackendName;
+        private readonly string                             subnetNsgName;
 
-        // These reference the Azure resources.
+        // These reference the cluster's Azure resources.
 
-        private bool                                    resourceGroupExists; 
-        private IPublicIPAddress                        publicAddress;
-        private IPAddress                               clusterAddress;
-        private INetwork                                vnet;
-        private ILoadBalancer                           loadBalancer;
-        private Dictionary<string, IAvailabilitySet>    nameToAvailabilitySet;
-        private INetworkSecurityGroup                   subnetNsg;
+        private ResourceGroupResource                       resourceGroup; 
+        private PublicIPAddressResource                     publicAddress;
+        private IPAddress                                   clusterAddress;
+        private VirtualNetworkResource                      vnet;
+        private SubnetData                                  subnet;
+        private LoadBalancerResource                        loadBalancer;
+        private ProximityPlacementGroupResource             proximityPlacementGroup;
+        private Dictionary<string, AvailabilitySetResource> nameToAvailabilitySet;
+        private NetworkSecurityGroupResource                subnetNsg;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -622,8 +886,9 @@ namespace Neon.Kube
             this.azureOptions          = hostingOptions.Azure;
             this.cloudOptions          = hostingOptions.Cloud;
             this.networkOptions        = cluster.Definition.Network;
-            this.nameToAvailabilitySet = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
+            this.nameToAvailabilitySet = new Dictionary<string, AvailabilitySetResource>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
+            this.azureLocation         = new AzureLocation(azureOptions.Region);
             this.resourceGroupName     = cluster.Definition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
 
             switch (cloudOptions.PrefixResourceNames)
@@ -657,8 +922,9 @@ namespace Neon.Kube
             this.publicAddressName              = GetResourceName("pip", "cluster", true);
             this.vnetName                       = GetResourceName("vnet", "cluster", true);
             this.subnetName                     = GetResourceName("snet", "cluster", true);
+            this.primaryNicName                 = "primary";
             this.proximityPlacementGroupName    = GetResourceName("ppg", "cluster", true);
-            this.loadbalancerName               = GetResourceName("lbe", "cluster", true);
+            this.loadbalancerName               = GetResourceName("lbe", "public", true);
             this.subnetNsgName                  = GetResourceName("nsg", "subnet");
             this.loadbalancerFrontendName       = "ingress";
             this.loadbalancerIngressBackendName = "ingress-nodes";
@@ -770,40 +1036,47 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether a resource belongs to the cluster by comparing its NEON cluster
-        /// tag value to the cluster name.
+        /// Adds standard tags to a resource's tag dictionary as well as any optional tages passed.
         /// </summary>
-        /// <param name="resource">The resource being checked.</param>
-        /// <returns><c>true</c> if the resource belongs to the cluster.</returns>
-        private bool IsClusterResource(IResource resource)
+        /// <param name="resource">The resource data being tagged.</param>
+        /// <param name="tags">Specifies any optional tags.</param>
+        /// <returns>The updated <paramref name="resource"/>.</returns>
+        private TResource WithTags<TResource>(TResource resource, params ResourceTag[] tags)
+            where TResource : TrackedResourceData
         {
-            if (resource == null)
-            {
-                return false;
-            }
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            return resource.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName);
-        }
-
-        /// <summary>
-        /// Creates the tags for a resource including cluster details, any custom
-        /// user resource tags, as well as any optional tags passed.
-        /// </summary>
-        /// <param name="tags">Any optional tags.</param>
-        /// <returns>The dictionary.</returns>
-        private Dictionary<string, string> GetTags(params ResourceTag[] tags)
-        {
-            var tagDictionary = new Dictionary<string, string>();
-
-            tagDictionary[neonClusterTagKey]     = clusterName;
-            tagDictionary[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
+            resource.Tags[neonClusterTagKey]     = clusterName;
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
 
             foreach (var tag in tags)
             {
-                tagDictionary[tag.Key] = tag.Value;
+                resource.Tags[tag.Key] = tag.Value;
             }
 
-            return tagDictionary;
+            return resource;
+        }
+
+        /// <summary>
+        /// Adds standard tags to a network resource's tag dictionary as well as any optional tages passed.
+        /// </summary>
+        /// <param name="resource">The resource data being tagged.</param>
+        /// <param name="tags">Specifies any optional tags.</param>
+        /// <returns>The updated <paramref name="resource"/>.</returns>
+        private TResource WithNetworkTags<TResource>(TResource resource, params ResourceTag[] tags)
+            where TResource : NetworkResourceData
+        {
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+
+            resource.Tags[neonClusterTagKey] = clusterName;
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
+
+            foreach (var tag in tags)
+            {
+                resource.Tags[tag.Key] = tag.Value;
+            }
+
+            return resource;
         }
 
         /// <inheritdoc/>
@@ -862,15 +1135,21 @@ namespace Neon.Kube
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
-            controller.AddGlobalStep("resource group", state => CreateResourceGroup());
+            controller.AddGlobalStep("resource group", state => GetClusterResourceGroup());
+
+            if (!azureOptions.DisableProximityPlacement)
+            {
+                controller.AddGlobalStep("proximity placement group", state => CreateProximityPlacementGroupAsync());
+            }
+
             controller.AddGlobalStep("availability sets", state => CreateAvailabilitySetsAsync());
-            controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroupsAsync());
+            controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroupAsync());
             controller.AddGlobalStep("virtual network", state => CreateVirtualNetworkAsync());
             controller.AddGlobalStep("public address", state => CreatePublicAddressAsync());
             controller.AddGlobalStep("ssh config", ConfigureNodeSsh, quiet: true);
             controller.AddGlobalStep("load balancer", state => CreateLoadBalancerAsync());
             controller.AddGlobalStep("listing virtual machines",
-                state =>
+                async state =>
                 {
                     controller.SetGlobalStepStatus("list: virtual machines");
 
@@ -878,14 +1157,16 @@ namespace Neon.Kube
                     // Note that it's possible for VMs that are unrelated to the cluster
                     // to be in the resource group, so we'll have to ignore those.
 
-                    foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroupName))
+                    var virtualMachineCollection = resourceGroup.GetVirtualMachines();
+
+                    await foreach (var vm in virtualMachineCollection.GetAllAsync())
                     {
-                        if (!vm.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
+                        if (!vm.Data.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
                         {
                             break;  // Not a cluster VM
                         }
 
-                        if (!nameToVm.TryGetValue(nodeName, out var azureNode))
+                        if (!nameToVm.TryGetValue(nodeName, out var azureVm))
                         {
                             // $todo(jefflill):
                             //
@@ -899,8 +1180,12 @@ namespace Neon.Kube
                             break;
                         }
 
-                        azureNode.Vm  = vm;
-                        azureNode.Nic = vm.GetPrimaryNetworkInterface();
+                        azureVm.Vm = vm;
+
+                        var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
+                        var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
+
+                        azureVm.Nic = await nicResource.GetAsync();
                     }
                 },
                 quiet: true);
@@ -915,7 +1200,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVmAsync);
-            controller.AddGlobalStep("internet access", state => UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet access", state => UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.AllowNodeSsh));
         }
 
         /// <inheritdoc/>
@@ -931,25 +1216,39 @@ namespace Neon.Kube
                 // won't be able to distinguish between the two disks.
                 //
                 // At this point, the data disk should be partitioned, formatted, and mounted so
-                // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
-                        var azureNode          = nameToVm[node.Name];
-                        var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
+                        var azureVm          = nameToVm[node.Name];
+                        var vm                 = azureVm.Vm;
+                        var openEBSStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEBSStorageType);
 
                         node.Status = "openebs: checking";
 
-                        if (azureNode.Vm.DataDisks.Count < 1)   // Note that the OS disk doesn't count.
+                        if (vm.Data.StorageProfile.DataDisks.Count < 1)     // Note that the OS disk doesn't count as a data disk.
                         {
                             node.Status = "openebs: cStor disk";
 
-                            await azureNode.Vm
-                                .Update()
-                                .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
-                                .WithTags(GetTags())
-                                .ApplyAsync();
+                            var vmPatch = new VirtualMachinePatch()
+                            {
+                                StorageProfile = vm.Data.StorageProfile
+                            };
+
+                            vmPatch.StorageProfile.DataDisks.Add(
+                                new DataDisk(openEBSDiskLun, DiskCreateOptionTypes.Attach)
+                                {
+                                    DiskSizeGB   = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes),
+                                    Caching      = CachingTypes.None,
+                                    ManagedDisk  = new ManagedDiskParameters()
+                                    {
+                                        StorageAccountType = openEBSStorageType
+                                    },
+                                    DeleteOption = DiskDeleteOptionTypes.Delete
+                                });
+
+                            azureVm.Vm = (await vm.UpdateAsync(WaitUntil.Completed, vmPatch)).Value;
                         }
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
@@ -965,13 +1264,13 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("AZURE connect",
+            controller.AddGlobalStep("connect azure",
                 async controller =>
                 {
                     await ConnectAzureAsync();
                 });
 
-            controller.AddGlobalStep("ssh: port mappings",
+            controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -998,7 +1297,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("ssh: block ingress",
+            controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
@@ -1011,16 +1310,18 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
+            await SyncContext.Clear;
+
             await ConnectAzureAsync();
 
             var operations = NetworkOperations.InternetRouting;
 
-            if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            if (loadBalancer.Data.LoadBalancingRules.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 // It looks like SSH NAT rules are enabled so we'll update
                 // those as well.
 
-                operations |= NetworkOperations.EnableSsh;
+                operations |= NetworkOperations.AllowNodeSsh;
             }
 
             await UpdateNetworkAsync(operations);
@@ -1032,7 +1333,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             await ConnectAzureAsync();
-            await UpdateNetworkAsync(NetworkOperations.EnableSsh);
+            await UpdateNetworkAsync(NetworkOperations.AllowNodeSsh);
         }
 
         /// <inheritdoc/>
@@ -1041,7 +1342,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             await ConnectAzureAsync();
-            await UpdateNetworkAsync(NetworkOperations.DisableSsh);
+            await UpdateNetworkAsync(NetworkOperations.DenyNodeSsh);
         }
 
         /// <inheritdoc/>
@@ -1058,7 +1359,7 @@ namespace Neon.Kube
                 throw new NeonKubeException($"Cannot locate Azure VM for the [{nodeName}] node.");
             }
 
-            return (Address: publicAddress.IPAddress, Port: azureVm.ExternalSshPort);
+            return (Address: publicAddress.Data.IPAddress, Port: azureVm.ExternalSshPort);
         }
 
         /// <inheritdoc/>
@@ -1081,7 +1382,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
-            return publicAddress.IPAddress;
+            return publicAddress.Data.IPAddress;
         }
 
         /// <summary>
@@ -1096,6 +1397,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConnectAzureAsync()
         {
+            await SyncContext.Clear;
+
             if (azure != null)
             {
                 return;
@@ -1103,7 +1406,7 @@ namespace Neon.Kube
 
             controller?.SetGlobalStepStatus("connect: Azure");
 
-            var environment = AzureEnvironment.AzureGlobalCloud;
+            var environment = ArmEnvironment.AzurePublicCloud;
 
             if (azureOptions.Environment != null)
             {
@@ -1111,33 +1414,27 @@ namespace Neon.Kube
                 {
                     case AzureCloudEnvironments.GlobalCloud:
 
-                        environment = AzureEnvironment.AzureGlobalCloud;
+                        environment = ArmEnvironment.AzurePublicCloud;
                         break;
 
                     case AzureCloudEnvironments.ChinaCloud:
 
-                        environment = AzureEnvironment.AzureChinaCloud;
+                        environment = ArmEnvironment.AzureChina;
                         break;
 
                     case AzureCloudEnvironments.GermanCloud:
 
-                        environment = AzureEnvironment.AzureGermanCloud;
+                        environment = ArmEnvironment.AzureGermany;
                         break;
 
                     case AzureCloudEnvironments.USGovernment:
 
-                        environment = AzureEnvironment.AzureUSGovernment;
+                        environment = ArmEnvironment.AzureGovernment;
                         break;
 
                     case AzureCloudEnvironments.Custom:
 
-                        environment = new AzureEnvironment()
-                        {
-                            AuthenticationEndpoint  = azureOptions.Environment.AuthenticationEndpoint,
-                            GraphEndpoint           = azureOptions.Environment.GraphEndpoint,
-                            ManagementEndpoint      = azureOptions.Environment.ManagementEnpoint,
-                            ResourceManagerEndpoint = azureOptions.Environment.ResourceManagerEndpoint
-                        };
+                        environment = new ArmEnvironment(new Uri(azureOptions.Environment.Endpoint), azureOptions.Environment.Audience);
                         break;
 
                     default:
@@ -1146,105 +1443,209 @@ namespace Neon.Kube
                 }
             }
 
-            azureCredentials =
-                new AzureCredentials(
-                    new ServicePrincipalLoginInformation()
-                    {
-                        ClientId     = azureOptions.ClientId,
-                        ClientSecret = azureOptions.ClientSecret
-                    },
-                    tenantId:    azureOptions.TenantId,
-                    environment: environment);
+            // We're going to indirectly use the [EnvironmentCredential] to create
+            // the default credential by setting the required environment variables.
 
-            azure = Azure.Configure()
-                .Authenticate(azureCredentials)
-                .WithSubscription(azureOptions.SubscriptionId);
+            Environment.SetEnvironmentVariable("AZURE_TENANT_ID", azureOptions.TenantId);
+            Environment.SetEnvironmentVariable("AZURE_CLIENT_ID", azureOptions.ClientId);
+            Environment.SetEnvironmentVariable("AZURE_CLIENT_SECRET", azureOptions.ClientSecret);
+
+            azure = new ArmClient(new DefaultAzureCredential(),
+                azureOptions.SubscriptionId,
+                new ArmClientOptions()
+                {
+                    Environment = ArmEnvironment.AzurePublicCloud
+                });
+
+            subscription = await azure.GetDefaultSubscriptionAsync();
 
             // Load references to any existing cluster resources.
 
-           await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Retrieves references to any cluster resources.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
+            await SyncContext.Clear;
+
+            //-----------------------------------------------------------------
             // The resource group.
 
-            if (!(await azure.ResourceGroups.ListAsync()).Any(resourceGroupItem => resourceGroupItem.Name == resourceGroupName && resourceGroupItem.RegionName == region))
+            var resourceGroupCollection = subscription.GetResourceGroups();
+
+            if (!await resourceGroupCollection.ExistsAsync(resourceGroupName))
             {
                 // The resource group doesn't exist so it's not possible for any other
                 // cluster resources to exist either.
 
-                resourceGroupExists = false;
                 return;
             }
 
-            resourceGroupExists = true;
+            resourceGroup = await resourceGroupCollection.GetAsync(resourceGroupName);
 
+            //-----------------------------------------------------------------
             // Network stuff.
 
-            publicAddress = (await azure.PublicIPAddresses.ListByResourceGroupAsync(resourceGroupName)).SingleOrDefault(address => address.Name == publicAddressName);
+            var publicAddresses = resourceGroup.GetPublicIPAddresses();
 
-            if (publicAddress != null)
+            if (await publicAddresses.ExistsAsync(publicAddressName))
             {
-                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
+                publicAddress  = await publicAddresses.GetAsync(publicAddressName);
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.Data.IPAddress);
             }
 
-            vnet         = (await azure.Networks.ListByResourceGroupAsync(resourceGroupName)).SingleOrDefault(vnet => vnet.Name == vnetName);
-            subnetNsg    = (await azure.NetworkSecurityGroups.ListByResourceGroupAsync(resourceGroupName)).SingleOrDefault(nsg => nsg.Name == subnetNsgName);
-            loadBalancer = (await azure.LoadBalancers.ListByResourceGroupAsync(resourceGroupName)).SingleOrDefault(loadBalancer => loadBalancer.Name == loadbalancerName);
+            var vnetCollection         = resourceGroup.GetVirtualNetworks();
+            var nsgCollection          = resourceGroup.GetNetworkSecurityGroups();
+            var loadBalancerCollection = resourceGroup.GetLoadBalancers();
 
+            if (await vnetCollection.ExistsAsync(vnetName))
+            {
+                vnet   = (await vnetCollection.GetAsync(vnetName)).Value;
+                subnet = vnet.Data.Subnets.First();
+            }
+
+            if (await nsgCollection.ExistsAsync(subnetNsgName))
+            {
+                subnetNsg = (await nsgCollection.GetAsync(subnetNsgName)).Value;
+            }
+
+            if (await loadBalancerCollection.ExistsAsync(loadbalancerName))
+            {
+                loadBalancer = (await loadBalancerCollection.GetAsync(loadbalancerName)).Value;
+            }
+
+            //-----------------------------------------------------------------
             // Availability sets
 
-            var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroupName)
-                .Where(set => IsClusterResource(set));
+            var availabilitySetCollection = resourceGroup.GetAvailabilitySets();
 
             nameToAvailabilitySet.Clear();
 
-            foreach (var set in existingAvailabilitySets)
+            await foreach (var availabilitySet in availabilitySetCollection.GetAllAsync())
             {
-                nameToAvailabilitySet.Add(set.Name, set);
+                nameToAvailabilitySet.Add(availabilitySet.Data.Name, availabilitySet);
             }
 
+            //-----------------------------------------------------------------
             // VM information
 
-            var existingVms = (await azure.VirtualMachines.ListByResourceGroupAsync(resourceGroupName))
-                .Where(vm => IsClusterResource(vm));
+            var vmCollection = resourceGroup.GetVirtualMachines();
 
-            foreach (var vm in existingVms)
+            await foreach (var vm in vmCollection.GetAllAsync())
             {
-                if (!vm.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
+                if (!vm.Data.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
                 {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Name}] is missing the [{neonNodeNameTagKey}] tag.");
+                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeNameTagKey}] tag.");
                 }
 
                 var node = cluster.FindNode(nodeName);
 
                 if (node == null)
                 {
-                    throw new NeonKubeException($"Unexpected VM: [{vm.Name}] does not correspond to a node in the cluster definition.");
+                    throw new NeonKubeException($"Unexpected VM: [{vm.Data.Name}] does not correspond to a node in the cluster definition.");
                 }
 
-                if (!vm.Tags.TryGetValue(neonNodeSshPortTagKey, out var sshPortString))
+                if (!vm.Data.Tags.TryGetValue(neonNodeSshPortTagKey, out var sshPortString))
                 {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Name}] is missing the [{neonNodeSshPortTagKey}] tag.");
+                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeSshPortTagKey}] tag.");
                 }
 
                 if (!int.TryParse(sshPortString, out var sshPort) || !NetHelper.IsValidPort(sshPort))
                 {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
+                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
                 }
 
                 var azureVm = nameToVm[nodeName];
 
-                azureVm.AvailabilitySetName = (await azure.AvailabilitySets.GetByIdAsync(vm.AvailabilitySetId)).Name;
-                azureVm.Nic                 = await azure.NetworkInterfaces.GetByIdAsync(vm.NetworkInterfaceIds.First());
                 azureVm.Vm                  = vm;
+                azureVm.AvailabilitySetName = (await azure.GetAvailabilitySetResource(vm.Data.AvailabilitySetId).GetAsync()).Value.Data.Name;
+
+                var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
+                var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
+
+                azureVm.Nic                 = await nicResource.GetAsync();
                 azureVm.ExternalSshPort     = sshPort;
             }
+        }
+
+        /// <summary>
+        /// Queries Azure for the provisoning/power status for all known cluster nodes.  This updates
+        /// the <see cref="nameToVm"/> dictionary values.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task GetClusterVmStatuses()
+        {
+            await SyncContext.Clear;
+            Covenant.Assert(azure != null);
+            Covenant.Assert(nameToVm != null);
+
+            // Unforunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
+            // so we need to query for each VM state individually.  We'll do this in parallel to speed thinbgs up.
+            //
+            // We'll be querying for each VM for its [InstanceView] and examine it's current status:
+            //
+            //      https://docs.microsoft.com/en-us/azure/virtual-machines/states-billing
+            //
+            // and then convert that to our [ClusterNodeState].
+
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
+                {
+                    var instanceView = (await azureVm.Vm.InstanceViewAsync()).Value;
+                    var latestStatus = instanceView.Statuses
+                        .Where(status => status.Code.StartsWith("PowerState/"))
+                        .OrderByDescending(status => status.Time)
+                        .FirstOrDefault();
+
+                    if (latestStatus == null)
+                    {
+                        azureVm.State = ClusterNodeState.Off;
+                    }
+                    else
+                    {
+                        switch (latestStatus.Code)
+                        {
+                            case "PowerState/Starting":
+
+                                azureVm.State = ClusterNodeState.Starting;
+                                break;
+
+                            case "PowerState/Running":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Stopping":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Stopped":
+
+                                azureVm.State = ClusterNodeState.Off;
+                                break;
+
+                            case "PowerState/Deallocating":
+
+                                azureVm.State = ClusterNodeState.Running;
+                                break;
+
+                            case "PowerState/Deallocated":
+
+                                azureVm.State = ClusterNodeState.NotProvisioned;
+                                break;
+
+                            default:
+
+                                azureVm.State = ClusterNodeState.Unknown;
+                                break;
+                        }
+                    }
+                });
         }
 
         /// <summary>
@@ -1253,45 +1654,75 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LocateNodeImageAsync()
         {
+            await SyncContext.Clear;
+
+            var neonKubeVersion      = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var nodeImageName        = neonKubeVersion.Prerelease == null ? "neonkube-node-amd64" : $"neonkube-node-amd64-{neonKubeVersion.Prerelease}";
+            var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
+
             // $todo(jefflill):
             //
             // This is currently hardcoded to locate the current node image from our
             // private development image gallery.  We'll need to modify this to reference
-            // our marketplace image and perhaps optionally use the development gallery.
+            // our marketplace image and perhaps optionally the development gallery as well.
 
             const string galleryResourceGroupName = "neonkube-images";
             const string galleryName              = "neonkube.images";
 
-            var gallery = (await azure.Galleries.ListByResourceGroupAsync(galleryResourceGroupName)).SingleOrDefault(gallery => gallery.Name == galleryName);
+            var resourceGroupCollection = subscription.GetResourceGroups();
 
-            if (gallery == null)
+            if (!await resourceGroupCollection.ExistsAsync(galleryResourceGroupName))
             {
-                throw new NeonKubeException($"Gallery [{galleryName}] not found in resource group: {galleryResourceGroupName}");
+                throw new NeonKubeException($"Resource group [{galleryResourceGroupName}] not found in subscription.");
             }
 
-            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
-            var nodeImageName   = "neonkube-node";
+            var galleryResourceGroup = (await resourceGroupCollection.GetAsync(galleryResourceGroupName)).Value;
+            var galleryCollection    = galleryResourceGroup.GetGalleries();
 
-            if (neonKubeVersion.Prerelease != null)
+            if (!await galleryCollection.ExistsAsync(galleryName))
             {
-                nodeImageName += $"-{neonKubeVersion.Prerelease}";
+                throw new NeonKubeException($"Gallery [{galleryName}] not found in resource group: {galleryResourceGroupName}.");
             }
 
-            var nodeImage = (await azure.GalleryImages.ListByGalleryAsync(gallery.ResourceGroupName, gallery.Name)).SingleOrDefault(image => image.Name == nodeImageName);
+            var gallery                = (await galleryCollection.GetAsync(galleryName)).Value;
+            var galleryImageCollection = gallery.GetGalleryImages();
 
-            if (nodeImage == null)
+            if (!await galleryImageCollection.ExistsAsync(nodeImageName))
             {
-                throw new NeonKubeException($"Node image [{nodeImageName}] not found in image gallery: {galleryResourceGroupName}:{galleryName}");
+                throw new NeonKubeException($"Node image [{nodeImageName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
             }
 
-            var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
+            var nodeImage                     = (await galleryImageCollection.GetAsync(nodeImageName)).Value;
+            var galleryImageVersionCollection = nodeImage.GetGalleryImageVersions();
 
-            nodeImageVersion = (await azure.GalleryImageVersions.ListByGalleryImageAsync(gallery.ResourceGroupName, gallery.Name, nodeImage.Name))
-                .SingleOrDefault(imageVersion => imageVersion.Name == nodeImageVersionName);
-
-            if (nodeImageVersion == null)
+            if (!await galleryImageVersionCollection.ExistsAsync(nodeImageVersionName))
             {
-                throw new NeonKubeException($"Node image version [{nodeImageVersionName}] not found in image: {galleryResourceGroupName}:{galleryName}/{nodeImageName}");
+                throw new NeonKubeException($"Node image [{nodeImageVersionName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
+            }
+
+            nodeImageVersion = (await galleryImageVersionCollection.GetAsync(nodeImageVersionName)).Value;
+        }
+
+        /// <summary>
+        /// Loads virtual machine size related information for the current region into the
+        /// <see cref="nameToVmSku"/> field when not already initialized.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task LoadVmSizeMetadataAsync()
+        {
+            await SyncContext.Clear;
+
+            if (nameToVmSku == null)
+            {
+                nameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
+
+                await foreach (var resourceSku in subscription.GetResourceSkusAsync(filter: $"location eq '{region.ToLowerInvariant()}'"))
+                {
+                    if (resourceSku.ResourceType == "virtualMachines")
+                    {
+                        nameToVmSku[resourceSku.Name] = new VmSku(resourceSku);
+                    }
+                }
             }
         }
 
@@ -1308,79 +1739,58 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task VerifyRegionAndVmSizesAsync()
         {
+            await SyncContext.Clear;
+
             controller.SetGlobalStepStatus("verify: Azure region and VM size availability");
 
-            var regionName   = cluster.Definition.Hosting.Azure.Region;
-            var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
-            var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
+            var regionName = cluster.Definition.Hosting.Azure.Region;
 
-            foreach (var vmSize in await azure.VirtualMachines.Sizes.ListByRegionAsync(regionName))
-            {
-                nameToVmSize[vmSize.Name] = vmSize;
-            }
-
-            foreach (var vmSku in await azure.ComputeSkus.ListByRegionAsync(regionName))
-            {
-                nameToVmSku[vmSku.Name.Value] = vmSku;
-            }
+            await LoadVmSizeMetadataAsync();
 
             foreach (var node in cluster.Nodes)
             {
-                var vmSizeName = node.Metadata.Azure.VmSize;
+                var vmSkuName = node.Metadata.Azure.VmSize;
 
-                if (!nameToVmSize.TryGetValue(vmSizeName, out var vmSize))
+                if (!nameToVmSku.TryGetValue(vmSkuName, out var vmSku))
                 {
-                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{regionName}] Azure region.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}].  This is not available in the [{regionName}] Azure region.");
                 }
-
-                if (!nameToVmSku.TryGetValue(vmSizeName, out var vmSku))
-                {
-                    // This should never happen, right?
-
-                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{regionName}] Azure region.");
-                }
-
-                // $todo(jefflill):
-                //
-                // We don't currently ensure that all VM sizes required by the cluster are AMD64 compatible.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/1545
 
                 switch (node.Metadata.Role)
                 {
                     case NodeRole.Master:
 
-                        if (vmSize.NumberOfCores < KubeConst.MinMasterCores)
+                        if (vmSku.VirtualCpus < KubeConst.MinMasterCores)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [Cores={vmSize.NumberOfCores} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
                         }
 
-                        if (vmSize.MemoryInMB < KubeConst.MinMasterRamMiB)
+                        if (vmSku.MemoryGiB < KubeConst.MinMasterRamMiB / 1024)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [RAM={vmSize.MemoryInMB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB * 1024} MiB].]");
                         }
 
-                        if (vmSize.MaxDataDiskCount < 1)
+                        if (vmSku.MaxDataDisks < 1)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] that supports up to [{vmSize.MaxDataDiskCount}] disks.  A minimum of [1] drive is required.");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] that supports up to [{vmSku.MaxDataDisks}] disks.  A minimum of [1] drive is required.");
                         }
                         break;
 
                     case NodeRole.Worker:
 
-                        if (vmSize.NumberOfCores < KubeConst.MinWorkerCores)
+                        if (vmSku.VirtualCpus < KubeConst.MinWorkerCores)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [Cores={vmSize.NumberOfCores} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
                         }
 
-                        if (vmSize.MemoryInMB < KubeConst.MinWorkerRamMiB)
+                        if (vmSku.MemoryGiB < KubeConst.MinWorkerRamMiB / 1024)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [RAM={vmSize.MemoryInMB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB * 1024} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
                         }
 
-                        if (vmSize.MaxDataDiskCount < 1)
+                        if (vmSku.MaxDataDisks < 1)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] that supports up to [{vmSize.MaxDataDiskCount}] disks.  A minimum of [1] drive is required.");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] that supports up to [{vmSku.MaxDataDisks}] disks.  A minimum of [1] drive is required.");
                         }
                         break;
 
@@ -1389,18 +1799,10 @@ namespace Neon.Kube
                         throw new NotImplementedException();
                 }
 
-                if (node.Metadata.Azure.StorageType == AzureStorageType.UltraSSD)
-                {
-                    if (!vmSku.Capabilities.Any(Capability => Capability.Name == "UltraSSDAvailable" && Capability.Value == "False"))
-                    {
-                        throw new NeonKubeException($"Node [{node.Name}] requests an UltraSSD disk.  This is not available in the [{regionName}] Azure region and/or the [{vmSize}] VM Size.");
-                    }
-                }
-
                 // Update the node labels to match the actual VM capabilities.
 
-                node.Metadata.Labels.ComputeCores     = vmSize.NumberOfCores;
-                node.Metadata.Labels.ComputeRam       = vmSize.MemoryInMB;
+                node.Metadata.Labels.ComputeCores     = vmSku.VirtualCpus;
+                node.Metadata.Labels.ComputeRam       = (int)(vmSku.MemoryGiB / 1024);
                 node.Metadata.Labels.StorageSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
                 node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
                 node.Metadata.Labels.StorageEphemeral = false;
@@ -1410,95 +1812,111 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the cluster's resource group if it doesn't already exist.
+        /// Creates the cluster's resource group if it doesn't already exist.  This sets
+        /// <see cref="resourceGroup"/> field to the cluster resource group.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateResourceGroup()
+        private async Task GetClusterResourceGroup()
         {
-            if (!resourceGroupExists)
+            await SyncContext.Clear;
+
+            if (resourceGroup != null)
             {
-                controller.SetGlobalStepStatus("create: resource group");
-
-                await azure.ResourceGroups
-                    .Define(resourceGroupName)
-                    .WithRegion(region)
-                    .WithTags(GetTags())
-                    .CreateAsync();
-
-                resourceGroupExists = true;
+                return;
             }
+
+            controller.SetGlobalStepStatus($"create: resource group: {resourceGroupName}");
+
+            resourceGroup = (await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, resourceGroupName, WithTags(new ResourceGroupData(azureLocation)))).Value;
         }
 
         /// <summary>
-        /// Creates an avilablity set for the master VMs and a separate one for the worker VMs
+        /// Creates the proximity placement group when this feature is not disabled.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CreateProximityPlacementGroupAsync()
+        {
+            await SyncContext.Clear;
+
+            if (!azureOptions.DisableProximityPlacement)
+            {
+                var proximityPlacementGroupCollection = resourceGroup.GetProximityPlacementGroups();
+
+                if (await proximityPlacementGroupCollection.ExistsAsync(proximityPlacementGroupName))
+                {
+                    proximityPlacementGroup = (await proximityPlacementGroupCollection.GetAsync(proximityPlacementGroupName)).Value;
+                }
+                else
+                {
+                    controller.SetGlobalStepStatus("create: proximity placement group");
+
+                    proximityPlacementGroup = (await proximityPlacementGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, proximityPlacementGroupName, WithTags(new ProximityPlacementGroupData(azureLocation)))).Value;
+                }
+            }
+        }
+         
+        /// <summary>
+        /// Creates an availability set for the master VMs and a separate one for the worker VMs
         /// as well as the cluster's proximity placement group.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateAvailabilitySetsAsync()
         {
-            // Create the availability sets defined for the cluster nodes.
+            await SyncContext.Clear;
 
-            controller.SetGlobalStepStatus("create: availability sets");
-
-            foreach (var azureNode in nameToVm.Values)
+            foreach (var azureVm in nameToVm.Values)
             {
-                azureNode.AvailabilitySetName = GetResourceName("avail", azureNode.Metadata.Labels.PhysicalAvailabilitySet);
+                azureVm.AvailabilitySetName = GetResourceName("avail", azureVm.Metadata.Labels.PhysicalAvailabilitySet);
 
-                if (nameToAvailabilitySet.ContainsKey(azureNode.AvailabilitySetName))
+                if (nameToAvailabilitySet.ContainsKey(azureVm.AvailabilitySetName))
                 {
                     continue;   // The availability set already exists.
                 }
 
                 // Create the availability set.
 
-                IAvailabilitySet newSet;
+                controller.SetGlobalStepStatus($"create: availability set: {azureVm.AvailabilitySetName}");
 
-                if (azureOptions.DisableProximityPlacement)
+                var availabilitySetCollection = resourceGroup.GetAvailabilitySets();
+                var availabilitySetData       =
+                    new AvailabilitySetData(azureLocation)
+                    {
+                        Sku                       = new ComputeSku() { Name = "Aligned" },
+                        PlatformUpdateDomainCount = azureOptions.UpdateDomains,
+                        PlatformFaultDomainCount  = azureOptions.FaultDomains
+                    };
+
+                if (!azureOptions.DisableProximityPlacement)
                 {
-                    newSet = await azure.AvailabilitySets
-                        .Define(azureNode.AvailabilitySetName)
-                        .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroupName)
-                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
-                        .WithFaultDomainCount(azureOptions.FaultDomains)
-                        .WithTags(GetTags())
-                        .CreateAsync();
-                }
-                else
-                {
-                    newSet = await azure.AvailabilitySets
-                        .Define(azureNode.AvailabilitySetName)
-                        .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroupName)
-                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
-                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
-                        .WithFaultDomainCount(azureOptions.FaultDomains)
-                        .WithTags(GetTags())
-                        .CreateAsync();
+                    availabilitySetData.ProximityPlacementGroupId = proximityPlacementGroup.Id;
                 }
 
-                nameToAvailabilitySet.Add(azureNode.AvailabilitySetName, newSet);
+                var availabilitySet = (await availabilitySetCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.AvailabilitySetName, WithTags(availabilitySetData))).Value;
+
+                nameToAvailabilitySet.Add(azureVm.AvailabilitySetName, availabilitySet);
             }
         }
 
         /// <summary>
-        /// Creates the network security groups.
+        /// Creates the network security group.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateNetworkSecurityGroupsAsync()
+        private async Task CreateNetworkSecurityGroupAsync()
         {
+            await SyncContext.Clear;
+
             if (subnetNsg == null)
             {
-                controller.SetGlobalStepStatus("create: network security groups");
+                controller.SetGlobalStepStatus("create: network security group");
 
-                // Note that we're going to add rules later.
+                // Note that we're going to add the actual security rules later.
 
-                subnetNsg = await azure.NetworkSecurityGroups
-                    .Define(subnetNsgName)
-                    .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .WithTags(GetTags())
-                    .CreateAsync();
+                var nsgCollection = resourceGroup.GetNetworkSecurityGroups();
+                var nsgData       = new NetworkSecurityGroupData()
+                {
+                    Location = azureLocation
+                };
+
+                subnetNsg = (await nsgCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(nsgData))).Value;
             }
         }
 
@@ -1508,19 +1926,23 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateVirtualNetworkAsync()
         {
+            await SyncContext.Clear;
+
             if (vnet == null)
             {
                 controller.SetGlobalStepStatus("create: vnet");
 
-                var vnetCreator = azure.Networks
-                    .Define(vnetName)
-                    .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .WithAddressSpace(azureOptions.VnetSubnet)
-                    .DefineSubnet(subnetName)
-                        .WithAddressPrefix(azureOptions.NodeSubnet)
-                        .WithExistingNetworkSecurityGroup(subnetNsg.Id)
-                        .Attach();
+                var networkCollection = resourceGroup.GetVirtualNetworks();
+                var networkData       = new VirtualNetworkData() { Location = azureLocation };
+
+                networkData.AddressPrefixes.Add(azureOptions.VnetSubnet);
+                networkData.Subnets.Add(
+                    new SubnetData()
+                    {
+                        Name                 = subnetName,
+                        AddressPrefix        = azureOptions.NodeSubnet,
+                        NetworkSecurityGroup = new NetworkSecurityGroupData() { Id = subnetNsg.Id }
+                    });
 
                 var nameservers = cluster.Definition.Network.Nameservers;
 
@@ -1528,13 +1950,12 @@ namespace Neon.Kube
                 {
                     foreach (var nameserver in nameservers)
                     {
-                        vnetCreator.WithDnsServer(nameserver);
+                        networkData.DhcpOptionsDnsServers.Add(nameserver);
                     }
                 }
 
-                vnet = await vnetCreator
-                    .WithTags(GetTags())
-                    .CreateAsync();
+                vnet   = (await networkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, WithNetworkTags(networkData))).Value;
+                subnet = vnet.Data.Subnets.First();
             }
         }
 
@@ -1544,37 +1965,39 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreatePublicAddressAsync()
         {
+            await SyncContext.Clear;
+
             if (publicAddress == null)
             {
                 controller.SetGlobalStepStatus("create: public IPv4 address");
 
-                publicAddress = await azure.PublicIPAddresses
-                    .Define(publicAddressName)
-                        .WithRegion(azureOptions.Region)
-                        .WithExistingResourceGroup(resourceGroupName)
-                        .WithStaticIP()
-                        .WithLeafDomainLabel(azureOptions.DomainLabel)
-                        .WithSku(PublicIPSkuType.Standard)
-                        .WithTags(GetTags())
-                        .CreateAsync();
+                var publicAddressCollection = resourceGroup.GetPublicIPAddresses();
+                var publicAddressData = new PublicIPAddressData()
+                {
+                    Location                 = azureLocation,
+                    DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel},
+                    PublicIPAllocationMethod = IPAllocationMethod.Static,
+                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
+                };
 
-                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.IPAddress);
+                publicAddress  = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicAddressName, WithNetworkTags(publicAddressData))).Value;
+                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.Data.IPAddress);
 
                 // Set [ClusterDefinition.PublicAddresses] to the public IP if the
                 // user hasn't specified any addresses.
 
                 if (cluster.Definition.PublicAddresses.Count == 0)
                 {
-                    cluster.Definition.PublicAddresses.Add(publicAddress.IPAddress);
+                    cluster.Definition.PublicAddresses.Add(publicAddress.Data.IPAddress);
                 }
             }
         }
 
         /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have one and update
+        /// Assigns external SSH ports to Azure VM records that don't already have one and update
         /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
-        /// that we're not actually going to write the instance tags here; we'll do that when we
-        /// actually create any new instances.
+        /// that we're not actually going to write the virtual machine tags here; we'll do that
+        /// when we actually create any new VMs.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         private void ConfigureNodeSsh(ISetupController controller)
@@ -1606,7 +2029,7 @@ namespace Neon.Kube
 
             var nextUnallocatedPortIndex = 0;
 
-            foreach (var azureVm in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            foreach (var azureVm in SortedMasterThenWorkerNodes.Where(vm => vm.ExternalSshPort == 0))
             {
                 azureVm.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
@@ -1630,7 +2053,7 @@ namespace Neon.Kube
             {
                 var azureVm = nameToVm[node.Name];
 
-                node.Address = IPAddress.Parse(publicAddress.IPAddress);
+                node.Address = IPAddress.Parse(publicAddress.Data.IPAddress);
                 node.SshPort = azureVm.ExternalSshPort;
             }
         }
@@ -1641,40 +2064,39 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateLoadBalancerAsync()
         {
+            await SyncContext.Clear;
+
             if (loadBalancer == null)
             {
                 controller.SetGlobalStepStatus("create: load balancer");
 
-                // The Azure fluent API does not support creating a load balancer without
-                // any rules.  So we're going to create the load balancer with a dummy rule
-                // and then delete that rule straight away.
+                var loadBalancerCollection = resourceGroup.GetLoadBalancers();
+                var loadBalancerData       = new LoadBalancerData()
+                {
+                     Location = azureLocation,
+                     Sku      = new LoadBalancerSku() { Name = "Standard", Tier = "Regional" }
+                };
 
-                loadBalancer = await azure.LoadBalancers
-                    .Define(loadbalancerName)
-                    .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .DefineLoadBalancingRule("dummy")
-                        .WithProtocol(TransportProtocol.Tcp)
-                        .FromFrontend(loadbalancerFrontendName)
-                        .FromFrontendPort(10000)
-                        .ToBackend(loadbalancerIngressBackendName)
-                        .ToBackendPort(10000)
-                        .Attach()
-                    .DefinePublicFrontend(loadbalancerFrontendName)
-                        .WithExistingPublicIPAddress(publicAddress)
-                        .Attach()
-                    .DefineBackend(loadbalancerMasterBackendName)
-                        .Attach()
-                    .DefineBackend(loadbalancerIngressBackendName)
-                        .Attach()
-                    .WithSku(LoadBalancerSkuType.Standard)
-                    .WithTags(GetTags())
-                    .CreateAsync();
+                loadBalancerData.FrontendIPConfigurations.Add(
+                    new FrontendIPConfigurationData()
+                    {
+                        Name            = loadbalancerFrontendName,
+                        PublicIPAddress = publicAddress.Data,
+                    });
 
-                loadBalancer = await loadBalancer.Update()
-                    .WithoutLoadBalancingRule("dummy")
-                    .WithTags(GetTags())
-                    .ApplyAsync();
+                loadBalancerData.BackendAddressPools.Add(
+                    new BackendAddressPoolData()
+                    {
+                         Name = loadbalancerMasterBackendName
+                    });
+
+                loadBalancerData.BackendAddressPools.Add(
+                    new BackendAddressPoolData()
+                    {
+                        Name = loadbalancerIngressBackendName
+                    });
+
+                loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancerData))).Value;
             }
         }
 
@@ -1686,36 +2108,56 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateVmAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var azureNode = nameToVm[node.Name];
+            await LoadVmSizeMetadataAsync();
 
-            if (azureNode.Vm != null)
+            var azureVm = nameToVm[node.Name];
+
+            if (azureVm.Vm != null)
             {
                 // The VM already exists.
 
                 return;
             }
 
+            if (!nameToVmSku.TryGetValue(azureVm.VmSize, out var vmSku))
+            {
+                throw new NeonKubeException($"VM size [{azureVm.VmSize}] is not available at [{region}].");
+            }
+
             node.Status = "create: NIC";
 
-            azureNode.Nic = await azure.NetworkInterfaces
-                .Define(GetResourceName("nic", azureNode.Node.Name))
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroupName)
-                .WithExistingPrimaryNetwork(vnet)
-                .WithSubnet(subnetName)
-                .WithPrimaryPrivateIPAddressStatic(azureNode.Address)
-                .WithTags(GetTags())
-                .CreateAsync();
+            var nicCollection = resourceGroup.GetNetworkInterfaces();
+            var nicData       = new NetworkInterfaceData()
+            {
+                Location                    = azureLocation,
+                NicType                     = NetworkInterfaceNicType.Standard,
+                NetworkSecurityGroup        = subnetNsg.Data,
+                EnableAcceleratedNetworking = vmSku.AcceleratedNetworking
+            };
+
+            nicData.IPConfigurations.Add(
+                new NetworkInterfaceIPConfigurationData()
+                {
+                    Name                      = primaryNicName,
+                    Primary                   = true,
+                    Subnet                    = subnet,
+                    PrivateIPAddress          = azureVm.Address,
+                    PrivateIPAllocationMethod = IPAllocationMethod.Static
+                });
+
+            azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureVm.Node.Name), WithNetworkTags(nicData))).Value;
 
             node.Status = "create: virtual machine";
 
-            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var azureNodeOptions = azureNode.Node.Metadata.Azure;
-            var azureStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
-            var diskSize         = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
-            var dataDiskSize     = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes);
+            var clusterLogin         = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var azureNodeOptions     = azureVm.Node.Metadata.Azure;
+            var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
+            var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
+            var diskSize             = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
+            var dataDiskSize         = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes);
 
             //-----------------------------------------------------------------
             // We need deploy a script that runs when the VM boots to: 
@@ -1730,12 +2172,10 @@ $@"#cloud-boothook
 
 # To enable logging for this Azure custom-data script, add ""-ex"" to the SHABANG above.
 # the SHEBANG above and uncomment the [exec] command below.  Then each command and its
-# output to be logged and can be viewable in the AWS portal.
-#
-#   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
+# output to be logged and can be viewable in the Azure portal.
 #
 # WARNING: Do not leave the ""-ex"" SHABANG option in production builds to avoid 
-#          leaking the secure SSH password to any logs!
+# leaking the secure SSH password to any logs!
 #          
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
@@ -1761,45 +2201,71 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 ";
             var encodedBootScript = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
 
+            var virtualMachineCollection = resourceGroup.GetVirtualMachines();
+            var virtualMachineData       = new VirtualMachineData(azureLocation)
+            {
+                HardwareProfile = new HardwareProfile()
+                {
+                    VmSize = azureVm.VmSize
+                },
+                OSProfile = new OSProfile()
+                {
+                    ComputerName  = "ubuntu",
+                    AdminUsername = KubeConst.SysAdminUser,
+                    AdminPassword = clusterLogin.SshPassword
+                },
+                NetworkProfile    = new NetworkProfile(),
+                StorageProfile    = new StorageProfile(),
+                AvailabilitySetId = nameToAvailabilitySet[azureVm.AvailabilitySetName].Id,
+                UserData          = encodedBootScript
+            };
+
+            virtualMachineData.NetworkProfile.NetworkInterfaces.Add(new NetworkInterfaceReference() { Id = azureVm.Nic.Id });
+
+            if (proximityPlacementGroup != null)
+            {
+                virtualMachineData.ProximityPlacementGroupId = proximityPlacementGroup.Id;
+            }
+
+            virtualMachineData.StorageProfile.ImageReference = new ImageReference()
+            {
+                Id = nodeImageVersion.Id
+            };
+
+            virtualMachineData.StorageProfile.OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
+            {
+                ManagedDisk = new ManagedDiskParameters()
+                {
+                    StorageAccountType = azureOSStorageType
+                },
+                OSType       = OperatingSystemTypes.Linux,
+                DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize),
+                DeleteOption = DiskDeleteOptionTypes.Delete,
+                Caching      = CachingTypes.None
+            };
+
             if (dataDiskSize > 0)
             {
-                azureNode.Vm = await azure.VirtualMachines
-                    .Define(azureNode.VmName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .WithExistingPrimaryNetworkInterface(azureNode.Nic)
-                    .WithLinuxGalleryImageVersion(nodeImageVersion.Id)
-                    .WithRootUsername(KubeConst.SysAdminUser)
-                    .WithRootPassword(clusterLogin.SshPassword)
-                    .WithComputerName("ubuntu")
-                    .WithCustomData(encodedBootScript)
-                    .WithNewDataDisk(dataDiskSize, dataDiskLun, CachingTypes.ReadOnly, azureStorageType)    // <-- adding the optional data disk here
-                    .WithOSDiskStorageAccountType(azureStorageType)
-                    .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
-                    .WithSize(node.Metadata.Azure.VmSize)
-                    .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                    .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
-                    .CreateAsync();
+                virtualMachineData.StorageProfile.DataDisks.Add(
+                    new DataDisk(dataDiskLun, DiskCreateOptionTypes.Empty)
+                    {
+                        ManagedDisk = new ManagedDiskParameters()
+                        {
+                            StorageAccountType = azureDataStorageType,
+                        },
+                        DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize),
+                        DeleteOption = DiskDeleteOptionTypes.Delete,
+                        Caching      = CachingTypes.None
+                    });
             }
-            else
+
+            var nodeTags = new ResourceTag[]
             {
-                azureNode.Vm = await azure.VirtualMachines
-                    .Define(azureNode.VmName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .WithExistingPrimaryNetworkInterface(azureNode.Nic)
-                    .WithLinuxGalleryImageVersion(nodeImageVersion.Id)
-                    .WithRootUsername(KubeConst.SysAdminUser)
-                    .WithRootPassword(clusterLogin.SshPassword)
-                    .WithComputerName("ubuntu")
-                    .WithCustomData(encodedBootScript)
-                    .WithOSDiskStorageAccountType(azureStorageType)
-                    .WithOSDiskSizeInGB((int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize))
-                    .WithSize(node.Metadata.Azure.VmSize)
-                    .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                    .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
-                    .CreateAsync();
-            }
+                new ResourceTag(neonNodeNameTagKey, node.Name),
+                new ResourceTag(neonNodeSshPortTagKey, azureVm.ExternalSshPort.ToString()),
+            };
+
+            azureVm.Vm = (await virtualMachineCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.VmName, WithTags(virtualMachineData, nodeTags))).Value;
         }
 
         /// <summary>
@@ -1809,234 +2275,202 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateNetworkAsync(NetworkOperations operations)
         {
+            await SyncContext.Clear;
+
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 controller.SetGlobalStepStatus("update: load balancer ingress/egress rules");
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
-            if ((operations & NetworkOperations.EnableSsh) != 0)
+            if ((operations & NetworkOperations.AllowNodeSsh) != 0)
             {
-                controller.SetGlobalStepStatus("add: SSH rules");
+                controller.SetGlobalStepStatus("add ssh rules");
                 await AddSshRulesAsync();
             }
 
-            if ((operations & NetworkOperations.DisableSsh) != 0)
+            if ((operations & NetworkOperations.DenyNodeSsh) != 0)
             {
-                controller.SetGlobalStepStatus("remove: SSH rules");
+                controller.SetGlobalStepStatus("remove ssh rules");
                 await RemoveSshRulesAsync();
             }
         }
 
         /// <summary>
+        /// Returns the ID for a load balancer child resource.
+        /// </summary>
+        /// <param name="childResourceType">Specifies the child resource type.</param>
+        /// <param name="childResourceName">Specifies the child resource name.</param>
+        /// <returns>The child resource ID.</returns>
+        private ResourceIdentifier GetChildLoadBalancerResourceId(string childResourceType, string childResourceName)
+        {
+            return new ResourceIdentifier($"/subscriptions/{subscription.Id}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/loadBalancers/{loadbalancerName}/{childResourceType}/{childResourceName}");
+        }
+
+        /// <summary>
+        /// <para>
         /// Updates the load balancer and network security rules to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
-            // $note(jefflill):
-            //
-            // I really wanted to apply changes to the load balancer backend configuration
-            // in one go so these changes would be atomic, but this doesn't seem to work.
-            // Only one of the master or ingress backends appear to be able to be updated
-            // simultaneously.
-            //
-            // This isn't really an issue for cluster setup but it may be a problem when
-            // we support adding and removing nodes from an existing cluster (although
-            // I suspect that will be OK too).
-            //
-            // We may be able to address this by editing the inner load balancer update
-            // properties directly (like we do when enabling TCP reset) or when we switch
-            // from the Azure Fluent SDK to the current SDK.
+            await SyncContext.Clear;
+            Covenant.Assert(loadBalancer != null, "LoadBalancer is not loaded.");
 
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var frontendCollection             = loadBalancer.GetFrontendIPConfigurations();
+            var backendCollection              = loadBalancer.GetBackendAddressPools();
+            var probeCollection                = loadBalancer.GetProbes();
 
-            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
-            // load balance this traffic to the master nodes.
-
-            var clusterRules = new IngressRule[]
-                {
-                    new IngressRule()
-                    {
-                        Name                  = "kubernetes-api",
-                        Protocol              = IngressProtocol.Tcp,
-                        ExternalPort          = NetworkPorts.KubernetesApiServer,
-                        NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
-                        AddressRules          = networkOptions.ManagementAddressRules,
-                        IdleTcpReset          = true,
-                        TcpIdleTimeoutMinutes = 5
-                    }
-                };
-
-            var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
-
-            //-----------------------------------------------------------------
-            // Backend pools:
-
-            // Ensure that we actually have some nodes marked for ingress when the cluster
+            // Ensure that we actually have some nodes labeled for ingress when the cluster
             // defines some ingress rules and then ensure that the load balancer's backend
             // pool includes those node VMs.
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // Rebuild the [ingress-nodes] backend pool. 
+            //-----------------------------------------------------------------
+            // Backend pools:
             //
-            // Note that we're going to add these VMs to the backend set one at a time
-            // because the API only works when the VMs being added in a batch are all
-            // in the same availability set.  Masters and workers are located within
-            // different sets by default.
+            // Add the virtual machine NICs to the backend pools as required.
 
-            var ingressBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerIngressBackendName);
+            var nicCollection          = resourceGroup.GetNetworkInterfaces();
+            var masterBackendPoolData  = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerMasterBackendName, StringComparison.InvariantCultureIgnoreCase));
+            var ingressBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
 
-            if (loadBalancer.Backends.TryGetValue(loadbalancerIngressBackendName, out var ingressBackend))
-            {
-                // Remove any existing VMs for nodes that no longer exist or are not
-                // currently labeled for ingress from the pool.
-
-                var vms = new List<IVirtualMachine>();
-
-                await Parallel.ForEachAsync(ingressBackend.GetVirtualMachineIds(), parallelOptions,
-                    async (vmId, cancellationToken) =>
-                    {
-                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
-                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
-
-                        if (node == null || !node.Metadata.Ingress)
-                        {
-                            lock (vms)
-                            {
-                                vms.Add(vm);
-                            }
-                        }
-                    });
-
-                if (vms.Count > 0)
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
                 {
-                    ingressBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
-                }
-            }
+                    var ipConfiguration        = azureVm.Nic.Data.IPConfigurations.First();
+                    var nicBackendAddressPools = ipConfiguration.LoadBalancerBackendAddressPools;
+                    var changed                = false;
 
-            foreach (var ingressNode in nameToVm.Values.Where(node => node.Metadata.Ingress))
-            {
-                ingressBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
-            }
-
-            loadBalancer = await ingressBackendUpdater.Parent().ApplyAsync();
-
-            // Rebuild the [master-nodes] backend pool.
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            var masterBackendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerMasterBackendName);
-
-            if (loadBalancer.Backends.TryGetValue(loadbalancerMasterBackendName, out var masterBackend))
-            {
-                // Remove any existing VMs for nodes that no longer exist or are not
-                // a master node.
-
-                var vms = new List<IVirtualMachine>();
-
-                await Parallel.ForEachAsync(masterBackend.GetVirtualMachineIds(), parallelOptions,
-                    async (vmId, cancellationToken) =>
+                    if (azureVm.IsMaster && !nicBackendAddressPools.Any(pool => pool.Id == masterBackendPoolData.Id))
                     {
-                        var vm   = await azure.VirtualMachines.GetByIdAsync(vmId);
-                        var node = cluster.FindNode(vm.Tags[neonNodeNameTagKey]);
+                        changed = true;
 
-                        if (node == null || !node.Metadata.IsMaster)
-                        {
-                            lock (vms)
+                        nicBackendAddressPools.Add(
+                            new BackendAddressPoolData()
                             {
-                                vms.Add(vm);
-                            }
-                        }
-                    });
+                                Id = masterBackendPoolData.Id
+                            });
+                    }
 
-                if (vms.Count > 0)
-                {
-                    masterBackendUpdater.WithoutExistingVirtualMachines(vms.ToArray());
-                }
-            }
+                    if (azureVm.Metadata.Ingress && !nicBackendAddressPools.Any(pool => pool.Id == ingressBackendPoolData.Id))
+                    {
+                        changed = true;
 
-            foreach (var masterNode in nameToVm.Values.Where(node => node.Metadata.IsMaster))
-            {
-                masterBackendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { masterNode.Vm });
-            }
+                        nicBackendAddressPools.Add(
+                            new BackendAddressPoolData()
+                            {
+                                Id = ingressBackendPoolData.Id
+                            });
+                    }
 
-            loadBalancer = await masterBackendUpdater.Parent().ApplyAsync();
+                    if (changed)
+                    {
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
+                    }
+                });
+
+            // Reload the load balancer to pick up any changes.
+
+            loadBalancer = await loadBalancer.GetAsync();
 
             //-----------------------------------------------------------------
-            // Cluster ingress load balancing rules
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // Remove all existing cluster ingress rules.
-
-            foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
-            }
-
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                subnetNsgUpdater.WithoutRule(rule.Name);
-            }
-
-            // We also need to remove any existing load balancer ingress related health probes.
-            // We'll recreate these below as necessary.
-
-            foreach (var probe in loadBalancer.HttpProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
-            foreach (var probe in loadBalancer.HttpsProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
-            foreach (var probe in loadBalancer.TcpProbes.Values
-                .Where(probe => probe.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutProbe(probe.Name);
-            }
-
             // Add the load balancer ingress rules and health probes.
 
+            // We need to add a special ingress rule for the Kubernetes API on its standard
+            // port 6443 and load balance this traffic to the master nodes.
+
+            var clusterRules = new IngressRule[]
+            {
+                new IngressRule()
+                {
+                    Name                  = "kubernetes-api",
+                    Protocol              = IngressProtocol.Tcp,
+                    ExternalPort          = NetworkPorts.KubernetesApiServer,
+                    NodePort              = NetworkPorts.KubernetesApiServer,
+                    Target                = IngressRuleTarget.Masters,
+                    AddressRules          = networkOptions.ManagementAddressRules,
+                    IdleTcpReset          = true,
+                    TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
+                }
+            };
+
+            var ingressRules       = networkOptions.IngressRules.Union(clusterRules).ToArray();
             var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
+
+            // Create a probe for each ingress rule.
+
+            loadBalancer.Data.Probes.Clear();
 
             foreach (var ingressRule in ingressRules)
             {
                 var probeName   = $"{ingressRulePrefix}{ingressRule.Name}";
                 var healthCheck = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
-                loadBalancerUpdater.DefineTcpProbe(probeName)
-                    .WithPort(ingressRule.NodePort)
-                    .WithIntervalInSeconds(healthCheck.IntervalSeconds)
-                    .WithNumberOfProbes(healthCheck.ThresholdCount)
-                    .Attach();
+                if (!loadBalancer.Data.Probes.Any(probe => probe.Name.Equals(probeName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    loadBalancer.Data.Probes.Add(
+                        new ProbeData()
+                        {
+                            Name              = probeName,
+                            Protocol          = ProbeProtocol.Tcp,
+                            Port              = ingressRule.NodePort,
+                            IntervalInSeconds = healthCheck.IntervalSeconds,
+                            NumberOfProbes    = healthCheck.ThresholdCount
+                        });
+                }
+            }
 
-                var ruleName    = $"{ingressRulePrefix}{ingressRule.Name}";
-                var tcpTimeout  = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
-                var backendName = (string)null;
+            // We need to update the load balancer so we can obtain the IDs for the frontend, the
+            // backend pools, as well as the health probes for each ingress rule.
+
+            var nameToFrontEndId    = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToBackEndPoolId = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToProbeId       = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, loadBalancer.Data)).Value;
+
+            foreach (var frontEnd in loadBalancer.Data.FrontendIPConfigurations)
+            {
+                nameToFrontEndId.Add(frontEnd.Name, frontEnd.Id);
+            }
+
+            foreach (var backEndPool in loadBalancer.Data.BackendAddressPools)
+            {
+                nameToBackEndPoolId.Add(backEndPool.Name, backEndPool.Id);
+            }
+
+            foreach (var probe in loadBalancer.Data.Probes)
+            {
+                nameToProbeId.Add(probe.Name, probe.Id);
+            }
+
+            foreach (var ingressRule in ingressRules)
+            {
+                var probeName      = $"{ingressRulePrefix}{ingressRule.Name}";
+                var ruleName       = $"{ingressRulePrefix}{ingressRule.Name}";
+                var tcpIdleTimeout = Math.Min(Math.Max(minAzureTcpIdleTimeoutMinutes, ingressRule.TcpIdleTimeoutMinutes), maxAzureTcpIdleTimeoutMinutes);
+                var backendPoolId  = (string)null;
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
-                        backendName = loadbalancerIngressBackendName;
+                        backendPoolId = nameToBackEndPoolId[loadbalancerIngressBackendName];
                         break;
 
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
-                        backendName = loadbalancerMasterBackendName;
+                        backendPoolId = nameToBackEndPoolId[loadbalancerMasterBackendName];
                         break;
 
                     default:
@@ -2044,15 +2478,23 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         throw new NotImplementedException();
                 }
 
-                loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
-                    .WithProtocol(ToTransportProtocol(ingressRule.Protocol))
-                    .FromExistingPublicIPAddress(publicAddress)
-                    .FromFrontendPort(ingressRule.ExternalPort)
-                    .ToBackend(backendName)
-                    .ToBackendPort(ingressRule.NodePort)
-                    .WithProbe(probeName)
-                    .WithIdleTimeoutInMinutes(tcpTimeout)
-                    .Attach();
+                if (!loadBalancer.Data.LoadBalancingRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    loadBalancer.Data.LoadBalancingRules.Add(
+                        new LoadBalancingRuleData()
+                        {
+                            Name                      = ruleName,
+                            FrontendIPConfigurationId = new ResourceIdentifier(nameToFrontEndId.Values.First()),
+                            BackendAddressPoolId      = new ResourceIdentifier(backendPoolId),
+                            ProbeId                   = new ResourceIdentifier(nameToProbeId[probeName]),
+                            Protocol                  = ToTransportProtocol(ingressRule.Protocol),
+                            FrontendPort              = ingressRule.ExternalPort,
+                            BackendPort               = ingressRule.NodePort,
+                            EnableTcpReset            = ingressRule.IdleTcpReset,
+                            IdleTimeoutInMinutes      = tcpIdleTimeout,
+                            EnableFloatingIP          = false
+                        });
+                }
             }
 
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
@@ -2060,13 +2502,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
-            // This is possible because NSGs rules allow a comma separated list of IP addresses
+            // This is possible because NSG rules allow a comma separated list of IP addresses
             // or subnets to be specified.
             //
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var priority = firstIngressNsgRulePriority;
+            var subnetNsgData = new NetworkSecurityGroupData() { Location = azureLocation };
+            var priority      = firstIngressNsgRulePriority;
 
             foreach (var ingressRule in ingressRules)
             {
@@ -2078,15 +2521,22 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                     var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
 
-                    subnetNsgUpdater.DefineRule(ruleName)
-                        .AllowInbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAnyAddress()
-                        .ToPort(ingressRule.NodePort)
-                        .WithProtocol(ruleProtocol)
-                        .WithPriority(priority++)
-                        .Attach();
+                    if (!subnetNsgData.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        subnetNsgData.SecurityRules.Add(
+                            new SecurityRuleData()
+                            {
+                                Name                     = ruleName,
+                                Access                   = SecurityRuleAccess.Allow,
+                                Direction                = SecurityRuleDirection.Inbound,
+                                SourceAddressPrefix      = "0.0.0.0/0",
+                                SourcePortRange          = "*",
+                                DestinationAddressPrefix = subnet.AddressPrefix,
+                                DestinationPortRange     = ingressRule.NodePort.ToString(),
+                                Protocol                 = ruleProtocol,
+                                Priority                 = priority++
+                            });
+                    }
                 }
                 else
                 {
@@ -2099,96 +2549,32 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     foreach (var addressRule in ingressRule.AddressRules)
                     {
                         var multipleAddresses = ingressRule.AddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}"
-                                                                  : $"{ingressRulePrefix}{ingressRule.Name}";
-                        switch (addressRule.Action)
+                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}" : $"{ingressRulePrefix}{ingressRule.Name}";
+
+                        if (!subnetNsgData.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
                         {
-                            case AddressRuleAction.Allow:
-
-                                if (addressRule.IsAny)
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .AllowInbound()
-                                        .FromAnyAddress()
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                else
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .AllowInbound()
-                                        .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                break;
-
-                            case AddressRuleAction.Deny:
-
-                                if (addressRule.IsAny)
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .DenyInbound()
-                                        .FromAnyAddress()
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                else
-                                {
-                                    subnetNsgUpdater.DefineRule(ruleName)
-                                        .DenyInbound()
-                                        .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromAnyPort()
-                                        .ToAnyAddress()
-                                        .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(ruleProtocol)
-                                        .WithPriority(priority++)
-                                        .Attach();
-                                }
-                                break;
-
-                            default:
-
-                                throw new NotImplementedException();
+                            subnetNsgData.SecurityRules.Add(
+                                new SecurityRuleData() 
+                                { 
+                                    Name                     = ruleName, 
+                                    Direction                = SecurityRuleDirection.Inbound,
+                                    Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                                    SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                                    SourcePortRange          = "*",
+                                    DestinationAddressPrefix = subnet.AddressPrefix,
+                                    DestinationPortRange     = ingressRule.NodePort.ToString(),
+                                    Protocol                 = ruleProtocol,
+                                    Priority                 = priority++ 
+                                });
                         }
                     }
                 }
             }
 
-            // Apply the updates.
+            // Update the load balancer and subnet security group.
 
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
-
-            // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support this property yet.
-            //
-            // It's a bit unfortunate that we can't apply these changes when we updated the
-            // load balancer above, but this shouldn't be a big deal.
-
-            loadBalancerUpdater = loadBalancer.Update();
-
-            foreach (var ingressRule in ingressRules)
-            {
-                var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
-                var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                lbRule.EnableTcpReset = ingressRule.IdleTcpReset;
-            }
-
-            await loadBalancerUpdater.ApplyAsync();
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsgData))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
         }
 
         /// <summary>
@@ -2199,87 +2585,83 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshRulesAsync()
         {
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            await SyncContext.Clear;
 
-            // Remove all existing load balancer public SSH related NAT rules.
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var nicCollection                  = resourceGroup.GetNetworkInterfaces();
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
 
-            foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
-            }
-
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                subnetNsgUpdater.WithoutRule(rule.Name);
-            }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // Add the SSH NAT rules for each node.  Note that we need to do this in three steps:
+            // Add SSH NAT rules for each node.  We need to do this in two steps:
             //
-            //      1. Add the NAT rule to the load balancer
-            //      2. Enable TCP Reset for connections that are idle for too long
-            //      3. Tie the node VM's NIC to the rule
+            //      1. Create the inbound NAT rules on the load balancer (if they don't already exist)
+            //
+            //      2. Iterate through the virtual machine NICs and add the associated rule ID to
+            //         each NIC's frontend configuration.
 
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
+            // STEP 1: Create the inbound NAT rules on the load balancer (if they don't already exist)
+
+            foreach (var azureVm in nameToVm.Values)
             {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
 
-                loadBalancerUpdater.DefineInboundNatRule(ruleName)
-                    .WithProtocol(TransportProtocol.Tcp)
-                    .FromExistingPublicIPAddress(publicAddress)
-                    .FromFrontendPort(azureNode.ExternalSshPort)
-                    .ToBackendPort(NetworkPorts.SSH)
-                    .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
-                    .Attach();
-            }
+                // Add the SSH NAT rule if it doesn't already exist.
 
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support the property (yet?).
-
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
-            {
-                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
-                var natRule  = loadBalancer.Inner.InboundNatRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                natRule.EnableTcpReset = true;
-            }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            foreach (var azureNode in SortedMasterThenWorkerNodes)
-            {
-                var sshRuleName = $"{publicSshRulePrefix}{azureNode.Name}";
-                var nicUpdater  = azureNode.Nic
-                    .Update()
-                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, sshRuleName);
-
-                if (azureNode.IsMaster)
+                if (!loadBalancer.Data.InboundNatRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerMasterBackendName);
+                    loadBalancer.Data.InboundNatRules.Add(
+                        new InboundNatRuleData()
+                        {
+                            Name                      = ruleName,
+                            FrontendIPConfigurationId = new ResourceIdentifier(loadBalancer.Data.FrontendIPConfigurations.Single().Id),
+                            Protocol                  = TransportProtocol.Tcp,
+                            FrontendPort              = azureVm.ExternalSshPort,
+                            BackendPort               = NetworkPorts.SSH,
+                            EnableTcpReset            = true,
+                            IdleTimeoutInMinutes      = maxAzureTcpIdleTimeoutMinutes,
+                            EnableFloatingIP          = false
+                        });
                 }
-
-                if (azureNode.Node.Metadata.Ingress)
-                {
-                    nicUpdater.WithExistingLoadBalancerBackend(loadBalancer, loadbalancerIngressBackendName);
-                }
-
-                azureNode.Nic = await nicUpdater.ApplyAsync();
             }
 
-            // Add NSG rules so that the public SSH NAT rules can actually route traffic to the nodes.
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, loadBalancer.Data)).Value;
+
+            // STEP 2: Add each inbound NAT rule to the associated VM NIC's IP configuration.
+
+            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
+                {
+                    var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
+                    var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
+                    var rule = loadBalancer.Data.InboundNatRules.SingleOrDefault(rule => rule.Name.Equals(ruleName, StringComparison.CurrentCultureIgnoreCase));
+
+                    if (rule != null && !vmIpConfiguration.LoadBalancerInboundNatRules
+                        .Any(rule =>
+                        {
+                            // $note(jefflill):
+                            //
+                            // Only the [rule.Id] property is set here so we need to extract the
+                            // rule name from the ID.
+
+                            var ruleId = new ResourceIdentifier(rule.Id);
+
+                            return ruleId.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase);
+                        }))
+                    {
+                        vmIpConfiguration.LoadBalancerInboundNatRules.Add(rule);
+
+                        azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, azureVm.Nic.Data.Name, azureVm.Nic.Data)).Value;
+                    }
+                });
+
+            loadBalancer = await loadBalancer.GetAsync();   // Fetch any NAT rule updates.
+
+            // Add NSG rules so that the public Kubernetes API and SSH NAT rules can actually route
+            // traffic to the nodes.
+            //
             // To keep things simple, we're going to generate a separate rule for each source
             // address restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
-            // This would be possible because NSGs rules allow a comma separated list of IP addresses
+            // This would be possible because NSG rules allow a comma separated list of IP addresses
             // or subnets to be specified.
 
             var priority  = firstSshNsgRulePriority;
@@ -2291,15 +2673,22 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 var ruleName = $"{publicSshRulePrefix}{ruleIndex++}";
 
-                subnetNsgUpdater.DefineRule(ruleName)
-                    .AllowInbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToPort(NetworkPorts.SSH)
-                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                    .WithPriority(priority++)
-                    .Attach();
+                if (!subnetNsg.Data.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    subnetNsg.Data.SecurityRules.Add(
+                        new SecurityRuleData()
+                        {
+                            Name                     = ruleName,
+                            Access                   = SecurityRuleAccess.Allow,
+                            Direction                = SecurityRuleDirection.Inbound,
+                            SourceAddressPrefix      = "0.0.0.0/0",
+                            SourcePortRange          = "*",
+                            DestinationAddressPrefix = subnet.AddressPrefix,
+                            DestinationPortRange     = "*",
+                            Protocol                 = SecurityRuleProtocol.Tcp,
+                            Priority                 = priority++
+                        });
+                }
             }
             else
             {
@@ -2312,77 +2701,31 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 foreach (var addressRule in networkOptions.ManagementAddressRules)
                 {
                     var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
-                    var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{ruleIndex++}-{addressRuleIndex++}"
-                                                              : $"{publicSshRulePrefix}{ruleIndex++}";
-                    switch (addressRule.Action)
+                    var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{ruleIndex++}-{addressRuleIndex++}" : $"{publicSshRulePrefix}{ruleIndex++}";
+
+                    if (!subnetNsg.Data.SecurityRules.Any(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase)))
                     {
-                        case AddressRuleAction.Allow:
-
-                            if (addressRule.IsAny)
+                        subnetNsg.Data.SecurityRules.Add(
+                            new SecurityRuleData()
                             {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .AllowInbound()
-                                    .FromAnyAddress()
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            else
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .AllowInbound()
-                                    .FromAddress(addressRule.AddressOrSubnet)
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            break;
-
-                        case AddressRuleAction.Deny:
-
-                            if (addressRule.IsAny)
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .DenyInbound()
-                                    .FromAnyAddress()
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            else
-                            {
-                                subnetNsgUpdater.DefineRule(ruleName)
-                                    .DenyInbound()
-                                    .FromAddress(addressRule.AddressOrSubnet)
-                                    .FromAnyPort()
-                                    .ToAnyAddress()
-                                    .ToPort(NetworkPorts.SSH)
-                                    .WithProtocol(SecurityRuleProtocol.Tcp)
-                                    .WithPriority(priority++)
-                                    .Attach();
-                            }
-                            break;
-
-                        default:
-
-                            throw new NotImplementedException();
+                                Name                     = ruleName,
+                                Access                   = addressRule.Action == AddressRuleAction.Allow ? SecurityRuleAccess.Allow : SecurityRuleAccess.Deny,
+                                Direction                = SecurityRuleDirection.Inbound,
+                                SourceAddressPrefix      = addressRule.IsAny ? "0.0.0.0/0" : addressRule.AddressOrSubnet,
+                                SourcePortRange          = "*",
+                                DestinationAddressPrefix = subnet.AddressPrefix,
+                                DestinationPortRange     = "*",
+                                Protocol                 = SecurityRuleProtocol.Tcp,
+                                Priority                 = priority++
+                            });
                     }
                 }
             }
 
             // Apply the updates.
 
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
+            subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsg.Data))).Value;
+            loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
         }
 
         /// <summary>
@@ -2393,37 +2736,38 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshRulesAsync()
         {
-            var loadBalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
+            await SyncContext.Clear;
 
-            // Remove all existing load balancer public SSH related NAT rules.
+            var loadBalancerCollection         = resourceGroup.GetLoadBalancers();
+            var networkSecurityGroupCollection = resourceGroup.GetNetworkSecurityGroups();
 
-            foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            // Remove all existing SSH related load balancer NAT and NSG rules.
+
+            var natDeleteRules = loadBalancer.Data.InboundNatRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            foreach (var rule in natDeleteRules)
             {
-                loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
+                loadBalancer.Data.InboundNatRules.Remove(rule);
             }
 
-            foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            var nsgDeleteRules = subnetNsg.Data.SecurityRules
+                .Where(rule => rule.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            if (nsgDeleteRules.Length > 0)
             {
-                subnetNsgUpdater.WithoutRule(rule.Name);
+                foreach (var rule in nsgDeleteRules)
+                {
+                    subnetNsg.Data.SecurityRules.Remove(rule);
+                }
+
+                // Apply the changes.
+
+                subnetNsg    = (await networkSecurityGroupCollection.CreateOrUpdateAsync(WaitUntil.Completed, subnetNsgName, WithNetworkTags(subnetNsg.Data))).Value;
+                loadBalancer = (await loadBalancerCollection.CreateOrUpdateAsync(WaitUntil.Completed, loadbalancerName, WithNetworkTags(loadBalancer.Data))).Value;
             }
-
-            loadBalancer        = await loadBalancerUpdater.ApplyAsync();
-            loadBalancerUpdater = loadBalancer.Update();
-
-            // Remove all of the SSH NAT related NSG rules.
-
-            foreach (var nsgRule in subnetNsg.SecurityRules.Values)
-            {
-                subnetNsgUpdater.WithoutRule(nsgRule.Name);
-            }
-
-            // Apply the changes.
-
-            loadBalancer = await loadBalancerUpdater.ApplyAsync();
-            subnetNsg    = await subnetNsgUpdater.ApplyAsync();
         }
 
         //---------------------------------------------------------------------
@@ -2431,7 +2775,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
-
 
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
@@ -2442,22 +2785,120 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
+            // $todo(jefflill): We're deferring checking quotas and current utilization for Azure:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1544
 
             // Verify that the region exists and is available to the current subscription.
 
-            var subscription = await azure.Subscriptions.GetByIdAsync(azureOptions.SubscriptionId);
-            var location     = subscription.ListLocations().SingleOrDefault(location => location.Name.Equals(azureOptions.Region, StringComparison.InvariantCultureIgnoreCase));
+            // $todo(jefflill):
+            //
+            // The [SubscriptionResource.GetAvailableLocationsAsync()] call below doesn't seem to 
+            // be working; it always returns an empty list.  We'll temporarily work around this by
+            // hardcoding known locations for the public cloud:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1555
 
-            if (location == null)
+            var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+#if DISABLED
+            foreach (var location in (await subscription.GetAvailableLocationsAsync()).Value)
+            {
+                locations.Add(location.Name);
+            }
+#else
+            var hardcodedLocations = new string[]
+            {
+                "eastus",
+                "eastus2",
+                "southcentralus",
+                "westus2",
+                "westus3",
+                "australiaeast",
+                "southeastasia",
+                "northeurope",
+                "swedencentral",
+                "uksouth",
+                "westeurope",
+                "centralus",
+                "southafricanorth",
+                "centralindia",
+                "eastasia",
+                "japaneast",
+                "koreacentral",
+                "canadacentral",
+                "francecentral",
+                "germanywestcentral",
+                "norwayeast",
+                "brazilsouth",
+                "eastus2euap",
+                "centralusstage",
+                "eastusstage",
+                "eastus2stage",
+                "northcentralusstage",
+                "southcentralusstage",
+                "westusstage",
+                "westus2stage",
+                "asia",
+                "asiapacific",
+                "australia",
+                "brazil",
+                "canada",
+                "europe",
+                "france",
+                "germany",
+                "global",
+                "india",
+                "japan",
+                "korea",
+                "norway",
+                "southafrica",
+                "switzerland",
+                "uae",
+                "uk",
+                "unitedstates",
+                "unitedstateseuap",
+                "eastasiastage",
+                "southeastasiastage",
+                "northcentralus",
+                "westus",
+                "jioindiawest",
+                "switzerlandnorth",
+                "uaenorth",
+                "centraluseuap",
+                "westcentralus",
+                "southafricawest",
+                "australiacentral",
+                "australiacentral2",
+                "australiasoutheast",
+                "japanwest",
+                "jioindiacentral",
+                "koreasouth",
+                "southindia",
+                "westindia",
+                "canadaeast",
+                "francesouth",
+                "germanynorth",
+                "norwaywest",
+                "switzerlandwest",
+                "ukwest",
+                "uaecentral",
+                "brazilsoutheast"
+            };
+
+            foreach (var location in hardcodedLocations)
+            {
+                locations.Add(location);
+            }
+#endif
+
+            if (!locations.Contains(regionName))
             {
                 var constraint =
                     new HostingResourceConstraint()
                     {
                         ResourceType = HostingConstrainedResourceType.VmHost,
-                        Details      = $"Azure region [{regionName}] not found or available.",
+                        Details      = $"Azure region [{regionName}] does not exist or is not available to your subscription.",
                         Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
                     };
 
@@ -2467,37 +2908,26 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     Constraints   = 
                         new Dictionary<string, List<HostingResourceConstraint>>()
                         {
-                            { $"AWS/{regionName}", new List<HostingResourceConstraint>() { constraint } }
+                            { $"AZURE/{regionName}", new List<HostingResourceConstraint>() { constraint } }
                         }
                 };
             }
 
-            // Verify that the instance types required by the cluster are available in the region.
+            // Verify that the virtual machine sizes required by the cluster are available in the region
+            // and also that all of the requested VM sizes are AMD64.
 
             // $todo(jefflill):
             //
             // We don't currently:
             // 
-            //      * ensure that all VM sizes required by the cluster
-            //      * VM sizes are AMD64 compatible
+            //      * Ensure that all VM sizes required by the cluster VM sizes are AMD64 compatible
             //      * VM is compatible with the storage tier specified for each node
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1545
 
-            var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
-            var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
-            var constraints  = new List<HostingResourceConstraint>();
+            await LoadVmSizeMetadataAsync();
 
-            foreach (var vmSize in await azure.VirtualMachines.Sizes.ListByRegionAsync(regionName))
-            {
-                nameToVmSize[vmSize.Name] = vmSize;
-            }
-
-            foreach (var vmSku in await azure.ComputeSkus.ListByRegionAsync(regionName))
-            {
-                nameToVmSku[vmSku.Name.Value] = vmSku;
-            }
-
+            var constraints    = new List<HostingResourceConstraint>();
             var clusterVmSizes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var node in cluster.Nodes)
@@ -2512,7 +2942,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             foreach (var vmSize in clusterVmSizes)
             {
-                if (!nameToVmSize.TryGetValue(vmSize, out var vmSizeInfo))
+                if (!nameToVmSku.TryGetValue(vmSize, out var vmSku))
                 {
                     constraints.Add(
                         new HostingResourceConstraint()
@@ -2527,6 +2957,20 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                     continue;
                 }
+
+                if (vmSku.CpuArchitecture != CpuArchitecture.Amd64)
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"VM Size [{vmSize}] [cpu-architecture={vmSku.CpuArchitecture}] is not currently supported by neonKUBE.",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Azure.VmSize == vmSize)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+                }
             }
 
             if (constraints.Count == 0)
@@ -2540,7 +2984,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             {
                 var constraintDictionary = new Dictionary<string, List<HostingResourceConstraint>>();
 
-                constraintDictionary.Add($"AWS/{regionName}", constraints);
+                constraintDictionary.Add($"AZURE/{regionName}", constraints);
 
                 return new HostingResourceAvailability()
                 {
@@ -2551,9 +2995,11 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
-            var clusterStatus = new ClusterInfo(cluster.Definition);
+            await SyncContext.Clear;
+
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -2563,14 +3009,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await ConnectAzureAsync();
 
             // We're going to infer the cluster provisiong status by examining the
-            // cluster login and the state of the VMs deployed to AWS.
+            // cluster login and the state of the VMs deployed to Azure.
 
             var contextName  = $"root@{cluster.Definition.Name}";
             var context      = KubeHelper.Config.GetContext(contextName);
             var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
 
-            // Create a hashset with the names of the nodes that map to deployed AWS
-            // machine instances.
+            // Create a hashset with the names of the nodes that map to deployed Azure
+            // virtual machines.
 
             var existingNodes = new HashSet<string>();
 
@@ -2607,6 +3053,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 // We're going to assume that all virtual machines in the cluster's resource group
                 // belong to the cluster and we'll map the actual VM states to public node states.
 
+                var virtualMachineCollection = resourceGroup.GetVirtualMachines();
+
                 foreach (var node in cluster.Definition.NodeDefinitions.Values)
                 {
                     var nodePowerState = ClusterNodeState.NotProvisioned;
@@ -2615,49 +3063,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     {
                         if (nameToVm.TryGetValue(node.Name, out var azureVm))
                         {
-                            var powerState = azureVm.Vm.PowerState;
-
-                            if (powerState == PowerState.Starting)
-                            {
-                                nodePowerState = ClusterNodeState.Starting;
-                            }
-                            else if (powerState == PowerState.Running)
-                            {
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Stopping)
-                            {
-                                // We don't currently have a status for stopping a node so we'll
-                                // consider it to be running because technically, it still is.
-
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Stopped)
-                            {
-                                nodePowerState = ClusterNodeState.Off;
-                            }
-                            else if (powerState == PowerState.Deallocating)
-                            {
-                                // We don't currently have a status for terminating a node so we'll
-                                // consider it to be running because technically, it still is.
-
-                                nodePowerState = ClusterNodeState.Running;
-                            }
-                            else if (powerState == PowerState.Deallocated)
-                            {
-                                nodePowerState = ClusterNodeState.NotProvisioned;
-                            }
-                            else
-                            {
-                                Covenant.Assert(false, $"Unexpected node instance status: [{powerState}]");
-                            }
+                            nodePowerState = azureVm.State;
                         }
                     }
 
                     clusterStatus.Nodes.Add(node.Name, nodePowerState);
                 }
 
-                // We're going to examine the node states from the AWS perspective and
+                // We're going to examine the node states from the Azure perspective and
                 // short-circuit the Kubernetes level cluster health check when the cluster
                 // nodes are not provisioned, are paused or appear to be transitioning
                 // between starting, stopping, or paused states.
@@ -2737,6 +3150,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
         /// <inheritdoc/>
         public override async Task StartClusterAsync()
         {
+            await SyncContext.Clear;
+
             // We're going to signal all cluster VMs to start.
 
             await ConnectAzureAsync();
@@ -2744,15 +3159,17 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
-                    var vm = nameToVm[node.Name];
+                    var azureVm = nameToVm[node.Name];
 
-                    await azure.VirtualMachines.StartAsync(resourceGroupName, vm.Name, cancellationToken);
+                    await azureVm.Vm.RestartAsync(WaitUntil.Completed);
                 });
         }
 
         /// <inheritdoc/>
         public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
+            await SyncContext.Clear;
+
             // We're going to signal all cluster VMs to stop.
 
             // $todo(jefflill): Note that the fluent SDK doesn't appear to support forced shutdown:
@@ -2764,19 +3181,21 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
-                    var vm = nameToVm[node.Name];
+                    var azureVm = nameToVm[node.Name];
 
-                    await azure.VirtualMachines.PowerOffAsync(resourceGroupName, vm.Name, cancellationToken);
+                    await azureVm.Vm.PowerOffAsync(WaitUntil.Completed, skipShutdown: stopMode != StopMode.Graceful);
                 });
         }
 
         /// <inheritdoc/>
         public override async Task RemoveClusterAsync(bool removeOrphans = false)
         {
+            await SyncContext.Clear;
+
             // We just need to delete the cluster resource group and everything within it.
 
             await ConnectAzureAsync();
-            await azure.ResourceGroups.DeleteByNameAsync(resourceGroupName, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
+            await resourceGroup.DeleteAsync(WaitUntil.Completed, forceDeletionTypes: "Microsoft.Compute/virtualMachines");
         }
     }
 }

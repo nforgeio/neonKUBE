@@ -110,7 +110,7 @@ namespace NeonDashboard
             }
 
             var configmap = k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus).Result;
-            NeonDashboardService.ClusterInfo = (new TypeSafeConfigMap<ClusterInfo>(configmap)).Config;
+            NeonDashboardService.ClusterInfo = (new TypeSafeConfigMap<ClusterStatus>(configmap)).Config;
 
             services.AddServerSideBlazor();
 

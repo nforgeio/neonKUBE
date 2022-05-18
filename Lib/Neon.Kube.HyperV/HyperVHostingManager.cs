@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -859,7 +859,7 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
@@ -905,7 +905,7 @@ namespace Neon.Kube
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterStatus = new ClusterInfo(cluster.Definition)
+                    var clusterStatus = new ClusterStatus(cluster.Definition)
                     {
                         State   = ClusterState.NotFound,
                         Summary = "Cluster does not exist"
@@ -924,7 +924,7 @@ namespace Neon.Kube
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
                     // zxthe actual VM states to public node states.
 
-                    var clusterStatus = new ClusterInfo(cluster.Definition);
+                    var clusterStatus = new ClusterStatus(cluster.Definition);
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
@@ -1190,7 +1190,7 @@ namespace Neon.Kube
 
                 if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
                 {
-                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), parallelOptions,
                         vm =>
                         {
                             hyperv.RemoveVm(vm.Name);

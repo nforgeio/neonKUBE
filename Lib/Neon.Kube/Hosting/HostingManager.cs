@@ -51,6 +51,12 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Maximum number of async operations that hosting managers should perform
+        /// in parallel.
+        /// </summary>
+        protected const int MaxAsyncParallelHostingOperations = 25;
+
+        /// <summary>
         /// Determines whether the hosting environment supports <b>fstrim</b>.
         /// </summary>
         /// <param name="environment">Specifies the hosting environment.</param>
@@ -145,12 +151,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task UpdateInternetRoutingAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public virtual async Task EnableInternetSshAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 
@@ -328,7 +336,7 @@ namespace Neon.Kube
         public abstract Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
 
         /// <inheritdoc/>
-        public abstract Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default);
+        public abstract Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default);
 
         /// <inheritdoc/>
         public virtual async Task StartClusterAsync()

@@ -18,9 +18,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Retry;
-using Neon.Kube.Operator;
+using Neon.Tasks;
 
 using k8s.Models;
 
@@ -73,6 +74,8 @@ namespace NeonNodeAgent
         /// <returns>The mutation result.</returns>
         public async Task<MutationResult> UpdateAsync(V1Pod originalPod, V1Pod newPod, bool dryRun)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(MutationResult.NoChanges());
         }
     }
