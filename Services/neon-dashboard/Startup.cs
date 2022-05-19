@@ -46,10 +46,11 @@ namespace NeonDashboard
     /// </summary>
     public class Startup
     {
-        public IConfiguration Configuration { get; }
-        public Service NeonDashboardService;
-        public KubernetesWithRetry k8s;
-        public static Dictionary<string, string> Svgs;
+        public IConfiguration                       Configuration { get; }
+        public Service                              NeonDashboardService;
+        public KubernetesWithRetry                  k8s;
+        public static Dictionary<string, string>    Svgs;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -76,18 +77,21 @@ namespace NeonDashboard
                 try
                 {
                     var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
-                    k8s  = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+                    
+                    k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
                     // set config map
                     var configMap = k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
+
                     NeonDashboardService.SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
 
-                    var secret    = k8s.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                    var secret = k8s.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+
                     NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
                     // Configure cluster callback url to allow local dev
-                    var dexConfigMap = k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
 
+                    var dexConfigMap = k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
                     var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
                     var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
                     var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
@@ -110,6 +114,7 @@ namespace NeonDashboard
             }
 
             var configmap = k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus).Result;
+
             NeonDashboardService.ClusterInfo = (new TypeSafeConfigMap<ClusterStatus>(configmap)).Config;
 
             services.AddServerSideBlazor();
@@ -120,9 +125,9 @@ namespace NeonDashboard
             })
             .AddCookie(options =>
             {
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                options.ExpireTimeSpan    = TimeSpan.FromMinutes(20);
                 options.SlidingExpiration = true;
-                options.AccessDeniedPath = "/Forbidden/";
+                options.AccessDeniedPath  = "/Forbidden/";
             })
             .AddOpenIdConnect("oidc", options =>
             {
