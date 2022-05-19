@@ -109,7 +109,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public const string Crio = "1.23.2";
+        public const string Crio = Kubernetes;
 
         /// <summary>
         /// The version of Calico to install.
