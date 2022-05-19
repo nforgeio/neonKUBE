@@ -43,7 +43,6 @@ namespace Neon.Deployment
     /// <summary>
     /// Used to manage GitHub repo tags.
     /// </summary>
-    /// <remarks>
     public class GitHubTagApi
     {
         /// <summary>
