@@ -1531,29 +1531,29 @@ namespace Neon.Kube
 
             // Elastic IPs
 
-            if (awsOptions.HasCustomElasticIPs)
+            if (awsOptions.Network.HasCustomElasticIPs)
             {
                 var describeResponse = await ec2Client.DescribeAddressesAsync(
                     new DescribeAddressesRequest()
                     {
                         AllocationIds = new List<string>()
                          {
-                             awsOptions.ElasticIpIngressId,
-                             awsOptions.ElasticIpEgressId
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
                          }
                     });
 
-                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
-                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
 
                 if (ingressAddress == null)
                 {
-                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
                 }
 
                 if (egressAddress == null)
                 {
-                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
                 }
 
                 ingressAddressName = ingressAddress.Tags
@@ -2198,7 +2198,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (awsOptions.HasCustomElasticIPs)
+            if (awsOptions.Network.HasCustomElasticIPs)
             {
                 controller.SetGlobalStepStatus("check: elastic IP addresses");
 
@@ -2207,22 +2207,22 @@ namespace Neon.Kube
                     {
                          AllocationIds = new List<string>()
                          {
-                             awsOptions.ElasticIpIngressId,
-                             awsOptions.ElasticIpEgressId
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
                          }
                     });
 
-                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
-                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
 
                 if (ingressAddress == null)
                 {
-                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
                 }
 
                 if (egressAddress == null)
                 {
-                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
                 }
 
                 ingressAddressName = ingressAddress.Tags
@@ -4330,7 +4330,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             //-----------------------------------------------------------------
             // Step #7: Release Elastic IPs created for the cluster
 
-            if (!cluster.Definition.Hosting.Aws.HasCustomElasticIPs)
+            if (!cluster.Definition.Hosting.Aws.Network.HasCustomElasticIPs)
             {
                 if (ingressAddress != null)
                 {

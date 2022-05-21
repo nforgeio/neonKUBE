@@ -91,6 +91,14 @@ namespace Neon.Kube
         public string AvailabilityZone { get; set; }
 
         /// <summary>
+        /// Specifies the AWS related cluster network options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "network", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public AwsNetworkOptions Network { get; set; }
+
+        /// <summary>
         /// Returns the AWS region where the cluster will be provisioned.  This is
         /// derived from <see cref="AvailabilityZone"/> by removing the last character, which
         /// is the zone suffix.
@@ -338,55 +346,6 @@ namespace Neon.Kube
         public string PublicSubnet { get; set; } = defaultPublicSubnet;
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies an existing Elastic IP address to be used by the cluster load balancer
-        /// for receiving network traffic.  Set this to your Elastic IP allocation ID (something
-        /// like <b>eipalloc-080a1efa9c04ad72</b>).  This is useful for ensuring that your cluster
-        /// is always provisioned with a known static IP.
-        /// </para>
-        /// <note>
-        /// When this isn't specified, the cluster will be configured with new Elastic IPs that will
-        /// be released when the cluster is deleted.
-        /// </note>
-        /// <note>
-        /// <see cref="ElasticIpIngressId"/> and <see cref="ElasticIpEgressId"/> must be specified
-        /// together or not at all.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "ElasticIpIngressId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "elasticIpIngressId", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ElasticIpIngressId { get; set; } = null;
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies an existing Elastic IP address to be used by the cluster load balancer
-        /// for sending network traffic.  Set this to your Elastic IP allocation ID (something
-        /// like <b>eipalloc-080a1efa9c04ad88</b>).  This is useful for ensuring that your cluster
-        /// is always provisioned with a known static IP.
-        /// </para>
-        /// <note>
-        /// When this isn't specified, the cluster will be configured with new Elastic IPs that will
-        /// be released when the cluster is deleted.
-        /// </note>
-        /// <note>
-        /// <see cref="ElasticIpIngressId"/> and <see cref="ElasticIpEgressId"/> must be specified
-        /// together or not at all.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "ElasticIpEgressId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "elasticIpEgressId", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ElasticIpEgressId { get; set; } = null;
-
-        /// <summary>
-        /// Returns <c>true</c> when the cluster references existing Elastic IP addresses for ingress and egress.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool HasCustomElasticIPs => !string.IsNullOrEmpty(ElasticIpIngressId) && !string.IsNullOrEmpty(ElasticIpEgressId);
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -395,6 +354,10 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            Network ??= new AwsNetworkOptions();
+
+            Network.Validate(clusterDefinition);
 
             var awsHostionOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Aws)}";
 
@@ -583,42 +546,6 @@ namespace Neon.Kube
             if (privateSubnet.Overlaps(publicSubnet))
             {
                 throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] and [{nameof(PublicSubnet)}={PublicSubnet}] cannot overlap.");
-            }
-
-            var elasticIpIdRegex = new Regex(@"^eipalloc-[0-9a-f]+$");
-
-            if (!string.IsNullOrEmpty(ElasticIpIngressId))
-            {
-                if (!elasticIpIdRegex.IsMatch(ElasticIpIngressId))
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ElasticIpIngressId)}={ElasticIpIngressId}] is not a valid Elastic IP allocation ID.");
-                }
-            }
-
-            if (!string.IsNullOrEmpty(ElasticIpEgressId))
-            {
-                if (!elasticIpIdRegex.IsMatch(ElasticIpEgressId))
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ElasticIpEgressId)}={ElasticIpEgressId}] is not a valid Elastic IP allocation ID.");
-                }
-            }
-
-            if (!string.IsNullOrEmpty(ElasticIpIngressId) || !string.IsNullOrEmpty(ElasticIpEgressId))
-            {
-                if (string.IsNullOrEmpty(ElasticIpIngressId))
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ElasticIpEgressId)}] is also required when [{nameof(ElasticIpIngressId)}] is specified.");
-                }
-
-                if (string.IsNullOrEmpty(ElasticIpEgressId))
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ElasticIpIngressId)}] is also required when [{nameof(ElasticIpEgressId)}] is specified.");
-                }
-
-                if (ElasticIpIngressId == ElasticIpEgressId)
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(ElasticIpIngressId)}] and [{nameof(ElasticIpEgressId)}] must be different.");
-                }
             }
         }
 
