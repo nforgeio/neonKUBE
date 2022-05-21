@@ -87,6 +87,8 @@ This command removes a named password or all passwords.
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             var nameArg = commandLine.Arguments.ElementAtOrDefault(0);
             var force   = commandLine.HasOption("--force");
 

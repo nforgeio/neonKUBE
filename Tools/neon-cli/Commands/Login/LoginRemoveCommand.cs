@@ -82,6 +82,8 @@ USER@CLUSTER[/NAMESPACE is not specified.
             KubeConfigContext   context     = null;
             KubeContextName     contextName = null;
 
+            Console.WriteLine();
+
             var force = commandLine.HasOption("--force");
 
             if (commandLine.Arguments.Length > 0)
