@@ -1577,14 +1577,14 @@ namespace Neon.Kube
         /// the <see cref="nameToVm"/> dictionary values.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetClusterVmStatuses()
+        private async Task GetAllClusterVmStatus()
         {
             await SyncContext.Clear;
             Covenant.Assert(azure != null);
             Covenant.Assert(nameToVm != null);
 
             // Unforunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
-            // so we need to query for each VM state individually.  We'll do this in parallel to speed thinbgs up.
+            // so we need to query for each VM state individually.  We'll do this in parallel to speed things up.
             //
             // We'll be querying for each VM for its [InstanceView] and examine it's current status:
             //
@@ -1607,34 +1607,34 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        switch (latestStatus.Code)
+                        switch (latestStatus.Code.ToLowerInvariant())
                         {
-                            case "PowerState/Starting":
+                            case "powerstate/starting":
 
                                 azureVm.State = ClusterNodeState.Starting;
                                 break;
 
-                            case "PowerState/Running":
+                            case "powerstate/running":
 
                                 azureVm.State = ClusterNodeState.Running;
                                 break;
 
-                            case "PowerState/Stopping":
+                            case "powerstate/stopping":
 
                                 azureVm.State = ClusterNodeState.Running;
                                 break;
 
-                            case "PowerState/Stopped":
+                            case "powerstate/stopped":
 
                                 azureVm.State = ClusterNodeState.Off;
                                 break;
 
-                            case "PowerState/Deallocating":
+                            case "powerstate/deallocating":
 
                                 azureVm.State = ClusterNodeState.Running;
                                 break;
 
-                            case "PowerState/Deallocated":
+                            case "powerstate/deallocated":
 
                                 azureVm.State = ClusterNodeState.NotProvisioned;
                                 break;
@@ -3053,7 +3053,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 // We're going to assume that all virtual machines in the cluster's resource group
                 // belong to the cluster and we'll map the actual VM states to public node states.
 
-                var virtualMachineCollection = resourceGroup.GetVirtualMachines();
+                await GetAllClusterVmStatus();
 
                 foreach (var node in cluster.Definition.NodeDefinitions.Values)
                 {
