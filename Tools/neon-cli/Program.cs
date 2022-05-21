@@ -479,7 +479,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
             {
                 while (true)
                 {
-                    Console.WriteLine();
                     Console.Write($"{prompt} [y/n]: ");
 
                     var key = Console.ReadKey().KeyChar;
