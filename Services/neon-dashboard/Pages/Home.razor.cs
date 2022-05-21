@@ -49,13 +49,13 @@ namespace NeonDashboard.Pages
             clusterInfo = NeonDashboardService.ClusterInfo;
         }
 
-
-
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
             AppState.CurrentDashboard = "neonkube";
             AppState.NotifyDashboardChanged();
+
+            await Task.CompletedTask;
         }
     }
 }

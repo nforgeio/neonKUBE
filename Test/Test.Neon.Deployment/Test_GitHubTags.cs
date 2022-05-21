@@ -39,7 +39,7 @@ namespace TestDeployment
     public partial class Test_GitHubTags
     {
         [Fact]
-        public async Task ListTags()
+        public void ListTags()
         {
             // Verify that we can list a repo's tags.
 
