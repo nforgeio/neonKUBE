@@ -1098,8 +1098,16 @@ location = ""{KubeConst.LocalClusterRegistry}""
             //-----------------------------------------------------------------
             // Install and configure CRI-O.
 
-            var crioVersion = Version.Parse(KubeVersions.Crio);
-            var install     = reconfigureOnly ? "false" : "true";
+            // $note(jefflill):
+            //
+            // Version pinning doesn't seem to work:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1563
+
+            var crioVersionFull    = Version.Parse(KubeVersions.Crio);
+            var crioVersionNoPatch = new Version(crioVersionFull.Major, crioVersionFull.Minor);
+            var crioVersionPinned  = $"{crioVersionNoPatch}:{crioVersionFull}";
+            var install            = reconfigureOnly ? "false" : "true";
 
             var setupScript =
 $@"
@@ -1107,37 +1115,25 @@ if [ ""{install}"" = ""true"" ]; then
 
     set -euo pipefail
 
+    # Initialize the OS and VERSION environment variables.
+
+    OS=xUbuntu_20.04
+    VERSION={crioVersionNoPatch}
+
     # Install the CRI-O packages.
 
-    cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
-EOF
+    echo ""deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo ""deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
-    cat <<EOF > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}:{KubeVersions.Crio}.list
-deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{crioVersion.Major}.{crioVersion.Minor}:/{KubeVersions.Crio}/xUbuntu_20.04/ /
-EOF
+    mkdir -p /usr/share/keyrings
 
-    # $note(jefflill):
-    #
-    # CRI-O mirror management (by the famous [haircommander]) is unreliable, so we're
-    # going to use the [--verbose] option here to make it easier to see what happened.
-    #
-    # This may actually be due to a cURL bug:
-    #
-    #   https://curl-library.cool.haxx.narkive.com/EtiNq1og/libcurl-reports-error-in-the-http2-framing-layer-16-for-outgoing-request
-    #
-    # I'm going to comment this out and switch to WGET.
-    #
-    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-    # curl {KubeHelper.CurlOptions} --verbose https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key > /tmp/key.txt
+    cat /tmp/key.txt | gpg --dearmor --yes -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
+    rm /tmp/key.txt
 
-    wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key -O /tmp/key
-    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
-    rm /tmp/key
-
-    wget https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{crioVersion.Major}.{crioVersion.Minor}/xUbuntu_20.04/Release.key -O /tmp/key
-    cat /tmp/key | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers-cri-o.gpg add -
-    rm /tmp/key
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key > /tmp/key.txt
+    cat /tmp/key.txt | gpg --dearmor --yes -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+    rm /tmp/key.txt
 
     {KubeNodeFolder.Bin}/safe-apt-get update -y
     {KubeNodeFolder.Bin}/safe-apt-get install -y cri-o cri-o-runc

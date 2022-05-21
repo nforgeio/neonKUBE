@@ -112,6 +112,11 @@ namespace Neon.Kube
         public const string Crio = Kubernetes;
 
         /// <summary>
+        /// The version of Podman to be installed.
+        /// </summary>
+        public const string Podman = "3.4.2";
+
+        /// <summary>
         /// The version of Calico to install.
         /// </summary>
         public const string Calico = "3.22.2";
