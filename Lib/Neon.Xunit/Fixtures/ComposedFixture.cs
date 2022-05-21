@@ -470,7 +470,7 @@ namespace Neon.Xunit
         /// Returns the fixture at the specified index (based on the order
         /// the fixture was added).
         /// </summary>
-        /// <param name="index">Specfies the index of the desired fixture.</param>
+        /// <param name="index">specifies the index of the desired fixture.</param>
         /// <returns>The test fixture.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if <paramref name="index"/> is outside the range of valid indexes.</exception>
         public ITestFixture this[int index]

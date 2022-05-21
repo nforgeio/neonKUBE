@@ -339,7 +339,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Optionally specfies an existing Elastic IP address to be used by the cluster load balancer
+        /// Optionally specifies an existing Elastic IP address to be used by the cluster load balancer
         /// for receiving network traffic.  Set this to your Elastic IP allocation ID (something
         /// like <b>eipalloc-080a1efa9c04ad72</b>).  This is useful for ensuring that your cluster
         /// is always provisioned with a known static IP.
@@ -360,7 +360,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Optionally specfies an existing Elastic IP address to be used by the cluster load balancer
+        /// Optionally specifies an existing Elastic IP address to be used by the cluster load balancer
         /// for sending network traffic.  Set this to your Elastic IP allocation ID (something
         /// like <b>eipalloc-080a1efa9c04ad88</b>).  This is useful for ensuring that your cluster
         /// is always provisioned with a known static IP.
