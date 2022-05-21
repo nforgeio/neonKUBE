@@ -87,6 +87,8 @@ EXITCODE:
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
