@@ -38,7 +38,24 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies AWS related network options.
+    /// <para>
+    /// Specifies AWS related network options, optionally specifying existing Elastic IP addresses
+    /// to use for cluster ingress and egress.
+    /// </para>
+    /// <para>
+    /// By default, clusters will be deployed with newly created addresses.  This means that the cluster
+    /// ingress change will change everytime the cluster is redeployed, which means that you may need
+    /// to update your DNS zone and also that the IP address for outbound traffic will also change which
+    /// may require that you update whitelist rules for other services.
+    /// </para>
+    /// <para>
+    /// You can mitigate this by creating ingress/egress elastic IPs, setting <see cref="ElasticIpIngressId"/>
+    /// and <see cref="ElasticIpEgressId"/> to their IDs before deploying your cluster.
+    /// </para>
+    /// <note>
+    /// <see cref="ElasticIpIngressId"/> and <see cref="ElasticIpEgressId"/> must be specified
+    /// together or not at all.
+    /// </note>
     /// </summary>
     public class AwsNetworkOptions
     {
