@@ -109,7 +109,7 @@ USAGE:
 
                         Console.WriteLine($"Locking: {cluster.Name}...");
                         await cluster.LockAsync();
-                        Console.WriteLine($"[{cluster.Name}]: LOCKED");
+                        Console.WriteLine("LOCKED");
                         break;
 
                     default:
