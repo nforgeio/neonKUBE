@@ -62,6 +62,7 @@ using Neon.Time;
 
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Neon.Kube
 {
@@ -829,7 +830,9 @@ namespace Neon.Kube
         // These names will be used to identify the cluster resources.
 
         private readonly string                             resourceGroupName;
-        private readonly string                             publicAddressName;
+        private readonly string                             publicIngressAddressName;
+        private readonly string                             publicEgressAddressName;
+        private readonly string                             publicEgressPrefixName;
         private readonly string                             vnetName;
         private readonly string                             subnetName;
         private readonly string                             primaryNicName;
@@ -839,11 +842,14 @@ namespace Neon.Kube
         private readonly string                             loadbalancerIngressBackendName;
         private readonly string                             loadbalancerMasterBackendName;
         private readonly string                             subnetNsgName;
+        private readonly string                             natGatewayName;
 
         // These reference the cluster's Azure resources.
 
         private ResourceGroupResource                       resourceGroup; 
-        private PublicIPAddressResource                     publicAddress;
+        private PublicIPAddressResource                     publicIngressAddress;
+        private PublicIPAddressResource                     publicEgressAddress;
+        private PublicIPPrefixResource                      publicEgressPrefix;
         private IPAddress                                   clusterAddress;
         private VirtualNetworkResource                      vnet;
         private SubnetData                                  subnet;
@@ -851,6 +857,7 @@ namespace Neon.Kube
         private ProximityPlacementGroupResource             proximityPlacementGroup;
         private Dictionary<string, AvailabilitySetResource> nameToAvailabilitySet;
         private NetworkSecurityGroupResource                subnetNsg;
+        private NatGatewayResource                          natGateway;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -919,13 +926,16 @@ namespace Neon.Kube
             //
             // optionally combined with the cluster name.
 
-            this.publicAddressName              = GetResourceName("pip", "cluster", true);
+            this.publicIngressAddressName       = GetResourceName("pip", "cluster-ingress", true);
+            this.publicEgressAddressName        = GetResourceName("pip", "cluster-egress", true);
+            this.publicEgressPrefixName         = GetResourceName("ippre", "cluster-egress", true);
             this.vnetName                       = GetResourceName("vnet", "cluster", true);
             this.subnetName                     = GetResourceName("snet", "cluster", true);
             this.primaryNicName                 = "primary";
             this.proximityPlacementGroupName    = GetResourceName("ppg", "cluster", true);
             this.loadbalancerName               = GetResourceName("lbe", "public", true);
             this.subnetNsgName                  = GetResourceName("nsg", "subnet");
+            this.natGatewayName                 = GetResourceName("ng", "cluster", true);
             this.loadbalancerFrontendName       = "ingress";
             this.loadbalancerIngressBackendName = "ingress-nodes";
             this.loadbalancerMasterBackendName  = "master-nodes";
@@ -1143,9 +1153,10 @@ namespace Neon.Kube
             }
 
             controller.AddGlobalStep("availability sets", state => CreateAvailabilitySetsAsync());
+            controller.AddGlobalStep("public addresses/prefixes", state => CreateAddressesAndPrefixAsync());
             controller.AddGlobalStep("network security groups", state => CreateNetworkSecurityGroupAsync());
+            controller.AddGlobalStep("nat gateway", state => CreateNatGatewayAsync());
             controller.AddGlobalStep("virtual network", state => CreateVirtualNetworkAsync());
-            controller.AddGlobalStep("public address", state => CreatePublicAddressAsync());
             controller.AddGlobalStep("ssh config", ConfigureNodeSsh, quiet: true);
             controller.AddGlobalStep("load balancer", state => CreateLoadBalancerAsync());
             controller.AddGlobalStep("listing virtual machines",
@@ -1359,7 +1370,7 @@ namespace Neon.Kube
                 throw new NeonKubeException($"Cannot locate Azure VM for the [{nodeName}] node.");
             }
 
-            return (Address: publicAddress.Data.IPAddress, Port: azureVm.ExternalSshPort);
+            return (Address: publicIngressAddress.Data.IPAddress, Port: azureVm.ExternalSshPort);
         }
 
         /// <inheritdoc/>
@@ -1382,7 +1393,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
-            return publicAddress.Data.IPAddress;
+            return publicIngressAddress.Data.IPAddress;
         }
 
         /// <summary>
@@ -1490,17 +1501,28 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Network stuff.
 
-            var publicAddresses = resourceGroup.GetPublicIPAddresses();
-
-            if (await publicAddresses.ExistsAsync(publicAddressName))
-            {
-                publicAddress  = await publicAddresses.GetAsync(publicAddressName);
-                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.Data.IPAddress);
-            }
-
             var vnetCollection         = resourceGroup.GetVirtualNetworks();
             var nsgCollection          = resourceGroup.GetNetworkSecurityGroups();
             var loadBalancerCollection = resourceGroup.GetLoadBalancers();
+            var natGatewayCollection   = resourceGroup.GetNatGateways();
+            var publicAddresses        = resourceGroup.GetPublicIPAddresses();
+            var publicPrefixes         = resourceGroup.GetPublicIPPrefixes();
+
+            if (await publicAddresses.ExistsAsync(publicIngressAddressName))
+            {
+                publicIngressAddress = await publicAddresses.GetAsync(publicIngressAddressName);
+                clusterAddress       = NetHelper.ParseIPv4Address(publicIngressAddress.Data.IPAddress);
+            }
+
+            if (await publicAddresses.ExistsAsync(publicEgressAddressName))
+            {
+                publicEgressAddress = await publicAddresses.GetAsync(publicEgressAddressName);
+            }
+
+            if (await publicPrefixes.ExistsAsync(publicEgressPrefixName))
+            {
+                publicEgressPrefix = await publicPrefixes.GetAsync(publicEgressPrefixName);
+            }
 
             if (await vnetCollection.ExistsAsync(vnetName))
             {
@@ -1516,6 +1538,11 @@ namespace Neon.Kube
             if (await loadBalancerCollection.ExistsAsync(loadbalancerName))
             {
                 loadBalancer = (await loadBalancerCollection.GetAsync(loadbalancerName)).Value;
+            }
+
+            if (await natGatewayCollection.ExistsAsync(natGatewayName))
+            {
+                natGateway = (await natGatewayCollection.GetAsync(natGatewayName)).Value;
             }
 
             //-----------------------------------------------------------------
@@ -1897,6 +1924,65 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Creates the public IP addresses and outbound NAT prefix as required.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CreateAddressesAndPrefixAsync()
+        {
+            await SyncContext.Clear;
+
+            var publicAddressCollection = resourceGroup.GetPublicIPAddresses();
+            var publicPrefixCollection  = resourceGroup.GetPublicIPPrefixes();
+
+            if (publicIngressAddress == null)
+            {
+                controller.SetGlobalStepStatus("create: cluster ingress address");
+
+                var ingressAddressData = new PublicIPAddressData()
+                {
+                    Location                 = azureLocation,
+                    DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel},
+                    PublicIPAllocationMethod = IPAllocationMethod.Static,
+                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
+                };
+
+                publicIngressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicIngressAddressName, WithNetworkTags(ingressAddressData))).Value;
+                clusterAddress       = NetHelper.ParseIPv4Address(publicIngressAddress.Data.IPAddress);
+
+                cluster.Definition.PublicAddresses = new List<string>() { publicIngressAddress.Data.IPAddress };
+
+                controller.SetGlobalStepStatus("create: cluster egress address");
+
+                var egressAddressData = new PublicIPAddressData()
+                {
+                    Location                 = azureLocation,
+                    PublicIPAllocationMethod = IPAllocationMethod.Static,
+                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
+                };
+
+                publicEgressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressAddressName, WithNetworkTags(egressAddressData))).Value;
+            }
+
+            // We'll favor an existing public egress prefix or address, otherwise
+            // we'll create a prefix if a prefix length was specified othewise we'll
+            // create an public IP.
+
+            if (azureOptions.Network.EgressPublicIpPrefixId != null)
+            {
+
+            }
+            else if (azureOptions.Network.EgressPublicIpId != null)
+            {
+            }
+            else if (azureOptions.Network.EgressPublicIpPrefixLength > 0)
+            {
+            }
+            else
+            {
+            }
+        }
+
+        /// <summary>
         /// Creates the network security group.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1921,6 +2007,46 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Creates the cluster's outbound NAT gateway.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CreateNatGatewayAsync()
+        {
+            await SyncContext.Clear;
+
+            var natGatewayCollection = resourceGroup.GetNatGateways();
+
+            if (natGateway == null)
+            {
+                controller.SetGlobalStepStatus("create: internet NAT gateway");
+
+                var natGatewayData = new NatGatewayData()
+                {
+                    Location             = azureLocation,
+                    SkuName              = NatGatewaySkuName.Standard,
+                    IdleTimeoutInMinutes = azureOptions.Network.MaxNatGatewayTcpIdle
+                };
+
+                // Attach the public egress IP address or prefix.
+
+                if (publicEgressPrefix != null)
+                {
+                    natGatewayData.PublicIPPrefixes.Add(new WritableSubResource() { Id = publicEgressPrefix.Id });
+                }
+                else if (publicEgressAddress != null)
+                {
+                    natGatewayData.PublicIPAddresses.Add(new WritableSubResource() { Id = publicEgressAddress.Id });
+                }
+                else
+                {
+                    Covenant.Assert(false, "Expected a public IP address or prefix.");
+                }
+
+                natGateway = (await natGatewayCollection.CreateOrUpdateAsync(WaitUntil.Completed, natGatewayName, WithNetworkTags(natGatewayData))).Value;
+            }
+        }
+
+        /// <summary>
         /// Creates the cluster's virtual network.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1941,6 +2067,7 @@ namespace Neon.Kube
                     {
                         Name                 = subnetName,
                         AddressPrefix        = azureOptions.NodeSubnet,
+                        NatGatewayId         = natGateway.Id,
                         NetworkSecurityGroup = new NetworkSecurityGroupData() { Id = subnetNsg.Id }
                     });
 
@@ -1956,46 +2083,18 @@ namespace Neon.Kube
 
                 vnet   = (await networkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, WithNetworkTags(networkData))).Value;
                 subnet = vnet.Data.Subnets.First();
+
+                // Reload to pick up any changes.
+
+                var natGatewayCollection = resourceGroup.GetNatGateways();
+
+                natGateway = (await natGatewayCollection.GetAsync(natGatewayName)).Value;
             }
         }
 
         /// <summary>
-        /// Creates the public IP address for the cluster's load balancer.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreatePublicAddressAsync()
-        {
-            await SyncContext.Clear;
-
-            if (publicAddress == null)
-            {
-                controller.SetGlobalStepStatus("create: public IPv4 address");
-
-                var publicAddressCollection = resourceGroup.GetPublicIPAddresses();
-                var publicAddressData = new PublicIPAddressData()
-                {
-                    Location                 = azureLocation,
-                    DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel},
-                    PublicIPAllocationMethod = IPAllocationMethod.Static,
-                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
-                };
-
-                publicAddress  = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicAddressName, WithNetworkTags(publicAddressData))).Value;
-                clusterAddress = NetHelper.ParseIPv4Address(publicAddress.Data.IPAddress);
-
-                // Set [ClusterDefinition.PublicAddresses] to the public IP if the
-                // user hasn't specified any addresses.
-
-                if (cluster.Definition.PublicAddresses.Count == 0)
-                {
-                    cluster.Definition.PublicAddresses.Add(publicAddress.Data.IPAddress);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Assigns external SSH ports to Azure VM records that don't already have one and update
-        /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
+        /// Assigns external SSH ports to Azure VM records that don't already have one and updates
+        /// the cluster node tags to identify the cluster's public IP and assigned SSH port.  Note
         /// that we're not actually going to write the virtual machine tags here; we'll do that
         /// when we actually create any new VMs.
         /// </summary>
@@ -2047,13 +2146,13 @@ namespace Neon.Kube
             // endpoint but we have a bit of a chicken-and-egg problem so this seems
             // to be the easiest approach.
 
-            Covenant.Assert(publicAddress != null);
+            Covenant.Assert(publicIngressAddress != null);
 
             foreach (var node in cluster.Nodes)
             {
                 var azureVm = nameToVm[node.Name];
 
-                node.Address = IPAddress.Parse(publicAddress.Data.IPAddress);
+                node.Address = IPAddress.Parse(publicIngressAddress.Data.IPAddress);
                 node.SshPort = azureVm.ExternalSshPort;
             }
         }
@@ -2081,7 +2180,7 @@ namespace Neon.Kube
                     new FrontendIPConfigurationData()
                     {
                         Name            = loadbalancerFrontendName,
-                        PublicIPAddress = publicAddress.Data,
+                        PublicIPAddress = publicIngressAddress.Data,
                     });
 
                 loadBalancerData.BackendAddressPools.Add(

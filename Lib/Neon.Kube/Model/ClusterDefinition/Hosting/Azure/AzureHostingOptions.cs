@@ -153,6 +153,14 @@ namespace Neon.Kube
         public bool DisableProximityPlacement { get; set; } = false;
 
         /// <summary>
+        /// Specifies the Azure related cluster network options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "network", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public AzureNetworkOptions Network { get; set; }
+
+        /// <summary>
         /// The DNS domain prefix for the public IP address to be assigned to the cluster.
         /// This defaults to <b>"neon-UUID"</b> where UUID is generated.
         /// </summary>
@@ -401,6 +409,10 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            Network ??= new AzureNetworkOptions();
+
+            Network.Validate(clusterDefinition);
 
             var azureHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
 
