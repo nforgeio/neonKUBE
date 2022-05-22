@@ -4080,13 +4080,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // Here's how we're going to do this:
             //
             //      1. Terminate all cluster instances
-            //      2. Remove the load balancer
-            //      3. Remove all target groups
-            //      4. Remove the NAT gateway and the route tables
-            //      5. Remove resources referenced by the VPC
-            //      6. Remove the VPC
-            //      7. Release Elastic IPs created with the cluster
-            //      8. Remove the resource group
+            //      2. Remove the placement groups
+            //      3. Remove the load balancer
+            //      4. Remove all target groups
+            //      5. Remove the NAT gateway and the route tables
+            //      6. Remove resources referenced by the VPC
+            //      7. Remove the VPC
+            //      8. Release Elastic IPs created with the cluster
+            //      9. Remove the resource group
             //
             // Note that these resources need to be deleted in this order to unwind
             // any dependencies and also that we're going to retry [DependencyViolation]
@@ -4126,7 +4127,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             //-----------------------------------------------------------------
-            // Step #1: Terminate all cluster instances
+            // Step 1: Terminate all cluster instances
 
             if (instanceIds.Count > 0)
             {
@@ -4134,7 +4135,20 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #2: Remove the load balancer
+            // Step 2: Remove tyhe placement groups
+
+            if (masterPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(masterPlacementGroup.GroupName)));
+            }
+
+            if (workerPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(workerPlacementGroup.GroupName)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 3: Remove the load balancer
 
             if (loadBalancer != null)
             {
@@ -4142,7 +4156,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #3: Remove all of the target groups
+            // Step #4: Remove all of the target groups
 
             await Parallel.ForEachAsync(nameToTargetGroup.Values, parallelOptions,
                 async (targetGroup, cancellationToken) =>
@@ -4151,7 +4165,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 });
 
             //-----------------------------------------------------------------
-            // Step #4: Remove the NAT gateway
+            // Step 5: Remove the NAT gateway
 
             if (ingressAddress != null && ingressAddress.AssociationId != null)
             {
@@ -4221,7 +4235,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #5: Remove resources referenced by the VPC:
+            // Step 6: Remove resources referenced by the VPC:
             //
             //      Internet Gateway
             //      Node Subnet
@@ -4320,7 +4334,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #6: Remove the VPC
+            // Step 7: Remove the VPC
 
             if (vpc != null)
             {
@@ -4328,7 +4342,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #7: Release Elastic IPs created for the cluster
+            // Step 8: Release Elastic IPs created for the cluster
 
             if (!cluster.Definition.Hosting.Aws.Network.HasCustomElasticIPs)
             {
@@ -4344,7 +4358,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #8: Remove the resource group
+            // Step 9: Remove the resource group
 
             if (resourceGroup != null)
             {
