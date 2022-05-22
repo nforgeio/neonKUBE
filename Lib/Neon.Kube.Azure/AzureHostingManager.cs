@@ -45,6 +45,7 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Storage;
 
 using Newtonsoft;
@@ -62,7 +63,7 @@ using Neon.Time;
 
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
-using Azure.ResourceManager.Resources.Models;
+using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
 
 namespace Neon.Kube
 {
@@ -1933,52 +1934,165 @@ namespace Neon.Kube
 
             var publicAddressCollection = resourceGroup.GetPublicIPAddresses();
             var publicPrefixCollection  = resourceGroup.GetPublicIPPrefixes();
+            var resourceGroupCollection = subscription.GetResourceGroups();
 
             if (publicIngressAddress == null)
             {
-                controller.SetGlobalStepStatus("create: cluster ingress address");
-
-                var ingressAddressData = new PublicIPAddressData()
+                if (!string.IsNullOrEmpty(azureOptions.Network.IngressPublicIpAddressId))
                 {
-                    Location                 = azureLocation,
-                    DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel},
-                    PublicIPAllocationMethod = IPAllocationMethod.Static,
-                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
-                };
+                    controller.SetGlobalStepStatus("attach: cluster ingress address");
 
-                publicIngressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicIngressAddressName, WithNetworkTags(ingressAddressData))).Value;
-                clusterAddress       = NetHelper.ParseIPv4Address(publicIngressAddress.Data.IPAddress);
+                    ResourceIdentifier ingressPublicIpAddressId;
 
-                cluster.Definition.PublicAddresses = new List<string>() { publicIngressAddress.Data.IPAddress };
+                    try
+                    {
+                        ingressPublicIpAddressId = new ResourceIdentifier(azureOptions.Network.IngressPublicIpAddressId);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new NeonKubeException($"Cannot parse Azure resource ID [{nameof(azureOptions.Network.IngressPublicIpAddressId)}={azureOptions.Network.IngressPublicIpAddressId}]", e);
+                    }
 
-                controller.SetGlobalStepStatus("create: cluster egress address");
+                    if (!await resourceGroupCollection.ExistsAsync(ingressPublicIpAddressId.ResourceGroupName))
+                    {
+                        throw new NeonKubeException($"Cannot locate resource group [{ingressPublicIpAddressId.ResourceGroupName}] specified by [{nameof(azureOptions.Network.IngressPublicIpAddressId)}={azureOptions.Network.IngressPublicIpAddressId}]");
+                    }
 
-                var egressAddressData = new PublicIPAddressData()
+                    var refResourceGroup           = (await resourceGroupCollection.GetAsync(ingressPublicIpAddressId.ResourceGroupName)).Value;
+                    var refPublicAddressCollection = refResourceGroup.GetPublicIPAddresses();
+
+                    if (!await refPublicAddressCollection.ExistsAsync(ingressPublicIpAddressId.Name))
+                    {
+                        throw new NeonKubeException($"Cannot locate public IP address [{ingressPublicIpAddressId.ResourceGroupName}/{ingressPublicIpAddressId.Name}] specified by [{nameof(azureOptions.Network.IngressPublicIpAddressId)}={azureOptions.Network.IngressPublicIpAddressId}]");
+                    }
+
+                    publicIngressAddress = (await refPublicAddressCollection.GetAsync(ingressPublicIpAddressId.Name)).Value;
+
+                    if (publicIngressAddress.Data.Location != region)
+                    {
+                        throw new NeonKubeException($"Egress public IP address is located at [{publicIngressAddress.Data.Location}] instead of the cluster region [{region}]: [{nameof(azureOptions.Network.IngressPublicIpAddressId)}={azureOptions.Network.IngressPublicIpAddressId}]");
+                    }
+                }
+                else
                 {
-                    Location                 = azureLocation,
-                    PublicIPAllocationMethod = IPAllocationMethod.Static,
-                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
-                };
+                    controller.SetGlobalStepStatus("create: cluster ingress address");
 
-                publicEgressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressAddressName, WithNetworkTags(egressAddressData))).Value;
+                    var ingressAddressData = new PublicIPAddressData()
+                    {
+                        Location                 = azureLocation,
+                        DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel },
+                        PublicIPAllocationMethod = IPAllocationMethod.Static,
+                        Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard, Tier = PublicIPAddressSkuTier.Regional },
+                    };
+
+                    publicIngressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicIngressAddressName, WithNetworkTags(ingressAddressData))).Value;
+                    clusterAddress       = NetHelper.ParseIPv4Address(publicIngressAddress.Data.IPAddress);
+
+                    cluster.Definition.PublicAddresses = new List<string>() { publicIngressAddress.Data.IPAddress };
+                }
             }
 
             // We'll favor an existing public egress prefix or address, otherwise
-            // we'll create a prefix if a prefix length was specified othewise we'll
-            // create an public IP.
+            // we'll create a prefix if a prefix length was specified and if none
+            // of those apply, we'll create an public IP.
 
-            if (azureOptions.Network.EgressPublicIpPrefixId != null)
+            if (!string.IsNullOrEmpty(azureOptions.Network.EgressPublicIpPrefixId))
             {
+                controller.SetGlobalStepStatus("attach: cluster egress prefix");
 
+                ResourceIdentifier egressPublicIpPrefixId;
+
+                try
+                {
+                    egressPublicIpPrefixId = new ResourceIdentifier(azureOptions.Network.EgressPublicIpPrefixId);
+                }
+                catch (Exception e)
+                {
+                    throw new NeonKubeException($"Cannot parse Azure resource ID [{nameof(azureOptions.Network.EgressPublicIpPrefixId)}={azureOptions.Network.EgressPublicIpPrefixId}]", e);
+                }
+
+                if (!await resourceGroupCollection.ExistsAsync(egressPublicIpPrefixId.ResourceGroupName))
+                {
+                    throw new NeonKubeException($"Cannot locate resource group [{egressPublicIpPrefixId.ResourceGroupName}] specified by [{nameof(azureOptions.Network.EgressPublicIpPrefixId)}={azureOptions.Network.EgressPublicIpPrefixId}]");
+                }
+
+                var refResourceGroup          = (await resourceGroupCollection.GetAsync(egressPublicIpPrefixId.ResourceGroupName)).Value;
+                var refPublicPrefixCollection = refResourceGroup.GetPublicIPPrefixes();
+
+                if (!await refPublicPrefixCollection.ExistsAsync(egressPublicIpPrefixId.Name))
+                {
+                    throw new NeonKubeException($"Cannot locate public prefix [{egressPublicIpPrefixId.ResourceGroupName}/{egressPublicIpPrefixId.Name}] specified by [{nameof(azureOptions.Network.EgressPublicIpPrefixId)}={azureOptions.Network.EgressPublicIpPrefixId}]");
+                }
+
+                publicEgressPrefix = (await refPublicPrefixCollection.GetAsync(egressPublicIpPrefixId.Name)).Value;
+
+                if (publicEgressPrefix.Data.Location != region)
+                {
+                    throw new NeonKubeException($"Egress public IP prefix is located at [{publicEgressPrefix.Data.Location}] instead of the cluster region [{region}]: [{nameof(azureOptions.Network.EgressPublicIpPrefixId)}={azureOptions.Network.EgressPublicIpPrefixId}]");
+                }
             }
-            else if (azureOptions.Network.EgressPublicIpId != null)
+            else if (!string.IsNullOrEmpty(azureOptions.Network.EgressPublicIpAddressId))
             {
+                controller.SetGlobalStepStatus("attach: cluster egress address");
+
+                ResourceIdentifier egressPublicIpAddressId;
+
+                try
+                {
+                    egressPublicIpAddressId = new ResourceIdentifier(azureOptions.Network.EgressPublicIpAddressId);
+                }
+                catch (Exception e)
+                {
+                    throw new NeonKubeException($"Cannot parse Azure resource ID [{nameof(azureOptions.Network.EgressPublicIpAddressId)}={azureOptions.Network.EgressPublicIpAddressId}]", e);
+                }
+
+                if (!await resourceGroupCollection.ExistsAsync(egressPublicIpAddressId.ResourceGroupName))
+                {
+                    throw new NeonKubeException($"Cannot locate resource group [{egressPublicIpAddressId.ResourceGroupName}] specified by [{nameof(azureOptions.Network.EgressPublicIpAddressId)}={azureOptions.Network.EgressPublicIpAddressId}]");
+                }
+
+                var refResourceGroup           = (await resourceGroupCollection.GetAsync(egressPublicIpAddressId.ResourceGroupName)).Value;
+                var refPublicAddressCollection = refResourceGroup.GetPublicIPAddresses();
+
+                if (!await refPublicAddressCollection.ExistsAsync(egressPublicIpAddressId.Name))
+                {
+                    throw new NeonKubeException($"Cannot locate public IP address [{egressPublicIpAddressId.ResourceGroupName}/{egressPublicIpAddressId.Name}] specified by [{nameof(azureOptions.Network.EgressPublicIpAddressId)}={azureOptions.Network.EgressPublicIpAddressId}]");
+                }
+
+                publicEgressAddress = (await refPublicAddressCollection.GetAsync(egressPublicIpAddressId.Name)).Value;
+
+                if (publicEgressAddress.Data.Location != region)
+                {
+                    throw new NeonKubeException($"Egress public IP address is located at [{publicEgressAddress.Data.Location}] instead of the cluster region [{region}]: [{nameof(azureOptions.Network.EgressPublicIpAddressId)}={azureOptions.Network.EgressPublicIpPrefixId}]");
+                }
             }
             else if (azureOptions.Network.EgressPublicIpPrefixLength > 0)
             {
+                controller.SetGlobalStepStatus("create: cluster egress prefix");
+
+                var publicIpPrefixData = new PublicIPPrefixData()
+                {
+                    Location               = azureLocation,
+                    PrefixLength           = azureOptions.Network.EgressPublicIpPrefixLength,
+                    Sku                    = new PublicIPPrefixSku() { Name = PublicIPPrefixSkuName.Standard, Tier = PublicIPPrefixSkuTier.Regional },
+                    PublicIPAddressVersion = Azure.ResourceManager.Network.Models.IPVersion.IPv4
+                };
+
+                publicEgressPrefix = (await publicPrefixCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressPrefixName, WithNetworkTags(publicIpPrefixData))).Value;
             }
             else
             {
+                controller.SetGlobalStepStatus("create: cluster egress address");
+
+                var publicIpAddressData = new PublicIPAddressData()
+                {
+                    Location                 = azureLocation,
+                    DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel + "-egress" },
+                    PublicIPAllocationMethod = IPAllocationMethod.Static,
+                    Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard, Tier = PublicIPAddressSkuTier.Regional }
+                };
+
+                publicEgressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressAddressName, publicIpAddressData)).Value;
             }
         }
 
@@ -2018,7 +2132,7 @@ namespace Neon.Kube
 
             if (natGateway == null)
             {
-                controller.SetGlobalStepStatus("create: internet NAT gateway");
+                controller.SetGlobalStepStatus("create: NAT gateway");
 
                 var natGatewayData = new NatGatewayData()
                 {

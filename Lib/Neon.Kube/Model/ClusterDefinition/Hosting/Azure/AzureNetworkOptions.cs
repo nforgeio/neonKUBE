@@ -59,7 +59,7 @@ namespace Neon.Kube
     /// </para>
     /// <para>
     /// To avoid this, you may create public IP addresses before deploying your cluster
-    /// and then setting <see cref="IngressPublicIpId"/> and/or <see cref="EgressPublicIpPrefixId"/>
+    /// and then setting <see cref="IngressPublicIpAddressId"/> and/or <see cref="EgressPublicIpPrefixId"/>
     /// to the IDs of the addresses you created and the cluster will be deployed using 
     /// these addresses instead.  Since these addresses are not in the resource group,
     /// they won't be deleted when the cluster is removed, so you'll be able to reuse them
@@ -153,15 +153,18 @@ namespace Neon.Kube
         /// be created when this isn't specified.
         /// </para>
         /// <note>
+        /// <b>IMPORTANT:</b> This resource must be located in the same region as the cluster.
+        /// </note>
+        /// <note>
         /// Setting this is handy when clusters are reprovisioned because the cluster will 
         /// end up with the same public address as before, meaning you won't have to update your
         /// DNS configuration, etc.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "IngressPublicIpId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ingressPublicIpId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "IngressPublicIpAddressId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressPublicIpAddressId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string IngressPublicIpId { get; set; }
+        public string IngressPublicIpAddressId { get; set; }
 
         /// <summary>
         /// <para>
@@ -169,21 +172,27 @@ namespace Neon.Kube
         /// to the NAT Gateway to send outboung network traffic.
         /// </para>
         /// <note>
+        /// <b>IMPORTANT:</b> This resource must be located in the same region as the cluster.
+        /// </note>
+        /// <note>
         /// Setting this is handy when clusters are reprovisioned because the cluster will 
         /// end up using the same egress address as before, meaning you won't have to update
         /// whitelist rules for other services, etc.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "EgressPublicIpId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "egressPublicIpId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "EgressPublicIpAddressId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "egressPublicIpAddressId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string EgressPublicIpId { get; set; }
+        public string EgressPublicIpAddressId { get; set; }
 
         /// <summary>
         /// <para>
         /// Optionally specifies the ID of an existing public IPv4 prefix to be assigned
         /// to the NAT Gateway to send outboung network traffic.
         /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> This resource must be located in the same region as the cluster.
+        /// </note>
         /// <note>
         /// Setting this is handy when clusters are reprovisioned because the cluster will 
         /// end up using the same egress addresses as before, meaning you won't have to update
@@ -272,7 +281,7 @@ namespace Neon.Kube
 
             var propertyCount = 0;
 
-            if (!string.IsNullOrEmpty(EgressPublicIpId))
+            if (!string.IsNullOrEmpty(EgressPublicIpAddressId))
             {
                 propertyCount++;
             }
@@ -289,7 +298,7 @@ namespace Neon.Kube
 
             if (propertyCount > 1)
             {
-                throw new ClusterDefinitionException($"Only one of [{optionsPropertyPath}.{nameof(EgressPublicIpId)}, {nameof(EgressPublicIpPrefixId)}, or {nameof(EgressPublicIpPrefixLength)} can be specified.");
+                throw new ClusterDefinitionException($"Only one of [{optionsPropertyPath}.{nameof(EgressPublicIpAddressId)}, {nameof(EgressPublicIpPrefixId)}, or {nameof(EgressPublicIpPrefixLength)} can be specified.");
             }
 
             if (EgressPublicIpPrefixLength != 0 && (EgressPublicIpPrefixLength < 28 || EgressPublicIpPrefixLength > 31))
