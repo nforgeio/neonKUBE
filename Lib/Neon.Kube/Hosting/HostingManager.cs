@@ -372,23 +372,5 @@ namespace Neon.Kube
             await SyncContext.Clear;
             throw new NotSupportedException();
         }
-
-        /// <inheritdoc/>
-        public virtual async Task StartNodeAsync(string nodeName)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            throw new NotSupportedException();
-        }
     }
 }

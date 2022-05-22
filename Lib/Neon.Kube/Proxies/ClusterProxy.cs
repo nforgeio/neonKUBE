@@ -1174,44 +1174,5 @@ namespace Neon.Kube
                 login.Delete();
             }
         }
-
-        /// <summary>
-        /// <para>
-        /// Starts a specific cluster node when it's not already running.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartNodeAsync(string nodeName)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Assert(HostingManager != null);
-
-            await HostingManager.StartNodeAsync(nodeName);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Stops a specific cluster node down when it's not already stopped or sleeping.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Assert(HostingManager != null);
-
-            await HostingManager.StopNodeAsync(nodeName, stopMode);
-        }
     }
 }

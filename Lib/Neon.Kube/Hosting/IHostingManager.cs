@@ -327,30 +327,5 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         Task RemoveClusterAsync(bool removeOrphans = false);
-
-        /// <summary>
-        /// <para>
-        /// Starts a specific cluster node when it's not already running.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task StartNodeAsync(string nodeName);
-
-        /// <summary>
-        /// <para>
-        /// Shuts a specific cluster node down when it's not already stopped or sleeping.
-        /// </para>
-        /// <note>
-        /// This operation may not be supported for all environments.
-        /// </note>
-        /// </summary>
-        /// <param name="nodeName">Identifies the target node.</param>
-        /// <param name="stopMode">Optionally specifies how the node is stopped.  This defaults to <see cref="StopMode.Graceful"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful);
     }
 }
