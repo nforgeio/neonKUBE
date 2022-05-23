@@ -2978,16 +2978,6 @@ echo $0 > /etc/neonkube/cloud-init/boot-script-path
 chmod 600 /etc/neonkube/cloud-init/boot-script-path
 
 #------------------------------------------------------------------------------
-# Prevent the script from doing anything after the instance is rebooted.
-
-if [ -f /etc/neonkube/cloud-init/disabled ]; then
-    exit 0
-fi
-
-touch /etc/neonkube/cloud-init/disabled
-chmod 644 /etc/neonkube/cloud-init/disabled
-
-#------------------------------------------------------------------------------
 # Update the [sysadmin] user password:
 
 echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
@@ -3104,11 +3094,21 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                        new DescribeInstanceStatusRequest()
+                    // It's possible that the instance created above hasn't gotten far enough
+                    // along in the provisioning process for the DescribeInstanceStatusAsync()
+                    // call below to see it.  We'll need to use a retry policy to deal with this.
+
+                    var retry = new LinearRetryPolicy(typeof(AmazonEC2Exception), retryInterval: pollInterval, timeout: timeout);
+
+                    var statusResponse = await retry.InvokeAsync(
+                        async () =>
                         {
-                            InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                            IncludeAllInstances = true
+                            return await ec2Client.DescribeInstanceStatusAsync(
+                                new DescribeInstanceStatusRequest()
+                                {
+                                    InstanceIds = new List<string>() { awsInstance.InstanceId },
+                                    IncludeAllInstances = true
+                                });
                         });
 
                     var status = statusResponse.InstanceStatuses.SingleOrDefault();
