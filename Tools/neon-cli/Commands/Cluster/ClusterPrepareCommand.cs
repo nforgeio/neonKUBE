@@ -161,6 +161,8 @@ OPTIONS:
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.

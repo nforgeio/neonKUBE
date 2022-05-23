@@ -61,7 +61,7 @@ Starts a stopped or paused cluster.  This is not supported by all environments.
 
 USAGE:
 
-    neon cluster stop [--turnoff] [--force] [--nowait]
+    neon cluster stop [--turnoff] [--force]
 
 OPTIONS:
 
@@ -70,8 +70,6 @@ OPTIONS:
 
     --force     - forces cluster stop without user confirmation
                   or verifying unlocked status
-
-    --nowait    - don't wait for the cluster to report being stopped
 
 REMARKS:
 
@@ -89,7 +87,7 @@ cluster definition or by executing this command on your cluster:
         public override string[] Words => new string[] { "cluster", "stop" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--turnoff", "--force", "--nowait" };
+        public override string[] ExtendedOptions => new string[] { "--turnoff", "--force" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -118,7 +116,6 @@ cluster definition or by executing this command on your cluster:
 
             var turnoff = commandLine.HasOption("--turnoff");
             var force   = commandLine.HasOption("--force");
-            var nowait  = commandLine.HasOption("--nowait");
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
@@ -126,7 +123,7 @@ cluster definition or by executing this command on your cluster:
 
                 if ((capabilities & HostingCapabilities.Stoppable) == 0)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cluster is not stoppable.");
+                    Console.Error.WriteLine($"*** ERROR: Cluster does not support start/stop.");
                     Program.Exit(1);
                 }
 
@@ -159,46 +156,30 @@ cluster definition or by executing this command on your cluster:
                             }
                         }
 
-                        if (turnoff)
+                        try
                         {
-                            Console.WriteLine($"Turning Off: {cluster.Name}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Stopping: {cluster.Name}...");
-                        }
-
-                        await cluster.StopAsync(turnoff ? StopMode.TurnOff : StopMode.Graceful);
-
-                        // Wait for the cluster to stop.
-
-                        if (!nowait)
-                        {
-                            try
+                            if (turnoff)
                             {
-                                await NeonHelper.WaitForAsync(
-                                    async () =>
-                                    {
-                                        var status = await cluster.GetClusterStatusAsync();
-
-                                        return status.State == ClusterState.Off;
-                                    },
-                                    timeout:      TimeSpan.FromSeconds(300),
-                                    pollInterval: TimeSpan.FromSeconds(5));
+                                Console.WriteLine($"Turning Off: {cluster.Name}");
                             }
-                            catch (TimeoutException)
+                            else
                             {
-                                Console.WriteLine($"***ERROR: Timeout waiting for cluster to stop.");
-                                Program.Exit(1);
+                                Console.WriteLine($"Stopping: {cluster.Name}...");
                             }
-                        }
 
-                        Console.WriteLine($"Cluster stopped: {cluster.Name}");
+                            await cluster.StopAsync(turnoff ? StopMode.TurnOff : StopMode.Graceful);
+                            Console.WriteLine($"STOPPED:  {cluster.Name}");
+                        }
+                        catch (TimeoutException)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                        }
                         break;
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster is already stopped.");
                         Program.Exit(1);
                         break;
                 }

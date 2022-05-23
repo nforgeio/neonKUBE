@@ -240,7 +240,7 @@ cluster definition or by executing this command on your cluster:
                             },
                             progressMessage => Console.WriteLine(progressMessage));
 
-                        Console.WriteLine($"Cluster has been reset: {cluster.Name}");
+                        Console.WriteLine($"RESET: {cluster.Name}");
                         break;
 
                     default:

@@ -149,6 +149,7 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
     neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
+    neon cluster status
     neon cluster stop       [OPTIONS]
     neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]

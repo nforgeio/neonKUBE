@@ -891,7 +891,7 @@ namespace Neon.Kube
             {
                 var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
 
-                clusterStatus.Summary            = kubeClusterStatus.Summary;
+                clusterStatus.Summary = kubeClusterStatus.Summary;
 
                 switch (kubeClusterStatus.State)
                 {
@@ -957,6 +957,25 @@ namespace Neon.Kube
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StartClusterAsync();
+
+            // Wait for the cluster to report being healthy.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var status = await GetClusterStatusAsync();
+
+                        return status.State == ClusterState.Healthy;
+                    }
+                    catch (TimeoutException)
+                    {
+                        return false;
+                    }
+                },
+                pollInterval: TimeSpan.FromSeconds(5),
+                timeout:      TimeSpan.FromMinutes(5));
         }
 
         /// <summary>
@@ -976,6 +995,25 @@ namespace Neon.Kube
             Covenant.Assert(HostingManager != null);
 
             await HostingManager.StopClusterAsync(stopMode);
+
+            // Wait for the cluster to report being stopped.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var status = await GetClusterStatusAsync();
+
+                        return status.State == ClusterState.Off;
+                    }
+                    catch (TimeoutException)
+                    {
+                        return false;
+                    }
+                },
+                pollInterval: TimeSpan.FromSeconds(5),
+                timeout:      TimeSpan.FromMinutes(5));
         }
 
         /// <summary>

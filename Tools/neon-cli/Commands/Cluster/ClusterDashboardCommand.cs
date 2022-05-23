@@ -65,7 +65,7 @@ USAGE:
 
             if (currentContextName == null)
             {
-                Console.Error.WriteLine("*** ERROR: To cluster selected.");
+                Console.Error.WriteLine("*** ERROR: No cluster selected.");
                 Program.Exit(1);
             }
 

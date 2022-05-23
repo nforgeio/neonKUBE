@@ -1612,7 +1612,7 @@ namespace Neon.Kube
                     publicSubnet = subnetItem;
                 }
                 else if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == nodeSubnetName) &&
-                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                         subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     nodeSubnet = subnetItem;
                 }
@@ -4046,6 +4046,18 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             await ec2Client.StartInstancesAsync(new StartInstancesRequest(instanceIds));
+
+            // ...and then wait for the cluster to report being configured.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterStatusAsync();
+
+                    return status.State == ClusterState.Configured;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
 
         /// <inheritdoc/>
@@ -4065,6 +4077,18 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             await ec2Client.StopInstancesAsync(new StopInstancesRequest(instanceIds) { Force = stopMode == StopMode.TurnOff });
+
+            // ...and then wait for cluster to report being stopped.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterStatusAsync();
+
+                    return status.State == ClusterState.Off;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
 
         /// <inheritdoc/>
@@ -4101,9 +4125,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                     if (ec2Exception != null)
                     {
-                        if (ec2Exception.ErrorCode == "DependencyViolation")
+                        switch (ec2Exception.ErrorCode)
                         {
-                            return true;
+                            case "DependencyViolation":
+                            case "InvalidPlacementGroup.InUse":
+
+                                return true;
                         }
 
                         if (e.InnerException != null)
@@ -4135,7 +4162,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step 2: Remove tyhe placement groups
+            // Step 2: Remove the placement groups
 
             if (masterPlacementGroup != null)
             {
@@ -4252,7 +4279,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         await ec2Client.DetachInternetGatewayAsync(
                             new DetachInternetGatewayRequest()
                             {
-                                VpcId = vpc.VpcId,
+                                VpcId             = vpc.VpcId,
                                 InternetGatewayId = internetGateway.InternetGatewayId
                             });
                     });

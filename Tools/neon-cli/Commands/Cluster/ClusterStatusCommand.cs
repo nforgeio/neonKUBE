@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterUnlockCommand.cs
+// FILE:	    ClusterStatusCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -51,26 +51,16 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster unlock</b> command.
+    /// Implements the <b>cluster status</b> command.
     /// </summary>
     [Command]
-    public class ClusterUnlockCommand : CommandBase
+    public class ClusterStatusCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current cluster by allowing ClusterFixture to run unit tests
-as well as allowing potentially distructive commands like:
-
-    remove, reset, pause and stop
-
-to execute without user confirmation.
-
-USAGE:
-
-    neon cluster unlock
-
+Prints the status of the current cluster.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "unlock" };
+        public override string[] Words => new string[] { "cluster", "status" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -99,24 +89,51 @@ USAGE:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var status       = await cluster.GetClusterStatusAsync();
-                var capabilities = cluster.Capabilities;
+                var status = await cluster.GetClusterStatusAsync();
 
-                switch (status.State)
+                Console.WriteLine($"{cluster.Name}: {status.State.ToString().ToUpperInvariant()}");
+                Console.WriteLine();
+
+                var maxNodeNameLength = cluster.Definition.NodeDefinitions.Keys.Max(nodeName => nodeName.Length);
+
+                Console.WriteLine("Master Nodes:");
+                Console.WriteLine("-------------");
+
+                foreach (var nodeDefinition in cluster.Definition.SortedMasterNodes)
                 {
-                    case ClusterState.Healthy:
-                    case ClusterState.Unhealthy:
+                    var nodeName = nodeDefinition.Name;
+                    var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
 
-                        Console.WriteLine($"Unlocking: {cluster.Name}...");
-                        await cluster.UnlockAsync();
-                        Console.WriteLine($"UNLOCKED:  {cluster.Name}");
-                        break;
+                    if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
+                    {
+                        Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
+                    }
+                }
 
-                    default:
+                if (cluster.Definition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.IsWorker))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Worker Nodes:");
+                    Console.WriteLine("-------------");
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
-                        Program.Exit(1);
-                        break;
+                    foreach (var nodeDefinition in cluster.Definition.SortedWorkerNodes)
+                    {
+                        var nodeName = nodeDefinition.Name;
+                        var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
+
+                        if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
+                        {
+                            Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
+                        }
+                    }
                 }
             }
         }

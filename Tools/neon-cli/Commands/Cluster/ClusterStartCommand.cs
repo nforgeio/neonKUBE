@@ -61,18 +61,11 @@ Starts a stopped or paused cluster.  This is not supported by all environments.
 
 USAGE:
 
-    neon cluster start [--nowait]
-
-OPTIONS:
-
-    --nowait    - don't wait for the cluster to report being stopped
+    neon cluster start
 
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "start" };
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--nowait" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -89,6 +82,8 @@ OPTIONS:
                 Program.Exit(0);
             }
 
+            Console.WriteLine();
+
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
@@ -96,8 +91,6 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: There is no current cluster.");
                 Program.Exit(1);
             }
-
-            var nowait = commandLine.HasOption("--nowait");
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
@@ -111,42 +104,27 @@ OPTIONS:
 
                         if ((capabilities & HostingCapabilities.Stoppable) == 0)
                         {
-                            Console.Error.WriteLine($"*** ERROR: Cluster is not startable.");
+                            Console.Error.WriteLine($"*** ERROR: Cluster does not support start/stop.");
                             Program.Exit(1);
                         }
 
                         Console.WriteLine($"Starting: {cluster.Name}...");
-                        await cluster.StartAsync();
 
-                        // Wait for the cluster to start.
-
-                        if (!nowait)
+                        try
                         {
-                            try
-                            {
-                                await NeonHelper.WaitForAsync(
-                                    async () =>
-                                    {
-                                        var status = await cluster.GetClusterStatusAsync();
-
-                                        return status.State == ClusterState.Healthy;
-                                    },
-                                    timeout:      TimeSpan.FromSeconds(300),
-                                    pollInterval: TimeSpan.FromSeconds(5));
-                            }
-                            catch (TimeoutException)
-                            {
-                                Console.WriteLine($"***ERROR: Timeout waiting for cluster to report being healthy.");
-                                Program.Exit(1);
-                            }
+                            await cluster.StartAsync();
+                            Console.WriteLine($"STARTED:  {cluster.Name}");
                         }
-
-                        Console.WriteLine($"Cluster started: {cluster.Name}");
+                        catch (TimeoutException)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                        }
                         break;
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Cluster appears to be running.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster is already running.");
                         Program.Exit(1);
                         break;
                 }
