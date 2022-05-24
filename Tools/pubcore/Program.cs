@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +48,32 @@ namespace pubcore
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
+            // $hack(jefflill): ServiceHub.IndexingService hacks.
+            //
+            // We need a place to save the IndexingService processes so we can
+            // resume them after the operation and we also need to locate the 
+            // [pssuspend.exe] PATH installed with SysInternals on the PATH.
+
+            var searchIndexerProcesses = new List<Process>();
+            var psSuspendPath          = (String)null;
+
+            foreach (var folder in Environment.GetEnvironmentVariable("PATH").Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var path = Path.Combine(folder, "pssuspend.exe");
+
+                if (Directory.Exists(folder) && File.Exists(path))
+                {
+                    psSuspendPath = path;
+                    break;
+                }
+            }
+
+            if (psSuspendPath == null)
+            {
+                Console.Error.WriteLine("*** ERROR: Cannot locate [pssuspend.exe] on the PATH.  Be sure Microsoft SysUtils is installed as described in: DEVELOPER.md");
+                Environment.Exit(1);
+            }
+
             try
             {
                 Console.WriteLine();
@@ -206,24 +233,53 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 var tryCount = 5;
                 var delay    = TimeSpan.FromSeconds(5);
 
+                // $hack(jefflill):
+                //
+                // Visual Studio 17.1.3+ introduced or updated the [ServiceHub.IndexingService] 
+                // which indexes source files.  This is holding a DLL lock for some reason.
+                // We're going to hack around this by suspending any [ServiceHub.IndexingService] 
+                // processes here and then resuming them below in the [finally] block before
+                // exiting.
+                //
+                // This requires that the SysUtils [pssuspend.exe] tool be installed.
+
+                foreach (var suspendedProcess in Process.GetProcesses())
+                {
+                    if (suspendedProcess.ProcessName == "ServiceHub.IndexingService")
+                    {
+                        searchIndexerProcesses.Add(suspendedProcess);
+
+                        var processStartInfo = new ProcessStartInfo(psSuspendPath, $"{suspendedProcess.Id} -nobanner") { UseShellExecute = false };
+                        var process          = Process.Start(processStartInfo);
+
+                        process.WaitForExit();
+
+                        if (process.ExitCode != 0)
+                        {
+                            Console.Error.WriteLine($"** FAILED: {psSuspendPath} -r {suspendedProcess.Id}");
+                            Environment.Exit(1);
+                        }
+                    }
+                }
+
                 // Publish the project.
 
                 Thread.Sleep(delay);
 
                 for (int i = 0; i < tryCount; i++)
                 {
-                    var process  = new Process();
+                    var process = new Process();
                     var sbOutput = new StringBuilder();
 
-                    process.StartInfo.FileName               = "dotnet.exe";
-                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-restore --no-dependencies";
-                    process.StartInfo.CreateNoWindow         = true;
-                    process.StartInfo.UseShellExecute        = false;
-                    process.StartInfo.RedirectStandardError  = true;
+                    process.StartInfo.FileName = "dotnet.exe";
+                    process.StartInfo.Arguments = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-dependencies";
+                    process.StartInfo.CreateNoWindow = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.RedirectStandardError = true;
                     process.StartInfo.RedirectStandardOutput = true;
 
                     process.OutputDataReceived += (s, e) => sbOutput.AppendLine(e.Data);
-                    process.ErrorDataReceived  += (s, e) => sbOutput.AppendLine(e.Data);
+                    process.ErrorDataReceived += (s, e) => sbOutput.AppendLine(e.Data);
 
                     if (i > 0)
                     {
@@ -351,8 +407,26 @@ $@"@echo off
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"ERROR: [{e.GetType().Name}]: {e.Message}");
+                Console.Error.WriteLine($"** ERROR: [{e.GetType().Name}]: {e.Message}");
                 Environment.Exit(1);
+            }
+            finally
+            {
+                // Resume any suspended [ServiceHub.IndexingService] processes.
+
+                foreach (var suspendedProcess in searchIndexerProcesses)
+                {
+                    var processStartInfo = new ProcessStartInfo(psSuspendPath, $"-r {suspendedProcess.Id} -nobanner") { UseShellExecute = false };
+                    var process          = Process.Start(processStartInfo);
+                    
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        Console.Error.WriteLine($"** FAILED: {suspendedProcess} -r {suspendedProcess.Id}");
+                        Environment.Exit(1);
+                    }
+                }
             }
         }
 
