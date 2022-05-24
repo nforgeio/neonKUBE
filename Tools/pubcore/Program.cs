@@ -268,14 +268,14 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
 
                 for (int i = 0; i < tryCount; i++)
                 {
-                    var process = new Process();
+                    var process  = new Process();
                     var sbOutput = new StringBuilder();
 
-                    process.StartInfo.FileName = "dotnet.exe";
-                    process.StartInfo.Arguments = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-dependencies";
-                    process.StartInfo.CreateNoWindow = true;
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.FileName               = "dotnet.exe";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-dependencies";
+                    process.StartInfo.CreateNoWindow         = true;
+                    process.StartInfo.UseShellExecute        = false;
+                    process.StartInfo.RedirectStandardError  = true;
                     process.StartInfo.RedirectStandardOutput = true;
 
                     process.OutputDataReceived += (s, e) => sbOutput.AppendLine(e.Data);
