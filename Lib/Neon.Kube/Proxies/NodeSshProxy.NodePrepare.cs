@@ -104,12 +104,25 @@ namespace Neon.Kube
 
             var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
-            // Configure the SSH credentials on the node.
+            // Write the SSHD subconfig file and configure the SSH certificate
+            // credentials for [sysadmin] on the node.
 
             InvokeIdempotent("prepare/ssh",
                 () =>
                 {
                     CommandBundle bundle;
+
+                    // Upload our custom SSH config files.
+
+                    controller.LogProgress(this, verb: "update", message: "ssh config");
+
+                    var configText = KubeHelper.OpenSshConfig;
+
+                    UploadText("/etc/ssh/sshd_config", NeonHelper.ToLinuxLineEndings(configText), permissions: "644");
+
+                    var subConfigText = KubeHelper.GetOpenSshPrepareSubConfig(allowPasswordAuth: true);
+
+                    UploadText("/etc/ssh/sshd_config.d/50-neonkube.conf", NeonHelper.ToLinuxLineEndings(subConfigText), permissions: "644"); 
 
                     // Here's some information explaining what how this works:
                     //
@@ -174,11 +187,19 @@ systemctl restart sshd
             // Verify that we can login with the new SSH private key and also verify that
             // the password still works.
 
+            // $todo(jefflill):
+            //
+            // Key based authentication isn't working at the moment for some reason.  I'm
+            // going to disable the login check for now and come back to this when we switch
+            // to key based authentication for AWS.
+
+#if DISABLED
             controller.LogProgress(this, verb: "verify", message: "ssh keys");
 
             Disconnect();
             UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             WaitForBoot();
+#endif
 
             controller.LogProgress(this, verb: "verify", message: "ssh password");
 
@@ -377,9 +398,9 @@ chmod 644 /etc/apt/apt.conf.d/80-retries
 # version of [/etc/security/limits.conf] with our own copy.
 #
 # Note that [systemd] ignores [limits.conf] when starting services, etc.  It
-# has its own configuration which we'll update below.  Note that [limits.conf]
-# is still important because the kernel uses those settings when starting
-# [systemd] as the init process 1.
+# has its own configuration which we'll update below, but [limits.conf] is 
+# still important because the kernel uses those settings when starting [systemd]
+# itself as the init process 1.
 
 # $todo(jefflill):
 #
@@ -405,10 +426,10 @@ cat <<EOF > /etc/security/limits.conf
 #        - a group name, with @group syntax
 #        - the wildcard *, for default entry
 #        - the wildcard %, can be also used with %group syntax,
-#                 for maxlogin limit
+# for maxlogin limit
 #        - NOTE: group and wildcard limits are not applied to root.
-#          To apply a limit to the root user, <domain> must be
-#          the literal username root.
+# To apply a limit to the root user, <domain> must be
+# the literal username root.
 #
 #   <type> can have the two values:
 #        - ""soft"" for enforcing the soft limits
@@ -463,11 +484,11 @@ mkdir -p /etc/systemd/user.conf.d
 chmod 764 /etc/systemd/user.conf.d
 
 cat <<EOF > /etc/systemd/user.conf.d/50-neonkube.conf
-#  This file is part of systemd.
+# This file is part of systemd.
 #
-#  systemd is free software; you can redistribute it and/or modify it
-#  under the terms of the GNU Lesser General Public License as published by
-#  the Free Software Foundation; either version 2.1 of the License, or
+# systemd is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
 #  (at your option) any later version.
 #
 # You can override the directives in this file by creating files in
@@ -487,42 +508,51 @@ cp /etc/systemd/user.conf.d/50-neonkube.conf /etc/systemd/system.conf
 echo ""session required pam_limits.so"" >> /etc/pam.d/common-session
 
 #------------------------------------------------------------------------------
-# Tweak some kernel settings.  I extracted this file from a clean Ubuntu install
-# and then made the changes marked by the ""# TWEAK"" comment.
+# Tweak some kernel settings.  I extracted [/etc/sysctl.d/99-sysctl.conf] from
+# a clean Ubuntu 22.04  install and then appended out changes after this line: 
+# 
+#   ##################################################
+#   # neonKUBE tweaks
+#
+# Ubuntu 22.04 splits it's config files into seperate conf files in the 
+# directlry and we're going to update the last file to be loaded:
+# [/etc/sysctl.d/99-sysctl.conf].  Ubuntu 20.04 just had one big file.
 
-cat <<EOF > /etc/sysctl.conf
+cat <<EOF > /etc/sysctl.d/99-sysctl.conf
 #
 # /etc/sysctl.conf - Configuration file for setting system variables
 # See /etc/sysctl.d/ for additional system variables.
 # See sysctl.conf (5) for information.
 #
 
-#kernel.domainname = example.com
+# kernel.domainname = example.com
 
 # Uncomment the following to stop low-level messages on console
-#kernel.printk = 3 4 1 3
+# kernel.printk = 3 4 1 3
 
-##############################################################3
+###################################################################
 # Functions previously found in netbase
+#
 
 # Uncomment the next two lines to enable Spoof protection (reverse-path filter)
 # Turn on Source Address Verification in all interfaces to
 # prevent some spoofing attacks
-#net.ipv4.conf.default.rp_filter = 1
-#net.ipv4.conf.all.rp_filter = 1
+# net.ipv4.conf.default.rp_filter=1
+# net.ipv4.conf.all.rp_filter=1
 
 # Uncomment the next line to enable TCP/IP SYN cookies
 # See http://lwn.net/Articles/277146/
 # Note: This may impact IPv6 TCP sessions too
-#net.ipv4.tcp_syncookies = 1
+# net.ipv4.tcp_syncookies=1
 
 # Uncomment the next line to enable packet forwarding for IPv4
-#net.ipv4.ip_forward = 1
+# net.ipv4.ip_forward=1
 
 # Uncomment the next line to enable packet forwarding for IPv6
-#  Enabling this option disables Stateless Address Autoconfiguration
-#  based on Router Advertisements for this host
-#net.ipv6.conf.all.forwarding = 1
+# Enabling this option disables Stateless Address Autoconfiguration
+# based on Router Advertisements for this host
+# net.ipv6.conf.all.forwarding=1
+
 
 ###################################################################
 # Additional settings - these settings can improve the network
@@ -532,47 +562,37 @@ cat <<EOF > /etc/sysctl.conf
 # settings are disabled so review and enable them as needed.
 #
 # Do not accept ICMP redirects (prevent MITM attacks)
-#net.ipv4.conf.all.accept_redirects = 0
-#net.ipv6.conf.all.accept_redirects = 0
+# net.ipv4.conf.all.accept_redirects = 0
+# net.ipv6.conf.all.accept_redirects = 0
 # _or_
 # Accept ICMP redirects only for gateways listed in our default
 # gateway list (enabled by default)
 # net.ipv4.conf.all.secure_redirects = 1
 #
 # Do not send ICMP redirects (we are not a router)
-#net.ipv4.conf.all.send_redirects = 0
+# net.ipv4.conf.all.send_redirects = 0
 #
 # Do not accept IP source route packets (we are not a router)
-#net.ipv4.conf.all.accept_source_route = 0
-#net.ipv6.conf.all.accept_source_route = 0
+# net.ipv4.conf.all.accept_source_route = 0
+# net.ipv6.conf.all.accept_source_route = 0
 #
 # Log Martian Packets
-#net.ipv4.conf.all.log_martians = 1
+# net.ipv4.conf.all.log_martians = 1
 #
 
 ###################################################################
 # Magic system request Key
-# 0=disable, 1=enable all
-# Debian kernels have this set to 0 (disable the key)
-# See https://www.kernel.org/doc/Documentation/sysrq.txt
+# 0=disable, 1=enable all, >1 bitmask of sysrq functions
+# See https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html
 # for what other values do
-#kernel.sysrq = 1
-
-###################################################################
-# Protected links
-#
-# Protects against creating or following links under certain conditions
-# Debian kernels have both set to 1 (restricted) 
-# See https://www.kernel.org/doc/Documentation/sysctl/fs.txt
-#fs.protected_hardlinks = 0
-#fs.protected_symlinks = 0
+# kernel.sysrq=438
 
 ###################################################################
 # TWEAK: neonKUBE settings:
 
 # Explicitly set the maximum number of file descriptors for the
 # entire system.  This looks like it defaults to [1048576] for
-# Ubuntu 20.04 so we're going to pin this value to enforce
+# Ubuntu 22.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
 fs.file-max = 4194303
 
@@ -651,9 +671,9 @@ net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 
 ###################################################################
-# TWEAK: Setting overrides recommended for custom Google Cloud images
+# Setting overrides recommended for custom Google Cloud images
 #
-#   https://cloud.google.com/compute/docs/images/building-custom-os
+# https://cloud.google.com/compute/docs/images/building-custom-os
 
 # Enable syn flood protection
 net.ipv4.tcp_syncookies = 1
@@ -677,7 +697,7 @@ net.ipv4.conf.all.secure_redirects = 1
 net.ipv4.conf.default.secure_redirects = 1
 
 # Don't allow traffic between networks or act as a router
-#net.ipv4.ip_forward = 0
+# net.ipv4.ip_forward = 0
 
 # Don't allow traffic between networks or act as a router
 net.ipv4.conf.all.send_redirects = 0
@@ -736,11 +756,11 @@ EOF
 # default.  We're going to explicitly set the limit to 1 million connections.
 # This will consume about 8MiB of RAM (so not too bad).
 
-#cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
+# cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
 # Explicitly set the maximum number of TCP connections that iptables can track.
 # Note that this number is multiplied by 8 to obtain the connection count.
-#options nf_conntrack hashsize = 393216
-#EOF
+# options nf_conntrack hashsize = 393216
+# EOF
 
 cat > /etc/modules <<EOF
 ip_vs
@@ -792,7 +812,7 @@ cat <<EOF > /etc/systemd/journald.conf
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an ""AS IS"" BASIS,
@@ -812,32 +832,32 @@ cat <<EOF > /etc/systemd/journald.conf
 
 [Journal]
 Storage=persistent
-#Compress=yes
-#Seal=yes
-#SplitMode=uid
-#SyncIntervalSec=5m
-#RateLimitInterval=30s
-#RateLimitBurst=1000
-#SystemMaxUse=
-#SystemKeepFree=
-#SystemMaxFileSize=
-#SystemMaxFiles=100
-#RuntimeMaxUse=
-#RuntimeKeepFree=
-#RuntimeMaxFileSize=
-#RuntimeMaxFiles=100
+# Compress=yes
+# Seal=yes
+# SplitMode=uid
+# SyncIntervalSec=5m
+# RateLimitInterval=30s
+# RateLimitBurst=1000
+# SystemMaxUse=
+# SystemKeepFree=
+# SystemMaxFileSize=
+# SystemMaxFiles=100
+# RuntimeMaxUse=
+# RuntimeKeepFree=
+# RuntimeMaxFileSize=
+# RuntimeMaxFiles=100
 MaxRetentionSec=345600
-#MaxFileSec=1month
-#ForwardToSyslog=yes
-#ForwardToKMsg=no
-#ForwardToConsole=no
-#ForwardToWall=yes
-#TTYPath=/dev/console
-#MaxLevelStore=debug
-#MaxLevelSyslog=debug
-#MaxLevelKMsg=notice
-#MaxLevelConsole=info
-#MaxLevelWall=emerg
+# MaxFileSec=1month
+# ForwardToSyslog=yes
+# ForwardToKMsg=no
+# ForwardToConsole=no
+# ForwardToWall=yes
+# TTYPath=/dev/console
+# MaxLevelStore=debug
+# MaxLevelSyslog=debug
+# MaxLevelKMsg=notice
+# MaxLevelConsole=info
+# MaxLevelWall=emerg
 EOF
 
 #------------------------------------------------------------------------------
@@ -863,7 +883,7 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-cleaner
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an ""AS IS"" BASIS,
@@ -875,14 +895,14 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-cleaner
 # on the cluster node including:
 #
 #   1. Shred and delete the root account's [.bash-history] file 
-#      as a security measure.  These commands could include
-#      sensitive information such as credentials, etc.
+# as a security measure.  These commands could include
+# sensitive information such as credentials, etc.
 #
 #   2. Purge temporary Neon command files uploaded by LinuxSshProxy.  These
-#      are located within folder beneath [/dev/shm/neonkube/cmd].  Although
-#      LinuxSshProxy removes these files after commands finish executing, it
-#      is possible to see these accumulate if the session was interrupted.
-#      We'll purge folders and files older than one day.
+# are located within folder beneath [/dev/shm/neonkube/cmd].  Although
+# LinuxSshProxy removes these files after commands finish executing, it
+# is possible to see these accumulate if the session was interrupted.
+# We'll purge folders and files older than one day.
 #
 $   3. Clean the temporary file LinuxSshProxy upload and execute folders.
 
@@ -894,7 +914,7 @@ echo ""[INFO] Starting: [sleep_time=\${{sleep_seconds}} seconds]""
 
 while true
 do
-    # Clean [.bash-history]
+# Clean [.bash-history]
 
     if [ -f \${{history_path1}} ] ; then
         echo ""[INFO] Shredding [\${{history_path1}}]""
@@ -912,14 +932,14 @@ do
         fi
     fi
 
-    # Clean the [LinuxSshProxy] temporary download files.
+# Clean the [LinuxSshProxy] temporary download files.
 
     if [ -d ""$/home/sysadmin/.neon/download"" ] ; then
         echo ""[INFO] Cleaning: /home/sysadmin/.neon/download""
         find ""/home/sysadmin/.neon/download/*"" -type d -ctime +1 | xargs rm -rf
     fi
 
-    # Clean the [LinuxSshProxy] temporary exec files.
+# Clean the [LinuxSshProxy] temporary exec files.
 
     if [ -d ""/home/sysadmin/.neon/exec"" ] ; then
         echo ""[INFO] Cleaning: ""/home/sysadmin/.neon/exec""""
@@ -931,7 +951,7 @@ do
         find ""/home/sysadmin/.neon/upload/*"" -type d -ctime +1 | xargs rm -rf
     fi
 
-    # Sleep for a while before trying again.
+# Sleep for a while before trying again.
 
     sleep \${{sleep_seconds}}
 done
@@ -1115,12 +1135,12 @@ if [ ""{install}"" = ""true"" ]; then
 
     set -euo pipefail
 
-    # Initialize the OS and VERSION environment variables.
+# Initialize the OS and VERSION environment variables.
 
-    OS=xUbuntu_20.04
+    OS=xUbuntu_22.04
     VERSION={crioVersionNoPatch}
 
-    # Install the CRI-O packages.
+# Install the CRI-O packages.
 
     echo ""deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
     echo ""deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
@@ -1167,14 +1187,14 @@ cat <<EOF > /etc/crio/crio.conf
 
 # Path to the ""root directory"". CRI-O stores all of its data, including
 # containers images, in this directory.
-#root = ""/var/lib/containers/storage""
+# root = ""/var/lib/containers/storage""
 
 # Path to the ""run directory"". CRI-O stores all of its state in this directory.
-#runroot = ""/var/run/containers/storage""
+# runroot = ""/var/run/containers/storage""
 
 # Storage driver used to manage the storage of images and containers. Please
 # refer to containers-storage.conf(5) to see all available storage drivers.
-#storage_driver = """"
+# storage_driver = """"
 
 # List to pass options to the storage driver. Please refer to
 # containers-storage.conf(5) to see all available storage options.
@@ -1239,7 +1259,7 @@ grpc_max_recv_msg_size = 16777216
 # ""<ulimit name>=<soft limit>:<hard limit>"", for example:
 # ""nofile=1024:2048""
 # If nothing is set here, settings will be inherited from the CRI-O daemon
-#default_ulimits = [
+# default_ulimits = [
 #]
 
 # default_runtime is the _name_ of the OCI runtime to be used as the default.
@@ -1312,7 +1332,7 @@ default_sysctls = [
 
 # List of additional devices. specified as
 # ""<device-on-host>:<device-on-container>:<permissions>"", for example: ""--device=/dev/sdc:/dev/xvdc:rwm"".
-#If it is empty or commented out, only the devices
+# If it is empty or commented out, only the devices
 # defined in the container json file by the user/kube will be added.
 additional_devices = [
 ]
@@ -1333,15 +1353,15 @@ default_mounts = [
 # its default mounts from the following two files:
 #
 #   1) /etc/containers/mounts.conf (i.e., default_mounts_file): This is the
-#      override file, where users can either add in their own default mounts, or
-#      override the default mounts shipped with the package.
+# override file, where users can either add in their own default mounts, or
+# override the default mounts shipped with the package.
 #
 #   2) /usr/share/containers/mounts.conf: This is the default file read for
-#      mounts. If you want CRI-O to read from a different, specific mounts file,
-#      you can change the default_mounts_file. Note, if this is done, CRI-O will
-#      only add mounts it finds in this file.
+# mounts. If you want CRI-O to read from a different, specific mounts file,
+# you can change the default_mounts_file. Note, if this is done, CRI-O will
+# only add mounts it finds in this file.
 #
-#default_mounts_file = """"
+# default_mounts_file = """"
 
 # Maximum number of processes allowed in a container.
 pids_limit = 1024
@@ -1411,20 +1431,20 @@ pinns_path = """"
 # of trust of the workload. Each entry in the table should follow the format:
 #
 #[crio.runtime.runtimes.runtime-handler]
-#  runtime_path = ""/path/to/the/executable""
-#  runtime_type = ""oci""
-#  runtime_root = ""/path/to/the/root""
+# runtime_path = ""/path/to/the/executable""
+# runtime_type = ""oci""
+# runtime_root = ""/path/to/the/root""
 #
 # Where:
 # - runtime-handler: name used to identify the runtime
 # - runtime_path (optional, string): absolute path to the runtime executable in
-#   the host filesystem. If omitted, the runtime-handler identifier should match
-#   the runtime executable name, and the runtime executable should be placed
-#   in $PATH.
+# the host filesystem. If omitted, the runtime-handler identifier should match
+# the runtime executable name, and the runtime executable should be placed
+# in $PATH.
 # - runtime_type (optional, string): type of runtime, one of: ""oci"", ""vm"". If
-#   omitted, an ""oci"" runtime is assumed.
+# omitted, an ""oci"" runtime is assumed.
 # - runtime_root (optional, string): root directory for storage of containers
-#   state.
+# state.
 
 [crio.runtime.runtimes.runc]
 runtime_path = """"
@@ -1485,7 +1505,7 @@ signature_policy = """"
 # List of registries to skip TLS verification for pulling images. Please
 # consider configuring the registries via /etc/containers/registries.conf before
 # changing them here.
-#insecure_registries = ""[]""
+# insecure_registries = ""[]""
 
 # Controls how image volumes are handled. The valid values are mkdir, bind and
 # ignore; the latter will ignore volumes entirely.
@@ -1496,7 +1516,7 @@ image_volumes = ""mkdir""
 # compatibility reasons. Depending on your workload and usecase you may add more
 # registries (e.g., ""quay.io"", ""registry.fedoraproject.org"",
 # ""registry.opensuse.org"", etc.).
-#registries = []
+# registries = []
 
 # The crio.network table containers settings pertaining to the management of
 # CNI plugins.
@@ -1657,24 +1677,38 @@ systemctl start crio
 
                     var setupScript =
 $@"
+# $todo(jefflill):
+#
+# [podman] installation is having some trouble with a couple package depedencies,
+# which causes the install command to return a non-zero exit code.  This appears
+# to be a problem with two package dependencies trying to update the same file.
+#
+# We're going to use an option to force the file overwrite and then ignore any
+# errors for now and hope for the best.  This isn't as bad as it sounds because 
+# for neonKUBE we're only calling this method while creating node images, so we'll
+# should be well aware of any problems while completing the node image configuration
+# and then deploying test clusters.
+#
+#       https://github.com/nforgeio/neonKUBE/issues/1571
+#       https://github.com/containers/podman/issues/14367
+#
+# I'm going to hack this for now by using this option:
+#
+#   -o Dpkg::Options::=""--force-overwrite""
+#
+# and ignoring errors from the command.
+
 set -euo pipefail
 
-source /etc/os-release
-echo ""deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${{VERSION_ID}}/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${{VERSION_ID}}/Release.key -O- | apt-key add -
-{KubeNodeFolder.Bin}/safe-apt-get update -qq
-{KubeNodeFolder.Bin}/safe-apt-get install -yq podman-rootless
+{KubeNodeFolder.Bin}/safe-apt-get update -q
+set +e                                                                                          # <--- HACK: disable error checks
+{KubeNodeFolder.Bin}/safe-apt-get install -yq podman -o Dpkg::Options::=""--force-overwrite""   # <--- HACK: ignore overwrite errors
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold podman
-
-# CRI-O appears to come with some Kubernetes related images pre-installed.
-# We're going to remove these to save some disk space.
-
-podman image rm --all --force
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -1885,7 +1919,7 @@ rm  install-kustomize.sh
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            InvokeIdempotent("setup/install-kubernetes",
+            InvokeIdempotent("setup/kubernetes",
                 () =>
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
@@ -1894,21 +1928,43 @@ rm  install-kustomize.sh
 
                     var mainScript =
 $@"
+# $todo(jefflill):
+#
+# [kubeadm] installation is having some trouble with a couple package depedencies,
+# which causes the install command to return a non-zero exit code.  This appears
+# to be a problem with two package dependencies trying to update the same file.
+#
+# We're going to use an option to force the file overwrite and then ignore any
+# errors for now and hope for the best.  This isn't as bad as it sounds because 
+# for neonKUBE we're only calling this method while creating node images, so we'll
+# should be well aware of any problems while completing the node image configuration
+# and then deploying test clusters.
+#
+#       https://github.com/nforgeio/neonKUBE/issues/1571
+#       https://github.com/containers/podman/issues/14367
+#
+# I'm going to hack this for now by using this option:
+#
+#   -o Dpkg::Options::=""--force-overwrite""
+#
+# and ignoring errors from the command.
+
 set -euo pipefail
 
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 {KubeNodeFolder.Bin}/safe-apt-get update
 
-{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage}
+set +e                                                                                                                                              # <--- HACK: disable error checks
+{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
 
 # Note that the [kubeadm] install also installs [kubelet] and [kubectl] but that the
 # versions installed may be more recent than the Kubernetes version.  We want our
 # clusters to use consistent versions of all tools so we're going to install these
 # two packages again with specific versions and allow them to be downgraded.
 
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage}
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage}
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
 
 # Prevent the package manager these components from starting automatically.
 

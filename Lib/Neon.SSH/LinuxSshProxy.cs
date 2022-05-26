@@ -2747,14 +2747,13 @@ echo $? > {cmdFolder}/exit
                         var partitionName = partition.Property("name").ToObject<string>();
                         var partitionSize = partition.Property("size").ToObject<long>();
                         var partitionType = partition.Property("type").ToObject<string>();
-                        var mountPoint    = partition.Property("mountpoint").ToObject<string>();
 
                         if (partitionType != "part")
                         {
                             continue;
                         }
 
-                        partitions.Add(new LinuxDiskPartition(partitionNum++, $"/dev/{partitionName}", partitionSize, mountPoint));
+                        partitions.Add(new LinuxDiskPartition(partitionNum++, $"/dev/{partitionName}", partitionSize));
                     }
                 }
 

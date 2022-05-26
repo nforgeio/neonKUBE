@@ -109,8 +109,8 @@ OPTIONS:
                                   image file as published to our public S3 bucket for
                                   the target hosting manager.  Examples:
 
-                                        Hyper-V:   ubuntu-20.04.hyperv.vhdx
-                                        XenServer: ubuntu-20.04.xenserver.xva
+                                        Hyper-V:   ubuntu-22.04.hyperv.vhdx
+                                        XenServer: ubuntu-22.04.xenserver.xva
 
                                   NOTE: This is required for [--debug]
 

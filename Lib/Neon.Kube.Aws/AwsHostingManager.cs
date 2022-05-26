@@ -139,7 +139,7 @@ namespace Neon.Kube
         // so all of the rules will be applied in a single opertation (rather
         // than performing multiple operations on the current ACL).
         //
-        // VMs are currently based on the Ubuntu-20.04 Server AMIs published to the
+        // VMs are currently based on the Ubuntu-22.04 Server AMIs published to the
         // AWS regions by Canonical.  Note that AWS VM images work differently from
         // Azure.  Azure images automatically exist in all of MSFT's regions and
         // each image has a unique ID that is the same across these regions.
@@ -1990,7 +1990,7 @@ namespace Neon.Kube
 
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
             var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}";
-            var operatingSystem = "ubuntu-20.04";
+            var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
             if (neonKubeVersion.Prerelease != null && neonKubeVersion.Prerelease.StartsWith("alpha", StringComparison.InvariantCultureIgnoreCase))
@@ -2997,7 +2997,9 @@ network:
       dhcp4: false
       dhcp6: false
       addresses: [{node.Metadata.Address}/{privateSubnet.PrefixLength}]
-      gateway4: {privateSubnet.FirstUsableAddress}
+      routes:
+      - to: default
+        via: {privateSubnet.FirstUsableAddress}
       nameservers:
         addresses: [{sbNameServers}]
 EOF

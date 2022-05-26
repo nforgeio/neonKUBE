@@ -769,7 +769,7 @@ namespace Neon.Kube
                 hyperv.AddVm(
                     vmName,
                     processorCount: processors,
-                    driveSize:       osDiskBytes.ToString(),
+                    driveSize:      osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
                     switchName:     switchName);

@@ -154,7 +154,7 @@ namespace Neon.Kube
         // currently assigning network security groups to these NICs.  The provisioner 
         // assigns these addresses automatically.
         //
-        // VMs are currently based on the Ubuntu-20.04 Server image provided  
+        // VMs are currently based on the Ubuntu-22.04 Server image provided  
         // published to the marketplace by Canonical.  We use the [neon-image] tool
         // from the neonCLOUD repo to create Azure Gen2 base and node images used
         // to provision the cluster.  Gen2 images work on most Azure VM sizes and offer
