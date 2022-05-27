@@ -54,6 +54,9 @@ spec:
           - name: "GOGC"
             value: "25"
         priorityClassName: {{ .Values.priorityClassName }}
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
         resources:
           requests:
             cpu: "{{ .Values.resources.pilot.requests.cpu }}"
@@ -68,6 +71,9 @@ spec:
           - name: "GOGC"
             value: "25"
         priorityClassName: {{ .Values.priorityClassName }}
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -89,6 +95,9 @@ spec:
             memory: "{{ .Values.resources.ingress.requests.memory }}"
     cni:
       k8s:
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
         env:
           - name: "GOGC"
             value: "25"
