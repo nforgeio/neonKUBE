@@ -57,7 +57,7 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - "exec /node-problem-detector --logtostderr {{ include "npd.cli.args" $ }}"
+            - "exec /node-problem-detector --logtostderr --port=0 {{ include "npd.cli.args" $ }}"
           {{- if .Values.securityContext }}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}

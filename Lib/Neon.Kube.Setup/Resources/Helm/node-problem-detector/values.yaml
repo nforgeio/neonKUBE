@@ -61,7 +61,7 @@ settings:
   # settings.prometheus_address -- Prometheus exporter address
   prometheus_address: 0.0.0.0
   # settings.prometheus_port -- Prometheus exporter port
-  prometheus_port: 20257
+  prometheus_port: 20259
 
   # The period at which k8s-exporter does forcibly sync with apiserver
   # settings.heartBeatPeriod -- Syncing interval with API server
