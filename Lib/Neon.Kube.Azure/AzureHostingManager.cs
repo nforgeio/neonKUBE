@@ -673,6 +673,8 @@ namespace Neon.Kube
                 new Regex(@"^Standard_DC\d+ads_v5$", RegexOptions.IgnoreCase),          // DCadsv5
                 new Regex(@"^Standard_DC\d+as_v5$", RegexOptions.IgnoreCase),           // DCasv5
                 new Regex(@"^Standard_DC\d+ads_v5$", RegexOptions.IgnoreCase),          // DCadsv5
+                new Regex(@"^Standard_DC\d+s_v3$", RegexOptions.IgnoreCase),            // DCsv3
+                new Regex(@"^Standard_DC\d+ds_v3$", RegexOptions.IgnoreCase),           // DCdsv3
                 new Regex(@"^Standard_D\d+_v5$", RegexOptions.IgnoreCase),              // Dv5
                 new Regex(@"^Standard_D\d+s_v5$", RegexOptions.IgnoreCase),             // Dsv5
                 new Regex(@"^Standard_D\d+d_v5$", RegexOptions.IgnoreCase),             // Ddv5
@@ -689,6 +691,8 @@ namespace Neon.Kube
                 new Regex(@"^Standard_E\d+ds_v4$", RegexOptions.IgnoreCase),            // Edsv4
                 new Regex(@"^Standard_E\d+as_v5$", RegexOptions.IgnoreCase),            // Easv5
                 new Regex(@"^Standard_E\d+ads_v5$", RegexOptions.IgnoreCase),           // Eadsv5
+                new Regex(@"^Standard_E\d+bds_v5$", RegexOptions.IgnoreCase),           // Ebdsv5
+                new Regex(@"^Standard_E\d+bs_v5$", RegexOptions.IgnoreCase),            // Ebdsv5
                 new Regex(@"^Standard_EC\d+as_v5$", RegexOptions.IgnoreCase),           // ECasv5
                 new Regex(@"^Standard_E\d+ads_v5$", RegexOptions.IgnoreCase),           // ECadsv5
                 new Regex(@"^Standard_E\d+d_v5$", RegexOptions.IgnoreCase),             // Edv5
