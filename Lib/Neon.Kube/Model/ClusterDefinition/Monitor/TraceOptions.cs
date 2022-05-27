@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MonitorOptions.cs
+// FILE:	    TraceOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,36 +36,23 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
+using k8s.Models;
+
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated logging stack.
+    /// Specifies the options for configuring the cluster integrated traceging and
+    /// metrics.
     /// </summary>
-    public class MonitorOptions
+    public class TraceOptions
     {
         /// <summary>
-        /// Logging options.
+        /// Trace retention period. Traces beyond this number of days will be purged by the ClusterManager
         /// </summary>
-        [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
-        [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public LogOptions Logs { get; set; } = new LogOptions();
-
-        /// <summary>
-        /// Metrics options
-        /// </summary>
-        [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
-        [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public MetricsOptions Metrics { get; set; } = new MetricsOptions();
-
-        /// <summary>
-        /// Tracing options
-        /// </summary>
-        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
-        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public TraceOptions Traces { get; set; } = new TraceOptions();
+        [JsonProperty(PropertyName = "TraceRetentionDays", Required = Required.Default)]
+        [YamlMember(Alias = "traceRetentionDays", ApplyNamingConventions = false)]
+        [DefaultValue(14)]
+        public int TraceRetentionDays { get; set; } = 14;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -75,13 +62,37 @@ namespace Neon.Kube
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Logs    = Logs ?? new LogOptions();
-            Metrics = Metrics ?? new MetricsOptions();
-            Traces  = Traces ?? new TraceOptions();
+            var traceOptionsPrefix = $"{nameof(ClusterDefinition.Monitor)}.{nameof(ClusterDefinition.Monitor.Traces)}";
 
-            Logs.Validate(clusterDefinition);
-            Metrics.Validate(clusterDefinition);
-            Traces.Validate(clusterDefinition);
+            if (TraceRetentionDays < 1)
+            {
+                throw new ClusterDefinitionException($"[{traceOptionsPrefix}.{nameof(TraceRetentionDays)}={TraceRetentionDays}] is valid.  This must be at least one day.");
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.Traces))
+            {
+                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
+                {
+                    foreach (var n in clusterDefinition.Nodes)
+                    {
+                        n.Labels.TracesInternal = true;
+                    }
+                }
+                else
+                {
+                    foreach (var n in clusterDefinition.Workers)
+                    {
+                        n.Labels.TracesInternal = true;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Traces))
+                {
+                    n.Labels.TracesInternal = true;
+                }
+            }
         }
     }
 }

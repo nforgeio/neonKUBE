@@ -502,6 +502,16 @@ namespace Neon.Kube
         public const string LabelMetricsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics-internal";
 
         /// <summary>
+        /// Reserved label name for <see cref="Traces"/>.
+        /// </summary>
+        public const string LabelTraces = ClusterDefinition.ReservedLabelPrefix + "monitor.traces";
+
+        /// <summary>
+        /// Reserved label name for <see cref="TracesInternal"/>.
+        /// </summary>
+        public const string LabelTracesInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.traces-internal";
+
+        /// <summary>
         /// <b>neonkube.io/monitor.logs</b> [<c>bool</c>]: Indicates the user has 
         /// specified that Loki logging should be deployed to the labeled node.  This 
         /// defaults to <c>false</c>.
@@ -537,6 +547,24 @@ namespace Neon.Kube
         [YamlMember(Alias = "metricsInternal", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool MetricsInternal { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/monitor.traces</b> [<c>bool</c>]: Indicates the user has specified
+        /// that Tempo traces should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
+        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Traces { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/monitor.traces-internal</b> [<c>bool</c>]: Indicates that Tempo
+        /// traces will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TracesInternal", Required = Required.Default)]
+        [YamlMember(Alias = "tracesInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool TracesInternal { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -615,6 +643,9 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
                 list.Add(new KeyValuePair<string, object>(LabelMetricsInternal,             NeonHelper.ToBoolString(MetricsInternal)));
+
+                list.Add(new KeyValuePair<string, object>(LabelTraces,                      NeonHelper.ToBoolString(Traces)));
+                list.Add(new KeyValuePair<string, object>(LabelTracesInternal,              NeonHelper.ToBoolString(TracesInternal)));
 
                 list.Add(new KeyValuePair<string, object>(LabelMinio,                       NeonHelper.ToBoolString(Minio)));
                 list.Add(new KeyValuePair<string, object>(LabelMinioInternal,               NeonHelper.ToBoolString(MinioInternal)));

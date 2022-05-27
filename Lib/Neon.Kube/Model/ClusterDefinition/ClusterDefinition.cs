@@ -274,11 +274,12 @@ namespace Neon.Kube
                 node.Labels.NeonSystemDb            = true;
                 node.Labels.NeonSystemRegistry      = true;
                 node.Labels.Minio                   = true;
+                node.Labels.Metrics                 = true;
                 node.Labels.MetricsInternal         = true;
                 node.Labels.Logs                    = true;
                 node.Labels.LogsInternal            = true;
-                node.Labels.Minio                   = true;
-                node.Labels.MetricsInternal         = true;
+                node.Labels.Traces                  = true;
+                node.Labels.TracesInternal          = true;
             }
         }
 
