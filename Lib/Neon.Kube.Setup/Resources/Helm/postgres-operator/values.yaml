@@ -53,7 +53,7 @@ configGeneral:
   # set_memory_request_to_limit: false
 
   # map of sidecar names to docker images
-  # sidecar_docker_images:
+  #  sidecar_docker_images:
   #  example: "exampleimage:exampletag"
 
   # number of routines the operator spawns to process requests concurrently
@@ -436,7 +436,13 @@ controllerID:
   # The name of the controller ID to use.
   # If not set and create is true, a name is generated using the fullname template
   name:
-
+  
+healthCheck:
+  enabled: true
+  image: 
+    organization: neon-registry.node.local
+    repository: zalan-postgres-health-check
+    tag: neonkube-0.5.0-alpha
 
 metrics:
   enabled: true
