@@ -7,6 +7,8 @@ metadata:
     chart: {{ template "mimir.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+  annotations:
+    reloader.stakater.com/match: 'false'
 data:
   runtime.yaml: |
     {{ tpl (toYaml .Values.runtimeConfig) . | nindent 4 }}

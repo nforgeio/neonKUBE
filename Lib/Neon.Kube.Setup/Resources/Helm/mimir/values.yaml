@@ -53,7 +53,14 @@ mimir:
   config: |
     multitenancy_enabled: false
 
-    limits: {}
+    limits:
+      max_global_series_per_user: 0
+      max_global_series_per_metric: 0 
+      enforce_metadata_metric_name: true
+      max_global_metadata_per_user: 0
+      max_global_metadata_per_metric: 0
+      max_label_names_per_series: 100
+      ingestion_rate: 50000
 
     alertmanager:
       data_dir: '/alertmanager'
@@ -242,7 +249,8 @@ alertmanager:
                 app.kubernetes.io/component: alertmanager
             topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   persistence:
     # SubPath in emptyDir for persistence, only enabled if alertmanager.statefulSet.enabled is false
     subPath:
@@ -399,7 +407,8 @@ distributor:
               app.kubernetes.io/component: distributor
           topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   persistence:
     subPath:
 
@@ -466,7 +475,8 @@ ingester:
   nodeSelector:
     neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
 
   persistentVolume:
     # If true and ingester.statefulSet.enabled is true,
@@ -547,7 +557,8 @@ ingester:
 overrides_exporter:
   replicas: 1
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
 
   initContainers: []
 
@@ -635,7 +646,8 @@ ruler:
   nodeSelector:
     neonkube.io/monitor.metrics-internal: 'true'
   affinity: {}
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   persistence:
     subPath:
 
@@ -719,7 +731,8 @@ querier:
                 app.kubernetes.io/component: querier
             topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   persistence:
     subPath:
 
@@ -803,7 +816,8 @@ query_frontend:
                 app.kubernetes.io/component: query-frontend
             topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   persistence:
     subPath:
 
@@ -875,7 +889,8 @@ store_gateway:
               app.kubernetes.io/component: store-gateway
           topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
 
   persistentVolume:
     # If true Store-gateway will create/use a Persistent Volume Claim
@@ -990,7 +1005,8 @@ compactor:
                 app.kubernetes.io/component: compactor
             topologyKey: 'kubernetes.io/hostname'
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
 
   persistentVolume:
     # If true compactor will create/use a Persistent Volume Claim
