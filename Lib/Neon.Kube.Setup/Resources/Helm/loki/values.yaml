@@ -33,7 +33,8 @@ loki:
   # (Deployments, StatefulSets, etc) that this chart launches. Use this to
   # implement something like the "Wave" controller or another controller that
   # is monitoring top level deployment resources.
-  annotations: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
   # Configures the readiness probe for all of the Loki pods
   readinessProbe:
     httpGet:
