@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "tempo.distributorLabels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/match: 'true'
 data:
   tempo-query.yaml: |
     {{- tpl .Values.queryFrontend.query.config . | nindent 4 }}

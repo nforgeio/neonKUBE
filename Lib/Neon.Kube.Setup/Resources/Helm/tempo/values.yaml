@@ -86,6 +86,9 @@ ingester:
   podLabels: {}
   # -- Annotations for ingester pods
   podAnnotations: {}
+  # -- Annotations for ingester deployment
+  annotations: 
+    reloader.stakater.com/search: 'true'
   # -- Additional CLI args for the ingester
   extraArgs: []
   # -- Environment variables to add to the ingester pods
@@ -136,7 +139,8 @@ ingester:
                 app.kubernetes.io/component: ingester
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for ingester pods
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.traces-internal: 'true'
   # -- Tolerations for ingester pods
   tolerations: []
   # -- Extra volumes for ingester pods
@@ -187,6 +191,9 @@ distributor:
   podLabels: {}
   # -- Annotations for distributor pods
   podAnnotations: {}
+  # -- Annotations for distributor deployment
+  annotations:
+    reloader.stakater.com/search: 'true'
   # -- Additional CLI args for the distributor
   extraArgs: []
   # -- Environment variables to add to the distributor pods
@@ -230,7 +237,8 @@ distributor:
                 app.kubernetes.io/component: distributor
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for distributor pods
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.traces-internal: 'true'
   # -- Tolerations for distributor pods
   tolerations: []
   # -- Extra volumes for distributor pods
@@ -252,6 +260,9 @@ compactor:
   podLabels: {}
   # -- Annotations for compactor pods
   podAnnotations: {}
+  # -- Annotations for compactor deployment
+  annotations:
+    reloader.stakater.com/search: 'true'
   # -- Additional CLI args for the compactor
   extraArgs: []
   # -- Environment variables to add to the compactor pods
@@ -275,7 +286,8 @@ compactor:
   # -- Grace period to allow the compactor to shutdown before it is killed
   terminationGracePeriodSeconds: 30
   # -- Node selector for compactor pods
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.traces-internal: 'true'
   # -- Tolerations for compactor pods
   tolerations: []
   # -- Extra volumes for compactor pods
@@ -304,6 +316,9 @@ querier:
   podLabels: {}
   # -- Annotations for querier pods
   podAnnotations: {}
+  # -- Annotations for querier deployment
+  annotations: 
+    reloader.stakater.com/search: 'true'
   # -- Additional CLI args for the querier
   extraArgs: []
   # -- Environment variables to add to the querier pods
@@ -347,7 +362,8 @@ querier:
                 app.kubernetes.io/component: querier
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for querier pods
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.traces-internal: 'true'
   # -- Tolerations for querier pods
   tolerations: []
   # -- Extra volumes for querier pods
@@ -420,6 +436,9 @@ queryFrontend:
   podLabels: {}
   # -- Annotations for query-frontend pods
   podAnnotations: {}
+  # -- Annotations for query-frontend deployment
+  annotations: 
+    reloader.stakater.com/search: 'true'
   # -- Additional CLI args for the query-frontend
   extraArgs: []
   # -- Environment variables to add to the query-frontend pods
@@ -463,7 +482,8 @@ queryFrontend:
                 app.kubernetes.io/component: query-frontend
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for query-frontend pods
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.traces-internal: 'true'
   # -- Tolerations for query-frontend pods
   tolerations: []
   # -- Extra volumes for query-frontend pods
@@ -640,9 +660,9 @@ storage:
     backend: local
     s3:
       endpoint: minio.neon-system.svc:80
-      bucket_name: tempo
-      access_key_id: ${ACCESS_KEY_ID}
-      secret_access_key: ${SECRET_ACCESS_KEY}
+      bucket: tempo
+      access_key: ${ACCESS_KEY_ID}
+      secret_key: ${SECRET_ACCESS_KEY}
       insecure: true
 
 # Global overrides
