@@ -5256,7 +5256,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s = GetK8sClient(controller);
+            var k8s     = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/cluster-configmaps",
                 async () =>
@@ -5299,32 +5299,32 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s = GetK8sClient(controller);
+            var k8s     = GetK8sClient(controller);
 
             await master.InvokeIdempotentAsync("setup/cluster-info",
                 async () =>
                 {
-                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
-                        name: KubeConfigMapName.ClusterInfo,
+                    var clusterInfoMap = new TypeSafeConfigMap<ClusterStatus>(
+                        name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        config: new ClusterInfo()
+                        config:     new ClusterStatus()
                         {
-                            ClusterVersion = KubeVersions.NeonKube,
-                            IsLocked = cluster.Definition.IsLocked,
-                            State = ClusterState.Healthy,
-                            Name = cluster.Definition.Name,
-                            Description = cluster.Definition.Description,
+                            ClusterVersion     = KubeVersions.NeonKube,
+                            IsLocked           = cluster.Definition.IsLocked,
+                            State              = ClusterState.Healthy,
+                            Name               = cluster.Definition.Name,
+                            Description        = cluster.Definition.Description,
                             HostingEnvironment = cluster.Definition.Hosting.Environment,
-                            Datacenter = cluster.Definition.Datacenter,
-                            Domain = cluster.Definition.Domain,
-                            PublicAddresses = cluster.Definition.PublicAddresses,
+                            Datacenter         = cluster.Definition.Datacenter,
+                            Domain             = cluster.Definition.Domain,
+                            PublicAddresses    = cluster.Definition.PublicAddresses,
                             OptionalComponents = new ClusterOptionalComponents()
                             {
-                                Mimir = true,
+                                Mimir   = true,
                                 Grafana = true,
-                                Harbor = true,
-                                Loki = true,
-                                Minio = true
+                                Harbor  = true,
+                                Loki    = true,
+                                Minio   = true
                             }
                         });
 

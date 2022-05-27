@@ -45,7 +45,7 @@ namespace Neon.Kube
         /// pre-preleases for the same version.
         /// </note>
         /// </summary>
-        public const string NeonKube = "0.5.0-alpha";
+        public const string NeonKube = "0.6.0-alpha";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
@@ -109,7 +109,12 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public const string Crio = "1.23.2";
+        public const string Crio = Kubernetes;
+
+        /// <summary>
+        /// The version of Podman to be installed.
+        /// </summary>
+        public const string Podman = "3.4.2";
 
         /// <summary>
         /// The version of Calico to install.

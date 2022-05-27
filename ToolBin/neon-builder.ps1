@@ -177,6 +177,8 @@ function PublishCore
 
 Push-Cwd $nfRoot | Out-Null
 
+$verbosity = "minimal"
+
 try
 {
     # Build the solution.
@@ -209,7 +211,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
 
         if (-not $?)
         {
@@ -224,7 +226,7 @@ try
 
         dotnet restore
 
-        & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+        & "$msbuild" "$nfSolution" -t:restore -verbosity:minimal
 
         if (-not $?)
         {
@@ -237,7 +239,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:$verbosity
 
         if (-not $?)
         {
@@ -289,7 +291,7 @@ try
             throw "ERROR: Cannot remove: $nfBuild\codedoc"
         }
 
-        & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity
 
         if (-not $?)
         {

@@ -109,8 +109,7 @@ namespace Neon.SSH
         /// <param name="partition">The partition number.</param>
         /// <param name="partitionName">The partition name.</param>
         /// <param name="partitionSize">The partition size in bytes.</param>
-        /// <param name="mountPoint">The partition mount point or <c>null</c>.</param>
-        public LinuxDiskPartition(int partition, string partitionName, long partitionSize, string mountPoint)
+        public LinuxDiskPartition(int partition, string partitionName, long partitionSize)
         {
             Covenant.Requires<ArgumentException>(partition > 0, nameof(partition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(partitionName), nameof(partitionName));
@@ -135,10 +134,5 @@ namespace Neon.SSH
         /// Returns the partition size in bytes.
         /// </summary>
         public long PartitionSize { get; private set; }
-
-        /// <summary>
-        /// Returns the current partition mount point or <c>null</c>.
-        /// </summary>
-        public string MountPoint { get; private set; }
     }
 }

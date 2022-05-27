@@ -71,6 +71,8 @@ OPTIONS:
 
 REMARKS:
 
+Use the [neon cluster start] command to resume a paused cluster.
+
 This command will not work on a locked clusters as a safety measure.  The idea
 it to add some friction to avoid impacting production clusters by accident.
 
@@ -120,7 +122,7 @@ cluster definition or by executing this command on your cluster:
 
                 if ((capabilities & HostingCapabilities.Pausable) == 0)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cluster is not pausable.");
+                    Console.Error.WriteLine($"*** ERROR: Cluster does not support pause/resume.");
                     Program.Exit(1);
                 }
 
@@ -153,8 +155,18 @@ cluster definition or by executing this command on your cluster:
                             }
                         }
 
-                        await cluster.StopAsync(StopMode.Sleep);
-                        Console.WriteLine($"Cluster is paused: {cluster.Name}");
+                        Console.WriteLine($"Pausing: {cluster.Name}");
+
+                        try
+                        {
+                            await cluster.StopAsync(StopMode.Sleep);
+                            Console.WriteLine($"PAUSED:  {cluster.Name}");
+                        }
+                        catch (TimeoutException)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                        }
                         break;
 
                     default:

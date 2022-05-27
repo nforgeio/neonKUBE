@@ -139,7 +139,7 @@ namespace Neon.Kube
         // so all of the rules will be applied in a single opertation (rather
         // than performing multiple operations on the current ACL).
         //
-        // VMs are currently based on the Ubuntu-20.04 Server AMIs published to the
+        // VMs are currently based on the Ubuntu-22.04 Server AMIs published to the
         // AWS regions by Canonical.  Note that AWS VM images work differently from
         // Azure.  Azure images automatically exist in all of MSFT's regions and
         // each image has a unique ID that is the same across these regions.
@@ -528,7 +528,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Specifies the owner ID to use when querying for Canonical AMIs 
@@ -1196,108 +1196,108 @@ namespace Neon.Kube
                 // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
                 controller.AddNodeStep("openebs",
-                async (controller, node) =>
-                {
-                    node.Status = "openebs: checking";
-
-                    var volumeName        = GetResourceName($"{node.Name}-openebs");
-                    var awsInstance       = nodeNameToAwsInstance[node.Name];
-                    var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-                    var volume            = (Volume)null;
-
-                    // Check if we've already created the volume.
-
-                    await foreach (var volumeItem in volumePagenator.Volumes)
+                    async (controller, node) =>
                     {
-                        if (volumeItem.State != VolumeState.Deleting && 
-                            volumeItem.State != VolumeState.Deleted &&
-                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                            volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        node.Status = "openebs: checking";
+
+                        var volumeName        = GetResourceName($"{node.Name}-openebs");
+                        var awsInstance       = nodeNameToAwsInstance[node.Name];
+                        var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                        var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+                        var volume            = (Volume)null;
+
+                        // Check if we've already created the volume.
+
+                        await foreach (var volumeItem in volumePagenator.Volumes)
                         {
-                            volume = volumeItem;
-                            break;
-                        }
-                    }
-
-                    // Create the volume if it doesn't exist.
-
-                    if (volume == null)
-                    {
-                        node.Status = "openebs: create cStor volume";
-
-                        var volumeResponse = await ec2Client.CreateVolumeAsync(
-                            new CreateVolumeRequest()
+                            if (volumeItem.State != VolumeState.Deleting && 
+                                volumeItem.State != VolumeState.Deleted &&
+                                volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                             {
-                                AvailabilityZone   = availabilityZone,
-                                VolumeType         = openEBSVolumeType,
-                                Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
-                                MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
-                            });
-
-                        volume = volumeResponse.Volume;
-                    }
-
-                    // Wait for the volume to become available.
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            node.Status = "openebs: waiting for cStor volume...";
-
-                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-
-                            await foreach (var volumeItem in volumePagenator.Volumes)
-                            {
-                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                                {
-                                    volume = volumeItem;
-                                    break;
-                                }
+                                volume = volumeItem;
+                                break;
                             }
+                        }
 
-                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
-                        },
-                        timeout:      operationTimeout,
-                        pollInterval: operationPollInternal);
+                        // Create the volume if it doesn't exist.
 
-                    // Attach the volume to the VM if it's not already attached.
-
-                    if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
-                    {
-                        await ec2Client.AttachVolumeAsync(
-                            new AttachVolumeRequest()
-                            {
-                                VolumeId   = volume.VolumeId,
-                                InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName,
-                            });
-                    }
-
-                    // AWS defaults to deleting volumes on termination only for the
-                    // volumes created along with the new instance.  We want the 
-                    // OpenEBS cStor volume to be deleted as well.
-
-                    await ec2Client.ModifyInstanceAttributeAsync(
-                        new ModifyInstanceAttributeRequest()
+                        if (volume == null)
                         {
-                            InstanceId          = awsInstance.InstanceId,
-                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
-                            {
-                                new InstanceBlockDeviceMappingSpecification()
+                            node.Status = "openebs: create cStor volume";
+
+                            var volumeResponse = await ec2Client.CreateVolumeAsync(
+                                new CreateVolumeRequest()
                                 {
-                                    DeviceName = openEBSDeviceName,
-                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    AvailabilityZone   = availabilityZone,
+                                    VolumeType         = openEBSVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    MultiAttachEnabled = false,
+                                    TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
+                                });
+
+                            volume = volumeResponse.Volume;
+                        }
+
+                        // Wait for the volume to become available.
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                node.Status = "openebs: waiting for cStor volume...";
+
+                                var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+
+                                await foreach (var volumeItem in volumePagenator.Volumes)
+                                {
+                                    if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                        volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                                     {
-                                        DeleteOnTermination = true,
+                                        volume = volumeItem;
+                                        break;
                                     }
                                 }
-                            }
-                        });
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+
+                                return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
+                            },
+                            timeout:      operationTimeout,
+                            pollInterval: operationPollInternal);
+
+                        // Attach the volume to the VM if it's not already attached.
+
+                        if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
+                        {
+                            await ec2Client.AttachVolumeAsync(
+                                new AttachVolumeRequest()
+                                {
+                                    VolumeId   = volume.VolumeId,
+                                    InstanceId = awsInstance.InstanceId,
+                                    Device     = openEBSDeviceName,
+                                });
+                        }
+
+                        // AWS defaults to deleting volumes on termination only for the
+                        // volumes created along with the new instance.  We want the 
+                        // OpenEBS cStor volume to be deleted as well.
+
+                        await ec2Client.ModifyInstanceAttributeAsync(
+                            new ModifyInstanceAttributeRequest()
+                            {
+                                InstanceId          = awsInstance.InstanceId,
+                                BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                                {
+                                    new InstanceBlockDeviceMappingSpecification()
+                                    {
+                                        DeviceName = openEBSDeviceName,
+                                        Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                        {
+                                            DeleteOnTermination = true,
+                                        }
+                                    }
+                                }
+                            });
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
             }
         }
 
@@ -1310,13 +1310,13 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("AWS connect",
+            controller.AddGlobalStep("connect aws",
                 async controller =>
                 {
                     await ConnectAwsAsync(controller);
                 });
 
-            controller.AddGlobalStep("ssh: port mappings",
+            controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
                     await cluster.HostingManager.EnableInternetSshAsync();
@@ -1343,7 +1343,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("ssh: block ingress",
+            controller.AddGlobalStep("ssh block ingress",
                 async controller =>
                 {
                     await cluster.HostingManager.DisableInternetSshAsync();
@@ -1458,7 +1458,7 @@ namespace Neon.Kube
 
             if (isConnected)
             {
-                await GetResourcesAsync();
+                await LoadResourcesAsync();
                 return;
             }
 
@@ -1488,14 +1488,14 @@ namespace Neon.Kube
 
             // Load information about any existing cluster resources.
 
-            await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Loads information about cluster related resources already provisioned to AWS.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
             await SyncContext.Clear;
 
@@ -1531,29 +1531,29 @@ namespace Neon.Kube
 
             // Elastic IPs
 
-            if (awsOptions.HasCustomElasticIPs)
+            if (awsOptions.Network.HasCustomElasticIPs)
             {
                 var describeResponse = await ec2Client.DescribeAddressesAsync(
                     new DescribeAddressesRequest()
                     {
                         AllocationIds = new List<string>()
                          {
-                             awsOptions.ElasticIpIngressId,
-                             awsOptions.ElasticIpEgressId
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
                          }
                     });
 
-                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
-                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
 
                 if (ingressAddress == null)
                 {
-                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
                 }
 
                 if (egressAddress == null)
                 {
-                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
                 }
 
                 ingressAddressName = ingressAddress.Tags
@@ -1612,7 +1612,7 @@ namespace Neon.Kube
                     publicSubnet = subnetItem;
                 }
                 else if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == nodeSubnetName) &&
-                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                         subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     nodeSubnet = subnetItem;
                 }
@@ -1990,7 +1990,7 @@ namespace Neon.Kube
 
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
             var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}";
-            var operatingSystem = "ubuntu-20.04";
+            var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
             if (neonKubeVersion.Prerelease != null && neonKubeVersion.Prerelease.StartsWith("alpha", StringComparison.InvariantCultureIgnoreCase))
@@ -2198,7 +2198,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (awsOptions.HasCustomElasticIPs)
+            if (awsOptions.Network.HasCustomElasticIPs)
             {
                 controller.SetGlobalStepStatus("check: elastic IP addresses");
 
@@ -2207,22 +2207,22 @@ namespace Neon.Kube
                     {
                          AllocationIds = new List<string>()
                          {
-                             awsOptions.ElasticIpIngressId,
-                             awsOptions.ElasticIpEgressId
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
                          }
                     });
 
-                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpIngressId);
-                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.ElasticIpEgressId);
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
 
                 if (ingressAddress == null)
                 {
-                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.ElasticIpIngressId}] does not exist.");
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
                 }
 
                 if (egressAddress == null)
                 {
-                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.ElasticIpEgressId}] does not exist.");
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
                 }
 
                 ingressAddressName = ingressAddress.Tags
@@ -2978,16 +2978,6 @@ echo $0 > /etc/neonkube/cloud-init/boot-script-path
 chmod 600 /etc/neonkube/cloud-init/boot-script-path
 
 #------------------------------------------------------------------------------
-# Prevent the script from doing anything after the instance is rebooted.
-
-if [ -f /etc/neonkube/cloud-init/disabled ]; then
-    exit 0
-fi
-
-touch /etc/neonkube/cloud-init/disabled
-chmod 644 /etc/neonkube/cloud-init/disabled
-
-#------------------------------------------------------------------------------
 # Update the [sysadmin] user password:
 
 echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
@@ -3007,7 +2997,9 @@ network:
       dhcp4: false
       dhcp6: false
       addresses: [{node.Metadata.Address}/{privateSubnet.PrefixLength}]
-      gateway4: {privateSubnet.FirstUsableAddress}
+      routes:
+      - to: default
+        via: {privateSubnet.FirstUsableAddress}
       nameservers:
         addresses: [{sbNameServers}]
 EOF
@@ -3104,11 +3096,21 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                        new DescribeInstanceStatusRequest()
+                    // It's possible that the instance created above hasn't gotten far enough
+                    // along in the provisioning process for the DescribeInstanceStatusAsync()
+                    // call below to see it.  We'll need to use a retry policy to deal with this.
+
+                    var retry = new LinearRetryPolicy(typeof(AmazonEC2Exception), retryInterval: pollInterval, timeout: timeout);
+
+                    var statusResponse = await retry.InvokeAsync(
+                        async () =>
                         {
-                            InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                            IncludeAllInstances = true
+                            return await ec2Client.DescribeInstanceStatusAsync(
+                                new DescribeInstanceStatusRequest()
+                                {
+                                    InstanceIds = new List<string>() { awsInstance.InstanceId },
+                                    IncludeAllInstances = true
+                                });
                         });
 
                     var status = statusResponse.InstanceStatuses.SingleOrDefault();
@@ -3323,7 +3325,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { vpc.VpcId },
-                        Tags = vpc.Tags
+                        Tags      = vpc.Tags
                     });
             }
 
@@ -3331,7 +3333,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -3346,12 +3348,17 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <summary>
+        /// <para>
         /// Updates the load balancer and network ACLs to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
             await SyncContext.Clear;
 
@@ -3368,7 +3375,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApiServer,
                         NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
+                        Target                = IngressRuleTarget.Masters,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -3437,12 +3444,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
                         targetNodes = targetMasterNodes;
                         break;
 
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
                         targetNodes = targetIngressNodes;
                         break;
@@ -3538,8 +3545,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.Ingress:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;
@@ -3716,7 +3723,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
 
-
         /// <inheritdoc/>
         public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
         {
@@ -3836,12 +3842,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
         }
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterInfo(cluster.Definition);
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -4042,6 +4048,18 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             await ec2Client.StartInstancesAsync(new StartInstancesRequest(instanceIds));
+
+            // ...and then wait for the cluster to report being configured.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterStatusAsync();
+
+                    return status.State == ClusterState.Configured;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
 
         /// <inheritdoc/>
@@ -4061,6 +4079,18 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             await ec2Client.StopInstancesAsync(new StopInstancesRequest(instanceIds) { Force = stopMode == StopMode.TurnOff });
+
+            // ...and then wait for cluster to report being stopped.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterStatusAsync();
+
+                    return status.State == ClusterState.Off;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
 
         /// <inheritdoc/>
@@ -4076,13 +4106,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // Here's how we're going to do this:
             //
             //      1. Terminate all cluster instances
-            //      2. Remove the load balancer
-            //      3. Remove all target groups
-            //      4. Remove the NAT gateway and the route tables
-            //      5. Remove resources referenced by the VPC
-            //      6. Remove the VPC
-            //      7. Release Elastic IPs created with the cluster
-            //      8. Remove the resource group
+            //      2. Remove the placement groups
+            //      3. Remove the load balancer
+            //      4. Remove all target groups
+            //      5. Remove the NAT gateway and the route tables
+            //      6. Remove resources referenced by the VPC
+            //      7. Remove the VPC
+            //      8. Release Elastic IPs created with the cluster
+            //      9. Remove the resource group
             //
             // Note that these resources need to be deleted in this order to unwind
             // any dependencies and also that we're going to retry [DependencyViolation]
@@ -4096,9 +4127,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                     if (ec2Exception != null)
                     {
-                        if (ec2Exception.ErrorCode == "DependencyViolation")
+                        switch (ec2Exception.ErrorCode)
                         {
-                            return true;
+                            case "DependencyViolation":
+                            case "InvalidPlacementGroup.InUse":
+
+                                return true;
                         }
 
                         if (e.InnerException != null)
@@ -4122,7 +4156,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             //-----------------------------------------------------------------
-            // Step #1: Terminate all cluster instances
+            // Step 1: Terminate all cluster instances
 
             if (instanceIds.Count > 0)
             {
@@ -4130,7 +4164,20 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #2: Remove the load balancer
+            // Step 2: Remove the placement groups
+
+            if (masterPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(masterPlacementGroup.GroupName)));
+            }
+
+            if (workerPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(workerPlacementGroup.GroupName)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 3: Remove the load balancer
 
             if (loadBalancer != null)
             {
@@ -4138,7 +4185,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #3: Remove all of the target groups
+            // Step #4: Remove all of the target groups
 
             await Parallel.ForEachAsync(nameToTargetGroup.Values, parallelOptions,
                 async (targetGroup, cancellationToken) =>
@@ -4147,7 +4194,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 });
 
             //-----------------------------------------------------------------
-            // Step #4: Remove the NAT gateway
+            // Step 5: Remove the NAT gateway
 
             if (ingressAddress != null && ingressAddress.AssociationId != null)
             {
@@ -4217,7 +4264,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #5: Remove resources referenced by the VPC:
+            // Step 6: Remove resources referenced by the VPC:
             //
             //      Internet Gateway
             //      Node Subnet
@@ -4234,7 +4281,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         await ec2Client.DetachInternetGatewayAsync(
                             new DetachInternetGatewayRequest()
                             {
-                                VpcId = vpc.VpcId,
+                                VpcId             = vpc.VpcId,
                                 InternetGatewayId = internetGateway.InternetGatewayId
                             });
                     });
@@ -4316,7 +4363,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #6: Remove the VPC
+            // Step 7: Remove the VPC
 
             if (vpc != null)
             {
@@ -4324,9 +4371,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #7: Release Elastic IPs created for the cluster
+            // Step 8: Release Elastic IPs created for the cluster
 
-            if (!cluster.Definition.Hosting.Aws.HasCustomElasticIPs)
+            if (!cluster.Definition.Hosting.Aws.Network.HasCustomElasticIPs)
             {
                 if (ingressAddress != null)
                 {
@@ -4340,7 +4387,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             }
 
             //-----------------------------------------------------------------
-            // Step #8: Remove the resource group
+            // Step 9: Remove the resource group
 
             if (resourceGroup != null)
             {

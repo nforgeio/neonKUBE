@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,21 +82,20 @@ namespace pubcore
 
                 // Verify the number of non-option arguments.
 
-                if (args.Length != 6)
+                if (args.Length != 5)
                 {
                     Console.WriteLine(
 $@"
 NEON PUBCORE v{Version}
 
-usage: pubcore [OPTIONS] PROJECT-PATH TARGET-NAME CONFIG OUTPUT-PATH PUBLISH-DIR
+usage: pubcore [OPTIONS] PROJECT-PATH TARGET-NAME CONFIG OUTPUT-PATH RUNTIME
 
 ARGUMENTS:
 
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
     CONFIG          - Build configuration (like: Debug or Release)
-    OUTDIR-PATH     - Project relative path to the output directory
-    PUBLISH-DIR     - Path to the publication output folder
+    OUTDIR-PATH     - Path to the output directory
     RUNTIME         - Target dotnet runtime, like: win10-x64,
 
 OPTIONS:
@@ -107,9 +107,9 @@ REMARKS:
 
 This utility is designed to be called from within a .NET Core project's
 POST-BUILD event using Visual Studio post-build event macros.  Here's
-an example that publishes a standalone [win10-x64] app to OUTPUT-PATH.
+an example that publishes a standalone [win10-x64] app to: %NF_BUILD%\neon
 
-    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""$(OutDir).TrimEnd('\')"" ""PUBLISH-DIR"" win10-x64
+    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""%NF_BUILD%\neon"" win10-x64
 
 Note that you MUST ADD the following to the <PropertyGroup>...</PropertyGroup>
 section on your project CSPROJ file for this to work:
@@ -157,9 +157,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 var targetName = args[1];
                 var config     = args[2];
                 var outputDir  = Path.Combine(Path.GetDirectoryName(projectPath), args[3]);
-                var publishDir = args[4];
-                var runtime    = args.ElementAtOrDefault(5);
-                var binFolder  = Path.Combine(publishDir, targetName);
+                var runtime    = args.ElementAtOrDefault(4);
 
                 // Ensure that the runtime identifier is present in the project file.
 
@@ -188,7 +186,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
 
                 // Ensure that the output folder exists.
 
-                Directory.CreateDirectory(publishDir);
+                Directory.CreateDirectory(outputDir);
 
                 // Time how long publication takes.
 
@@ -206,17 +204,13 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                 var tryCount = 5;
                 var delay    = TimeSpan.FromSeconds(5);
 
-                // Publish the project.
-
-                Thread.Sleep(delay);
-
                 for (int i = 0; i < tryCount; i++)
                 {
                     var process  = new Process();
                     var sbOutput = new StringBuilder();
 
                     process.StartInfo.FileName               = "dotnet.exe";
-                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --self-contained --no-restore --no-dependencies";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} -o \"{outputDir}\" --self-contained --no-dependencies";
                     process.StartInfo.CreateNoWindow         = true;
                     process.StartInfo.UseShellExecute        = false;
                     process.StartInfo.RedirectStandardError  = true;
@@ -270,65 +264,6 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                     }
                 }
 
-                // Copy published binaries to the output folder.  This also seems to
-                // experience transient errors, so we'll retry here with delays.
-
-                for (int i = 1; i <= tryCount; i++)
-                {
-                    try
-                    {
-                        if (i > 1)
-                        {
-                            Console.WriteLine($"===========================================================");
-                            Console.WriteLine($"PUBCORE RETRY: Copy to output folder");
-                            Console.WriteLine($"===========================================================");
-                        }
-
-                        // Create the CMD.EXE script when not disabled.
-
-                        var cmdPath = Path.Combine(publishDir, $"{targetName}.cmd");
-
-                        if (!noCmd)
-                        {
-                            File.WriteAllText(cmdPath,
-$@"@echo off
-""%~dp0\{targetName}\{targetName}.exe"" %*
-");
-                        }
-                        else
-                        {
-                            // Delete any existing CMD.EXE script.
-
-                            if (File.Exists(cmdPath))
-                            {
-                                File.Delete(cmdPath);
-                            }
-                        }
-
-                        // Remove the output folder and then recreate it to ensure
-                        // that all old files will be removed.
-
-                        if (Directory.Exists(binFolder))
-                        {
-                            Directory.Delete(binFolder, recursive: true);
-                        }
-
-                        CopyRecursive(GetPublishDir(outputDir, runtime), binFolder);
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        if (i < tryCount)
-                        {
-                            Thread.Sleep(delay);
-                            continue;
-                        }
-
-                        Console.WriteLine($"ERROR(retry): {e.GetType().FullName}: {e.Message}");
-                        Environment.Exit(1);
-                    }
-                }
-
                 // For some bizarre reason, [dotnet publish] copies [dotnet.exe] to the publish
                 // folder and this is causing trouble running [dotnet] commands for other apps.
                 // I'm also seeing other random DLLs being published as well for single-file
@@ -337,7 +272,7 @@ $@"@echo off
                 // This might be a new Visual Studio 2022 (bad?) behavior.  I'm going to mitigate
                 // by removing the [dotnet.exe] file from the publish folder if present.
 
-                var dotnetPath = Path.Combine(binFolder, "dotnet.exe");
+                var dotnetPath = Path.Combine(outputDir, "dotnet.exe");
 
                 if (File.Exists(dotnetPath))
                 {
@@ -351,87 +286,8 @@ $@"@echo off
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"ERROR: [{e.GetType().Name}]: {e.Message}");
+                Console.Error.WriteLine($"** ERROR: [{e.GetType().Name}]: {e.Message}");
                 Environment.Exit(1);
-            }
-        }
-
-        /// <summary>
-        /// Recursively copies the contents of one folder to another.
-        /// </summary>
-        /// <param name="sourceFolder">The source folder path.</param>
-        /// <param name="targetFolder">The target folder path.</param>
-        private static void CopyRecursive(string sourceFolder, string targetFolder)
-        {
-            Directory.CreateDirectory(targetFolder);
-
-            foreach (var file in Directory.GetFiles(sourceFolder, "*.*", SearchOption.TopDirectoryOnly))
-            {
-                File.Copy(file, Path.Combine(targetFolder, Path.GetFileName(file)), overwrite: true);
-            }
-
-            foreach (var folder in Directory.GetDirectories(sourceFolder))
-            {
-                var subfolder = folder.Split(Path.DirectorySeparatorChar).Last();
-
-                CopyRecursive(Path.Combine(sourceFolder, subfolder), Path.Combine(targetFolder, subfolder));
-            }
-        }
-
-        /// <summary>
-        /// Returns the directory path where <b>dotnet publish</b> actually published
-        /// the tool binaries.
-        /// </summary>
-        /// <param name="outputDir">The project's output directory path.</param>
-        /// <param name="runtime">The runtime identifier.</param>
-        /// <returns>The projects publish directory path.</returns>
-        private static string GetPublishDir(string outputDir, string runtime)
-        {
-            Console.WriteLine();
-
-            // Projects specifying a single runtime identifier like:
-            //
-            //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-            //
-            // will publish their output to:
-            //
-            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\publish
-            //
-            // Projects that use <RuntimeIdentifiers/> (plural) with one
-            // or more runtime identifiers like:
-            //
-            //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
-            //
-            // will publish output to:
-            //
-            //      PROJECT-DIR\bin\CONFIGURATION\net6.0\win10-x64\publish
-            //
-            // We're going to probe for the existence of the first folder
-            // and assume the second if the first doesn't exist.
-            //
-            // We also need handle targeting of different versions of .NET.
-
-            var probeDir1 = Path.Combine(outputDir, "publish");
-
-            if (Directory.Exists(probeDir1))
-            {
-                Console.WriteLine($"Publish source: {probeDir1}");
-                return probeDir1;
-            }
-            else
-            {
-                var probeDir2 = Path.Combine(outputDir, runtime, "publish");
-
-                if (!Directory.Exists(probeDir2))
-                {
-                    Console.Error.WriteLine($"*** ERROR: Cannot locate publication directory:");
-                    Console.Error.WriteLine($"***        ...at: {probeDir1}");
-                    Console.Error.WriteLine($"***        ...or: {probeDir2}");
-                    Environment.Exit(1);
-                }
-
-                Console.WriteLine($"Publish source: {probeDir2}");
-                return probeDir2;
             }
         }
     }

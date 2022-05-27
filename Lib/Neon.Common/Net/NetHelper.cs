@@ -210,7 +210,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Converts an IPv4 address into a32-bit unsigned integer equivalent.
+        /// Converts an IPv4 address into a 32-bit unsigned integer equivalent.
         /// </summary>
         /// <param name="address">The input IPv4 address.</param>
         /// <returns>The 32-bit unsigned integer equivalent.</returns>

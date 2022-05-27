@@ -42,7 +42,7 @@ namespace Neon.Deployment
         /// <item><c>AWS_SECRET_ACCESS_KEY</c></item>
         /// </list>
         /// </summary>
-        /// <param name="secretName">Optionally specfies a custom name for the 1Password secret holding the credentials..</param>
+        /// <param name="secretName">Optionally specifies a custom name for the 1Password secret holding the credentials..</param>
         /// <remarks>
         /// <para>
         /// The AWS credentials are persisted to a 1Password secret for each maintainer, where each user should

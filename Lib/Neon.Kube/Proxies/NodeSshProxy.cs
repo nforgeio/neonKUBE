@@ -484,11 +484,9 @@ namespace Neon.Kube
                 controller.LogProgress(this, verb: "check", message: "operating system");
             }
 
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
-
-            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion < Version.Parse("20.04"))
+            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion != Version.Parse("22.04"))
             {
-                Fault("Expected: Ubuntu 20.04+");
+                Fault("Expected: Ubuntu 22.04");
                 return false;
             }
 

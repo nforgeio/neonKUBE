@@ -2106,14 +2106,6 @@ while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
     sleep 1
 done
 
-#------------------------------------------------------------------------------
-# Update the APT config to disable updates there as well.
-cat > /etc/apt/apt.conf.d/20auto-upgrades <<EOF
-APT::Periodic::Update-Package-Lists ""0"";
-APT::Periodic::Download-Upgradeable-Packages ""0"";
-APT::Periodic::AutocleanInterval ""0"";
-APT::Periodic::Unattended-Upgrade ""1"";
-EOF
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
@@ -2140,8 +2132,11 @@ network:
   ethernets:
     eth0:
      dhcp4: no
+     dhcp6: no
      addresses: [{address}/{NetworkCidr.Parse(subnet).PrefixLength}]
-     gateway4: {gateway}
+     routes:
+     - to: default
+       via: {gateway}
      nameservers:
        addresses: [{sbNameservers}]
 EOF
@@ -2449,112 +2444,215 @@ exit 0
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This file is written to neonKUBE nodes during cluster preparation.
+# This file is written to neonKUBE nodes during cluster preparation.  The
+# settings below were captured from the OpenSSH version installed with
+# Ubuntu-22.04:
 #
-# See the sshd_config(5) manpage for details
+#		OpenSSH_8.9p1 Ubuntu-3, OpenSSL 3.0.2 15 Mar 2022
+#
+# The only change we made was to move the include statement from the top
+# to the bottom of this file:
+#
+#		Include /etc/ssh/sshd_config.d/*.conf
+#
+# This allows the sub-config files to be able to override all of the settings
+# here.  Cluster preparaton works by writing a sub-config file with our custom
+# settings:
+#
+#		/etc/ssh/sshd_config.d/50-neonkube.conf
 
-# Make it easy for operators to customize this config.
-Include /etc/ssh/sshd_config.d/*
+###############################################################################
+# Default OpenSSH config file                                                 #
+###############################################################################
 
-# What ports, IPs and protocols we listen for
-# Port 22
-# Use these options to restrict which interfaces/protocols sshd will bind to
-# ListenAddress ::
-# ListenAddress 0.0.0.0
-Protocol 2
-# HostKeys for protocol version 2
-HostKey /etc/ssh/ssh_host_rsa_key
-# HostKey /etc/ssh/ssh_host_dsa_key
-# HostKey /etc/ssh/ssh_host_ecdsa_key
-# HostKey /etc/ssh/ssh_host_ed25519_key
-# Privilege Separation is turned on for security
-UsePrivilegeSeparation yes
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
 
-# Lifetime and size of ephemeral version 1 server key
-KeyRegenerationInterval 3600
-ServerKeyBits 1024
+# This sshd was compiled with PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+#Port 22
+#AddressFamily any
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Ciphers and keying
+#RekeyLimit default none
 
 # Logging
-SyslogFacility AUTH
-LogLevel INFO
+#SyslogFacility AUTH
+#LogLevel INFO
 
 # Authentication:
-LoginGraceTime 120
-PermitRootLogin no
-StrictModes yes
 
-RSAAuthentication yes
-PubkeyAuthentication yes
-# AuthorizedKeysFile	%h/.ssh/authorized_keys
+#LoginGraceTime 2m
+#PermitRootLogin prohibit-password
+#StrictModes yes
+#MaxAuthTries 6
+#MaxSessions 10
 
+#PubkeyAuthentication yes
+
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
+
+#AuthorizedPrincipalsFile none
+
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+#HostbasedAuthentication no
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+#IgnoreUserKnownHosts no
 # Don't read the user's ~/.rhosts and ~/.shosts files
-IgnoreRhosts yes
-# For this to work you will also need host keys in /etc/ssh_known_hosts
-RhostsRSAAuthentication no
-# similar for protocol version 2
-HostbasedAuthentication no
-# Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-# IgnoreUserKnownHosts yes
+#IgnoreRhosts yes
 
-# To enable empty passwords, change to yes (NOT RECOMMENDED)
-PermitEmptyPasswords no
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
-ChallengeResponseAuthentication no
-
-# Change to no to disable tunnelled clear text passwords
-PasswordAuthentication yes
+KbdInteractiveAuthentication no
 
 # Kerberos options
-# KerberosAuthentication no
-# KerberosGetAFSToken no
-# KerberosOrLocalPasswd yes
-# KerberosTicketCleanup yes
+#KerberosAuthentication no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+#KerberosGetAFSToken no
 
 # GSSAPI options
-# GSSAPIAuthentication no
-# GSSAPICleanupCredentials yes
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+#GSSAPIStrictAcceptorCheck yes
+#GSSAPIKeyExchange no
 
-AllowTcpForwarding no
-X11Forwarding no
-X11DisplayOffset 10
-PermitTunnel no
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the KbdInteractiveAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via KbdInteractiveAuthentication may bypass
+# the setting of ""PermitRootLogin without-password"".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and KbdInteractiveAuthentication to 'no'.
+UsePAM yes
+
+#AllowAgentForwarding yes
+#AllowTcpForwarding yes
+#GatewayPorts no
+X11Forwarding yes
+#X11DisplayOffset 10
+#X11UseLocalhost yes
+#PermitTTY yes
 PrintMotd no
-PrintLastLog yes
-TCPKeepAlive yes
-UsePrivilegeSeparation yes
-# UseLogin no
+#PrintLastLog yes
+#TCPKeepAlive yes
+#PermitUserEnvironment no
+#Compression delayed
+#ClientAliveInterval 0
+#ClientAliveCountMax 3
+#UseDNS no
+#PidFile /run/sshd.pid
+#MaxStartups 10:30:100
+#PermitTunnel no
+#ChrootDirectory none
+#VersionAddendum none
 
-# MaxStartups 10:30:60
-# Banner /etc/issue.net
+# no default banner path
+#Banner none
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
 
-Subsystem sftp /usr/lib/openssh/sftp-server
+# override default of no subsystems
+Subsystem sftp  /usr/lib/openssh/sftp-server
 
-# Set this to 'yes' to enable PAM authentication, account processing,
-# and session processing. If this is enabled, PAM authentication will
-# be allowed through the ChallengeResponseAuthentication and
-# PasswordAuthentication.  Depending on your PAM configuration,
-# PAM authentication via ChallengeResponseAuthentication may bypass
-# the setting of ""PermitRootLogin without-password"".
-# If you just want the PAM account and session checks to run without
-# PAM authentication, then enable this but set PasswordAuthentication
-# and ChallengeResponseAuthentication to 'no'.
-UsePAM yes
+# Example of overriding settings on a per-user basis
+#Match User anoncvs
+#       X11Forwarding no
+#       AllowTcpForwarding no
+#       PermitTTY no
+#       ForceCommand cvs server
+PasswordAuthentication yes
+
+###############################################################################
+# neonKUBE customization: relocated from the top of the original file         #
+###############################################################################
+
+Include /etc/ssh/sshd_config.d/*.conf
+";
+
+        /// <summary>
+        /// Returns the contexts of the OpenSSH sub-config file to deployed during
+        /// as node images are created or when the cluster nodes are provisioned 
+        /// to <b>/etc/ssh/sshd_config.d/20-neonkube.conf</b> to customize OpenSSH.
+        /// </summary>
+        /// <param name="allowPasswordAuth">Enable password authentication.</param>
+        public static string GetOpenSshPrepareSubConfig(bool allowPasswordAuth)
+        {
+            var allowPasswordAuthValue = allowPasswordAuth ? "yes" : "no";
+
+            return
+$@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
+# CONTRIBUTOR: Jeff Lill
+# COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the ""License"");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an ""AS IS"" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This file is written to neonKUBE nodes during cluster preparation
+# to customize OpenSSH.
+#
+# See the sshd_config(5) manpage for details
+
+# Authentication
+
+PermitRootLogin no
+usePAM {allowPasswordAuthValue}
+PasswordAuthentication {allowPasswordAuthValue}
+AuthorizedKeysFile %h/.ssh/authorized_keys
+
+#------------------------------------------------------------------------------
+# Interfactive login
+
+PrintMotd no
+
+#------------------------------------------------------------------------------
+# Networking
+
+AllowTcpForwarding no
 
 # Allow connections to be idle for up to an 10 minutes (600 seconds)
 # before terminating them.  This configuration pings the client every
 # 30 seconds for up to 20 times without a response:
 #
-#   20*30 = 600 seconds
+#   30*20 = 600 seconds
 
 ClientAliveInterval 30
 ClientAliveCountMax 20
 TCPKeepAlive yes
 ";
+        }
 
         /// <summary>
         /// Downloads a multi-part node image to a local folder.

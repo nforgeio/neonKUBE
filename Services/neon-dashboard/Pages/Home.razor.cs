@@ -33,7 +33,7 @@ namespace NeonDashboard.Pages
     [Authorize]
     public partial class Home : PageBase
     {
-        private ClusterInfo clusterInfo;
+        private ClusterStatus clusterInfo;
 
         /// <summary>
         /// Constructor.
@@ -45,17 +45,17 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override void OnInitialized()
         {
-            PageTitle = NeonDashboardService.ClusterInfo.Name;
+            PageTitle   = NeonDashboardService.ClusterInfo.Name;
             clusterInfo = NeonDashboardService.ClusterInfo;
         }
-
-
 
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
             AppState.CurrentDashboard = "neonkube";
             AppState.NotifyDashboardChanged();
+
+            await Task.CompletedTask;
         }
     }
 }

@@ -109,7 +109,7 @@ USAGE:
 
                         Console.WriteLine($"Unlocking: {cluster.Name}...");
                         await cluster.UnlockAsync();
-                        Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
+                        Console.WriteLine($"UNLOCKED:  {cluster.Name}");
                         break;
 
                     default:

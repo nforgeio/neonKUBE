@@ -37,7 +37,7 @@ namespace NeonDashboard
         /// <summary>
         /// Neon cluster info.
         /// </summary>
-        public ClusterInfo ClusterInfo;
+        public ClusterStatus ClusterInfo;
 
         /// <summary>
         /// Session cookie name.

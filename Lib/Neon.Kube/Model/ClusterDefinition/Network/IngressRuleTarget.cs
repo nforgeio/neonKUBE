@@ -34,16 +34,16 @@ namespace Neon.Kube
         /// Provisioned for required neonKUBE cluster ingress ports, like the Kubernetes
         /// API port 6443.  This traffic will be routed to the cluster master nodes.
         /// </summary>
-        [EnumMember(Value = "neon")]
-        Neon,
+        [EnumMember(Value = "masters")]
+        Masters,
 
         /// <summary>
-        /// Provisioned for user-define ingress rules.  These groups include all
+        /// Provisioned for user-defined ingress rules.  These groups include all
         /// cluster nodes with the <b>ingress</b> label.  This traffic will be
         /// routed to the ingress nodes.
         /// </summary>
-        [EnumMember(Value = "user")]
-        User,
+        [EnumMember(Value = "ingress")]
+        Ingress,
 
         /// <summary>
         /// Provisioned for SSH management.  A group will be created for each node

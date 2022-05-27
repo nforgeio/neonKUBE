@@ -124,7 +124,7 @@ USAGE:
 
                     var padding = new string(' ', maxLoginNameWidth - login.Name.Length);
 
-                    Console.Write($"{login.Name}{padding}    {login.Info}");
+                    Console.WriteLine($"{login.Name}{padding}    {login.Info}");
                 }
 
                 Console.WriteLine();

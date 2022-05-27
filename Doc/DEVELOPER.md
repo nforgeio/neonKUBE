@@ -122,18 +122,20 @@ Follow the steps below to configure a development or test workstation:
     * Close Visual Studio to complete the installation
     * Install the latest Git Extentions App from [here](https://github.com/gitextensions/gitextensions/releases)
 
-15. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
+15. Download the SysInternals utiliies from [here](https://download.sysinternals.com/files/SysinternalsSuite.zip) and extract them to a folder on your PATH.
+
+16. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
-16. Install some SDKs:
+17. Install some SDKs:
 
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
 
-17. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+18. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -144,30 +146,13 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-18. Configure the build **environment variables**:
+19. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-19. Enable **WSL2**:
-
-    * Open a **pwsh** console **as administrator** and execute these commands:
-    ```
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-    ```
-
-    * Execute these commands to install Ubuntu-20.04 on WSL2:
-    ```
-    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
-    wsl --import Ubuntu-20.04 "%USERPROFILE%\wsl-Ubuntu" ubuntu.tar
-    Remove-Item ubuntu.tar
-    wsl --set-default-version 2
-    wsl --set-default Ubuntu-20.04
-    ```
-
 20. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)

@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
         /// <param name="baseImageName">
         /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
-        /// For example: <b>ubuntu-20.04.1.hyperv.amd64.vhdx.gz.manifest</b>
+        /// For example: <b>ubuntu-22.04.1.hyperv.amd64.vhdx.gz.manifest</b>
         /// </param>
         /// <returns>The download URI or <c>null</c>.</returns>
         public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null)

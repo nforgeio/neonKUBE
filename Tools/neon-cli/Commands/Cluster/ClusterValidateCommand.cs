@@ -63,6 +63,8 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            Console.WriteLine();
+            
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
@@ -73,7 +75,6 @@ ARGUMENTS:
 
             ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
-            Console.WriteLine();
             Console.WriteLine("The cluster definition is OK.");
 
             await Task.CompletedTask;

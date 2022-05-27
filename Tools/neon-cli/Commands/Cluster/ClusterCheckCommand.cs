@@ -107,6 +107,8 @@ This command returns a non-zero exit code when one or more checks fail.
                 Program.Exit(1);
             }
 
+            Console.WriteLine();
+
             var contextName = KubernetesClientConfiguration.BuildDefaultConfig().CurrentContext;
 
             if (string.IsNullOrEmpty(contextName))

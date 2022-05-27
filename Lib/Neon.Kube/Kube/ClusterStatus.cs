@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterInfo.cs
+// FILE:	    ClusterStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -30,12 +30,12 @@ namespace Neon.Kube
     /// <summary>
     /// Holds details about a cluster's state.
     /// </summary>
-    public class ClusterInfo
+    public class ClusterStatus
     {
         /// <summary>
         /// Default constructor used for deserializion.
         /// </summary>
-        public ClusterInfo()
+        public ClusterStatus()
         {
         }
 
@@ -44,7 +44,7 @@ namespace Neon.Kube
         /// cluster definition.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        public ClusterInfo(ClusterDefinition clusterDefinition)
+        public ClusterStatus(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 

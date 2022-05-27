@@ -120,7 +120,7 @@ namespace Neon.Kube
         /// Constructs an instance with the specified name and <typeparamref name="TConfig"/> value.
         /// </summary>
         /// <param name="name">Specifies the configmap name.</param>
-        /// <param name="namespace">Specfies the namespace.</param>
+        /// <param name="namespace">specifies the namespace.</param>
         /// <param name="config">
         /// Optionally specifies the initial config value.  A default instance will be created
         /// when this is <c>null</c>.

@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
-        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -1056,12 +1056,12 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterInfo> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterInfo(cluster.Definition);
+            var clusterStatus = new ClusterStatus(cluster.Definition);
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -1434,10 +1434,10 @@ namespace Neon.Kube
 
             if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
             {
-                Parallel.ForEach(xenClients, new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                Parallel.ForEach(xenClients, parallelOptions,
                     xenClient =>
                     {
-                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), new ParallelOptions() { MaxDegreeOfParallelism = 5 },
+                        Parallel.ForEach(xenClient.Machine.List().Where(vm => vm.NameLabel.StartsWith(vmPrefix)), parallelOptions,
                             vm =>
                             {
                                 xenClient.Machine.Remove(vm, keepDrives: false);
@@ -1472,89 +1472,6 @@ namespace Neon.Kube
 
                     xenClient.Machine.Remove(vm, keepDrives: false);
                 });
-        }
-
-        /// <inheritdoc/>
-        public override async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
-            {
-                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
-            }
-
-            var vmName    = GetVmName(nodeDefinition);
-            var xenClient = GetXenClient(nodeName);
-            var vm        = xenClient.Machine.Find(vmName);
-
-            if (vm == null)
-            {
-                throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
-            }
-
-            switch (vm.PowerState)
-            {
-                case XenVmPowerState.Halted:
-                case XenVmPowerState.Paused:
-
-                    // We're treating all of these states as: OFF
-
-                    return;
-
-                case XenVmPowerState.Running:
-
-                    // Drop out to actually stop the node below.
-
-                    break;
-
-                default:
-                case XenVmPowerState.Unknown:
-
-                    throw new InvalidOperationException($"Cannot stop node [{nodeName}] when it is in the [{vm.PowerState}] state.");
-            }
-
-            if (stopMode == StopMode.Sleep)
-            {
-                xenClient.Machine.Suspend(vm);
-            }
-            else
-            {
-                xenClient.Machine.Shutdown(vm, stopMode == StopMode.TurnOff);
-            }
-        }
-
-        /// <inheritdoc/>
-        public override async Task StartNodeAsync(string nodeName)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            if (!cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
-            {
-                throw new InvalidOperationException($"Node [{nodeName}] is not present in the cluster.");
-            }
-
-            var vmName    = GetVmName(nodeDefinition);
-            var xenClient = GetXenClient(nodeName);
-            var vm        = xenClient.Machine.Find(name: vmName);
-
-            if (vm == null)
-            {
-                throw new InvalidOperationException($"Cannot find virtual machine for node [{nodeName}].");
-            }
-
-            switch (vm.PowerState)
-            {
-                case XenVmPowerState.Halted:
-                case XenVmPowerState.Paused:
-
-                    xenClient.Machine.Start(vm);
-                    break;
-            }
         }
     }
 }

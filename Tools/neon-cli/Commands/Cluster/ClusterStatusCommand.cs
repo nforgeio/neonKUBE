@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterIsLockedCommand.cs
+// FILE:	    ClusterStatusCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -51,26 +51,16 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster islocked</b> command.
+    /// Implements the <b>cluster status</b> command.
     /// </summary>
     [Command]
-    public class ClusterIsLockedCommand : CommandBase
+    public class ClusterStatusCommand : CommandBase
     {
         private const string usage = @"
-Determines whether the current cluster is locked.
-
-USAGE:
-
-    neon cluster islocked
-
-EXITCODE:
-
-    0   - when the cluster is locked
-    1   - for errors
-    2   - when the cluster is unlocked
+Prints the status of the current cluster.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "islocked" };
+        public override string[] Words => new string[] { "cluster", "status" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -101,36 +91,49 @@ EXITCODE:
             {
                 var status = await cluster.GetClusterStatusAsync();
 
-                switch (status.State)
+                Console.WriteLine($"{cluster.Name}: {status.State.ToString().ToUpperInvariant()}");
+                Console.WriteLine();
+
+                var maxNodeNameLength = cluster.Definition.NodeDefinitions.Keys.Max(nodeName => nodeName.Length);
+
+                Console.WriteLine("Master Nodes:");
+                Console.WriteLine("-------------");
+
+                foreach (var nodeDefinition in cluster.Definition.SortedMasterNodes)
                 {
-                    case ClusterState.Healthy:
-                    case ClusterState.Unhealthy:
+                    var nodeName = nodeDefinition.Name;
+                    var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
 
-                        var isLocked = await cluster.IsLockedAsync();
+                    if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
+                    {
+                        Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
+                    }
+                }
 
-                        if (!isLocked.HasValue)
+                if (cluster.Definition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.IsWorker))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Worker Nodes:");
+                    Console.WriteLine("-------------");
+
+                    foreach (var nodeDefinition in cluster.Definition.SortedWorkerNodes)
+                    {
+                        var nodeName = nodeDefinition.Name;
+                        var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
+
+                        if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
                         {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                            Program.Exit(1);
-                        }
-
-                        if (isLocked.Value)
-                        {
-                            Console.WriteLine($"[{cluster.Name}]: LOCKED");
-                            Program.Exit(0);
+                            Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
                         }
                         else
                         {
-                            Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
-                            Program.Exit(2);
+                            Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
                         }
-                        break;
-
-                    default:
-
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
-                        Program.Exit(1);
-                        break;
+                    }
                 }
             }
         }

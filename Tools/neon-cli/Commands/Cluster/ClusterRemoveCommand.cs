@@ -149,9 +149,19 @@ cluster definition or by executing this command on your cluster:
                     }
                 }
 
-                Console.WriteLine($"Removing: {cluster.Name}...");
-                await cluster.RemoveAsync();
-                Console.WriteLine($"Cluster was removed: {cluster.Name}");
+                try
+                {
+                    Console.WriteLine($"Removing: {cluster.Name}...");
+                    await cluster.RemoveAsync();
+                    KubeHelper.Config.RemoveContext(context);
+
+                    Console.WriteLine($"REMOVED:  {cluster.Name}");
+                }
+                catch (TimeoutException)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                }
             }
         }
     }

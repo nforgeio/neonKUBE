@@ -105,7 +105,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "non-interactive tty");
+                    controller.LogProgress(this, verb: "configure", message: "tty");
 
                     // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
                     // we haven't installed [zip/unzip] yet so we can't use a command bundle.
@@ -267,30 +267,13 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "linux patches");
+                    controller.LogProgress(this, verb: "patch", message: "linux");
                     UpdateLinux();
                 });
         }
 
         /// <summary>
-        /// Updates Linux by applying all outstanding package updates but without 
-        /// upgrading the Linux distribution.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void BaseUpdateLinux(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            InvokeIdempotent("base/update-linux",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "linux security patches");
-                    UpgradeLinuxDistribution();
-                });
-        }
-
-        /// <summary>
-        /// Updates the Linux distribution.
+        /// Upgrades the Linux distribution on the node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void BaseUpgradeLinuxDistribution(ISetupController controller)
@@ -610,8 +593,8 @@ EOF
         }
 
         /// <summary>
-        /// Installs the <b>neon-init</b> service which is a cloud-init like service we
-        /// use to configure the network and credentials for VMs hosted in non-cloud
+        /// Installs the <b>neon-init</b> service which is a poor man's cloud-init like 
+        /// service we use to configure the network and credentials for VMs hosted in non-cloud
         /// hypervisors.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -716,6 +699,9 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 #       7. The service just exits if the DVD and/or script file are 
 #          not present.  This shouldn't happen in production but is useful
 #          for script debugging.
+#
+# NOTE: Ubuntu 22.04 seems to have removed the [/dev/dvd] device but 
+#       [/dev/cdrom] works, su we're swiching to that.
 
 # Run the prep script only once.
 
@@ -724,23 +710,44 @@ if [ -f /etc/neon-init/ready ] ; then
     exit 0
 fi
 
-# Check for the DVD and prep script.
+# Create a mount point for the DVD.
 
-mkdir -p /media/neon-init
-
-if [ ! $? ] ; then
+if ! mkdir -p /media/neon-init ; then
     echo ""ERROR: Cannot create DVD mount point.""
     rm -rf /media/neon-init
     exit 1
 fi
 
-mount /dev/dvd /media/neon-init
+# Wait up to 60 seconds for for the DVD to be discovered.  It can
+# take some time for this to happen.
 
-if [ ! $? ] ; then
+for i in {{1..12}}; do
+
+    # Sleep for 5 seconds.  We're doing this first to give Linux
+    # a chance to discover the DVD and then this will act as a
+    # retry interval.  12 iterations at 5 seconds each is 60 seconds.
+
+    sleep 5
+
+    # Try mounting the DVD.
+
+    if !mount /dev/cdrom /media/neon-init ; then
+        break
+    fi
+
+    echo ""WARNING: No DVD is present (yet).""
+
+done
+
+# Exit when no DVD is mounted.
+
+if ! mount /dev/cdrom /media/neon-init ; then
     echo ""WARNING: No DVD is present.""
     rm -rf /media/neon-init
     exit 0
 fi
+
+# Check for the [neon-init.sh] script and execute it.
 
 if [ ! -f /media/neon-init/neon-init.sh ] ; then
     echo ""WARNING: No [neon-init.sh] script is present on the DVD.""

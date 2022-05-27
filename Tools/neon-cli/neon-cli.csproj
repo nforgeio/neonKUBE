@@ -16,10 +16,7 @@
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
-
-		<PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
 		<SelfContained>true</SelfContained>
-
 		<!-- 
         We need to prevent the KubeOps build targets from trying to call the program
         entrypoint to generate the CRDs and other installation related files.
@@ -53,7 +50,7 @@
 		<PublishTrimmed>false</PublishTrimmed>
 		<TrimMode>copyused</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
-		<Optimize>False</Optimize>
+		<Optimize>true</Optimize>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -123,9 +120,9 @@
 	  </EmbeddedResource>
 	</ItemGroup>
 
-	<Target Name="PubCore" AfterTargets="AfterBuild">
+	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
 		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(OutDir.TrimEnd('\'))&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NF_BUILD)\neon&quot; win10-x64" />
 	</Target>
 
 </Project>
