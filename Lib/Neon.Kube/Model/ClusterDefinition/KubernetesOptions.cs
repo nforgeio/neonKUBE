@@ -95,54 +95,6 @@ namespace Neon.Kube
         public bool? AllowPodsOnMasters { get; set; } = null;
 
         /// <summary>
-        /// Optionally configures an external Kubernetes API server load balancer by
-        /// specifying the load balancer endpoint as HOSTNAME:PORT or IPADDRESS:PORT.
-        /// This defaults to <c>null</c>.  See the remarks to see what this means.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Production clusters really should be deployed using an external highly
-        /// available load balancer that distributes API server traffic across
-        /// the API servers running on the masters.
-        /// </para>
-        /// <para>
-        /// For cloud environments like AWS and Azure, neonKUBE provisions a cloud
-        /// load balancer by default for this.  This is the ideal situation.
-        /// </para>
-        /// <para>
-        /// For on-premise environments like Hyper-V and XenServer, we use the
-        /// HAProxy based load balancer deployed to the first master node (as sorted
-        /// by node name).  This forwards traffic to port 5000 to the Kubernetes
-        /// API servers running on the masters.  This is not really HA though,
-        /// because the loss of the first master will result in the loss of 
-        /// API server connectivity.  This does help some though.  For example,
-        /// stopping the API server on the first master won't take the cluster
-        /// API server offline because HAProxy will still be able to direct 
-        /// traffic to the remaining masters.
-        /// </para>
-        /// <note>
-        /// <para>
-        /// The HAProxy load balancer is actually deployed to all of the masters
-        /// but the other master HAProxy instances won't see any traffic because
-        /// Kubernetes is configured with a single balancer endpoint.
-        /// </para>
-        /// <para>
-        /// In the future, it may be possible to turn the master HAProxy instances
-        /// into an HA cluster via a virtual IP address and heartbeat mechanism.
-        /// </para>
-        /// <para>
-        /// You can use the <see cref="ApiLoadBalancer"/> property to specify an
-        /// external load balancer that already exists.  Setting this will override
-        /// the default behaviors described above.
-        /// </para>
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "apiLoadBalancer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "apiLoadBalancer", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ApiLoadBalancer { get; set; } = null;
-
-        /// <summary>
         /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
         /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
         /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
@@ -192,29 +144,6 @@ namespace Neon.Kube
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
             {
                 throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
-            }
-
-            if (!string.IsNullOrEmpty(ApiLoadBalancer))
-            {
-                // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
-
-                var fields = ApiLoadBalancer.Split(':', 2);
-                var error  = $"[{kubernetesOptionsPrefix}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].  HOSTNAME:PORT or IPADDRESS:PORT expected.";
-
-                if (fields.Length != 2)
-                {
-                    throw new ClusterDefinitionException(error);
-                }
-
-                if (!NetHelper.IsValidHost(fields[0]) && (!NetHelper.TryParseIPv4Address(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork))
-                {
-                    throw new ClusterDefinitionException(error);
-                }
-
-                if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
-                {
-                    throw new ClusterDefinitionException(error);
-                }
             }
 
             if (!AllowPodsOnMasters.HasValue)

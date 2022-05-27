@@ -397,25 +397,14 @@ spec:
 
             sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
-            {
-                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
-
-                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
-
-                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
-            }
-
             if (cluster.Definition.Domain != null)
             {
                 sbCertSANs.AppendLine($"  - \"{cluster.Definition.Domain}\"");
             }
 
-            var clusterIP = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: true);
-
-            if (clusterIP != null)
+            foreach (var address in cluster.Definition.PublicAddresses)
             {
-                sbCertSANs.AppendLine($"  - \"{clusterIP}\"");
+                sbCertSANs.AppendLine($"  - \"{address}\"");
             }
 
             foreach (var node in cluster.Masters)
