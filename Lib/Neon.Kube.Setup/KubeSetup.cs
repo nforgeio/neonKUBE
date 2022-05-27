@@ -191,11 +191,11 @@ namespace Neon.Kube
             {
                 if (node.Spec.Taints?.Count() > 0)
                 {
-                    foreach (var taintList in node.Spec.Taints)
+                    foreach (var taint in node.Spec.Taints)
                     {
-                        if (!taints.Any(taintList => taintList.Key == taintList.Key && taintList.Effect == taintList.Effect && taintList.Value == taintList.Value))
+                        if (!taints.Any(t => t.Key == taint.Key && t.Effect == taint.Effect && t.Value == taint.Value))
                         {
-                            taints.Add(taintList);
+                            taints.Add(taint);
                         }
                     }
                 }

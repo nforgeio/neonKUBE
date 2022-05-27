@@ -1386,11 +1386,11 @@ kubectl apply -f priorityclasses.yaml
                                         // restart coredns and try again.
                                         var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
                                         await coredns.RestartAsync(k8s);
-                                        await Task.Delay(5000);
+                                        await Task.Delay(10000);
                                         return false;
                                     }
                                 },
-                                timeout: TimeSpan.FromSeconds(30),
+                                timeout: TimeSpan.FromSeconds(120),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
 
 
@@ -3271,7 +3271,7 @@ $@"- name: StorageType
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystem, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelRole, "worker"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -3416,11 +3416,17 @@ $@"- name: StorageType
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
                     {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
+                        foreach (var component in new string[]
+                        {
+                            "alertmanager", "distributor", "ingester", "overrides_exporter", "ruler", "querier", "query_frontend", "store_gateway", "compactor"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
                         i++;
                     }
 
@@ -3546,6 +3552,22 @@ $@"- name: StorageType
                         values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
                     }
 
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelLogsInternal, "true"))
+                    {
+                        foreach (var component in new string[]
+                        {
+                            "ingester", "distributor", "querier", "queryFrontend", "tableManager", "compactor", "ruler", "indexGateway"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
+                        i++;
+                    }
+
                     await master.InstallHelmChartAsync(controller, "loki",
                         releaseName:  "loki",
                         @namespace:   KubeNamespace.NeonMonitor,
@@ -3641,6 +3663,22 @@ $@"- name: StorageType
                     values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
+
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelTracesInternal, "true"))
+                    {
+                        foreach (var component in new string[]
+                        {
+                            "ingester", "distributor", "compactor", "querier", "queryFrontend"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
+                        i++;
+                    }
 
                     await master.InstallHelmChartAsync(controller, "tempo",
                         releaseName: "tempo",
@@ -4006,19 +4044,17 @@ $@"- name: StorageType
 
                             int i = 0;
 
-                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMinioInternal, "true"))
                             {
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].key", serviceAdvice.ReplicaCount);
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].effect", serviceAdvice.ReplicaCount);
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].operator", serviceAdvice.ReplicaCount);
-
-                                values.Add($"console.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                                values.Add($"console.tolerations[{i}].effect", taint.Effect);
-                                values.Add($"console.tolerations[{i}].operator", "Exists");
-
-                                values.Add($"operator.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                                values.Add($"operator.tolerations[{i}].effect", taint.Effect);
-                                values.Add($"operator.tolerations[{i}].operator", "Exists");
+                                foreach (var component in new string[]
+                                {
+                                    "tenants[0].pools[0]", "console", "operator"
+                                })
+                                {
+                                    values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                                    values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                                    values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                                }
                                 i++;
                             }
 
@@ -4743,6 +4779,7 @@ $@"- name: StorageType
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
 
                     int i = 0;
 
