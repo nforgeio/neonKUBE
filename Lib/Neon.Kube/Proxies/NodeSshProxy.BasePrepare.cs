@@ -718,14 +718,14 @@ if ! mkdir -p /media/neon-init ; then
     exit 1
 fi
 
-# Wait up to 60 seconds for for the DVD to be discovered.  It can
+# Wait up to 120 seconds for for the DVD to be discovered.  It can
 # take some time for this to happen.
 
-for i in {{1..12}}; do
+for i in {{1..24}}; do
 
     # Sleep for 5 seconds.  We're doing this first to give Linux
     # a chance to discover the DVD and then this will act as a
-    # retry interval.  12 iterations at 5 seconds each is 60 seconds.
+    # retry interval.  24 iterations at 5 seconds each is 120 seconds.
 
     sleep 5
 
