@@ -126,7 +126,7 @@ cluster definition or by executing this command on your cluster:
                     Program.Exit(1);
                 }
 
-                var status = await cluster.GetClusterStatusAsync();
+                var status = await cluster.GetClusterHealthAsync();
 
                 switch (status.State)
                 {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterStatusCommand.cs
+// FILE:	    ClusterInfoCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -38,6 +38,8 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
@@ -51,16 +53,18 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster status</b> command.
+    /// Implements the <b>cluster ingo</b> command.
     /// </summary>
     [Command]
-    public class ClusterStatusCommand : CommandBase
+    public class ClusterInfoCommand : CommandBase
     {
         private const string usage = @"
-Prints the status of the current cluster.
+Prints the information the current cluster.
+
+USAGE: neon cluster ingo
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "status" };
+        public override string[] Words => new string[] { "cluster", "info" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -89,52 +93,11 @@ Prints the status of the current cluster.
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var status = await cluster.GetClusterStatusAsync();
+                var clusterInfo = await cluster.GetClusterInfoAsync();
 
-                Console.WriteLine($"{cluster.Name}: {status.State.ToString().ToUpperInvariant()}");
                 Console.WriteLine();
-
-                var maxNodeNameLength = cluster.Definition.NodeDefinitions.Keys.Max(nodeName => nodeName.Length);
-
-                Console.WriteLine("Master Nodes:");
-                Console.WriteLine("-------------");
-
-                foreach (var nodeDefinition in cluster.Definition.SortedMasterNodes)
-                {
-                    var nodeName = nodeDefinition.Name;
-                    var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
-
-                    if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
-                    {
-                        Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
-                    }
-                }
-
-                if (cluster.Definition.NodeDefinitions.Values.Any(nodeDefinition => nodeDefinition.IsWorker))
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("Worker Nodes:");
-                    Console.WriteLine("-------------");
-
-                    foreach (var nodeDefinition in cluster.Definition.SortedWorkerNodes)
-                    {
-                        var nodeName = nodeDefinition.Name;
-                        var padding  = new string(' ', maxNodeNameLength - nodeName.Length + 4);
-
-                        if (status.Nodes.TryGetValue(nodeDefinition.Name, out var nodeState))
-                        {
-                            Console.WriteLine($"{nodeName}: {padding}{nodeState.ToString().ToUpperInvariant()}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{nodeName}: {padding}*NOT-FOUND*");
-                        }
-                    }
-                }
+                Console.WriteLine(NeonHelper.JsonSerialize(clusterInfo, Formatting.Indented));
+                Console.WriteLine();
             }
         }
     }

@@ -864,7 +864,7 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
@@ -910,7 +910,7 @@ namespace Neon.Kube
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterStatus = new ClusterStatus(cluster.Definition)
+                    var clusterHealth = new ClusterHealth()
                     {
                         State   = ClusterState.NotFound,
                         Summary = "Cluster does not exist"
@@ -918,10 +918,10 @@ namespace Neon.Kube
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
-                        clusterStatus.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                        clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
                     }
 
-                    return clusterStatus;
+                    return clusterHealth;
                 }
                 else
                 {
@@ -929,7 +929,7 @@ namespace Neon.Kube
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
                     // zxthe actual VM states to public node states.
 
-                    var clusterStatus = new ClusterStatus(cluster.Definition);
+                    var clusterHealth = new ClusterHealth();
 
                     foreach (var node in cluster.Definition.NodeDefinitions.Values)
                     {
@@ -980,7 +980,7 @@ namespace Neon.Kube
                             }
                         }
 
-                        clusterStatus.Nodes.Add(node.Name, nodeState);
+                        clusterHealth.Nodes.Add(node.Name, nodeState);
                     }
 
                     // We're going to examine the node states from the Hyper-V perspective and
@@ -988,27 +988,27 @@ namespace Neon.Kube
                     // nodes are not provisioned, are paused or appear to be transitioning
                     // between starting, stopping, waking, or paused states.
 
-                    var commonNodeState = clusterStatus.Nodes.Values.First();
+                    var commonNodeState = clusterHealth.Nodes.Values.First();
 
-                    foreach (var nodeState in clusterStatus.Nodes.Values)
+                    foreach (var nodeState in clusterHealth.Nodes.Values)
                     {
                         if (nodeState != commonNodeState)
                         {
                             // Nodes have differing states so we're going to consider the cluster
                             // to be transitioning.
 
-                            clusterStatus.State   = ClusterState.Transitioning;
-                            clusterStatus.Summary = "Cluster is transitioning";
+                            clusterHealth.State   = ClusterState.Transitioning;
+                            clusterHealth.Summary = "Cluster is transitioning";
                             break;
                         }
                     }
 
                     if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
                     {
-                        clusterStatus.State   = ClusterState.Configuring;
-                        clusterStatus.Summary = "Cluster is partially configured";
+                        clusterHealth.State   = ClusterState.Configuring;
+                        clusterHealth.Summary = "Cluster is partially configured";
                     }
-                    else if (clusterStatus.State != ClusterState.Transitioning)
+                    else if (clusterHealth.State != ClusterState.Transitioning)
                     {
                         // If we get here then all of the nodes have the same state so
                         // we'll use that common state to set the overall cluster state.
@@ -1017,51 +1017,51 @@ namespace Neon.Kube
                         {
                             case ClusterNodeState.Paused:
 
-                                clusterStatus.State    = ClusterState.Paused;
-                                clusterStatus.Summary = "Cluster is paused";
+                                clusterHealth.State    = ClusterState.Paused;
+                                clusterHealth.Summary = "Cluster is paused";
                                 break;
 
                             case ClusterNodeState.Starting:
 
-                                clusterStatus.State   = ClusterState.Unhealthy;
-                                clusterStatus.Summary = "Cluster is starting";
+                                clusterHealth.State   = ClusterState.Unhealthy;
+                                clusterHealth.Summary = "Cluster is starting";
                                 break;
 
                             case ClusterNodeState.Running:
 
-                                clusterStatus.State   = ClusterState.Configured;
-                                clusterStatus.Summary = "Cluster is configured";
+                                clusterHealth.State   = ClusterState.Configured;
+                                clusterHealth.Summary = "Cluster is configured";
                                 break;
 
                             case ClusterNodeState.Off:
 
-                                clusterStatus.State   = ClusterState.Off;
-                                clusterStatus.Summary = "Cluster is turned off";
+                                clusterHealth.State   = ClusterState.Off;
+                                clusterHealth.Summary = "Cluster is turned off";
                                 break;
 
                             case ClusterNodeState.NotProvisioned:
 
-                                clusterStatus.State   = ClusterState.NotFound;
-                                clusterStatus.Summary = "Cluster is not found.";
+                                clusterHealth.State   = ClusterState.NotFound;
+                                clusterHealth.Summary = "Cluster is not found.";
                                 break;
 
                             case ClusterNodeState.Unknown:
                             default:
 
-                                clusterStatus.State   = ClusterState.Unknown;
-                                clusterStatus.Summary = "Cluster not found";
+                                clusterHealth.State   = ClusterState.Unknown;
+                                clusterHealth.Summary = "Cluster not found";
                                 break;
                         }
                     }
 
-                    if (clusterStatus.State == ClusterState.Off)
+                    if (clusterHealth.State == ClusterState.Off)
                     {
-                        clusterStatus.Summary = "Cluster is turned off";
+                        clusterHealth.Summary = "Cluster is turned off";
 
-                        return clusterStatus;
+                        return clusterHealth;
                     }
 
-                    return clusterStatus;
+                    return clusterHealth;
                 }
             }
         }

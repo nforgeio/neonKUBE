@@ -3074,13 +3074,13 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="context">The cluster context.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
-        /// <returns>A <see cref="KubeClusterHealth"/> instance.</returns>
-        public static async Task<KubeClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
+        /// <returns>A <see cref="ClusterHealth"/> instance.</returns>
+        public static async Task<ClusterHealth> GetClusterHealthAsync(KubeConfigContext context, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
-            // We're going to retrieve the special [neon-status/cluster-status] config map
+            // We're going to retrieve the special [neon-status/cluster-health] config map
             // and return the status from there.  This config map is created initially by
             // cluster setup and then is updated by neon-cluster-operator.
 
@@ -3089,17 +3089,17 @@ TCPKeepAlive yes
 
             if (config == null)
             {
-                return new KubeClusterHealth()
+                return new ClusterHealth()
                 {
                     Version = "0",
-                    State   = KubeClusterState.Unknown,
+                    State   = ClusterState.Unknown,
                     Summary = $"kubecontext for [{context.Name}] not found."
                 };
             }
             
             using (var k8s = new KubernetesClient(config))
             {
-                // Cluster status is persisted to the [neon-status/cluster-status] configmap
+                // Cluster status is persisted to the [neon-status/cluster-health] configmap
                 // during cluster setup and is maintained there after by [neon-cluster-operator].
 
                 try
@@ -3109,25 +3109,25 @@ TCPKeepAlive yes
                         namespaceParameter: KubeNamespace.NeonStatus,
                         cancellationToken:  cancellationToken);
 
-                    var statusConfig = new TypeSafeConfigMap<KubeClusterHealth>(configMap);
+                    var statusConfig = new TypeSafeConfigMap<ClusterHealth>(configMap);
 
                     return statusConfig.Config;
                 }
                 catch (OperationCanceledException)
                 {
-                    return new KubeClusterHealth()
+                    return new ClusterHealth()
                     {
                         Version = "0",
-                        State   = KubeClusterState.Unknown,
+                        State   = ClusterState.Unknown,
                         Summary = "Cluster health check cancelled"
                     };
                 }
                 catch (Exception e)
                 {
-                    return new KubeClusterHealth()
+                    return new ClusterHealth()
                     {
                         Version = "0",
-                        State   = KubeClusterState.Unknown,
+                        State   = ClusterState.Unknown,
                         Summary = e.Message
                     };
                 }

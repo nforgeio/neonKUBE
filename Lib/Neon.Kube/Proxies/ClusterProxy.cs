@@ -768,7 +768,7 @@ namespace Neon.Kube
                     namespaceParameter: KubeNamespace.NeonStatus,
                     cancellationToken:  cancellationToken);
 
-                var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+                var lockStatusConfig = TypeSafeConfigMap<ClusterLock>.From(configMap);
 
                 return lockStatusConfig.Config.IsLocked;
             }
@@ -799,7 +799,7 @@ namespace Neon.Kube
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
-            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+            var lockStatusConfig = TypeSafeConfigMap<ClusterLock>.From(configMap);
 
             if (!lockStatusConfig.Config.IsLocked)
             {
@@ -831,7 +831,7 @@ namespace Neon.Kube
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
-            var lockStatusConfig = TypeSafeConfigMap<KubeClusterLock>.From(configMap);
+            var lockStatusConfig = TypeSafeConfigMap<ClusterLock>.From(configMap);
 
             if (lockStatusConfig.Config.IsLocked)
             {
@@ -872,54 +872,65 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines the status of a cluster.
+        /// Returns information about a cluster.
+        /// </summary>
+        /// <returns>The <see cref="ClusterHealth"/>.</returns>
+        public async Task<ClusterInfo> GetClusterInfoAsync()
+        {
+            await SyncContext.Clear;
+
+            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+                name:               KubeConfigMapName.ClusterInfo,
+                namespaceParameter: KubeNamespace.NeonStatus);
+
+            var clusterInfoMap = TypeSafeConfigMap<ClusterInfo>.From(configMap);
+
+            return clusterInfoMap.Config;
+        }
+
+        /// <summary>
+        /// Returns the health status of a cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
-        /// <returns>The <see cref="ClusterStatus"/>.</returns>
-        public async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        /// <returns>The <see cref="ClusterHealth"/>.</returns>
+        public async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            var clusterStatus = await HostingManager.GetClusterStatusAsync(timeout);
+            var clusterHealth = await HostingManager.GetClusterHealthAsync(timeout);
 
             // When it looks like the cluster is configured from the hosting manager's
             // perspective, we're going to check from the Kubernetes perspective to
             // determine whether the cluster itself appears to be healthy or not.
 
-            if (clusterStatus.State == ClusterState.Configured && context != null)
+            if (clusterHealth.State == ClusterState.Configured && context != null)
             {
-                var kubeClusterStatus = await KubeHelper.GetClusterHealthAsync(context);
-
-                clusterStatus.Summary = kubeClusterStatus.Summary;
-
-                switch (kubeClusterStatus.State)
+                switch (clusterHealth.State)
                 {
-                    case KubeClusterState.Unknown:
+                    case ClusterState.Unknown:
 
-                        clusterStatus.State   = ClusterState.Unhealthy;
-                        clusterStatus.Summary = kubeClusterStatus.Summary;
+                        clusterHealth.State   = ClusterState.Unhealthy;
+                        clusterHealth.Summary = clusterHealth.Summary;
                         break;
 
-                    case KubeClusterState.Unhealthy:
+                    case ClusterState.Unhealthy:
 
-                        clusterStatus.State    = ClusterState.Unhealthy;
-                        clusterStatus.Summary  = kubeClusterStatus.Summary;
-                        clusterStatus.IsLocked = await IsLockedAsync();
+                        clusterHealth.State   = ClusterState.Unhealthy;
+                        clusterHealth.Summary = clusterHealth.Summary;
                         break;
 
-                    case KubeClusterState.Transitioning:
-                    case KubeClusterState.Healthy:
+                    case ClusterState.Transitioning:
+                    case ClusterState.Healthy:
 
-                        clusterStatus.State    = ClusterState.Healthy;
-                        clusterStatus.Summary  = "Cluster is healthy";
-                        clusterStatus.IsLocked = await IsLockedAsync();
+                        clusterHealth.State   = ClusterState.Healthy;
+                        clusterHealth.Summary = "Cluster is healthy";
                         break;
 
-                    case KubeClusterState.Paused:
+                    case ClusterState.Paused:
 
-                        clusterStatus.State   = ClusterState.Paused;
-                        clusterStatus.Summary = "Cluster is paused";
+                        clusterHealth.State   = ClusterState.Paused;
+                        clusterHealth.Summary = "Cluster is paused";
                         break;
 
                     default:
@@ -928,17 +939,7 @@ namespace Neon.Kube
                 }
             }
 
-            // $todo(jefflill):
-            //
-            // We're going to indicate that all optional components have been deployed
-            // to the cluster right now because we haven't implemented this feature yet.
-            // We'll need to persist that information somewhere (probably in another
-            // [neon-status] configmap so neon-cluster-operator can include it when it
-            // updates the cluster health status.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1492
-
-            return clusterStatus;
+            return clusterHealth;
         }
 
         /// <summary>
@@ -965,7 +966,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var status = await GetClusterStatusAsync();
+                        var status = await GetClusterHealthAsync();
 
                         return status.State == ClusterState.Healthy;
                     }
@@ -1003,7 +1004,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var status = await GetClusterStatusAsync();
+                        var status = await GetClusterHealthAsync();
 
                         return status.State == ClusterState.Off;
                     }

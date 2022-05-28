@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterIsLockedCommand.cs
+// FILE:	    ClusterHealthCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -38,6 +38,8 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
@@ -51,26 +53,18 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster islocked</b> command.
+    /// Implements the <b>cluster health</b> command.
     /// </summary>
     [Command]
-    public class ClusterIsLockedCommand : CommandBase
+    public class ClusterHealthCommand : CommandBase
     {
         private const string usage = @"
-Determines whether the current cluster is locked.
+Prints the status of the current cluster.
 
-USAGE:
-
-    neon cluster islocked
-
-EXITCODE:
-
-    0   - when the cluster is locked
-    1   - for errors
-    2   - when the cluster is unlocked
+USAGE: neon cluster health
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "islocked" };
+        public override string[] Words => new string[] { "cluster", "health" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -99,39 +93,11 @@ EXITCODE:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var status = await cluster.GetClusterHealthAsync();
+                var clusterHealth = await cluster.GetClusterHealthAsync();
 
-                switch (status.State)
-                {
-                    case ClusterState.Healthy:
-                    case ClusterState.Unhealthy:
-
-                        var isLocked = await cluster.IsLockedAsync();
-
-                        if (!isLocked.HasValue)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                            Program.Exit(1);
-                        }
-
-                        if (isLocked.Value)
-                        {
-                            Console.WriteLine($"[{cluster.Name}]: LOCKED");
-                            Program.Exit(0);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
-                            Program.Exit(2);
-                        }
-                        break;
-
-                    default:
-
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
-                        Program.Exit(1);
-                        break;
-                }
+                Console.WriteLine();
+                Console.WriteLine(NeonHelper.JsonSerialize(clusterHealth, Formatting.Indented));
+                Console.WriteLine();
             }
         }
     }

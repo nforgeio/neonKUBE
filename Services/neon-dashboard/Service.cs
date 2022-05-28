@@ -35,9 +35,9 @@ namespace NeonDashboard
         private IWebHost webHost;
 
         /// <summary>
-        /// Neon cluster info.
+        /// Information about the cluster.
         /// </summary>
-        public ClusterStatus ClusterInfo;
+        public ClusterInfo ClusterInfo;
 
         /// <summary>
         /// Session cookie name.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeClusterHealth.cs
+// FILE:	    ClusterHealth.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -54,12 +54,12 @@ namespace Neon.Kube
     /// <summary>
     /// Describes the current health of a cluster.
     /// </summary>
-    public class KubeClusterHealth
+    public class ClusterHealth
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeClusterHealth()
+        public ClusterHealth()
         {
         }
 
@@ -75,8 +75,8 @@ namespace Neon.Kube
         /// The cluster health state.
         /// </summary>
         [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(KubeClusterState.Unknown)]
-        public KubeClusterState State { get; set; }
+        [DefaultValue(ClusterState.Unknown)]
+        public ClusterState State { get; set; }
 
         /// <summary>
         /// Human readable text summarizing the cluster health state.
@@ -84,5 +84,12 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Summary { get; set; }
+
+        /// <summary>
+        /// Maps node names to their provisioning states.
+        /// </summary>
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public Dictionary<string, ClusterNodeState> Nodes { get; set; } = new Dictionary<string, ClusterNodeState>(StringComparer.InvariantCultureIgnoreCase);
     }
 }
