@@ -544,7 +544,7 @@ namespace Neon.Kube.Xunit
                         throw new NeonKubeException($"Cluster is locked: {cluster.Name}");
                     }
 
-                    if ((clusterHealth.State == ClusterState.Healthy || clusterHealth.State == ClusterState.Configured) && clusterInfo.ClusterVersion == KubeVersions.NeonKube)
+                    if (clusterHealth.State == ClusterState.Healthy && clusterInfo.ClusterVersion == KubeVersions.NeonKube)
                     {
                         // We need to reset an existing cluster to ensure it's in a known state.
 

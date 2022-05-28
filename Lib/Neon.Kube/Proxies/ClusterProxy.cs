@@ -900,11 +900,7 @@ namespace Neon.Kube
 
             var clusterHealth = await HostingManager.GetClusterHealthAsync(timeout);
 
-            // When it looks like the cluster is configured from the hosting manager's
-            // perspective, we're going to check from the Kubernetes perspective to
-            // determine whether the cluster itself appears to be healthy or not.
-
-            if (clusterHealth.State == ClusterState.Configured && context != null)
+            if (context != null)
             {
                 switch (clusterHealth.State)
                 {
@@ -932,10 +928,6 @@ namespace Neon.Kube
                         clusterHealth.State   = ClusterState.Paused;
                         clusterHealth.Summary = "Cluster is paused";
                         break;
-
-                    default:
-
-                        throw new NotImplementedException();
                 }
             }
 

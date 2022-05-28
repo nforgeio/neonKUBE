@@ -3994,7 +3994,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                         case ClusterNodeState.Running:
 
-                            clusterHealth.State   = ClusterState.Configured;
+                            clusterHealth.State   = ClusterState.Healthy;
                             clusterHealth.Summary = "Cluster is configured";
                             break;
 
@@ -4049,14 +4049,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             await ec2Client.StartInstancesAsync(new StartInstancesRequest(instanceIds));
 
-            // ...and then wait for the cluster to report being configured.
+            // ...and then wait for the cluster to report being healthy.
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     var status = await GetClusterHealthAsync();
 
-                    return status.State == ClusterState.Configured;
+                    return status.State == ClusterState.Healthy;
                 },
                 timeout:      timeout,
                 pollInterval: pollInterval);

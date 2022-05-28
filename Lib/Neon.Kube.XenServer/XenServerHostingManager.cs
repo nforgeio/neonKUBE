@@ -1282,7 +1282,7 @@ namespace Neon.Kube
 
                         case ClusterNodeState.Running:
 
-                            clusterHealth.State   = ClusterState.Configured;
+                            clusterHealth.State   = ClusterState.Healthy;
                             clusterHealth.Summary = "Cluster is configured";
                             break;
 
