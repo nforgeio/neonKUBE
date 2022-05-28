@@ -5298,6 +5298,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterStatus()
                         {
+                            ClusterId          = Guid.NewGuid().ToString("d"),
                             ClusterVersion     = KubeVersions.NeonKube,
                             IsLocked           = cluster.Definition.IsLocked,
                             State              = ClusterState.Healthy,

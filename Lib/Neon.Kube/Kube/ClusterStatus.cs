@@ -56,6 +56,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Globally unique cluster identifier.  This is set during cluster setup and is 
+        /// used to distinguish between customer clusters.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string ClusterId { get; set; } = null;
+
+        /// <summary>
         /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
