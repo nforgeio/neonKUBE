@@ -371,14 +371,19 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
+        public override IEnumerable<string> GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
             if (nullWhenNoLoadbalancer)
             {
                 return null;
             }
 
-            return cluster.FirstMaster.Address?.ToString();
+            if (!(cluster.Definition.PublicAddresses?.Any() ?? false))
+            {
+                return cluster.Definition.PublicAddresses;
+            }
+
+            return cluster.Definition.Masters.Select(master => master.Address);
         }
 
         /// <inheritdoc/>

@@ -198,7 +198,7 @@ namespace Neon.Kube
         /// clusters that aren't behind by a load balancer.  This defaults to <c>false</c>.
         /// </param>
         /// <returns>The cluster IP address or <c>null</c>.</returns>
-        string GetClusterAddress(bool nullWhenNotCloud = false);
+        IEnumerable<string> GetClusterAddress(bool nullWhenNotCloud = false);
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 

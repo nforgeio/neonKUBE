@@ -1396,9 +1396,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetClusterAddress(bool nullWhenNoLoadbalancer = false)
+        public override IEnumerable<string> GetClusterAddress(bool nullWhenNoLoadbalancer = false)
         {
-            return publicIngressAddress.Data.IPAddress;
+            return new List<string>() { publicIngressAddress.Data.IPAddress };
         }
 
         /// <summary>
