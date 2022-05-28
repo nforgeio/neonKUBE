@@ -561,8 +561,8 @@ metrics:
   ## @param metrics.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
-    registry: docker.io
-    repository: bitnami/memcached-exporter
+    registry: neon-registry.node.local
+    repository: bitnami-memcached-exporter
     tag: 0.9.0-debian-10-r348
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
