@@ -160,7 +160,7 @@ namespace Neon.Kube
 
             foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
-                var hostAddress  = host.Address;
+                var hostAddress  = GetHostIpAddress(host);
                 var hostname     = host.Name;
                 var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
                 var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
@@ -296,7 +296,7 @@ namespace Neon.Kube
 
             foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
-                var hostAddress  = host.Address;
+                var hostAddress  = NetHelper.ParseIPv4Address(GetHostIpAddress(host));
                 var hostname     = host.Name;
                 var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
                 var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
@@ -320,7 +320,7 @@ namespace Neon.Kube
                 //          [SetupController] semantics.
 
                 var xenClient = GetXenClient(hostname);
-                var sshProxy  = new NodeSshProxy<XenClient>(hostname, NetHelper.ParseIPv4Address(hostAddress), SshCredentials.FromUserPassword(hostUsername, hostPassword), NodeRole.XenServer, logWriter: xenClient.LogWriter); 
+                var sshProxy  = new NodeSshProxy<XenClient>(hostname, hostAddress, SshCredentials.FromUserPassword(hostUsername, hostPassword), NodeRole.XenServer, logWriter: xenClient.LogWriter);
 
                 sshProxy.Metadata = xenClient;
 
@@ -425,6 +425,36 @@ namespace Neon.Kube
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
             }
+        }
+
+        /// <summary>
+        /// Returns the IP address for a XenServer host, performing a DNS lookup if necessary.
+        /// </summary>
+        /// <param name="host">The XenServer host information.</param>
+        /// <returns>The IP address.</returns>
+        /// <exception cref="NeonKubeException">Thrown if the address could not be obtained.</exception>
+        private string GetHostIpAddress(HypervisorHost host)
+        {
+            if (!NetHelper.TryParseIPv4Address(host.Address, out var ipAddress))
+            {
+                try
+                {
+                    var addresses = Dns.GetHostAddresses(host.Address);
+
+                    if (addresses.Length == 0)
+                    {
+                        throw new NeonKubeException($"DNS lookup failed for: {host.Address}");
+                    }
+
+                    ipAddress = addresses.First();
+                }
+                catch (Exception e)
+                {
+                    throw new NeonKubeException($"DNS lookup failed for: {host.Address}", e);
+                }
+            }
+
+            return ipAddress.ToString();
         }
 
         /// <summary>
