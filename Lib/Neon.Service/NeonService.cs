@@ -461,25 +461,18 @@ namespace Neon.Service
         // The code below should be manually synchronized with similar code in [KubeHelper]
         // if neonKUBE related folder names ever change in the future.
 
-        private static string testFolder;
-        private static string cachedNeonKubeUserFolder;
-        private static string cachedPasswordsFolder;
+        private static string   testFolder;
+        private static string   cachedNeonKubeUserFolder;
+        private static string   cachedPasswordsFolder;
 
         /// <summary>
-        /// Call this at the top of your service's main entry point to ensure
-        /// that the current execution environment is properly initialized.
+        /// Call this at the top of your service's main program entry point to
+        /// ensure that the current execution environment is properly initialized.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// This method currently handles initialization of the [Kubernetes] client's
-        /// JSON serializer which is required to support some custom resources.  The
-        /// method automatically detects whether the Kubernetes related types are
-        /// loaded and does nothing when they are not present.
-        /// </para>
-        /// <para>
-        /// Calling this method isn't strictly required at this time, but we highly
-        /// recommend that you call it anyway.
-        /// </para>
+        /// This method currently dds a listener to the <see cref="AppDomain.UnhandledException"/> 
+        /// event and logs information about any unhandled exceptions.  Note that this doesn't 
+        /// interfere with any other listeners that may be present.
         /// </remarks>
         public static void Initialize()
         {
@@ -488,45 +481,21 @@ namespace Neon.Service
                 return;
             }
 
-            // $hack(jefflill):
-            //
-            // Services deployed to Kubernetes that manage custom resouces may need
-            // to customize the JSON serializer settings used by the stock [Kubernetes]
-            // client.  There isn't a clean way to handle this so we're going to do
-            // the best we can.
-            //
-            // The static [Neon.Kube.KubernetesClient] class implements a static
-            // [Initialize()] method which intializes the serializer the first time
-            // it's called.  The problem is that this call will fail after the first
-            // stock [Kubernetes] client has been created.
-            //
-            // To make this transparent for most service implementators, we're going
-            // to detect whether the [Neon.Kube] assembly is loaded in the appdomain
-            // and call the [Initialize()] method when it's present.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1517
+            // Detect unhandled application exceptions and log them.
 
-            var kubernetesClientType = (Type)null;
-
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                kubernetesClientType = assembly.GetType("Neon.Kube.KubernetesClient");
-
-                if (kubernetesClientType != null)
+            AppDomain.CurrentDomain.UnhandledException +=
+                (s, a) =>
                 {
-                    break;
-                }
-            }
+                    // $hack(jefflill):
+                    //
+                    // We're just going to use the default logger here because the service
+                    // instance hasn't been created yet.  This isn't ideal.
 
-            if (kubernetesClientType != null)
-            {
-                var initialzeMethod = kubernetesClientType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    var exception = (Exception)a.ExceptionObject;
+                    var logger    = Neon.Diagnostics.LogManager.Default.GetLogger();
 
-                Covenant.Assert(initialzeMethod != null);
-                initialzeMethod.Invoke(null, Array.Empty<object>());
-            }
-
-            isInitalized = true;
+                    logger.LogCritical($"Unhandled exception [terminating={a.IsTerminating}]", exception);
+                };
         }
 
         /// <summary>
@@ -651,7 +620,6 @@ namespace Neon.Service
         private MetricPusher                    metricPusher;
         private IDisposable                     metricCollector;
         private string                          terminationMessagePath;
-
 
         /// <summary>
         /// Constructor.
@@ -796,7 +764,7 @@ namespace Neon.Service
 
             // Set a default logger so logging calls in the service constructor won't 
             // fail with a [NullReferenceException].  Note that we don't recommend
-            // logging from withing the constructor.
+            // logging from within the constructor.
 
             LogManager = new LogManager(parseLogLevel: false, version: this.Version, logFilter: logFilter);
 

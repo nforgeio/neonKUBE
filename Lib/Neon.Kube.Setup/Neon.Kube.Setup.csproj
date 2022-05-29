@@ -117,6 +117,7 @@
 		<None Remove="Resources\Helm\neon-dashboard\templates\configmap.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\.helmignore" />
 		<None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\CHEATS.md" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />

@@ -46,6 +46,7 @@ namespace NeonNodeAgent
         public static async Task Main(string[] args)
         {
             NeonService.Initialize();
+            KubernetesClient.Initialize();
 
             // Intercept and handle KubeOps [generator] commands executed by the 
             // KubeOps MSBUILD tasks.
