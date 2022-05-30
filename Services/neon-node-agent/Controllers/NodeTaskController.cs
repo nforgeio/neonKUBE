@@ -501,7 +501,7 @@ namespace NeonNodeAgent
                                 if (innerNodeTask.Spec.CaptureOutput)
                                 {
                                     innerNodeTask.Status.Output = result.OutputText;
-                                    innerNodeTask.Status.Error = result.ErrorText;
+                                    innerNodeTask.Status.Error  = result.ErrorText;
                                 }
                             }
 
