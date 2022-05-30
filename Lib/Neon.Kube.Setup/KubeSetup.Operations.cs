@@ -2807,7 +2807,7 @@ EOF
                         }
                     }
 
-                    await k8s.CreateNamespacedCustomObjectAsync<V1CStorPoolCluster>(cStorPoolCluster, KubeNamespace.NeonStorage);
+                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
                 });
 
             controller.ThrowIfCancelled();

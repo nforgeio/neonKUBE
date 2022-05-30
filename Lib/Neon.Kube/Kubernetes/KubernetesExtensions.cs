@@ -46,6 +46,27 @@ namespace Neon.Kube
     public static partial class KubernetesExtensions
     {
         //---------------------------------------------------------------------
+        // V1ObjectMeta extensions
+
+        /// <summary>
+        /// Sets a label within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The label name.</param>
+        /// <param name="value">Optionally specifies a label value.  This defaults to an empty string.</param>
+        public static void SetLabel(this V1ObjectMeta metadata, string name, string value = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Labels == null)
+            {
+                metadata.Labels = new Dictionary<string, string>();
+            }
+
+            metadata.Labels[name] = value ?? string.Empty;
+        }
+
+        //---------------------------------------------------------------------
         // Deployment extensions
 
         /// <summary>

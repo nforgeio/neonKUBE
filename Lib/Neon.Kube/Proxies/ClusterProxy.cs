@@ -55,7 +55,7 @@ namespace Neon.Kube
     public delegate NodeSshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address);
 
     /// <summary>
-    /// Used to remotely manage a cluster via SSH/SCP.
+    /// Used to manage a neonKUBE cluster.
     /// </summary>
     public class ClusterProxy : IDisposable
     {
@@ -1127,14 +1127,14 @@ namespace Neon.Kube
                 .Where(crd => KubeHelper.IsNeonKubeCustomResource(crd))
                 .ToArray();
 
-            // Remove any cluster scoped neonKUBE resources that aren't labeled indicating that
-            // they should be retained.
+            // Remove any cluster scoped neonKUBE resources that are labeled indicating that
+            // they removed on cluster reset.
 
             foreach (var crd in neonKubeCrds)
             {
                 foreach (var version in crd.Spec.Versions.Select(ver => ver.Name))
                 {
-                    foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"!{NeonLabel.ClusterFixtureResetKeep}")).Items)
+                    foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
                     {
                         await K8s.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
                     }

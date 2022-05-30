@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
+using Neon.SSH;
 using Neon.Xunit;
 
 using k8s;

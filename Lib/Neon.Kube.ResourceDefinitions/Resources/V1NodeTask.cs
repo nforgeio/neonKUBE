@@ -72,8 +72,8 @@ namespace Neon.Kube.Resources
     /// <note>
     /// <para>
     /// <b>WARNING!</b> You need to recognize that secrets included in a node task command line will
-    /// can be observed by examining the <b>NodeTask</b> custom resource.  These are persisted within
-    /// the <b>neon-system</b> namespace and can be protected with RBAC roles.
+    /// can be observed by examining the <b>NodeTask</b> custom resource.  These are persisted at the
+    /// cluster level.
     /// </para>
     /// <para>
     /// Node tasks are intended to run local node tasks that probably won't need secrets.  We recommend 
@@ -134,7 +134,7 @@ namespace Neon.Kube.Resources
         public class V1NodeTaskSpec
         {
             /// <summary>
-            /// Identifies the node where the command will be executed.
+            /// Identifies the target node where the command will be executed.
             /// </summary>
 #if KUBEOPS
             [Required]

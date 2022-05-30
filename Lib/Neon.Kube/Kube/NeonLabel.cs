@@ -31,9 +31,9 @@ namespace Neon.Kube
     public static class NeonLabel
     {
         /// <summary>
-        /// Used to label custom neonKUBE resources that should not be removed by the <b>ClusterFixture</b>
-        /// when resetting a test cluster.
+        /// Used to label custom neonKUBE resources that should be removed by <b>ClusterFixture</b> or
+        /// <see cref="ClusterProxy"/> when resetting a test cluster.
         /// </summary>
-        public const string ClusterFixtureResetKeep = ClusterDefinition.ReservedLabelPrefix + "clusterfixture-reset-keep";
+        public const string RemoveOnClusterReset = ClusterDefinition.ReservedLabelPrefix + "remove-on-cluster-reset";
     }
 }

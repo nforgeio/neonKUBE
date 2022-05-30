@@ -321,6 +321,7 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
@@ -425,7 +426,7 @@ namespace Neon.Kube
             body.Metadata.Name = name;
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
-            // create it otherwise we'll replace it.
+            // create a new resource otherwise we'll replace the existing resource.
 
             try
             {

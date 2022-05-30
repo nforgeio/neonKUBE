@@ -323,9 +323,10 @@ namespace Neon.Kube
             string              dryRun       = null,
             string              fieldManager = null) 
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateNamespacedCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, namespaceParameter, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
