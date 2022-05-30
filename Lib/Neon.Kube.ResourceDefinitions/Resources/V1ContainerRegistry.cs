@@ -43,7 +43,7 @@ namespace Neon.Kube.Resources
     /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = Helper.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+    [KubernetesEntity(Group = Helper.NeonKubeResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
 #if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]

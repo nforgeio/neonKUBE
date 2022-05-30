@@ -138,5 +138,15 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "KeepNamespaces", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> KeepNamespaces { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para>
+        /// Specifies the number of seconds to wait for the cluster to stablize after performing
+        /// the reset.  This defaults to <b>30 seconds</b>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "StabilizeSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(30)]
+        public int StabilizeSeconds { get; set; } = 30;
     }
 }

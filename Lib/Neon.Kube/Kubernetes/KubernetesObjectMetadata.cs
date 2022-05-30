@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Helper.cs
+// FILE:	    KubernetesObjectMetadata.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,27 +17,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
 
-#if KUBEOPS
-namespace Neon.Kube.ResourceDefinitions
-#else
-namespace Neon.Kube.Resources
-#endif
+using Neon.Common;
+
+namespace Neon.Kube
 {
     /// <summary>
-    /// Internal helpers.
+    /// Describes a Kubernetes object by its basic properties, <see cref="ApiVersion"/>, <see cref="Kind"/>, and <see cref="Metadata"/>.
     /// </summary>
-    internal static class Helper
+    public class KubernetesObjectMetadata : IKubernetesObject, IMetadata<V1ObjectMeta>, IValidate
     {
-        /// <summary>
-        /// Identifes a special configmap used to report cluster status.  This configmap will
-        /// be located in the <b>neon-status</b> namespace and is created during cluster setup
-        /// and then is maintained by the neon-cluster-operator thereafter.
-        /// </summary>
-        public const string NeonKubeResourceGroup = "neonkube.io";
+        /// <inheritdoc/>
+        public string ApiVersion { get; set; }
+
+        /// <inheritdoc/>
+        public string Kind { get; set; }
+
+        /// <inheritdoc/>
+        public V1ObjectMeta Metadata { get; set; }
+
+        /// <inheritdoc/>
+        public void Validate()
+        {
+        }
     }
 }

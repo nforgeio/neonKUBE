@@ -2,7 +2,11 @@
 ---
 
 ```
-neon helm install neon-node-agent --namespace neon-system -f values.yaml --set logLevel=debug --set image.organization=ghcr.io/neonkube-dev --set image.repository=neon-node-agent --set image.pullPolicy=Always --set image.tag=neonkube-0.6.0-alpha .
+set DEBUG_ORG=ghcr.io/neonkube-dev
+set DEBUG_REPO=neon-node-agent
+set DEBUG_TAG=neonkube-0.6.0-alpha
+
+neon helm install neon-node-agent --namespace neon-system -f values.yaml --set logLevel=debug --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .
 
 neon helm uninstall neon-node-agent --namespace neon-system
 

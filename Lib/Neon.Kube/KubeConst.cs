@@ -358,7 +358,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
         /// </summary>
-        public const string NeonResourceGroup = "neonkube.io";
+        public const string NeonKubeResourceGroup = "neonkube.io";
 
         /// <summary>
         /// The base URI for the neonCLOUD production headend services.

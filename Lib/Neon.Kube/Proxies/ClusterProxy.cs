@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1116,6 +1117,27 @@ namespace Neon.Kube
                 finally
                 {
                     master.Disconnect();
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Remove all neonKUBE custom resources.
+
+            var neonKubeCrds = (await K8s.ListCustomResourceDefinitionAsync()).Items
+                .Where(crd => KubeHelper.IsNeonKubeCustomResource(crd))
+                .ToArray();
+
+            // Remove any cluster scoped neonKUBE resources that aren't labeled indicating that
+            // they should be retained.
+
+            foreach (var crd in neonKubeCrds)
+            {
+                foreach (var version in crd.Spec.Versions.Select(ver => ver.Name))
+                {
+                    foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"!{NeonLabel.ClusterFixtureResetKeep}")).Items)
+                    {
+                        await K8s.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
+                    }
                 }
             }
 

@@ -3187,7 +3187,7 @@ TCPKeepAlive yes
         {
             Covenant.Requires<ArgumentNullException>(crd != null, nameof(crd));
 
-            return crd.Kind.EndsWith($".{KubeConst.NeonKubeResourceGroup}");
+            return crd.Spec.Group.EndsWith($".{KubeConst.NeonKubeResourceGroup}");
         }
     }
 }

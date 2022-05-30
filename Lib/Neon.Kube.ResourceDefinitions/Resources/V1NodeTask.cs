@@ -112,7 +112,7 @@ namespace Neon.Kube.Resources
     /// </item>
     /// </list>
     /// </remarks>
-    [KubernetesEntity(Group = Helper.NeonResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
+    [KubernetesEntity(Group = Helper.NeonKubeResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
 #if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]

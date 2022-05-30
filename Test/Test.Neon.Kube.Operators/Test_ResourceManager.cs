@@ -47,7 +47,7 @@ namespace TestKube
         //---------------------------------------------------------------------
         // Private types
 
-        [KubernetesEntity(Group = KubeConst.NeonResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+        [KubernetesEntity(Group = KubeConst.NeonKubeResourceGroup, ApiVersion = "v1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
         [KubernetesEntityShortNames]
         [EntityScope(EntityScope.Cluster)]
         [Description("Describes a neonKUBE cluster upstream container registry.")]

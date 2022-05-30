@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -985,6 +986,7 @@ namespace Neon.Kube.Xunit
             if (TestHelper.IsClusterTestingEnabled)
             {
                 Cluster?.ResetAsync(options.ResetOptions, message => WriteTestOutputLine(message)).WaitWithoutAggregate();
+                Thread.Sleep(options.ResetOptions.StabilizeSeconds);
             }
 
             base.Reset();

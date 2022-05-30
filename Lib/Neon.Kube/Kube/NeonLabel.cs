@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Helper.cs
+// FILE:	    NeonLabel.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -16,28 +16,24 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-using k8s;
-using k8s.Models;
-
-#if KUBEOPS
-namespace Neon.Kube.ResourceDefinitions
-#else
-namespace Neon.Kube.Resources
-#endif
+namespace Neon.Kube
 {
     /// <summary>
-    /// Internal helpers.
+    /// <para>
+    /// Defines the non-node cluster definition labels used to tag objects by neonKUBE.
+    /// </para>
+    /// <note>
+    /// Labels specified by the cluster definition and assigned to nodes are defined
+    /// here: <see cref="NodeLabels"/>.
+    /// </note>
     /// </summary>
-    internal static class Helper
+    public static class NeonLabel
     {
         /// <summary>
-        /// Identifes a special configmap used to report cluster status.  This configmap will
-        /// be located in the <b>neon-status</b> namespace and is created during cluster setup
-        /// and then is maintained by the neon-cluster-operator thereafter.
+        /// Used to label custom neonKUBE resources that should not be removed by the <b>ClusterFixture</b>
+        /// when resetting a test cluster.
         /// </summary>
-        public const string NeonKubeResourceGroup = "neonkube.io";
+        public const string ClusterFixtureResetKeep = ClusterDefinition.ReservedLabelPrefix + "clusterfixture-reset-keep";
     }
 }
