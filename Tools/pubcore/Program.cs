@@ -40,7 +40,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "2.0";
+        public const string Version = "2.1";
 
         /// <summary>
         /// Program entrypoint.
@@ -261,6 +261,27 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                     else
                     {
                         break;
+                    }
+                }
+
+                // Create the CMD shell script when not disabled.
+
+                var cmdPath = Path.Combine(Path.Combine(outputDir, ".."), $"{targetName}.cmd");
+
+                if (!noCmd)
+                {
+                    File.WriteAllText(cmdPath,
+$@"@echo off
+""%~dp0\{targetName}\{targetName}.exe"" %*
+");
+                }
+                else
+                {
+                    // Delete any existing CMD.EXE script.
+
+                    if (File.Exists(cmdPath))
+                    {
+                        File.Delete(cmdPath);
                     }
                 }
 
