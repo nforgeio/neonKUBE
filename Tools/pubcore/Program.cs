@@ -210,7 +210,7 @@ The [--no-cmd] option prevents the CMD.EXE batch file from being created.
                     var sbOutput = new StringBuilder();
 
                     process.StartInfo.FileName               = "dotnet.exe";
-                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} -o \"{outputDir}\" --self-contained --no-dependencies";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} -o \"{outputDir}\" --self-contained";
                     process.StartInfo.CreateNoWindow         = true;
                     process.StartInfo.UseShellExecute        = false;
                     process.StartInfo.RedirectStandardError  = true;
