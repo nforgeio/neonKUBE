@@ -2080,32 +2080,6 @@ mountFolder=${{1}}
 
 sleep 10
 
-#------------------------------------------------------------------------------
-# Disable the [apt-timer] and [apt-daily] services.  We're doing this 
-# for two reasons:
-#
-#   1. These services interfere with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
-#
-#   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night which might cause trouble.
-#
-# We're going to implement our own cluster updating machanism
-# that will be smart enough to update the nodes such that the
-# impact on cluster workloads will be limited.
-
-rm -f /etc/systemd/system/apt-daily.timer
-rm -f /etc/systemd/system/apt-daily.service
-
-# It may be possible for the updater to already be running so we'll
-# wait here for it to release any lock files it holds.
-
-while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
-    sleep 1
-done
-
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
@@ -2115,6 +2089,7 @@ echo ""Configure network: {address}""
 # Make a backup copy of any original netplan files to the [/etc/neon-init/netplan-backup]
 # folder so it will be possible to restore these if we need to reset the [neon-init] state.
 
+mkdir -p /etc/netplan
 mkdir -p /etc/neon-init/netplan-backup
 cp -r /etc/netplan/* /etc/neon-init/netplan-backup
 
@@ -3201,6 +3176,18 @@ TCPKeepAlive yes
             obj.Metadata   = new V1ObjectMeta() { Name = name };
 
             return obj;
+        }
+
+        /// <summary>
+        /// Determines whether a custom resource definition is a neonKUBE custom resource.
+        /// </summary>
+        /// <param name="crd">The custom resource definition.</param>
+        /// <returns><c>true</c> for neonKUBE resource definitions.</returns>
+        public static bool IsNeonKubeCustomResource(V1CustomResourceDefinition crd)
+        {
+            Covenant.Requires<ArgumentNullException>(crd != null, nameof(crd));
+
+            return crd.Kind.EndsWith($".{KubeConst.NeonKubeResourceGroup}");
         }
     }
 }
