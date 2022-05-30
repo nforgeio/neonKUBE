@@ -53,16 +53,10 @@ namespace Neon.Kube.Resources
         Running,
 
         /// <summary>
-        /// The task timed out while awaiting execution.
-        /// </summary>
-        [EnumMember(Value = "execute-timeout")]
-        PendingTimeout,
-
-        /// <summary>
         /// The task timed out while executing.
         /// </summary>
-        [EnumMember(Value = "execute-timeout")]
-        ExecuteTimeout,
+        [EnumMember(Value = "timeout")]
+        Timeout,
 
         /// <summary>
         /// The task started executing on one <b>neon-node-agent</b> pod which

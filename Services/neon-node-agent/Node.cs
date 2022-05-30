@@ -106,13 +106,14 @@ namespace NeonNodeAgent
         /// </note>
         /// </summary>
         /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
+        /// <param name="timeout">Optionally specifies the maximum time the command can run.</param>
         /// <param name="args">Optional command arguments.</param>
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, params object[] args)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, TimeSpan? timeout, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
-            return await ExecuteCaptureAsync(command, null, args);
+            return await ExecuteCaptureAsync(command, null, timeout, args);
         }
 
         /// <summary>
@@ -129,9 +130,10 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
         /// <param name="processCallback">Optional callback action that will be called with the process details or <c>null</c>.</param>
+        /// <param name="timeout">Optionally specifies the maximum time the command can run.</param>
         /// <param name="args">Optional command arguments.</param>
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, Action<Process> processCallback, params object[] args)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, Action<Process> processCallback, TimeSpan? timeout, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
@@ -145,7 +147,7 @@ namespace NeonNodeAgent
                 actualArgs.Add(arg);
             }
 
-            return await NeonHelper.ExecuteCaptureAsync("chroot", actualArgs.ToArray(), processCallback: processCallback);
+            return await NeonHelper.ExecuteCaptureAsync("chroot", actualArgs.ToArray(), timeout: timeout, processCallback: processCallback);
         }
     }
 }

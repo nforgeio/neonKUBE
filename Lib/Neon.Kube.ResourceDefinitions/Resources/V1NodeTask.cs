@@ -60,11 +60,9 @@ namespace Neon.Kube.Resources
     /// </item>
     /// <item>
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
-    /// node it's managing, the agent compares the <see cref="V1NodeTaskSpec.StartLimitUtc"/>
-    /// property to the current time.  If the current time is before the limit, the agent will 
-    /// assign its unique ID to the task status, set the <see cref="V1NodeTaskStatus.StartedUtc"/>
-    /// to the current time and change the state to <see cref="NodeTaskState.Running"/>, saving
-    /// these status changes to the API server.
+    /// node it's managing, the agent will assign its unique ID to the task status, set the
+    /// <see cref="V1NodeTaskStatus.StartedUtc"/> to the current time and change the state to
+    /// <see cref="NodeTaskState.Running"/>.
     /// </item>
     /// <item>
     /// The agent will then execute the command on the node, persisting the process ID to the node task 
@@ -97,7 +95,7 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution times out, the agent will kill the process and set the node task state to
-    /// <see cref="NodeTaskState.ExecuteTimeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
+    /// <see cref="NodeTaskState.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
     /// current time.
     /// </item>
     /// <item>
@@ -109,9 +107,7 @@ namespace Neon.Kube.Resources
     /// and <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time.
     /// </item>
     /// <item>
-    /// <b>neon-cluster-operator</b> also monitors these tasks.  It will remove pending tasks that are
-    /// older than <see cref="V1NodeTaskSpec.StartLimitUtc"/>, tasks that have been completed for
-    /// longer than <see cref="V1NodeTaskSpec.RetainSeconds"/> as well as tasks assigned to nodes
+    /// <b>neon-cluster-operator</b> also monitors these tasks.  It will remove tasks assigned to nodes
     /// that don't exist.
     /// </item>
     /// </list>
@@ -152,13 +148,6 @@ namespace Neon.Kube.Resources
             [Required]
 #endif
             public List<string> Command { get; set; }
-
-            /// <summary>
-            /// Specifies the time after which the task will be rejected by the node agent. 
-            /// This can be used to ensure that node tasks won't remain pending forever.  
-            /// This defaults to one day in the future from the time the task was created.
-            /// </summary>
-            public DateTime StartLimitUtc { get; set; } = DateTime.UtcNow + TimeSpan.FromDays(1);
 
             /// <summary>
             /// Specifies the maximum time in seconds the command will be allowed to execute.
@@ -246,6 +235,11 @@ namespace Neon.Kube.Resources
             /// Indicates when the task finished executing.
             /// </summary>
             public DateTime? FinishedUtc { get; set;}
+
+            /// <summary>
+            /// Set to the task execution time serialized to a string.
+            /// </summary>
+            public string ExecutionTime { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.

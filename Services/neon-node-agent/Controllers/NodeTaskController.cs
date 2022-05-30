@@ -43,7 +43,7 @@ namespace NeonNodeAgent
     /// Manages <see cref="V1NodeTask"/> resources on the Kubernetes API Server.
     /// </para>
     /// <note>
-    /// This controller relies on a lease named like <b>nodeagent-nodetask-NODENAME</b> where <b>NODENAME</b>
+    /// This controller relies on a lease named like <b>neon-node-agent.nodetask-NODENAME</b> where <b>NODENAME</b>
     /// is the name of the node where the <b>neon-node-agent</b> operator is running.  This lease will be
     /// persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace and will be used to
     /// elect a leader for the node in case there happens to be two agents running on the same
@@ -110,7 +110,7 @@ namespace NeonNodeAgent
                     new LeaderElectionConfig(
                         k8s,
                         @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"nodeagent-nodetask-{Node.Name}",
+                        leaseName:        $"{Program.Service.Name}.nodetask-{Node.Name}",
                         identity:         Pod.Name,
                         promotionCounter: promotionCounter,
                         demotionCounter:  demotedCounter,
@@ -262,11 +262,6 @@ namespace NeonNodeAgent
         /// deletion.
         /// </item>
         /// <item>
-        /// Tasks whose <see cref="V1NodeTask.V1NodeTaskSpec.StartLimitUtc"/> has been exceeded
-        /// will be marked as <see cref="NodeTaskState.PendingTimeout"/> and the finish time will 
-        /// be set to now.  This sets the task up for eventual deletion.
-        /// </item>
-        /// <item>
         /// Tasks with a finish time that is older than <see cref="V1NodeTask.V1NodeTaskSpec.RetainSeconds"/>
         /// will be removed.
         /// </item>
@@ -380,7 +375,7 @@ namespace NeonNodeAgent
             // will return an empty line when the process doesn't exist and a single line
             // with the process command line when the process exists.
 
-            var result = await Node.ExecuteCaptureAsync($"ps --pid={nodeTask.Status.ProcessId} --format cmd=");
+            var result = await Node.ExecuteCaptureAsync($"ps --pid={nodeTask.Status.ProcessId} --format cmd=", timeout: null);
 
             if (result.ExitCode == 0)
             {
@@ -392,7 +387,7 @@ namespace NeonNodeAgent
                     {
                         // The process ID and command line match, so kill it.
 
-                        result = await Node.ExecuteCaptureAsync("kill", "-s", "SIGTERM", nodeTask.Status.ProcessId);
+                        result = await Node.ExecuteCaptureAsync("kill", null, "-s", "SIGTERM", nodeTask.Status.ProcessId);
 
                         if (result.ExitCode != 0)
                         {
@@ -437,7 +432,7 @@ namespace NeonNodeAgent
 
                     try
                     {
-                        task = Node.ExecuteCaptureAsync(nodeTask.Spec.Command.First(), _process => process = _process, nodeTask.Spec.Command.Skip(1));
+                        task = Node.ExecuteCaptureAsync(nodeTask.Spec.Command.First(), _process => process = _process, TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), nodeTask.Spec.Command.Skip(1));
                     }
                     catch (Exception e)
                     {
@@ -447,9 +442,10 @@ namespace NeonNodeAgent
 
                         log.LogWarn(e);
 
-                        nodeTask.Status.State    = NodeTaskState.Finished;
-                        nodeTask.Status.ExitCode = -1;
-                        nodeTask.Status.Error    = $"EXECUTE FAILED: {e.Message}";
+                        nodeTask.Status.State       = NodeTaskState.Finished;
+                        nodeTask.Status.FinishedUtc = DateTime.UtcNow;
+                        nodeTask.Status.ExitCode    = -1;
+                        nodeTask.Status.Error       = $"EXECUTE FAILED: {e.Message}";
 
                         await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
 
@@ -473,19 +469,40 @@ namespace NeonNodeAgent
 
                     try
                     {
-                        var result        = await task;
+                        var result  = (ExecuteResponse)null;
+                        var timeout = false;
+
+                        try
+                        {
+                            result = await task;
+                        }
+                        catch (TimeoutException)
+                        {
+                            timeout = true;
+                        }
+
                         var innerNodeTask = await k8s.GetNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, taskName);
 
                         if (innerNodeTask.Status.State == NodeTaskState.Running)
                         {
-                            innerNodeTask.Status.State       = NodeTaskState.Finished;
-                            innerNodeTask.Status.FinishedUtc = DateTime.UtcNow;
-                            innerNodeTask.Status.ExitCode    = result.ExitCode;
+                            innerNodeTask.Status.FinishedUtc   = DateTime.UtcNow;
+                            innerNodeTask.Status.ExecutionTime = (innerNodeTask.Status.FinishedUtc - innerNodeTask.Status.StartedUtc).ToString();
 
-                            if (innerNodeTask.Spec.CaptureOutput)
+                            if (timeout)
                             {
-                                innerNodeTask.Status.Output = result.OutputText;
-                                innerNodeTask.Status.Error  = result.ErrorText;
+                                innerNodeTask.Status.State    = NodeTaskState.Timeout;
+                                innerNodeTask.Status.ExitCode = -1;
+                            }
+                            else
+                            {
+                                innerNodeTask.Status.State    = NodeTaskState.Finished;
+                                innerNodeTask.Status.ExitCode = result.ExitCode;
+
+                                if (innerNodeTask.Spec.CaptureOutput)
+                                {
+                                    innerNodeTask.Status.Output = result.OutputText;
+                                    innerNodeTask.Status.Error = result.ErrorText;
+                                }
                             }
 
                             await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(innerNodeTask, taskName);
