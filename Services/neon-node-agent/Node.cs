@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -74,6 +75,27 @@ namespace NeonNodeAgent
 
         /// <summary>
         /// <para>
+        /// Returns the actual command line that will be executed on the node from the
+        /// command and arguments passed.  This will include the path where we mount
+        /// container commands to the node as well as any command line formatting by
+        /// the <see cref="NeonHelper"/> execution classes.
+        /// </para>
+        /// <para>
+        /// This is called and used to help detect orphaned tasks.
+        /// </para>
+        /// </summary>
+        /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
+        /// <param name="args">Optional command arguments.</param>
+        /// <returns>The actual command line to be executed on the node.</returns>
+        public static string GetCommandLine(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            return $"chroot {HostMount}{command} {NeonHelper.NormalizeExecArgs()}";
+        }
+
+        /// <summary>
+        /// <para>
         /// Executes a command on the host node, setting the file system root to <see cref="HostMount"/>
         /// where the host's file system is mounted.
         /// </para>
@@ -86,7 +108,30 @@ namespace NeonNodeAgent
         /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
         /// <param name="args">Optional command arguments.</param>
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
-        public static ExecuteResponse ExecuteCapture(string command, params object[] args)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            return await ExecuteCaptureAsync(command, null, args);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Executes a command on the host node, setting the file system root to <see cref="HostMount"/>
+        /// where the host's file system is mounted.  This override accepts an action that will be
+        /// called with the process details immediately after the process is launched.
+        /// </para>
+        /// <note>
+        /// WARNING! This relies on the pod's environment variables like PATH matching the host
+        /// environment, which is currently the case because the Microsoft .NET container images
+        /// are based on Ubuntu, as are neonKUBE cluster nodes.
+        /// </note>
+        /// </summary>
+        /// <param name="command">The fully qualified path to the command to be executed (relative to the host file system).</param>
+        /// <param name="processCallback">Optional callback action that will be called with the process details or <c>null</c>.</param>
+        /// <param name="args">Optional command arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string command, Action<Process> processCallback, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
@@ -100,7 +145,7 @@ namespace NeonNodeAgent
                 actualArgs.Add(arg);
             }
 
-            return NeonHelper.ExecuteCapture("chroot", actualArgs.ToArray());
+            return await NeonHelper.ExecuteCaptureAsync("chroot", actualArgs.ToArray(), processCallback: processCallback);
         }
     }
 }

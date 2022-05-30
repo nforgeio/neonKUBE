@@ -112,9 +112,9 @@ namespace NeonNodeAgent
         private static readonly Counter configUpdateCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_node_updated", "Number of node config updates.");
         private static readonly Counter loginErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
 
-        private static readonly Counter promotionCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_promoted", "Leader promotions");
-        private static readonly Counter demotedCounter                  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_demoted", "Leader demotions");
-        private static readonly Counter newLeaderCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes");
+        private static readonly Counter promotionCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_promoted", "Leader promotions");
+        private static readonly Counter demotedCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_demoted", "Leader demotions");
+        private static readonly Counter newLeaderCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes");
 
         //---------------------------------------------------------------------
         // Instance members
@@ -302,7 +302,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 configUpdateCounter.Inc();
 
                 File.WriteAllText(configMountPath, newConfigText);
-                Node.ExecuteCapture("/usr/bin/pkill", new object[] { "-HUP", "crio" }).EnsureSuccess();
+                (await Node.ExecuteCaptureAsync("/usr/bin/pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                 // Wait a few seconds to give CRI-O a chance to reload its config.  This will
                 // help mitigate problems when managing logins below due to potential inconsistencies
@@ -332,7 +332,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         // the registry.
 
                         log.LogInfo($"podman logout {registry.Spec.Location}");
-                        Node.ExecuteCapture("podman", "logout", registry.Spec.Location);
+                        await Node.ExecuteCaptureAsync("podman", "logout", registry.Spec.Location);
                     }
                     else
                     {
@@ -345,11 +345,11 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         // yet.  The delay above should mitigate this most of the time, so we're going
                         // to retry here, just in case.
 
-                        retry.Invoke(
-                            () =>
+                        await retry.InvokeAsync(
+                            async () =>
                             {
                                 log.LogInfo($"podman login {registry.Spec.Location} --username {registry.Spec.Username} --password REDACTED");
-                                Node.ExecuteCapture("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password).EnsureSuccess();
+                                (await Node.ExecuteCaptureAsync("podman", "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password)).EnsureSuccess();
                             });
                     }
                 }
@@ -361,13 +361,14 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
             }
 
             // We also need to log out of registeries that were just removed from the configuration.
+            // We're going to ignore any errors.
 
             foreach (var location in existingLocations)
             {
                 if (!registries.Values.Any(registry => location == registry.Spec.Location))
                 {
                     log.LogInfo($"podman logout {location}");
-                    Node.ExecuteCapture("podman", "logout", location);
+                    await Node.ExecuteCaptureAsync("podman", "logout", location);
                 }
             }
         }

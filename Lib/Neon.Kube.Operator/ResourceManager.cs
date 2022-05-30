@@ -742,7 +742,7 @@ namespace Neon.Kube.Operator
 
         /// <summary>d
         /// <para>
-        /// Returns a deep clone the current set of resources being managed or of the dictionary passed.
+        /// Returns a deep clone the current set of resources being managed or of the specific dictionary passed.
         /// </para>
         /// <note>
         /// This can be an expensive operation when you're tracking a lot of resources.
