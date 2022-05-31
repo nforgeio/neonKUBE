@@ -378,7 +378,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            if (!(cluster.Definition.PublicAddresses?.Any() ?? false))
+            if (cluster.Definition.PublicAddresses?.Any() ?? false)
             {
                 return cluster.Definition.PublicAddresses;
             }
