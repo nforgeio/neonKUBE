@@ -291,7 +291,7 @@ openebsMonitoringAddon:
     alertRules:
       enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
 
       ## Endpoints of the selected service to be monitored
       endpoints:
@@ -481,7 +481,7 @@ openebsMonitoringAddon:
     alertRules:
       enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
 
       ## Endpoints of the selected service to be monitored
       endpoints:
@@ -572,7 +572,7 @@ openebsMonitoringAddon:
     alertRules:
       enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
 
       ## Endpoints of the selected service to be monitored
       endpoints:
@@ -629,7 +629,7 @@ openebsMonitoringAddon:
     alertRules:
       enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
 
       ## Endpoints of the selected service to be monitored
       endpoints:
@@ -686,7 +686,7 @@ openebsMonitoringAddon:
     alertRules:
       enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
 
       ## Endpoints of the selected service to be monitored
       endpoints:

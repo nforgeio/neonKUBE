@@ -270,6 +270,11 @@ namespace Neon.Kube
         public static string Kiali = "kiali";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Loki</b> service.
+        /// </summary>
+        public static string Loki = "loki";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Loki Compactor</b> service.
         /// </summary>
         public static string LokiCompactor = "loki-compactor";
@@ -318,6 +323,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Metrics-Server</b> service.
         /// </summary>
         public static string MetricsServer = "metrics-server";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Mimir</b> service.
+        /// </summary>
+        public static string Mimir = "mimir";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Mimir Alertmanager</b> service.
@@ -410,6 +420,11 @@ namespace Neon.Kube
         public static string OpenEbsApiServer = "openebs-api-server";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS cStor</b> service.
+        /// </summary>
+        public static string OpenEbsCstor = "openebs-cstor";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>OpenEBS cStor Admission Server</b> service.
         /// </summary>
         public static string OpenEbsCstorAdmissionServer = "openebs-cstor-admission-server";
@@ -433,6 +448,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>OpenEBS cStor CVC Operator</b> service.
         /// </summary>
         public static string OpenEbsCstorCvcOperator = "openebs-cstor-cvc-operator";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>OpenEBS Jiva</b> service.
+        /// </summary>
+        public static string OpenEbsJiva = "openebs-jiva";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>OpenEBS Local PV Provisioner</b> service.
@@ -488,6 +508,11 @@ namespace Neon.Kube
         /// Identifies the neonKUBE cluster's <b>Reloader</b> service.
         /// </summary>
         public static string Reloader = "reloader";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's <b>Tempo</b> service.
+        /// </summary>
+        public static string Tempo = "tempo";
 
         /// <summary>
         /// Identifies the neonKUBE cluster's <b>Tempo Alertmanager</b> service.

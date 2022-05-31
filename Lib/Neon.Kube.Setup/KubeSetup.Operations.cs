@@ -1111,7 +1111,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Update kubeconfig.
 
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
-                    var port       = KubeHelper.IsCloudEnvironment(cluster.Definition.Hosting.Environment) ? NetworkPorts.KubernetesApiServer : 6442 /* HAPROXY for API server */;
+                    var port       = NetworkPorts.KubernetesApiServer;
 
                     configText = configText.Replace("https://kubernetes-masters:6442", $"https://{cluster.Definition.Domain}:{port}");
 
@@ -2613,7 +2613,9 @@ EOF
             var cluster                = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice          = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var apiServerAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsApiServer);
+            var cStorAdvice            = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstor);
             var provisionerAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsProvisioner);
+            var jivaAdvice             = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsJiva);
             var localPvAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsLocalPvProvisioner);
             var snapshotOperatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsSnapshotOperator);
             var ndmOperatorAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdmOperator);
@@ -2652,6 +2654,13 @@ EOF
                             values.Add($"ndmOperator.replicas", ndmOperatorAdvice.ReplicaCount);
                             values.Add($"webhook.replicas", webhookAdvice.ReplicaCount);
                             values.Add($"serviceMonitor.interval", clusterAdvice.MetricsInterval);
+
+                            values.Add($"openebsMonitoringAddon.cStor.serviceMonitor.enabled", cStorAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.jiva.serviceMonitor.enabled", jivaAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
+
 
                             await master.InstallHelmChartAsync(controller, "openebs",
                                 releaseName:  "openebs",
@@ -3308,6 +3317,7 @@ $@"- name: StorageType
                     var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s                 = GetK8sClient(controller);
                     var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var mimirAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Mimir);
                     var alertmanagerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirAlertmanager);
                     var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirCompactor);
                     var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirDistributor);
@@ -3368,8 +3378,8 @@ $@"- name: StorageType
                     values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
                     values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", ingesterAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", ingesterAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
@@ -3460,6 +3470,7 @@ $@"- name: StorageType
             var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                 = GetK8sClient(controller);
             var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var lokiAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Loki);
             var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiCompactor);
             var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiDistributor);
             var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiIngester);
@@ -3522,8 +3533,8 @@ $@"- name: StorageType
                     values.Add($"tableManager.resources.limits.memory", ToSiString(tableManagerAdvice.PodMemoryLimit));
                     values.Add($"tableManager.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", ingesterAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", ingesterAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
@@ -3596,6 +3607,7 @@ $@"- name: StorageType
             var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                 = GetK8sClient(controller);
             var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var tempoAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Tempo);
             var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoCompactor);
             var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoDistributor);
             var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoIngester);
@@ -3640,8 +3652,8 @@ $@"- name: StorageType
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"serviceMonitor.enabled", ingesterAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", ingesterAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
