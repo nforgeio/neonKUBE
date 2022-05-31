@@ -29,8 +29,8 @@ using Xunit.Abstractions;
 // probably be OK since this will never be called by UX code and isn't really going
 // to consume a bunch of threads.
 //
-// I'm not sure what else we can do because we need to await operations in the class
-// constructor and destructors.
+// I'm not sure what else we can do because we need to await operations in the referencing
+// test class constructor and other sync methods like [Dispose()] and [Reset()].
 
 namespace Neon.Kube.Xunit
 {
@@ -65,7 +65,7 @@ namespace Neon.Kube.Xunit
     /// @"name: test
     /// datacenter: test
     /// environment: test
-    /// isLocked: false
+    /// isLocked: false         # $lt;-- test clusters need to be unlocked
     /// timeSources:
     /// - pool.ntp.org
     /// kubernetes:
@@ -144,10 +144,7 @@ namespace Neon.Kube.Xunit
     /// <see cref="Start(ClusterDefinition, ClusterFixtureOptions)"/> handles the deployment of 
     /// the test cluster when it doesn't already exist as well as the  removal of any previous 
     /// cluster, depending on the parameters passed.  You'll be calling this in your test class
-    /// constructor.
-    /// </para>
-    /// <para>
-    /// The <b>Start()</b> methods accept a cluster definition in various forms and returns
+    /// constructor.  This method accepts a cluster definition in various forms and returns
     /// <see cref="TestFixtureStatus.Disabled"/> when cluster unit testing is disabled on the 
     /// current machine, <see cref="TestFixtureStatus.Started"/> the first time one of these methods 
     /// have been called on the fixture instance or <see cref="TestFixtureStatus.AlreadyRunning"/>
@@ -155,6 +152,13 @@ namespace Neon.Kube.Xunit
     /// use this value to decide whether to reset the cluster and or whether additional cluster 
     /// configuration is required (e.g. deploying test applications).
     /// </para>
+    /// <para>
+    /// Alternatively, you can use the <see cref="StartWithCurrentCluster(ClusterFixtureOptions)"/> method to run tests
+    /// against the current cluster.
+    /// </para>
+    /// <note>
+    /// The current cluster must be unlocked and running.
+    /// </note>
     /// <para>
     /// It's up to you to call <see cref="ClusterFixture.ResetCluster()"/> within your test class constructor
     /// when you wish to reset the cluster state between test method executions.  Alternatively, you 
@@ -380,12 +384,68 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// Initializes the test fixture to run tests against the current cluster.  This is useful
+        /// when developing unit tests against a developer managed cluster.
+        /// </summary>
+        /// <param name="options">
+        /// Optionally specifies the options that <see cref="ClusterFixture"/> will use to
+        /// manage the test cluster.
+        /// </param>
+        /// <returns>This always returns <see cref="TestFixtureStatus.AlreadyRunning"/>.</returns>
+        /// <exception cref="NeonKubeException">Thrown when there isn't a current cluster or when it's locked.</exception>
+        public TestFixtureStatus StartWithCurrentCluster(ClusterFixtureOptions options = null)
+        {
+            options ??= new ClusterFixtureOptions();
+
+            // Make a copy of the options and then disable any settings that don't apply to
+            // running tests against the current cluster.
+
+            options = options.Clone();
+
+            options.RemoveClusterOnStart   = false;
+            options.RemoveClusterOnDispose = false;
+
+            this.options = options;
+
+            // Verify that:
+            //
+            //      * There is a current cluster
+            //      * That it's running
+            //      * That it's not locked
+
+            Cluster = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory());
+
+            try
+            {
+                var isLocked = !Cluster.IsLockedAsync().Result;
+
+                if (!isLocked.HasValue)
+                {
+                    throw new NeonKubeException("Unable to determine the cluster lock status.");
+                }
+
+                if (isLocked.Value)
+                {
+                    throw new NeonKubeException("Cluster is locked.  Use this command to unlock it: neon cluster unlock");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new NeonKubeException("Unable to connect cluster.  Is it running?", e);
+            }
+
+            started   = true;
+            IsRunning = true;
+
+            return TestFixtureStatus.AlreadyRunning;
+        }
+
+        /// <summary>
         /// <para>
-        /// Deploys a new cluster as specified by the cluster definition model passed.
+        /// Deploys a new test cluster as specified by the cluster definition passed or connects
+        /// to a cluster previously deployed by this method when the cluster definition of the
+        /// existing cluster and the definition passed here are the same.
         /// </para>
-        /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
-        /// </note>
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition model.</param>
         /// <param name="options">
@@ -421,6 +481,7 @@ namespace Neon.Kube.Xunit
         /// </item>
         /// </list>
         /// </returns>
+        /// <exception cref="NeonKubeException">Thrown when the test cluster could not be deployed.</exception>
         /// <remarks>
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
@@ -438,6 +499,11 @@ namespace Neon.Kube.Xunit
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            if (clusterDefinition.IsLocked)
+            {
+                throw new NeonKubeException("Test clusters need to be unlocked.  Please set [isLocked: false] in your cluster definition.");
+            }
+
             if (!TestHelper.IsClusterTestingEnabled)
             {
                 return TestFixtureStatus.Disabled;
@@ -449,7 +515,7 @@ namespace Neon.Kube.Xunit
             }
             
             options    ??= new ClusterFixtureOptions();
-            this.options = options;
+            this.options = options.Clone();
 
             if (this.Cluster != null)
             {
@@ -665,7 +731,7 @@ namespace Neon.Kube.Xunit
         /// <b>INTERNAL USE ONLY:</b> Deploys a new cluster using the current user's <b>neon-assistant</b> 
         /// <b>clusterdefinition.key</b> profile value to determine which of the built-in cluster definitions
         /// from <see cref="KubeTestHelper.ClusterDefinitions"/> to be used for unit testing in the user's
-        /// environment.s
+        /// environment.
         /// </para>
         /// <note>
         /// This method removes any existing neonKUBE cluster before deploying a fresh one.
@@ -724,7 +790,7 @@ namespace Neon.Kube.Xunit
         /// <exception cref="ProfileException">
         /// Thrown when the <b>clusterdefinition.key</b> profile value could not be retrieved.
         /// </exception>
-        public TestFixtureStatus Start(ClusterFixtureOptions options = null)
+        public TestFixtureStatus StartWithNeonAssistant(ClusterFixtureOptions options = null)
         {
             var profileClient = new ProfileClient();
             var key           = profileClient.GetProfileValue("clusterdefinition.key");

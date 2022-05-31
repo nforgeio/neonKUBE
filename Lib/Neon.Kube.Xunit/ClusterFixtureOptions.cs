@@ -61,8 +61,14 @@ namespace Neon.Kube.Xunit
         public bool Unredacted { get; set; } = false;
 
         /// <summary>
+        /// <para>
         /// Forces the removal of any existing cluster when the associated <see cref="ClusterFixture"/> 
         /// is started.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// This property applies only to clusters deployed by <see cref="ClusterFixture"/>.  Existing
+        /// clusters will never be removed.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// <para>
@@ -84,8 +90,14 @@ namespace Neon.Kube.Xunit
         public bool RemoveClusterOnStart { get; set; } = false;
 
         /// <summary>
+        /// <para>
         /// Controls whether <see cref="ClusterFixture"/> will remove the cluster after unit test
         /// have finished executing or whether it will delete it.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// This property applies only to clusters deployed by <see cref="ClusterFixture"/>.  Existing
+        /// clusters will never be removed.
+        /// </note>
         /// </summary>
         public bool RemoveClusterOnDispose { get; set; } = false;
 
@@ -117,5 +129,14 @@ namespace Neon.Kube.Xunit
         /// This defaults to <c>500</c> which is effectively infinite.
         /// </summary>
         public int MaxParallel { get; set; } = 500;
+
+        /// <summary>
+        /// Returns a copy of the instance.
+        /// </summary>
+        /// <returns>The cloned instance.</returns>
+        public ClusterFixtureOptions Clone()
+        {
+            return NeonHelper.JsonClone(this);
+        }
     }
 }

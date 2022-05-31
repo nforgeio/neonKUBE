@@ -72,7 +72,7 @@ namespace TestKube
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions();
-            var status  = fixture.Start(options: options);
+            var status  = fixture.StartWithNeonAssistant(options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {
