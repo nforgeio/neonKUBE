@@ -66,6 +66,31 @@ namespace Neon.Kube
             metadata.Labels[name] = value ?? string.Empty;
         }
 
+        /// <summary>
+        /// Fetches the value of a label from the metadata.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The label name.</param>
+        /// <returns>The label value or <c>null</c> when the label doesn't exist.</returns>
+        public static string GetLabel(this V1ObjectMeta metadata, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Labels == null)
+            {
+                return null;
+            }
+
+            if (metadata.Labels.TryGetValue(name, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Deployment extensions
 

@@ -135,17 +135,15 @@ namespace TestKube
                 var metadata = nodeTask.Metadata;
                 var spec     = nodeTask.Spec;
 
-                metadata.Name              = nodeToTaskName[node.Name];
-                metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+                metadata.Name = nodeToTaskName[node.Name];
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
+                spec.Node    = node.Name;
                 spec.Command = new List<string>()
                 {
                     "touch",
                     $"{GetTestFilePath(node.Name)}"
                 };
-
-                spec.Node = node.Name;
 
                 await fixture.K8s.CreateClusterCustomObjectAsync(nodeTask);
             }
