@@ -33,7 +33,7 @@ namespace NeonDashboard.Pages
     [Authorize]
     public partial class Home : PageBase
     {
-        private ClusterStatus clusterInfo;
+        private ClusterInfo clusterInfo;
 
         /// <summary>
         /// Constructor.

@@ -714,24 +714,27 @@ fi
 
 if ! mkdir -p /media/neon-init ; then
     echo ""ERROR: Cannot create DVD mount point.""
-    rm -rf /media/neon-init
     exit 1
 fi
 
-# Wait up to 60 seconds for for the DVD to be discovered.  It can
+# Wait up to 120 seconds for for the DVD to be discovered.  It can
 # take some time for this to happen.
 
-for i in {{1..12}}; do
+mounted=$false
+
+for i in {{1..24}}; do
 
     # Sleep for 5 seconds.  We're doing this first to give Linux
     # a chance to discover the DVD and then this will act as a
-    # retry interval.  12 iterations at 5 seconds each is 60 seconds.
+    # retry interval.  24 iterations at 5 seconds each is 120 seconds.
 
     sleep 5
 
     # Try mounting the DVD.
 
-    if !mount /dev/cdrom /media/neon-init ; then
+    if mount /dev/cdrom /media/neon-init ; then
+        
+        mounted=$true
         break
     fi
 
@@ -739,18 +742,15 @@ for i in {{1..12}}; do
 
 done
 
-# Exit when no DVD is mounted.
-
-if ! mount /dev/cdrom /media/neon-init ; then
-    echo ""WARNING: No DVD is present.""
-    rm -rf /media/neon-init
-    exit 0
+if ! $mounted; then
+    echo ""WARNING: No DVD is present: exiting""
+    exit 1
 fi
 
 # Check for the [neon-init.sh] script and execute it.
 
 if [ ! -f /media/neon-init/neon-init.sh ] ; then
-    echo ""WARNING: No [neon-init.sh] script is present on the DVD.""
+    echo ""WARNING: No [neon-init.sh] script is present on the DVD: exiting""
     rm -rf /media/neon-init
     exit 0
 fi
@@ -767,7 +767,7 @@ echo ""INFO: Cleanup""
 umount /media/neon-init
 rm -rf /media/neon-init
 
-# Disable [neon-init] the next time it starts.
+# Disable [neon-init] so it does nothing the next time it's launched.
 
 mkdir -p /etc/neon-init
 touch /etc/neon-init/ready

@@ -46,6 +46,8 @@ USAGE:
 
     neon cluster check
     neon cluster dashboard
+    neon cluster health
+    neon cluster info
     neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
@@ -56,7 +58,6 @@ USAGE:
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
     neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
-    neon cluster status
     neon cluster stop       [OPTIONS]
     neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]

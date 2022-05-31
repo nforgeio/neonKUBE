@@ -63,12 +63,6 @@ namespace Neon.Kube
         Configuring,
 
         /// <summary>
-        /// Cluster is configured.
-        /// </summary>
-        [EnumMember(Value = "configured")]
-        Configured,
-
-        /// <summary>
         /// Cluster is configured but is turned off.
         /// </summary>
         [EnumMember(Value = "off")]

@@ -185,14 +185,21 @@ namespace Neon.XenServer
 
             if (!NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
-                var hostEntry = Dns.GetHostEntry(addressOrFQDN);
-
-                if (hostEntry.AddressList.Length == 0)
+                try
                 {
-                    throw new XenException($"[{addressOrFQDN}] is not a valid IP address or fully qualified domain name of a XenServer host.");
-                }
+                    var hostEntry = Dns.GetHostEntry(addressOrFQDN);
 
-                address = hostEntry.AddressList.First();
+                    if (hostEntry.AddressList.Length == 0)
+                    {
+                        throw new XenException($"[{addressOrFQDN}] is not a valid IP address or fully qualified domain name of a XenServer host.");
+                    }
+
+                    address = hostEntry.AddressList.First();
+                }
+                catch
+                {
+                    throw new XenException($"[{addressOrFQDN}] DNS lookup failed.");
+                }
             }
             
             this.logWriter = (TextWriter)null;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeClusterLock.cs
+// FILE:	    ClusterLock.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,41 +18,56 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using k8s.Models;
-
-using Microsoft.Extensions.DependencyInjection;
-
-using Neon.Common;
-using Neon.Diagnostics;
+using Microsoft.Rest;
+using Microsoft.Win32;
+using SharpCompress.Readers;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
+
+using Neon.Common;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used to describe the current lock status of a neonKUBE cluster.  This is used to help avoid
-    /// disructive operations like cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
-    /// on production or otherwise important clusters.
+    /// Describes the current lock status of a cluster.
     /// </summary>
-    public class KubeClusterLock
+    public class ClusterLock
     {
         /// <summary>
-        /// Set to <c>true</c> when the cluster is locked.
+        /// Default constructor.
+        /// </summary>
+        public ClusterLock()
+        {
+        }
+
+        /// <summary>
+        /// Indicates whether the cluster is currently locked.
         /// </summary>
         [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool IsLocked { get; set; }
+        public bool IsLocked { get; set; } = false;
     }
 }

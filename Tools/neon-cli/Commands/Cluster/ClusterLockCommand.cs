@@ -99,7 +99,7 @@ USAGE:
 
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var status       = await cluster.GetClusterStatusAsync();
+                var status       = await cluster.GetClusterHealthAsync();
                 var capabilities = cluster.Capabilities;
 
                 switch (status.State)

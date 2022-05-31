@@ -535,14 +535,16 @@ namespace Neon.Kube.Xunit
                 {
                     KubeHelper.SetCurrentContext(clusterContextName);
 
-                    var status = cluster.GetClusterStatusAsync().ResultWithoutAggregate();
+                    var isLocked      = cluster.IsLockedAsync().ResultWithoutAggregate();
+                    var clusterInfo   = cluster.GetClusterInfoAsync().ResultWithoutAggregate();
+                    var clusterHealth = cluster.GetClusterHealthAsync().ResultWithoutAggregate();
 
-                    if (status.IsLocked.HasValue && status.IsLocked.Value)
+                    if (isLocked.HasValue && isLocked.Value)
                     {
                         throw new NeonKubeException($"Cluster is locked: {cluster.Name}");
                     }
 
-                    if ((status.State == ClusterState.Healthy || status.State == ClusterState.Configured) && status.ClusterVersion == KubeVersions.NeonKube)
+                    if (clusterHealth.State == ClusterState.Healthy && clusterInfo.ClusterVersion == KubeVersions.NeonKube)
                     {
                         // We need to reset an existing cluster to ensure it's in a known state.
 

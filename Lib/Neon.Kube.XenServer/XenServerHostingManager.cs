@@ -160,7 +160,7 @@ namespace Neon.Kube
 
             foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
-                var hostAddress  = host.Address;
+                var hostAddress  = GetHostIpAddress(host);
                 var hostname     = host.Name;
                 var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
                 var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
@@ -296,7 +296,7 @@ namespace Neon.Kube
 
             foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
-                var hostAddress  = host.Address;
+                var hostAddress  = NetHelper.ParseIPv4Address(GetHostIpAddress(host));
                 var hostname     = host.Name;
                 var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
                 var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
@@ -320,7 +320,7 @@ namespace Neon.Kube
                 //          [SetupController] semantics.
 
                 var xenClient = GetXenClient(hostname);
-                var sshProxy  = new NodeSshProxy<XenClient>(hostname, NetHelper.ParseIPv4Address(hostAddress), SshCredentials.FromUserPassword(hostUsername, hostPassword), NodeRole.XenServer, logWriter: xenClient.LogWriter); 
+                var sshProxy  = new NodeSshProxy<XenClient>(hostname, hostAddress, SshCredentials.FromUserPassword(hostUsername, hostPassword), NodeRole.XenServer, logWriter: xenClient.LogWriter);
 
                 sshProxy.Metadata = xenClient;
 
@@ -425,6 +425,36 @@ namespace Neon.Kube
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
             }
+        }
+
+        /// <summary>
+        /// Returns the IP address for a XenServer host, performing a DNS lookup if necessary.
+        /// </summary>
+        /// <param name="host">The XenServer host information.</param>
+        /// <returns>The IP address.</returns>
+        /// <exception cref="NeonKubeException">Thrown if the address could not be obtained.</exception>
+        private string GetHostIpAddress(HypervisorHost host)
+        {
+            if (!NetHelper.TryParseIPv4Address(host.Address, out var ipAddress))
+            {
+                try
+                {
+                    var addresses = Dns.GetHostAddresses(host.Address);
+
+                    if (addresses.Length == 0)
+                    {
+                        throw new NeonKubeException($"DNS lookup failed for: {host.Address}");
+                    }
+
+                    ipAddress = addresses.First();
+                }
+                catch (Exception e)
+                {
+                    throw new NeonKubeException($"DNS lookup failed for: {host.Address}", e);
+                }
+            }
+
+            return ipAddress.ToString();
         }
 
         /// <summary>
@@ -1061,12 +1091,12 @@ namespace Neon.Kube
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
 
         /// <inheritdoc/>
-        public override async Task<ClusterStatus> GetClusterStatusAsync(TimeSpan timeout = default)
+        public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
-            var clusterStatus = new ClusterStatus(cluster.Definition);
+            var clusterHealth = new ClusterHealth();
 
             if (timeout <= TimeSpan.Zero)
             {
@@ -1164,10 +1194,10 @@ namespace Neon.Kube
                     sbOfflineHostnames.AppendWithSeparator(hostname);
                 }
 
-                clusterStatus.State   = ClusterState.Unhealthy;
-                clusterStatus.Summary = $"XenServer hosts are offline: {sbOfflineHostnames}";
+                clusterHealth.State   = ClusterState.Unhealthy;
+                clusterHealth.Summary = $"XenServer hosts are offline: {sbOfflineHostnames}";
 
-                return clusterStatus;
+                return clusterHealth;
             }
 
             // Build the cluster status.
@@ -1178,15 +1208,15 @@ namespace Neon.Kube
                 // virtual machines with names matching the virtual machines that would be
                 // provisioned for the cluster definition are conflicting.
 
-                clusterStatus.State   = ClusterState.NotFound;
-                clusterStatus.Summary = "Cluster does not exist";
+                clusterHealth.State   = ClusterState.NotFound;
+                clusterHealth.Summary = "Cluster does not exist";
 
                 foreach (var node in cluster.Definition.NodeDefinitions.Values)
                 {
-                    clusterStatus.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
                 }
 
-                return clusterStatus;
+                return clusterHealth;
             }
             else
             {
@@ -1233,7 +1263,7 @@ namespace Neon.Kube
                         }
                     }
 
-                    clusterStatus.Nodes.Add(node.Name, nodeState);
+                    clusterHealth.Nodes.Add(node.Name, nodeState);
                 }
 
                 // We're going to examine the node states from the XenServer perspective and
@@ -1241,27 +1271,27 @@ namespace Neon.Kube
                 // nodes are not provisioned, are paused or appear to be transitioning
                 // between starting, stopping, or paused states.
 
-                var commonNodeState = clusterStatus.Nodes.Values.First();
+                var commonNodeState = clusterHealth.Nodes.Values.First();
 
-                foreach (var nodeState in clusterStatus.Nodes.Values)
+                foreach (var nodeState in clusterHealth.Nodes.Values)
                 {
                     if (nodeState != commonNodeState)
                     {
                         // Nodes have differing states so we're going to consider the cluster
                         // to be transitioning.
 
-                        clusterStatus.State   = ClusterState.Transitioning;
-                        clusterStatus.Summary = "Cluster is transitioning";
+                        clusterHealth.State   = ClusterState.Transitioning;
+                        clusterHealth.Summary = "Cluster is transitioning";
                         break;
                     }
                 }
 
                 if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
                 {
-                    clusterStatus.State   = ClusterState.Configuring;
-                    clusterStatus.Summary = "Cluster is partially configured";
+                    clusterHealth.State   = ClusterState.Configuring;
+                    clusterHealth.Summary = "Cluster is partially configured";
                 }
-                else if (clusterStatus.State != ClusterState.Transitioning)
+                else if (clusterHealth.State != ClusterState.Transitioning)
                 {
                     // If we get here then all of the nodes have the same state so
                     // we'll use that common state to set the overall cluster state.
@@ -1270,51 +1300,51 @@ namespace Neon.Kube
                     {
                         case ClusterNodeState.Paused:
 
-                            clusterStatus.State   = ClusterState.Paused;
-                            clusterStatus.Summary = "Cluster is paused";
+                            clusterHealth.State   = ClusterState.Paused;
+                            clusterHealth.Summary = "Cluster is paused";
                             break;
 
                         case ClusterNodeState.Starting:
 
-                            clusterStatus.State   = ClusterState.Unhealthy;
-                            clusterStatus.Summary = "Cluster is starting";
+                            clusterHealth.State   = ClusterState.Unhealthy;
+                            clusterHealth.Summary = "Cluster is starting";
                             break;
 
                         case ClusterNodeState.Running:
 
-                            clusterStatus.State   = ClusterState.Configured;
-                            clusterStatus.Summary = "Cluster is configured";
+                            clusterHealth.State   = ClusterState.Healthy;
+                            clusterHealth.Summary = "Cluster is configured";
                             break;
 
                         case ClusterNodeState.Off:
 
-                            clusterStatus.State   = ClusterState.Off;
-                            clusterStatus.Summary = "Cluster is turned off";
+                            clusterHealth.State   = ClusterState.Off;
+                            clusterHealth.Summary = "Cluster is turned off";
                             break;
 
                         case ClusterNodeState.NotProvisioned:
 
-                            clusterStatus.State   = ClusterState.NotFound;
-                            clusterStatus.Summary = "Cluster is not found.";
+                            clusterHealth.State   = ClusterState.NotFound;
+                            clusterHealth.Summary = "Cluster is not found.";
                             break;
 
                         case ClusterNodeState.Unknown:
                         default:
 
-                            clusterStatus.State   = ClusterState.NotFound;
-                            clusterStatus.Summary = "Cluster not found";
+                            clusterHealth.State   = ClusterState.NotFound;
+                            clusterHealth.Summary = "Cluster not found";
                             break;
                     }
                 }
 
-                if (clusterStatus.State == ClusterState.Off)
+                if (clusterHealth.State == ClusterState.Off)
                 {
-                    clusterStatus.Summary = "Cluster is turned off";
+                    clusterHealth.Summary = "Cluster is turned off";
 
-                    return clusterStatus;
+                    return clusterHealth;
                 }
 
-                return clusterStatus;
+                return clusterHealth;
             }
         }
 

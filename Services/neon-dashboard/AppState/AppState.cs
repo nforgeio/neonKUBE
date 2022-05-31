@@ -116,23 +116,23 @@ namespace NeonDashboard
         public bool DoNotTrack = false;
 
         public AppState(
-            Service neonDashboardService,
-            IHttpContextAccessor httpContextAccessor,
-            INeonLogger neonLogger,
-            IJSRuntime jSRuntime,
-            NavigationManager navigationManager,
-            IWebHostEnvironment webHostEnv,
-            IAnalytics analytics,
-            ILocalStorageService localStorage)
+            Service                 neonDashboardService,
+            IHttpContextAccessor    httpContextAccessor,
+            INeonLogger             neonLogger,
+            IJSRuntime              jSRuntime,
+            NavigationManager       navigationManager,
+            IWebHostEnvironment     webHostEnv,
+            IAnalytics              analytics,
+            ILocalStorageService    localStorage)
         {
             this.NeonDashboardService = neonDashboardService;
-            this.NavigationManager = navigationManager;
-            this.Logger = neonLogger;
-            this.JSRuntime = jSRuntime;
-            this.HttpContextAccessor = httpContextAccessor;
-            this.WebHostEnvironment = webHostEnv;
-            this.Analytics = analytics;
-            this.LocalStorage = localStorage;
+            this.NavigationManager    = navigationManager;
+            this.Logger               = neonLogger;
+            this.JSRuntime            = jSRuntime;
+            this.HttpContextAccessor  = httpContextAccessor;
+            this.WebHostEnvironment   = webHostEnv;
+            this.Analytics            = analytics;
+            this.LocalStorage         = localStorage;
 
             bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
 
@@ -144,14 +144,17 @@ namespace NeonDashboard
 
             if (Dashboards == null || Dashboards.Count == 0)
             {
-                ClusterId = neonDashboardService.ClusterInfo.Domain;
+                ClusterId  = neonDashboardService.ClusterInfo.Domain;
                 Dashboards = new List<Dashboard>();
+
                 Dashboards.Add(new Dashboard("neonkube", "neonKUBE"));
 
                 using (var sr = new StreamReader(neonDashboardService.GetConfigFilePath("/etc/neon-dashboard/dashboards.yaml")))
                 {
                     var dashboards = NeonHelper.YamlDeserialize<List<Dashboard>>(sr.ReadToEnd());
+
                     Dashboards = Dashboards.Concat(dashboards).ToList();
+
                     Logger.LogInfo(NeonHelper.JsonSerialize(Dashboards));
                 }
 
