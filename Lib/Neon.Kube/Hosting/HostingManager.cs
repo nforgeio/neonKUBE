@@ -175,7 +175,7 @@ namespace Neon.Kube
         public abstract string GetDataDisk(LinuxSshProxy node);
 
         /// <inheritdoc/>
-        public abstract IEnumerable<string> GetClusterAddress(bool nullWhenNoLoadbalancer = false);
+        public abstract IEnumerable<string> GetClusterAddresses();
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

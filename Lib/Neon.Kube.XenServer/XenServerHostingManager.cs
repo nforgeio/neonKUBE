@@ -869,13 +869,8 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override IEnumerable<string> GetClusterAddress(bool nullWhenNoLoadbalancer = false)
+        public override IEnumerable<string> GetClusterAddresses()
         {
-            if (nullWhenNoLoadbalancer)
-            {
-                return null;
-            }
-
             if (cluster.Definition.PublicAddresses?.Any() ?? false)
             {
                 return cluster.Definition.PublicAddresses;

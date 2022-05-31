@@ -1792,7 +1792,7 @@ subjects:
 
             certHostnames.Add(cluster.Definition.Domain);
 
-            var clusterAddresses = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: false);
+            var clusterAddresses = cluster.HostingManager.GetClusterAddresses();
 
             foreach (var clusterAddress in clusterAddresses)
             {

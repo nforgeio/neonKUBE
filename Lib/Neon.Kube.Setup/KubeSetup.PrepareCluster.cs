@@ -400,7 +400,7 @@ namespace Neon.Kube
                     controller.SetGlobalStepStatus("create: *.neoncluster.io domain (for TLS)");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                    var clusterAddresses   = cluster.HostingManager.GetClusterAddress(nullWhenNotCloud: false);
+                    var clusterAddresses   = cluster.HostingManager.GetClusterAddresses();
 
                     using (var jsonClient = new JsonClient())
                     {
