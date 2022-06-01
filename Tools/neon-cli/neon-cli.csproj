@@ -68,7 +68,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="KubernetesClient" Version="7.0.8" />
+		<PackageReference Include="KubernetesClient" Version="7.0.15" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />

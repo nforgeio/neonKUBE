@@ -56,8 +56,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubernetesClient" Version="7.0.8" />
-		<PackageReference Include="KubeOps" Version="6.2.4" />
+		<PackageReference Include="KubernetesClient" Version="7.0.15" />
+		<PackageReference Include="KubeOps" Version="6.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>

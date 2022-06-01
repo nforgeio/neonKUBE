@@ -52,7 +52,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubernetesClient" Version="7.0.8" />
+		<PackageReference Include="KubernetesClient" Version="7.0.15" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.4.1" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />

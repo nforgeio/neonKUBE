@@ -28,7 +28,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
-		<PackageReference Include="prometheus-net.AspNetCore" Version="5.0.2" />
+		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
 		<PackageReference Include="Yarp.ReverseProxy" Version="1.0.1" />
 	</ItemGroup>

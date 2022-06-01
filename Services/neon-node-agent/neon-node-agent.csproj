@@ -42,7 +42,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubeOps" Version="6.2.4" />
+		<PackageReference Include="KubeOps" Version="6.5.0" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 	</ItemGroup>
 
