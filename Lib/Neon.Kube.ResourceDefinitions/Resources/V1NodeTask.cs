@@ -35,8 +35,13 @@ namespace Neon.Kube.Resources
 #endif
 {
     /// <summary>
-    /// Describes a task to be executed as a command on a node by the <b>neon-node-agent</b> pods running on 
-    /// the target cluster node.
+    /// <para>
+    /// Describes a task to be executed as a Bash script on a node by the <b>neon-node-agent</b> pod
+    /// running on the target cluster node.
+    /// </para>
+    /// <note>
+    /// The node agent currently executes one node task at a time in no guaranteed order.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <para>
@@ -50,9 +55,9 @@ namespace Neon.Kube.Resources
     /// </para>
     /// <list type="number">
     /// <item>
-    /// <b>neon-cluster-operator</b> determines that a command needs to be run on a specific node
-    /// and creates a <see cref="V1NodeTask"/> specifiying the name of the target node as well as 
-    /// the command and any arguments.
+    /// <b>neon-cluster-operator</b> or other entity determines that a script needs to be run on a
+    /// specific node and creates a <see cref="V1NodeTask"/> specifiying the name of the target node
+    /// as well as the Bash script to be executed.
     /// </item>
     /// <item>
     /// <b>neon-node-agent</b> is running as a daemonset on all cluster nodes and each instance is
@@ -65,15 +70,19 @@ namespace Neon.Kube.Resources
     /// <see cref="NodeTaskState.Running"/>.
     /// </item>
     /// <item>
-    /// The agent will then execute the command on the node, persisting the process ID to the node task 
-    /// status and then capturing its exit code and standard output and error streams when the command completes.
-    /// The command execution time will be limited by <see cref="V1NodeTaskSpec.TimeoutSeconds"/>.
+    /// The agent will assign a new UUID to the task and save this in the node task status.  This UUID will
+    /// be used to name the script file persisted to the host and will also be used to identify the 
+    /// The agent will then execute the script on the node, persisting the process ID to the node task 
+    /// status along with the command line used to execute the script.  When the script finishes, the
+    /// agent will capture its exit code and standard output and error streams as text.  The command 
+    /// execution time will be limited by <see cref="V1NodeTaskSpec.TimeoutSeconds"/>.
     /// </item>
     /// <note>
     /// <para>
     /// <b>WARNING!</b> You need to recognize that secrets included in a node task command line will
     /// can be observed by examining the <b>NodeTask</b> custom resource.  These are persisted at the
-    /// cluster level.
+    /// cluster level.  The script itself will be executed in a host folder where only <b>root</b> has
+    /// permissions.
     /// </para>
     /// <para>
     /// Node tasks are intended to run local node tasks that probably won't need secrets.  We recommend 
@@ -94,7 +103,7 @@ namespace Neon.Kube.Resources
     /// the output may include secrets.
     /// </note>
     /// <item>
-    /// When the command execution times out, the agent will kill the process and set the node task state to
+    /// When the command execution timesout, the agent will kill the process and set the node task state to
     /// <see cref="NodeTaskState.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
     /// current time.
     /// </item>
@@ -105,6 +114,11 @@ namespace Neon.Kube.Resources
     /// command completed.  The agent will attempt to locate the running pod by its command line and
     /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskState.Orphaned"/>
     /// and <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time.
+    /// </item>
+    /// <item>
+    /// Finally, <b>neon-node-agent</b> periodically looks for Bash scripts that don't have corresponding node
+    /// tasks and will delete these so they don't accumulate.  This means the a task's script will typically
+    /// be deleted shortly after the task retention period has been exceeded.
     /// </item>
     /// <item>
     /// <b>neon-cluster-operator</b> also monitors these tasks.  It will remove tasks assigned to nodes
@@ -142,18 +156,18 @@ namespace Neon.Kube.Resources
             public string Node { get; set; }
 
             /// <summary>
-            /// Specifies the command and arguments to be executed on the node.
+            /// Specifies the Bash script to be executed on the target node.
             /// </summary>
 #if KUBEOPS
             [Required]
 #endif
-            public List<string> Command { get; set; }
+            public string BashScript { get; set; }
 
             /// <summary>
             /// Specifies the maximum time in seconds the command will be allowed to execute.
-            /// This defaults to 1800 seconds (30 minutes).
+            /// This defaults to 300 seconds (5 minutes).
             /// </summary>
-            public int TimeoutSeconds { get; set; } = 1800;
+            public int TimeoutSeconds { get; set; } = 300;
 
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
@@ -185,14 +199,9 @@ namespace Neon.Kube.Resources
             {
                 var specPrefix = $"{nameof(V1NodeTask)}.Spec";
 
-                if (Command == null || Command.Count == 0)
+                if (string.IsNullOrEmpty(BashScript))
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(Command)}]: List be NULL or empty.");
-                }
-
-                if (string.IsNullOrEmpty(Command[0]))
-                {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(Command)}]: Command cannot be NULL or empty.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(BashScript)}]: cannot be NULL or empty.");
                 }
 
                 if (TimeoutSeconds <= 0)
@@ -245,6 +254,13 @@ namespace Neon.Kube.Resources
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.
             /// </summary>
             public string CommandLine { get; set; }
+
+            /// <summary>
+            /// Set to a UUID identifying the execution.  This will be used to name the Bash
+            /// script when persisted to the host node as well as to help identify the process
+            /// when it's running.
+            /// </summary>
+            public string ExecutionId { get; set; }
 
             /// <summary>
             /// Set to the ID of the task process while its running.

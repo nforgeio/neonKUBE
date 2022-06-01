@@ -108,6 +108,16 @@ namespace Neon.Kube.Operator
                                     return false;
                                 }
                             }
+
+                            // KubeOPs also spams the logs with reconnection attempts.
+
+                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
+                            {
+                                if (logEvent.Message.StartsWith("Trying to reconnect with exponential backoff"))
+                                {
+                                    return false;
+                                }
+                            }
                             break;
 
                         case LogLevel.Error:

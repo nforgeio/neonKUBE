@@ -146,30 +146,32 @@ namespace NeonClusterOperator
 
                     if (name == null)
                     {
-                        // This is a NO-CHANGE event which is a good time to handle any
-                        // cleanup related to tasks belonging to this node.
+                        // This is a NO-CHANGE event which is a good time remove any tasks
+                        // assigned to nodes that don't exist.
 
                         var tasks = await resourceManager.CloneResourcesAsync(resources);
-                        var nodes = new Dictionary<string, V1Node>(StringComparer.InvariantCultureIgnoreCase);
+                        var nodes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
                         foreach (var node in (await k8s.ListNodeAsync()).Items)
                         {
-                            nodes.Add(node.Name(), node);
+                            nodes.Add(node.Name());
                         }
 
                         foreach (var nodeTask in tasks.Values)
                         {
                             var taskName = nodeTask.Name();
+                            var nodeName = nodeTask.Spec.Node;
 
                             // Remove tasks assigned to nodes that don't exist.
 
                             var utcNow = DateTime.UtcNow;
 
-                            if (!nodes.ContainsKey(taskName))
+                            if (!nodes.Contains(nodeName))
                             {
                                 try
                                 {
-                                    await k8s.DeleteNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, taskName);
+                                    log.LogWarn($"Removing [nodetask={taskName}] because the [node={nodeName}] doesn't exist.");
+                                    await k8s.DeleteNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, nodeName);
                                 }
                                 catch (Exception e)
                                 {

@@ -820,6 +820,9 @@ chmod 750 {KubeNodeFolder.State}
 
 mkdir -p {KubeNodeFolder.State}/setup
 chmod 750 {KubeNodeFolder.State}/setup
+
+mkdir -p {KubeNodeFolder.NodeTasks}
+chmod 740 {KubeNodeFolder.NodeTasks}
 ";
                     SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

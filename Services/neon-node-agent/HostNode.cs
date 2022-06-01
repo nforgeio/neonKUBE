@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Node.cs
+// FILE:	    HostNode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
@@ -39,7 +39,7 @@ namespace NeonNodeAgent
     /// <summary>
     /// Abstracts access to the host node.
     /// </summary>
-    public static class Node
+    public static class HostNode
     {
         /// <summary>
         /// The Linux path where the host node's file system is mounted into the container.
@@ -49,7 +49,7 @@ namespace NeonNodeAgent
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static Node()
+        static HostNode()
         {
             try
             {

@@ -457,8 +457,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Deletes a namespace scoped custom object of the specified generic type,
-        /// but doesn't throw any exceptions if it doesn't exist.
+        /// Deletes a namespace scoped custom object of the specified generic type, nanmespace, 
+        /// and name and doesn't throw any exceptions if the object doesn't exist.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -512,9 +512,6 @@ namespace Neon.Kube
             where T : IKubernetesObject, new()
         {
             await SyncContext.Clear;
-
-            // We're going to try fetching the resource first.  If it doesn't exist, we'll
-            // create it otherwise we'll replace it.
 
             try
             {

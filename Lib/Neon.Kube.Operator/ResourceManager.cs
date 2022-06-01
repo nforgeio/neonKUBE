@@ -289,7 +289,7 @@ namespace Neon.Kube.Operator
             bool                    waitForAll   = true)
         {
             this.filter                     = filter ?? new Func<TResource, bool>(resource => true);
-            this.log                        = logger ?? LogManager.Default.GetLogger("Neon.Kube.Operator.ResourceManager");
+            this.log                        = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TResource).Name})");
             this.waitForAll                 = waitForAll;
             this.nextNoChangeReconciledUtc  = DateTime.UtcNow;
             this.reconciledNoChangeInterval = TimeSpan.FromMinutes(5);
@@ -502,6 +502,7 @@ namespace Neon.Kube.Operator
                 {
                     var name    = resource.Metadata.Name;
                     var changed = false;
+                    var utcNow  = DateTime.UtcNow;
 
                     if (resources.TryGetValue(resource.Metadata.Name, out var existing))
                     {
@@ -517,13 +518,18 @@ namespace Neon.Kube.Operator
                         resources[name] = resource;
                     }
 
+
                     if (waitForAll && !changed)
                     {
-                        // Looks like we're tracking all of the known resources now.
-
-                        waitForAll = false;
+                        // Looks like we're tracking all of the known resources now, so stop
+                        // waiting for resources and configure to raise an immediate NO-CHANGE
+                        // event below.
 
                         log.LogInfo($"All known resources loaded.");
+
+                        waitForAll                = false;
+                        changed                   = true;
+                        nextNoChangeReconciledUtc = utcNow;
                     }
 
                     if (waitForAll)
@@ -533,8 +539,6 @@ namespace Neon.Kube.Operator
                         log.LogInfo($"RECONCILED: {name} (waiting for known resources)");
                         return null;
                     }
-
-                    var utcNow = DateTime.UtcNow;
 
                     if (!changed && utcNow < nextNoChangeReconciledUtc)
                     {

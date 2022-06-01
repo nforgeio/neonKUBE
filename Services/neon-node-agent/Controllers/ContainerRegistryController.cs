@@ -85,7 +85,7 @@ namespace NeonNodeAgent
         // Static members
 
         private static readonly INeonLogger                     log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
-        private static readonly string                          configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static readonly string                          configMountPath = LinuxPath.Combine(HostNode.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static ResourceManager<V1ContainerRegistry>     resourceManager;
 
         // Configuration settings
@@ -138,7 +138,7 @@ namespace NeonNodeAgent
                     new LeaderElectionConfig(
                         k8s,
                         @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.containerregistry-{Node.Name}",
+                        leaseName:        $"{Program.Service.Name}.containerregistry-{HostNode.Name}",
                         identity:         Pod.Name,
                         promotionCounter: promotionCounter,
                         demotionCounter:  demotedCounter,
@@ -302,7 +302,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 configUpdateCounter.Inc();
 
                 File.WriteAllText(configMountPath, newConfigText);
-                (await Node.ExecuteCaptureAsync("/usr/bin/pkill", null, new object[] { "-HUP", "crio" })).EnsureSuccess();
+                (await HostNode.ExecuteCaptureAsync("/usr/bin/pkill", null, new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                 // Wait a few seconds to give CRI-O a chance to reload its config.  This will
                 // help mitigate problems when managing logins below due to potential inconsistencies
@@ -332,7 +332,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         // the registry.
 
                         log.LogInfo($"podman logout {registry.Spec.Location}");
-                        await Node.ExecuteCaptureAsync("podman", null, "logout", registry.Spec.Location);
+                        await HostNode.ExecuteCaptureAsync("podman", null, "logout", registry.Spec.Location);
                     }
                     else
                     {
@@ -349,7 +349,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                             async () =>
                             {
                                 log.LogInfo($"podman login {registry.Spec.Location} --username {registry.Spec.Username} --password REDACTED");
-                                (await Node.ExecuteCaptureAsync("podman", null, "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password)).EnsureSuccess();
+                                (await HostNode.ExecuteCaptureAsync("podman", null, "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password)).EnsureSuccess();
                             });
                     }
                 }
@@ -368,7 +368,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 if (!registries.Values.Any(registry => location == registry.Spec.Location))
                 {
                     log.LogInfo($"podman logout {location}");
-                    await Node.ExecuteCaptureAsync("podman", null, "logout", location);
+                    await HostNode.ExecuteCaptureAsync("podman", null, "logout", location);
                 }
             }
         }

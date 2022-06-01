@@ -110,7 +110,7 @@ namespace NeonNodeAgent
                     new LeaderElectionConfig(
                         k8s,
                         @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.nodetask-{Node.Name}",
+                        leaseName:        $"{Program.Service.Name}.nodetask-{HostNode.Name}",
                         identity:         Pod.Name,
                         promotionCounter: promotionCounter,
                         demotionCounter:  demotedCounter,
@@ -136,7 +136,7 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
-            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
+            return task.Spec.Node.Equals(HostNode.Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -157,43 +157,90 @@ namespace NeonNodeAgent
                 {
                     log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
+log.LogDebug($"*** RECONCILE: 0");
 
                     if (name == null)
                     {
-                        // This is a NO-CHANGE event which is a good time to handle any
-                        // cleanup related to tasks belonging to this node.
+                        // This is a NO-CHANGE event: we'll use this as a signal to do any cleanup.
 
+                        // Execute the youngest node task that's pending (if there is one).
+
+log.LogDebug($"*** RECONCILE: 1");
                         await CleanupTasksAsync(resources);
+log.LogDebug($"*** RECONCILE: 2");
                     }
                     else
                     {
-                        // We have a new NodeTask targeting this node.
+log.LogDebug($"*** RECONCILE: 3");
+                        // We have a new node task targeting this node:
+                        //
+                        //      1. Ensure that it's valid, delete if bad
+                        //      2. Add a status property as necessary
+                        //      3. Remove the task if it's been retained for long enough
+                        //      4. Execute the task if it's pending
 
                         var nodeTask = resources[name];
-                        var isOK     = true;
+var specIsNull = nodeTask.Spec == null ? "SPEC IS NULL" : "SPEC!=NULL";
+log.LogDebug($"*** RECONCILE: 4: {specIsNull}");
 
                         // Verify that task is well structured.
 
                         try
                         {
                             nodeTask.Validate();
+log.LogDebug($"*** RECONCILE: 5");
                         }
                         catch (Exception e)
                         {
                             log.LogWarn($"Invalid NodeTask: [{name}]", e);
                             log.LogWarn($"Deleting invalid NodeTask: [{name}]");
-                            await k8s.DeleteNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, nodeTask.Name());
+                            await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 6");
 
-                            isOK = false;
+                            return null;
                         }
 
-                        if (isOK)
+                        // Add default status to the node task if it doesn't already have status.
+
+log.LogDebug($"*** RECONCILE: 7");
+                        if (nodeTask.Status == null)
                         {
-                            await ExecuteTaskAsync(resources[name]);
+log.LogDebug($"*** RECONCILE: 8");
+                            nodeTask.Status = new V1NodeTask.V1NodeTaskStatus();
+
+                            nodeTask = await k8s.UpsertClusterCustomObjectAsync(nodeTask, nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 9");
+                        }
+log.LogDebug($"*** RECONCILE: 10");
+
+                        if (nodeTask.Status.FinishedUtc.HasValue)
+                        {
+log.LogDebug($"*** RECONCILE: 11");
+                            var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishedUtc;
+
+                            if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetainSeconds))
+                            {
+log.LogDebug($"*** RECONCILE: 12");
+                                log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}]: deleting now.");
+                                await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 13");
+
+                                return null;
+                            }
+                        }
+
+                        // Execute the task if it's pending.
+
+log.LogDebug($"*** RECONCILE: 14");
+                        if (nodeTask.Status.State == NodeTaskState.Pending)
+                        {
+log.LogDebug($"*** RECONCILE: 15");
+                            await ExecuteTaskAsync(nodeTask);
+log.LogDebug($"*** RECONCILE: 16");
                         }
                     }
 
-                    return await Task.FromResult<ResourceControllerResult>(null);
+                    return null;
                 },
                 errorCounter: reconciledErrorCounter);
 
@@ -252,7 +299,7 @@ namespace NeonNodeAgent
 
         /// <summary>
         /// <para>
-        /// Handles the management of tasks targeting the current cluster node:
+        /// Handles the cleanup of tasks targeting the current cluster node:
         /// </para>
         /// <list type="bullet">
         /// <item>
@@ -275,6 +322,9 @@ namespace NeonNodeAgent
 
             var tasks = await resourceManager.CloneResourcesAsync(resources);
 
+            //-----------------------------------------------------------------
+            // Terminate orphaned tasks as well as any tasks that have been executing past their timeout.
+
             foreach (var nodeTask in tasks.Values)
             {
                 var taskName = nodeTask.Name();
@@ -290,7 +340,7 @@ namespace NeonNodeAgent
                 {
                     log.LogWarn($"Invalid NodeTask: [{taskName}]", e);
                     log.LogWarn($"Deleting invalid NodeTask: [{taskName}]");
-                    await k8s.DeleteNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, taskName);
+                    await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
                     continue;
                 }
 
@@ -298,8 +348,19 @@ namespace NeonNodeAgent
                 {
                     // Detect and kill orphaned tasks.
 
-                    if (await KillOrphanedTaskAsync(nodeTask))
+                    if (nodeTask.Status.AgentId != HostNode.AgentId)
                     {
+                        log.LogWarn($"Detected orphaned [nodetask={taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={HostNode.AgentId}]");
+                        await KillTaskAsync(nodeTask);
+
+                        // Update the node task status to: ORPHANED
+
+                        nodeTask.Status.State         = NodeTaskState.Orphaned;
+                        nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
+                        nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
+                        nodeTask.Status.ExitCode      = -1;
+
+                        await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
                         continue;
                     }
 
@@ -307,47 +368,42 @@ namespace NeonNodeAgent
 
                     if (utcNow - nodeTask.Status.StartedUtc >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
                     {
+                        log.LogWarn($"Detected timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
                         await KillTaskAsync(nodeTask);
+
+                        // Update the node task status to: TIMEOUT
+
+                        nodeTask.Status.State         = NodeTaskState.Timeout;
+                        nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
+                        nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
+                        nodeTask.Status.ExitCode      = -1;
+
+                        await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
                         continue;
                     }
                 }
             }
-        }
 
-        /// <summary>
-        /// Detects when the node task passed is orphaned, killing it and updating it as required.
-        /// </summary>
-        /// <param name="nodeTask">The node task.</param>
-        /// <returns><c>true</c> when the task is orhpaned, <c>false</c> otherwise.</returns>
-        private async Task<bool> KillOrphanedTaskAsync(V1NodeTask nodeTask)
-        {
-            if (nodeTask.Status.AgentId == Node.AgentId)
+            //-----------------------------------------------------------------
+            // Remove any script folders whose node task no longer exists.
+
+            var nodeTaskExecuteIds = new HashSet<string>();
+
+            foreach (var nodeTask in tasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.ExecutionId)))
             {
-                return false;
+                nodeTaskExecuteIds.Add(nodeTask.Status.ExecutionId);
             }
 
-            if (nodeTask.Status.State == NodeTaskState.Orphaned)
+            foreach (var scriptFolderPath in Directory.GetDirectories(LinuxPath.Combine(HostNode.HostMount, KubeNodeFolder.NodeTasks), "*", SearchOption.TopDirectoryOnly))
             {
-                return true;
+                var scriptFolderName = LinuxPath.GetFileName(scriptFolderPath);
+
+                if (!nodeTaskExecuteIds.Contains(scriptFolderName))
+                {
+                    log.LogWarn($"Removing node task host script folder: {scriptFolderName}");
+                    NeonHelper.DeleteFolder(scriptFolderPath);
+                }
             }
-
-            var taskName = nodeTask.Name();
-
-            log.LogWarn($"Orphaned node task [{taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={Node.AgentId}]");
-
-            // Update the node task status to: orphaned
-
-            nodeTask.Status.State       = NodeTaskState.Orphaned;
-            nodeTask.Status.FinishedUtc = DateTime.UtcNow;
-            nodeTask.Status.ExitCode    = -1;
-
-            await KillTaskAsync(nodeTask);
-
-            // Update the resource status.
-
-            await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
-
-            return true;
         }
 
         /// <summary>
@@ -375,7 +431,7 @@ namespace NeonNodeAgent
             // will return an empty line when the process doesn't exist and a single line
             // with the process command line when the process exists.
 
-            var result = await Node.ExecuteCaptureAsync($"ps --pid={nodeTask.Status.ProcessId} --format cmd=", timeout: null);
+            var result = await HostNode.ExecuteCaptureAsync($"ps --pid={nodeTask.Status.ProcessId} --format cmd=", timeout: null);
 
             if (result.ExitCode == 0)
             {
@@ -387,7 +443,7 @@ namespace NeonNodeAgent
                     {
                         // The process ID and command line match, so kill it.
 
-                        result = await Node.ExecuteCaptureAsync("kill", null, "-s", "SIGTERM", nodeTask.Status.ProcessId);
+                        result = await HostNode.ExecuteCaptureAsync("kill", null, "-s", "SIGTERM", nodeTask.Status.ProcessId);
 
                         if (result.ExitCode != 0)
                         {
@@ -408,128 +464,162 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(nodeTask != null, nameof(nodeTask));
 
+log.LogDebug($"*** EXECUTE: 0");
             var taskName = nodeTask.Name();
 
             if (nodeTask.Status.State != NodeTaskState.Pending)
             {
+log.LogDebug($"*** EXECUTE: 1");
                 return;
             }
+log.LogDebug($"*** EXECUTE: 2");
 
-            // Start and execute the command in the background.  The trick here is
-            // that we need the ID of the process launched and we need to update the
-            // node task status immediately, return, and then handle execution
-            // completion in the background.
+            // Start and execute the command.  The trick here is that we need the
+            // ID of the process launched.
 
             var process       = (Process)null;
             var statusUpdated = false;
 
-            _ = Task.Run(
-                async () =>
+            // Generate the execution UUID and write the script to the host node.
+
+            var executionId  = Guid.NewGuid().ToString("d");
+            var scriptFolder = LinuxPath.Combine(HostNode.HostMount, KubeNodeFolder.NodeTasks, executionId);
+            var scriptPath   = LinuxPath.Combine(scriptFolder, executionId);
+log.LogDebug($"*** EXECUTE: 3");
+
+            Directory.CreateDirectory(scriptFolder);
+            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(nodeTask.Spec.BashScript));
+
+            nodeTask.Status.State       = NodeTaskState.Running;
+            nodeTask.Status.StartedUtc  = DateTime.UtcNow;
+            nodeTask.Status.AgentId     = HostNode.AgentId;
+            nodeTask.Status.CommandLine = $"/bin/bash {scriptPath}";
+            nodeTask.Status.ProcessId   = process.Id;
+            nodeTask.Status.ExecutionId = executionId;
+log.LogDebug($"*** EXECUTE: 4");
+
+            // Start the command process.
+
+            var task = (Task<ExecuteResponse>)null;
+
+            try
+            {
+                // This callback will be executed once the [HostNode.ExecuteCaptureAsync()]
+                // call has the process details.  We'll save the details, update the node task
+                // status and persist the status changes to the API server.
+
+log.LogDebug($"*** EXECUTE: 5");
+                var processCallback =
+                    (Process _process) =>
+                    {
+log.LogDebug($"*** EXECUTE: 6: processID = {process.Id}");
+                        process                   = _process;
+                        nodeTask.Status.ProcessId = process.Id;
+
+log.LogDebug($"*** EXECUTE: 7");
+                        nodeTask = k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName).Result;
+log.LogDebug($"*** EXECUTE: 8");
+
+                        log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={process.Id}]");
+
+                        statusUpdated = true;
+                    };
+
+log.LogDebug($"*** EXECUTE: 9");
+                task = HostNode.ExecuteCaptureAsync(LinuxPath.Combine(HostNode.HostMount, "/bin/bash"), processCallback, TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), scriptPath);
+log.LogDebug($"*** EXECUTE: 10");
+            }
+            catch (Exception e)
+            {
+                // We shouldn't ever see an error here because [/bin/bash] should always
+                // exist, but we'll log something just in case.
+
+                log.LogWarn(e);
+
+                nodeTask.Status.State         = NodeTaskState.Finished;
+                nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
+                nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
+                nodeTask.Status.ExitCode      = -1;
+                nodeTask.Status.Error         = $"EXECUTE FAILED: {e.Message}";
+
+log.LogDebug($"*** EXECUTE: 11");
+                await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+log.LogDebug($"*** EXECUTE: 12");
+                return;
+            }
+
+            // Mitigate the possiblity of a race condition updating the node task status
+            // by waiting for the update above to complete first.
+
+            try
+            {
+                NeonHelper.WaitFor(() => statusUpdated, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
+            }
+            catch (TimeoutException e)
+            {
+                // It's possible but unlikely that the update above failed for some reason.
+                // We'll log this hope for the best.
+
+                log.LogWarn(e);
+            }
+log.LogDebug($"*** EXECUTE: 13");
+
+            // Wait for the command to complete and the update the node task status.
+
+            try
+            {
+                var result  = (ExecuteResponse)null;
+                var timeout = false;
+
+                try
                 {
-                    // Start the command process.
+                    result = await task;
+log.LogDebug($"*** EXECUTE: 14");
 
-                    var task = (Task<ExecuteResponse>)null;
+                    log.LogInfo($"Finished [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [exitcode={result.ExitCode}]");
+                }
+                catch (TimeoutException)
+                {
+log.LogDebug($"*** EXECUTE: 15");
+                    timeout = true;
 
-                    try
+                    log.LogWarn($"Timeout [nodetask={taskName}]");
+                }
+
+                if (nodeTask.Status.State == NodeTaskState.Running)
+                {
+log.LogDebug($"*** EXECUTE: 16");
+                    nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
+                    nodeTask.Status.ExecutionTime = (nodeTask.Status.FinishedUtc - nodeTask.Status.StartedUtc).ToString();
+
+                    if (timeout)
                     {
-                        task = Node.ExecuteCaptureAsync(nodeTask.Spec.Command.First(), _process => process = _process, TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), nodeTask.Spec.Command.Skip(1));
+log.LogDebug($"*** EXECUTE: 17");
+                        nodeTask.Status.State    = NodeTaskState.Timeout;
+                        nodeTask.Status.ExitCode = -1;
                     }
-                    catch (Exception e)
+                    else
                     {
-                        // It's possible for command execution to fail because the command doesn't exist or
-                        // due to permissions issues.  We're going to log this and then mark the task as
-                        // finised with an error.
+log.LogDebug($"*** EXECUTE: 18");
+                        nodeTask.Status.State    = NodeTaskState.Finished;
+                        nodeTask.Status.ExitCode = result.ExitCode;
 
-                        log.LogWarn(e);
-
-                        nodeTask.Status.State       = NodeTaskState.Finished;
-                        nodeTask.Status.FinishedUtc = DateTime.UtcNow;
-                        nodeTask.Status.ExitCode    = -1;
-                        nodeTask.Status.Error       = $"EXECUTE FAILED: {e.Message}";
-
-                        await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
-
-                        return;
-                    }
-
-                    // Mitegate the possiblity of a race condition updating the node task status
-                    // by waiting for the update below to complete first.
-
-                    try
-                    {
-                        NeonHelper.WaitFor(() => statusUpdated, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
-                    }
-                    catch (TimeoutException)
-                    {
-                        // It's possible that the update below failed for some reason.
-                        // In this case, we'll just continue and hope for the best.
-                    }
-
-                    // Wait for the command to complete and the update the node task status.
-
-                    try
-                    {
-                        var result  = (ExecuteResponse)null;
-                        var timeout = false;
-
-                        try
+                        if (nodeTask.Spec.CaptureOutput)
                         {
-                            result = await task;
-                        }
-                        catch (TimeoutException)
-                        {
-                            timeout = true;
-                        }
-
-                        var innerNodeTask = await k8s.GetNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, taskName);
-
-                        if (innerNodeTask.Status.State == NodeTaskState.Running)
-                        {
-                            innerNodeTask.Status.FinishedUtc   = DateTime.UtcNow;
-                            innerNodeTask.Status.ExecutionTime = (innerNodeTask.Status.FinishedUtc - innerNodeTask.Status.StartedUtc).ToString();
-
-                            if (timeout)
-                            {
-                                innerNodeTask.Status.State    = NodeTaskState.Timeout;
-                                innerNodeTask.Status.ExitCode = -1;
-                            }
-                            else
-                            {
-                                innerNodeTask.Status.State    = NodeTaskState.Finished;
-                                innerNodeTask.Status.ExitCode = result.ExitCode;
-
-                                if (innerNodeTask.Spec.CaptureOutput)
-                                {
-                                    innerNodeTask.Status.Output = result.OutputText;
-                                    innerNodeTask.Status.Error  = result.ErrorText;
-                                }
-                            }
-
-                            await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(innerNodeTask, taskName);
+                            nodeTask.Status.Output = result.OutputText;
+                            nodeTask.Status.Error  = result.ErrorText;
                         }
                     }
-                    catch (Exception e)
-                    {
-                        log.LogWarn(e);
-                    }
-                });
 
-            // Wait for the process callback action to be called.
-
-            NeonHelper.WaitFor(() => process != null, TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
-
-            // Update the task status.
-
-            nodeTask.Status.State      = NodeTaskState.Running;
-            nodeTask.Status.StartedUtc = DateTime.UtcNow;
-            nodeTask.Status.AgentId    = Node.AgentId;
-            nodeTask.Status.ProcessId  = process.Id;
-
-            await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
-
-            // Signal to the background task that the node task status has been updated.
-
-            statusUpdated = true;
+log.LogDebug($"*** EXECUTE: 19");
+                    await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+log.LogDebug($"*** EXECUTE: 20");
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogWarn(e);
+            }
         }
     }
 }
