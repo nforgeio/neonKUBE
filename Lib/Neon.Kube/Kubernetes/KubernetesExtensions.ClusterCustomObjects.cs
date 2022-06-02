@@ -311,12 +311,14 @@ namespace Neon.Kube
         /// changes. The value must be less than or 128 characters long, and only contain
         /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
         /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
         public static async Task<T> CreateClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
-            string              dryRun       = null,
-            string              fieldManager = null) 
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            CancellationToken   cancellationToken = default) 
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -324,7 +326,15 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.CreateClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, dryRun, fieldManager, pretty: false);
+            var result       = await k8s.CreateClusterCustomObjectAsync(
+                body:              body, 
+                group:             typeMetadata.Group, 
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName, 
+                dryRun:            dryRun, 
+                fieldManager:      fieldManager, 
+                pretty:            false, 
+                cancellationToken: cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
@@ -347,7 +357,12 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.GetClusterCustomObjectAsync(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, cancellationToken);
+            var result       = await k8s.GetClusterCustomObjectAsync(
+                group:             typeMetadata.Group,
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName, 
+                name:              name,
+                cancellationToken: cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
@@ -372,7 +387,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
+        public static async Task<T> PatchClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -385,7 +400,15 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.ReplaceClusterCustomObjectAsync(body, typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, name, dryRun, fieldManager, cancellationToken);
+            var result       = await k8s.ReplaceClusterCustomObjectAsync(
+                body:              body, 
+                group:             typeMetadata.Group,
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName,
+                name:              name,
+                dryRun:            dryRun, 
+                fieldManager:      fieldManager,
+                cancellationToken: cancellationToken);
 
             return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
         }
@@ -436,7 +459,7 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager);
+                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager, cancellationToken);
                 }
                 else
                 {
@@ -444,7 +467,55 @@ namespace Neon.Kube
                 }
             }
 
-            return await k8s.ReplaceClusterCustomObjectAsync<T>(body, name, dryRun, fieldManager);
+            return await k8s.PatchClusterCustomObjectAsync<T>(
+                body:              body, 
+                name:              name, 
+                dryRun:            dryRun,
+                fieldManager:      fieldManager, 
+                cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Updates the <b>status</b> subresource of a cluster scoped custom object of the specified generic type
+        /// and name.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="body">Specifies the new object data.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="dryRun">
+        /// When present, indicates that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="fieldManager">
+        /// fieldManager is a name associated with the actor or entity that is making these
+        /// changes. The value must be less than or 128 characters long, and only contain
+        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated object.</returns>
+        public static async Task<T> UpdateClusterCustomObjectStatusAsync<T>(
+            this IKubernetes    k8s,
+            T                   body,
+            string              name,
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            CancellationToken   cancellationToken = default(CancellationToken))
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+
+            body.Metadata.Name = $"{name}/status";
+
+            return await k8s.PatchClusterCustomObjectAsync<T>(
+                body:              body, 
+                name:              $"{name}",
+                dryRun:            dryRun, 
+                fieldManager:      fieldManager, 
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -479,12 +550,6 @@ namespace Neon.Kube
         /// processing of the request. Valid values are: - All: all dry run stages will be
         /// processed
         /// </param>
-        /// <param name="fieldManager">
-        /// Optionally specifies identifies the fieldManager, which is a name associated with
-        /// the actor or entity that is making these changes. The value must be less than or 
-        /// 128 characters long, and only contain printable characters, as defined by
-        /// https://golang.org/pkg/unicode/#IsPrint.
-        /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
@@ -495,7 +560,6 @@ namespace Neon.Kube
             bool?               orphanDependents   = null,
             string              propagationPolicy  = null,
             string              dryRun             = null,
-            string              fieldManager       = null,
             CancellationToken   cancellationToken  = default(CancellationToken))
 
             where T : IKubernetesObject, new()

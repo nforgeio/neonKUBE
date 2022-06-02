@@ -9,7 +9,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
+using Neon.Kube;
+
 using KubeOps.Operator;
+using k8s;
 
 namespace NeonClusterOperator
 {
@@ -25,11 +28,12 @@ namespace NeonClusterOperator
         public void ConfigureServices(IServiceCollection services)
         {
             var operatorBuilder = services
+                .AddSingleton<IKubernetes>(new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig()))
                 .AddKubernetesOperator(
                     settings =>
                     {
                         settings.EnableAssemblyScanning = true;
-                        settings.EnableLeaderElection   = false;
+                        settings.EnableLeaderElection   = false;    // We're using ResourceManager leases
                     });
 
             Program.AddResourceAssemblies(operatorBuilder);

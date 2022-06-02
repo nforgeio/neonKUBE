@@ -1,4 +1,5 @@
-﻿# Rebuild and install: neon-node-agent
+﻿#------------------------------------------------------------------------------
+# Rebuild and install: neon-node-agent
 
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-node-agent

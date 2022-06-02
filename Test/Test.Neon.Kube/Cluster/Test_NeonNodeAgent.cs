@@ -166,8 +166,8 @@ namespace TestKube
                     {
                         switch (nodeTask.Status.State)
                         {
-                            case NodeTaskState.Pending:
-                            case NodeTaskState.Running:
+                            case V1NodeTaskState.Pending:
+                            case V1NodeTaskState.Running:
 
                                 return false;
                         }

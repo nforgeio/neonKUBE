@@ -52,7 +52,7 @@ namespace NeonClusterOperator
     /// This controller handles removal of node tasks targeting nodes that don't exist.  
     /// See <see cref="V1NodeTask"/> for more details.
     /// </remarks>
-    [EntityRbac(typeof(V1NodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
+    [EntityRbac(typeof(V1NodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class NodeTaskController : IResourceController<V1NodeTask>
     {
         //---------------------------------------------------------------------
@@ -89,13 +89,17 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private IKubernetes     k8s = new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig(), new HttpClient()); 
+        private readonly IKubernetes k8s;
 
         /// <summary>
-        /// Coinstructor.
+        /// Constructor.
         /// </summary>
-        public NodeTaskController()
+        public NodeTaskController(IKubernetes k8s)
         {
+            Covenant.Requires(k8s != null, nameof(k8s));
+
+            this.k8s = k8s;
+
             // Load the configuration settings the first time a controller instance is created.
 
             if (!configured)

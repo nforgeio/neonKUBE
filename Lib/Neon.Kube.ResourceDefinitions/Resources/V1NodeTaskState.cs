@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeTaskState.cs
+// FILE:	    V1NodeTaskState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -38,8 +38,15 @@ namespace Neon.Kube.Resources
     /// <summary>
     /// Enumerates the possible status of a <see cref="V1NodeTask"/>.
     /// </summary>
-    public enum NodeTaskState
+    public enum V1NodeTaskState
     {
+        /// <summary>
+        /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
+        /// to <see cref="Pending"/> when it sees the task for the first time.
+        /// </summary>
+        [EnumMember(Value = "new")]
+        New = 0,
+
         /// <summary>
         /// The task is waiting to be executed by the <b>neon-node-agent</b>.
         /// </summary>

@@ -67,7 +67,7 @@ namespace Neon.Kube.Resources
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
     /// <see cref="V1NodeTaskStatus.StartedUtc"/> to the current time and change the state to
-    /// <see cref="NodeTaskState.Running"/>.
+    /// <see cref="V1NodeTaskState.Running"/>.
     /// </item>
     /// <item>
     /// The agent will assign a new UUID to the task and save this in the node task status.  This UUID will
@@ -91,7 +91,7 @@ namespace Neon.Kube.Resources
     /// </para>
     /// </note>
     /// <item>
-    /// When the command completes without timing out, the agent will set its state to <see cref="NodeTaskState.Finished"/>,
+    /// When the command completes without timing out, the agent will set its state to <see cref="V1NodeTaskState.Finished"/>,
     /// set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time and <see cref="V1NodeTaskStatus.ExitCode"/>,
     /// <see cref="V1NodeTaskStatus.Output"/> and <see cref="V1NodeTaskStatus.Error"/> to the command results.
     /// </item>
@@ -104,7 +104,7 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="NodeTaskState.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
+    /// <see cref="V1NodeTaskState.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
     /// current time.
     /// </item>
     /// <item>
@@ -112,7 +112,7 @@ namespace Neon.Kube.Resources
     /// <see cref="V1NodeTaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
     /// happen when the previous agent pod started executing the command and then was terminated before the
     /// command completed.  The agent will attempt to locate the running pod by its command line and
-    /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskState.Orphaned"/>
+    /// process ID and terminate when it exists and then set the state to <see cref="V1NodeTaskState.Orphaned"/>
     /// and <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time.
     /// </item>
     /// <item>
@@ -167,6 +167,9 @@ namespace Neon.Kube.Resources
             /// Specifies the maximum time in seconds the command will be allowed to execute.
             /// This defaults to 300 seconds (5 minutes).
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public int TimeoutSeconds { get; set; } = 300;
 
             /// <summary>
@@ -176,6 +179,9 @@ namespace Neon.Kube.Resources
             /// when it should delete the task.  This defaults to 600 seconds
             /// (10 minutes).
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public int RetainSeconds { get; set; } = 600;
 
             /// <summary>
@@ -189,6 +195,9 @@ namespace Neon.Kube.Resources
             /// when the command output may include secrets.
             /// </note>
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public bool CaptureOutput { get; set; } = true;
 
             /// <summary>
@@ -227,32 +236,50 @@ namespace Neon.Kube.Resources
             /// finish before node agent crashed or was otherwise terminated, providing a way
             /// for the next node-agent to clean things up.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string AgentId { get; set; }
 
             /// <summary>
             /// Indicates the current state of the task.  This defaules to
-            /// <see cref="NodeTaskState.Pending"/> when the task is constructed.
+            /// <see cref="V1NodeTaskState.Pending"/> when the task is constructed.
             /// </summary>
-            public NodeTaskState State { get; set; } = NodeTaskState.Pending;
+#if KUBEOPS
+            [Required]
+#endif
+            public V1NodeTaskState State { get; set; } = V1NodeTaskState.New;
 
             /// <summary>
             /// Indicates when the task started executing. 
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public DateTime? StartedUtc { get; set; }
 
             /// <summary>
             /// Indicates when the task finished executing.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public DateTime? FinishedUtc { get; set;}
 
             /// <summary>
             /// Set to the task execution time serialized to a string.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string ExecutionTime { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string CommandLine { get; set; }
 
             /// <summary>
@@ -260,26 +287,41 @@ namespace Neon.Kube.Resources
             /// script when persisted to the host node as well as to help identify the process
             /// when it's running.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string ExecutionId { get; set; }
 
             /// <summary>
             /// Set to the ID of the task process while its running.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public int? ProcessId { get; set; }
 
             /// <summary>
             /// The exit code returned by the command.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public int ExitCode { get; set; }
 
             /// <summary>
             /// The text written to standard output by the command.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string Output { get; set; }
 
             /// <summary>
             /// The text written to standard error by the command.
             /// </summary>
+#if KUBEOPS
+            [Required]
+#endif
             public string Error { get; set; }
 
             /// <summary>

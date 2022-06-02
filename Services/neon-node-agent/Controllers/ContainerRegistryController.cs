@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -78,7 +79,7 @@ namespace NeonNodeAgent
     /// </item>
     /// </list>
     /// </remarks>
-    [EntityRbac(typeof(V1ContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
+    [EntityRbac(typeof(V1ContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
     public class ContainerRegistryController : IResourceController<V1ContainerRegistry>
     {
         //---------------------------------------------------------------------
@@ -119,13 +120,17 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Instance members
 
-        private IKubernetes k8s = new KubernetesClient(KubernetesClientConfiguration.BuildDefaultConfig(), new HttpClient());
+        private readonly IKubernetes k8s;
 
         /// <summary>
-        /// Coinstructor.
+        /// Constructor.
         /// </summary>
-        public ContainerRegistryController()
+        public ContainerRegistryController(IKubernetes k8s)
         {
+            Covenant.Requires(k8s != null, nameof(k8s));
+
+            this.k8s = k8s;
+
             // Load the configuration settings the first time a controller instance is created.
 
             if (!configured)
