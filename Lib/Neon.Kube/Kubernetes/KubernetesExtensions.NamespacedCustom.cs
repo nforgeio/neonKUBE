@@ -346,7 +346,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a namespaced custom object, deserialized as the specified generic type.
+        /// Returns a namespaced custom object, deserialized as the specified generic object type.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -377,7 +377,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Replace a namespaced custom object of the specified generic type.
+        /// Replace a namespaced custom object of the specified generic object type.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -426,7 +426,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates or replaces a namespace scoped custom object of the specified generic type,
+        /// Creates or replaces a namespace scoped custom object of the specified generic object type,
         /// depending on whether the object already exists in the cluster.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
@@ -459,6 +459,10 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
+
+            // $todo(jefflill): Investigate fixing race condition:
+            // 
+            //      https://github.com/nforgeio/neonKUBE/issues/1578 
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
@@ -494,7 +498,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Deletes a namespace scoped custom object of the specified generic type, nanmespace, 
+        /// Deletes a namespace scoped custom object of the specified generic object type, nanmespace, 
         /// and name and doesn't throw any exceptions if the object doesn't exist.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>

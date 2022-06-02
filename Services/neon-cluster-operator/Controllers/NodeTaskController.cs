@@ -1,4 +1,6 @@
-﻿//-----------------------------------------------------------------------------
+﻿#if DISABLED
+
+//-----------------------------------------------------------------------------
 // FILE:	    NodeTaskController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
@@ -89,12 +91,12 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly KubernetesWithRetry k8s;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NodeTaskController(IKubernetes k8s)
+        public NodeTaskController(KubernetesWithRetry k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
 
@@ -243,3 +245,5 @@ namespace NeonClusterOperator
         }
     }
 }
+
+#endif

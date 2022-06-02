@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -340,7 +341,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a cluster scoped custom object, deserialized as the specified generic type.
+        /// Returns a cluster scoped custom object, deserialized as the specified generic object type.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -368,7 +369,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Replace a cluster scoped custom object of the specified generic type.
+        /// Replace a cluster scoped custom object of the specified generic object type.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -387,7 +388,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<T> PatchClusterCustomObjectAsync<T>(
+        public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -414,8 +415,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates or replaces a cluster scoped custom object of the specified generic type
-        /// and name, depending on whether the object already exists in the cluster.
+        /// Creates or replaces a cluster scoped custom object of the specified generic 
+        /// object type and name, depending on whether the object already exists in the cluster.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -446,6 +447,10 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
+            // $todo(jefflill): Investigate fixing race condition:
+            // 
+            //      https://github.com/nforgeio/neonKUBE/issues/1578 
+
             body.Metadata.Name = name;
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
@@ -467,7 +472,7 @@ namespace Neon.Kube
                 }
             }
 
-            return await k8s.PatchClusterCustomObjectAsync<T>(
+            return await k8s.ReplaceClusterCustomObjectAsync<T>(
                 body:              body, 
                 name:              name, 
                 dryRun:            dryRun,
@@ -476,50 +481,41 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Updates the <b>status</b> subresource of a cluster scoped custom object of the specified generic type
-        /// and name.
+        /// Updates the <b>status</b> subresource of a cluster scoped custom object of the specified generic 
+        /// object type and name.
         /// </summary>
-        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <typeparam name="TObject">The custom object type.</typeparam>
+        /// <typeparam name="TStatus">The custom object's status type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">Specifies the new object data.</param>
         /// <param name="name">Specifies the object name.</param>
-        /// <param name="dryRun">
-        /// When present, indicates that modifications should not be persisted. An invalid
-        /// or unrecognized dryRun directive will result in an error response and no further
-        /// processing of the request. Valid values are: - All: all dry run stages will be
-        /// processed
-        /// </param>
-        /// <param name="fieldManager">
-        /// fieldManager is a name associated with the actor or entity that is making these
-        /// changes. The value must be less than or 128 characters long, and only contain
-        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
-        /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<T> UpdateClusterCustomObjectStatusAsync<T>(
+        public static async Task<TObject> UpdateClusterCustomObjectStatusAsync<TObject, TStatus>(
             this IKubernetes    k8s,
-            T                   body,
+            TObject             body,
             string              name,
-            string              dryRun            = null,
-            string              fieldManager      = null,
             CancellationToken   cancellationToken = default(CancellationToken))
 
-            where T : IKubernetesObject<V1ObjectMeta>, new()
+            where TObject : IKubernetesObject<V1ObjectMeta>, IStatus<TStatus>, new()
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            body.Metadata.Name = $"{name}/status";
+            var typeMetadata = typeof(TObject).GetKubernetesTypeMetadata();
+            var request      = new HttpRequestMessage(HttpMethod.Put, $"{k8s.BaseUri}apis/{body.ApiVersion}/{typeMetadata.PluralName}/{name}/status")
+            {
+                 Content = new StringContent(NeonHelper.JsonSerialize(body.Status), Encoding.UTF8, "application/json")
+            };
 
-            return await k8s.PatchClusterCustomObjectAsync<T>(
-                body:              body, 
-                name:              $"{name}",
-                dryRun:            dryRun, 
-                fieldManager:      fieldManager, 
-                cancellationToken: cancellationToken);
+            await k8s.HttpClient.SendSafeAsync(request, cancellationToken: cancellationToken);
+
+            return body;
         }
 
         /// <summary>
-        /// Deletes a namespace scoped custom object of the specified generic type,
+        /// Deletes a namespace scoped custom object of the specified generic object type,
         /// and doesn't throw any exceptions if the object doesn't exist.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
