@@ -218,27 +218,38 @@ namespace {targetNamespace}
                 writer.WriteLine($"        }}");
 
                 //-------------------------------------------------------------
-                // Generate the public [Kubernetes] class properties.
+                // Generate the public [Kubernetes] class properties.  These are simply going to
+                // reference the corresponding underlying [k8s] field's properties.
 
                 foreach (var property in kubernetesType.GetProperties())
                 {
-                    var getter    = property.GetGetMethod();
-                    var setter    = property.GetSetMethod();
-                    var accessors = new StringBuilder();
-
-                    if (getter != null)
-                    {
-                        accessors.AppendWithSeparator("get;");
-                    }
-
-                    if (setter != null)
-                    {
-                        accessors.AppendWithSeparator("set;");
-                    }
+                    var getter          = property.GetGetMethod() != null;
+                    var setter          = property.GetSetMethod() != null;
+                    var getterAndSetter = getter && setter;
 
                     writer.WriteLine();
                     writer.WriteLine("         /// <inheritdoc/>");
-                    writer.WriteLine($"        public {ResolveTypeReference(property.PropertyType, isResultType: true)} {property.Name} {{ {accessors} }}");
+
+                    if (getterAndSetter)
+                    {
+                        writer.WriteLine($"        public {ResolveTypeReference(property.PropertyType, isResultType: true)} {property.Name}");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            get => k8s.{property.Name};");
+                        writer.WriteLine($"            set => k8s.{property.Name} = value;");
+                        writer.WriteLine($"        }}");
+                    }
+                    else if (getter)
+                    {
+                        writer.WriteLine($"        public {ResolveTypeReference(property.PropertyType, isResultType: true)} {property.Name} => k8s.{property.Name};");
+                    }
+                    else if (setter)
+                    {
+                        writer.WriteLine($"        public {ResolveTypeReference(property.PropertyType, isResultType: true)} {property.Name} => k8s.{property.Name} = value;");
+                    }
+                    else
+                    {
+                        Covenant.Assert(false);
+                    }
                 }
 
                 //-------------------------------------------------------------
