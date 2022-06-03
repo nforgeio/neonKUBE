@@ -170,20 +170,20 @@ namespace NeonDashboard
                 // Configure cluster callback url to allow local dev
 
                 var dexConfigMap = Kubernetes.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
-                var yamlConfig = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
-                var dexConfig = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
+                var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
+                var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
                 var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
 
                 if (!clientConfig.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
                 {
                     clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
                     dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                    Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
+                    await Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem);
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Log.LogError("Error configuring SSO", ex);
+                Log.LogError("Error configuring SSO", e.GetNonAggregateException());
             }
         }
     }
