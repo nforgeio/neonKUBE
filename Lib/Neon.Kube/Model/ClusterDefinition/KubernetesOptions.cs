@@ -151,9 +151,11 @@ namespace Neon.Kube
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
             }
 
-            if ((clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3) > (double)IPNetwork.Parse(clusterDefinition.Network.PodSubnet).Usable)
+            var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
+
+            if ((clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3) > podSubnetCidr.UsableAddressCount)
             {
-                var maxPods        = decimal.ToInt32((decimal)IPNetwork.Parse(clusterDefinition.Network.PodSubnet).Usable / 2.3m);
+                var maxPods        = podSubnetCidr.UsableAddressCount / 2.3;
                 var clusterPods    = clusterDefinition.Nodes.Count() * MaxPodsPerNode;
                 var maxPodsPerNode = maxPods / clusterDefinition.Nodes.Count();
                 var maxNodes       = maxPods / MaxPodsPerNode;

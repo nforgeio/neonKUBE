@@ -72,7 +72,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="IPNetwork2" Version="2.5.402" />
 		<PackageReference Include="KubernetesClient" Version="7.0.15" />
 		<PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
