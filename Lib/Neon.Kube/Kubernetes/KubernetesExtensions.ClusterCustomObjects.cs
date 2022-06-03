@@ -529,7 +529,7 @@ namespace Neon.Kube
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             return (T)await k8s.PatchClusterCustomObjectStatusAsync(
-                body:              body,
+                body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
                 plural:            typeMetadata.PluralName,

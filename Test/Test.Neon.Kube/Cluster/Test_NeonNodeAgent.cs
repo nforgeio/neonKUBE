@@ -135,7 +135,7 @@ namespace TestKube
                 node.SudoCommand($"rm -rf {testFolderPath}");
                 node.SudoCommand($"mkdir -p {testFolderPath}");
 
-                // Create the test node task for the node.
+                // Create the node task for the target node.
 
                 var nodeTask = new V1NodeTask();
                 var metadata = nodeTask.Metadata;

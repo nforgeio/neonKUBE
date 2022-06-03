@@ -236,50 +236,31 @@ namespace Neon.Kube.Resources
             /// finish before node agent crashed or was otherwise terminated, providing a way
             /// for the next node-agent to clean things up.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string AgentId { get; set; }
 
             /// <summary>
             /// Indicates the current state of the task.  This defaules to
             /// <see cref="V1NodeTaskState.Pending"/> when the task is constructed.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public V1NodeTaskState State { get; set; } = V1NodeTaskState.New;
 
             /// <summary>
             /// Indicates when the task started executing. 
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public DateTime? StartedUtc { get; set; }
 
             /// <summary>
             /// Indicates when the task finished executing.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public DateTime? FinishedUtc { get; set;}
 
             /// <summary>
             /// Set to the task execution time serialized to a string.
-            /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string ExecutionTime { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string CommandLine { get; set; }
 
             /// <summary>
@@ -287,41 +268,26 @@ namespace Neon.Kube.Resources
             /// script when persisted to the host node as well as to help identify the process
             /// when it's running.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string ExecutionId { get; set; }
 
             /// <summary>
             /// Set to the ID of the task process while its running.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public int? ProcessId { get; set; }
 
             /// <summary>
             /// The exit code returned by the command.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public int ExitCode { get; set; }
 
             /// <summary>
             /// The text written to standard output by the command.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string Output { get; set; }
 
             /// <summary>
             /// The text written to standard error by the command.
             /// </summary>
-#if KUBEOPS
-            [Required]
-#endif
             public string Error { get; set; }
 
             /// <summary>

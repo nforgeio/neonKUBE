@@ -197,7 +197,7 @@ log.LogDebug($"*** RECONCILE: 3");
                         //
                         //      1. Ensure that it's valid, delete if bad
                         //      2. Add a status property as necessary
-                        //      3. Remove the task if it's been retained for long enough
+                        //      3. Remove the task if it's been retained long enough
                         //      4. Execute the task if it's pending
 
                         var nodeTask = resources[name];
@@ -233,7 +233,15 @@ log.LogDebug($"*** RECONCILE: 8A");
 log.LogDebug($"*** RECONCILE: 8B");
 try
 {
-                            var patch = new V1Patch(nodeTask.Status, V1Patch.PatchType.JsonPatch);
+                                var patchString =
+$@"
+{{
+    ""spec"": {{
+        ""state:"" ""{ NeonHelper.EnumToString(nodeTask.Status.State) }""
+    }}
+}}
+";
+                            var patch = new V1Patch(patchString, V1Patch.PatchType.MergePatch);
 
                             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync(nodeTask, patch, nodeTask.Name());
 }
