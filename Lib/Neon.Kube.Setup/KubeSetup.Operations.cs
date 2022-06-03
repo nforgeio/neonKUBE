@@ -5266,25 +5266,7 @@ $@"- name: StorageType
                     var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        config:     new ClusterInfo()
-                        {
-                            ClusterId          = Guid.NewGuid().ToString("d"),
-                            ClusterVersion     = KubeVersions.NeonKube,
-                            Name               = cluster.Definition.Name,
-                            Description        = cluster.Definition.Description,
-                            HostingEnvironment = cluster.Definition.Hosting.Environment,
-                            Datacenter         = cluster.Definition.Datacenter,
-                            Domain             = cluster.Definition.Domain,
-                            PublicAddresses    = cluster.Definition.PublicAddresses,
-                            OptionalComponents = new ClusterOptionalComponents()
-                            {
-                                Mimir   = true,
-                                Grafana = true,
-                                Harbor  = true,
-                                Loki    = true,
-                                Minio   = true
-                            }
-                        });
+                        config:     new ClusterInfo(cluster.Definition));
 
                     await k8s.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
                 }));

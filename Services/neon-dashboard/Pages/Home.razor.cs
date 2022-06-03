@@ -28,12 +28,17 @@ using Neon.Tasks;
 
 using NeonDashboard.Shared.Components;
 
+using k8s;
+using k8s.Models;
+
 namespace NeonDashboard.Pages
 {
     [Authorize]
     public partial class Home : PageBase
     {
         private ClusterInfo clusterInfo;
+        private V1NodeList nodeList;
+        private NodeMetricsList nodeMetrics;
 
         /// <summary>
         /// Constructor.
@@ -56,6 +61,17 @@ namespace NeonDashboard.Pages
             AppState.NotifyDashboardChanged();
 
             await Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                nodeList = await AppState.GetNodesAsync();
+                nodeMetrics = await AppState.GetNodeMetricsAsync();
+                StateHasChanged();
+            }
         }
     }
 }

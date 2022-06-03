@@ -48,11 +48,17 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            Name            = clusterDefinition.Name;
-            Description     = clusterDefinition.Description;
-            Datacenter      = clusterDefinition.Datacenter;
-            Domain          = clusterDefinition.Domain;
-            PublicAddresses = clusterDefinition.PublicAddresses;
+            
+            ClusterId          = Guid.NewGuid().ToString("d");
+            ClusterVersion     = clusterDefinition.ClusterVersion;
+            Name               = clusterDefinition.Name;
+            Description        = clusterDefinition.Description;
+            HostingEnvironment = clusterDefinition.Hosting.Environment;
+            Environment        = clusterDefinition.Environment;
+            Datacenter         = clusterDefinition.Datacenter;
+            Domain             = clusterDefinition.Domain;
+            PublicAddresses    = clusterDefinition.PublicAddresses;
+            FeatureOptions     = clusterDefinition.Features;
         }
 
         /// <summary>
@@ -97,8 +103,8 @@ namespace Neon.Kube
         /// definition. 
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("")]
-        public string Environment { get; set; } = string.Empty;
+        [DefaultValue(EnvironmentType.Other)]
+        public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster
@@ -145,8 +151,8 @@ namespace Neon.Kube
         /// <summary>
         /// Describes which optional components have been deployed to the cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "OptionalComponents", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "FeatureOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public ClusterOptionalComponents OptionalComponents { get; set; } = new ClusterOptionalComponents();
+        public FeatureOptions FeatureOptions { get; set; } = new FeatureOptions();
     }
 }

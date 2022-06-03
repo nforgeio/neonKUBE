@@ -13,3 +13,22 @@
 <p>Cluster Version: @clusterInfo.ClusterVersion</p>
 <p>DataCenter: @clusterInfo.Datacenter</p>
 <p>Hosting Environment: @clusterInfo.HostingEnvironment</p>
+
+
+@if (nodeList != null)
+{
+  <table>
+  <tr>
+    <td>Name</td>
+    <td>Status</td>
+  </tr>
+  @foreach(var node in nodeList.Items)
+  {
+    <tr>
+      <td>@node.Metadata.Name</td>
+      <td>@(bool.Parse(node.Status.Conditions.Where(c => c.Type == "Ready").First().Status) ? "Ready" : "Not Ready")</td>
+    </tr>
+  }
+  </table>
+}
+
