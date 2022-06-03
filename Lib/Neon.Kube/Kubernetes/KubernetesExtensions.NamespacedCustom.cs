@@ -498,6 +498,70 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Updates the <b>status</b> of a namespace scoped custom object of the specified generic 
+        /// object type and name.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.  Note that this is passed as the entire custom object including its status.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="body">Specifies the new object data.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="patch">
+        /// Specifies the patch to be applied to the object status.  This is typically a 
+        /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
+        /// </param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="dryRun">
+        /// When present, indicates that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="fieldManager">
+        /// fieldManager is a name associated with the actor or entity that is making these
+        /// changes. The value must be less than or 128 characters long, and only contain
+        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// </param>
+        /// <param name="force">
+        /// Force is going to "force" Apply requests. It means user will re-acquire conflicting
+        /// fields owned by other people. Force flag must be unset for non-apply patch requests.
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated object.</returns>
+        public static async Task<T> PatchNamespacedCustomObjectStatusAsync<T>(
+            this IKubernetes    k8s,
+            T                   body,
+            string              namespaceParameter, 
+            object              patch,
+            string              name,
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            bool?               force             = null,
+            CancellationToken   cancellationToken = default(CancellationToken))
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+            return (T)await k8s.PatchNamespacedCustomObjectStatusAsync(
+                body:               body,
+                namespaceParameter: namespaceParameter,
+                group:              typeMetadata.Group,
+                version:            typeMetadata.ApiVersion,
+                plural:             typeMetadata.PluralName,
+                name:               name,
+                dryRun:             dryRun,
+                fieldManager:       fieldManager,
+                force:              force,
+                cancellationToken:  cancellationToken);
+        }
+
+        /// <summary>
         /// Deletes a namespace scoped custom object of the specified generic object type, nanmespace, 
         /// and name and doesn't throw any exceptions if the object doesn't exist.
         /// </summary>

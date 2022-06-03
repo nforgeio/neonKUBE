@@ -481,37 +481,63 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Updates the <b>status</b> subresource of a cluster scoped custom object of the specified generic 
+        /// Updates the <b>status</b> of a cluster scoped custom object of the specified generic 
         /// object type and name.
         /// </summary>
-        /// <typeparam name="TObject">The custom object type.</typeparam>
-        /// <typeparam name="TStatus">The custom object's status type.</typeparam>
+        /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">Specifies the new object data.</param>
+        /// <param name="patch">
+        /// Specifies the patch to be applied to the object status.  This is typically a 
+        /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
+        /// </param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="dryRun">
+        /// When present, indicates that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="fieldManager">
+        /// fieldManager is a name associated with the actor or entity that is making these
+        /// changes. The value must be less than or 128 characters long, and only contain
+        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// </param>
+        /// <param name="force">
+        /// Force is going to "force" Apply requests. It means user will re-acquire conflicting
+        /// fields owned by other people. Force flag must be unset for non-apply patch requests.
+        /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<TObject> UpdateClusterCustomObjectStatusAsync<TObject, TStatus>(
+        public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
-            TObject             body,
+            T                   body,
+            object              patch,
             string              name,
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            bool?               force             = null,
             CancellationToken   cancellationToken = default(CancellationToken))
 
-            where TObject : IKubernetesObject<V1ObjectMeta>, IStatus<TStatus>, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            var typeMetadata = typeof(TObject).GetKubernetesTypeMetadata();
-            var request      = new HttpRequestMessage(HttpMethod.Put, $"{k8s.BaseUri}apis/{body.ApiVersion}/{typeMetadata.PluralName}/{name}/status")
-            {
-                 Content = new StringContent(NeonHelper.JsonSerialize(body.Status), Encoding.UTF8, "application/json")
-            };
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            await k8s.HttpClient.SendSafeAsync(request, cancellationToken: cancellationToken);
-
-            return body;
+            return (T)await k8s.PatchClusterCustomObjectStatusAsync(
+                body:              body,
+                group:             typeMetadata.Group,
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName,
+                name:              name,
+                dryRun:            dryRun,
+                fieldManager:      fieldManager,
+                force:             force,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
