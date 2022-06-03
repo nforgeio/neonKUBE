@@ -25,7 +25,8 @@
 		<PackageReference Include="Blazor-Analytics" Version="3.10.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
-		<PackageReference Include="GitInfo" Version="2.2.0">
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
+    <PackageReference Include="GitInfo" Version="2.2.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -36,6 +37,7 @@
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="5.0.2" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
+		<PackageReference Include="PSC.Blazor.Components.Chartjs" Version="6.0.8" />
 	</ItemGroup>
 
 	<ItemGroup>
