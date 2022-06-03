@@ -155,7 +155,7 @@ namespace NeonDashboard
 
                     Dashboards = Dashboards.Concat(dashboards).ToList();
 
-                    Logger.LogInfo(NeonHelper.JsonSerialize(Dashboards));
+                    Logger.LogDebug(NeonHelper.JsonSerialize(Dashboards));
                 }
 
                 DashboardFrames = new List<Dashboard>(); 
