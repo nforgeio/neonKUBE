@@ -1,6 +1,4 @@
-﻿#if DISABLED
-
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // FILE:	    NodeTaskController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
@@ -168,7 +166,19 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 4");
                 {
                     log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
-log.LogDebug($"*** RECONCILE: 0");
+log.LogDebug($"*** RECONCILE: 0A");
+try
+{
+    await k8s.ListClusterCustomObjectAsync<V1NodeTask>();
+}
+catch (Exception e)
+{
+log.LogError("#############################################################");
+log.LogError(e);
+log.LogError("#############################################################");
+return null;
+}
+log.LogDebug($"*** RECONCILE: 0B");
 
                     if (name == null)
                     {
@@ -223,61 +233,9 @@ log.LogDebug($"*** RECONCILE: 8A");
 log.LogDebug($"*** RECONCILE: 8B");
 try
 {
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-                                log.LogDebug($"*** RECONCILE: 8B");
-try
-{
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-var config = KubernetesClientConfiguration.InClusterConfig();
-log.LogDebug($"in-cluster:      {KubernetesClientConfiguration.IsInCluster()}");
-log.LogDebug($"host:            {config.Host}");
-log.LogDebug($"username:        {config.Username}");
-log.LogDebug($"ca-cert-cnt:     {config.SslCaCerts.Count}");
-log.LogDebug($"token:           {config.AccessToken}");
-log.LogDebug($"namespace:       {config.Namespace}");
-log.LogDebug($"k8s null:        {k8s == null}");
-log.LogDebug($"HttpClient null: {k8s?.HttpClient == null}");
+                            var patch = new V1Patch(nodeTask.Status, V1Patch.PatchType.JsonPatch);
 
-log.LogDebug("#################### WORKED??? ####################");
-
-var request = new HttpRequestMessage(HttpMethod.Get, $"{k8s.BaseUri}apis/neonkube.io/v1alpha1/nodetasks/{name}");
-//var request = new HttpRequestMessage(HttpMethod.Get, $"{k8s.BaseUri}apis/neonkube.io/v1alpha1/nodetasks/{name}/status");
-var response = await k8s.HttpClient.SendAsync(request);
-log.LogDebug($"{response.StatusCode}: {response.ReasonPhrase}");
-log.LogDebug(await response.Content.ReadAsStringAsync());
-}
-catch (Exception e)
-{
-log.LogDebug(e);
-log.LogDebug("===============================================");
-log.LogDebug(e.Message);
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-}
-
-                            nodeTask = await k8s.UpdateClusterCustomObjectStatusAsync<V1NodeTask, V1NodeTask.V1NodeTaskStatus>(nodeTask, nodeTask.Name());
-}
-catch (Exception e)
-{
-log.LogDebug(e);
-log.LogDebug("===============================================");
-log.LogDebug(e.Message);
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-}
-log.LogDebug($"*** RECONCILE: 8C");
-try
-{
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-                            nodeTask = await k8s.UpdateClusterCustomObjectStatusAsync<V1NodeTask, V1NodeTask.V1NodeTaskStatus>(nodeTask, nodeTask.Name());
+                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync(nodeTask, patch, nodeTask.Name());
 }
 catch (Exception e)
 {
@@ -702,5 +660,3 @@ log.LogDebug($"*** EXECUTE: 20");
         }
     }
 }
-
-#endif
