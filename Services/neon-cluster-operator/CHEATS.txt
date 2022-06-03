@@ -1,11 +1,18 @@
-﻿# Rebuild and install: neon-cluster-operator
+﻿REM MAINTAINERS ONLY: Rebuild and install: neon-cluster-operator
+
+if not "%NEON_GITHUB_USER%" == "" goto userOK
+
+echo "ERROR" [NEON_GITHUB_USER] environment variable not set."
+goto done
+
+userOK:
 
 # neon delete crd containerregistries.neonkube.io
 # neon delete crd nodetasks.neonkube.io
 
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-cluster-operator
-set DEBUG_TAG=neonkube-0.6.0-alpha
+set DEBUG_TAG=neonkube-%NEON_GITHUB_USER%
 
 cd %NF_ROOT%\Images\neon-cluster-operator
 pwsh -f publish.ps1
@@ -13,3 +20,5 @@ pwsh -f publish.ps1
 cd %NF_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator
 neon helm uninstall neon-cluster-operator --namespace neon-system
 neon helm install neon-cluster-operator --namespace neon-system -f values.yaml --set logLevel=debug --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .
+
+:done

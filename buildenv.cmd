@@ -27,15 +27,20 @@ goto done
 
 :goodPath 
 
-echo.
-echo Configuring...
-echo.
-
 REM Set NF_REPOS to the parent directory holding the neonFORGE repositories.
 
 pushd "%NF_ROOT%\.."
 set NF_REPOS=%cd%
 popd 
+
+REM Some scripts need to know the developer's GitHub username:
+
+echo.
+set /p NEON_GITHUB_USER="Enter your GitHub username: "
+
+echo.
+echo Configuring...
+echo.
 
 REM Configure the environment variables.
 
@@ -54,6 +59,7 @@ set NEON_CLUSTER_TESTING=1
 
 REM Persist the environment variables.
 
+setx NEON_GITHUB_USER "%NEON_GITHUB_USER%" /M                 > nul
 setx NF_REPOS "%NF_REPOS%" /M                                 > nul
 setx NF_ROOT "%NF_ROOT%" /M                                   > nul
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M                             > nul
