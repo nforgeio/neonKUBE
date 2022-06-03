@@ -66,9 +66,8 @@ namespace Neon.Kube
                     throw new JsonException();
                 }
 
-                string? propertyName = reader.GetString();
-
-                var value = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref reader, options);
+                var propertyName = reader.GetString();
+                var value        = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref reader, options);
 
                 if (propertyName == "limits")
                 {
