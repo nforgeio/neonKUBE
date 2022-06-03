@@ -32,6 +32,10 @@ using k8s;
 
 namespace Neon.Kube
 {
+    /// <summary>
+    /// This handles streams from the Kubernetes API server, used for watching resources.
+    /// </summary>
+    /// <typeparam name="T">The type of resource being watched.</typeparam>
     public class WatchStream<T> : IAsyncEnumerable<WatchEvent<T>>, IDisposable where T : new()
     {
         private readonly StreamReader _reader;
