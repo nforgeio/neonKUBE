@@ -150,5 +150,31 @@ namespace System
                 }
             }
         }
+
+        /// <summary>
+        /// Examines the exception passed and if it's a <see cref="AggregateException"/> then the
+        /// first inner exception will be returned.  This is handy when you need to log the details
+        /// of the underlying exception thrown by an async operation.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <returns>The underlying exception.</returns>
+        public static Exception GetNonAggregateException(this Exception e)
+        {
+            var aggregateException = e as AggregateException;
+
+            if (aggregateException == null)
+            {
+                return e;
+            }
+            else
+            {
+                // $note(jefflill):
+                //
+                // We'll return the parent exception on the off-chance that there
+                // is no inner exception.
+
+                return aggregateException.InnerExceptions.FirstOrDefault() ?? e;
+            }
+        }
     }
 }
