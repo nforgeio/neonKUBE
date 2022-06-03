@@ -1433,7 +1433,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override IEnumerable<string> GetClusterAddress(bool nullWhenNoLoadbalancer = false)
+        public override IEnumerable<string> GetClusterAddresses()
         {
             return new List<string>() { ingressAddress.PublicIp } ;
         }

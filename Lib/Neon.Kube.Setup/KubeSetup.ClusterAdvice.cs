@@ -107,6 +107,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Kiali, CalculateKialiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubernetesDashboard, CalculateKubernetesDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Loki, CalculateLokiAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.LokiCompactor, CalculateLokiCompactorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.LokiDistributor, CalculateLokiDistributorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.LokiIndexGateway, CalculateLokiIndexGatewayAdvice(cluster));
@@ -117,6 +118,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.LokiTableManager, CalculateLokiTableManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Memcached, CalculateMemcachedAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MetricsServer, CalculateMetricsServerAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Mimir, CalculateMimirAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MimirAlertmanager, CalculateMimirAlertmanagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MimirCompactor, CalculateMimirCompactorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MimirDistributor, CalculateMimirDistributorAdvice(cluster));
@@ -136,6 +138,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Oauth2Proxy, CalculateOauth2ProxyAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsAdmissionServer, CalculateOpenEbsAdmissionServerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsApiServer, CalculateOpenEbsApiServerAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstor, CalculateOpenEbsCstorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorAdmissionServer, CalculateOpenEbsCstorAdmissionServerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorCsiController, CalculateOpenEbsCstorCsiControllerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorCsiNode, CalculateOpenEbsCstorCsiNodeAdvice(cluster));
@@ -143,6 +146,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorCvcOperator, CalculateOpenEbsCstorCvcOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorPool, CalculateOpenEbsCstorPoolAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsCstorPoolAux, CalculateOpenEbsCstorPoolAuxAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsJiva, CalculateOpenEbsJivaAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsLocalPvProvisioner, CalculateOpenEbsLocalPvProvisionerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsNdm, CalculateOpenEbsNdmAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsNdmOperator, CalculateOpenEbsNdmOperatorAdvice(cluster));
@@ -152,6 +156,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Prometheus, CalculatePrometheusAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.PrometheusOperator, CalculatePrometheusOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Reloader, CalculateReloaderAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Tempo, CalculateTempoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoAlertmanager, CalculateTempoAlertmanagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoCompactor, CalculateTempoCompactorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoDistributor, CalculateTempoDistributorAdvice(cluster));
@@ -532,6 +537,15 @@ namespace Neon.Kube
             return advice;
         }
 
+        private static KubeServiceAdvice CalculateMimirAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Mimir);
+
+            advice.MetricsEnabled = false;
+
+            return advice;
+        }
+
         private static KubeServiceAdvice CalculateMimirAlertmanagerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.MimirAlertmanager);
@@ -681,15 +695,22 @@ namespace Neon.Kube
 
             return advice;
         }
+        private static KubeServiceAdvice CalculateLokiAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Loki);
 
+            advice.MetricsEnabled = false;
+
+            return advice;
+        }
         private static KubeServiceAdvice CalculateLokiCompactorAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.LokiCompactor);
 
-            advice.ReplicaCount     = 1;
-            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
+            advice.ReplicaCount = 1;
+            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
-            advice.MetricsEnabled   = false;
+            advice.MetricsEnabled = false;
 
             return advice;
         }
@@ -925,6 +946,15 @@ namespace Neon.Kube
             return advice;
         }
 
+        private static KubeServiceAdvice CalculateOpenEbsCstorAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.OpenEbsCstor);
+
+            advice.MetricsEnabled = false;
+
+            return advice;
+        }
+
         private static KubeServiceAdvice CalculateOpenEbsCstorAdmissionServerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.OpenEbsCstorAdmissionServer);
@@ -1001,6 +1031,15 @@ namespace Neon.Kube
                 advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("500Mi");
             }
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateOpenEbsJivaAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.OpenEbsJiva);
+
+            advice.MetricsEnabled = false;
 
             return advice;
         }
@@ -1090,6 +1129,15 @@ namespace Neon.Kube
             return advice;
         }
 
+        private static KubeServiceAdvice CalculateTempoAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.Tempo);
+
+            advice.MetricsEnabled = false;
+
+            return advice;
+        }
+
         private static KubeServiceAdvice CalculateTempoAlertmanagerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.TempoAlertmanager);
@@ -1105,8 +1153,8 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.TempoCompactor);
 
-            advice.ReplicaCount = 1;
-            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.ReplicaCount     = 1;
+            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
 
             return advice;

@@ -191,14 +191,10 @@ namespace Neon.Kube
         /// Returns the IP address to be used to access the cluster.  For clusters
         /// deployed the the cloud, this will be the ingress IP address assigned to
         /// the load balancer.  For on-premise clusters, this returns the private
-        /// IP address for the first master node.
+        /// IP addresses for the master nodes.
         /// </summary>
-        /// <param name="nullWhenNotCloud">
-        /// Optionally specifies that <c>null</c> should be returned for non-cloud
-        /// clusters that aren't behind by a load balancer.  This defaults to <c>false</c>.
-        /// </param>
-        /// <returns>The cluster IP address or <c>null</c>.</returns>
-        IEnumerable<string> GetClusterAddress(bool nullWhenNotCloud = false);
+        /// <returns>The list of cluster IP addresses.</returns>
+        IEnumerable<string> GetClusterAddresses();
 
         /// <summary>
         /// Identifies the data disk device for a node.  This returns the data disk's device 

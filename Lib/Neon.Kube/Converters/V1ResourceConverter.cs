@@ -39,20 +39,63 @@ namespace Neon.Kube
             Type                    typeToConvert,
             JsonSerializerOptions   options)
         {
-            var value     = reader.GetString()!;
-            var resources = NeonHelper.JsonDeserialize<dynamic>(reader.GetString());
-            var result    = new V1ResourceRequirements();
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                throw new JsonException();
+            }
 
-            result.Requests = new Dictionary<string, ResourceQuantity>();
-            result.Limits   = new Dictionary<string, ResourceQuantity>();
+            // initialize
+            var result                = new V1ResourceRequirements();
+            result.Limits             = new Dictionary<string, ResourceQuantity>();
+            result.Requests           = new Dictionary<string, ResourceQuantity>();
+            result.Limits["cpu"]      = new ResourceQuantity();
+            result.Limits["memory"]   = new ResourceQuantity();
+            result.Requests["cpu"]    = new ResourceQuantity();
+            result.Requests["memory"] = new ResourceQuantity();
 
-            result.Requests["cpu"]    = new ResourceQuantity(resources.limits.cpu);
-            result.Requests["memory"] = new ResourceQuantity(resources.limits.cpu);
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return result;
+                }
 
-            result.Limits["cpu"]      = new ResourceQuantity(resources.limits.cpu);
-            result.Limits["memory"]   = new ResourceQuantity(resources.limits.cpu);
+                // Get the key.
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    throw new JsonException();
+                }
 
-            return result;
+                string? propertyName = reader.GetString();
+
+                var value = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref reader, options);
+
+                if (propertyName == "limits")
+                {
+                    if (value.TryGetProperty("cpu", out var cpu))
+                    {
+                        result.Limits["cpu"].Value = cpu.GetString();
+                    }
+                    if (value.TryGetProperty("memory", out var memory))
+                    {
+                        result.Limits["memory"].Value = memory.GetString();
+                    }
+                }
+
+                if (propertyName == "requests")
+                {
+                    if (value.TryGetProperty("cpu", out var cpu))
+                    {
+                        result.Requests["cpu"].Value = cpu.GetString();
+                    }
+                    if (value.TryGetProperty("memory", out var memory))
+                    {
+                        result.Requests["memory"].Value = memory.GetString();
+                    }
+                }
+            }
+
+            throw new JsonException();
         }
 
         /// <inheritdoc/>

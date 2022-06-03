@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,6 +40,8 @@ using Prometheus;
 
 using Segment;
 
+using StackExchange.Redis;
+
 namespace NeonDashboard
 {
     /// <summary>
@@ -60,6 +63,7 @@ namespace NeonDashboard
         {
             Configuration             = configuration;
             this.NeonDashboardService = service;
+            k8s                       = service.Kubernetes;
         }
 
         /// <summary>
@@ -74,48 +78,23 @@ namespace NeonDashboard
 
             if (NeonHelper.IsDevWorkstation)
             {
-                try
-                {
-                    var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
-                    
-                    k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
-
-                    // set config map
-                    var configMap = k8s.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
-
-                    NeonDashboardService.SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
-
-                    var secret = k8s.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
-
-                    NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
-
-                    // Configure cluster callback url to allow local dev
-
-                    var dexConfigMap = k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
-                    var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
-                    var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
-                    var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
-
-                    if (!clientConfig.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
-                    {
-                        clientConfig.RedirectUris.Add("http://localhost:11001/oauth2/callback");
-                        dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                        k8s.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem).WaitWithoutAggregate();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    NeonDashboardService.Log.LogError(ex);
-                }
+                services.AddDistributedMemoryCache();
             }
             else
             {
-                k8s = new KubernetesWithRetry(KubernetesClientConfiguration.InClusterConfig());
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = "neon-redis.neon-system";
+                    options.InstanceName = "neon-redis";
+                    options.ConfigurationOptions = new ConfigurationOptions()
+                    {
+                        AllowAdmin = true,
+                        ServiceName = "master"
+                    };
+
+                    options.ConfigurationOptions.EndPoints.Add("neon-redis.neon-system:26379");
+                });
             }
-
-            var configmap = k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus).Result;
-
-            NeonDashboardService.ClusterInfo = (new TypeSafeConfigMap<ClusterInfo>(configmap)).Config;
 
             services.AddServerSideBlazor();
 
@@ -135,7 +114,6 @@ namespace NeonDashboard
                 options.ClientSecret                  = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
                 options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
-                //options.GetClaimsFromUserInfoEndpoint = true;
                 options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.SaveTokens                    = true;
                 options.RequireHttpsMetadata          = true;
@@ -151,7 +129,6 @@ namespace NeonDashboard
                 {
                     RequireNonce = false,
                     RequireState = false
-                    
                 };
             });
 

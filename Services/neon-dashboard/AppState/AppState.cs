@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Hosting;
 
@@ -81,6 +82,11 @@ namespace NeonDashboard
         public ILocalStorageService LocalStorage;
 
         /// <summary>
+        /// Redis Cache.
+        /// </summary>
+        public IDistributedCache Cache;
+
+        /// <summary>
         /// Bool to check whether it's ok to run javascript.
         /// </summary>
         public bool JsEnabled => HttpContextAccessor.HttpContext.WebSockets.IsWebSocketRequest;
@@ -123,7 +129,8 @@ namespace NeonDashboard
             NavigationManager       navigationManager,
             IWebHostEnvironment     webHostEnv,
             IAnalytics              analytics,
-            ILocalStorageService    localStorage)
+            ILocalStorageService    localStorage,
+            IDistributedCache       cache)
         {
             this.NeonDashboardService = neonDashboardService;
             this.NavigationManager    = navigationManager;
@@ -133,6 +140,7 @@ namespace NeonDashboard
             this.WebHostEnvironment   = webHostEnv;
             this.Analytics            = analytics;
             this.LocalStorage         = localStorage;
+            this.Cache                = cache;
 
             bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
 
@@ -155,7 +163,7 @@ namespace NeonDashboard
 
                     Dashboards = Dashboards.Concat(dashboards).ToList();
 
-                    Logger.LogInfo(NeonHelper.JsonSerialize(Dashboards));
+                    Logger.LogDebug(NeonHelper.JsonSerialize(Dashboards));
                 }
 
                 DashboardFrames = new List<Dashboard>(); 
