@@ -256,6 +256,7 @@ namespace Neon.Kube.Resources
 
             /// <summary>
             /// Set to the task execution time serialized to a string.
+            /// </summary>
             public string ExecutionTime { get; set; }
 
             /// <summary>
