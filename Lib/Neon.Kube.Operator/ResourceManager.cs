@@ -95,7 +95,7 @@ namespace Neon.Kube.Operator
     /// Kubernetes operators work by watching cluster resources via the API server.  The KubeOps Operator SDK
     /// starts watching the resource specified by <typeparamref name="TResource"/> and raises the
     /// controller events as they are received, handling any failures seamlessly.  The <see cref="ResourceManager{TCustomResource}"/> 
-    /// class helps keep track of the known resources as well reducing the complexity of determining why
+    /// class helps keep track of the existing resources as well reducing the complexity of determining why
     /// an event was raised.  KubeOps also periodically raises reconciled events even when nothing has 
     /// changed.  This appears to happen once a minute.
     /// </para>
@@ -103,8 +103,8 @@ namespace Neon.Kube.Operator
     /// When your operator first starts, a reconciled event will be raised for each custom resource of 
     /// type <typeparamref name="TResource"/> in the cluster and the resource manager will add
     /// these resources to its internal dictionary.  By default, the resource manager will not call 
-    /// your handler until all known resources have been added to this dictionary.  Then after the 
-    /// resource manager has determined that it has collected all of the known resources, it will call 
+    /// your handler until all existing resources have been added to this dictionary.  Then after the 
+    /// resource manager has determined that it has collected all of the existing resources, it will call 
     /// your handler for the first time, passing a <c>null</c> resource name and your handler can start
     /// doing it's thing.
     /// </para>
@@ -462,8 +462,8 @@ namespace Neon.Kube.Operator
         /// Call this when your controller receives a <b>reconciled</b> event, passing the
         /// resource.  This method adds the resource to the collection if it  doesn't already 
         /// exist and then calls your handler with the resource name and a dictionary of the
-        /// known resources when a change is detected.  The resource name will be passed as
-        /// <c>null</c> when no change is detected or when all known resources have been
+        /// existing resources when a change is detected.  The resource name will be passed as
+        /// <c>null</c> when no change is detected or when all existing resources have been
         /// collected.
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
@@ -478,7 +478,7 @@ namespace Neon.Kube.Operator
         /// </para>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
-        /// known resources have been receieved.  You can disable this behavior by passing
+        /// existing resources have been receieved.  You can disable this behavior by passing
         /// <c>false</c> to the constructor.
         /// </para>
         /// </remarks>
@@ -521,11 +521,11 @@ namespace Neon.Kube.Operator
 
                     if (waitForAll && !changed)
                     {
-                        // Looks like we're tracking all of the known resources now, so stop
+                        // Looks like we're tracking all of the existing resources now, so stop
                         // waiting for resources and configure to raise an immediate NO-CHANGE
                         // event below.
 
-                        log.LogInfo($"All known resources loaded.");
+                        log.LogInfo($"All existing resources loaded.");
 
                         waitForAll                = false;
                         changed                   = true;
@@ -536,7 +536,7 @@ namespace Neon.Kube.Operator
                     {
                         // We're still receiving known resources.
 
-                        log.LogInfo($"RECONCILED: {name} (waiting for known resources)");
+                        log.LogInfo($"RECONCILED: {name} (waiting for existing resources)");
                         return null;
                     }
 
@@ -572,7 +572,7 @@ namespace Neon.Kube.Operator
         /// Call this when your controller receives a <b>deleted</b> event, passing the resource.
         /// If the resource exists in the collection, this method will remove it and call your
         /// handler.  The handler is not called when the resource does not exist the collection
-        /// or while we're still waiting to receive all known resources.
+        /// or while we're still waiting to receive all existing resources.
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handler">Your custom event handler.</param>
@@ -623,7 +623,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"DELETED: {resource.Metadata.Name} (waiting for known resources)");
+                        log.LogInfo($"DELETED: {resource.Metadata.Name} (waiting for existing resources)");
                         return null;
                     }
                 }
@@ -641,7 +641,7 @@ namespace Neon.Kube.Operator
         /// Call this when a <b>status-modified</b> event was received, passing the resource.
         /// This method replaces any existing resource with the same name in the collection.
         /// The handler is not called when the resource does not exist in the collection or
-        /// while we're still waiting to receive all known resources.
+        /// while we're still waiting to receive all existing resources.
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handler">Your custom event handler.</param>
@@ -691,7 +691,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (waiting for known resources)");
+                        log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (waiting for existing resources)");
                         return null;
                     }
                 }
