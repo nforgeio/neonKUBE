@@ -29,7 +29,7 @@ namespace NeonClusterOperator
         public void ConfigureServices(IServiceCollection services)
         {
             var operatorBuilder = services
-                .AddSingleton<KubernetesWithRetry>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
+                .AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
                 .AddKubernetesOperator(
                     settings =>
                     {

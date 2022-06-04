@@ -91,12 +91,12 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly KubernetesWithRetry k8s;
+        private readonly IKubernetes k8s;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NodeTaskController(KubernetesWithRetry k8s)
+        public NodeTaskController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
 
