@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,10 +29,13 @@ using Microsoft.Rest.Serialization;
 using Neon.Common;
 
 using k8s;
-using System.Text.Json.Serialization;
 
 namespace Neon.Kube
 {
+    /// <summary>
+    /// This handles streams from the Kubernetes API server, used for watching resources.
+    /// </summary>
+    /// <typeparam name="T">The type of resource being watched.</typeparam>
     public class WatchStream<T> : IAsyncEnumerable<WatchEvent<T>>, IDisposable where T : new()
     {
         private readonly StreamReader _reader;
@@ -40,6 +44,12 @@ namespace Neon.Kube
         private Memory<char> _currentBuffer = Memory<char>.Empty;
         private Memory<char> _currentData = Memory<char>.Empty;
         private static JsonSerializerOptions jsonSerializerOptions;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="response"></param>
         public WatchStream(Stream stream, IDisposable response)
         {
             _reader = new StreamReader(stream, leaveOpen: false);
@@ -51,6 +61,7 @@ namespace Neon.Kube
             jsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             try
@@ -63,11 +74,13 @@ namespace Neon.Kube
             }
         }
 
+        /// <inheritdoc/>
         public IAsyncEnumerator<WatchEvent<T>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             return new AsyncEnumerator(this, cancellationToken);
         }
 
+        /// <inheritdoc/>
         public async Task<(WatchEventType eventType, T resource, bool connected)> ReadNextAsync(CancellationToken cancellationToken = default)
         {
             if (TryGetLine(out var line))
@@ -140,6 +153,11 @@ namespace Neon.Kube
             private WatchStream<T> _self;
             private CancellationToken _cancellationToken;
 
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="self"></param>
+            /// <param name="cancellationToken"></param>
             public AsyncEnumerator(WatchStream<T> self, CancellationToken cancellationToken)
             {
                 _self = self;
@@ -148,12 +166,14 @@ namespace Neon.Kube
 
             public WatchEvent<T> Current { get; set; }
 
+            /// <inheritdoc/>
             public ValueTask DisposeAsync()
             {
                 _self.Dispose();
                 return ValueTask.CompletedTask;
             }
 
+            /// <inheritdoc/>
             public async ValueTask<bool> MoveNextAsync()
             {
                 var (eventType, resource, connected) = await _self.ReadNextAsync(_cancellationToken);

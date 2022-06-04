@@ -57,8 +57,9 @@ namespace NeonDashboard
                     return value;
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
+                Logger.LogError(e);
             }
 
             var nodes = await NeonDashboardService.Kubernetes.ListNodeAsync();
@@ -80,8 +81,9 @@ namespace NeonDashboard
                     return value;
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
+                Logger.LogError(e);
             }
 
             var nodeMetricsList = await NeonDashboardService.Kubernetes.GetKubernetesNodesMetricsAsync();

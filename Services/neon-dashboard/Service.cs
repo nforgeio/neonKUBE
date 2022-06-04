@@ -159,17 +159,17 @@ namespace NeonDashboard
             try
             {
                 // set config map
-                var configMap = Kubernetes.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem).Result;
+                var configMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem);
 
                 SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
 
-                var secret = Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                var secret = await Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
                 // Configure cluster callback url to allow local dev
 
-                var dexConfigMap = Kubernetes.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem).Result;
+                var dexConfigMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
                 var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
                 var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
                 var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
@@ -183,7 +183,7 @@ namespace NeonDashboard
             }
             catch (Exception e)
             {
-                Log.LogError("Error configuring SSO", e.GetNonAggregateException());
+                Log.LogError("Error configuring SSO", e);
             }
         }
     }
