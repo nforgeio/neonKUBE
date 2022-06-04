@@ -3,9 +3,22 @@
 // CONTRIBUTOR: Simon Zhang
 // COPYRIGHT: Copyright (c) 2005-2022 by neonFORGE LLC. All rights reserved.*/
 
+@font-face {
+    font-family: "Pangram Sans";
+    src: url("../fonts/PPPangramSans-Medium.otf");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "Pangram Sans";
+    src: url("../fonts/PPPangramSans-Bold.otf");
+    font-weight: bold;
+}
+
+
 body {
     font-size: var(--base);
-    font-family: sans-serif;
+    font-family: "Pangram Sans", sans-serif;
 }
 
 

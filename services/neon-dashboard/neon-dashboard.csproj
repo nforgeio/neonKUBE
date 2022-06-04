@@ -58,6 +58,15 @@
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\fonts\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\fonts\PPPangramSans-Bold.otf" />
+	  <None Include="wwwroot\fonts\PPPangramSans-Medium.otf" />
+	</ItemGroup>
+
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
 		<Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared --style compressed --load-path=Styles --update" />
 	</Target>
