@@ -798,7 +798,7 @@ compactor:
             topologyKey: failure-domain.beta.kubernetes.io/zone
   persistence:
     # -- Enable creating PVCs for the compactor
-    enabled: true
+    enabled: false
     # -- Size of persistent disk
     size: 1Gi
     # -- Storage class to be used.

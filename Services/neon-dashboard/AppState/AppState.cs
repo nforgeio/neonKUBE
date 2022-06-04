@@ -42,6 +42,21 @@ namespace NeonDashboard
         public Service NeonDashboardService;
 
         /// <summary>
+        /// Kubernetes related state.
+        /// </summary>
+        public __Kube Kube;
+
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
+        public __Metrics Metrics;
+
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
+        public __Cache Cache;
+
+        /// <summary>
         /// The Navigation Manager.
         /// </summary>
         public NavigationManager NavigationManager;
@@ -84,7 +99,7 @@ namespace NeonDashboard
         /// <summary>
         /// Redis Cache.
         /// </summary>
-        public IDistributedCache Cache;
+        public IDistributedCache DistributedCache;
 
         /// <summary>
         /// Bool to check whether it's ok to run javascript.
@@ -140,7 +155,10 @@ namespace NeonDashboard
             this.WebHostEnvironment   = webHostEnv;
             this.Analytics            = analytics;
             this.LocalStorage         = localStorage;
-            this.Cache                = cache;
+            this.DistributedCache     = cache;
+            this.Kube                 = new __Kube(this);
+            this.Metrics              = new __Metrics(this);
+            this.Cache                = new __Cache(this);
 
             bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
 

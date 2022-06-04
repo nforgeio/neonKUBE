@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+﻿        //-----------------------------------------------------------------------------
 // FILE:	    Home.razor.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
@@ -68,8 +68,9 @@ namespace NeonDashboard.Pages
         {
             if (firstRender)
             {
-                nodeList = await AppState.GetNodesAsync();
-                nodeMetrics = await AppState.GetNodeMetricsAsync();
+                nodeList = await AppState.Kube.GetNodesAsync();
+                nodeMetrics = await AppState.Kube.GetNodeMetricsAsync();
+                await AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow);
                 StateHasChanged();
             }
         }
