@@ -207,7 +207,7 @@ log.LogDebug($"*** RECONCILE: 3");
                         var nodeTask = resources[name];
 var statusIsNull = nodeTask.Status == null ? "STATUS IS NULL" : "STATUS != NULL";
 log.LogDebug($"*** RECONCILE: 4A: {statusIsNull}");
-log.LogDebug($"*** RECONCILE: 4B: state={nodeTask.Status?.State}");
+log.LogDebug($"*** RECONCILE: 4B: state={nodeTask.Status?.Phase}");
 
                         // Verify that task is well structured.
 
@@ -229,10 +229,10 @@ log.LogDebug($"*** RECONCILE: 6");
                         // For new tasks, update the status to: PENDING
                         
 log.LogDebug($"*** RECONCILE: 7");
-                        if (nodeTask.Status.State == V1NodeTaskState.New)
+                        if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.New)
                         {
 log.LogDebug($"*** RECONCILE: 8A");
-                            //nodeTask.Status.State = V1NodeTaskState.Pending;
+                            //nodeTask.Status.State = V1NodeTask.NodeTaskState.Pending;
 
 log.LogDebug($"*** RECONCILE: 8B");
 try
@@ -241,14 +241,14 @@ try
 $@"
 {{
     ""spec"": {{
-        ""state"": ""{ NeonHelper.EnumToString(nodeTask.Status.State) }""
+        ""state"": ""{ NeonHelper.EnumToString(nodeTask.Status.Phase) }""
     }}
 }}
 ";
                                 var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
                                 patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
-                                patch.Replace(path => path.Status.State, V1NodeTaskState.Pending);
+                                patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
 
                                 nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                             }
@@ -284,7 +284,7 @@ log.LogDebug($"*** RECONCILE: 13");
                         // Execute the task if it's pending.
 
 log.LogDebug($"*** RECONCILE: 14");
-                        if (nodeTask.Status.State == V1NodeTaskState.Pending)
+                        if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Pending)
                         {
 log.LogDebug($"*** RECONCILE: 15");
                             await ExecuteTaskAsync(nodeTask);
@@ -356,7 +356,7 @@ log.LogDebug($"*** RECONCILE: 16");
         /// <list type="bullet">
         /// <item>
         /// Tasks whose <see cref="V1NodeTask.V1NodeTaskStatus.AgentId"/> doesn't match
-        /// the ID for the current agent will be marked as <see cref="V1NodeTaskState.Orphaned"/>
+        /// the ID for the current agent will be marked as <see cref="V1NodeTask.NodeTaskPhase.Orphaned"/>
         /// and the finish time will be set to now.  This sets the task up for eventual
         /// deletion.
         /// </item>
@@ -396,7 +396,7 @@ log.LogDebug($"*** RECONCILE: 16");
                     continue;
                 }
 
-                if (nodeTask.Status.State == V1NodeTaskState.Running)
+                if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Running)
                 {
                     // Detect and kill orphaned tasks.
 
@@ -407,7 +407,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         // Update the node task status to: ORPHANED
 
-                        nodeTask.Status.State         = V1NodeTaskState.Orphaned;
+                        nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Orphaned;
                         nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
                         nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
                         nodeTask.Status.ExitCode      = -1;
@@ -425,7 +425,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         // Update the node task status to: TIMEOUT
 
-                        nodeTask.Status.State         = V1NodeTaskState.Timeout;
+                        nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Timeout;
                         nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
                         nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
                         nodeTask.Status.ExitCode      = -1;
@@ -469,7 +469,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
             var taskName = nodeTask.Name();
 
-            if (nodeTask.Status.State != V1NodeTaskState.Running)
+            if (nodeTask.Status.Phase != V1NodeTask.NodeTaskPhase.Running)
             {
                 return;
             }
@@ -519,7 +519,7 @@ log.LogDebug($"*** RECONCILE: 16");
 log.LogDebug($"*** EXECUTE: 0");
             var taskName = nodeTask.Name();
 
-            if (nodeTask.Status.State != V1NodeTaskState.Pending)
+            if (nodeTask.Status.Phase != V1NodeTask.NodeTaskPhase.Pending)
             {
 log.LogDebug($"*** EXECUTE: 1");
                 return;
@@ -542,7 +542,7 @@ log.LogDebug($"*** EXECUTE: 3");
             Directory.CreateDirectory(scriptFolder);
             File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(nodeTask.Spec.BashScript));
 
-            nodeTask.Status.State       = V1NodeTaskState.Running;
+            nodeTask.Status.Phase       = V1NodeTask.NodeTaskPhase.Running;
             nodeTask.Status.StartedUtc  = DateTime.UtcNow;
             nodeTask.Status.AgentId     = HostNode.AgentId;
             nodeTask.Status.CommandLine = $"/bin/bash {scriptPath}";
@@ -588,7 +588,7 @@ log.LogDebug($"*** EXECUTE: 10");
 
                 log.LogWarn(e);
 
-                nodeTask.Status.State         = V1NodeTaskState.Finished;
+                nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Finished;
                 nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
                 nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
                 nodeTask.Status.ExitCode      = -1;
@@ -638,7 +638,7 @@ log.LogDebug($"*** EXECUTE: 15");
                     log.LogWarn($"Timeout [nodetask={taskName}]");
                 }
 
-                if (nodeTask.Status.State == V1NodeTaskState.Running)
+                if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Running)
                 {
 log.LogDebug($"*** EXECUTE: 16");
                     nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
@@ -647,13 +647,13 @@ log.LogDebug($"*** EXECUTE: 16");
                     if (timeout)
                     {
 log.LogDebug($"*** EXECUTE: 17");
-                        nodeTask.Status.State    = V1NodeTaskState.Timeout;
+                        nodeTask.Status.Phase    = V1NodeTask.NodeTaskPhase.Timeout;
                         nodeTask.Status.ExitCode = -1;
                     }
                     else
                     {
 log.LogDebug($"*** EXECUTE: 18");
-                        nodeTask.Status.State    = V1NodeTaskState.Finished;
+                        nodeTask.Status.Phase    = V1NodeTask.NodeTaskPhase.Finished;
                         nodeTask.Status.ExitCode = result.ExitCode;
 
                         if (nodeTask.Spec.CaptureOutput)

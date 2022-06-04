@@ -214,19 +214,6 @@ namespace Neon.Kube.Operator
 
             var patchString = JsonConvert.SerializeObject(patchDoc, Formatting.None, NeonHelper.JsonRelaxedSerializerSettings.Value);
 
-            //###############################
-            // $debug(jefflill): DELETE THIS!
-
-            Console.WriteLine($"PATCH BEFORE = {patchString}");
-
-            //patchString = patchString.Replace("Status", "status");
-            //patchString = patchString.Replace("pending", "Pending");
-            //patchString = patchString.Replace("State", "state");
-
-            Console.WriteLine($"PATCH AFTER  = {patchString}");
-
-            //###############################
-
             return new V1Patch(patchString, V1Patch.PatchType.JsonPatch);
         }
     }

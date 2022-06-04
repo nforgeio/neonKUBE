@@ -1,7 +1,7 @@
 ﻿REM MAINTAINERS ONLY: Rebuild and install: neon-cluster-operator
 
-# neon delete crd containerregistries.neonkube.io
-# neon delete crd nodetasks.neonkubget podse.io
+REM neon delete crd containerregistries.neonkube.io
+REM neon delete crd nodetasks.neonkube.io
 
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-cluster-operator

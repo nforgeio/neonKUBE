@@ -67,7 +67,7 @@ namespace Neon.Kube.Resources
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
     /// <see cref="V1NodeTaskStatus.StartedUtc"/> to the current time and change the state to
-    /// <see cref="V1NodeTaskState.Running"/>.
+    /// <see cref="NodeTaskPhase.Running"/>.
     /// </item>
     /// <item>
     /// The agent will assign a new UUID to the task and save this in the node task status.  This UUID will
@@ -91,7 +91,7 @@ namespace Neon.Kube.Resources
     /// </para>
     /// </note>
     /// <item>
-    /// When the command completes without timing out, the agent will set its state to <see cref="V1NodeTaskState.Finished"/>,
+    /// When the command completes without timing out, the agent will set its state to <see cref="NodeTaskPhase.Finished"/>,
     /// set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time and <see cref="V1NodeTaskStatus.ExitCode"/>,
     /// <see cref="V1NodeTaskStatus.Output"/> and <see cref="V1NodeTaskStatus.Error"/> to the command results.
     /// </item>
@@ -104,7 +104,7 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="V1NodeTaskState.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
+    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
     /// current time.
     /// </item>
     /// <item>
@@ -112,7 +112,7 @@ namespace Neon.Kube.Resources
     /// <see cref="V1NodeTaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
     /// happen when the previous agent pod started executing the command and then was terminated before the
     /// command completed.  The agent will attempt to locate the running pod by its command line and
-    /// process ID and terminate when it exists and then set the state to <see cref="V1NodeTaskState.Orphaned"/>
+    /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskPhase.Orphaned"/>
     /// and <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time.
     /// </item>
     /// <item>
@@ -134,6 +134,51 @@ namespace Neon.Kube.Resources
 #endif
     public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.V1NodeTaskSpec, V1NodeTask.V1NodeTaskStatus>
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Enumerates the possible status of a <see cref="V1NodeTask"/>.
+        /// </summary>
+        public enum NodeTaskPhase
+        {
+            /// <summary>
+            /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
+            /// to <see cref="Pending"/> when it sees the task for the first time.
+            /// </summary>
+            New = 0,
+
+            /// <summary>
+            /// The task is waiting to be executed by the <b>neon-node-agent</b>.
+            /// </summary>
+            Pending,
+
+            /// <summary>
+            /// The task is currently running.
+            /// </summary>
+            Running,
+
+            /// <summary>
+            /// The task timed out while executing.
+            /// </summary>
+            Timeout,
+
+            /// <summary>
+            /// The task started executing on one <b>neon-node-agent</b> pod which
+            /// crashed or was otherwise terminated and a newly scheduled pod detected
+            /// this sutuation.
+            /// </summary>
+            Orphaned,
+
+            /// <summary>
+            /// The task finished executing.
+            /// </summary>
+            Finished
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -239,10 +284,11 @@ namespace Neon.Kube.Resources
             public string AgentId { get; set; }
 
             /// <summary>
-            /// Indicates the current state of the task.  This defaules to
-            /// <see cref="V1NodeTaskState.Pending"/> when the task is constructed.
+            /// Indicates the current task phase.  This defaults to <see cref="NodeTaskPhase.New"/>
+            /// when the task is constructed which can be used to detect whether the status is
+            /// actually persisted to Kubernetes.
             /// </summary>
-            public V1NodeTaskState State { get; set; } = V1NodeTaskState.New;
+            public NodeTaskPhase Phase { get; set; } = NodeTaskPhase.New;
 
             /// <summary>
             /// Indicates when the task started executing. 

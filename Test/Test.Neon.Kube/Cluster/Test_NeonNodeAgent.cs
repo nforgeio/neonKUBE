@@ -164,10 +164,10 @@ namespace TestKube
                 {
                     foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                     {
-                        switch (nodeTask.Status.State)
+                        switch (nodeTask.Status.Phase)
                         {
-                            case V1NodeTaskState.Pending:
-                            case V1NodeTaskState.Running:
+                            case V1NodeTask.NodeTaskPhase.Pending:
+                            case V1NodeTask.NodeTaskPhase.Running:
 
                                 return false;
                         }
