@@ -1,21 +1,12 @@
 ﻿REM MAINTAINERS ONLY: Rebuild and install: neon-node-agent
 
-if not "%NEON_GITHUB_USER%" == "" goto userOK
-
-echo "ERROR" [NEON_GITHUB_USER] environment variable not set."
-goto done
-
-userOK:
-
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-node-agent
 set DEBUG_TAG=neonkube-%NEON_GITHUB_USER%
 
 cd %NF_ROOT%\Images\neon-node-agent
-pwsh -f publish.ps1
+pwsh -f publish.ps1 %DEBUG_TAG%
 
 cd %NF_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent
 neon helm uninstall neon-node-agent --namespace neon-system
 neon helm install neon-node-agent --namespace neon-system -f values.yaml --set logLevel=debug --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .
-
-:done
