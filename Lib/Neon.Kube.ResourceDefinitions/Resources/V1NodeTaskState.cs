@@ -44,25 +44,21 @@ namespace Neon.Kube.Resources
         /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
         /// to <see cref="Pending"/> when it sees the task for the first time.
         /// </summary>
-        [EnumMember(Value = "new")]
         New = 0,
 
         /// <summary>
         /// The task is waiting to be executed by the <b>neon-node-agent</b>.
         /// </summary>
-        [EnumMember(Value = "pending")]
         Pending,
 
         /// <summary>
         /// The task is currently running.
         /// </summary>
-        [EnumMember(Value = "running")]
         Running,
 
         /// <summary>
         /// The task timed out while executing.
         /// </summary>
-        [EnumMember(Value = "timeout")]
         Timeout,
 
         /// <summary>
@@ -70,13 +66,11 @@ namespace Neon.Kube.Resources
         /// crashed or was otherwise terminated and a newly scheduled pod detected
         /// this sutuation.
         /// </summary>
-        [EnumMember(Value = "orphaned")]
         Orphaned,
 
         /// <summary>
         /// The task finished executing.
         /// </summary>
-        [EnumMember(Value = "finished")]
         Finished
     }
 }

@@ -15,7 +15,10 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
+
+using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -34,6 +37,7 @@ using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
+using Newtonsoft.Json;
 using Prometheus;
 
 namespace NeonNodeAgent
@@ -118,9 +122,9 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 2");
                         this.k8s,
                         @namespace: KubeNamespace.NeonSystem,
                         leaseName:        $"{Program.Service.Name}.nodetask-{HostNode.Name}",
-                        identity: Pod.Name,
+                        identity:         Pod.Name,
                         promotionCounter: promotionCounter,
-                        demotionCounter: demotedCounter,
+                        demotionCounter:  demotedCounter,
                         newLeaderCounter: newLeaderCounter);
 log.LogDebug($"*** NODETASK-CONTROLLER: 3");
 
@@ -228,7 +232,7 @@ log.LogDebug($"*** RECONCILE: 7");
                         if (nodeTask.Status.State == V1NodeTaskState.New)
                         {
 log.LogDebug($"*** RECONCILE: 8A");
-                            nodeTask.Status.State = V1NodeTaskState.Pending;
+                            //nodeTask.Status.State = V1NodeTaskState.Pending;
 
 log.LogDebug($"*** RECONCILE: 8B");
 try
@@ -237,14 +241,17 @@ try
 $@"
 {{
     ""spec"": {{
-        ""state:"" ""{ NeonHelper.EnumToString(nodeTask.Status.State) }""
+        ""state"": ""{ NeonHelper.EnumToString(nodeTask.Status.State) }""
     }}
 }}
 ";
-                            var patch = new V1Patch(patchString, V1Patch.PatchType.MergePatch);
+                                var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync(nodeTask, patch, nodeTask.Name());
-}
+                                patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
+                                patch.Replace(path => path.Status.State, V1NodeTaskState.Pending);
+
+                                nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                            }
 catch (Exception e)
 {
 log.LogDebug(e);
