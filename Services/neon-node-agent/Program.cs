@@ -53,7 +53,7 @@ namespace NeonNodeAgent
 
             try
             {
-                if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+                if (await OperatorHelper.HandleGeneratorCommand<Startup>(args))
                 {
                     return;
                 }

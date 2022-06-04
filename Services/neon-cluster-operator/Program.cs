@@ -53,7 +53,7 @@ namespace NeonClusterOperator
                 // Intercept and handle KubeOps [generator] commands executed by the 
                 // KubeOps MSBUILD tasks.
 
-                if (await OperatorHelper.HandleGeneratorCommand(args, AddResourceAssemblies))
+                if (await OperatorHelper.HandleGeneratorCommand<Startup>(args))
                 {
                     return;
                 }

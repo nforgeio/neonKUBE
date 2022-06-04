@@ -42,47 +42,7 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class OperatorHelper
     {
-        //-------------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Configures the operator's service controllers.
-        /// </summary>
-        private class Startup
-        {
-            /// <summary>
-            /// Configures depdendency injection.
-            /// </summary>
-            /// <param name="services">The service collection.</param>
-            public void ConfigureServices(IServiceCollection services)
-            {
-                Covenant.Assert(operatorAssembly != null);
-
-                var operatorBuilder = services.AddKubernetesOperator();
-
-                operatorBuilder.AddResourceAssembly(OperatorHelper.operatorAssembly);
-
-                if (builderCallback != null)
-                {
-                    builderCallback(operatorBuilder);
-                }
-            }
-
-            /// <summary>
-            /// Configures the operator service controllers.
-            /// </summary>
-            /// <param name="app">Specifies the application builder.</param>
-            public void Configure(IApplicationBuilder app)
-            {
-                app.UseKubernetesOperator();
-            }
-        }
-
-        //-------------------------------------------------------------------------
-        // Implementation
-
-        private static Assembly                     operatorAssembly;
-        private static Action<IOperatorBuilder>     builderCallback;
+        private static Assembly     operatorAssembly;
 
         /// <summary>
         /// Static constructor.
@@ -150,13 +110,8 @@ namespace Neon.Kube.Operator
         /// Handles <b>generator</b> commands invoked on an operator application
         /// during build by the built-in KubrOps build targets.
         /// </summary>
+        /// <typeparam name="TStartup">Specifies the operator's ASP.NET startup type.</typeparam>
         /// <param name="args">The command line arguments.</param>
-        /// <param name="builderCallback">
-        /// Optionally specifies the callback used to identify additional the assemblies 
-        /// where custom resources are defined.  Note that the assembly that called
-        /// <see cref="HandleGeneratorCommand(string[], Action{IOperatorBuilder})"/>
-        /// is included by default.
-        /// </param>
         /// <returns>
         /// <c>true</c> when the command was handled or <c>false</c> for other commands 
         /// that should be handled by the operator application itself.
@@ -170,39 +125,27 @@ namespace Neon.Kube.Operator
         /// </para>
         /// <para>
         /// You should call this early within your operator's <b>Main(string[] args)</b>
-        /// method, passing the command line arguments as well as a callback where you
-        /// will identify additional assemblies that may include custom resource types.
-        /// This method handles any <b>generator</b> commands and returns <c>true</c> for 
-        /// these.  Your main method should return immediately in this case.  Otherwise,
-        /// your <b>Main()</b> method should continue with normal application startup.
+        /// method, passing your controller's <b>Startup</b> type as the generic type parameter.
+        /// Your main method should exit immediately when this method returns <c>true</c>.
+        /// Otherwise, your <b>Main()</b> method should continue with normal application startup.
         /// </para>
-        /// <note>
-        /// This method identifies the calling assembly as potentially including custom
-        /// resources.
-        /// </note>
         /// <para>
         /// Your operator <b>Main()</b> entrypoint should look something like:
         /// </para>
         /// <code language="C#">
         /// public static async Task Main(string[] args)
         /// {
-        ///     if (await OperatorHelper(args, 
-        ///             operatorBuilder =>
-        ///             {
-        ///                 // This is where you'll identify any additional assemblies
-        ///                 // defining custom resource types.
-        /// 
-        ///                 operatorBuilder.AddResourceAssembly(typeof(V1MyCustomResource).Assembly)
-        ///             }))
-        ///         {
-        ///             return;
-        ///         }
+        ///     if (await OperatorHelper.HandleGeneratorCommand&lt;Startup&gt;(args))
+        ///     {
+        ///         return;
+        ///     }
         ///         
         ///     // Continue with normal operator startup here.
         /// }
         /// </code>
         /// </remarks>
-        public static async Task<bool> HandleGeneratorCommand(string[] args, Action<IOperatorBuilder> builderCallback = null)
+        public static async Task<bool> HandleGeneratorCommand<TStartup>(string[] args)
+            where TStartup: class, new()
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));;
@@ -215,10 +158,9 @@ namespace Neon.Kube.Operator
                 }
 
                 OperatorHelper.operatorAssembly = Assembly.GetCallingAssembly();
-                OperatorHelper.builderCallback  = builderCallback;
 
                 await Host.CreateDefaultBuilder(args)
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<Startup>(); })
+                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })
                     .Build()
                     .RunOperatorAsync(args);
 
