@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using Microsoft.Rest.Serialization;
 
 using Neon.Common;
+using Neon.Tasks;
 
 using k8s;
 
@@ -83,6 +84,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task<(WatchEventType eventType, T resource, bool connected)> ReadNextAsync(CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (TryGetLine(out var line))
             {
                 var data = JsonSerializer.Deserialize<Watcher<T>.WatchEvent>(line, jsonSerializerOptions);
@@ -176,6 +179,7 @@ namespace Neon.Kube
             /// <inheritdoc/>
             public async ValueTask<bool> MoveNextAsync()
             {
+                await SyncContext.Clear;
                 var (eventType, resource, connected) = await _self.ReadNextAsync(_cancellationToken);
                 Current = new WatchEvent<T>(eventType, resource);
                 return connected;

@@ -833,6 +833,8 @@ namespace Neon.Kube
             bool updatesOnly = false, 
             CancellationToken cancellationToken = default) where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.Clear;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (updatesOnly)
@@ -916,6 +918,8 @@ namespace Neon.Kube
             bool allowWatchBookmarks = default,
             CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
         {
+            await SyncContext.Clear;
+
             var message = await GetAsyncWithHttpMessagesAsync<T>(k8s, namespaceParameter: namespaceParameter, watch: true, resourceVersion, allowWatchBookmarks, cancellationToken);
 
             var stream = await message.Content.ReadAsStreamAsync(cancellationToken);
@@ -947,6 +951,8 @@ namespace Neon.Kube
             bool allowWatchBookmarks = default,
             CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
         {
+            await SyncContext.Clear;
+
             return await GetAsyncWithHttpMessagesAsync(k8s, typeof(T), namespaceParameter, watch, resourceVersion, allowWatchBookmarks, cancellationToken);
         }
 
@@ -970,6 +976,8 @@ namespace Neon.Kube
             bool allowWatchBookmarks = default, 
             CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var typeMetaData = ((IKubernetesObject)Activator.CreateInstance(type)).GetKubernetesTypeMetadata();
 
             var requestUri = new StringBuilder();
