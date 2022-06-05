@@ -12,7 +12,7 @@
                    <NotAuthorized>
                     @{
                          var returnUrl = UriHelper.ToBaseRelativePath(UriHelper.Uri);
-                         UriHelper.NavigateTo($"login?redirectUri={returnUrl}", forceLoad: true);
+                         UriHelper.NavigateTo($"login?redirectUri=/{returnUrl}", forceLoad: true);
                      }
                  </NotAuthorized>
                    <Authorizing>

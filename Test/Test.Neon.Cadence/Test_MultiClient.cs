@@ -136,7 +136,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Simultaneous()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // We're going to establish two simultaneous client connections, 
             // register a workflow on each, and then verify that these workflows work.
@@ -174,7 +174,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Connect_Twice()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // We're going to establish two successive client connections
             // and verify that these work.
@@ -367,7 +367,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestArea.NeonCadence)]
         public async Task Multiple_TaskLists()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test the scenario where there multiple clients without
             // workers that will be used to simulate apps that make calls

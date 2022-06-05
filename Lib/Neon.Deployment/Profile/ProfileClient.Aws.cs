@@ -38,19 +38,38 @@ namespace Neon.Deployment
         /// and sets these enviroment variables for use by the AWS-CLI:
         /// </para>
         /// <list type="bullet">
-        ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
-        ///     <item><c>AWS_SECRET_ACCESS_KEY</c></item>
+        /// <item><c>AWS_ACCESS_KEY_ID</c></item>
+        /// <item><c>AWS_SECRET_ACCESS_KEY</c></item>
         /// </list>
         /// </summary>
-        /// <param name="awsAccessKeyId">Optionally specfies a custom name for the AWS <b>access key ID</b> secret.</param>
-        /// <param name="awsSecretAccessKey">Optionally specfies a custom name for the AWS <b>access key</b> secret.</param>
-        public void GetAwsCredentials(string awsAccessKeyId = "AWS_ACCESS_KEY_ID", string awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY")
+        /// <param name="secretName">Optionally specifies a custom name for the 1Password secret holding the credentials..</param>
+        /// <remarks>
+        /// <para>
+        /// The AWS credentials are persisted to a 1Password secret for each maintainer, where each user should
+        /// be granted individual credentials so they can be easy to revoke if necessary.  We use a single secret
+        /// to hold these individual fields:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>ACCESS_KEY_ID</b></term>
+        ///     <description>
+        ///     Identifies the AWS access key.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>SECRET_ACCESS_KEY</b></term>
+        ///     <description>
+        ///     The AWS access key secret.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public void GetAwsCredentials(string secretName = "AWS_NEONFORGE")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsAccessKeyId), nameof(awsAccessKeyId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(awsSecretAccessKey), nameof(awsSecretAccessKey));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName), nameof(secretName));
 
-            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", GetSecretPassword(awsAccessKeyId));
-            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", GetSecretPassword(awsSecretAccessKey));
+            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", GetSecretValue($"{secretName}[ACCESS_KEY_ID]"));
+            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", GetSecretValue($"{secretName}[SECRET_ACCESS_KEY]"));
         }
 
         /// <summary>
@@ -58,8 +77,8 @@ namespace Neon.Deployment
         /// Removes the AWS-CLI credential environment variables if present:
         /// </para>
         /// <list type="bullet">
-        ///     <item><c>AWS_ACCESS_KEY_ID</c></item>
-        ///     <item><c>AWS_SECRET_ACCESS_KEY</c></item>
+        /// <item><c>AWS_ACCESS_KEY_ID</c></item>
+        /// <item><c>AWS_SECRET_ACCESS_KEY</c></item>
         /// </list>
         /// </summary>
         public void ClearAwsCredentials()

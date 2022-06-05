@@ -50,7 +50,7 @@ using Renci.SshNet;
 //        SUDO and writing some config proxy related config files.  This will 
 //        probably cause some eyebrow raising amongst serious security folks.
 //
-//      * There are some operations we can't perform like importing a VM template
+//      * There are some operations we can't perform, like importing a VM template
 //        that needs to be downloaded in pieces and reassembled (to stay below
 //        GitHub Releases 2GB artifact file limit).  We also can't export an
 //        template XVA file to the controlling computer because there's not 
@@ -106,6 +106,40 @@ namespace Neon.XenServer
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable, IXenClient
     {
+        //-------------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Parses <b>xe</b> client properties formatted like <b>name1:value1; name2: value2;...</b>
+        /// into a dictionary, making it easy to retrieve specific values.
+        /// </summary>
+        /// <param name="property">The property string.</param>
+        /// <returns>The case-insensitive dictionary.</returns>
+        public static Dictionary<string, string> ParseValues(string property)
+        {
+            var values = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var item in property.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var colonPos = item.IndexOf(':');
+
+                if (colonPos == -1)
+                {
+                    continue;
+                }
+
+                var key   = item.Substring(0, colonPos).Trim();
+                var value = item.Substring(colonPos + 1).Trim();
+
+                values[key] = value;
+            }
+
+            return values;
+        }
+
+        //-------------------------------------------------------------------------
+        // Instance members
+
         private bool            isDisposed = false;
         private SftpClient      sftpClient = null;
         private string          username;
@@ -151,14 +185,21 @@ namespace Neon.XenServer
 
             if (!NetHelper.TryParseIPv4Address(addressOrFQDN, out var address))
             {
-                var hostEntry = Dns.GetHostEntry(addressOrFQDN);
-
-                if (hostEntry.AddressList.Length == 0)
+                try
                 {
-                    throw new XenException($"[{addressOrFQDN}] is not a valid IP address or fully qualified domain name of a XenServer host.");
-                }
+                    var hostEntry = Dns.GetHostEntry(addressOrFQDN);
 
-                address = hostEntry.AddressList.First();
+                    if (hostEntry.AddressList.Length == 0)
+                    {
+                        throw new XenException($"[{addressOrFQDN}] is not a valid IP address or fully qualified domain name of a XenServer host.");
+                    }
+
+                    address = hostEntry.AddressList.First();
+                }
+                catch
+                {
+                    throw new XenException($"[{addressOrFQDN}] DNS lookup failed.");
+                }
             }
             
             this.logWriter = (TextWriter)null;
@@ -173,7 +214,7 @@ namespace Neon.XenServer
             this.Address  = addressOrFQDN;
             this.username = username;
             this.password = password;
-            this.Name     = name;
+            this.Name     = name ?? $"XENSERVER-{addressOrFQDN}";
             this.xePath   = Path.Combine(NeonHelper.GetBaseDirectory(), "assets-Neon.XenServer", platformSubfolder, "xe.exe");
             this.xeFolder = Path.GetDirectoryName(xePath);
 
@@ -353,6 +394,78 @@ namespace Neon.XenServer
         {
             EnsureNotDisposed();
 
+            if (command == "vm-reset-powerstate")
+            {
+                // $hack(jefflill):
+                //
+                // [vm-reset-powerstate] commands can fail sometimes with errors like:
+                //
+                //      The operation could not be performed because a domain still exists for the specified VM.
+                //
+                // It appears that we need to remove the VM's "domain" in case the VM is "stuck".
+                // I'm not entirely sure what these domains are, but apparently it's an internal
+                // XenServer entity that that manages VM resources while the VM is actually running.
+                // We're going to proactively remove any associated domain before resetting the 
+                // VM powerstate.
+                //
+                // We need identify the domain associated with the VM if there is one and 
+                // remove it.  We need to SSH into the host to do this because domains aren't
+                // managed by the XE command line tool.
+                //
+                // We'll execute [list_domains] to list all of the existing domains.  This will
+                // print output something like:
+                //
+                //      id |                                 uuid |  state
+                //      0  | 5aadf5d8-85e0-4aaf-9ce8-85fd500a2dbb |     R
+                //      3  | 79ebe13d-5d6f-1518-c320-45b3103fb866 |     RH
+                //
+                // Where the [uuid] for each row identify the associated VM and the [id]
+                // specifies the domain ID.  We'll look for a line with the VM's UUID and
+                // extract the associated domain ID when the VM is listed and then remove
+                // the domain via:
+                //
+                //      /usr/sbin/xl destroy <domid>
+
+                // Extract the VM UUID from the command arguments.
+
+                var vmUuid = args
+                    .Where(arg => arg.StartsWith("uuid="))
+                    .Select(arg => arg.Substring("uuid=".Length))
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(vmUuid))
+                {
+                    // Connect to the XenServer host and handle the domain removal.
+
+                    using (var hostProxy = Connect())
+                    {
+                        var response = hostProxy.SudoCommand("/bin/list_domains").EnsureSuccess();
+                        var domainId = -1;
+
+                        using (var reader = new StringReader(response.OutputText))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                if (line.Contains(vmUuid))
+                                {
+                                    var pipePos = line.IndexOf('|');
+
+                                    Covenant.Assert(pipePos > 1);
+
+                                    domainId = int.Parse(line.Substring(0, pipePos).Trim());
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (domainId > 0)
+                        {
+                            hostProxy.SudoCommand("/usr/sbin/xl", "destroy", domainId).EnsureSuccess();
+                        }
+                    }
+                }
+            }
+
             return LogXeCommand(command, args, NeonHelper.ExecuteCapture(xePath, NormalizeArgs(command, args), workingDirectory: xeFolder));
         }
 
@@ -413,32 +526,67 @@ namespace Neon.XenServer
         {
             // List the hosts to obtain the host UUID.  We're going to assume that only the
             // current host will be returned and the confguring a resource pool doesn't change
-            // this.
+            // this (which is probably not going to be the case in the real world).
 
             var response = SafeInvokeItems("host-list");
 
             Covenant.Assert(response.Items.Count == 1, "[xe host-list] is expected to return exactly one host.");
 
-            response = SafeInvokeItems("host-param-list", $"uuid={response.Items.Single()["uuid"]}");
+            var hostUuid = response.Items.Single()["uuid"];
+
+            // Fetch the host parameters and extract the host version information.
+
+            response = SafeInvokeItems("host-param-list", $"uuid={hostUuid}", "--all");
 
             var hostParams   = response.Items.Single();
-            var versionItems = hostParams["software-version"].Split(';');
+            var versionItems = ParseValues(hostParams["software-version"]);
+            var edition      = hostParams["edition"];
+            var version      = versionItems["product_version"];
 
-            for (int i = 0; i < versionItems.Length; i++)
+            //-----------------------------------------------------------------
+            // Extract information about the available cores and memory.
+
+            var cpuItems        = ParseValues(hostParams["cpu_info"]);
+            var cpuCount        = cpuItems["cpu_count"];
+            var usableCores     = int.Parse(cpuCount);
+            var availableMemory = long.Parse(hostParams["memory-free-computed"]);
+
+            //-----------------------------------------------------------------
+            // Fetch information about the available disk space.
+
+            // $note(jefflill):
+            //
+            // We're currently collecting information only for the [Local storage] repository.
+            // Eventually, we'll need to modify this to collect information for all attached
+            // repositories.
+
+            // Fetch the parameters for the local storage repository and extract [physical-size] and
+            // [physical-utilisation] to compute the available disk space.
+
+            var srLocal = SafeInvokeItems("sr-list", $"name-label=Local storage").Items.SingleOrDefault();
+
+            if (srLocal == null)
             {
-                versionItems[i] = versionItems[i].Trim();
+                throw new XenException($"Cannot locate the [Local storage] storage repository.");
             }
 
-            var version = versionItems.Single(item => item.StartsWith("product_version:"));
-            var pos     = version.IndexOf(':');
+            var srLocalUuid         = srLocal["uuid"];
+            var srParams            = SafeInvokeItems("sr-param-list", $"uuid={srLocalUuid}").Items.Single();
+            var physicalSize        = long.Parse(srParams["physical-size"]);
+            var physicalUtilisation = long.Parse(srParams["physical-utilisation"]);
+            var availableDisk       = physicalSize - physicalUtilisation;
 
-            version = version.Substring(pos + 1).Trim();
+            //-----------------------------------------------------------------
+            // Construct and return the result.
 
             return new XenHostInfo()
             {
-                Edition = hostParams["edition"],
-                Version = SemanticVersion.Parse(version),
-                Params  = new ReadOnlyDictionary<string, string>(hostParams)
+                Edition         = edition,
+                Version         = SemanticVersion.Parse(version),
+                Params          = new ReadOnlyDictionary<string, string>(hostParams),
+                UsableCores     = usableCores,
+                AvailableMemory = availableMemory,
+                AvailableDisk   = availableDisk
             };
         }
 
@@ -588,6 +736,19 @@ namespace Neon.XenServer
 
             SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
             SafeInvoke("sr-forget", $"uuid={tempIso.SrUuid}");
+        }
+
+        /// <summary>
+        /// Establishes an SSH connection to the assocated XenServer.
+        /// </summary>
+        /// <returns>The connected <see cref="LinuxSshProxy"/>.</returns>
+        public LinuxSshProxy Connect()
+        {
+            var proxy = new LinuxSshProxy(Name, IPAddress.Parse(Address), SshCredentials.FromUserPassword(username, password));
+
+            proxy.Connect();
+
+            return proxy;
         }
     }
 }

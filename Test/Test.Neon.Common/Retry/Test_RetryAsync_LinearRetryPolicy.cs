@@ -69,7 +69,8 @@ namespace TestCommon
         {
             var policy = new LinearRetryPolicy(TransientDetector);
 
-            Assert.Equal(5, policy.MaxAttempts);
+            Assert.Equal(RetryPolicy.DefaultMaxAttempts, policy.MaxAttempts);
+            Assert.Null(policy.Timeout);
             Assert.Equal(TimeSpan.FromSeconds(1), policy.RetryInterval);
         }
 
@@ -454,10 +455,10 @@ namespace TestCommon
         [Fact]
         public async Task Timeout()
         {
-            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 6, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(1.5));
+            var policy = new LinearRetryPolicy(TransientDetector, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(1.5));
             var times  = new List<DateTime>();
 
-            Assert.Equal(6, policy.MaxAttempts);
+            Assert.Equal(int.MaxValue, policy.MaxAttempts);
             Assert.Equal(TimeSpan.FromSeconds(0.5), policy.RetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
 
@@ -474,7 +475,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(6, times.Count);
+            Assert.Equal(4, times.Count);
 
             // Additional test to verify this serious problem is fixed:
             //
@@ -487,7 +488,6 @@ namespace TestCommon
 
             times.Clear();
 
-            Assert.Equal(6, policy.MaxAttempts);
             Assert.Equal(TimeSpan.FromSeconds(0.5), policy.RetryInterval);
             Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
 
@@ -504,7 +504,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(6, times.Count);
+            Assert.Equal(4, times.Count);
         }
     }
 }

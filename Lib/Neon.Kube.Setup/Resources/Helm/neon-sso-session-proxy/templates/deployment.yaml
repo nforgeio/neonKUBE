@@ -15,8 +15,9 @@ spec:
       {{- include "neon-sso-session-proxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -29,6 +30,7 @@ spec:
       serviceAccountName: {{ include "neon-sso-session-proxy.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

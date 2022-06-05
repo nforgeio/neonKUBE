@@ -107,11 +107,11 @@ namespace TestCadence
 
                 // Auto register the test workflow and activity implementations.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
 
                 // Start the worker.
 
-                client.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
+                client.StartWorkerAsync(CadenceTestHelper.TaskList).WaitWithoutAggregate();
             }
             else
             {

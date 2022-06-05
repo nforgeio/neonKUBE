@@ -312,6 +312,13 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Returns the number of usable IP addresses within the subnet.  This returns
+        /// <c>AddressCount - 1</c> to exclude the first address (.0) in the subnet as
+        /// well as the last address which is reserved for broadcasting.
+        /// </summary>
+        public long UsableAddressCount => AddressCount - 2;
+
+        /// <summary>
         /// Returns the first IP address in the subnet.
         /// </summary>
         public IPAddress FirstAddress

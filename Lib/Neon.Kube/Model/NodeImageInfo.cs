@@ -60,7 +60,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the image folde path.
+        /// Returns the image folder path.
         /// </summary>
         public string Folder { get; private set; }
 

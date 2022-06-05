@@ -5,6 +5,8 @@
 
 .dashboard-container {
     display: grid;
+    height: 100%;
+    position: relative;
 }
 
 .dashboard-frame {

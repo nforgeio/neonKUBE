@@ -11,14 +11,14 @@ agent:
   image:
     organization: neon-registry.node.local
     repository: grafana-agent
-    tag: v0.21.1
+    tag: v0.23.0
     pullPolicy: IfNotPresent
 
 operator:
   image:
     organization: neon-registry.node.local
     repository: grafana-agent-operator
-    tag: v0.21.1
+    tag: v0.23.0
     pullPolicy: IfNotPresent
 
 configReloader:
@@ -68,6 +68,9 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
+
+serviceMesh:
+  enabled: true
 
 nodeSelector:
   neonkube.io/monitor.metrics-internal: 'true'

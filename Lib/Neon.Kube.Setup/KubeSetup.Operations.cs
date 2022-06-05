@@ -17,53 +17,33 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Helm.Helm;
 using k8s;
 using k8s.Models;
-using Microsoft.Rest;
-using Minio;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Npgsql;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Resources;
-using Neon.Postgres;
-using Neon.Retry;
+using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Net;
-
-using Tomlyn;
-using Tomlyn.Model;
-using Tomlyn.Syntax;
-
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NodeDeserializers;
-using YamlDotNet.Serialization.NamingConventions;
-using System.Text.Json;
 
 namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Configures a local HAProxy container that makes the Kubernetes Etc
+        /// Configures a local HAProxy container that makes the Kubernetes etcd
         /// cluster highly available.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -74,7 +54,7 @@ namespace Neon.Kube
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.LogProgress(node, verb: "configure", message: "etcd ha");
+            controller.LogProgress(node, verb: "configure", message: "etcd HA");
 
             var sbHaProxyConfig = new StringBuilder();
 
@@ -123,7 +103,7 @@ backend kubernetes_masters_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {master.Name}         {master.Address}:{KubeNodePorts.KubeApiServer}");
+    server {master.Name}         {master.Metadata.Address}:{KubeNodePort.KubeApiServer}");
             }
 
             sbHaProxyConfig.Append(
@@ -136,7 +116,7 @@ backend harbor_backend_http
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {n.Name}         {n.Address}:{KubeNodePorts.IstioIngressHttp}");
+    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttp}");
             }
 
             sbHaProxyConfig.Append(
@@ -149,7 +129,7 @@ backend harbor_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {n.Name}         {n.Address}:{KubeNodePorts.IstioIngressHttps}");
+    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttps}");
             }
 
             node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
@@ -174,6 +154,7 @@ spec:
        path: /etc/neonkube/neon-etcd-proxy.cfg
        type: File
   hostNetwork: true
+  priorityClassName: { PriorityClass.SystemNodeCritical.Name }
   containers:
     - name: web
       image: {KubeConst.LocalClusterRegistry}/haproxy:{KubeVersions.Haproxy}
@@ -196,7 +177,7 @@ spec:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task LabelNodesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -204,6 +185,7 @@ spec:
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/label-nodes",
                 async () =>
                 {
@@ -215,6 +197,8 @@ spec:
 
                         foreach (var node in cluster.Nodes)
                         {
+                            controller.ThrowIfCancelled();
+
                             var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).FirstOrDefault();
 
                             var patch = new V1Node()
@@ -268,61 +252,108 @@ spec:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task SetupClusterAsync(ISetupController controller, int maxParallel = defaultMaxParallelNodes)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var master        = cluster.FirstMaster;
-            var debugMode     = controller.Get<bool>(KubeSetupProperty.DebugMode);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var cluster   = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var master    = cluster.FirstMaster;
+            var debugMode = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
-            cluster.ClearStatus();
+            cluster.ClearNodeStatus();
 
-            KubeHelper.K8sClientConverterInitialize();
-
+            controller.ThrowIfCancelled();
             ConfigureKubernetes(controller, master);
-            ConfigureFeatureGates(controller, cluster.Masters);
+
+            controller.ThrowIfCancelled();
+            ConfigureKubelet(controller, cluster.Masters);
+
+            controller.ThrowIfCancelled();
             ConfigureWorkstation(controller, master);
 
+            controller.ThrowIfCancelled();
             ConnectCluster(controller);
 
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await ConfigureKubeletAsync(controller, master);
-                await RestartPodsAsync(controller, master);
-            }
-
+            controller.ThrowIfCancelled();
             await ConfigureMasterTaintsAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await TaintNodesAsync(controller);
+
+            controller.ThrowIfCancelled();
+            await InstallCrdsAsync(controller);
+
+            controller.ThrowIfCancelled();
             await LabelNodesAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await CreateNamespacesAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await CreateRootUserAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await ConfigurePriorityClassesAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallCalicoCniAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallMetricsServerAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallIstioAsync(controller, master);
 
-            if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
-            {
-                await InstallEtcdAsync(controller, master);
+            controller.ThrowIfCancelled();
+            await InstallPrometheusAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallCertManagerAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallKubeDashboardAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            if (cluster.Definition.Features.NodeProblemDetector) 
+            { 
+                await InstallNodeProblemDetectorAsync(controller, master);
             }
 
-            await InstallPrometheusAsync(controller, master);
-            await InstallCertManagerAsync(controller, master);
-            await InstallKubeDashboardAsync(controller, master);
-            await InstallNodeProblemDetectorAsync(controller, master);
+            controller.ThrowIfCancelled();
             await InstallOpenEbsAsync(controller, master);
-            await InstallReloaderAsync(controller, master);
-            await InstallSystemDbAsync(controller, master);
-            await InstallRedisAsync(controller, master);
-            await InstallSsoAsync(controller, master);
-            await InstallKialiAsync(controller, master);
 
+            controller.ThrowIfCancelled();
+            await InstallReloaderAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallSystemDbAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallRedisAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallSsoAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            if (cluster.Definition.Features.Kiali)
+            {
+                await InstallKialiAsync(controller, master);
+            }
+
+            controller.ThrowIfCancelled();
             await InstallMinioAsync(controller, master);
-            await SetupGrafanaAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallHarborAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await WriteClusterInfoAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallNeonDashboardAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallMonitoringAsync(controller);
 
             // Install the cluster operators and any required custom resources.
@@ -330,9 +361,21 @@ spec:
             // NOTE: The neonKUBE CRDs are installed with [neon-cluster-operator]
             //       so we need to install that first.
 
+            controller.ThrowIfCancelled();
             await InstallClusterOperatorAsync(controller, master);
-            //await InstallNodeAgentAsync(controller, master);
-            //await InstallContainerRegistryResources(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallNodeAgentAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallContainerRegistryResourcesAsync(controller, master);
+
+            // IMPORTANT!
+            //
+            // This must be the last cluster setup steps.
+
+            controller.ThrowIfCancelled();
+            await WriteClusterConfigMapsAsync(controller, master);
         }
 
         /// <summary>
@@ -348,55 +391,45 @@ spec:
 
             var hostingEnvironment   = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin         = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var readyToGoMode        = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var controlPlaneEndpoint = $"kubernetes-masters:6442";
             var sbCertSANs           = new StringBuilder();
+            var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
+            sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+
+            if (cluster.Definition.Domain != null)
             {
-                // Tweak the API server endpoint for WSL2.
-
-                controlPlaneEndpoint = $"{KubeConst.NeonDesktopWsl2BuiltInDistroName}:{KubeNodePorts.KubeApiServer}";
+                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Domain}\"");
             }
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
+            foreach (var address in cluster.Definition.PublicAddresses)
             {
-                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
-
-                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
-
-                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
-                sbCertSANs.AppendLine($"  - \"kubernetes-masters\"");
+                sbCertSANs.AppendLine($"  - \"{address}\"");
             }
 
             foreach (var node in cluster.Masters)
             {
-                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
+                sbCertSANs.AppendLine($"  - \"{node.Metadata.Address}\"");
                 sbCertSANs.AppendLine($"  - \"{node.Name}\"");
             }
 
-            if (cluster.Definition.IsDesktopCluster)
+            if (cluster.Definition.IsDesktopBuiltIn)
             {
                 sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
                 sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
             }
 
             var kubeletFailSwapOnLine = string.Empty;
-
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                // SWAP will be enabled by the default Microsoft WSL2 kernel which
-                // will cause Kubernetes to complain because this isn't a supported
-                // configuration.  We need to disable these error checks.
-
-                kubeletFailSwapOnLine = "failSwapOn: false";
-            }
-
-            var clusterConfig = new StringBuilder();
+            var clusterConfig         = new StringBuilder();
 
             clusterConfig.AppendLine(
 $@"
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  criSocket: {KubeConst.CrioSocket}
+  imagePullPolicy: IfNotPresent
+---
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
@@ -411,7 +444,7 @@ apiServer:
     default-unreachable-toleration-seconds: ""30"" #default  300
     allow-privileged: ""true""
     api-audiences: api
-    service-account-issuer: kubernetes.default.svc
+    service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
     oidc-issuer-url: https://sso.{cluster.Definition.Domain}
@@ -420,6 +453,7 @@ apiServer:
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
     oidc-groups-prefix: """"
+    default-watch-cache-size: ""{clusterAdvice.KubeApiServerWatchCacheSize}""
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
@@ -447,6 +481,7 @@ volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
+maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
 ");
 
             var kubeProxyMode = "ipvs";
@@ -461,118 +496,6 @@ mode: {kubeProxyMode}");
         }
 
         /// <summary>
-        /// Restart all pods in a cluster. This is used when updating CA certs.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ConfigureKubeletAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterIp          = controller.Get<string>(KubeSetupProperty.ClusterIp);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var k8s                = GetK8sClient(controller);
-
-            await master.InvokeIdempotentAsync("ready-to-go/kube-apiserver-running-config",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "configure kube-apiserver");
-
-                    var k8s = GetK8sClient(controller);
-                    var configMap = await k8s.ReadNamespacedConfigMapAsync("kubeadm-config", KubeNamespaces.KubeSystem);
-                    var clusterConfig = configMap.Data["ClusterConfiguration"];
-                    clusterConfig = Regex.Replace(clusterConfig, @"oidc-issuer-url.*", $"oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
-                    configMap.Data["ClusterConfiguration"] = clusterConfig;
-
-                    await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
-                });
-
-            await master.InvokeIdempotentAsync("ready-to-go/kube-apiserver-static-config",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "configure kube-apiserver static pod");
-
-                    var kubeletConfig = master.DownloadText("/etc/kubernetes/manifests/kube-apiserver.yaml");
-
-                    kubeletConfig = Regex.Replace(kubeletConfig, @"oidc-issuer-url.*", $"oidc-issuer-url=https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
-
-                    master.UploadText("/etc/kubernetes/manifests/kube-apiserver.yaml", kubeletConfig, permissions: "600", owner: "root:root");
-
-                    master.SudoCommand("systemctl", "restart", "kubelet");
-
-                    await Task.CompletedTask;
-                });
-        }
-
-        /// <summary>
-        /// Restart all pods in a cluster. This is used when updating CA certs.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RestartPodsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.ClearAsync;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-            var k8s                = GetK8sClient(controller);
-            var numPods            = 0;
-
-            await master.InvokeIdempotentAsync("ready-to-go/restart-pods",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "restart pods");
-
-                    var pods = await k8s.ListPodForAllNamespacesAsync();
-
-                    numPods = pods.Items.Count();
-
-                    foreach (var p in pods.Items)
-                    {
-                        if (p.Name() == "kube-apiserver-neon-desktop")
-                        {
-                            continue;
-                        }
-
-                        await k8s.DeleteNamespacedPodAsync(p.Name(), p.Namespace(), gracePeriodSeconds: 0);
-                    }
-                });
-
-            await master.InvokeIdempotentAsync("ready-to-go/wait-for-pods",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "restart pods - wait");
-
-                    await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                try
-                                {
-                                    var pods = await k8s.ListPodForAllNamespacesAsync();
-
-                                    return pods.Items.All(p => p.Status.Phase != "Pending") && pods.Items.Where(p => p.Namespace() == KubeNamespaces.NeonSystem).Count() > 1;
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
-                            },
-                            timeout: TimeSpan.FromMinutes(10),
-                            pollInterval: TimeSpan.FromMilliseconds(500));
-                });
-        }
-        
-        /// <summary>
         /// Basic Kubernetes cluster initialization.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -585,8 +508,8 @@ mode: {kubeProxyMode}");
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-            
+
+            controller.ThrowIfCancelled();
             master.InvokeIdempotent("setup/cluster-init",
                 () =>
                 {
@@ -597,10 +520,11 @@ mode: {kubeProxyMode}");
 
                     // Initialize Kubernetes:
 
+                    controller.ThrowIfCancelled();
                     master.InvokeIdempotent("setup/kubernetes-init",
                         () =>
                         {
-                            controller.LogProgress(master, verb: "initialize", message: "kubernetes");
+                            controller.LogProgress(master, verb: "reset", message: "kubernetes");
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
@@ -617,34 +541,62 @@ mode: {kubeProxyMode}");
                             //
                             // We're going to wait for the presence of the CRI-O socket here.
 
-                            const string crioSocket = "/var/run/crio/crio.sock";
+                            controller.LogProgress(master, verb: "wait", message: "for cri-o");
 
                             NeonHelper.WaitFor(
                                 () =>
                                 {
+                                    controller.ThrowIfCancelled();
+
                                     var socketResponse = master.SudoCommand("cat", new object[] { "/proc/net/unix" });
 
-                                    return socketResponse.Success && socketResponse.OutputText.Contains(crioSocket);
-
+                                    return socketResponse.Success && socketResponse.OutputText.Contains(KubeConst.CrioSocket);
                                 },
                                 pollInterval: TimeSpan.FromSeconds(0.5),
-                                timeout: TimeSpan.FromSeconds(60));
+                                timeout:      TimeSpan.FromSeconds(60));
 
-                            // Configure the control plane's API server endpoint and initialize
-                            // the certificate SAN names to include each master IP address as well
-                            // as the HOSTNAME/ADDRESS of the API load balancer (if any).
+                            // $note(jefflill):
+                            //
+                            // We've seen this fail occasionally with this message in the command response:
+                            //
+                            //      [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+                            //      [kubelet-check] Initial timeout of 40s passed.
+                            //
+                            // After some investigation, it looks like the second line is really just
+                            // a warning and that kubeadm does continue waiting for the full 4 minutes,
+                            // but sometimes this is not long enough.
+                            //
+                            // We're going to mitigate this by retrying 2 additional times.
 
-                            controller.LogProgress(master, verb: "initialize", message: "cluster");
-
-                            var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
-
+                            var clusterConfig  = GenerateKubernetesClusterConfig(controller, master);
                             var kubeInitScript =
 $@"
-set -euo pipefail
+if ! systemctl enable kubelet.service; then
+    echo 'FAILED: systemctl enable kubelet.service' >&2
+    exit 1
+fi
 
-systemctl enable kubelet.service
-kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests --cri-socket={crioSocket}
+# The first call doesn't specify [--ignore-preflight-errors=all]
+
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
+    exit 0
+fi
+
+# The additional two calls specify [--ignore-preflight-errors=all] to avoid detecting
+# bogus conflicts with itself.
+
+for count in {{1..2}}
+do
+    if kubeadm init --config cluster.yaml --ignore-preflight-errors=all; then
+        exit 0
+    fi
+done
+
+echo 'FAILED: kubeadm init...' >&2
+exit 1
 ";
+                            controller.LogProgress(master, verb: "initialize", message: "kubernetes");
+
                             var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
                             // Extract the cluster join command from the response.  We'll need this to join
@@ -667,7 +619,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                 master.LogLine("END: [kubeadm init ...] response ==============================================");
 
-                                throw new KubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
+                                throw new NeonKubeException("Cannot locate the [kubeadm join ...] command in the [kubeadm init ...] response.");
                             }
 
                             var pEnd = output.Length;
@@ -686,6 +638,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                             controller.LogProgress(master, verb: "created", message: "cluster");
                         });
 
+                    controller.ThrowIfCancelled();
                     master.InvokeIdempotent("setup/kubectl",
                         () =>
                         {
@@ -739,6 +692,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                         {
                             var text = master.DownloadText(file.Path);
 
+                            controller.ThrowIfCancelled();
                             clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
                     }
@@ -754,6 +708,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                     {
                         try
                         {
+                            controller.ThrowIfCancelled();
                             master.InvokeIdempotent("setup/kubectl",
                                 () =>
                                 {
@@ -775,6 +730,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                     // Join the cluster:
 
+                                    controller.ThrowIfCancelled();
                                     master.InvokeIdempotent("setup/master-join",
                                         () =>
                                         {
@@ -798,6 +754,8 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
 
                                             for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                             {
+                                                controller.ThrowIfCancelled();
+
                                                 var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                                 if (response.Success)
@@ -814,6 +772,7 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                                                 throw new Exception($"Unable to join node [{master.Name}] to the after [{maxJoinAttempts}] attempts.");
                                             }
 
+                                            controller.ThrowIfCancelled();
                                             master.SudoCommand("docker kill neon-etcd-proxy");
                                             master.SudoCommand("docker rm neon-etcd-proxy");
                                         });
@@ -828,16 +787,19 @@ kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable--etc-k
                         controller.LogProgress(master, verb: "joined", message: "to cluster");
                     }
 
+                    cluster.ClearNodeStatus();
+
                     // Configure [kube-apiserver] on all the masters
 
                     foreach (var master in cluster.Masters)
                     {
                         try
                         {
+                            controller.ThrowIfCancelled();
                             master.InvokeIdempotent("setup/kubernetes-apiserver",
                                 () =>
                                 {
-                                    controller.LogProgress(master, verb: "configure", message: "api server");
+                                    controller.LogProgress(master, verb: "configure", message: "api-server");
 
                                     master.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
@@ -868,6 +830,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
+                                controller.ThrowIfCancelled();
                                 worker.InvokeIdempotent("setup/worker-join",
                                     () =>
                                     {
@@ -879,6 +842,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                                         controller.LogProgress(worker, verb: "join", message: "as worker");
 
+                                        controller.ThrowIfCancelled();
                                         worker.SudoCommand("podman run",
                                             "--name=neon-etcd-proxy",
                                             "--detach",
@@ -891,6 +855,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
+                                            controller.ThrowIfCancelled();
+
                                             var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                             if (response.Success)
@@ -907,6 +873,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
                                         }
 
+                                        controller.ThrowIfCancelled();
                                         worker.SudoCommand("docker kill neon-etcd-proxy");
                                         worker.SudoCommand("docker rm neon-etcd-proxy");
                                     });
@@ -921,148 +888,34 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         });
                 });
 
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                master.InvokeIdempotent("ready-to-go/renew-certs",
-                () =>
-                {
-                    controller.LogProgress(master, verb: "ready-to-go", message: "renew kubectl certs");
-
-                    var clusterConfig = GenerateKubernetesClusterConfig(controller, master);
-
-                    var kubeInitScript =
-$@"
-set -euo pipefail
-
-rm -rf /etc/kubernetes/pki/*
-rm -f /etc/kubernetes/admin.conf
-rm -f /etc/kubernetes/kubelet.conf
-rm -f /etc/kubernetes/controller-manager.conf
-rm -f /etc/kubernetes/scheduler.conf
-kubeadm init --config cluster.yaml phase certs all
-kubeadm init --config cluster.yaml phase kubeconfig all
-
-set +e
-
-until kubectl get pods
-do
-  sleep 0.5
-done
-
-for namespace in $(kubectl get ns --no-headers | awk '{{print $1}}'); do
-    for token in $(kubectl get secrets --namespace ""$namespace"" --field-selector type=kubernetes.io/service-account-token -o name); do
-        kubectl delete $token --namespace ""$namespace""
-    done
-done
-";
-                    var response = master.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
-                    var pods     = NeonHelper.JsonDeserialize<dynamic>(master.SudoCommand("crictl", "pods", "--namespace", "kube-system", "-o", "json").AllText);
-
-                    foreach (dynamic p in pods.items)
-                    {
-                        master.SudoCommand("crictl", "stopp", p.id);
-                        master.SudoCommand("crictl", "rmp", p.id);
-                    }
-
-                    master.SudoCommand("rm", "-f", "/var/lib/kubelet/pki/kubelet-client*");
-                    master.SudoCommand("systemctl", "restart", "kubelet");
-
-                    // Edit the Kubernetes configuration file to rename the context:
-                    //
-                    //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
-                    //
-                    // rename the user:
-                    //
-                    //      CLUSTERNAME-admin --> CLUSTERNAME-root 
-
-                    var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
-
-                    adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                    adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
-
-                    master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
-                });
-
-                master.InvokeIdempotent("ready-to-go/download-certs",
-                () =>
-                {
-                    controller.LogProgress(master, verb: "readytogo", message: "renew kubectl certs");
-
-                    // Download the boot master files that will need to be provisioned on
-                    // the remaining masters and may also be needed for other purposes
-                    // (if we haven't already downloaded these).
-
-                    if (clusterLogin.SetupDetails.MasterFiles != null)
-                    {
-                        clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
-                    }
-
-                    if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
-                    {
-                        // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but it's not worth
-                        // the bother at this point.
-
-                        var files = new RemoteFile[]
-                        {
-                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                        };
-
-
-                    foreach (var file in files)
-                    {
-                        var text = master.DownloadText(file.Path);
-
-                        clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                    }
-
-                    clusterLogin.Save();
-                    }
-                });
-            }
+            cluster.ClearNodeStatus();
         }
 
         /// <summary>
         /// Configures the Kubernetes feature gates specified by the <see cref="ClusterDefinition.FeatureGates"/> dictionary.
         /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
-        /// on the master nodes as required.
+        /// on the master nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="masterNodes">The target master nodes.</param>
-        /// <remarks>
-        /// This operation doesn't do anything when we're preparing a ready-to-go node image.
-        /// </remarks>
-        public static void ConfigureFeatureGates(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> masterNodes)
+        public static void ConfigureKubelet(ISetupController controller, IEnumerable<NodeSshProxy<NodeDefinition>> masterNodes)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(masterNodes != null, nameof(masterNodes));
             Covenant.Requires<ArgumentException>(masterNodes.Count() > 0, nameof(masterNodes));
 
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode, ReadyToGoMode.Normal);
-
-            if (readyToGoMode == ReadyToGoMode.Prepare)
-            {
-                return;
-            }
-
-            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterDefinition = cluster.Definition;
-
-            if (clusterDefinition.FeatureGates.Count() == 0)
-            {
-                return;
-            }
 
             // We need to generate a "--feature-gates=..." command line option and add it to the end
             // of the command arguments in the API server static pod manifest at: 
+            //
+            //      /etc/kubernetes/manifests/kube-apiserver.yaml
+            //
+            // and while we're at it, we need to modify the [--service-account-issuer] option to
+            // pass the Kubernetes compliance tests.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1385
             //
             // Here's what the static pod manifest looks like:
             //
@@ -1114,13 +967,13 @@ done
             //      - --requestheader-group-headers=X-Remote-Group
             //      - --requestheader-username-headers=X-Remote-User
             //      - --secure-port=6443
-            //      - --service-account-issuer=kubernetes.default.svc
+            //      - --service-account-issuer=https://kubernetes.default.svc                   <--- WE NEED TO REPLACE THE ORIGINAL SETTING WITH THIS TO PASS KUBERNETES COMPLIANCE TESTS
             //      - --service-account-key-file=/etc/kubernetes/pki/sa.key
             //      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
             //      - --service-cluster-ip-range=10.253.0.0/16
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
-            //      - --feature-gates=EphemeralContainers=true,...                        <<--- WE'RE INSERTING SOMETHING LIKE THIS!
+            //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
             //      image: neon-registry.node.local/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
@@ -1143,18 +996,19 @@ done
 
             foreach (var master in masterNodes)
             {
+                controller.ThrowIfCancelled();
                 master.InvokeIdempotent("setup/feature-gates",
                     () =>
                     {
                         controller.LogProgress(master, verb: "configure", message: "feature-gates");
 
                         var manifestText = master.DownloadText(manifestPath);
-                        var manifest     = NeonHelper.YamlDeserialize<dynamic>(manifestText);
-                        var spec         = manifest["spec"];
-                        var containers   = spec["containers"];
-                        var container    = containers[0];
-                        var command      = (List<object>)container["command"];
-                        var sbFeatures   = new StringBuilder();
+                        var manifest = NeonHelper.YamlDeserialize<dynamic>(manifestText);
+                        var spec = manifest["spec"];
+                        var containers = spec["containers"];
+                        var container = containers[0];
+                        var command = (List<object>)container["command"];
+                        var sbFeatures = new StringBuilder();
 
                         foreach (var featureGate in clusterDefinition.FeatureGates)
                         {
@@ -1162,11 +1016,10 @@ done
                         }
 
                         // Search for a [--feature-gates] command line argument.  If one is present,
-                        // we'll replace it, otherwise we'll append a new one.  We may see an
-                        // existing option when setting up a ready-to-go cluster.
+                        // we'll replace it, otherwise we'll append a new one.
 
                         var featureGateOption = $"--feature-gates={sbFeatures}";
-                        var existingArgIndex  = -1;
+                        var existingArgIndex = -1;
 
                         for (int i = 0; i < command.Count; i++)
                         {
@@ -1188,7 +1041,48 @@ done
                             command.Add(featureGateOption);
                         }
 
+                        // Update the [---service-account-issuer] command option as well.
+
+                        for (int i = 0; i < command.Count; i++)
+                        {
+                            var arg = (string)command[i];
+
+                            if (arg.StartsWith("--service-account-issuer="))
+                            {
+                                command[i] = "--service-account-issuer=https://kubernetes.default.svc";
+                                break;
+                            }
+                        }
+
+                        // Set GOGC so that GC happens more frequently, reducing memory usage.
+
+                        // This is a bit of a 2 part hack because the environment variable needs to be
+                        // a string, and YamlDotNet doesn't serialise it as such.
+
+                        var env = new List<Dictionary<string, string>>();
+
+                        env.Add(new Dictionary<string, string>() { 
+                            { "name", "GOGC"},
+                        });
+
+                        container["env"] = env;
+
                         manifestText = NeonHelper.YamlSerialize(manifest);
+
+                        var sb = new StringBuilder();
+                        using (var reader = new StringReader(manifestText))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                sb.AppendLine(line);
+                                if (line.Contains("- name: GOGC"))
+                                {
+                                    sb.AppendLine(line.Replace("- name: GOGC", @"  value: ""25"""));
+                                }
+                            }
+                        }
+
+                        manifestText = sb.ToString();
 
                         master.UploadText(manifestPath, manifestText, permissions: "600", owner: "root");
                     });
@@ -1205,9 +1099,7 @@ done
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(firstMaster != null, nameof(firstMaster));
 
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-
-            firstMaster.InvokeIdempotent($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/workstation",
+            firstMaster.InvokeIdempotent("setup/workstation",
                 (Action)(() =>
                 {
                     controller.LogProgress(firstMaster, verb: "configure", message: "workstation");
@@ -1218,15 +1110,10 @@ done
 
                     // Update kubeconfig.
 
-                    // $todo(marcusbooyah):
-                    //
-                    // This is hardcoding the kubeconfig to point to the first master.  Issue 
-                    // https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy
-                    // to neonDESKTOP and load balancing requests across the k8s api servers.
-
                     var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var port       = NetworkPorts.KubernetesApiServer;
 
-                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
+                    configText = configText.Replace("https://kubernetes-masters:6442", $"https://{cluster.Definition.Domain}:{port}");
 
                     if (!File.Exists(kubeConfigPath))
                     {
@@ -1275,49 +1162,71 @@ done
                         KubeHelper.SetConfig(existingConfig);
                     }
 
-                    if (readyToGoMode == ReadyToGoMode.Setup)
-                    {
-                        var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+                    // Make sure that the config cached by [KubeHelper] is up to date.
 
-                        var k8sClient = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
-
-                        k8sClient.RetryPolicy =
-                            new ExponentialRetryPolicy(
-                                transientDetector:
-                                    exception =>
-                                    {
-                                        var exceptionType = exception.GetType();
-
-                                            // Exceptions like this happen when a API server connection can't be established
-                                            // because the server isn't running or ready.
-
-                                        if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
-                                        {
-                                            return true;
-                                        }
-
-                                        if (exceptionType == typeof(HttpOperationException) && ((HttpOperationException)exception).Response.StatusCode == HttpStatusCode.Forbidden)
-                                        {
-                                            return true;
-                                        }
-
-                                        // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
-
-                                        if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
-                                        {
-                                            return true;
-                                        }
-
-                                        return false;
-                                    },
-                                    maxAttempts:          int.MaxValue,
-                                    initialRetryInterval: TimeSpan.FromSeconds(1),
-                                    maxRetryInterval:     TimeSpan.FromSeconds(5),
-                                    timeout:              TimeSpan.FromMinutes(5));
-
-                        controller[KubeSetupProperty.K8sClient] = k8sClient;
-                    }
+                    KubeHelper.LoadConfig();
                 }));
+        }
+
+        /// <summary>
+        /// Adds the neonKUBE standard priority classes to the cluster.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="master"></param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ConfigurePriorityClassesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var cluster = master.Cluster;
+            var k8s = GetK8sClient(controller);
+
+            controller.ThrowIfCancelled();
+            master.InvokeIdempotent("setup/priorityclass",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "configure", message: "priority classes");
+
+                    // I couldn't figure out how to specify the priority class name when create them
+                    // via the Kubernetes client, so I'll just use [kubectl] to apply them all at
+                    // once on the master.
+
+                    var sbPriorityClasses = new StringBuilder();
+
+                    foreach (var priorityClassDef in PriorityClass.Values.Where(priorityClass => !priorityClass.IsSystem))
+                    {
+                        if (sbPriorityClasses.Length > 0)
+                        {
+                            sbPriorityClasses.AppendLine("---");
+                        }
+
+                        var definition =
+$@"apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {priorityClassDef.Name}
+value: {priorityClassDef.Value}
+description: ""{priorityClassDef.Description}""
+preemptionPolicy: PreemptLowerPriority
+globalDefault: {NeonHelper.ToBoolString(priorityClassDef.IsDefault)}
+";
+                        sbPriorityClasses.Append(definition);
+                    }
+
+                    var script =
+@"
+set -euo pipefail
+
+kubectl apply -f priorityclasses.yaml
+";
+                    var bundle = CommandBundle.FromScript(script);
+
+                    bundle.AddFile("priorityclasses.yaml", sbPriorityClasses.ToString());
+
+                    master.SudoCommand(bundle, RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -1328,14 +1237,51 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCalicoCniAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = master.Cluster;
-            var k8s     = GetK8sClient(controller);
+            var cluster       = master.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var coreDnsAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CoreDns);
 
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/dns",
+                async () =>
+                {
+                    var coreDnsDeployment = await k8s.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
+
+                    var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                    var coreDnsDaemonset = new V1DaemonSet()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "coredns",
+                            NamespaceProperty = KubeNamespace.KubeSystem,
+                            Labels = coreDnsDeployment.Metadata.Labels
+                        },
+                        Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
+                    };
+
+                    coreDnsDaemonset.Spec.Template.Spec.NodeSelector = new Dictionary<string, string>()
+                    {
+                        { "neonkube.io/node.role", "master" }
+                    };
+
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] =
+                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
+
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] =
+                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+
+                    await k8s.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
+                    await k8s.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
+
+                });
+            
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cni",
                 async () =>
                 {
@@ -1345,55 +1291,39 @@ done
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
 
-                    if (cluster.HostingManager.HostingEnvironment == HostingEnvironment.Wsl2)
-                    {
-                        values.Add($"neonDesktop", $"true");
-                        values.Add($"kubernetes.service.host", $"neon-desktop");
-                        values.Add($"kubernetes.service.port", KubeNodePorts.KubeApiServer);
-                    }
-
-                    await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespaces.KubeSystem, values: values);
+                    controller.ThrowIfCancelled();
+                    await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespace.KubeSystem, values: values);
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
-                    // We're going to wait a maximum of 300 seconds.
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            var pods = await k8s.ListPodForAllNamespacesAsync();
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "calico-node",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
 
-                            foreach (var pod in pods.Items)
-                            {
-                                if (pod.Status.Phase != "Running")
-                                {
-                                    if (pod.Metadata.Name.Contains("coredns") && pod.Status.Phase == "Pending")
-                                    {
-                                        master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
-                                    }
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "coredns",
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
 
-                                    await Task.Delay(5000);
+                    // Spin up a [dnsutils] pod and then exec into it to confirm that
+                    // CoreDNS is answering DNS queries.
 
-                                    return false;
-                                }
-                            }
-
-                            return true;
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval);
-                    
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/dnsutils",
                         async () =>
                         {
                             controller.LogProgress(master, verb: "setup", message: "dnsutils");
 
-                            var pods = await k8s.CreateNamespacedPodAsync(
+                            var pod = await k8s.CreateNamespacedPodAsync(
                                 new V1Pod()
                                 {
                                     Metadata = new V1ObjectMeta()
                                     {
                                         Name              = "dnsutils",
-                                        NamespaceProperty = KubeNamespaces.NeonSystem
+                                        NamespaceProperty = KubeNamespace.NeonSystem
                                     },
                                     Spec = new V1PodSpec()
                                     {
@@ -1414,30 +1344,47 @@ done
                                             { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
                                         }
                                     }
-                                }, 
-                                KubeNamespaces.NeonSystem);
+                                },
+                                KubeNamespace.NeonSystem);
+
+                            await k8s.WaitForPodAsync(pod.Namespace(), pod.Name(),
+                                timeout:           clusterOpTimeout,
+                                pollInterval:      clusterOpPollInterval,
+                                cancellationToken: controller.CancellationToken);
                         });
 
-                    await NeonHelper.WaitForAsync(
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/dns-verify",
                         async () =>
                         {
-                            var result = master.SudoCommand($"kubectl exec -n {KubeNamespaces.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput);
+                            controller.LogProgress(master, verb: "verify", message: "dns");
 
-                            if (result.Success)
-                            {
-                                return await Task.FromResult(true);
-                            }
-                            else
-                            {
-                                master.SudoCommand("kubectl rollout restart --namespace kube-system deployment/coredns", RunOptions.LogOnErrorOnly);
-                                await Task.Delay(5000);
-                                return await Task.FromResult(false);
-                            }
-                        },
-                        timeout:      clusterOpTimeout,
-                        pollInterval: clusterOpPollInterval);
+                            // Verify that [coredns] is actually working.
 
-                    await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespaces.NeonSystem);
+                            await NeonHelper.WaitForAsync(
+                                async () =>
+                                {
+                                    try
+                                    {
+                                        master.SudoCommand($"kubectl exec -n {KubeNamespace.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput).EnsureSuccess();
+
+                                        return true;
+                                    }
+                                    catch
+                                    {
+                                        // restart coredns and try again.
+                                        var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+                                        await coredns.RestartAsync(k8s);
+                                        await Task.Delay(10000);
+                                        return false;
+                                    }
+                                },
+                                timeout: TimeSpan.FromSeconds(120),
+                                pollInterval: TimeSpan.FromMilliseconds(500));
+
+
+                            await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
+                        });
                 });
         }
 
@@ -1449,15 +1396,15 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureMetadataAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
+            controller.ThrowIfCancelled();
             node.InvokeIdempotent("cluster-metadata",
                 () =>
                 {
-                    node.UploadText(LinuxPath.Combine(KubeNodeFolders.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest, Formatting.Indented));
+                    node.UploadText(LinuxPath.Combine(KubeNodeFolder.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest, Formatting.Indented));
                 });
 
             await Task.CompletedTask;
@@ -1471,14 +1418,14 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ConfigureMasterTaintsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = master.Cluster;
-            var k8s     = GetK8sClient(controller);
+            var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kubernetes-master-taints",
                 async () =>
                 {
@@ -1494,14 +1441,18 @@ done
                         await NeonHelper.WaitForAsync(
                            async () =>
                            {
-                               nodes = await k8s.ListNodeAsync(labelSelector: "node-role.kubernetes.io/master=");
+                               nodes = await k8s.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
+
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
-                           timeout:      TimeSpan.FromMinutes(5),
-                           pollInterval: TimeSpan.FromSeconds(5));
+                           timeout:           TimeSpan.FromMinutes(5),
+                           pollInterval:      TimeSpan.FromSeconds(5),
+                           cancellationToken: controller.CancellationToken);
 
                         foreach (var master in nodes.Items)
                         {
+                            controller.ThrowIfCancelled();
+
                             if (master.Spec.Taints == null)
                             {
                                 continue;
@@ -1511,7 +1462,8 @@ done
                             {
                                 Spec = new V1NodeSpec()
                                 {
-                                    Taints = master.Spec.Taints.Where(t => t.Key != "node-role.kubernetes.io/master").ToList()
+                                    Taints = master.Spec.Taints.Where(t => t.Key != "node-role.kubernetes.io/master"
+                                                                        && t.Key != "node-role.kubernetes.io/control-plane").ToList()
                                 }
                             };
 
@@ -1529,7 +1481,7 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMetricsServerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1537,6 +1489,7 @@ done
             var cluster = master.Cluster;
             var k8s     = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
                 async () =>
                 {
@@ -1556,15 +1509,16 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespaces.KubeSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "metrics-server", releaseName: "metrics-server", @namespace: KubeNamespace.KubeSystem, values: values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "metrics-server");
 
-                    await k8s.WaitForDeploymentAsync("kube-system", "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync("kube-system", "metrics-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -1576,7 +1530,7 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallIstioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
@@ -1587,20 +1541,12 @@ done
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
 
-            await master.InvokeIdempotentAsync("setup/ingress-namespace",
-                async () =>
-                {
-                    await k8s.CreateNamespaceAsync(new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name = KubeNamespaces.NeonIngress
-                        }
-                    });
-                });
+            controller.ThrowIfCancelled();
+            await CreateNamespaceAsync(controller, master, KubeNamespace.NeonIngress, false);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/ingress",
                 async () =>
                 {
@@ -1611,8 +1557,9 @@ done
                     values.Add("cluster.name", clusterLogin.ClusterDefinition.Name);
                     values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
 
-                    var i      = 0;
-                    foreach (var rule in master.Cluster.Definition.Network.IngressRules)
+                    var i = 0;
+                    foreach (var rule in master.Cluster.Definition.Network.IngressRules
+                        .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through ingress gateway
                     {
                         values.Add($"nodePorts[{i}].name", $"{rule.Name}");
                         values.Add($"nodePorts[{i}].protocol", $"{rule.Protocol.ToString().ToUpper()}");
@@ -1632,9 +1579,21 @@ done
                     values.Add($"resources.proxy.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
                     values.Add($"resources.proxy.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
 
-                    await master.InstallHelmChartAsync(controller, "istio", releaseName: "neon-ingress", @namespace: KubeNamespaces.NeonIngress, values: values);
+                    values.Add($"resources.pilot.limits.cpu", $"{ToSiString(proxyAdvice.PodCpuLimit)}");
+                    values.Add($"resources.pilot.limits.memory", $"{ToSiString(proxyAdvice.PodMemoryLimit)}");
+                    values.Add($"resources.pilot.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
+                    values.Add($"resources.pilot.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
+
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    
+                    await master.InstallHelmChartAsync(controller, "istio",
+                        releaseName: "neon-ingress",
+                        @namespace: KubeNamespace.NeonIngress,
+                        prioritySpec: PriorityClass.SystemClusterCritical.Name,
+                        values: values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/ingress-ready",
                 async () =>
                 {
@@ -1643,36 +1602,14 @@ done
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "istio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "istiod", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                        });
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "istio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "istiod", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                        },
+                        timeoutMessage:    "setup/ingress-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/neoncluster-gateway",
-                async () =>
-                {
-                    var gateway = await k8s.GetNamespacedCustomObjectAsync<Gateway>(KubeNamespaces.NeonIngress, "neoncluster-gateway");
-                    var regexPattern = "[a-z0-9]+.neoncluster.io";
-                    var servers      = new List<Server>();
-
-                    foreach (var server in gateway.Spec.Servers)
-                    {
-                        var hosts = new List<string>();
-
-                        foreach (var host in server.Hosts)
-                        {
-                            hosts.Add(Regex.Replace(host, regexPattern, cluster.Definition.Domain));
-                        }
-                        server.Hosts = hosts;
-                    }
-
-                    await k8s.ReplaceNamespacedCustomObjectAsync<Gateway>(gateway, KubeNamespaces.NeonIngress, gateway.Name());
-                });
-            }
         }
 
         /// <summary>
@@ -1683,21 +1620,20 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallCertManagerAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s                = GetK8sClient(controller);
-            var readyToGoMode      = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
             var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cert-manager",
                 async () =>
                 {
@@ -1719,11 +1655,14 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "cert-manager", releaseName: "cert-manager", @namespace: KubeNamespaces.NeonIngress, values: values);
-
+                    await master.InstallHelmChartAsync(controller, "cert-manager",
+                        releaseName: "cert-manager",
+                        @namespace: KubeNamespace.NeonIngress,
+                        prioritySpec: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}",
+                        values: values);
                 });
 
-
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cert-manager-ready",
                 async () =>
                 {
@@ -1732,25 +1671,29 @@ done
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "cert-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                        });
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                        },
+                        timeoutMessage:    "setup/cert-manager-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-acme",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
-                    
-                    var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-                    var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-                    var values        = new Dictionary<string, object>();
+
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", clusterLogin.ClusterDefinition.Name);
-                    values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("certficateDuration", cluster.Definition.Network.CertificateDuration);
+                    values.Add("certificateRenewBefore", cluster.Definition.Network.CertificateRenewBefore);
 
                     int i = 0;
 
@@ -1762,69 +1705,12 @@ done
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "neon-acme", releaseName: "neon-acme", @namespace: KubeNamespaces.NeonIngress, values: values);
-
+                    await master.InstallHelmChartAsync(controller, "neon-acme",
+                        releaseName:  "neon-acme",
+                        @namespace:   KubeNamespace.NeonIngress,
+                        prioritySpec: PriorityClass.NeonNetwork.Name,
+                        values:       values);
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/cluster-cert",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "renew cluster cert");
-
-                        await k8s.DeleteNamespacedCustomObjectAsync<Certificate>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
-                        await k8s.DeleteNamespacedCustomObjectAsync<CertificateRequest>(KubeNamespaces.NeonIngress, "neon-cluster-certificate");
-                        
-                        try
-                        {
-                            await k8s.DeleteNamespacedSecretAsync("neon-cluster-certificate", KubeNamespaces.NeonIngress);
-                        }
-                        catch (HttpOperationException e)
-                        {
-                            if (e.Response.StatusCode != HttpStatusCode.NotFound)
-                            {
-                                throw;
-                            }
-                        }
-
-                        var cert = new Certificate()
-                        {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = "neon-cluster-certificate",
-                                NamespaceProperty = KubeNamespaces.NeonIngress
-                            },
-                            Spec = new CertificateSpec()
-                        };
-
-                        cert.Spec.CommonName  = clusterLogin.ClusterDefinition.Domain;
-                        cert.Spec.RenewBefore = "360h0m0s";
-                        cert.Spec.SecretName  = "neon-cluster-certificate";
-                        cert.Spec.Usages      = new X509Usages[] { X509Usages.ServerAuth, X509Usages.ClientAuth };
-                        cert.Spec.Duration    = "2160h0m0s";
-                        cert.Spec.Duration    = "2160h0m0s";
-                        cert.Spec.DnsNames    = new List<string>()
-                        {
-                            $"{clusterLogin.ClusterDefinition.Domain}",
-                            $"*.{clusterLogin.ClusterDefinition.Domain}"
-                        };
-                        cert.Spec.IssuerRef = new IssuerRef()
-                        {
-                            Group = "cert-manager.io",
-                            Kind  = "ClusterIssuer",
-                            Name  = "neon-acme"
-                        };
-                        cert.Spec.PrivateKey = new PrivateKey()
-                        {
-                            Algorithm      = KeyAlgorithm.RSA,
-                            Encoding       = KeyEncoding.PKCS1,
-                            RotationPolicy = RotationPolicy.Always
-                        };
-
-                        await k8s.UpsertNamespacedCustomObjectAsync<Certificate>(cert, KubeNamespaces.NeonIngress, cert.Name());
-                    });
-            }
         }
 
         /// <summary>
@@ -1835,11 +1721,12 @@ done
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateRootUserAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
@@ -1879,34 +1766,44 @@ subjects:
         /// Generates a dashboard certificate.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The generated certificate.</returns>
-        public static TlsCertificate GenerateDashboardCert(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static TlsCertificate GenerateDashboardCert(ISetupController controller)
         {
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            // We're going to tie the custom certificate to the IP addresses
-            // of the master nodes only.  This means that only these nodes
-            // can accept the traffic and also that we'd need to regenerate
-            // the certificate if we add/remove a master node.
+            // We're going to tie the custom certificate to the private IP
+            // addresses of the master nodes as well as the cluster domain
+            // plus the public ingress address for cloud deployments.
+            //
+            // This means that only these nodes can accept the traffic and also
+            // that we'd need to regenerate the certificate if we add/remove a
+            // master node.
             //
             // Here's the tracking task:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/441
 
-            var masterAddresses = new List<string>();
+            var certHostnames = new List<string>();
 
-            foreach (var masterNode in cluster.Masters)
+            foreach (var master in cluster.Masters)
             {
-                masterAddresses.Add(masterNode.Address.ToString());
+                certHostnames.Add(master.Metadata.Address);
+            }
+
+            certHostnames.Add(cluster.Definition.Domain);
+
+            var clusterAddresses = cluster.HostingManager.GetClusterAddresses();
+
+            foreach (var clusterAddress in clusterAddresses)
+            {
+                certHostnames.Add(clusterAddress);
             }
 
             var utcNow     = DateTime.UtcNow;
             var utc10Years = utcNow.AddYears(10);
 
             var certificate = TlsCertificate.CreateSelfSigned(
-                hostnames: masterAddresses,
+                hostnames: certHostnames,
                 validDays: (int)(utc10Years - utcNow).TotalDays,
                 issuedBy:  "kubernetes-dashboard");
 
@@ -1921,18 +1818,16 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kube-dashboard",
                 async () =>
                 {
@@ -1945,31 +1840,19 @@ subjects:
                     values.Add("settings.clusterName", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("ingress.subdomain", ClusterDomain.KubernetesDashboard);
-                    values.Add($"metricsScraper.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"metricsScraper.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    await master.InstallHelmChartAsync(controller, "kubernetes-dashboard", releaseName: "kubernetes-dashboard", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "kubernetes-dashboard");
+                    await master.InstallHelmChartAsync(controller, "kubernetes-dashboard",
+                        releaseName:     "kubernetes-dashboard",
+                        @namespace:      KubeNamespace.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonApp.Name,
+                        values:          values,
+                        progressMessage: "kubernetes-dashboard");
 
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/k8s-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update k8s ingress");
-
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "k8s-dashboard-virtual-service");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}"
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-            }
         }
 
         /// <summary>
@@ -1979,13 +1862,13 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task TaintNodesAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var master  = cluster.FirstMaster;
+            var master = cluster.FirstMaster;
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/taint-nodes",
                 async () =>
                 {
@@ -2037,6 +1920,553 @@ subjects:
         }
 
         /// <summary>
+        /// Installs CRDs used later on in setup by various helm charts.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallCrdsAsync(ISetupController controller)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var master = cluster.FirstMaster;
+
+            controller.ThrowIfCancelled();
+            master.InvokeIdempotent("setup/install-crds",
+                () =>
+                {
+                    controller.LogProgress(master, verb: "Install", message: "CRDs");
+
+                    var grafanaDashboardScript =
+                    @"
+cat <<EOF | kubectl apply -f -
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  name: grafanadashboards.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: GrafanaDashboard
+    listKind: GrafanaDashboardList
+    plural: grafanadashboards
+    singular: grafanadashboard
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: GrafanaDashboard is the Schema for the grafanadashboards API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: GrafanaDashboardSpec defines the desired state of GrafanaDashboard
+            properties:
+              configMapRef:
+                description: Selects a key from a ConfigMap.
+                properties:
+                  key:
+                    description: The key to select.
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                  optional:
+                    description: Specify whether the ConfigMap or its key must be
+                      defined
+                    type: boolean
+                required:
+                - key
+                type: object
+              customFolderName:
+                type: string
+              datasources:
+                items:
+                  properties:
+                    datasourceName:
+                      type: string
+                    inputName:
+                      type: string
+                  required:
+                  - datasourceName
+                  - inputName
+                  type: object
+                type: array
+              grafanaCom:
+                properties:
+                  id:
+                    type: integer
+                  revision:
+                    type: integer
+                required:
+                - id
+                type: object
+              json:
+                type: string
+              jsonnet:
+                type: string
+              plugins:
+                items:
+                  description: GrafanaPlugin contains information about a single plugin
+                  properties:
+                    name:
+                      type: string
+                    version:
+                      type: string
+                  required:
+                  - name
+                  - version
+                  type: object
+                type: array
+              url:
+                type: string
+            type: object
+          status:
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: """"
+    plural: """"
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  name: grafanadatasources.integreatly.org
+spec:
+  group: integreatly.org
+  names:
+    kind: GrafanaDataSource
+    listKind: GrafanaDataSourceList
+    plural: grafanadatasources
+    singular: grafanadatasource
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: GrafanaDataSource is the Schema for the grafanadatasources API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: GrafanaDataSourceSpec defines the desired state of GrafanaDataSource
+            properties:
+              datasources:
+                items:
+                  properties:
+                    access:
+                      type: string
+                    basicAuth:
+                      type: boolean
+                    basicAuthPassword:
+                      type: string
+                    basicAuthUser:
+                      type: string
+                    database:
+                      type: string
+                    editable:
+                      type: boolean
+                    isDefault:
+                      type: boolean
+                    jsonData:
+                      description: GrafanaDataSourceJsonData contains the most common
+                        json options See https://grafana.com/docs/administration/provisioning/#datasources
+                      properties:
+                        addCorsHeader:
+                          description: Useful fields for clickhouse datasource See
+                            https://github.com/Vertamedia/clickhouse-grafana/tree/master/dist/README.md#configure-the-datasource-with-provisioning
+                            See https://github.com/Vertamedia/clickhouse-grafana/tree/master/src/datasource.ts#L44
+                          type: boolean
+                        alertmanagerUid:
+                          description: AlertManagerUID if null use the internal grafana
+                            alertmanager
+                          type: string
+                        allowInfraExplore:
+                          type: boolean
+                        apiToken:
+                          type: string
+                        appInsightsAppId:
+                          description: Fields for Azure data sources
+                          type: string
+                        assumeRoleArn:
+                          type: string
+                        authType:
+                          type: string
+                        authenticationType:
+                          type: string
+                        azureLogAnalyticsSameAs:
+                          type: string
+                        clientEmail:
+                          type: string
+                        clientId:
+                          type: string
+                        cloudName:
+                          type: string
+                        clusterUrl:
+                          type: string
+                        connMaxLifetime:
+                          type: integer
+                        customMetricsNamespaces:
+                          type: string
+                        customQueryParameters:
+                          description: Fields for Prometheus data sources
+                          type: string
+                        defaultBucket:
+                          type: string
+                        defaultDatabase:
+                          type: string
+                        defaultProject:
+                          type: string
+                        defaultRegion:
+                          type: string
+                        derivedFields:
+                          items:
+                            properties:
+                              datasourceUid:
+                                type: string
+                              matcherRegex:
+                                type: string
+                              name:
+                                type: string
+                              url:
+                                type: string
+                            type: object
+                          type: array
+                        encrypt:
+                          type: string
+                        esVersion:
+                          type: string
+                        exemplarTraceIdDestinations:
+                          items:
+                            properties:
+                              datasourceUid:
+                                type: string
+                              name:
+                                type: string
+                              url:
+                                type: string
+                              urlDisplayLabel:
+                                type: string
+                            type: object
+                          type: array
+                        githubUrl:
+                          description: Fields for Github data sources
+                          type: string
+                        graphiteVersion:
+                          type: string
+                        httpHeaderName1:
+                          description: Custom HTTP headers for datasources See https://grafana.com/docs/grafana/latest/administration/provisioning/#datasources
+                          type: string
+                        httpHeaderName2:
+                          type: string
+                        httpHeaderName3:
+                          type: string
+                        httpHeaderName4:
+                          type: string
+                        httpHeaderName5:
+                          type: string
+                        httpHeaderName6:
+                          type: string
+                        httpHeaderName7:
+                          type: string
+                        httpHeaderName8:
+                          type: string
+                        httpHeaderName9:
+                          type: string
+                        httpMethod:
+                          type: string
+                        httpMode:
+                          description: Fields for InfluxDB data sources
+                          type: string
+                        implementation:
+                          description: Fields for Alertmanager data sources
+                          type: string
+                        interval:
+                          type: string
+                        logAnalyticsClientId:
+                          type: string
+                        logAnalyticsDefaultWorkspace:
+                          type: string
+                        logAnalyticsSubscriptionId:
+                          type: string
+                        logAnalyticsTenantId:
+                          type: string
+                        logLevelField:
+                          type: string
+                        logMessageField:
+                          type: string
+                        manageAlerts:
+                          description: ManageAlerts turns on alert management from
+                            UI
+                          type: boolean
+                        maxIdleConns:
+                          type: integer
+                        maxLines:
+                          description: Fields for Loki data sources
+                          type: integer
+                        maxOpenConns:
+                          type: integer
+                        nodeGraph:
+                          properties:
+                            enabled:
+                              type: boolean
+                          type: object
+                        oauthPassThru:
+                          type: boolean
+                        organization:
+                          type: string
+                        port:
+                          type: integer
+                        postgresVersion:
+                          type: integer
+                        search:
+                          properties:
+                            hide:
+                              type: boolean
+                          type: object
+                        server:
+                          description: Fields for Grafana Clickhouse data sources
+                          type: string
+                        serviceMap:
+                          properties:
+                            datasourceUid:
+                              type: string
+                          type: object
+                        showOffline:
+                          type: boolean
+                        sigV4AssumeRoleArn:
+                          type: string
+                        sigV4Auth:
+                          description: Fields for AWS Prometheus data sources
+                          type: boolean
+                        sigV4AuthType:
+                          type: string
+                        sigV4ExternalId:
+                          type: string
+                        sigV4Profile:
+                          type: string
+                        sigV4Region:
+                          type: string
+                        sslmode:
+                          type: string
+                        subscriptionId:
+                          type: string
+                        tenantId:
+                          type: string
+                        timeField:
+                          type: string
+                        timeInterval:
+                          type: string
+                        timescaledb:
+                          type: boolean
+                        timezone:
+                          description: Extra field for MySQL data source
+                          type: string
+                        tlsAuth:
+                          type: boolean
+                        tlsAuthWithCACert:
+                          type: boolean
+                        tlsSkipVerify:
+                          type: boolean
+                        tokenUri:
+                          description: Fields for Stackdriver data sources
+                          type: string
+                        tracesToLogs:
+                          description: Fields for tracing data sources
+                          properties:
+                            datasourceUid:
+                              type: string
+                            filterBySpanID:
+                              type: boolean
+                            filterByTraceID:
+                              type: boolean
+                            lokiSearch:
+                              type: boolean
+                            spanEndTimeShift:
+                              type: string
+                            spanStartTimeShift:
+                              type: string
+                            tags:
+                              items:
+                                type: string
+                              type: array
+                          type: object
+                        tsdbResolution:
+                          type: string
+                        tsdbVersion:
+                          type: string
+                        url:
+                          description: Fields for Instana data sources See https://github.com/instana/instana-grafana-datasource/blob/main/provisioning/datasources/datasource.yml
+                          type: string
+                        usePOST:
+                          type: boolean
+                        useProxy:
+                          type: boolean
+                        useYandexCloudAuthorization:
+                          type: boolean
+                        username:
+                          type: string
+                        version:
+                          type: string
+                        xHeaderKey:
+                          type: string
+                        xHeaderUser:
+                          type: string
+                      type: object
+                    name:
+                      type: string
+                    orgId:
+                      type: integer
+                    password:
+                      type: string
+                    secureJsonData:
+                      description: GrafanaDataSourceSecureJsonData contains the most
+                        common secure json options See https://grafana.com/docs/administration/provisioning/#datasources
+                      properties:
+                        accessKey:
+                          type: string
+                        accessToken:
+                          description: Fields for Github data sources
+                          type: string
+                        appInsightsApiKey:
+                          type: string
+                        basicAuthPassword:
+                          type: string
+                        clientSecret:
+                          description: Fields for Azure data sources
+                          type: string
+                        httpHeaderValue1:
+                          description: Custom HTTP headers for datasources See https://grafana.com/docs/grafana/latest/administration/provisioning/#datasources
+                          type: string
+                        httpHeaderValue2:
+                          type: string
+                        httpHeaderValue3:
+                          type: string
+                        httpHeaderValue4:
+                          type: string
+                        httpHeaderValue5:
+                          type: string
+                        httpHeaderValue6:
+                          type: string
+                        httpHeaderValue7:
+                          type: string
+                        httpHeaderValue8:
+                          type: string
+                        httpHeaderValue9:
+                          type: string
+                        logAnalyticsClientSecret:
+                          type: string
+                        password:
+                          type: string
+                        privateKey:
+                          description: Fields for Stackdriver data sources
+                          type: string
+                        secretKey:
+                          type: string
+                        sigV4AccessKey:
+                          description: Fields for AWS data sources
+                          type: string
+                        sigV4SecretKey:
+                          type: string
+                        tlsCACert:
+                          type: string
+                        tlsClientCert:
+                          type: string
+                        tlsClientKey:
+                          type: string
+                        token:
+                          description: Fields for InfluxDB data sources
+                          type: string
+                      type: object
+                    type:
+                      type: string
+                    uid:
+                      type: string
+                    url:
+                      type: string
+                    user:
+                      type: string
+                    version:
+                      type: integer
+                    withCredentials:
+                      type: boolean
+                  required:
+                  - name
+                  - type
+                  type: object
+                type: array
+              name:
+                type: string
+            required:
+            - datasources
+            - name
+            type: object
+          status:
+            properties:
+              message:
+                type: string
+              phase:
+                type: string
+            required:
+            - message
+            - phase
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: """"
+    plural: """"
+  conditions: []
+  storedVersions: []
+EOF
+";
+
+                    master.SudoCommand(CommandBundle.FromScript(grafanaDashboardScript), RunOptions.FaultOnError);
+                });
+        }
+
+        /// <summary>
         /// Deploy Kiali.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2044,24 +2474,21 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task InstallKialiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
+            var k8s     = GetK8sClient(controller);
 
-            var k8s = GetK8sClient(controller);
-
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kiali",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "kaili");
+                    controller.LogProgress(master, verb: "setup", message: "kiali");
 
                     var values = new Dictionary<string, object>();
-
-                    var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
+                    var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
                     values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
                     values.Add("image.operator.organization", KubeConst.LocalClusterRegistry);
@@ -2071,8 +2498,8 @@ subjects:
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("ingress.subdomain", ClusterDomain.Kiali);
-                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(20));
-                    
+                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
                     {
@@ -2082,53 +2509,28 @@ subjects:
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "kiali", releaseName: "kiali-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "kiali",
+                        releaseName:  "kiali-operator",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonApp.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kiali-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "kaili");
+                    controller.LogProgress(master, verb: "wait for", message: "kiali");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
-                        });
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "kiali", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
+                        },
+                        timeoutMessage:    "setup/kiali-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/kiali-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update kiali ingress");
-                        
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "kiali-dashboard-virtual-service");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.Kiali}.{cluster.Definition.Domain}"
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/kiali-crd-config",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update kiali crd config");
-
-                        var kiali = await k8s.GetNamespacedCustomObjectAsync<Kiali>(KubeNamespaces.NeonSystem, "kiali");
-
-                        kiali.Spec["auth"]["openid"]["issuer_uri"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-                        kiali.Spec["external_services"]["grafana"]["url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync(kiali, KubeNamespaces.NeonSystem, kiali.Name());
-                    });
-            }
         }
 
         /// <summary>
@@ -2139,11 +2541,11 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task KubeSetupAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/initial-kubernetes", async
                 () =>
                 {
@@ -2161,8 +2563,7 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeProblemDetectorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2177,17 +2578,23 @@ subjects:
             values.Add("cluster.domain", cluster.Definition.Domain);
             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/node-problem-detector",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "node-problem-detector", releaseName: "node-problem-detector", @namespace: KubeNamespaces.NeonSystem);
+                    await master.InstallHelmChartAsync(controller, "node-problem-detector",
+                        releaseName: "node-problem-detector",
+                        prioritySpec: PriorityClass.NeonOperator.Name,
+                        @namespace:   KubeNamespace.NeonSystem);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/node-problem-detector-ready",
                 async () =>
                 {
-                    await k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonSystem, "node-problem-detector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "node-problem-detector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -2199,25 +2606,28 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOpenEbsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster                = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice          = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var apiServerAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsApiServer);
+            var cStorAdvice            = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstor);
             var provisionerAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsProvisioner);
+            var jivaAdvice             = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsJiva);
             var localPvAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsLocalPvProvisioner);
             var snapshotOperatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsSnapshotOperator);
             var ndmOperatorAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdmOperator);
             var webhookAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsWebhook);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/openebs-all",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "setup", message: "openebs");
 
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/openebs",
                         async () =>
                         {
@@ -2245,10 +2655,21 @@ subjects:
                             values.Add($"webhook.replicas", webhookAdvice.ReplicaCount);
                             values.Add($"serviceMonitor.interval", clusterAdvice.MetricsInterval);
 
-                            await master.InstallHelmChartAsync(controller, "openebs", releaseName: "openebs", values: values, @namespace: KubeNamespaces.NeonStorage);
+                            values.Add($"openebsMonitoringAddon.cStor.serviceMonitor.enabled", cStorAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.jiva.serviceMonitor.enabled", jivaAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
+                            values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
+
+
+                            await master.InstallHelmChartAsync(controller, "openebs",
+                                releaseName:  "openebs",
+                                @namespace:   KubeNamespace.NeonStorage,
+                                prioritySpec: PriorityClass.NeonStorage.Name,
+                                values:       values);
                         });
 
-                    switch (cluster.Definition.OpenEbs.Engine)
+                    switch (cluster.Definition.Storage.OpenEbs.Engine)
                     {
                         case OpenEbsEngine.cStor:
 
@@ -2257,7 +2678,7 @@ subjects:
 
                         case OpenEbsEngine.HostPath:
                         case OpenEbsEngine.Jiva:
-                            
+
                             await WaitForOpenEbsReady(controller, master);
                             break;
 
@@ -2265,7 +2686,7 @@ subjects:
                         case OpenEbsEngine.Default:
                         case OpenEbsEngine.Mayastor:
 
-                            throw new NotImplementedException($"[{cluster.Definition.OpenEbs.Engine}]");
+                            throw new NotImplementedException($"[{cluster.Definition.Storage.OpenEbs.Engine}]");
                     }
                 });
         }
@@ -2278,11 +2699,15 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task DeployOpenEbsWithcStor(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var k8s                = GetK8sClient(controller);
+            var cstorPoolAdvice    = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPool);
+            var cstorPoolAuxAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsCstorPoolAux);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/openebs-cstor",
                 async () =>
                 {
@@ -2313,13 +2738,15 @@ subjects:
 
                     values.Add("admissionServer.image.organization", KubeConst.LocalClusterRegistry);
 
-                    await master.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespaces.NeonStorage);
+                    await master.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespace.NeonStorage);
                 });
 
+            controller.ThrowIfCancelled();
             await WaitForOpenEbsReady(controller, master);
 
             controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/openebs-pool",
                 async () =>
                 {
@@ -2328,16 +2755,26 @@ subjects:
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "cspc-stripe",
-                            NamespaceProperty = KubeNamespaces.NeonStorage
+                            NamespaceProperty = KubeNamespace.NeonStorage
                         },
                         Spec = new V1CStorPoolClusterSpec()
                         {
-                            Pools = new List<V1CStorPoolSpec>()
+                            Pools     = new List<V1CStorPoolSpec>(),
+                            Resources = new V1ResourceRequirements()
+                            {
+                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAdvice.PodMemoryRequest)) } },
+                            },
+                            AuxResources = new V1ResourceRequirements()
+                            {
+                                Limits   = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryLimit)) } },
+                                Requests = new Dictionary<string, ResourceQuantity>() { { "memory", new ResourceQuantity(ToSiString(cstorPoolAuxAdvice.PodMemoryRequest)) } },
+                            }
                         }
                     };
 
-                    var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDeviceList>(KubeNamespaces.NeonStorage);
-                    
+                    var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDeviceList>(KubeNamespace.NeonStorage);
+
                     foreach (var node in cluster.Definition.Nodes)
                     {
                         if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
@@ -2358,7 +2795,7 @@ subjects:
                                 PoolConfig = new V1CStorPoolConfig()
                                 {
                                     DataRaidGroupType = DataRaidGroupType.Stripe,
-                                    Tolerations = new List<V1Toleration>()
+                                    Tolerations       = new List<V1Toleration>()
                                     {
                                         { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
                                         { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
@@ -2379,9 +2816,10 @@ subjects:
                         }
                     }
 
-                    await k8s.CreateNamespacedCustomObjectAsync<V1CStorPoolCluster>(cStorPoolCluster, KubeNamespaces.NeonStorage);
+                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/openebs-cstor-ready",
                 async () =>
                 {
@@ -2390,11 +2828,13 @@ subjects:
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonStorage, "openebs-cstor-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-cstor-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-cstor-cvc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-cstor-cspc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
-                        });
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-cstor-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cvc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-cstor-cspc-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
+                        },
+                        timeoutMessage:    "setup/openebs-cstor-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
 
             var replicas = 3;
@@ -2404,6 +2844,7 @@ subjects:
                 replicas = cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
             }
 
+            controller.ThrowIfCancelled();
             await CreateCstorStorageClass(controller, master, "openebs-cstor", replicaCount: replicas);
         }
 
@@ -2415,10 +2856,11 @@ subjects:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task WaitForOpenEbsReady(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/openebs-ready",
                 async () =>
                 {
@@ -2427,16 +2869,18 @@ subjects:
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonStorage, "openebs-ndm-node-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-apiserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-ndm-cluster-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonStorage, "openebs-snapshot-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
-                        });
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm-node-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-apiserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-cluster-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-snapshot-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
+                        },
+                        timeoutMessage:    "setup/openebs-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -2454,27 +2898,28 @@ subjects:
             string                          name,
             bool                            istioInjectionEnabled = true)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/namespace-{name}",
                 async () =>
                 {
-                    await k8s.CreateNamespaceAsync(new V1Namespace()
-                    {
-                        Metadata = new V1ObjectMeta()
+                    await k8s.CreateNamespaceAsync(
+                        new V1Namespace()
                         {
-                            Name   = name,
-                            Labels = new Dictionary<string, string>()
+                            Metadata = new V1ObjectMeta()
                             {
-                                { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
+                                Name = name,
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
+                                }
                             }
-                        }
-                    });
+                        });
                 });
         }
 
@@ -2494,8 +2939,7 @@ subjects:
             int                             replicaCount = 3,
             string                          storagePool  = "default")
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -2503,6 +2947,7 @@ subjects:
 
             var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
                 async () =>
                 {
@@ -2516,7 +2961,7 @@ subjects:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = name,
+                            Name        = name,
                             Annotations = new Dictionary<string, string>()
                             {
                                 {  "cas.openebs.io/config",
@@ -2549,14 +2994,14 @@ $@"- name: ReplicaCount
             NodeSshProxy<NodeDefinition>    master,
             string                          name)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/storage-class-hostpath-{name}",
                 async () =>
                 {
@@ -2564,7 +3009,7 @@ $@"- name: ReplicaCount
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = name,
+                            Name        = name,
                             Annotations = new Dictionary<string, string>()
                             {
                                 {  "cas.openebs.io/config",
@@ -2601,8 +3046,7 @@ $@"- name: StorageType
             string                          cstorPoolCluster = "cspc-stripe",
             int                             replicaCount     = 3)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -2610,6 +3054,7 @@ $@"- name: StorageType
 
             var k8s = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
@@ -2654,8 +3099,7 @@ $@"- name: StorageType
             string                          name,
             int                             replicaCount = 3)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -2663,7 +3107,9 @@ $@"- name: StorageType
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            switch (cluster.Definition.OpenEbs.Engine)
+            controller.ThrowIfCancelled();
+
+            switch (cluster.Definition.Storage.OpenEbs.Engine)
             {
                 case OpenEbsEngine.Default:
 
@@ -2687,62 +3133,8 @@ $@"- name: StorageType
                 case OpenEbsEngine.Mayastor:
                 default:
 
-                    throw new NotImplementedException($"Support for the [{cluster.Definition.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
+                    throw new NotImplementedException($"Support for the [{cluster.Definition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
             };
-        }
-
-        /// <summary>
-        /// Installs an Etcd cluster to the monitoring namespace.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallEtcdAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.ClearAsync;
-
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
-            var advice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice).GetServiceAdvice(KubeClusterAdvice.EtcdCluster);
-
-            await master.InvokeIdempotentAsync("setup/monitoring-etcd",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "setup", message: "etcd");
-
-                    await CreateStorageClass(controller, master, "neon-internal-etcd");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add($"replicas", advice.ReplicaCount);
-
-                    values.Add($"volumeClaimTemplate.resources.requests.storage", "1Gi");
-
-                    int i = 0;
-
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
-                    {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
-                        i++;
-                    }
-
-                    await master.InstallHelmChartAsync(controller, "etcd-cluster", releaseName: "neon-etcd", @namespace: KubeNamespaces.NeonSystem, values: values);
-                });
-
-            await master.InvokeIdempotentAsync("setup/setup/monitoring-etcd-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "etc (monitoring)");
-
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "neon-system-etcd", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                });
-
-            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2753,8 +3145,7 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
@@ -2764,6 +3155,7 @@ $@"- name: StorageType
             var agentNodeAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.GrafanaAgentNode);
             var istioAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-prometheus",
                 async () =>
                 {
@@ -2774,35 +3166,37 @@ $@"- name: StorageType
 
                     values.Add($"cluster.name", cluster.Definition.Name);
                     values.Add($"cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
+                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
 
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    if (agentAdvice.PodMemoryRequest != null && agentAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
+                    values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
 
-                    if (agentNodeAdvice.PodMemoryRequest != null && agentNodeAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest));
+                    values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit));
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
                         values.Add($"tolerations[{i}].operator", "Exists");
-
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "grafana-agent", releaseName: "grafana-agent", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "grafana-agent",
+                        releaseName:  "grafana-agent",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
                 });
         }
 
@@ -2814,14 +3208,14 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForPrometheusAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-agent-ready",
                 async () =>
                 {
@@ -2830,127 +3224,233 @@ $@"- name: StorageType
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-agent-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonMonitor, "grafana-agent-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "grafana-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                        });
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-agent-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonMonitor, "grafana-agent-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "grafana-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                        },
+                        timeoutMessage:    "setup/monitoring-grafana-agent-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
         }
 
         /// <summary>
-        /// Installs Cortex to the monitoring namespace.
+        /// Installs Memcached to the neon-system namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCortexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallMemcachedAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            await master.InvokeIdempotentAsync("setup/monitoring-cortex-all",
+            controller.ThrowIfCancelled();
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Memcached);
+
+            var values = new Dictionary<string, object>();
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/memcached",
                 async () =>
                 {
-                    var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var k8s           = GetK8sClient(controller);
-                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Cortex);
+                    controller.LogProgress(master, verb: "setup", message: "memcached");
 
-                    var values        = new Dictionary<string, object>();
-
-                    values.Add($"ingress.alertmanager.subdomain", ClusterDomain.AlertManager);
-                    values.Add($"ingress.ruler.subdomain", ClusterDomain.CortexRuler);
+                    values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add($"server.memory", Decimal.ToInt32(serviceAdvice.PodMemoryLimit.Value / 1200000));
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelRole, "worker"))
                     {
-                        values.Add($"cortexConfig.distributor.ha_tracker.enable_ha_tracker", true);
-                        values.Add($"cortexConfig.distributor.ha_tracker.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.distributor.ring.kvstore.store", "etcd");
-
-                        values.Add($"cortexConfig.ingester.lifecycler.ring.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.ingester.lifecycler.ring.replication_factor", 3);
-
-                        values.Add($"cortexConfig.ruler.ring.kvstore.store", "etcd");
-
-                        values.Add($"cortexConfig.alertmanager.sharding_enabled", true);
-                        values.Add($"cortexConfig.alertmanager.sharding_ring.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.alertmanager.sharding_ring.replication_factor", 3);
-
-                        values.Add($"cortexConfig.compactor.sharding_enabled", true);
-                        values.Add($"cortexConfig.compactor.sharding_ring.kvstore.store", "etcd");
-                        values.Add($"cortexConfig.compactor.sharding_ring.kvstore.replication_factor", 3);
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
                     }
 
-                    if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
-                    {
-                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
-                    }
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
 
-                    await master.InvokeIdempotentAsync("setup/monitoring-cortex-secret",
+                    await master.InstallHelmChartAsync(controller, "memcached",
+                        releaseName: "neon-memcached",
+                        @namespace: KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values: values);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/memcached-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "memcached");
+
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-memcached", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+        }
+
+        /// <summary>
+        /// Installs Mimir to the monitoring namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallMimirAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            await CreateHostPathStorageClass(controller, master, "neon-internal-mimir");
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/monitoring-mimir-all",
+                async () =>
+                {
+                    var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s                 = GetK8sClient(controller);
+                    var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var mimirAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Mimir);
+                    var alertmanagerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirAlertmanager);
+                    var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirCompactor);
+                    var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirDistributor);
+                    var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirIngester);
+                    var overridesAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirOverridesExporter);
+                    var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirQuerier);
+                    var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirQueryFrontend);
+                    var rulerAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirRuler);
+                    var storeGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirStoreGateway);
+                    
+                    var values        = new Dictionary<string, object>();
+
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+
+                    values.Add($"alertmanager.replicas", alertmanagerAdvice.ReplicaCount);
+                    values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
+                    values.Add($"alertmanager.resources.limits.memory", ToSiString(alertmanagerAdvice.PodMemoryLimit));
+                    values.Add($"alertmanager.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"overrides_exporter.replicas", overridesAdvice.ReplicaCount);
+                    values.Add($"overrides_exporter.resources.requests.memory", ToSiString(overridesAdvice.PodMemoryRequest));
+                    values.Add($"overrides_exporter.resources.limits.memory", ToSiString(overridesAdvice.PodMemoryLimit));
+                    values.Add($"overrides_exporter.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"query_frontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"query_frontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"query_frontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"query_frontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
+                    values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
+                    values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
+                    values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"store_gateway.replicas", storeGatewayAdvice.ReplicaCount);
+                    values.Add($"store_gateway.resources.requests.memory", ToSiString(storeGatewayAdvice.PodMemoryRequest));
+                    values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
+                    values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+
+                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.MimirRuler);
+
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
                         async () =>
                         {
 
-                            var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                            var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                             var citusSecret = new V1Secret()
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name = KubeConst.CitusSecretKey,
-                                    NamespaceProperty = KubeNamespaces.NeonMonitor
+                                    Name              = KubeConst.CitusSecretKey,
+                                    NamespaceProperty = KubeNamespace.NeonMonitor
                                 },
-                                Data = new Dictionary<string, byte[]>(),
+                                Data       = new Dictionary<string, byte[]>(),
                                 StringData = new Dictionary<string, string>()
                             };
 
                             citusSecret.Data["username"] = dbSecret.Data["username"];
                             citusSecret.Data["password"] = dbSecret.Data["password"];
 
-                            await k8s.UpsertSecretAsync(citusSecret, KubeNamespaces.NeonMonitor);
+                            await k8s.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
                         }
                         );
 
-                    await master.InvokeIdempotentAsync("setup/monitoring-cortex",
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                    {
+                        foreach (var component in new string[]
+                        {
+                            "alertmanager", "distributor", "ingester", "overrides_exporter", "ruler", "querier", "query_frontend", "store_gateway", "compactor"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
+                        i++;
+                    }
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+
+                    await master.InstallHelmChartAsync(controller, "mimir",
+                        releaseName: "mimir",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        values:       values);
+
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/monitoring-mimir-ready",
                         async () =>
                         {
-                            controller.LogProgress(master, verb: "setup", message: "cortex");
+                            controller.LogProgress(master, verb: "wait for", message: "mimir");
 
-                            if (cluster.Definition.IsDesktopCluster ||
-                                cluster.Definition.Nodes.Any(node => node.Vm.GetMemory(cluster.Definition) < ByteUnits.Parse("4 GiB")))
-                            {
-                                values.Add($"cortexConfig.ingester.retain_period", $"120s");
-                                values.Add($"cortexConfig.ingester.metadata_retain_period", $"5m");
-                                values.Add($"cortexConfig.querier.batch_iterators", true);
-                                values.Add($"cortexConfig.querier.max_samples", 10000000);
-                                values.Add($"cortexConfig.table_manager.retention_period", "12h");
-                            }
-
-                            int i = 0;
-
-                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
-                            {
-                                values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                                values.Add($"tolerations[{i}].effect", taint.Effect);
-                                values.Add($"tolerations[{i}].operator", "Exists");
-                                i++;
-                            }
-
-                            values.Add("image.organization", KubeConst.LocalClusterRegistry);
-
-                            await master.InstallHelmChartAsync(controller, "cortex", releaseName: "cortex", @namespace: KubeNamespaces.NeonMonitor, values: values);
-                        });
-
-                    await master.InvokeIdempotentAsync("setup/monitoring-cortex-ready",
-                        async () =>
-                        {
-                            controller.LogProgress(master, verb: "wait for", message: "cortex");
-
-                            await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "cortex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                            await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "mimir-alertmanager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "mimir-compactor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "mimir-distributor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "mimir-ingester", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "mimir-overrides-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "mimir-querier", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "mimir-query-frontend", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "mimir-ruler", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                            await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "mimir-store-gateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                         });
                 });
         }
@@ -2963,16 +3463,26 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallLokiAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-            
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s            = GetK8sClient(controller);
-            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Loki);
+            var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s                 = GetK8sClient(controller);
+            var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var lokiAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Loki);
+            var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiCompactor);
+            var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiDistributor);
+            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiIngester);
+            var indexGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiIndexGateway);
+            var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiQuerier);
+            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiQueryFrontend);
+            var rulerAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiRuler);
+            var tableManagerAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.LokiTableManager);
 
+            await CreateHostPathStorageClass(controller, master, "neon-internal-loki");
+
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-loki",
                 async () =>
                 {
@@ -2980,39 +3490,105 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    
-                    values.Add($"replicas", serviceAdvice.ReplicaCount);
-                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
-                    {
-                        values.Add($"config.common.ring.kvstore.store", "etcd");
-                        values.Add($"config.common.ring.kvstore.replication_factor", 3);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
 
+                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"indexGateway.replicas", indexGatewayAdvice.ReplicaCount);
+                    values.Add($"indexGateway.resources.requests.memory", ToSiString(indexGatewayAdvice.PodMemoryRequest));
+                    values.Add($"indexGateway.resources.limits.memory", ToSiString(indexGatewayAdvice.PodMemoryLimit));
+                    values.Add($"indexGateway.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
+                    values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
+                    values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
+                    values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"tableManager.replicas", tableManagerAdvice.ReplicaCount);
+                    values.Add($"tableManager.resources.requests.memory", ToSiString(tableManagerAdvice.PodMemoryRequest));
+                    values.Add($"tableManager.resources.limits.memory", ToSiString(tableManagerAdvice.PodMemoryLimit));
+                    values.Add($"tableManager.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+
+                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
+                    {
+                        values.Add($"config.replication_factor", 3);
                     }
 
-                    if (cluster.Definition.IsDesktopCluster)
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1)
                     {
-                        values.Add($"config.limits_config.reject_old_samples_max_age", "15m");
+                        await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
+                        values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
+                        values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
                     }
 
-                    if (serviceAdvice.PodMemoryRequest != null && serviceAdvice.PodMemoryLimit != null)
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelLogsInternal, "true"))
                     {
-                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit.Value));
+                        foreach (var component in new string[]
+                        {
+                            "ingester", "distributor", "querier", "queryFrontend", "tableManager", "compactor", "ruler", "indexGateway"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
+                        i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "loki", releaseName: "loki", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "loki",
+                        releaseName:  "loki",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-loki-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "loki");
 
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "loki", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-compactor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-distributor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "loki-index-gateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "loki-ingester", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-querier", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-query-frontend", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-ruler", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-table-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -3024,16 +3600,23 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallTempoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            
+            var cluster             = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s                 = GetK8sClient(controller);
+            var clusterAdvice       = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var tempoAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Tempo);
+            var compactorAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoCompactor);
+            var distributorAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoDistributor);
+            var ingesterAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoIngester);
+            var querierAdvice       = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoQuerier);
+            var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.TempoQueryFrontend);
 
-            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s            = GetK8sClient(controller);
-            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var advice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Tempo);
+            await CreateHostPathStorageClass(controller, master, "neon-internal-tempo");
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-tempo",
                 async () =>
                 {
@@ -3041,33 +3624,81 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("tempo.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
 
-                    values.Add($"replicas", advice.ReplicaCount);
-                    values.Add($"serviceMonitor.enabled", advice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", advice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
+                    values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
+                    values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
+                    values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.Metrics).Count() >= 3)
-                    {
-                        values.Add($"config.ingester.lifecycler.ring.kvstore.store", "etcd");
-                        values.Add($"config.ingester.lifecycler.ring.kvstore.replication_factor", 3);
+                    values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
+                    values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
+                    values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
+                    values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
+                    values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
+                    values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
+                    values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"querier.replicas", querierAdvice.ReplicaCount);
+                    values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
+                    values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
+                    values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
+                    values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
+                    values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
+                    values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+
+                    values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1) {
+                        values.Add($"storage.trace.backend", "s3");
                     }
 
-                    if (advice.PodMemoryRequest != null && advice.PodMemoryLimit != null)
+                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
+
+                    int i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelTracesInternal, "true"))
                     {
-                        values.Add($"resources.requests.memory", ToSiString(advice.PodMemoryRequest.Value));
-                        values.Add($"resources.limits.memory", ToSiString(advice.PodMemoryLimit.Value));
+                        foreach (var component in new string[]
+                        {
+                            "ingester", "distributor", "compactor", "querier", "queryFrontend"
+                        })
+                        {
+                            values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                            values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                            values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                        }
+                        i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "tempo", releaseName: "tempo", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "tempo",
+                        releaseName: "tempo",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-tempo-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "tempo");
 
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "tempo", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "tempo-compactor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "tempo-distributor", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "tempo-ingester", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "tempo-querier", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "tempo-query-frontend", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -3079,16 +3710,16 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallKubeStateMetricsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics",
                 async () =>
                 {
@@ -3097,16 +3728,22 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    await master.InstallHelmChartAsync(controller, "kube-state-metrics", releaseName: "kube-state-metrics", @namespace: KubeNamespaces.NeonMonitor, values: values);
+                    await master.InstallHelmChartAsync(controller, "kube-state-metrics",
+                        releaseName:  "kube-state-metrics",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-kube-state-metrics-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "kube-state-metrics");
 
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonMonitor, "kube-state-metrics", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonMonitor, "kube-state-metrics", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -3118,16 +3755,16 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallReloaderAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s            = GetK8sClient(controller);
-            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Reloader);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Reloader);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/reloader",
                 async () =>
                 {
@@ -3137,16 +3774,22 @@ $@"- name: StorageType
 
                     values.Add($"reloader.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"reloader.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    await master.InstallHelmChartAsync(controller, "reloader", releaseName: "reloader", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "reloader",
+                        releaseName:  "reloader",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: $"reloader.deployment.priorityClassName={PriorityClass.NeonOperator.Name}",
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/reloader-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "reloader");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "reloader", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "reloader", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -3158,181 +3801,170 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Grafana);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/monitoring-grafana",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "setup", message: "grafana");
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "grafana");
 
-                        var values = new Dictionary<string, object>();
+                    var values = new Dictionary<string, object>();
 
-                        values.Add("cluster.name", cluster.Definition.Name);
-                        values.Add("cluster.domain", cluster.Definition.Domain);
-                        values.Add("ingress.subdomain", ClusterDomain.Grafana);
-                        values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                        values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("ingress.subdomain", ClusterDomain.Grafana);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                        await master.InvokeIdempotentAsync("setup/db-credentials-grafana",
-                            async () =>
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/db-credentials-grafana",
+                        async () =>
+                        {
+                            var secret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
+                            var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
+
+                            var monitorSecret = new V1Secret()
                             {
-                                var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                                var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
-
-                                var monitorSecret = new V1Secret()
+                                Metadata = new V1ObjectMeta()
                                 {
-                                    Metadata = new V1ObjectMeta()
+                                    Name        = KubeConst.GrafanaSecret,
+                                    Annotations = new Dictionary<string, string>()
                                     {
-                                        Name = KubeConst.GrafanaSecret,
-                                        Annotations = new Dictionary<string, string>()
-                                        {
-                                            {  "reloader.stakater.com/match", "true" }
-                                        }
-                                    },
-                                    Type = "Opaque",
-                                    Data = new Dictionary<string, byte[]>()
-                                    {
-                                        { "DATABASE_PASSWORD", secret.Data["password"] },
-                                        { "CLIENT_ID", Encoding.UTF8.GetBytes("grafana") },
-                                        { "CLIENT_SECRET", dexSecret.Data["GRAFANA_CLIENT_SECRET"] },
+                                        {  "reloader.stakater.com/match", "true" }
                                     }
-                                };
+                                },
+                                Type = "Opaque",
+                                Data = new Dictionary<string, byte[]>()
+                                {
+                                    { "DATABASE_PASSWORD", secret.Data["password"] },
+                                    { "CLIENT_ID", Encoding.UTF8.GetBytes("grafana") },
+                                    { "CLIENT_SECRET", dexSecret.Data["GRAFANA_CLIENT_SECRET"] },
+                                }
+                            };
 
-                                await k8s.CreateNamespacedSecretAsync(monitorSecret, KubeNamespaces.NeonMonitor);
-                            });
+                            await k8s.CreateNamespacedSecretAsync(monitorSecret, KubeNamespace.NeonMonitor);
+                        });
 
-                        int i = 0;
+                    int i = 0;
 
-                        foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
-                        {
-                            values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                            values.Add($"tolerations[{i}].effect", taint.Effect);
-                            values.Add($"tolerations[{i}].operator", "Exists");
-                            i++;
-                        }
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
 
-                        if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
-                        {
-                            values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                            values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-                        }
+                    if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
+                    {
+                        values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                        values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    }
 
-                        await master.InstallHelmChartAsync(controller, "grafana", releaseName: "grafana", @namespace: KubeNamespaces.NeonMonitor, values: values);
-                    });
+                    controller.ThrowIfCancelled();
+                    await master.InstallHelmChartAsync(controller, "grafana",
+                        releaseName:  "grafana",
+                        @namespace:   KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values:       values);
+                });
 
             await master.InvokeIdempotentAsync("setup/monitoring-grafana-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "grafana");
 
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            try
-                            {
-                                var configmap = await k8s.ReadNamespacedConfigMapAsync("grafana-datasources", KubeNamespaces.NeonMonitor);
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
-                                if (configmap.Data == null || configmap.Data.Keys.Count < 3)
-                                {
-                                    await (await k8s.ReadNamespacedDeploymentAsync("grafana-operator", KubeNamespaces.NeonMonitor)).RestartAsync(k8s);
-                                    return false;
-                                }
-                            } 
-                            catch
-                            {
-                                return false;
-                            }
-
-                            return true;
-                        }, TimeSpan.FromMinutes(5),
-                        TimeSpan.FromSeconds(60));
-
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    controller.ThrowIfCancelled();
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
-            await master.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
-
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespaces.NeonMonitor);
-                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
-                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var kialiSecret = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespaces.NeonSystem);
-                    var kialiPassword = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
-
-                    var cmd = new string[]
-                    {
-                        "/bin/bash",
-                        "-c",
-                        $@"wget -q -O- --post-data='{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}' --header='Content-Type:application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users"
-                    };
-                    var pod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonMonitor, labelSelector: "app=grafana")).Items.First();
-                    (await k8s.NamespacedPodExecAsync(pod.Namespace(), pod.Name(), "grafana", cmd)).EnsureSuccess();
-                });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
+            if (cluster.Definition.Features.Kiali)
             {
-                await master.InvokeIdempotentAsync("ready-to-go/grafana-secrets",
+                controller.ThrowIfCancelled();
+                await master.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user",
                     async () =>
                     {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "renew grafana secrets");
+                        controller.LogProgress(master, verb: "create", message: "kiali-grafana-user");
 
-                        var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                        var grafanaSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaSecret, KubeNamespaces.NeonMonitor);
+                        var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                        var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                        var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
+                        var kialiSecret     = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespace.NeonSystem);
+                        var kialiPassword   = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
 
-                        grafanaSecret.Data["DATABASE_PASSWORD"] = dbSecret.Data["password"];
+                        var cmd = new string[]
+                        {
+                            "/bin/bash",
+                            "-c",
+                            $@"curl -X POST http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/admin/users -H 'Content-Type: application/json' -d '{{""name"":""kiali"",""email"":""kiali@cluster.local"",""login"":""kiali"",""password"":""{kialiPassword}"",""OrgId"":1}}'"
+                        };
 
-                        var grafanaAdminSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.GrafanaAdminSecret, KubeNamespaces.NeonMonitor);
+                        var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                        grafanaSecret.Data["GF_SECURITY_ADMIN_USER"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
+                        controller.ThrowIfCancelled();
 
-                        await k8s.UpsertSecretAsync(grafanaSecret, KubeNamespaces.NeonMonitor);
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/grafana-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update grafana ingress");
-
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "grafana-dashboard-virtual-service");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.Grafana}.{cluster.Definition.Domain}"
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/grafana-crd-config",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update grafana crd config");
-
-                        var grafana = await k8s.GetNamespacedCustomObjectAsync<Grafana>(KubeNamespaces.NeonMonitor, "grafana");
-
-                        grafana.Spec["config"]["auth.generic_oauth"]["api_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/userinfo";
-                        grafana.Spec["config"]["auth.generic_oauth"]["auth_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/auth";
-                        grafana.Spec["config"]["auth.generic_oauth"]["token_url"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}/token";
-
-                        grafana.Spec["config"]["server"]["root_url"] = $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}";
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync(grafana, KubeNamespaces.NeonMonitor, grafana.Name());
+                        await k8s.NamespacedPodExecWithRetryAsync(
+                                    retryPolicy:        podExecRetry,
+                                    namespaceParameter: pod.Namespace(),
+                                    name:               pod.Name(),
+                                    container:          "grafana",
+                                    command:            cmd);
                     });
             }
+
+            await master.InvokeIdempotentAsync("setup/monitoring-grafana-config",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "configure", message: "grafana");
+
+                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
+                    var grafanaPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+
+                    var cmd = new string[]
+                        {
+                            "/bin/bash",
+                            "-c",
+                            $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
+                        };
+
+                    var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy: podExecRetry,
+                                namespaceParameter: grafanaPod.Namespace(),
+                                name: grafanaPod.Name(),
+                                container: "grafana",
+                                command: cmd);
+
+                    var dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+
+                    cmd = new string[]
+                        {
+                            "/bin/bash",
+                            "-c",
+                            $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
+                        };
+
+                    await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy: podExecRetry,
+                                namespaceParameter: grafanaPod.Namespace(),
+                                name: grafanaPod.Name(),
+                                container: "grafana",
+                                command: cmd);
+                });
         }
 
         /// <summary>
@@ -3343,22 +3975,23 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMinioAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Minio);
+            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s            = GetK8sClient(controller);
+            var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Minio);
+            var operatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MinioOperator);
 
             await master.InvokeIdempotentAsync("setup/minio-all",
                 async () =>
                 {
+                    controller.ThrowIfCancelled();
                     await CreateHostPathStorageClass(controller, master, "neon-internal-minio");
 
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/minio",
                         async () =>
                         {
@@ -3374,6 +4007,16 @@ $@"- name: StorageType
                             values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
+                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerNode);
+
+                            var volumesize = ByteUnits.Humanize(
+                                ByteUnits.Parse(cluster.Definition.Storage.Minio.VolumeSize),
+                                powerOfTwo:      true,
+                                spaceBeforeUnit: false,
+                                removeByteUnit:  true);
+
+                            values.Add($"tenants[0].pools[0].size", volumesize);
+
                             values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
                             if (serviceAdvice.ReplicaCount > 1)
@@ -3381,52 +4024,57 @@ $@"- name: StorageType
                                 values.Add($"mode", "distributed");
                             }
 
-                            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
-                            {
-                                values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                                values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-                            }
-                            
-                            var accessKey = NeonHelper.GetCryptoRandomPassword(20);
-                            var secretKey = NeonHelper.GetCryptoRandomPassword(20);
+                            values.Add($"tenants[0].pools[0].resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                            values.Add($"tenants[0].pools[0].resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+
+                            values.Add($"operator.resources.requests.memory", ToSiString(operatorAdvice.PodMemoryRequest));
+                            values.Add($"operator.resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
+
+                            var accessKey = NeonHelper.GetCryptoRandomPassword(16);
+                            var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                             values.Add($"tenants[0].secrets.accessKey", accessKey);
                             values.Add($"clients.aliases.minio.accessKey", accessKey);
                             values.Add($"tenants[0].secrets.secretKey", secretKey);
                             values.Add($"clients.aliases.minio.secretKey", secretKey);
 
-                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(10));
-                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(10));
-                            values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(20));
-                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(20));
+                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(16));
+                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
                             int i = 0;
 
-                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                            foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMinioInternal, "true"))
                             {
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].key", serviceAdvice.ReplicaCount);
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].effect", serviceAdvice.ReplicaCount);
-                                values.Add($"tenants[0].pools[0].tolerations[{i}].operator", serviceAdvice.ReplicaCount);
-
-                                values.Add($"console.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                                values.Add($"console.tolerations[{i}].effect", taint.Effect);
-                                values.Add($"console.tolerations[{i}].operator", "Exists");
-
-                                values.Add($"operator.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                                values.Add($"operator.tolerations[{i}].effect", taint.Effect);
-                                values.Add($"operator.tolerations[{i}].operator", "Exists");
+                                foreach (var component in new string[]
+                                {
+                                    "tenants[0].pools[0]", "console", "operator"
+                                })
+                                {
+                                    values.Add($"{component}.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                                    values.Add($"{component}.tolerations[{i}].effect", taint.Effect);
+                                    values.Add($"{component}.tolerations[{i}].operator", "Exists");
+                                }
                                 i++;
                             }
 
-                            await master.InstallHelmChartAsync(controller, "minio", releaseName: "minio", @namespace: KubeNamespaces.NeonSystem, values: values);
+                            values.Add("tenants[0].priorityClassName", PriorityClass.NeonStorage.Name);
+
+                            await master.InstallHelmChartAsync(controller, "minio",
+                                releaseName:  "minio",
+                                @namespace:   KubeNamespace.NeonSystem,
+                                prioritySpec: PriorityClass.NeonStorage.Name,
+                                values:       values);
                         });
 
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("configure/minio-secrets",
                         async () =>
                         {
                             controller.LogProgress(master, verb: "configure", message: "minio secret");
 
-                            var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+                            var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
 
                             secret.Metadata.NamespaceProperty = "monitoring";
 
@@ -3434,7 +4082,7 @@ $@"- name: StorageType
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name = secret.Name(),
+                                    Name        = secret.Name(),
                                     Annotations = new Dictionary<string, string>()
                                     {
                                         { "reloader.stakater.com/match", "true" }
@@ -3442,9 +4090,10 @@ $@"- name: StorageType
                                 },
                                 Data = secret.Data,
                             };
-                            await k8s.CreateNamespacedSecretAsync(monitoringSecret, KubeNamespaces.NeonMonitor);
+                            await k8s.CreateNamespacedSecretAsync(monitoringSecret, KubeNamespace.NeonMonitor);
                         });
 
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/minio-ready",
                         async () =>
                         {
@@ -3453,98 +4102,39 @@ $@"- name: StorageType
                             await NeonHelper.WaitAllAsync(
                                 new List<Task>()
                                 {
-                                    k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                                    k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "minio-console", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                                    k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "minio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                                });
+                                    k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, labelSelector: "app=minio", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                    k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "minio-console", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                    k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "minio-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                },
+                                timeoutMessage:    "setup/minio-ready",
+                                cancellationToken: controller.CancellationToken);
                         });
 
+                    controller.ThrowIfCancelled();
                     await master.InvokeIdempotentAsync("setup/minio-policy",
                         async () =>
                         {
                             controller.LogProgress(master, verb: "wait for", message: "minio");
 
-                            var minioPod = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
+                            var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
-                            await k8s.NamespacedPodExecAsync(
-                                KubeNamespaces.NeonSystem,
-                                minioPod.Name(),
-                                "minio-operator",
-                                new string[] {
+                            await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy:              podExecRetry,
+                                namespaceParameter: minioPod.Namespace(),
+                                name:               minioPod.Name(),
+                                container:          "minio-operator",
+                                command:            new string[] {
                                     "/bin/bash",
                                     "-c",
                                     $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
                                 });
 
-                            await k8s.NamespacedPodExecAsync(
-                                KubeNamespaces.NeonSystem,
-                                minioPod.Name(),
-                                "minio-operator",
-                                new string[] {
-                                    "/bin/bash",
-                                    "-c",
-                                    $"/mc admin policy add minio superadmin /tmp/superadmin.json"
-                                });
+                            controller.ThrowIfCancelled();
+                            await cluster.ExecMinioCommandAsync(
+                                retryPolicy:    podExecRetry,
+                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json");
                         });
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/minio-secrets",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "renew minio secret");
-
-                        var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
-
-                        secret.Data["accesskey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                        secret.Data["secretkey"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-                        await k8s.ReplaceNamespacedSecretAsync(secret, "minio", KubeNamespaces.NeonSystem);
-
-                        var monitoringSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonMonitor);
-
-                        monitoringSecret.Data["accesskey"] = secret.Data["accesskey"];
-                        monitoringSecret.Data["secretkey"] = secret.Data["secretkey"];
-                        await k8s.ReplaceNamespacedSecretAsync(monitoringSecret, monitoringSecret.Name(), KubeNamespaces.NeonMonitor);
-
-                        var registrySecret = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
-
-                        registrySecret.Data["accesskey"] = secret.Data["accesskey"];
-                        registrySecret.Data["secretkey"] = secret.Data["secretkey"];
-                        registrySecret.Data["secret"] = secret.Data["secretkey"];
-                        await k8s.ReplaceNamespacedSecretAsync(registrySecret, registrySecret.Name(), KubeNamespaces.NeonSystem);
-
-                        // Delete certs so that they will be regenerated.
-
-                        await k8s.DeleteNamespacedSecretAsync("operator-tls", KubeNamespaces.NeonSystem);
-                        await k8s.DeleteNamespacedSecretAsync("operator-webhook-secret", KubeNamespaces.NeonSystem);
-
-                        // Restart minio components.
-
-                        var minioOperator = await k8s.ReadNamespacedDeploymentAsync("minio-operator", KubeNamespaces.NeonSystem);
-
-                        await minioOperator.RestartAsync(GetK8sClient(controller));
-
-                        var minioStatefulSet = (await k8s.ListNamespacedStatefulSetAsync(KubeNamespaces.NeonSystem, labelSelector: "app=minio")).Items.FirstOrDefault();
-                        await minioStatefulSet.RestartAsync(GetK8sClient(controller));
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/minio-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update minio ingress");
-
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "minio-operator-dashboard-virtual-service");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.Minio}.{cluster.Definition.Domain}"
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-            }
         }
 
         /// <summary>
@@ -3554,24 +4144,33 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallMonitoringAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var master  = cluster.FirstMaster;
             var tasks   = new List<Task>();
 
-            controller.LogProgress(master, verb: "setup", message: "cluster metrics");
+            controller.LogProgress(master, verb: "setup", message: "cluster monitoring");
 
             tasks.Add(WaitForPrometheusAsync(controller, master));
-            tasks.Add(InstallCortexAsync(controller, master));
+            tasks.Add(InstallMemcachedAsync(controller, master));
+            tasks.Add(InstallMimirAsync(controller, master));
             tasks.Add(InstallLokiAsync(controller, master));
             tasks.Add(InstallKubeStateMetricsAsync(controller, master));
-            tasks.Add(InstallTempoAsync(controller, master));
+
+            if (cluster.Definition.Features.Tracing)
+            {
+                tasks.Add(InstallTempoAsync(controller, master));
+            }
+
             tasks.Add(InstallGrafanaAsync(controller, master));
 
-            await NeonHelper.WaitAllAsync(tasks);
+            controller.LogProgress(master, verb: "wait", message: "for cluster monitoring");
+
+            await NeonHelper.WaitAllAsync(tasks,
+                timeoutMessage:    "install-monitoring",
+                cancellationToken: controller.CancellationToken);
         }
 
         /// <summary>
@@ -3582,32 +4181,31 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallRedisAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Redis);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/redis",
                 async () =>
                 {
-                    await SyncContext.ClearAsync;
+                    await SyncContext.Clear;
 
                     controller.LogProgress(master, verb: "setup", message: "redis");
 
-                    var values   = new Dictionary<string, object>();
+                    var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"exporter.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
                     if (serviceAdvice.ReplicaCount < 2)
                     {
@@ -3625,17 +4223,22 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "redis-ha", releaseName: "neon-redis", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "redis-ha",
+                        releaseName:  "neon-redis",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonData.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/redis-ready",
                 async () =>
                 {
-                    await SyncContext.ClearAsync;
+                    await SyncContext.Clear;
 
                     controller.LogProgress(master, verb: "wait for", message: "redis");
 
-                    await k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "neon-redis-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-redis-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -3647,31 +4250,30 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallHarborAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Harbor);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("configure/registry-minio-secret",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "configure", message: "minio secret");
 
-                    var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+                    var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
 
                     var secret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "registry-minio",
-                            NamespaceProperty = KubeNamespaces.NeonSystem,
+                            NamespaceProperty = KubeNamespace.NeonSystem,
                             Annotations       = new Dictionary<string, string>()
                             {
                                 {  "reloader.stakater.com/match", "true" }
@@ -3684,9 +4286,10 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespaces.NeonSystem);
+                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/harbor-db",
                 async () =>
                 {
@@ -3696,22 +4299,22 @@ $@"- name: StorageType
 
                     // Create the Harbor databases.
 
-                    var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+                    var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                     var harborSecret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = KubeConst.RegistrySecretKey,
-                            NamespaceProperty = KubeNamespaces.NeonSystem
+                            NamespaceProperty = KubeNamespace.NeonSystem
                         },
                         Data       = new Dictionary<string, byte[]>(),
                         StringData = new Dictionary<string, string>()
                     };
 
-                    if ((await k8s.ListNamespacedSecretAsync(KubeNamespaces.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
+                    if ((await k8s.ListNamespacedSecretAsync(KubeNamespace.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
                     {
-                        harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
+                        harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespace.NeonSystem);
 
                         if (harborSecret.Data == null)
                         {
@@ -3725,241 +4328,142 @@ $@"- name: StorageType
                     {
                         harborSecret.Data["postgresql-password"] = dbSecret.Data["password"];
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
+                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
-                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(20);
+                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespaces.NeonSystem);
+                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
                 });
 
-                await master.InvokeIdempotentAsync("setup/harbor",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "configure", message: "harbor minio");
-
-                        // Create the Harbor Minio bucket.
-
-                        var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
-                        var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-                        var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-                        var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        var serviceUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data["serviceuser"]));
-
-                        await CreateMinioBucketAsync(controller, master, "harbor");
-
-                        // Install the Harbor Helm chart.
-
-                        var values = new Dictionary<string, object>();
-
-
-                        values.Add("cluster.name", cluster.Definition.Name);
-                        values.Add("cluster.domain", cluster.Definition.Domain);
-                        values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                        values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-
-                        values.Add("ingress.notary.subdomain", ClusterDomain.HarborNotary);
-                        values.Add("ingress.registry.subdomain", ClusterDomain.HarborRegistry);
-                        
-                        values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
-                        values.Add($"storage.s3.secretKeyRef", "registry-minio");
-
-                        var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
-
-                        values.Add($"ldap.baseDN", baseDN);
-                        values.Add($"ldap.secret", serviceUser.Password);
-
-                        int j = 0;
-
-                        foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
-                        {
-                            values.Add($"tolerations[{j}].key", $"{taint.Key.Split("=")[0]}");
-                            values.Add($"tolerations[{j}].effect", taint.Effect);
-                            values.Add($"tolerations[{j}].operator", "Exists");
-                            j++;
-                        }
-
-                        await master.InstallHelmChartAsync(controller, "harbor", releaseName: "registry-harbor", @namespace: KubeNamespaces.NeonSystem, values: values);
-                    });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync($"ready-to-go/harbor-cluster",
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/harbor",
                 async () =>
                 {
-                    var harborCluster = await k8s.GetNamespacedCustomObjectAsync<HarborCluster>(KubeNamespaces.NeonSystem, "registry");
-                    var minioSecret   = await k8s.ReadNamespacedSecretAsync("registry-minio", KubeNamespaces.NeonSystem);
+                    controller.LogProgress(master, verb: "configure", message: "harbor minio");
 
-                    harborCluster.Spec["expose"]["core"]["ingress"]["host"]    = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster.Spec["expose"]["notary"]["ingress"]["host"]  = $"https://notary.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster.Spec["externalURL"]                          = $"https://registry.{clusterLogin.ClusterDefinition.Domain}";
-                    harborCluster.Spec["imageChartStorage"]["s3"]["accesskey"] = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+                    // Create the Harbor Minio bucket.
 
-                    await k8s.ReplaceNamespacedCustomObjectAsync(harborCluster, KubeNamespaces.NeonSystem, harborCluster.Name());
-                });
+                    var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
+                    var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+                    var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+                    var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
 
-                await master.InvokeIdempotentAsync($"ready-to-go/harbor-configuration",
-                async () =>
-                {
-                    var harborConfig = await k8s.GetNamespacedCustomObjectAsync<HarborConfiguration>(KubeNamespaces.NeonSystem, "ldap-config");
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Harbor);
 
-                    var baseDN = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
+                    // Install the Harbor Helm chart.
 
-                    harborConfig.Spec["configuration"]["ldapBaseDn"]       = $"cn=users,{baseDN}";
-                    harborConfig.Spec["configuration"]["ldapGroupAdminDn"] = $"ou=superadmin,ou=groups,{baseDN}";
-                    harborConfig.Spec["configuration"]["ldapGroupBaseDn"]  = $"ou=users,{baseDN}";
-                    harborConfig.Spec["configuration"]["ldapSearchDn"]     = $"cn=serviceuser,ou=admin,{baseDN}";
+                    var values = new Dictionary<string, object>();
 
-                    await k8s.ReplaceNamespacedCustomObjectAsync(harborConfig, KubeNamespaces.NeonSystem, harborConfig.Name());
-                });
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                await master.InvokeIdempotentAsync($"ready-to-go/harbor-ldap-secret",
-                async () =>
-                {
-                    var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                    var serviceUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data["serviceuser"]));
-                    var ldapSecret  = await k8s.ReadNamespacedSecretAsync("harbor-ldap", KubeNamespaces.NeonSystem);
+                    values.Add($"components.chartMuseum.enabled", cluster.Definition.Features.Harbor.ChartMuseum);
+                    values.Add($"components.notary.enabled", cluster.Definition.Features.Harbor.Notary);
+                    values.Add($"components.trivy.enabled", cluster.Definition.Features.Harbor.Trivy);
                     
-                    ldapSecret.Data["ldap_search_password"] = Encoding.UTF8.GetBytes(serviceUser.Password);
-                    
-                    await k8s.UpsertSecretAsync(ldapSecret, KubeNamespaces.NeonSystem);
+                    values.Add("ingress.notary.subdomain", ClusterDomain.HarborNotary);
+                    values.Add("ingress.registry.subdomain", ClusterDomain.HarborRegistry);
+
+                    values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
+                    values.Add($"storage.s3.secretKeyRef", "registry-minio");
+
+                    var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+
+                    values.Add($"ldap.baseDN", baseDN);
+                    values.Add($"ldap.secret", serviceUser.Password);
+
+                    int j = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelNeonSystemRegistry, "true"))
+                    {
+                        values.Add($"tolerations[{j}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{j}].effect", taint.Effect);
+                        values.Add($"tolerations[{j}].operator", "Exists");
+                        j++;
+                    }
+
+                    values.Add("nginx.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("portal.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("core.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("jobservice.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("registry.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("chartmuseum.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("clair.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("notary.server.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("notary.signer.priorityClassName", PriorityClass.NeonData.Name);
+                    values.Add("trivy.priorityClassName", PriorityClass.NeonData.Name);
+
+                    await master.InstallHelmChartAsync(controller, "harbor",
+                        releaseName:  "registry-harbor",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonData.Name,
+                        values:       values);
                 });
 
-
-                await master.InvokeIdempotentAsync($"ready-to-go/harbor-registry-configuration",
-                    async () =>
-                    {
-                        var registryTemplateConfig = await k8s.ReadNamespacedConfigMapAsync("harbor-operator-config-template", KubeNamespaces.NeonSystem);
-                        var registryTemplate       = registryTemplateConfig.Data["registry-config.yaml.tmpl"];
-
-                        registryTemplate           = Regex.Replace(registryTemplate, @"https:\/\/registry.*.neoncluster.io\/service\/token", $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}/service/token");
-
-                        registryTemplateConfig.Data["registry-config.yaml.tmpl"] = registryTemplate;
-                        await k8s.ReplaceNamespacedConfigMapAsync(registryTemplateConfig, registryTemplateConfig.Name(), registryTemplateConfig.Namespace());
-                        
-                        var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("harbor-operator", KubeNamespaces.NeonSystem);
-
-                        await harborChartmuseum.RestartAsync(GetK8sClient(controller));
-
-                        await k8s.DeleteNamespacedConfigMapAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
-                    });
-            }
-
-
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/harbor-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "harbor");
 
-                    await NeonHelper.WaitAllAsync(
-                        new List<Task>()
-                        {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-chartmuseum", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-core", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-jobservice", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-notaryserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-notarysigner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-portal", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-registry", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-registryctl", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "registry-harbor-harbor-trivy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval)
-                        });
-                });
+                    var tasks = new List<Task>();
 
-            await master.InvokeIdempotentAsync($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/harbor-credentials",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "images", message: "push");
-
-                    if (readyToGoMode == ReadyToGoMode.Setup)
+                    if (cluster.Definition.Features.Harbor.ChartMuseum)
                     {
-                        var adminSecret   = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
-                        var adminUsername = Encoding.UTF8.GetString(adminSecret.Data["username"]);
-                        var adminPassword = Encoding.UTF8.GetString(adminSecret.Data["password"]);
-
-                        var secret       = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                        var harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespaces.NeonSystem);
-
-                        harborSecret.Data["postgresql-password"] = secret.Data["password"];
-                        harborSecret.Data["secret"]              = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(20));
-
-                        await k8s.UpsertSecretAsync(harborSecret, harborSecret.Namespace());
-
-                        // Delete secret so that the harbor operator creates a new one with the updated credential.
-
-                        await k8s.DeleteNamespacedSecretAsync("registry-harbor-harbor-registry-basicauth", KubeNamespaces.NeonSystem);
-
-                        var master = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
-
-                        var command = new string[]
-                            {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} harbor_core -t -c ""UPDATE public.harbor_user SET password='', salt = '' WHERE user_id = 1;"""
-                            };
-
-                        var result = await k8s.NamespacedPodExecAsync(
-                            name:               master.Name(),
-                            namespaceParameter: master.Namespace(),
-                            container:          "postgres",
-                            command:            command);
-
-                        // Restart registry components.
-
-                        var harborChartmuseum = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-chartmuseum", KubeNamespaces.NeonSystem);
-
-                        await harborChartmuseum.RestartAsync(GetK8sClient(controller));
-
-                        var harborCore = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-core", KubeNamespaces.NeonSystem);
-
-                        await harborCore.RestartAsync(GetK8sClient(controller));
-
-                        var harborRegistry = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registry", KubeNamespaces.NeonSystem);
-
-                        await harborRegistry.RestartAsync(GetK8sClient(controller));
-
-                        var harborRegistryctl = await k8s.ReadNamespacedDeploymentAsync("registry-harbor-harbor-registryctl", KubeNamespaces.NeonSystem);
-
-                        await harborRegistryctl.RestartAsync(GetK8sClient(controller));
+                        tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-chartmuseum", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     }
+
+                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-core", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-jobservice", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+
+                    if (cluster.Definition.Features.Harbor.Notary)
+                    {
+                        tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-notaryserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                        tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-notarysigner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    }
+
+                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-portal", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registry", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registryctl", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    
+                    if (cluster.Definition.Features.Harbor.Trivy)
+                    {
+                        tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-trivy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    }
+
+                    if ((bool)(serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled))
+                    {
+                        tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
+                    }
+
+                    await NeonHelper.WaitAllAsync(tasks,
+                        timeoutMessage:    "setup/harbor-ready",
+                        cancellationToken: controller.CancellationToken);
                 });
 
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/harbor-ingress",
-                    async () =>
-                    {
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "harbor-virtual-service");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}",
-                                $"{ClusterDomain.HarborNotary}.{cluster.Definition.Domain}",
-                                KubeConst.LocalClusterRegistry
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-            }
-
-            await master.InvokeIdempotentAsync($"{(readyToGoMode == ReadyToGoMode.Setup ? "ready-to-go" : "setup")}/harbor-login",
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/harbor-login",
                 async () =>
                 {
-                    var authSecret = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                    var user       = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(authSecret.Data["root"]));
-                    var password   = user.Password;
-                    var sbScript   = new StringBuilder();
-                    var sbArgs     = new StringBuilder();
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var password = user.Password;
+                    var sbScript = new StringBuilder();
+                    var sbArgs   = new StringBuilder();
 
                     sbScript.AppendLineLinux("#!/bin/bash");
                     sbScript.AppendLineLinux($"echo '{password}' | podman login neon-registry.node.local --username {user.Name} --password-stdin");
 
                     foreach (var node in cluster.Nodes)
                     {
+                        controller.ThrowIfCancelled();
+
                         await NeonHelper.WaitForAsync(
                             async () =>
                             {
@@ -3974,8 +4478,9 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout:      TimeSpan.FromSeconds(300),
-                            pollInterval: TimeSpan.FromSeconds(1));
+                            timeout:           TimeSpan.FromSeconds(600),
+                            pollInterval:      TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
                     }
                 });
         }
@@ -3988,13 +4493,14 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallClusterOperatorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var k8s = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cluster-operator",
                 async () =>
                 {
@@ -4004,16 +4510,72 @@ $@"- name: StorageType
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    await master.InstallHelmChartAsync(controller, "neon-cluster-operator", releaseName: "neon-cluster-operator", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "neon-cluster-operator",
+                        releaseName:  "neon-cluster-operator",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonOperator.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cluster-operator-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+        }
+
+        /// <summary>
+        /// Installs <b>neon-dashboard</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s     = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
+                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("dashboards.kiali.enabled", cluster.Definition.Features.Kiali);
+
+                    await master.InstallHelmChartAsync(controller, "neon-dashboard",
+                        releaseName:  "neon-dashboard",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonApp.Name,
+                        values:       values);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4025,13 +4587,14 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s = GetK8sClient(controller);
+            var k8s     = GetK8sClient(controller);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-node-agent",
                 async () =>
                 {
@@ -4041,16 +4604,22 @@ $@"- name: StorageType
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-                    await master.InstallHelmChartAsync(controller, "neon-node-agent", releaseName: "neon-node-agent", @namespace: KubeNamespaces.NeonSystem, values: values);
+                    await master.InstallHelmChartAsync(controller, "neon-node-agent",
+                        releaseName:  "neon-node-agent",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonOperator.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-node-agent-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-node-agent");
 
-                    await k8s.WaitForDaemonsetAsync(KubeNamespaces.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4067,67 +4636,20 @@ $@"- name: StorageType
         /// because that's where the cluster CRDs get installed.
         /// </note>
         /// </remarks>
-        public static async Task InstallContainerRegistryResources(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        public static async Task InstallContainerRegistryResourcesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-
-            if (readyToGoMode == ReadyToGoMode.Prepare)
-            {
-                // Defer registry configuration until full cluster setup.
-
-                return;
-            }
-
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/container-registries",
                 async () =>
                 {
                     var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s     = GetK8sClient(controller);
 
-                    // We need to add the implict local cluster Harbor registry.
-
-                    var localRegistries = new List<Registry>();
-                    var localRegistry   = new Registry();
-                    var authSecret      = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-
-                    localRegistry.Name     = 
-                    localRegistry.Prefix   =
-                    localRegistry.Location = KubeConst.LocalClusterRegistry;
-                    localRegistry.Blocked  = false;
-                    localRegistry.Insecure = true;
-                    localRegistry.Username = KubeConst.LocalClusterRegistryUser;
-                    localRegistry.Password = Encoding.UTF8.GetString(authSecret.Data[localRegistry.Username]);
-
-                    localRegistries.Add(localRegistry);
-
-                    // Add registries from the cluster definition.
-
-                    foreach (var registry in cluster.Definition.Container.Registries)
-                    {
-                        localRegistries.Add(registry);
-                    }
-
-                    // Write the custom resources to the cluster.
-
-                    foreach (var registry in localRegistries)
-                    {
-                        var clusterRegistry = new V1ContainerRegistry();
-
-                        clusterRegistry.Spec.SearchOrder = cluster.Definition.Container.SearchRegistries.IndexOf(registry.Location);
-                        clusterRegistry.Spec.Prefix      = registry.Prefix;
-                        clusterRegistry.Spec.Location    = registry.Location;
-                        clusterRegistry.Spec.Blocked     = registry.Blocked;
-                        clusterRegistry.Spec.Insecure    = registry.Insecure;
-                        clusterRegistry.Spec.Username    = registry.Username;
-                        clusterRegistry.Spec.Password    = registry.Password;
-
-                        await k8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
-                    }
+                    await cluster.AddContainerRegistryResourcesAsync();
                 });
         }
 
@@ -4139,18 +4661,21 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
+
+            controller.ThrowIfCancelled();
 
             var tasks = new List<Task>();
 
-            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespaces.NeonMonitor, true));
-            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespaces.NeonStorage, false));
-            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespaces.NeonSystem, true));
+            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespace.NeonMonitor, true));
+            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespace.NeonStorage, false));
+            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespace.NeonSystem, true));
+            tasks.Add(CreateNamespaceAsync(controller, master, KubeNamespace.NeonStatus, false));
 
             return await Task.FromResult(tasks);
         }
@@ -4163,14 +4688,12 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSystemDbAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSystemDb);
 
@@ -4179,11 +4702,12 @@ $@"- name: StorageType
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-            if (cluster.Definition.IsDesktopCluster)
+            if (cluster.Definition.IsDesktopBuiltIn)
             {
                 values.Add($"persistence.size", "1Gi");
             }
 
+            controller.ThrowIfCancelled();
             await CreateStorageClass(controller, master, "neon-internal-system-db");
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
@@ -4192,23 +4716,24 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/db-credentials-admin",
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbAdminUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(20);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = KubeConst.NeonSystemDbAdminSecret,
+                            Name        = KubeConst.NeonSystemDbAdminSecret,
                             Annotations = new Dictionary<string, string>()
                             {
                                 {  "reloader.stakater.com/match", "true" }
                             }
                         },
-                        Type = "Opaque",
+                        Type       = "Opaque",
                         StringData = new Dictionary<string, string>()
                         {
                             { "username", username },
@@ -4216,26 +4741,27 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespaces.NeonSystem);
+                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/db-credentials-service",
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbServiceUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(20);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = KubeConst.NeonSystemDbServiceSecret,
+                            Name        = KubeConst.NeonSystemDbServiceSecret,
                             Annotations = new Dictionary<string, string>()
                             {
-                                {  "reloader.stakater.com/match", "true" } 
+                                {  "reloader.stakater.com/match", "true" }
                             }
                         },
-                        Type = "Opaque",
+                        Type       = "Opaque",
                         StringData = new Dictionary<string, string>()
                         {
                             { "username", username },
@@ -4243,15 +4769,18 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespaces.NeonSystem);
+                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "setup", message: "cluster database (citus)");
+                    controller.LogProgress(master, verb: "setup", message: "neon-system-db");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
 
                     int i = 0;
 
@@ -4263,58 +4792,32 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    await master.InstallHelmChartAsync(controller, "postgres-operator", releaseName: "neon-system-db", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "cluster database (citus)");
+                    // We're going to set the pod priority class to the same value as 
+                    // the postgres operator.
+
+                    values.Add("podPriorityClassName", PriorityClass.NeonData.Name);
+
+                    await master.InstallHelmChartAsync(controller, "postgres-operator",
+                        releaseName:     "neon-system-db",
+                        @namespace:      KubeNamespace.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonData.Name,
+                        values:          values,
+                        progressMessage: "neon-system-db");
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/system-db-ready",
                 async () =>
                 {
-                    controller.LogProgress(master, verb: "wait for", message: "system database");
+                    controller.LogProgress(master, verb: "wait for", message: "neon-system-db");
 
                     await NeonHelper.WaitAllAsync(
                         new List<Task>()
                         {
-                            k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-system-db-postgres-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
-                            k8s.WaitForStatefulSetAsync(KubeNamespaces.NeonSystem, "neon-system-db", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-system-db-postgres-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-system-db", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         });
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("setup/system-db-ready-to-go",
-                   async () =>
-                   {
-                       await ResetPostgresUserAsync(k8s, "postgres", "postgres.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, "standby", "standby.neon-system-db.credentials.postgresql", KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbAdminUser, KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
-                       await ResetPostgresUserAsync(k8s, KubeConst.NeonSystemDbServiceUser, KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-
-                       await (await k8s.ReadNamespacedStatefulSetAsync("neon-system-db", KubeNamespaces.NeonSystem)).RestartAsync(k8s);
-                   });
-             }
-        }
-
-        private static async Task ResetPostgresUserAsync(IKubernetes k8s, string username, string secretName, string secretNamespace)
-        {
-            var secret = await k8s.ReadNamespacedSecretAsync(secretName, secretNamespace);
-            var password = NeonHelper.GetCryptoRandomPassword(20);
-            secret.Data["password"] = Encoding.UTF8.GetBytes(password);
-            await k8s.UpsertSecretAsync(secret, secretNamespace);
-
-            var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
-
-            var command = new string[]
-            {
-                "/bin/bash",
-                "-c",
-                $@"psql -U {KubeConst.NeonSystemDbAdminUser} postgres -t -c ""ALTER ROLE {username} WITH PASSWORD '{password}';"""
-            };
-
-            var result = await k8s.NamespacedPodExecAsync(
-                name: postgres.Name(),
-                namespaceParameter: postgres.Namespace(),
-                container: "postgres",
-                command: command);
         }
 
         /// <summary>
@@ -4325,19 +4828,20 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallSsoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-
+            controller.ThrowIfCancelled();
             await InstallGlauthAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallDexAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallNeonSsoProxyAsync(controller, master);
+
+            controller.ThrowIfCancelled();
             await InstallOauth2ProxyAsync(controller, master);
         }
 
@@ -4349,35 +4853,35 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallDexAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Dex);
-            var users         = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-            var serviceUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data["serviceuser"]));
+            var serviceUser   = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
 
             var values = new Dictionary<string, object>();
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
             values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.kubernetes", NeonHelper.GetCryptoRandomPassword(32));
-            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(32));
+            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.kubernetes", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 
             values.Add("config.issuer", $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
 
             // LDAP
+
             var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+
             values.Add("config.ldap.bindDN", $@"cn=serviceuser\,ou=admin\,{baseDN}");
             values.Add("config.ldap.userSearch.baseDN", $@"cn=users\,{baseDN}");
             values.Add("config.ldap.groupSearch.baseDN", $@"ou=users\,{baseDN}");
@@ -4388,102 +4892,26 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/dex-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "dex", releaseName: "dex", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "dex");
+                    await master.InstallHelmChartAsync(controller, "dex",
+                        releaseName:     "dex",
+                        @namespace:      KubeNamespace.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonApi.Name,
+                        values:          values,
+                        progressMessage: "dex");
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/dex-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-sso");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/dex-secret",
-                   async () =>
-                   {
-                       var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
-
-                       foreach (var key in secret.Data.Keys)
-                       {
-                           secret.Data[key] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(32));
-                       }
-
-                       await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
-                   });
-
-                await master.InvokeIdempotentAsync("ready-to-go/dex-config",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update dex configuration");
-
-                        var dexSecret  = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespaces.NeonSystem);
-                        var userSecret = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        var configMap  = await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespaces.NeonSystem);
-
-                        var yamlConfig = NeonHelper.YamlDeserialize<dynamic>(configMap.Data["config.yaml"]);
-                        var dexConfig = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
-
-                        dexConfig.Issuer = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-
-                        var ldapConnector = dexConfig.Connectors.Where(c => c.Type == DexConnectorType.Ldap).FirstOrDefault() as DexLdapConnector;
-                        var baseDN        = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
-                        var serviceUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(userSecret.Data["serviceuser"]));
-                        
-                        ldapConnector.Config.BindDN             = $@"cn=serviceuser,ou=admin,{baseDN}";
-                        ldapConnector.Config.BindPW             = serviceUser.Password;
-                        ldapConnector.Config.UserSearch.BaseDN  = $@"cn=users,{baseDN}";
-                        ldapConnector.Config.GroupSearch.BaseDN = $@"ou=users,{baseDN}";
-
-                        foreach (var client in dexConfig.StaticClients)
-                        {
-                            switch (client.Name)
-                            {
-                                case "Grafana":
-                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["GRAFANA_CLIENT_SECRET"]);
-                                    client.RedirectUris = new List<string>()
-                                    {
-                                        $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}/login/generic_oauth",
-                                    };
-                                    client.TrustedPeers = new List<string>() { "kubernetes", "harbor", "minio" };
-                                    break;
-                                case "Kubernetes":
-                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["KUBERNETES_CLIENT_SECRET"]);
-                                    client.RedirectUris = new List<string>()
-                                    {
-                                        $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}/oauth2/callback",
-                                        $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}/oauth2/callback"
-                                    };
-                                    client.TrustedPeers = new List<string>() { "grafana", "harbor", "minio" };
-                                    break;
-                                case "Harbor":
-                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["KUBERNETES_CLIENT_SECRET"]);
-                                    client.RedirectUris = new List<string>()
-                                    {
-                                        $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}/oauth_callback",
-                                    };
-                                    client.TrustedPeers = new List<string>() { "grafana", "kubernetes", "minio" };
-                                    break;
-                                case "Minio":
-                                    client.Secret = Encoding.UTF8.GetString(dexSecret.Data["MINIO_CLIENT_SECRET"]);
-                                    client.RedirectUris = new List<string>()
-                                    {
-                                        $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}/oauth_callback",
-                                    };
-                                    client.TrustedPeers = new List<string>() { "grafana", "kubernetes", "harbor" };
-                                    break;
-                            }
-                        }
-
-                        configMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
-                        await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
-                    });
-            }
         }
 
         /// <summary>
@@ -4494,24 +4922,24 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNeonSsoProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
+            var values        = new Dictionary<string, object>();
 
-            var values = new Dictionary<string, object>();
-
+            values.Add("image.organization", KubeConst.LocalClusterRegistry);
+            values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
             values.Add("ingress.subdomain", ClusterDomain.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -4519,49 +4947,25 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "neon-sso-session-proxy", releaseName: "neon-sso-session-proxy", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso-session-proxy");
+                    await master.InstallHelmChartAsync(controller, "neon-sso-session-proxy",
+                        releaseName:  "neon-sso-session-proxy",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonNetwork.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-sso-proxy-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-sso-session-proxy");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso ingress");
-
-                        var virtualService = await k8s.GetNamespacedCustomObjectAsync<VirtualService>(KubeNamespaces.NeonIngress, "neon-sso-session-proxy");
-
-                        virtualService.Spec.Hosts =
-                            new List<string>()
-                            {
-                                $"{ClusterDomain.Sso}.{cluster.Definition.Domain}"
-                            };
-
-                        await k8s.ReplaceNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespaces.NeonIngress, virtualService.Name());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/neon-sso-ingress",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso secret");
-
-                        var sessionSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoSessionProxySecret, KubeNamespaces.NeonSystem);
-                        sessionSecret.StringData["CIPHER_KEY"] = AesCipher.GenerateKey(256);
-
-                        await k8s.ReplaceNamespacedSecretAsync(sessionSecret, sessionSecret.Name(), sessionSecret.Namespace());
-                    });
-            }
         }
 
         /// <summary>
@@ -4572,30 +4976,29 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallGlauthAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Glauth);
             var values        = new Dictionary<string, object>();
-            var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
+            var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
             var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
             values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
             values.Add("users.root.password", clusterLogin.SsoPassword);
-            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(20));
+            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -4603,53 +5006,90 @@ $@"- name: StorageType
                 values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
             }
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/glauth-install",
                 async () =>
                 {
-                    await master.InstallHelmChartAsync(controller, "glauth", releaseName: "glauth", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "glauth");
+                    await master.InstallHelmChartAsync(controller, "glauth",
+                        releaseName:  "glauth",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonApp.Name,
+                        values:       values);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/glauth-ready",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "wait for", message: "glauth");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+
+                    // Wait for the [glauth postgres.so] plugin to initialize its database
+                    // by quering the three tables we'll be modifying later below.  The database
+                    // will be ready when these queries succeed.
+
+                    controller.ThrowIfCancelled();
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            // Verify [groups] table.
+
+                            var result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM groups;", noSuccessCheck: true);
+
+                            if (result.ExitCode != 0)
+                            {
+                                return false;
+                            }
+
+                            // Verify [users] table.
+
+                            controller.ThrowIfCancelled();
+
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM users;", noSuccessCheck: true);
+
+                            if (result.ExitCode != 0)
+                            {
+                                return false;
+                            }
+
+                            // Verify [capabilities] table.
+
+                            controller.ThrowIfCancelled();
+
+                            result = await cluster.ExecSystemDbCommandAsync("glauth", "SELECT * FROM capabilities;", noSuccessCheck: true);
+
+                            if (result.ExitCode != 0)
+                            {
+                                return false;
+                            }
+
+                            return true;
+                        },
+                        timeout:           clusterOpTimeout, 
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
                 });
 
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/glauth-users",
                 async () =>
                 {
                     controller.LogProgress(master, verb: "create", message: "glauth users");
 
-                    controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
+                    var users  = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                    var groups = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
 
-                    var users  = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                    var groups = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespaces.NeonSystem);
-
-                    var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
-                    
-                    foreach (var g in groups.Data.Keys)
+                    foreach (var key in groups.Data.Keys)
                     {
-                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[g]));
-                        
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(groups.Data[key]));
 
-                        var command = new string[]
-                        {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                        INSERT INTO groups(name,gidnumber)
-                                            VALUES('{group.Name}','{group.GidNumber}') 
-                                                    ON CONFLICT (name) DO UPDATE
-                                                        SET gidnumber = '{group.GidNumber}';"""
-                        };
-
-                        var result = await k8s.NamespacedPodExecAsync(
-                            name: postgres.Name(),
-                            namespaceParameter: postgres.Namespace(),
-                            container: "postgres",
-                            command: command);
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                            $@"INSERT INTO groups(name, gidnumber)
+                                   VALUES('{group.Name}','{group.GidNumber}') 
+                                       ON CONFLICT (name) DO UPDATE
+                                           SET gidnumber = '{group.GidNumber}';");
                     }
 
                     foreach (var user in users.Data.Keys)
@@ -4662,106 +5102,29 @@ $@"- name: StorageType
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
 
-                        var command = new string[]
-                        {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                        INSERT INTO users(name,givenname,mail,uidnumber,primarygroup,passsha256)
-                                            VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
-                                                    ON CONFLICT (name) DO UPDATE
-                                                        SET 
-                                                            givenname     = '{givenname}',
-                                                            mail          = '{mail}',
-                                                            uidnumber     = '{uidnumber}',
-                                                            primarygroup  = '{primarygroup}',
-                                                            passsha256    = '{passsha256}';"""
-                        };
-
-                        var result = await k8s.NamespacedPodExecAsync(
-                            name: postgres.Name(),
-                            namespaceParameter: postgres.Namespace(),
-                            container: "postgres",
-                            command: command);
+                        controller.ThrowIfCancelled();
+                        await cluster.ExecSystemDbCommandAsync("glauth",
+                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
+                                    VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
+                                        ON CONFLICT (name) DO UPDATE
+                                            SET givenname    = '{givenname}',
+                                                mail         = '{mail}',
+                                                uidnumber    = '{uidnumber}',
+                                                primarygroup = '{primarygroup}',
+                                                passsha256   = '{passsha256}';");
 
                         if (userData.Capabilities != null)
                         {
-                            foreach (var c in userData.Capabilities)
+                            foreach (var capability in userData.Capabilities)
                             {
-                                command = new string[]
-                                {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""
-                                        INSERT INTO capabilities(userid,action,object)
-                                            VALUES('{uidnumber}','{c.Action}','{c.Object}');"""
-                                };
-
-                                result = await k8s.NamespacedPodExecAsync(
-                                    name: postgres.Name(),
-                                    namespaceParameter: postgres.Namespace(),
-                                    container: "postgres",
-                                    command: command);
+                                controller.ThrowIfCancelled();
+                                await cluster.ExecSystemDbCommandAsync("glauth",
+                                    $@"INSERT INTO capabilities(userid, action, object)
+                                           VALUES('{uidnumber}','{capability.Action}','{capability.Object}');");
                             }
                         }
                     }
                 });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/glauth-config",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update glauth config");
-
-                        var config      = await k8s.ReadNamespacedSecretAsync("glauth", KubeNamespaces.NeonSystem);
-                        var dbSecret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespaces.NeonSystem);
-                        var usersConfig = config.Data["config.cfg"];
-                        var doc         = Toml.Parse(Encoding.UTF8.GetString(usersConfig));
-                        var table       = doc.Tables.Where(table => table.Name.Key.ToString() == "backend").First();
-                        var baseDN      = $@"dc={string.Join($@",dc=", cluster.Definition.Domain.Split('.'))}";
-                        var dbString    = $"host=neon-system-db port=5432 dbname=glauth user={KubeConst.NeonSystemDbServiceUser} password={Encoding.UTF8.GetString(dbSecret.Data["username"])} sslmode=disable";
-                        
-                        var items       = table.Items.Where(i => i.Key.ToString().Trim() == "baseDN");
-                        items.First().Value = new StringValueSyntax(baseDN);
-
-                        items = table.Items.Where(i => i.Key.ToString().Trim() == "database");
-                        items.First().Value = new StringValueSyntax(dbString);
-
-                        config.Data["config.cfg"] = Encoding.UTF8.GetBytes(doc.ToString());
-
-                        await k8s.ReplaceNamespacedSecretAsync(config, config.Name(), config.Namespace());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/glauth-users",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update glauth users");
-
-                        var users       = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespaces.NeonSystem);
-                        
-                        var postgres = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
-                        
-                        foreach (var user in users.Data.Keys)
-                        {
-                            var userData = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
-                            var password = CryptoHelper.ComputeSHA256String(userData.Password);
-                            var command = new string[]
-                            {
-                                "/bin/bash",
-                                "-c",
-                                $@"psql -U {KubeConst.NeonSystemDbAdminUser} glauth -t -c ""UPDATE users SET passsha256 = '{password}' WHERE name = '{user}';"""
-                            };
-
-                            var result = await k8s.NamespacedPodExecAsync(
-                                name: postgres.Name(),
-                                namespaceParameter: postgres.Namespace(),
-                                container: "postgres",
-                                command: command);
-                        }
-                        
-                    });
-            }
         }
 
         /// <summary>
@@ -4772,18 +5135,16 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallOauth2ProxyAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Oauth2Proxy);
 
-
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/oauth2-proxy",
                 async () =>
                 {
@@ -4793,57 +5154,17 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(32)));
+                    values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-                    await master.InstallHelmChartAsync(controller, "oauth2-proxy", releaseName: "neon-sso", @namespace: KubeNamespaces.NeonSystem, values: values, progressMessage: "neon-sso proxy");
+                    await master.InstallHelmChartAsync(controller, "oauth2-proxy",
+                        releaseName:     "neon-sso",
+                        @namespace:      KubeNamespace.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonApi.Name,
+                        values:          values,
+                        progressMessage: "neon-sso-oauth2-proxy");
                 });
-
-            await master.InvokeIdempotentAsync("setup/oauth2-proxy-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "oauth2 proxy");
-
-                    await k8s.WaitForDeploymentAsync(KubeNamespaces.NeonSystem, "neon-sso-oauth2-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval);
-                });
-
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-secret",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso oauth2 secret");
-
-                        var oauth2Secret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSsoOauth2Proxy, KubeNamespaces.NeonSystem);
-                        oauth2Secret.Data["cookie-secret"] = Encoding.UTF8.GetBytes(NeonHelper.GetCryptoRandomPassword(32));
-
-                        await k8s.ReplaceNamespacedSecretAsync(oauth2Secret, oauth2Secret.Name(), oauth2Secret.Namespace());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-config",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "update neon sso oauth2 config");
-
-                        var configMap = await k8s.ReadNamespacedConfigMapAsync(KubeConst.NeonSsoOauth2Proxy, KubeNamespaces.NeonSystem);
-                        configMap.Data["loginUrl"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-                        configMap.Data["issuerUrl"] = $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}";
-
-                        await k8s.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
-                    });
-
-                await master.InvokeIdempotentAsync("ready-to-go/oauth2-proxy-restart",
-                    async () =>
-                    {
-                        controller.LogProgress(master, verb: "ready-to-go", message: "wait for oauth2 proxy");
-
-                        var deployment = await k8s.ReadNamespacedDeploymentAsync("neon-sso-oauth2-proxy", KubeNamespaces.NeonSystem);
-                        await deployment.RestartAsync(k8s);
-                    });
-
-                
-            }
         }
 
         /// <summary>
@@ -4854,12 +5175,11 @@ $@"- name: StorageType
         /// <returns>The connection string.</returns>
         public static async Task<string> GetSystemDatabaseConnectionStringAsync(ISetupController controller)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var k8s        = GetK8sClient(controller);
-            var secret     = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespaces.NeonSystem);
+            var secret     = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespace.NeonSystem);
             var username   = Encoding.UTF8.GetString(secret.Data["username"]);
             var password   = Encoding.UTF8.GetString(secret.Data["password"]);
             var dbHost     = KubeService.NeonSystemDb;
@@ -4879,62 +5199,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Deploys a Kubernetes job that runs Grafana setup.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SetupGrafanaAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            var k8s           = GetK8sClient(controller);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-
-            // Perform the Grafana Minio configuration.
-
-
-            await master.InvokeIdempotentAsync("setup/minio-loki",
-                async () =>
-                {
-                    master.Status = "create: grafana [loki] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "loki", clusterAdvice.LogsQuota);
-                });
-
-            await master.InvokeIdempotentAsync("setup/minio-cortex",
-                async () =>
-                {
-                    master.Status = "create: grafana [cortex] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "cortex", clusterAdvice.MetricsQuota);
-                });
-
-            await master.InvokeIdempotentAsync("setup/minio-alertmanager",
-                async () =>
-                {
-                    master.Status = "create: grafana [alertmanager] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "alertmanager");
-                });
-
-            await master.InvokeIdempotentAsync("setup/minio-cortex-ruler",
-                async () =>
-                {
-                    master.Status = "create: grafana [cortex-ruler] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "cortex-ruler");
-                });
-
-            await master.InvokeIdempotentAsync("setup/minio-tempo",
-                async () =>
-                {
-                    master.Status = "create: grafana [tempo] minio bucket";
-
-                    await CreateMinioBucketAsync(controller, master, "tempo", clusterAdvice.TracesQuota);
-                });
-        }
-
-        /// <summary>
-        /// Creates a minio bucket by using the mc client on one of the minio server pods.
+        /// Creates a Minio bucket by using the mc client on one of the minio server pods.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="master">The master node where the operation will be performed.</param>
@@ -4943,44 +5208,114 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateMinioBucketAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master, string name, string quota = null)
         {
-            await SyncContext.ClearAsync;
-
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-            Covenant.Requires < ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespaces.NeonSystem);
+            master.Status = $"create: [{name}] minio bucket";
+
+            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
             var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
             var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
             var k8s         = GetK8sClient(controller);
-            var minioPod    = (await k8s.ListNamespacedPodAsync(KubeNamespaces.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator")).Items.First();
-
+            
+            controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
-                    await k8s.NamespacedPodExecAsync(
-                        KubeNamespaces.NeonSystem,
-                        minioPod.Name(),
-                        "minio-operator",
-                        new string[] {
-                            "/bin/bash",
-                            "-c",
-                            $"/mc mb minio/{name}"
+                    await cluster.ExecMinioCommandAsync(
+                        retryPolicy: podExecRetry,
+                        mcCommand:   $"mb minio/{name}");
+                });
+
+            controller.ThrowIfCancelled();
+            if (!string.IsNullOrEmpty(quota))
+            {
+                await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
+                    async () =>
+                    {
+                        await cluster.ExecMinioCommandAsync(
+                            retryPolicy: podExecRetry,
+                            mcCommand:   $"admin bucket quota minio/{name} --hard {quota}");
+                    });
+            }
+        }
+
+
+        /// <summary>
+        /// Writes the <see cref="KubeConfigMapName.ClusterInfo"/>
+        /// config map to the <see cref="KubeNamespace.NeonStatus"/> namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task WriteClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
+
+            await master.InvokeIdempotentAsync("setup/cluster-info",
+                (Func<Task>)(async () =>
+                {
+                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
+                        name:       KubeConfigMapName.ClusterInfo,
+                        @namespace: KubeNamespace.NeonStatus,
+                        config:     new ClusterInfo(cluster.Definition));
+
+                    await k8s.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
+                }));
+        }
+
+        /// <summary>
+        /// Writes the <see cref="KubeConfigMapName.ClusterHealth"/> and <see cref="KubeConfigMapName.ClusterLock"/> 
+        /// config maps to the <see cref="KubeNamespace.NeonStatus"/> namespace.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task WriteClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
+
+            await master.InvokeIdempotentAsync("setup/cluster-lock",
+                async () =>
+                {
+                    var clusterLockMap = new TypeSafeConfigMap<ClusterLock>(
+                        name:       KubeConfigMapName.ClusterLock,
+                        @namespace: KubeNamespace.NeonStatus,
+                        config:     new ClusterLock()
+                        {
+                            IsLocked = cluster.Definition.IsLocked,
                         });
 
-                    if (!string.IsNullOrEmpty(quota))
-                    {
-                        await k8s.NamespacedPodExecAsync(
-                            KubeNamespaces.NeonSystem,
-                            minioPod.Name(),
-                            "minio-operator",
-                            new string[] {
-                            "/bin/bash",
-                            "-c",
-                            $"/mc admin bucket quota minio/{name} --fifo {quota}"
-                        });
-                    }
+                    await k8s.CreateNamespacedConfigMapAsync(clusterLockMap.ConfigMap, KubeNamespace.NeonStatus);
                 });
+
+            await master.InvokeIdempotentAsync("setup/cluster-health",
+                (Func<Task>)(async () =>
+                {
+                    var clusterHealthMap = new TypeSafeConfigMap<ClusterHealth>(
+                        name:       KubeConfigMapName.ClusterHealth,
+                        @namespace: KubeNamespace.NeonStatus,
+                        config:     new ClusterHealth()
+                        {
+                            State   = ClusterState.Healthy,
+                            Summary = "Cluster is healthy"
+                        });
+
+                    await k8s.CreateNamespacedConfigMapAsync(clusterHealthMap.ConfigMap, KubeNamespace.NeonStatus);
+                }));
         }
 
         /// <summary>
@@ -5011,30 +5346,6 @@ $@"- name: StorageType
             }
 
             return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-        }
-
-        /// <summary>
-        /// Returns the built-in cluster definition for a local neonDESKTOP cluster provisioned on WSL2.
-        /// </summary>
-        /// <returns>The cluster definition text.</returns>
-        public static ClusterDefinition GetLocalWsl2ClusterDefintion()
-        {
-            var yaml =
-@"
-name: neon-desktop
-datacenter: wsl2
-environment: development
-timeSources:
-- pool.ntp.org
-kubernetes:
-  allowPodsOnMasters: true
-hosting:
-  environment: wsl2
-nodes:
-  master:
-    role: master
-";
-            return ClusterDefinition.FromYaml(yaml);
         }
     }
 }

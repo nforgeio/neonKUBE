@@ -21,20 +21,24 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.Rest;
 
 using Neon.Common;
+using Neon.Retry;
+using Neon.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Models;
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
 
 namespace Neon.Kube
 {
@@ -43,6 +47,52 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubernetesExtensions
     {
+        //---------------------------------------------------------------------
+        // V1ObjectMeta extensions
+
+        /// <summary>
+        /// Sets a label within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The label name.</param>
+        /// <param name="value">Optionally specifies a label value.  This defaults to an empty string.</param>
+        public static void SetLabel(this V1ObjectMeta metadata, string name, string value = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Labels == null)
+            {
+                metadata.Labels = new Dictionary<string, string>();
+            }
+
+            metadata.Labels[name] = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Fetches the value of a label from the metadata.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The label name.</param>
+        /// <returns>The label value or <c>null</c> when the label doesn't exist.</returns>
+        public static string GetLabel(this V1ObjectMeta metadata, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Labels == null)
+            {
+                return null;
+            }
+
+            if (metadata.Labels.TryGetValue(name, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Deployment extensions
 
@@ -54,6 +104,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -120,6 +171,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             // $todo(jefflill):
@@ -174,6 +226,73 @@ namespace Neon.Kube
                         return false;
                     }
                 },
+                timeout: TimeSpan.FromSeconds(300),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+        }
+
+        /// <summary>
+        /// Restarts a <see cref="V1DaemonSet"/>.
+        /// </summary>
+        /// <param name="daemonset">The daemonset being restarted.</param>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task RestartAsync(this V1DaemonSet daemonset, IKubernetes k8s)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            // $todo(jefflill):
+            //
+            // Fish out the k8s client from the statefulset so we don't have to pass it in as a parameter.
+
+            var generation = daemonset.Status.ObservedGeneration;
+
+            var patchStr = $@"
+{{
+    ""spec"": {{
+        ""template"": {{
+            ""metadata"": {{
+                ""annotations"": {{
+                    ""kubectl.kubernetes.io/restartedAt"": ""{DateTime.UtcNow.ToString("s")}""
+                }}
+            }}
+        }}
+    }}
+}}";
+
+            await k8s.PatchNamespacedDaemonSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), daemonset.Name(), daemonset.Namespace());
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var newDeployment = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+
+                        return newDeployment.Status.ObservedGeneration > generation;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout:      TimeSpan.FromSeconds(300),
+                pollInterval: TimeSpan.FromMilliseconds(500));
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        daemonset = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+
+                        return (daemonset.Status.CurrentNumberScheduled == daemonset.Status.NumberReady) && daemonset.Status.UpdatedNumberScheduled == null;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
                 timeout:      TimeSpan.FromSeconds(300),
                 pollInterval: TimeSpan.FromMilliseconds(500));
         }
@@ -194,10 +313,10 @@ namespace Neon.Kube
                 this.GroupApiVersion = $"{attr.Group}/{attr.ApiVersion}";
             }
 
-            public string Group { get; private set; }
-            public string ApiVersion { get; private set; }
-            public string Kind { get; private set; }
-            public string GroupApiVersion { get; private set; }
+            public string Group             { get; private set; }
+            public string ApiVersion        { get; private set; }
+            public string Kind              { get; private set; }
+            public string GroupApiVersion   { get; private set; }
         }
 
         private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new ();
@@ -274,6 +393,7 @@ namespace Neon.Kube
         /// <returns>The updated secret.</returns>
         public static async Task<V1Secret> UpsertSecretAsync(this IKubernetes k8s, V1Secret secret, string @namespace = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
             if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
@@ -287,15 +407,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Waits for a service deployment to complete.
+        /// Waits for a service deployment to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -304,14 +425,16 @@ namespace Neon.Kube
         public static async Task WaitForDeploymentAsync(
             this IKubernetes    k8s, 
             string              namespaceParameter, 
-            string              name          = null, 
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null, 
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
-            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of name, labelSelector or fieldSelector must be set,");
+            Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be specified.");
 
             if (pollInterval <= TimeSpan.Zero)
             {
@@ -355,20 +478,22 @@ namespace Neon.Kube
                     }
                             
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
-        /// Waits for a stateful set deployment to complete.
+        /// Waits for a stateful set to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
-        /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="name">The statefulset name.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -377,12 +502,14 @@ namespace Neon.Kube
         public static async Task WaitForStatefulSetAsync(
             this IKubernetes    k8s,
             string              namespaceParameter,
-            string              name          = null,
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null,
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -427,20 +554,22 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
-        /// Waits for a daemon set deployment to complete.
+        /// Waits for a daemon set to start successfully.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">The namespace.</param>
-        /// <param name="name">The deployment name.</param>
-        /// <param name="labelSelector">The optional label selector.</param>
-        /// <param name="fieldSelector">The optional field selector.</param>
+        /// <param name="name">The daemonset name.</param>
+        /// <param name="labelSelector">Optionally specifies a label selector.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -450,12 +579,14 @@ namespace Neon.Kube
 
             this IKubernetes    k8s,
             string              namespaceParameter,
-            string              name          = null,
-            string              labelSelector = null,
-            string              fieldSelector = null,
-            TimeSpan            pollInterval  = default,
-            TimeSpan            timeout       = default)
+            string              name              = null,
+            string              labelSelector     = null,
+            string              fieldSelector     = null,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentException>(name != null || labelSelector != null || fieldSelector != null, "One of [name], [labelSelector] or [fieldSelector] must be passed.");
 
@@ -499,20 +630,104 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
-        /// Executes a program within a pod container.
+        /// Waits for a pod to start successfully.
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">The namespace.</param>
+        /// <param name="name">The pod name.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
+        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>x
+        public static async Task WaitForPodAsync(
+            this IKubernetes    k8s, 
+            string              namespaceParameter, 
+            string              name              = null, 
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var pod = await k8s.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+
+                        return pod.Status.Phase == "Running";
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                            
+                },
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns a running pod within the specified namespace that matches a label selector. 
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
+        /// <param name="labelSelector">
+        /// Specifies the label selector to constrain the set of pods to be targeted.
+        /// This is required.
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
+        public static async Task<V1Pod> GetNamespacedRunningPodAsync(
+            this IKubernetes    k8s,
+            string              namespaceParameter,
+            string              labelSelector)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
+
+            var pods = (await k8s.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
+            var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
+
+            if (pod == null)
+            {
+                throw new KubernetesException(pods.Count > 0 ? $"[0 of {pods.Count}] pods are running." : "No deployed pods.");
+            }
+
+            return pod;
+        }
+
+        /// <summary>
+        /// Executes a command within a pod container.
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecAsync(
@@ -521,9 +736,10 @@ namespace Neon.Kube
             string              name,
             string              container,
             string[]            command,
-            CancellationToken   cancellationToken = default,
-            bool                noSuccessCheck    = false)
+            bool                noSuccessCheck    = false,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
             Covenant.Requires<ArgumentException>(command.Length > 0, nameof(command));
@@ -557,6 +773,227 @@ namespace Neon.Kube
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// Executes a command within a pod container with a <see cref="IRetryPolicy"/>
+        /// </summary>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="retryPolicy">The <see cref="IRetryPolicy"/>.</param>
+        /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
+        /// <param name="name">Specifies the target pod name.</param>
+        /// <param name="container">Identifies the target container within the pod.</param>
+        /// <param name="command">Specifies the program and arguments to be executed.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero.</exception>
+        public static async Task<ExecuteResponse> NamespacedPodExecWithRetryAsync(
+            this IKubernetes    k8s,
+            IRetryPolicy        retryPolicy,
+            string              namespaceParameter,
+            string              name,
+            string              container,
+            string[]            command,
+            CancellationToken   cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(retryPolicy != null, nameof(retryPolicy));
+
+            return await retryPolicy.InvokeAsync(
+                async () =>
+                {
+                    return await k8s.NamespacedPodExecAsync(
+                        namespaceParameter: namespaceParameter,
+                        name:               name,
+                        container:          container,
+                        command:            command,
+                        cancellationToken:  cancellationToken,
+                        noSuccessCheck:     true);
+                });
+        }
+
+        /// <summary>
+        /// Helper method to watch a Kubernetes object type. It will loop indefinitely and handle any timeouts from the server.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="funcAsync">The function to handle updates.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="updatesOnly">Optionally specifies whether to read all objects before watching.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public static async Task WatchAsync<T>(
+            this IKubernetes k8s,
+            Func<WatchEvent<T>, Task> funcAsync, 
+            string namespaceParameter = null, 
+            string resourceVersion = "0", 
+            bool allowWatchBookmarks = true, 
+            bool updatesOnly = false, 
+            CancellationToken cancellationToken = default) where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (updatesOnly)
+                {
+                    var definedTypes = typeof(T).Assembly.DefinedTypes;
+
+                    // hack(marcusbooyah):
+                    // We need to get the list type so that we can get the list of resources and grab the resource version from it.
+                    var listType = definedTypes.Where(
+                        dt => dt.CustomAttributes.Any(
+                            ca => ca.NamedArguments.Any(
+                                na => na.MemberName == "PluralName"
+                                && na.TypedValue.ArgumentType == typeof(string)
+                                && (string)na.TypedValue.Value == typeof(T).GetKubernetesTypeMetadata().PluralName))
+                        && dt.GetProperty("Metadata", BindingFlags.Instance | BindingFlags.Public).PropertyType == typeof(V1ListMeta)).FirstOrDefault().UnderlyingSystemType;
+
+                    var configMapListResponse = await GetAsyncWithHttpMessagesAsync(k8s, listType, namespaceParameter, false, resourceVersion, allowWatchBookmarks, cancellationToken);
+                    var configMapList         = System.Text.Json.JsonSerializer.Deserialize(await configMapListResponse.Content.ReadAsStringAsync(), listType);
+
+                    resourceVersion      = ((IKubernetesObject<V1ListMeta>)configMapList).Metadata.ResourceVersion;
+                    var continueProperty = ((IKubernetesObject<V1ListMeta>)configMapList).Metadata.ContinueProperty;
+                }
+
+                while (!cancellationToken.IsCancellationRequested && !string.IsNullOrEmpty(resourceVersion))
+                {
+                    try
+                    {
+                        using var watch = (await WatchAsyncWithHttpMessagesAsync<T>(k8s, namespaceParameter, resourceVersion, allowWatchBookmarks, cancellationToken)).Body;
+
+                        // inner loop: receive items as lines arrive
+                        await foreach (var watchEventArgs in watch.WithCancellation(cancellationToken))
+                        {
+                            switch (watchEventArgs.Type)
+                            {
+                                case WatchEventType.Bookmark:
+                                    resourceVersion = watchEventArgs.Object.ResourceVersion();
+                                    break;
+                                case WatchEventType.Error:
+                                    break;
+                                case WatchEventType.Added:
+                                case WatchEventType.Modified:
+                                case WatchEventType.Deleted:
+                                    resourceVersion = watchEventArgs.Object.ResourceVersion();
+                                    await funcAsync(watchEventArgs);
+                                    break;
+                                default:
+                                    throw new KubernetesException();
+                            }
+                        }
+                    }
+                    catch (Exception error)
+                    {
+                        if (error is KubernetesException kubernetesError)
+                        {
+                            // deal with this non-recoverable condition "too old resource version"
+                            if (string.Equals(kubernetesError.Status.Reason, "Expired", StringComparison.Ordinal))
+                            {
+                                // force control back to outer loop
+                                resourceVersion = null;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Watches a resource type from the Kubernetes API.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public static async Task<HttpOperationResponse<WatchStream<T>>> WatchAsyncWithHttpMessagesAsync<T>(
+            this IKubernetes k8s, 
+            string namespaceParameter = null, 
+            string resourceVersion = default,
+            bool allowWatchBookmarks = default,
+            CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
+        {
+            var message = await GetAsyncWithHttpMessagesAsync<T>(k8s, namespaceParameter: namespaceParameter, watch: true, resourceVersion, allowWatchBookmarks, cancellationToken);
+
+            var stream = await message.Content.ReadAsStreamAsync(cancellationToken);
+
+            return new HttpOperationResponse<WatchStream<T>>
+            {
+                Request = message.RequestMessage,
+                Response = message,
+                Body = new WatchStream<T>(stream, message),
+            };
+        }
+
+        /// <summary>
+        /// Gets a generic type from the Kubernetes API.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="watch">Whether to watch the resource.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public static async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync<T>(
+            this IKubernetes k8s, 
+            string namespaceParameter = null,
+            bool watch = false, 
+            string resourceVersion = default, 
+            bool allowWatchBookmarks = default,
+            CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
+        {
+            return await GetAsyncWithHttpMessagesAsync(k8s, typeof(T), namespaceParameter, watch, resourceVersion, allowWatchBookmarks, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets a type from the Kubernetes API.
+        /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="type">The type parameter.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="watch">Whether to watch the resource.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public static async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync(
+            this IKubernetes k8s, 
+            Type type, 
+            string namespaceParameter = null,
+            bool watch = false, 
+            string resourceVersion = default,
+            bool allowWatchBookmarks = default, 
+            CancellationToken cancellationToken = default)
+        {
+            var typeMetaData = ((IKubernetesObject)Activator.CreateInstance(type)).GetKubernetesTypeMetadata();
+
+            var requestUri = new StringBuilder();
+
+            requestUri.Append($"{k8s.BaseUri}api/{typeMetaData.ApiVersion}/");
+
+            if (!string.IsNullOrEmpty(namespaceParameter))
+            {
+                requestUri.Append($"namespaces/{namespaceParameter}/");
+            }
+
+            requestUri.Append(typeMetaData.PluralName);
+            requestUri.Append("?");
+            requestUri.Append($"allowWatchBookmarks={allowWatchBookmarks.ToString().ToLower()}");
+            requestUri.Append($"&watch={(watch ? "1" : "0")}");
+            requestUri.Append($"&resourceVersion={resourceVersion}");
+
+
+            var request = new HttpRequestMessage
+            {
+                RequestUri = new Uri(requestUri.ToString()),
+            };
+
+            return await k8s.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS8892 // Method 'Program.Main(string[])' will not be used as an entry point because a synchronous entry point 'Program.Main(string[])' was found.
+
+using System;
 using System.Collections.Generic;
 using System.Net.Mail;
 using System.Threading.Tasks;

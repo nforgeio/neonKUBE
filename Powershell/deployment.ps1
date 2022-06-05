@@ -42,9 +42,9 @@ Pop-Location | Out-Null
 
 if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
 {
-  Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
-  Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
-  Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
+    Load-Assembly "$env:NEON_ASSISTANT_HOME\YamlDotNet.dll"
+    Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Common.dll"
+    Load-Assembly "$env:NEON_ASSISTANT_HOME\Neon.Deployment.dll"
 }
 
 #------------------------------------------------------------------------------
@@ -161,8 +161,7 @@ function Get-SecretValue
 #
 # ARGUMENTS:
 #
-#   awsAccessKeyId      - Optionally overrides the key ID password name
-#   awsSecretAccessKey  - Optionally overrides the secret key password name
+#   secretName          - Optionally overrides the default "AWS_NEONFORGE" secret name
 #   vault               - Optionally overrides the default vault
 #   masterPassword      - Optionally specifies the master 1Password (for automation)
 
@@ -171,9 +170,7 @@ function Import-AwsCliCredentials
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
-        [string]$awsAccessKeyId = "AWS_ACCESS_KEY_ID",
-        [Parameter(Position=1, Mandatory=$false)]
-        [string]$awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY",
+        [string]$secretName = "AWS_NEONFORGE",
         [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=$false)]
@@ -187,8 +184,8 @@ function Import-AwsCliCredentials
 
     $client = Get-ProfileClient
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword($awsAccessKeyId, $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword($awsSecretAccessKey, $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
+    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------

@@ -47,7 +47,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task Base_Ping()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that Ping works and optionally measure simple transaction throughput.
 
@@ -91,7 +91,7 @@ namespace TestTemporal
 
                         for (int j = 0; j < iterations; j++)
                         {
-                            client.PingAsync().Wait();
+                            client.PingAsync().WaitWithoutAggregate();
                         }
 
                         stopwatch.Stop();
@@ -118,7 +118,7 @@ namespace TestTemporal
         [Trait(TestTrait.Category, TestTrait.Slow)]
         public async Task Base_Namespace()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Exercise the Temporal namespace operations.
 
@@ -185,7 +185,7 @@ namespace TestTemporal
         [Fact]
         public async Task Base_ListNamespaces()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Register 100 new namespaces and then list them in various ways 
             // to verify that works.
@@ -275,7 +275,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task Base_DescribeTaskQueue()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify some information about decision tasks.
 
@@ -313,7 +313,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task Base_DescribeWorkflowExecutionAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var utcNow = DateTime.UtcNow;
 

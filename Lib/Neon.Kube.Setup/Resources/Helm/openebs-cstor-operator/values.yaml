@@ -194,7 +194,7 @@ csiNode:
   securityContext: {}
 
 csiDriver:
-  create: true
+  create: false
   podInfoOnMount: true
   attachRequired: true
 

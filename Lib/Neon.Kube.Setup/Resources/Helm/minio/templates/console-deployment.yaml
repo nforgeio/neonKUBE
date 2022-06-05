@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: {{ include "minio-operator.console-fullname" . }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    reloader.stakater.com/auto: "true"
   labels:
     app: minio
     {{- include "minio-operator.labels" . | nindent 4 }}
@@ -42,6 +44,7 @@ spec:
           secret:
             secretName: minio-client
             defaultMode: 420
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.console.image.organization }}/{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
@@ -53,6 +56,9 @@ spec:
             name: https
           args:
           - server
+          envFrom:
+            - configMapRef:
+                name: {{ include "minio-operator.console-fullname" . }}
           env:
           - name: ACCESS_KEY
             valueFrom:
@@ -66,10 +72,6 @@ spec:
                 key: secretkey
           - name: CONSOLE_OPERATOR_MODE
             value: "on"
-          - name: CONSOLE_IDP_URL
-            value: "https://sso.{{ .Values.cluster.domain }}/.well-known/openid-configuration" 
-          - name: CONSOLE_IDP_CALLBACK
-            value: "https://{{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}/oauth_callback"
           - name: CONSOLE_IDP_CLIENT_ID
             value: minio
           - name: CONSOLE_IDP_SECRET

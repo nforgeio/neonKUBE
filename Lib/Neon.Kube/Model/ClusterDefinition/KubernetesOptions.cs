@@ -95,52 +95,15 @@ namespace Neon.Kube
         public bool? AllowPodsOnMasters { get; set; } = null;
 
         /// <summary>
-        /// Optionally configures an external Kubernetes API server load balancer by
-        /// specifying the load balancer endpoint as HOSTNAME:PORT or IPADDRESS:PORT.
-        /// This defaults to <c>null</c>.  See the remarks to see what this means.
+        /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
+        /// (deprecated; default off) is on, when dynamically updating this field, consider that changes may cause Pods to fail admission on 
+        /// Kubelet restart, and may change the value reported in Node.Status.Capacity[v1.ResourcePods], thus affecting future scheduling decisions.
+        /// Increasing this value may also decrease performance, as more Pods can be packed into a single node. Default: 250
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Production clusters really should be deployed using an external highly
-        /// available load balancer that distributes API server traffic across
-        /// the API servers running on the masters.
-        /// </para>
-        /// <para>
-        /// For cloud environments like AWS and Azure, neonKUBE provisions a cloud
-        /// load balancer by default for this.  This is the ideal situation.
-        /// </para>
-        /// <para>
-        /// For on-premise environments like Hyper-V and XenServer, we use the
-        /// HAProxy based load balancer deployed to the first master node (as sorted
-        /// by node name).  This forwards traffic to port 5000 to the Kubernetes
-        /// API servers running on the masters.  This is not really HA though,
-        /// because the loss of the first master will result in the loss of 
-        /// API server connectivity.  This does help some though.  For example,
-        /// stopping the API server on the first master won't take the cluster
-        /// API server offline because HAProxy will still be able to direct 
-        /// traffic to the remaining masters.
-        /// </para>
-        /// <note>
-        /// <para>
-        /// The HAProxy load balancer is actually deployed to all of the masters
-        /// but the other master HAProxy instances won't see any traffic because
-        /// Kubernetes is configured with a single balancer endpoint.
-        /// </para>
-        /// <para>
-        /// In the future, it may be possible to turn the master HAProxy instances
-        /// into an HA cluster via a virtual IP address and heartbeat mechanism.
-        /// </para>
-        /// <para>
-        /// You can use the <see cref="ApiLoadBalancer"/> property to specify an
-        /// external load balancer that already exists.  Setting this will override
-        /// the default behaviors described above.
-        /// </para>
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "apiLoadBalancer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "apiLoadBalancer", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ApiLoadBalancer { get; set; } = null;
+        [JsonProperty(PropertyName = "MaxPodsPerNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "maxPodsPerNode", ApplyNamingConventions = false)]
+        [DefaultValue(250)]
+        public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -148,24 +111,25 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var kubernetesOptionsPrefix = $"{nameof(ClusterDefinition.Kubernetes)}";
 
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
 
             if (Version != defaultVersion)
             {
-                if (!System.Version.TryParse(Version, out var vKubernetes))
+                if (!System.Version.TryParse(Version, out var kubernetesVersion))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
                 }
 
-                if (vKubernetes < System.Version.Parse(minVersion))
+                if (kubernetesVersion < System.Version.Parse(minVersion))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
                 }
             }
 
@@ -173,36 +137,13 @@ namespace Neon.Kube
             {
                 if (!System.Version.TryParse(DashboardVersion, out var vDashboard))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
+                    throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
                 }
             }
 
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
             {
-                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
-            }
-
-            if (!string.IsNullOrEmpty(ApiLoadBalancer))
-            {
-                // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
-
-                var fields = ApiLoadBalancer.Split(':', 2);
-                var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].  HOSTNAME:PORT or IPADDRESS:PORT expected.";
-
-                if (fields.Length != 2)
-                {
-                    throw new ClusterDefinitionException(error);
-                }
-
-                if (!NetHelper.IsValidHost(fields[0]) && (!NetHelper.TryParseIPv4Address(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork))
-                {
-                    throw new ClusterDefinitionException(error);
-                }
-
-                if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
-                {
-                    throw new ClusterDefinitionException(error);
-                }
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
             }
 
             if (!AllowPodsOnMasters.HasValue)
@@ -210,11 +151,27 @@ namespace Neon.Kube
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystem))
+            var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
+
+            if ((clusterDefinition.Nodes.Count() * MaxPodsPerNode * 2.3) > podSubnetCidr.UsableAddressCount)
             {
-                foreach (var m in clusterDefinition.Masters)
+                var maxPods        = podSubnetCidr.UsableAddressCount / 2.3;
+                var clusterPods    = clusterDefinition.Nodes.Count() * MaxPodsPerNode;
+                var maxPodsPerNode = maxPods / clusterDefinition.Nodes.Count();
+                var maxNodes       = maxPods / MaxPodsPerNode;
+
+                throw new ClusterDefinitionException(@$"[{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}={MaxPodsPerNode}] is not valid.
+[{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}={clusterDefinition.Network.PodSubnet}] supports a maximum of {maxPods} pods.
+Either expand [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
+or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
+");
+            }
+
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystem))
+            {
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystem = true;
+                    manager.Labels.NeonSystem = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
@@ -226,52 +183,52 @@ namespace Neon.Kube
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemDb))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemDb))
             {
-                foreach (var m in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystemDb = true;
+                    manager.Labels.NeonSystemDb = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
                 {
-                    foreach (var w in clusterDefinition.Workers)
+                    foreach (var worker in clusterDefinition.Workers)
                     {
-                        w.Labels.NeonSystemDb = true;
+                        worker.Labels.NeonSystemDb = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemRegistry))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemRegistry))
             {
-                foreach (var m in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.Masters)
                 {
-                    m.Labels.NeonSystemRegistry = true;
+                    manager.Labels.NeonSystemRegistry = true;
                 }
 
                 if (clusterDefinition.Masters.Count() < 3)
                 {
-                    foreach (var w in clusterDefinition.Workers)
+                    foreach (var worker in clusterDefinition.Workers)
                     {
-                        w.Labels.NeonSystemRegistry = true;
+                        worker.Labels.NeonSystemRegistry = true;
                     }
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.Istio))
             {
                 if (AllowPodsOnMasters.GetValueOrDefault())
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.Istio = true;
+                        node.Labels.Istio = true;
                     };
                 }
                 else
                 {
-                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
                     {
-                        w.Labels.Istio = true;
+                        worker.Labels.Istio = true;
                     }
                 }
             }

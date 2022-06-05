@@ -34,7 +34,7 @@ namespace Neon.HyperV
     public class VirtualDrive
     {
         /// <summary>
-        /// Specifies the path where the drive will be located.  The drive format
+        /// Specifies the path where the drive is located.  The drive format
         /// is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
         /// </summary>
         public string Path { get; set; }

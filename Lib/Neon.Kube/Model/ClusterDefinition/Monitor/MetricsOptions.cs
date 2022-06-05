@@ -66,24 +66,24 @@ namespace Neon.Kube
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault() == true)
                 {
-                    foreach (var n in clusterDefinition.Nodes)
+                    foreach (var node in clusterDefinition.Nodes)
                     {
-                        n.Labels.MetricsInternal = true;
+                        node.Labels.MetricsInternal = true;
                     }
                 }
                 else
                 {
-                    foreach (var n in clusterDefinition.Workers)
+                    foreach (var node in clusterDefinition.Workers)
                     {
-                        n.Labels.MetricsInternal = true;
+                        node.Labels.MetricsInternal = true;
                     }
                 }
             }
             else
             {
-                foreach (var n in clusterDefinition.Nodes.Where(n => n.Labels.Metrics))
+                foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.Metrics))
                 {
-                    n.Labels.MetricsInternal = true;
+                    node.Labels.MetricsInternal = true;
                 }
             }
         }

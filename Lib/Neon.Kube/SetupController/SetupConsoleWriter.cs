@@ -33,6 +33,40 @@ namespace Neon.Kube
     /// </summary>
     public class SetupConsoleWriter
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Set to <c>true</c> when the current process has a console.
+        /// </summary>
+        private static readonly bool HasConsole;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static SetupConsoleWriter()
+        {
+            // Detect whether the current process has a console.  It looks like
+            // the only way to do this is to perform a console operation and 
+            // catch the exception thrown when there's no console.
+
+            try
+            {
+                var pos = Console.GetCursorPosition();
+
+                Console.SetCursorPosition(pos.Left, pos.Top);
+                
+                HasConsole = true;
+            }
+            catch
+            {
+                HasConsole = false;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private object          syncLock      = new object();
         private string          previousText  = null;
         private List<string>    previousLines = new List<string>();
@@ -44,6 +78,15 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
+            if (!HasConsole)
+            {
+                return;
+            }
+
+            // Hide the cursor while updating.
+
+            Console.CursorVisible = false;
+
             lock (syncLock)
             {
                 if (stopped)
@@ -59,10 +102,9 @@ namespace Neon.Kube
 
                 if (previousText == null)
                 {
-                    // This is the first Update() has been called so we need configure
-                    // and clear the console.
+                    // This is the first Update() has been called so we need to
+                    // clear the console.
 
-                    Console.CursorVisible = false;
                     Console.Clear();
                 }
 
@@ -109,24 +151,27 @@ namespace Neon.Kube
             {
                 stopped = true;
 
-                // Move the cursor to the beginning of the second line after the last
-                // non-blank line written by Update() and then re-enable the cursor
-                // such that the next Console write will happen there.
-
-                for (int lineIndex = previousLines.Count - 1; lineIndex >= 1; lineIndex--)
+                if (HasConsole)
                 {
-                    if (string.IsNullOrWhiteSpace(previousLines[lineIndex]))
-                    {
-                        previousLines.RemoveAt(lineIndex);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                    // Move the cursor to the beginning of the second line after the last
+                    // non-blank line written by Update() and then re-enable the cursor
+                    // such that the next Console write will happen there.
 
-                Console.SetCursorPosition(0, previousLines.Count + 1);
-                Console.CursorVisible = true;
+                    for (int lineIndex = previousLines.Count - 1; lineIndex >= 1; lineIndex--)
+                    {
+                        if (string.IsNullOrWhiteSpace(previousLines[lineIndex]))
+                        {
+                            previousLines.RemoveAt(lineIndex);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    Console.SetCursorPosition(0, previousLines.Count + 1);
+                    Console.CursorVisible = true;
+                }
             }
         }
     }

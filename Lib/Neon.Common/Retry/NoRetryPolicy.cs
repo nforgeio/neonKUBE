@@ -24,6 +24,8 @@ using System.Threading.Tasks;
 
 using Neon.Tasks;
 
+#pragma warning disable CS0067 // Event is never used
+
 namespace Neon.Retry
 {
     /// <summary>
@@ -53,6 +55,9 @@ namespace Neon.Retry
         public TimeSpan? Timeout => null;
 
         /// <inheritdoc/>
+        public event Action<RetryTransientArgs> OnTransient;
+
+        /// <inheritdoc/>
         public IRetryPolicy Clone(Func<Exception, bool> transientDetector = null)
         {
             // This class is invariant and doesn't use a transient detector
@@ -64,14 +69,14 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public async Task InvokeAsync(Func<Task> action)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             await action();
         }
 
         /// <inheritdoc/>
         public async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             return await action();
         }
 

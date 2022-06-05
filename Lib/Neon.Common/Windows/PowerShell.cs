@@ -47,7 +47,8 @@ namespace Neon.Windows
         //---------------------------------------------------------------------
         // Static members
 
-        private const int PowershellBufferWidth = 16192;
+        private const int               PowershellBufferWidth = 16192;
+        private static readonly Regex   ttyColorRegex         = new Regex(@"\u001b\[.*?m", RegexOptions.ExplicitCapture);     // Matches TTY color commands
 
         /// <summary>
         /// Optional path to the Powershell Core <b>pwsh</b> executable.  The <b>PATH</b>
@@ -175,12 +176,24 @@ $@"
 try {{
     {command} | Out-String -Width {PowershellBufferWidth}
 }}
-catch [Exception] {{
-    write-error $_Exception.Message
-    exit 1
+catch [Exception]
+{{
+    if ($_Exception -ne $null)
+    {{
+        write-error $_Exception.Message
+        exit 1
+    }}
 }}
 ");
-                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
+                var result  = NeonHelper.ExecuteCapture(GetPwshPath(), $"-File \"{file.Path}\" -NonInteractive -NoProfile", outputAction: outputAction, errorAction: errorAction);
+                var allText = result.AllText;
+
+                // Powershell includes TTY color commands in its output and we need
+                // to strip these out of the the result:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1259
+
+                allText = ttyColorRegex.Replace(allText, string.Empty);
 
                 // $hack(jefflill):
                 //
@@ -190,10 +203,15 @@ catch [Exception] {{
 
                 if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
-                    throw new PowerShellException(result.AllText);
+                    throw new PowerShellException(allText);
                 }
 
-                return result.AllText;
+                // Powershell includes TTY color commands in its output and we need
+                // to strip these out of the the result:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1259
+
+                return allText;
             }
         }
 

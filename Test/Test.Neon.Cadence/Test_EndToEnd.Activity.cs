@@ -89,7 +89,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_WithNoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity and results
@@ -145,7 +145,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity that returns
@@ -257,7 +257,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_WithError()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
@@ -270,7 +270,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task ActivityLocal_WithError()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that an exception thrown by a normal activity can be caught
             // and verified by the parent workflow.
@@ -319,7 +319,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task ActivityLocal_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple local activity that
@@ -381,7 +381,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task ActivityLocal_WithoutResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call a simple workflow that accepts a
@@ -458,7 +458,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task ActivityLocal_WithMultipleMethods()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call different methods of a local activity.
@@ -528,7 +528,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_WithMultipleMethods()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call different methods of a regular activity.
@@ -582,7 +582,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Logger()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that logging within an activity doesn't barf.
 
@@ -643,7 +643,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_MultipleStubs()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can reuse an activity stub to make multiple calls.
 
@@ -693,7 +693,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_DifferentNames()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that an activity whose class and interface names
             // don't match works.  This ensures that the Cadence client
@@ -849,7 +849,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Heartbeat()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the standard way works.
 
@@ -861,7 +861,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -873,7 +873,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Heartbeat_WithDetails()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -885,7 +885,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Heartbeat_WithInterval()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -947,7 +947,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Fail()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a workflow that calls an activity
             // which throws an exception and that we see the error.
@@ -961,7 +961,7 @@ namespace TestCadence
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);
-            Assert.Contains("StartToCloseTimeoutException", error);
+            Assert.Contains("ArgumentException", error);
         }
 
         //---------------------------------------------------------------------
@@ -1009,7 +1009,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_ComplexData()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can round-trip an object to a workflow and activity
             // and then back.
@@ -1130,7 +1130,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_External_CompleteByToken()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can externally heartbeat and complete an activity
             // using its task token.
@@ -1151,7 +1151,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_External_CompleteById()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can externally heartbeat and complete an activity
             // using the workflow execution and the activity ID.
@@ -1172,7 +1172,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_External_ErrorByToken()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can externally fail an activity
             // using its task token.
@@ -1204,7 +1204,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_External_ErrorById()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can externally fail an activity
             // using the workflow execution and the activity ID.
@@ -1237,7 +1237,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_External_HeartbeatTimeout()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that externally completed activities will timeout when
             // there are no recorded heartbeats.
@@ -1254,7 +1254,7 @@ namespace TestCadence
         {
             // Verifies that external heartbeats submitted by ID works.
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             ActivityExternalCompletion.Reset();
 
@@ -1286,7 +1286,7 @@ namespace TestCadence
         {
             // Verifies that external heartbeats submitted by token works.
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             ActivityExternalCompletion.Reset();
 
@@ -1359,7 +1359,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_WithDependency()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that depdency injection works for activities.  Note that the
             // Test_EndToEnd constructor has configured a singleton ActivityDependency

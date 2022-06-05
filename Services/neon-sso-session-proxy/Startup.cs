@@ -31,14 +31,14 @@ namespace NeonSsoSessionProxy
     public class Startup
     {
         public IConfiguration               Configuration { get; }
-        public NeonSsoSessionProxyService   NeonSsoSessionProxyService;
+        public Service   NeonSsoSessionProxyService;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Specifies the service configuration.</param>
         /// <param name="service">Specifies the service.</param>
-        public Startup(IConfiguration configuration, NeonSsoSessionProxyService service)
+        public Startup(IConfiguration configuration, Service service)
         {
             Configuration                   = configuration;
             this.NeonSsoSessionProxyService = service;
@@ -78,7 +78,7 @@ namespace NeonSsoSessionProxy
 
             var configFile = NeonSsoSessionProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
             var config     = NeonHelper.YamlDeserialize<dynamic>(File.ReadAllText(configFile));
-            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"));
+            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Log);
             
             // Load in each of the clients from the Dex config into the client.
 

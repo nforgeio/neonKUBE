@@ -45,6 +45,20 @@ namespace TestDeployment
     {
         const string repo = "neon-test/github-automation";
 
+        private readonly TimeSpan releaseDelay = TimeSpan.FromSeconds(5);
+
+        public Test_GitHubReleases()
+        {
+            // Remove any existing GitHub releases.
+
+            var releaseList = GitHub.Releases.List(repo);
+
+            foreach (var release in releaseList)
+            {
+                GitHub.Releases.Remove(repo, release);
+            }
+        }
+
         [Fact]
         public void EndToEnd_WithFileAsset()
         {
@@ -65,7 +79,7 @@ namespace TestDeployment
 
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
+                var release = GitHub.Releases.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
 
                 Assert.Equal("Hello World!", release.Body);
                 Assert.True(release.Draft);
@@ -81,7 +95,7 @@ namespace TestDeployment
                 {
                     File.WriteAllText(tempFile.Path, "test asset contents");
 
-                    asset = GitHub.Release.UploadAsset(repo, release, tempFile.Path, "test-asset.dat");
+                    asset = GitHub.Releases.UploadAsset(repo, release, tempFile.Path, "test-asset.dat");
 
                     Assert.Equal("test-asset.dat", asset.Name);
                     Assert.Equal("application/octet-stream", asset.ContentType);
@@ -93,42 +107,42 @@ namespace TestDeployment
 
                 releaseUpdate.Draft = false;
 
-                release = GitHub.Release.Update(repo, release, releaseUpdate);
+                release = GitHub.Releases.Update(repo, release, releaseUpdate);
 
                 Assert.False(release.Draft);
                 Assert.NotNull(release.PublishedAt);
 
                 // List all releases to ensure that new release is included:
 
-                var releaseList = GitHub.Release.List(repo);
+                var releaseList = GitHub.Releases.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the new release:
 
-                var fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                var fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.NotNull(fetchedRelease);
                 Assert.False(fetchedRelease.Draft);
 
-                var assertUri = GitHub.Release.GetAssetUri(release, asset);
+                var assertUri = GitHub.Releases.GetAssetUri(release, asset);
                 var assetText = httpClient.GetAsync(assertUri).Result.Content.ReadAsStringAsync().Result;
 
                 Assert.Equal("test asset contents", assetText);
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
 
                 // List all releases to ensure that the new release is no longer present:
 
-                releaseList = GitHub.Release.List(repo);
+                releaseList = GitHub.Releases.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
-                fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.Null(fetchedRelease);
             }
@@ -154,7 +168,7 @@ namespace TestDeployment
 
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
+                var release = GitHub.Releases.Create(repo, tagName, body: "Hello World!", draft: true, prerelease: true);
 
                 Assert.Equal("Hello World!", release.Body);
                 Assert.True(release.Draft);
@@ -171,7 +185,7 @@ namespace TestDeployment
                     ms.Write(Encoding.UTF8.GetBytes("test asset contents"));
                     ms.Position = 0;
 
-                    asset = GitHub.Release.UploadAsset(repo, release, ms, "test-asset.dat");
+                    asset = GitHub.Releases.UploadAsset(repo, release, ms, "test-asset.dat");
 
                     Assert.Equal("test-asset.dat", asset.Name);
                     Assert.Equal("application/octet-stream", asset.ContentType);
@@ -183,49 +197,49 @@ namespace TestDeployment
 
                 releaseUpdate.Draft = false;
 
-                release = GitHub.Release.Update(repo, release, releaseUpdate);
+                release = GitHub.Releases.Update(repo, release, releaseUpdate);
 
                 Assert.False(release.Draft);
                 Assert.NotNull(release.PublishedAt);
 
                 // List all releases to ensure that new release is included:
 
-                var releaseList = GitHub.Release.List(repo);
+                var releaseList = GitHub.Releases.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the new release:
 
-                var fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                var fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.NotNull(fetchedRelease);
                 Assert.False(fetchedRelease.Draft);
 
-                var assertUri = GitHub.Release.GetAssetUri(release, asset);
+                var assertUri = GitHub.Releases.GetAssetUri(release, asset);
                 var assetText = httpClient.GetAsync(assertUri).Result.Content.ReadAsStringAsync().Result;
 
                 Assert.Equal("test asset contents", assetText);
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
 
                 // List all releases to ensure that the new release is no longer present:
 
-                releaseList = GitHub.Release.List(repo);
+                releaseList = GitHub.Releases.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
-                fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.Null(fetchedRelease);
             }
         }
 
         [Fact]
-        public void EndToEnd_WithDefaults()
+        public async Task EndToEnd_WithDefaults()
         {
             var tagName = Guid.NewGuid().ToString("d");
 
@@ -236,7 +250,7 @@ namespace TestDeployment
 
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName);
+                var release = GitHub.Releases.Create(repo, tagName);
 
                 Assert.Null(release.Body);
                 Assert.False(release.Draft);
@@ -244,11 +258,17 @@ namespace TestDeployment
                 Assert.Empty(release.Assets);
                 Assert.NotNull(release.PublishedAt);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // List all releases to ensure that new release is included:
 
-                var releaseList = GitHub.Release.List(repo);
+                var releaseList = GitHub.Releases.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Adding an asset for published releases should fail:
 
@@ -261,7 +281,7 @@ namespace TestDeployment
                         {
                             File.WriteAllText(tempFile.Path, "test asset contents");
 
-                            asset = GitHub.Release.UploadAsset(repo, release, tempFile.Path, "test-asset.dat");
+                            asset = GitHub.Releases.UploadAsset(repo, release, tempFile.Path, "test-asset.dat");
 
                             Assert.Equal("test-asset.dat", asset.Name);
                             Assert.Equal("application/octet-stream", asset.ContentType);
@@ -270,7 +290,7 @@ namespace TestDeployment
 
                 // Fetch the new release:
 
-                var fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                var fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.NotNull(fetchedRelease);
                 Assert.False(fetchedRelease.Draft);
@@ -278,24 +298,30 @@ namespace TestDeployment
 
                 // Delete the release:
 
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
+
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
 
                 // List all releases to ensure that the new release is no longer present:
 
-                releaseList = GitHub.Release.List(repo);
+                releaseList = GitHub.Releases.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Fetch the release to verify that it's no longer present:
 
-                fetchedRelease = GitHub.Release.Get(repo, release.TagName);
+                fetchedRelease = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.Null(fetchedRelease);
             }
         }
 
         [Fact]
-        public void Delete_Draft()
+        public async void Delete_Draft()
         {
             // Verify that we can list and delete draft releases.
 
@@ -305,7 +331,7 @@ namespace TestDeployment
             {
                 // Create a draft release:
 
-                var release = GitHub.Release.Create(repo, tagName);
+                var release = GitHub.Releases.Create(repo, tagName);
 
                 Assert.Null(release.Body);
                 Assert.False(release.Draft);
@@ -313,28 +339,46 @@ namespace TestDeployment
                 Assert.Empty(release.Assets);
                 Assert.NotNull(release.PublishedAt);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // List all releases to ensure that new release is included:
 
-                var releaseList = GitHub.Release.List(repo);
+                var releaseList = GitHub.Releases.List(repo);
 
-                Assert.NotNull(releaseList.SingleOrDefault(r => r.Id == release.Id));
+                Assert.NotNull(releaseList.FirstOrDefault(r => r.Id == release.Id));
 
                 // Also confirm that we can fetch the draft release.
 
-                release = GitHub.Release.Get(repo, release.TagName);
+                release = GitHub.Releases.Get(repo, release.TagName);
 
                 Assert.NotNull(release);
 
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
+
                 // Delete the draft release.
 
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
+
+                // $hack(jefflill):
+                //
+                // It can take some time for release operations to actually completed.
+
+                await Task.Delay(releaseDelay);
 
                 // Confirm that the release is gone.
 
-                releaseList = GitHub.Release.List(repo);
+                releaseList = GitHub.Releases.List(repo);
 
-                Assert.Null(releaseList.SingleOrDefault(r => r.Id == release.Id));
-                Assert.Null(GitHub.Release.Get(repo, release.TagName));
+                Assert.Null(releaseList.FirstOrDefault(r => r.Id == release.Id));
+                Assert.Null(GitHub.Releases.Get(repo, release.TagName));
             }
         }
 
@@ -353,7 +397,7 @@ namespace TestDeployment
             {
                 // Create the draft release:
 
-                var release1 = GitHub.Release.Create(repo, tagName1, draft: true);
+                var release1 = GitHub.Releases.Create(repo, tagName1, draft: true);
 
                 Assert.Null(release1.Body);
                 Assert.True(release1.Draft);
@@ -363,7 +407,7 @@ namespace TestDeployment
 
                 // Create the published release:
 
-                var release2 = GitHub.Release.Create(repo, tagName2, draft: false);
+                var release2 = GitHub.Releases.Create(repo, tagName2, draft: false);
 
                 Assert.Null(release2.Body);
                 Assert.False(release2.Draft);
@@ -373,15 +417,15 @@ namespace TestDeployment
 
                 // Exercise Find()
 
-                Assert.Empty(GitHub.Release.Find(repo, release => release.Name == null));
+                Assert.Empty(GitHub.Releases.Find(repo, release => release.Name == null));
 
-                var match = GitHub.Release.Find(repo, release => release.Draft).SingleOrDefault(release => release.TagName == tagName1);
+                var match = GitHub.Releases.Find(repo, release => release.Draft).FirstOrDefault(release => release.TagName == tagName1);
 
                 Assert.NotNull(match);
                 Assert.Equal(tagName1, match.TagName);
                 Assert.True(match.Draft);
 
-                match = GitHub.Release.Find(repo, release => !release.Draft).SingleOrDefault(release => release.TagName == tagName2);
+                match = GitHub.Releases.Find(repo, release => !release.Draft).FirstOrDefault(release => release.TagName == tagName2);
 
                 Assert.NotNull(match);
                 Assert.Equal(tagName2, match.TagName);
@@ -395,7 +439,7 @@ namespace TestDeployment
             // Upload file as a multi-part release and verify that we can download it.
 
             var tagName = Guid.NewGuid().ToString("d");
-            var release = GitHub.Release.Create(repo, tagName);
+            var release = GitHub.Releases.Create(repo, tagName);
 
             try
             {
@@ -466,7 +510,7 @@ namespace TestDeployment
             }
             finally
             {
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
             }
         }
 
@@ -477,7 +521,7 @@ namespace TestDeployment
             // that downloading it again completes the download.
 
             var tagName = Guid.NewGuid().ToString("d");
-            var release = GitHub.Release.Create(repo, tagName);
+            var release = GitHub.Releases.Create(repo, tagName);
 
             try
             {
@@ -504,8 +548,8 @@ namespace TestDeployment
                         Assert.Equal(download.Md5, CryptoHelper.ComputeMD5String(stream));
                     }
 
-                    // Set the file size to zero and verify that downloading it again downloads
-                    // all of the parts.
+                    // Set the file size to zero and verify that downloading it again 
+                    // actually results in the entire file being downloaded..
                     //
                     // Note that we're using the progress action to count how many parts were downloaded.
 
@@ -592,7 +636,7 @@ namespace TestDeployment
             }
             finally
             {
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
             }
         }
 
@@ -603,7 +647,7 @@ namespace TestDeployment
             // verify that we detect the problem when downloading.
 
             var tagName = Guid.NewGuid().ToString("d");
-            var release = GitHub.Release.Create(repo, tagName);
+            var release = GitHub.Releases.Create(repo, tagName);
 
             try
             {
@@ -629,7 +673,7 @@ namespace TestDeployment
             }
             finally
             {
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
             }
         }
 
@@ -641,7 +685,7 @@ namespace TestDeployment
             // data is longer than we expected.
 
             var tagName = Guid.NewGuid().ToString("d");
-            var release = GitHub.Release.Create(repo, tagName);
+            var release = GitHub.Releases.Create(repo, tagName);
 
             try
             {
@@ -667,7 +711,7 @@ namespace TestDeployment
             }
             finally
             {
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
             }
         }
 
@@ -679,7 +723,7 @@ namespace TestDeployment
             // data is shorter than we expected.
 
             var tagName = Guid.NewGuid().ToString("d");
-            var release = GitHub.Release.Create(repo, tagName);
+            var release = GitHub.Releases.Create(repo, tagName);
 
             try
             {
@@ -705,7 +749,7 @@ namespace TestDeployment
             }
             finally
             {
-                GitHub.Release.Remove(repo, release);
+                GitHub.Releases.Remove(repo, release);
             }
         }
 
@@ -745,7 +789,7 @@ namespace TestDeployment
                     }
                 }
 
-                return GitHub.Release.UploadMultipartAsset(repo, release, tempFile.Path, version: version, name: name, maxPartSize: partSize);
+                return GitHub.Releases.UploadMultipartAsset(repo, release, tempFile.Path, version: version, name: name, maxPartSize: partSize);
             }
         }
     }

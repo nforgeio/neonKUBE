@@ -23,28 +23,45 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
+using Neon.Tasks;
+
 using NeonDashboard.Shared.Components;
 
 namespace NeonDashboard.Pages
 {
+    [Authorize]
     public partial class Index : PageBase
     {
+        /// <summary>
+        /// The id of the current selected dashboard.
+        /// </summary>
         [Parameter]
         public string CurrentDashboard { get; set; }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public Index()
         {
         }
 
+        /// <inheritdoc/>
         protected override void OnInitialized()
         {
             AppState.OnDashboardChange += StateHasChanged;
         }
+
+        /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
-            if (!AppState.DashboardFrames.Any(d => d.Name == CurrentDashboard))
+            if (string.IsNullOrEmpty(CurrentDashboard))
             {
-                var dashboard = AppState.Dashboards.Where(d => d.Name == CurrentDashboard).FirstOrDefault();
+                NavigationManager.NavigateTo("neonkube", true);
+            }
+
+            if (!AppState.DashboardFrames.Any(d => d.Id == CurrentDashboard && d.Id != "neonkube"))
+            {
+                var dashboard = AppState.Dashboards.Where(d => d.Id == CurrentDashboard).FirstOrDefault();
                 if (dashboard != null)
                 {
                     AppState.DashboardFrames.Add(dashboard);
@@ -53,9 +70,14 @@ namespace NeonDashboard.Pages
 
             AppState.CurrentDashboard = CurrentDashboard;
 
-            if (!string.IsNullOrEmpty(CurrentDashboard))
+            if (!string.IsNullOrEmpty(CurrentDashboard) && httpContextAccessor.HttpContext.Request.HttpContext.WebSockets.IsWebSocketRequest)
             {
-                NeonDashboardService.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
+                PageTitle = $"{AppState.NeonDashboardService.ClusterInfo.Name} - {AppState.GetCurrentDashboard(CurrentDashboard).Name}";
+                Program.Service.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();
+            }
+            else
+            {
+                PageTitle = $"{AppState.NeonDashboardService.ClusterInfo.Name}";
             }
 
             AppState.NotifyDashboardChanged();

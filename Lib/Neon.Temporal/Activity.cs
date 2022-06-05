@@ -120,7 +120,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task RecordHeartbeatAsync(byte[] details = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -147,7 +147,7 @@ namespace Neon.Temporal
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<bool> HasLastHeartbeatDetailsAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -175,7 +175,7 @@ namespace Neon.Temporal
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<byte[]> GetLastHeartbeatDetailsAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -237,7 +237,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<bool> HeartbeatAsync(Func<byte[]> detailsFunc = null, TimeSpan? interval = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var nextInterval = interval.HasValue ? interval.Value : TimeSpan.FromTicks(Task.HeartbeatTimeout.Ticks / 2);
 

@@ -51,5 +51,26 @@ namespace Neon.XenServer
         /// Holds the raw host parameters.
         /// </summary>
         public IDictionary<string, string> Params { get; internal set; }
+
+        /// <summary>
+        /// <para>
+        /// Returns the number of cores usable by virtual machines.
+        /// </para>
+        /// <note>
+        /// This includes all usable cores and includes cores that are pinned to
+        /// specific virtual machines.
+        /// </note>
+        /// </summary>
+        public int UsableCores { get; set; }
+
+        /// <summary>
+        /// Returns the bytes of memory available for new virtual machines.
+        /// </summary>
+        public long AvailableMemory { get; internal set; }
+
+        /// <summary>
+        /// Returns the bytes of disk available for new virtual machines.
+        /// </summary>
+        public long AvailableDisk { get; internal set; }
     }
 }

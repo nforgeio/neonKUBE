@@ -178,20 +178,22 @@ SetVersion Neon.Xunit.Temporal      $libraryVersion
 SetVersion Neon.Xunit.YugaByte      $libraryVersion
 SetVersion Neon.YugaByte            $libraryVersion
 
-# SetVersion Neon.Kube                $kubeVersion
-# SetVersion Neon.Kube.Aws            $kubeVersion
-# SetVersion Neon.Kube.Azure          $kubeVersion
-# SetVersion Neon.Kube.BareMetal      $kubeVersion
-# SetVersion Neon.Kube.Google         $kubeVersion
-# SetVersion Neon.Kube.Hosting        $kubeVersion
-# SetVersion Neon.Kube.HyperV         $kubeVersion
-# SetVersion Neon.Kube.HyperVLocal    $kubeVersion
-# SetVersion Neon.Kube.Models         $kubeVersion
-# SetVersion Neon.Kube.Operator       $kubeVersion
-# SetVersion Neon.Kube.Resources      $kubeVersion
-# SetVersion Neon.Kube.Setup          $kubeVersion
-# SetVersion Neon.Kube.XenServer      $kubeVersion
-# SetVersion Neon.Kube.Xunit          $kubeVersion
+# SetVersion Neon.Kube                      $kubeVersion
+# SetVersion Neon.Kube.Aws                  $kubeVersion
+# SetVersion Neon.Kube.Azure                $kubeVersion
+# SetVersion Neon.Kube.BareMetal            $kubeVersion
+# SetVersion Neon.Kube.DesktopServer        $kubeVersion
+# SetVersion Neon.Kube.Google               $kubeVersion
+# SetVersion Neon.Kube.GrpcProto            $kubeVersion
+# SetVersion Neon.Kube.Hosting              $kubeVersion
+# SetVersion Neon.Kube.HyperV               $kubeVersion
+# SetVersion Neon.Kube.Models               $kubeVersion
+# SetVersion Neon.Kube.Operator             $kubeVersion
+# SetVersion Neon.Kube.ResourceDefinitions  $kubeVersion
+# SetVersion Neon.Kube.Resources            $kubeVersion
+# SetVersion Neon.Kube.Setup                $kubeVersion
+# SetVersion Neon.Kube.XenServer            $kubeVersion
+# SetVersion Neon.Kube.Xunit                $kubeVersion
 
 # Build and publish the projects.
 
@@ -222,20 +224,22 @@ Publish Neon.Xunit.Temporal         $libraryVersion
 Publish Neon.Xunit.YugaByte         $libraryVersion
 Publish Neon.YugaByte               $libraryVersion
 
-# Publish Neon.Kube                   $kubeVersion
-# Publish Neon.Kube.Aws               $kubeVersion
-# Publish Neon.Kube.Azure             $kubeVersion
-# Publish Neon.Kube.BareMetal         $kubeVersion
-# Publish Neon.Kube.Google            $kubeVersion
-# Publish Neon.Kube.Hosting           $kubeVersion
-# Publish Neon.Kube.HyperV            $kubeVersion
-# Publish Neon.Kube.HyperVLocal       $kubeVersion
-# Publish Neon.Kube.Models            $kubeVersion
-# Publish Neon.Kube.Operator          $kubeVersion
-# Publish Neon.Kube.Resources         $kubeVersion
-# Publish Neon.Kube.Setup             $kubeVersion
-# Publish Neon.Kube.XenServer         $kubeVersion
-# Publish Neon.Kube.Xunit             $kubeVersion
+# Publish Neon.Kube                         $kubeVersion
+# Publish Neon.Kube.Aws                     $kubeVersion
+# Publish Neon.Kube.Azure                   $kubeVersion
+# Publish Neon.Kube.BareMetal               $kubeVersion
+# Publish Neon.Kube.DesktopServer           $kubeVersion
+# Publish Neon.Kube.Google                  $kubeVersion
+# Publish Neon.Kube.GrpcProto               $kubeVersion
+# Publish Neon.Kube.Hosting                 $kubeVersion
+# Publish Neon.Kube.HyperV                  $kubeVersion
+# Publish Neon.Kube.Models                  $kubeVersion
+# Publish Neon.Kube.Operator                $kubeVersion
+# Publish Neon.Kube.ResourceDefinitions     $kubeVersion
+# Publish Neon.Kube.Resources               $kubeVersion
+# Publish Neon.Kube.Setup                   $kubeVersion
+# Publish Neon.Kube.XenServer               $kubeVersion
+# Publish Neon.Kube.Xunit                   $kubeVersion
 
 # Remove all of the generated nuget files so these don't accumulate.
 

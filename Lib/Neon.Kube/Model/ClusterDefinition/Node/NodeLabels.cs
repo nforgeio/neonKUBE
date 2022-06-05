@@ -177,8 +177,8 @@ namespace Neon.Kube
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + "storage.ephemral";
 
         /// <summary>
-        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node primary drive 
-        /// storage capacity in bytes (<see cref="ByteUnits"/>).
+        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node OS drive 
+        /// storage capacity in bytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "StorageSize", ApplyNamingConventions = false)]
@@ -450,6 +450,34 @@ namespace Neon.Kube
         [DefaultValue(false)]
         public bool NeonSystemRegistry { get; set; } = false;
 
+        /// <summary>
+        /// <b>neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates the user has specified
+        /// that Minio should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Minio", Required = Required.Default)]
+        [YamlMember(Alias = "minio", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Minio { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/system.minio-internal</b> [<c>bool</c>]: Indicates that Minio
+        /// will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MinioInternal", Required = Required.Default)]
+        [YamlMember(Alias = "minioInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool MinioInternal { get; set; } = false;
+
+        /// <summary>
+        /// Reserved label name for <see cref="Minio"/>.
+        /// </summary>
+        public const string LabelMinio = ClusterDefinition.ReservedLabelPrefix + "system.minio";
+
+        /// <summary>
+        /// Reserved label name for <see cref="MinioInternal"/>.
+        /// </summary>
+        public const string LabelMinioInternal = ClusterDefinition.ReservedLabelPrefix + "system.minio-internal";
+
         //---------------------------------------------------------------------
         // Define the logging related labels.
 
@@ -474,6 +502,16 @@ namespace Neon.Kube
         public const string LabelMetricsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics-internal";
 
         /// <summary>
+        /// Reserved label name for <see cref="Traces"/>.
+        /// </summary>
+        public const string LabelTraces = ClusterDefinition.ReservedLabelPrefix + "monitor.traces";
+
+        /// <summary>
+        /// Reserved label name for <see cref="TracesInternal"/>.
+        /// </summary>
+        public const string LabelTracesInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.traces-internal";
+
+        /// <summary>
         /// <b>neonkube.io/monitor.logs</b> [<c>bool</c>]: Indicates the user has 
         /// specified that Loki logging should be deployed to the labeled node.  This 
         /// defaults to <c>false</c>.
@@ -494,7 +532,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>neonkube.io/monitor.metrics</b> [<c>bool</c>]: Indicates the user has specified
-        /// that Cortex metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// that Mimir metrics should be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
         [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
@@ -502,13 +540,31 @@ namespace Neon.Kube
         public bool Metrics { get; set; } = false;
 
         /// <summary>
-        /// <b>neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Cortex
+        /// <b>neonkube.io/monitor.metrics-internal</b> [<c>bool</c>]: Indicates that Mirmir
         /// metrics will be deployed to the labeled node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MetricsInternal", Required = Required.Default)]
         [YamlMember(Alias = "metricsInternal", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool MetricsInternal { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/monitor.traces</b> [<c>bool</c>]: Indicates the user has specified
+        /// that Tempo traces should be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
+        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Traces { get; set; } = false;
+
+        /// <summary>
+        /// <b>neonkube.io/monitor.traces-internal</b> [<c>bool</c>]: Indicates that Tempo
+        /// traces will be deployed to the labeled node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TracesInternal", Required = Required.Default)]
+        [YamlMember(Alias = "tracesInternal", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool TracesInternal { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -557,12 +613,12 @@ namespace Neon.Kube
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,             Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,        Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,          Node.Azure.DiskSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,          ByteUnits.Parse(Node.Azure.DiskSize)));
                 }
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageSize,                 StorageSize));
+                list.Add(new KeyValuePair<string, object>(LabelStorageSize,                 ByteUnits.Parse(StorageSize)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,                StorageLocal));
                 list.Add(new KeyValuePair<string, object>(LabelStorageHDD,                  NeonHelper.ToBoolString(StorageHDD)));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,            NeonHelper.ToBoolString(StorageRedundant)));
@@ -587,6 +643,12 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
                 list.Add(new KeyValuePair<string, object>(LabelMetricsInternal,             NeonHelper.ToBoolString(MetricsInternal)));
+
+                list.Add(new KeyValuePair<string, object>(LabelTraces,                      NeonHelper.ToBoolString(Traces)));
+                list.Add(new KeyValuePair<string, object>(LabelTracesInternal,              NeonHelper.ToBoolString(TracesInternal)));
+
+                list.Add(new KeyValuePair<string, object>(LabelMinio,                       NeonHelper.ToBoolString(Minio)));
+                list.Add(new KeyValuePair<string, object>(LabelMinioInternal,               NeonHelper.ToBoolString(MinioInternal)));
 
                 return list;
             }
@@ -645,7 +707,7 @@ namespace Neon.Kube
                 switch (label.Key)
                 {
                     case LabelAddress:                      Node.Address = label.Value; break;
-                    case LabelRole:                         Node.Role = label.Value; break;
+                    case LabelRole:                         Node.Role    = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
                     case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEbsStorage = NeonHelper.ParseBool(label.Value); }); break; 
 
@@ -660,13 +722,13 @@ namespace Neon.Kube
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
-                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageType>(label.Value); }); break;
+                            case LabelAzureVmSize:          Node.Azure.VmSize   = label.Value; break;
                             case LabelAzureDriveSize:       Node.Azure.DiskSize = label.Value; break;
+                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageType>(label.Value); }); break;
                         }
                         break;
 
-                    case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = label.Value; }); break;
+                    case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = ByteUnits.Parse(label.Value).ToString(); }); break;
                     case LabelStorageLocal:                 Node.Labels.StorageLocal            = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageHDD:                   Node.Labels.StorageHDD              = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageRedundant:             Node.Labels.StorageRedundant        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
@@ -683,8 +745,7 @@ namespace Neon.Kube
                     case LabelDatacenter:
                     case LabelEnvironment:
 
-                        // These labels don't currently map to node properties so
-                        // we'll ignore them.
+                        // These labels don't currently map to node properties so we'll ignore them.
 
                         break;
 
@@ -703,7 +764,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -724,7 +784,7 @@ namespace Neon.Kube
             //
             //      1. Must start or end with an alphnumeric character.
             //      2. May include alphanumerics, dashes, underscores or dots
-            //         between the begining and ending characters.
+            //         between the beginning and ending characters.
             //      3. Values can be empty.
             //      4. Maximum length is 63 characters.
 

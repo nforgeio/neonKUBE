@@ -5,7 +5,19 @@
 
 @inherits LayoutComponentBase
 
-<div class="top-row px-4">
+<div class="mainlayout" >
+  <div class="container">
+      <main class="main">
+              @Body
+      </main>
+       <div class="bottom">
+          <BottomMenu />
+      </div>
+  </div>
+
+</div>
+
+<div class="top-row px-4" style="display: none">
     <AuthorizeView>
         <Authorized>
             <form method="get" action="logout">
@@ -17,20 +29,4 @@
         </NotAuthorized>
     </AuthorizeView>
     <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-</div> 
-
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <div class="main">
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <div class="content px-4">
-            @Body
-        </div>
-    </div>
-</div>
+  </div> 

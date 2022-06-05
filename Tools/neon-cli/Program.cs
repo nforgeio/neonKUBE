@@ -31,6 +31,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon;
@@ -55,21 +58,21 @@ namespace NeonCli
         /// The program version.
         /// </summary>
         public const string Version =
-#if ENTERPRISE
+#if PREMIUM
             Neon.Cloud.Build.NeonDesktopVersion;
 #else
             Neon.Kube.KubeVersions.Kubernetes;
 #endif
 
         /// <summary>
-        /// Returns <c>true</c> if this is the enterprise <b>neon-cli</b> build.
+        /// Returns <c>true</c> if this is the premium <b>neon-cli</b> build.
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// neonKUBE and neonCLOUD (enterprise) GitHub repositories.
+        /// neonKUBE and neonCLOUD (premium) GitHub repositories.
         /// </remarks>
-        public const bool IsEnterprise =
-#if ENTERPRISE
+        public const bool IsPremium =
+#if PREMIUM
             true;
 #else
             false;
@@ -77,11 +80,11 @@ namespace NeonCli
 
         /// <summary>
         /// Returns the program name for printing help.  This will be <b>"neon"</b> for the community
-        /// version and <b>"neon enterprise"</b> for the enterprise version.
+        /// version and <b>"neon (premium)"</b> for the premium version.
         /// </summary>
         public const string Name =
-#if ENTERPRISE
-            "neon enterprise";
+#if PREMIUM
+            "neon (premium)";
 #else
             "neon";
 #endif
@@ -132,14 +135,26 @@ NEON KUBECTL COMMANDS:
 
     neon apply -f my-manifest.yaml
 
-NEON CLUSTER MANAGEMENT COMMANDS:
+NEON CLUSTER LIFE-CYCLE COMMANDS:
 
-    neon cluster prepare    [CLUSTER-DEF]
-    neon cluster remove
-    neon cluster setup      [CLUSTER-DEF]
-    neon cluster start      USER@CLUSTER[/NAMESPACE]
-    neon cluster stop       USER@CLUSTER[/NAMESPACE] [--turnoff]
+    neon cluster check
+    neon cluster dashboard
+    neon cluster health
+    neon cluster info
+    neon cluster islocked
+    neon cluster lock
+    neon cluster prepare    CLUSTER-DEF
+    neon cluster pause      [OPTIONS]
+    neon cluster remove     [OPTIONS]
+    neon cluster rm         [OPTIONS]
+    neon cluster reset      [OPTIONS]
+    neon cluster setup      [OPTIONS] root@CLUSTER-NAME
+    neon cluster space      [SPACE-NAME] [--reset]
+    neon cluster start
+    neon cluster stop       [OPTIONS]
+    neon cluster unlock
     neon cluster verify     [CLUSTER-DEF]
+
     neon login              COMMAND
     neon logout
 
@@ -175,25 +190,25 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             PowerShell.PwshPath = KubeHelper.PwshPath;
 
-            // Ensure that all of the non-enterprise cluster hosting manager 
+            // Ensure that all of the non-premium cluster hosting manager 
             // implementations are loaded.
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
-
-#if ENTERPRISE
-            // Configure the enterprise service depedencies.
-
-            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHostingLoader>(new EnterpriseHostingLoader());
-            NeonHelper.ServiceContainer.AddSingleton<IEnterpriseHelper>(new EnterpriseHelper());
-#endif
 
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
-            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that this
-            // will download them when necessary.
+            // Set the clusterspace mode when necessary.
+
+            if (KubeHelper.CurrentClusterSpace != null)
+            {
+                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
+            }
+
+            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
+            // will download them when they're not already present.
 
             KubectlPath = GetKubectlPath();
             HelmPath    = GetHelmPath();
@@ -239,7 +254,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 // Short-circuit the help command.
 
-                if (CommandLine.Arguments[0] == "help")
+                if (CommandLine.Arguments.ElementAtOrDefault(0) == "help")
                 {
                     CommandLine = CommandLine.Shift(1);
                     command     = GetCommand(CommandLine, commands);
@@ -264,7 +279,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 command = GetCommand(CommandLine, commands);
 
-                if (CommandLine.Arguments[0] == "tool" && command == null)
+                if (CommandLine.Arguments.ElementAtOrDefault(0) == "tool" && command == null)
                 {
                     // Special case invalid command detection for [tool] commands.
 
@@ -466,7 +481,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
             {
                 while (true)
                 {
-                    Console.WriteLine();
                     Console.Write($"{prompt} [y/n]: ");
 
                     var key = Console.ReadKey().KeyChar;

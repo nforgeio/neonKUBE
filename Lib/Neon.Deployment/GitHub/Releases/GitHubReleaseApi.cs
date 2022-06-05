@@ -359,7 +359,7 @@ namespace Neon.Deployment
             var repoPath = GitHubRepoPath.Parse(repo);
             var client   = GitHub.CreateGitHubClient(repo);
 
-            client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).Wait();
+            client.Repository.Release.Delete(repoPath.Owner, repoPath.Repo, release.Id).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -438,7 +438,7 @@ namespace Neon.Deployment
                         part.Md5            = CryptoHelper.ComputeMD5String(partStream);
                         partStream.Position = 0;
 
-                        var asset = GitHub.Release.UploadAsset(repo, release, partStream, $"part-{partNumber:0#}");
+                        var asset = GitHub.Releases.UploadAsset(repo, release, partStream, $"part-{partNumber:0#}");
 
                         assetPartMap.Add(new Tuple<ReleaseAsset, DownloadPart>(asset, part));
                     }
@@ -460,14 +460,14 @@ namespace Neon.Deployment
 
                 releaseUpdate.Draft = false;
 
-                release = GitHub.Release.Update(repo, release, releaseUpdate);
+                release = GitHub.Releases.Update(repo, release, releaseUpdate);
 
                 // Now that the release has been published, we can go back and fill in
                 // the asset URIs for each of the download parts.
 
                 foreach (var item in assetPartMap)
                 {
-                    item.Item2.Uri = GitHub.Release.GetAssetUri(release, item.Item1);
+                    item.Item2.Uri = GitHub.Releases.GetAssetUri(release, item.Item1);
                 }
 
                 // Write the MD5 file unless disabled.

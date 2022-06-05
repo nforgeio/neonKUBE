@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "loki.queryFrontendFullname" . }}
+  labels:
+    {{- include "loki.queryFrontendLabels" . | nindent 4 }}
+    {{- with .Values.queryFrontend.serviceLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-metrics
+      port: 3100
+      targetPort: http-metrics
+      protocol: TCP
+    - name: grpc
+      port: 9095
+      targetPort: grpc
+      protocol: TCP
+    - name: grpclb
+      port: 9096
+      targetPort: grpc
+      protocol: TCP
+  selector:
+    {{- include "loki.queryFrontendSelectorLabels" . | nindent 4 }}

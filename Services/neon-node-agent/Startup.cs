@@ -4,6 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;
+using System.Net.Http;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using Neon.Kube;
+
 using KubeOps.Operator;
+using k8s;
 
 namespace NeonNodeAgent
 {
@@ -27,11 +31,12 @@ namespace NeonNodeAgent
         public void ConfigureServices(IServiceCollection services)
         {
             var operatorBuilder = services
+                .AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
                 .AddKubernetesOperator(
                     settings =>
                     {
                         settings.EnableAssemblyScanning = true;
-                        settings.EnableLeaderElection   = false;    // node agents run in parallel to manage their cluster nodes
+                        settings.EnableLeaderElection   = false;    // ResourceManager is managing leader election
                     });
 
             Program.AddResourceAssemblies(operatorBuilder);

@@ -45,7 +45,7 @@ namespace Neon.Common
         /// </para>
         /// <para>
         /// For Windows, the <see cref="Process.Start(ProcessStartInfo)"/> method does not 
-        /// search the PATH for the application.  This method attempts to convert the program
+        /// search the PATH for the application so this method attempts to convert the program
         /// file name into a fully qualified path by actually searching the PATH.
         /// </para>
         /// <para>
@@ -236,7 +236,15 @@ namespace Neon.Common
         /// <summary>
         /// Forks a child process that will run in parallel with the current process.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <returns>The <see cref="Process"/> information.</returns>
         public static Process Fork(string path, params object[] args)
@@ -263,7 +271,15 @@ namespace Neon.Common
         /// Starts a process with an array of arguments to run an executable file and
         /// then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -282,6 +298,11 @@ namespace Neon.Common
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
         /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -293,15 +314,31 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
+        public static int Execute(
+            string                      path, 
+            object[]                    args, 
+            TimeSpan?                   timeout = null, 
+            Process                     process = null, 
+            string                      workingDirectory = null, 
+            Dictionary<string, string>  environmentVariables = null, 
+            TextReader                  input = null, 
+            Action<Process>             processCallback = null)
         {
-            return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
+            return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, processCallback: processCallback);
         }
 
         /// <summary>
         /// Starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -321,6 +358,11 @@ namespace Neon.Common
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
         /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -331,7 +373,15 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
+        public static int Execute(
+            string                      path, 
+            string                      args, 
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null, 
+            string                      workingDirectory     = null, 
+            Dictionary<string, string>  environmentVariables = null,
+            TextReader                  input                = null,
+            Action<Process>             processCallback      = null)
         {
             var processInfo   = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var killOnTimeout = process == null;
@@ -412,6 +462,7 @@ namespace Neon.Common
                     };
 
                 process.Start();
+                processCallback?.Invoke(process);
                 process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
 
@@ -468,7 +519,15 @@ namespace Neon.Common
         /// Asynchronously starts a process to run an executable file with an array of
         /// arguments and then and waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -488,6 +547,11 @@ namespace Neon.Common
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
         /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
         /// <remarks>
@@ -498,17 +562,33 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
+        public static async Task<int> ExecuteAsync(
+            string                      path, 
+            object[]                    args, 
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null, 
+            string                      workingDirectory     = null, 
+            Dictionary<string, string>  environmentVariables = null, 
+            TextReader                  input                = null, 
+            Action<Process>             processCallback      = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
-            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input);
+            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, processCallback: processCallback);
         }
 
         /// <summary>
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -527,6 +607,11 @@ namespace Neon.Common
         /// <param name="input">
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
         /// </param>
         /// <returns>The process exit code.</returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -538,11 +623,19 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null, string workingDirectory = null, Dictionary<string, string> environmentVariables = null, TextReader input = null)
+        public static async Task<int> ExecuteAsync(
+            string path, 
+            string args, 
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null, 
+            string                      workingDirectory     = null, 
+            Dictionary<string, string>  environmentVariables = null, 
+            TextReader                  input                = null, 
+            Action<Process>             processCallback      = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
-            return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory, environmentVariables, input));
+            return await Task.Run(() => Execute(path, args, timeout, process, workingDirectory, environmentVariables, input, processCallback: processCallback));
         }
 
         /// <summary>
@@ -616,7 +709,15 @@ namespace Neon.Common
         /// Starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -641,6 +742,11 @@ namespace Neon.Common
         /// <param name="outputEncoding">
         /// Optionally specifies the expected standard output/error encoding.  This defaults to 
         /// <c>null</c> which sets the default system codepage.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -671,16 +777,25 @@ namespace Neon.Common
             Action<string>              outputAction         = null,
             Action<string>              errorAction          = null,
             TextReader                  input                = null,
-            Encoding                    outputEncoding       = null)
+            Encoding                    outputEncoding       = null,
+            Action<Process>             processCallback      = null)
         {
-            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, outputAction, errorAction, input, outputEncoding);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, outputAction, errorAction, input, outputEncoding, processCallback: processCallback);
         }
 
         /// <summary>
         /// Starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -705,6 +820,11 @@ namespace Neon.Common
         /// <param name="outputEncoding">
         /// Optionally specifies the expected standard output/error encoding.  This defaults to 
         /// <c>null</c> which sets the default system codepage.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -735,7 +855,8 @@ namespace Neon.Common
             Action<string>              outputAction         = null,
             Action<string>              errorAction          = null,
             TextReader                  input                = null,
-            Encoding                    outputEncoding       = null)
+            Encoding                    outputEncoding       = null,
+            Action<Process>             processCallback      = null)
         {       
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var externalProcess = process != null;
@@ -781,6 +902,7 @@ namespace Neon.Common
                 process.EnableRaisingEvents = true;
 
                 process.Start();
+                processCallback?.Invoke(process);
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
@@ -846,7 +968,15 @@ namespace Neon.Common
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Maximum time to wait for the process to complete or <c>null</c> to wait
@@ -869,6 +999,11 @@ namespace Neon.Common
         /// <param name="outputEncoding">
         /// Optionally specifies the expected standard output/error encoding.  This defaults to 
         /// <c>null</c> which sets the default system codepage.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
         /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
@@ -891,18 +1026,27 @@ namespace Neon.Common
             TimeSpan?                   timeout              = null, 
             Process                     process              = null,
             TextReader                  input                = null,
-            Encoding                    outputEncoding       = null)
+            Encoding                    outputEncoding       = null,
+            Action<Process>             processCallback      = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
-            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, outputEncoding);
+            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, outputEncoding, processCallback: processCallback);
         }
 
         /// <summary>
         /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
-        /// <param name="path">Path to the executable file.</param>
+        /// <param name="path">
+        /// <para>
+        /// Name or path to the executable file.
+        /// </para>
+        /// <note>
+        /// The <c>PATH</c> environment variable will be searched for the executable file 
+        /// when no path is specified.
+        /// </note>
+        /// </param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <param name="timeout">
         /// Maximum time to wait for the process to complete or <c>null</c> to wait
@@ -926,6 +1070,11 @@ namespace Neon.Common
         /// Optionally specifies the expected standard output/error encoding.  This defaults to 
         /// <c>null</c> which sets the default system codepage.
         /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
         /// <returns>
         /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -947,11 +1096,12 @@ namespace Neon.Common
             string                      workingDirectory     = null,
             Dictionary<string, string>  environmentVariables = null,
             TextReader                  input                = null,
-            Encoding                    outputEncoding       = null)
+            Encoding                    outputEncoding       = null,
+            Action<Process>             processCallback      = null)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
-            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input, outputEncoding: outputEncoding));
+            return await Task.Run(() => ExecuteCapture(path, args, timeout, process, workingDirectory, environmentVariables, input: input, outputEncoding: outputEncoding, processCallback: processCallback));
         }
 
         /// <summary>
@@ -992,7 +1142,6 @@ namespace Neon.Common
             {
                 var processStart = new ProcessStartInfo(uri)
                 {
-                    CreateNoWindow = true,
                     UseShellExecute = true
                 };
 
@@ -1000,14 +1149,10 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jefflill): Test this.
-
-                Process.Start("open", uri);
+                Process.Start("open", uri.Replace("&", "^&"));
             }
             else if (IsLinux)
             {
-                // $todo(jefflill): test this.
-
                 Process.Start("xdg-open", uri);
             }
             else

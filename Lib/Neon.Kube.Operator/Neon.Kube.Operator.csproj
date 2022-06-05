@@ -1,28 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <OutputType>Library</OutputType>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>10000.0.298-dev-marcus</Version>
-    <Authors>neonFORGE Team</Authors>
-    <Company>neonFORGE LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
-    <Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-    <PackageIcon>nuget-icon.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>kubernetes</PackageTags>
-    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <AssemblyVersion>0.0.0.0</AssemblyVersion>
-    <FileVersion>0.0.0.0</FileVersion>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<Version>10000.0.1650-dev-jeff</Version>
+		<Authors>neonFORGE Team</Authors>
+		<Company>neonFORGE LLC</Company>
+		<Product>neonKUBE</Product>
+		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>kubernetes</PackageTags>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<AssemblyVersion>0.0.0.0</AssemblyVersion>
+		<FileVersion>0.0.0.0</FileVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -38,30 +39,32 @@
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
 	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-    <None Include="..\nuget-icon.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <Optimize>False</Optimize>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="KubeOps" Version="6.2.1" />
-    <PackageReference Include="prometheus-net" Version="5.0.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KubeOps" Version="6.5.0" />
+		<PackageReference Include="prometheus-net" Version="6.0.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\Neon.Service\Neon.Service.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+		<ProjectReference Include="..\Neon.Service\Neon.Service.csproj" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+	
 </Project>

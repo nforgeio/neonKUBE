@@ -108,17 +108,17 @@ namespace CadenceService
 
                 using (var worker = client.StartWorkerAsync(taskList))
                 {
-                    // Let NeonService know that we're running.
+                    // Indicate that the service is running.
 
                     Log.LogInfo("Ready for work.");
                     await StartedAsync();
-
-                    // Wait for the process terminator to signal that the service is stopping.
-
-                    await Terminator.StopEvent.WaitAsync();
-                    Terminator.ReadyToExit();
                 }
             }
+
+            // Handle termination gracefully.
+
+            await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
 
             return 0;
         }

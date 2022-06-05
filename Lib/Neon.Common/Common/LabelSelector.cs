@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
@@ -33,47 +34,20 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using System.Collections;
 
 namespace Neon.Common
 {
     /// <summary>
-    /// <see cref="LabelSelector{TItem}"/> related options.
-    /// </summary>
-    [Flags]
-    public enum LabelSelectorOptions
-    {
-        /// <summary>
-        /// No options are selected.
-        /// </summary>
-        None = 0x0000,
-
-        /// <summary>
-        /// <para>
-        /// Normally <see cref="LabelSelector{TItem}"/> matches label values using
-        /// case sensitive comparisons.  Use this to make the comparisons case
-        /// insensitive.
-        /// </para>
-        /// <note>
-        /// Label name case sensitivity is determined by the the dictionaries returned
-        /// by the item <see cref="ILabeled.GetLabels()"/> method.
-        /// </note>
-        /// </summary>
-        CaseInsensitiveValues = 0x0001,
-
-        /// <summary>
-        /// <see cref="LabelSelector{TItem}"/> defaults to parsing label names
-        /// and values to ensure that they are Kubernetes compliant.  Use this 
-        /// to disable this so you can use arbitrary labels.
-        /// </summary>
-        UnConstraintedLabels = 0x0002
-    }
-
-    /// <summary>
-    /// Implements a Kubernetes compatible general purpose label based selector mechanism that 
+    /// <para>
+    /// Implements a Kubernetes compatible general purpose label-based selector mechanism that 
     /// can select a set of items from a collection based on the set of labels assigned to each 
-    /// item.  This class supports some simple fixed query methods as well as a simple text 
+    /// item.  This class supports some simple fixed query methods as well as a simple text-based
     /// query language.
+    /// </para>
+    /// <para>
+    /// This is suitable for operations like selecting Kubernetes related items by labels 
+    /// or annotations.
+    /// </para>
     /// </summary>
     /// <typeparam name="TItem">The underlying item type.</typeparam>
     /// <remarks>

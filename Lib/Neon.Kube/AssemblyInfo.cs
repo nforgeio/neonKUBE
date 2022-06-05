@@ -25,6 +25,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Neon.Kube.BareMetal")]
 [assembly: InternalsVisibleTo("Neon.Kube.Google")]
 [assembly: InternalsVisibleTo("Neon.Kube.HyperV")]
-[assembly: InternalsVisibleTo("Neon.Kube.HyperVLocal")]
 [assembly: InternalsVisibleTo("Neon.Kube.XenServer")]
 

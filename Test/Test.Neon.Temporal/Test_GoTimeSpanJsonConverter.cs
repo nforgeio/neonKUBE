@@ -38,7 +38,7 @@ namespace TestTemporal
     {
         public class MyData
         {
-            [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+            [JsonConverter(typeof(GoDurationJsonConverter))]
             public TimeSpan Value { get; set; }
         }
 
@@ -157,7 +157,7 @@ namespace TestTemporal
             var json5 = "{ \"Value\": -50000000000000000 }";
             var json6 = "{ \"Value\": -9223372036854775808 }";
 
-            var gtjc = new GoTimeSpanJsonConverter();
+            var gtjc = new GoDurationJsonConverter();
 
             var data = serializer.Deserialize<MyData>(CreateReader(json0));
 

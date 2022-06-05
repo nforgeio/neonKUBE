@@ -111,7 +111,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
+            : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonnodeagent", logFilter: OperatorHelper.LogFilter)
         {
         }
 
@@ -159,22 +159,16 @@ namespace NeonNodeAgent
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
-            // Let NeonService know that we're running.
+            // Indicate that the service is running.
 
             await StartedAsync();
 
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            // Handle termination gracefully.
 
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(5));
+            await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
 
-                // $todo(jefflill):
-                // 
-                // We're disabling all activities until we code proper operators.
-
-                // await CheckNodeImagesAsync();
-            }
+            return 0;
         }
     }
 }

@@ -105,7 +105,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<ExternalWorkflowFuture> StartAsync(params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (execution != null)
@@ -136,7 +136,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<ExternalWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (execution != null)
@@ -170,7 +170,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -212,7 +212,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task SyncSignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -251,7 +251,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<TResult> SyncSignalAsync<TResult>(string signalName, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -284,7 +284,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task<TQueryResult> QueryAsync<TQueryResult>(string queryName, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName), nameof(queryName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 

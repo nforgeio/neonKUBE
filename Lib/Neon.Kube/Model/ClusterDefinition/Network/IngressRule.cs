@@ -45,6 +45,13 @@ namespace Neon.Kube
     public class IngressRule
     {
         /// <summary>
+        /// The default TCP idle timeout in minutes.  TCP connections managed by a rule
+        /// will be reset when the idle timeout is exceeded and <see cref="IdleTcpReset"/>
+        /// is set to <c>true</c>.
+        /// </summary>
+        public const int DefaultTcpIdleTimeoutMinutes = 4;
+
+        /// <summary>
         /// The name of the ingress rule.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -61,7 +68,8 @@ namespace Neon.Kube
         public IngressProtocol Protocol { get; set; } = IngressProtocol.Tcp;
 
         /// <summary>
-        /// The external ingress port.
+        /// The external ingress port used to handle external (generally Internet) traffic 
+        /// received by the cluster load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "ExternalPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "externalPort", ApplyNamingConventions = false)]
@@ -69,15 +77,10 @@ namespace Neon.Kube
         public int ExternalPort { get; set; }
 
         /// <summary>
-        /// The target ingress port.
-        /// </summary>
-        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public int TargetPort { get; set; }
-
-        /// <summary>
-        /// The Kubernetes NodePort. This is where the ingress gateway is listening.
+        /// The port on cluster nodes where external traffic received by the load balancer 
+        /// on <see cref="ExternalPort"/> will be forwarded.  The cluster's ingress gateway
+        /// (Istio) will be configured to listen for traffic on this port and route it into
+        /// the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "NodePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "nodePort", ApplyNamingConventions = false)]
@@ -85,12 +88,31 @@ namespace Neon.Kube
         public int NodePort { get; set; }
 
         /// <summary>
+        /// <para>
+        /// The target ingress port internal to the cluster.  The cluster's ingress gateway
+        /// (Istio) applies routing rules (virtual service) to the network traffic as it was
+        /// received on <see cref="TargetPort"/>.  This decouples routing rules from <see cref="NodePort"/>
+        /// which may change for different hosting environments.
+        /// </para>
+        /// <para>
+        /// This property is optional and defaults to zero, indicating that the traffic should
+        /// be routed to just the node port but <b>should not be routed through ingress gateway</b>.
+        /// This is useful for handling UDP traffic which Istio doesn't currently support and
+        /// perhaps some other scenarios.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int TargetPort { get; set; } = 0;
+
+        /// <summary>
         /// Identifies which group of cluster nodes will receive the network traffic
-        /// from this rule.  This defaults to <see cref="IngressRuleTarget.User"/>.
+        /// from this rule.  This defaults to <see cref="IngressRuleTarget.Ingress"/>.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.User;
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.Ingress;
 
         /// <summary>
         /// <para>
@@ -131,7 +153,7 @@ namespace Neon.Kube
         /// <see cref="IngressProtocol.Http"/>, <see cref="IngressProtocol.Https"/>, and
         /// <see cref="IngressProtocol.Tcp"/>.  Inbound TCP connections that have no network
         /// traffic going either way will be closed by supported load balancers or routers.
-        /// This defaults to <b>4 minutes</b>.
+        /// This defaults to <see cref="DefaultTcpIdleTimeoutMinutes"/> (<b>4 minutes</b>).
         /// </para>
         /// <note>
         /// <para>
@@ -147,8 +169,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "TcpIdleTimeoutMinutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "tcpIdleTimeoutMinutes", ApplyNamingConventions = false)]
-        [DefaultValue(4)]
-        public int TcpIdleTimeoutMinutes { get; set; } = 4;
+        [DefaultValue(DefaultTcpIdleTimeoutMinutes)]
+        public int TcpIdleTimeoutMinutes { get; set; } = DefaultTcpIdleTimeoutMinutes;
 
         /// <summary>
         /// Returns <see cref="TcpIdleTimeoutMinutes"/> as a <see cref="TimeSpan"/>.
@@ -161,7 +183,7 @@ namespace Neon.Kube
         /// <para>
         /// Optionally controls whether the cluster router or load balancer sends a TCP RESET
         /// packet to both ends of a TCP connection that has been idle for longer than
-        /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>false</c>.
+        /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
         /// At this point, this property is supported only in cloud environments where we
@@ -171,15 +193,14 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "IdleTcpReset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "idleTcpReset", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool IdleTcpReset { get; set; } = false;
+        [DefaultValue(true)]
+        public bool IdleTcpReset { get; set; } = true;
 
         /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             if (string.IsNullOrEmpty(Name))
@@ -189,33 +210,38 @@ namespace Neon.Kube
 
             if (!NetHelper.IsValidPort(ExternalPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
-            }
-
-            if (!NetHelper.IsValidPort(TargetPort))
-            {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
             }
 
             if (!NetHelper.IsValidPort(NodePort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
+            }
+
+            if (!NetHelper.IsValidPort(TargetPort) && TargetPort != 0)  // NOTE: [TargetPort=0] indicates that the traffic is not managed by the ingress gateway.
+            {
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
+            }
+
+            if (TargetPort > 0 && Protocol == IngressProtocol.Udp)
+            {
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] implies that traffic will be processed by the Istio gateway which does not support UDP traffic.");
             }
 
             if (AddressRules != null)
             {
                 foreach (var rule in AddressRules)
                 {
-                    rule.Validate(clusterDefinition, "ingress-rule-address");
+                    rule.Validate(clusterDefinition, Name);
                 }
             }
 
             if (TcpIdleTimeoutMinutes <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
+                throw new ClusterDefinitionException($"Rule [{Name}]: [{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
             }
 
-            IngressHealthCheck?.Validate(clusterDefinition, $"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.IngressRules)}] ingress rule [{Name}].");
+            IngressHealthCheck?.Validate(clusterDefinition, $"Rule [{Name}]: [{nameof(NetworkOptions)}.{nameof(NetworkOptions.IngressRules)}]");
         }
     }
 }

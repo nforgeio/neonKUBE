@@ -111,9 +111,12 @@ namespace Neon.Service
     ///
     ///     await StartedAsync();
     ///
-    ///     // Wait for the process terminator to signal that the service is stopping.
+    ///     // Handle termination gracefully.
     /// 
-    ///    await Terminator.StopEvent.WaitAsync();
+    ///     await Terminator.StopEvent.WaitAsync();
+    ///     Terminator.ReadyToExit();
+    ///    
+    ///     return 0;
     /// }
     /// </code>
     /// </remarks>

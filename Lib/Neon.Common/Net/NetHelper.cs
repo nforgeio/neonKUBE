@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Net
 {
@@ -209,7 +210,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Converts an IPv4 address into a32-bit unsigned integer equivalent.
+        /// Converts an IPv4 address into a 32-bit unsigned integer equivalent.
         /// </summary>
         /// <param name="address">The input IPv4 address.</param>
         /// <returns>The 32-bit unsigned integer equivalent.</returns>
@@ -722,6 +723,8 @@ namespace Neon.Net
         /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
         private static async Task<IPAddress[]> GetHostAddressesAsync(string hostname)
         {
+            await SyncContext.Clear;
+
             try
             {
                 return await Dns.GetHostAddressesAsync(hostname);

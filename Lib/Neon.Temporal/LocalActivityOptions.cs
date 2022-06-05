@@ -76,7 +76,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally specifies the maximum time the activity can run.
         /// </summary>
-        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
+        [JsonConverter(typeof(GoDurationJsonConverter))]
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>

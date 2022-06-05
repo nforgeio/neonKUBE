@@ -49,7 +49,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter  = "DATACENTER";
         private const string        defaultProvisioner = "unknown";
         private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
@@ -61,7 +60,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Regex for verifying cluster prefixes.  This is the similar to <see cref="NameRegex"/> but optionally
-        /// allows a "(" and ")" which we use for automation related deployments.
+        /// allows a "(" and ")" which we use for clusterspace related deployments.
         /// </summary>
         public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
 
@@ -75,7 +74,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         public static void ValidateFile(string path, bool strict = false)
         {
             FromFile(path, strict: strict);
@@ -96,6 +96,7 @@ namespace Neon.Kube
         /// </note>
         /// </param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -132,7 +133,8 @@ namespace Neon.Kube
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be read.</exception>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
@@ -230,6 +232,87 @@ namespace Neon.Kube
             return (long)size;
         }
 
+        /// <summary>
+        /// Normalizes a cluster definition for <see cref="AreSimilar(ClusterDefinition, ClusterDefinition)"/>.
+        /// </summary>
+        /// <param name="definition">The cluster definition.</param>
+        private static void Normalize(ClusterDefinition definition)
+        {
+            Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
+
+            // The domain amd public addresses aren't important to [ClusterFixture].
+
+            definition.Domain          = null;
+            definition.PublicAddresses = null;
+
+            // Ensure that computed peroperties are set.
+
+            definition.Validate();
+
+            // $todo(jefflill):
+            //
+            // We're going to clear a bunch of the node properties that may be
+            // customized during cluster setup.  This means that changes to these
+            // properties will not impact [ClusterFixture]'s decision about redeploying
+            // the cluster or not.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1505
+
+            foreach (var node in definition.Nodes)
+            {
+                node.Ingress                        = true;
+                node.Labels.StorageSize             = null;
+                node.Labels.ComputeCores            = 0;
+                node.Labels.ComputeRam              = 0;
+                node.Labels.PhysicalLocation        = null;
+                node.Labels.PhysicalMachine         = null;
+                node.Labels.PhysicalAvailabilitySet = null;
+                node.Labels.PhysicalPower           = null;
+                node.Labels.Istio                   = true;
+                node.Labels.OpenEBS                 = false;
+                node.Labels.NeonSystem              = true;
+                node.Labels.NeonSystemDb            = true;
+                node.Labels.NeonSystemRegistry      = true;
+                node.Labels.Minio                   = true;
+                node.Labels.Metrics                 = true;
+                node.Labels.MetricsInternal         = true;
+                node.Labels.Logs                    = true;
+                node.Labels.LogsInternal            = true;
+                node.Labels.Traces                  = true;
+                node.Labels.TracesInternal          = true;
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// <b>INTERNAL USE ONLY:</b> Compares two <see cref="ClusterDefinition"/> instances to 
+        /// determine whether they can be considered the same by <c>ClusterFixture</c> when it's 
+        /// deciding whether to reuse an existing cluster or deploy a new one.
+        /// </para>
+        /// <note>
+        /// This method works by comparing the definitions serialized to JSON after removing a handful
+        /// of unimportant properties that may conflict.
+        /// </note>
+        /// </summary>
+        /// <param name="definition1">The first cluster definition.</param>
+        /// <param name="definition2">The second cluster definition.</param>
+        /// <returns><c>true</c> when the definitions are close enough for <c>ClusterFixture</c>.</returns>
+        public static bool AreSimilar(ClusterDefinition definition1, ClusterDefinition definition2)
+        {
+            Covenant.Requires<ArgumentNullException>(definition1 != null, nameof(definition1));
+            Covenant.Requires<ArgumentNullException>(definition2 != null, nameof(definition2));
+
+            definition1 = NeonHelper.JsonClone(definition1);
+            definition2 = NeonHelper.JsonClone(definition2);
+
+            // Clear properties [ClusterFixture] doesn't care about.
+
+            Normalize(definition1);
+            Normalize(definition2);
+
+            return NeonHelper.JsonEquals(definition1, definition2);
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -256,25 +339,34 @@ namespace Neon.Kube
             {
                 switch (Hosting.Environment)
                 {
-                    case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.HyperV:
 
-                        return Hosting.HyperVLocal != null && Hosting.HyperVLocal.NeonDesktopBuiltIn;
+                        return Hosting.HyperV != null && Hosting.HyperV.NeonDesktopBuiltIn;
 
-                    case HostingEnvironment.Wsl2:
+                    default:
 
-                        return true;
+                        return false;
                 }
-
-                return false;
             }
         }
 
         /// <summary>
         /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
         /// </summary>
-        [JsonProperty(PropertyName = "IsDesktopCluster", Required = Required.Always)]
-        [YamlMember(Alias = "isDesktopCluster", ApplyNamingConventions = false)]
-        public bool IsDesktopCluster { get; set; }
+        [JsonProperty(PropertyName = "IsDesktopBuiltIn", Required = Required.Always)]
+        [YamlMember(Alias = "isDesktopBuiltIn", ApplyNamingConventions = false)]
+        public bool IsDesktopBuiltIn { get; set; }
+
+        /// <summary>
+        /// Indicates whether the cluster should be locked after being deployed successfully.
+        /// <b>neon-desktop</b>, <b>neon-cli</b>, and <b>ClusterFixture</b> will block distructive
+        /// operations such as cluster <b>pause</b>, <b>reset</b>, <b>remove</b>, and <b>stop</b>
+        /// on locked clusters as to help avoid impacting production clusters by accident.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsLocked", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "isLocked", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool IsLocked { get; set; } = true;
 
         /// <summary>
         /// <para>
@@ -292,16 +384,62 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
+        /// </summary>
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "description", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Description { get; set; } = null;
+
+        /// <summary>
         /// <para>
-        /// The cluster domain. This will be used for accessing dashboards.
+        /// The cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
+        /// for your cluster by default when this is not set.
         /// </para>
         /// <note>
-        /// The domain 
+        /// Setting this to a specific domain that you've already registered is not supported at
+        /// this time and will be ignored.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Always)]
+        /// <remarks>
+        /// <para>
+        /// The idea here is that neonKUBE will be use the generated domain to deploy a fully
+        /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
+        /// This works even for clusters deployed behind a firewall or neonDESKTOP built-in
+        /// clusters running on a workstation or laptop.
+        /// </para>
+        /// <para>
+        /// In the future, we plan to support custom DNS domains where these are pre-registered
+        /// by the customer or we manage the DNS hosts on behalf of the customer via a domain
+        /// registar API.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Domain { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the public IP addresses for the cluster.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// For cloud clusters, this will default to the public IP address assigned to the cluster
+        /// load balancer and for on-premise clusters, this defaults to the IP addresses assigned
+        /// to the master nodes.
+        /// </para>
+        /// <para>
+        /// This can also be specified explicitly here in the cluster definition.  This is useful
+        /// for things like documenting the public IP address for a router that directs traffic
+        /// into the cluster.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> PublicAddresses { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the semantic version of the neonKUBE cluster being created.
@@ -317,25 +455,13 @@ namespace Neon.Kube
         /// <para>
         /// Optionally specifies custom tags that will be attached to cluster resources in cloud
         /// hosting environments.  These tags are intended to help you manage your cloud resources
-        /// as well as help originize you cost reporting.
+        /// as well as help organize your cost reporting.
         /// </para>
         /// <note>
         /// Currently, this is only supported for clusters deployed to AWS, Azure or Google Cloud.
         /// </note>
         /// </summary>
         public List<ResourceTag> ResourceTags { get; set; } = null;
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies cluster debugging options.
-        /// </para>
-        /// <note>
-        /// These options are generally intended for neonKUBE maintainers only.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
-        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
-        public DebugOptions Debug { get; set; } = new DebugOptions();
 
         /// <summary>
         /// Enables or disables specific Kubernetes features.  This can be used to enable
@@ -372,12 +498,6 @@ namespace Neon.Kube
         ///     </para>
         ///     </description>
         /// </item>
-        /// <item>
-        ///     <term><b>RunAsGroup</b></term>
-        ///     <description>
-        ///     <b>REQUIRED:</b> Allows pods processes to run in a specific security group.
-        ///     </description>
-        /// </item>
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -386,7 +506,7 @@ namespace Neon.Kube
         public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
 
         /// <summary>
-        /// Optionally specifies options used by <b>KubernetesFixture</b> and possibly
+        /// Optionally specifies options used by <b>ClusterFixture</b> and possibly
         /// custom tools for customizing cluster and node names to avoid conflicts.
         /// </summary>
         [JsonProperty(PropertyName = "Deployment", Required = Required.Always)]
@@ -394,11 +514,11 @@ namespace Neon.Kube
         public DeploymentOptions Deployment { get; set; } = new DeploymentOptions();
 
         /// <summary>
-        /// Specifies the cluster OpenEbs related options.
+        /// Specifies the cluster storage related options.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Always)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
-        public OpenEbsOptions OpenEbs { get; set; } = new OpenEbsOptions();
+        [JsonProperty(PropertyName = "Storage", Required = Required.Always)]
+        [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
+        public StorageOptions Storage { get; set; } = new StorageOptions();
 
         /// <summary>
         /// Specifies cluster security options.
@@ -414,15 +534,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "kubernetes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
-
-        /// <summary>
-        /// Returns the options to be used when installing Docker on each
-        /// of the cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "Docker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "docker", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public DockerOptions Docker { get; set; } = new DockerOptions();
 
         /// <summary>
         /// Returns the options to be used for configuring the cluster integrated
@@ -443,7 +554,16 @@ namespace Neon.Kube
         public HostingOptions Hosting { get; set; } = null;
 
         /// <summary>
-        /// Identifies the datacenter.
+        /// Specifies optional features to be installed in the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "Features", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "features", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public FeatureOptions Features { get; set; } = new FeatureOptions();
+
+        /// <summary>
+        /// Identifies the datacenter.  This defaults to empty string for on-premise clusters
+        /// or the region for clusters deployed to the cloud.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -452,8 +572,8 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "datacenter", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDatacenter)]
-        public string Datacenter { get; set; } = defaultDatacenter;
+        [DefaultValue("")]
+        public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
         /// Indicates how the cluster is being used.
@@ -566,7 +686,9 @@ namespace Neon.Kube
         public Dictionary<string, string> SetupState { get; set; } = null;
 
         /// <summary>
-        /// The cluster root single sign-on (SSO) password.
+        /// Optionally specifies the cluster root single sign-on (SSO) password.  A random password
+        /// with of <see cref="SecurityOptions.PasswordLength"/> will be created by default when no
+        /// password is specified here.
         /// </summary>
         [JsonProperty(PropertyName = "RootPassword", Required = Required.Default)]
         [YamlMember(Alias = "rootPassword", ApplyNamingConventions = false)]
@@ -657,7 +779,16 @@ namespace Neon.Kube
             lock (syncLock)
             {
                 SetupState = null;
-                Hosting?.ClearSecrets(this);
+
+                // $todo(jefflill):
+                //
+                // I'm temporarily commenting this out because neon-desktop needs
+                // the hosting related secrets in some circumstances.  We need to
+                // think about a comprehensive solution:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1482
+
+                // Hosting?.ClearSecrets(this);
             }
         }
 
@@ -825,17 +956,8 @@ namespace Neon.Kube
         /// like <see cref="MachineHostingOptions"/> which require specified node IP addresses.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void ValidatePrivateNodeAddresses()
         {
-            if (Hosting.Environment == HostingEnvironment.Wsl2)
-            {
-                // WSL2 nodes have dynamic IP addresses that change everytime the host
-                // machine reboots so this check makes no sense for this environment.
-
-                return;
-            }
-
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
             foreach (var node in SortedNodes.OrderBy(n => n.Name))
@@ -881,7 +1003,6 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate()
         {
             // Wire up the node label parents.
@@ -896,55 +1017,80 @@ namespace Neon.Kube
 
             // Validate the properties.
 
-            Debug        = Debug ?? new DebugOptions();
             FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
             Deployment   = Deployment ?? new DeploymentOptions();
-            OpenEbs      = OpenEbs ?? new OpenEbsOptions();
+            Storage      = Storage ?? new StorageOptions();
             Security     = Security ?? new SecurityOptions();
             Kubernetes   = Kubernetes ?? new KubernetesOptions();
-            Docker       = Docker ?? new DockerOptions();
             Monitor      = Monitor ?? new MonitorOptions();
             Hosting      = Hosting ?? new HostingOptions();
             NodeOptions  = NodeOptions ?? new NodeOptions();
             Network      = Network ?? new NetworkOptions();
-            Container     = Container ?? new ContainerOptions();
+            Container    = Container ?? new ContainerOptions();
+            Features     = Features ?? new FeatureOptions();
 
-            if (IsDesktopCluster && Nodes.Count() > 1)
+            if (IsDesktopBuiltIn && Nodes.Count() > 1)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only for single node clusters.");
+                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only for single node clusters.");
             }
 
-            if (IsDesktopCluster && !IsSpecialNeonCluster)
+            if (IsDesktopBuiltIn && !IsSpecialNeonCluster)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopCluster)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
-            Debug.Validate(this);
+            foreach (var node in Nodes)
+            {
+                node.Validate(this);
+            }
+
             Deployment.Validate(this);
-            OpenEbs.Validate(this);
+            Storage.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);
-            Docker.Validate(this);
             Monitor.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);
             Network.Validate(this);
             Container.Validate(this);
+            Features.Validate(this);
 
             // Have the hosting manager perform its own validation.
 
             new HostingManagerFactory().Validate(this);
 
-            // Configure the required features.
-
-            FeatureGates["RunAsGroup"] = true;
-
-            // Add any neonKUBE default feature gates unless the user specifically configures them.
+            // Add default neonKUBE feature gates when the user has not already configured them.
 
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {
                 FeatureGates["EphemeralContainers"] = true;
+            }
+
+            // Validate/initialize the public addresses.
+
+            PublicAddresses ??= new List<string>();
+
+            PublicAddresses = PublicAddresses
+                .Where(address => !string.IsNullOrEmpty(address))
+                .ToList();
+
+            foreach (var address in PublicAddresses)
+            {
+                if (!IPAddress.TryParse(address, out var ip))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(PublicAddresses)}={address}] is not a valid IPv4 address.");
+                }
+            }
+
+            if (PublicAddresses.Count == 0 && !KubeHelper.IsCloudEnvironment(Hosting.Environment))
+            {
+                // Default to the master node addresses for non-cloud environments.
+
+                foreach (var node in SortedMasterNodes)
+                {
+                    PublicAddresses.Add(node.Address);
+                }
             }
 
             // Validate the NTP time sources.
@@ -970,27 +1116,27 @@ namespace Neon.Kube
 
             if (Name == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}] property is required.");
             }
 
             if (!IsValidName(Name))
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (Name.Length > 32)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
-            if (Datacenter == null)
+            if (Description != null && Description.Length > 256)
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(Description)}] has more than 256 characters.");
             }
 
-            if (!IsValidName(Datacenter))
+            if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
             {
-                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             var masterNodeCount = Masters.Count();
@@ -1022,12 +1168,12 @@ namespace Neon.Kube
 
                     if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
                     {
-                        throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                        throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
 
                     if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
                     {
-                        throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                        throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
                 }
             }

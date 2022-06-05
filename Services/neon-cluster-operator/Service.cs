@@ -45,6 +45,65 @@ namespace NeonClusterOperator
     /// <summary>
     /// Implements the <b>neon-cluster-operator</b> service.
     /// </summary>
+    /// <remarks>
+    /// <para><b>ENVIRONMENT VARIABLES</b></para>
+    /// <para>
+    /// The <b>neon-node-agent</b> is configured using these environment variables:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
+    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
+    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
+    ///     exception is thrown when handling ContainerRegistry events.  This
+    ///     value will be doubled when subsequent events also fail until the
+    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
+    ///     This defaults to <b>15 seconds</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum requeue time for ContainerRegistry
+    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
+    ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
+    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
+    ///     exception is thrown when handling NodeTask events.  This
+    ///     value will be doubled when subsequent events also fail until the
+    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
+    ///     This defaults to <b>15 seconds</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum requeue time for NodeTask
+    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     </description>
+    /// </item>
+    /// <item>
+    /// </list>
+    /// </remarks>
     public partial class Service : NeonService
     {
         /// <summary>
@@ -53,7 +112,7 @@ namespace NeonClusterOperator
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public Service(string name, ServiceMap serviceMap = null)
-            : base(name, version: KubeVersions.NeonKube, logFilter: OperatorHelper.LogFilter)
+            : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonclusteroperator", logFilter: OperatorHelper.LogFilter)
         {
         }
 
@@ -101,14 +160,16 @@ namespace NeonClusterOperator
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
+            // Indicate that the service is running.
+
             await StartedAsync();
 
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            // Handle termination gracefully.
 
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(5));
-            }
+            await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
+
+            return 0;
         }
 
 #if TODO

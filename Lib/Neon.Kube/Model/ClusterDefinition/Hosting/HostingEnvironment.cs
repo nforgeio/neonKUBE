@@ -58,30 +58,16 @@ namespace Neon.Kube
         Google,
 
         /// <summary>
-        /// Microsoft Hyper-V hypervisor running on remote servers
-        /// (typically for production purposes).
+        /// Microsoft Hyper-V hypervisor.
         /// </summary>
         [EnumMember(Value = "hyperv")]
         HyperV,
-
-        /// <summary>
-        /// Microsoft Hyper-V hypervisor running on the local workstation
-        /// (typically for development or test purposes).
-        /// </summary>
-        [EnumMember(Value = "hyperv-local")]
-        HyperVLocal,
 
         /// <summary>
         /// Citrix XenServer hypervisor running on remote servers (typically
         /// for production purposes).
         /// </summary>
         [EnumMember(Value = "xenserver")]
-        XenServer,
-
-        /// <summary>
-        /// <b>NOT SUPPORTED YET:</b> Windows Subsystem for Linux.
-        /// </summary>
-        [EnumMember(Value = "wsl2")]
-        Wsl2
+        XenServer
     }
 }

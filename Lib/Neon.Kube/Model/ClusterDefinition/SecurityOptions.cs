@@ -59,12 +59,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             if (PasswordLength < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
+                throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Security)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
             }
         }
     }

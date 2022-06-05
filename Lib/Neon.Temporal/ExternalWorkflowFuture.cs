@@ -63,7 +63,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (completed)
             {
@@ -110,7 +110,7 @@ namespace Neon.Temporal
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (completed)
             {

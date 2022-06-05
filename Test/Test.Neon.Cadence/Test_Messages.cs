@@ -169,7 +169,7 @@ namespace TestCadence
                 Content = content
             };
 
-            var response = proxyClient.SendAsync(request).Result;
+            var response = proxyClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).Result;
 
             response.EnsureSuccessStatusCode();
 

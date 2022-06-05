@@ -125,22 +125,6 @@ namespace Neon.Kube
         public string DashboardCertificate { get; set; }
 
         /// <summary>
-        /// The SSH root username.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SshUsername { get; set; }
-
-        /// <summary>
-        /// The SSH root password.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SshPassword { get; set; }
-
-        /// <summary>
         /// The root single sign-on (SSO) cluster username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -155,6 +139,22 @@ namespace Neon.Kube
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SsoPassword { get; set; }
+
+        /// <summary>
+        /// The SSH root username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshUsername { get; set; }
+
+        /// <summary>
+        /// The SSH root password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshPassword { get; set; }
 
         /// <summary>
         /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to
@@ -187,6 +187,14 @@ namespace Neon.Kube
         public KubeSshKey SshKey { get; set; }
 
         /// <summary>
+        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
+
+        /// <summary>
         /// Sets the file path where the extension will be persisted.
         /// </summary>
         /// <param name="path">The target path.</param>
@@ -216,6 +224,14 @@ namespace Neon.Kube
 
                 File.WriteAllText(path, NeonHelper.YamlSerialize(this));
             }
+        }
+
+        /// <summary>
+        /// Deletes the login.
+        /// </summary>
+        public void Delete()
+        {
+            NeonHelper.DeleteFile(path);
         }
     }
 }

@@ -1,0 +1,24 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: {{ template "mimir.fullname" . }}-alertmanager
+  labels:
+    app: {{ template "mimir.name" . }}
+    chart: {{ template "mimir.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  datasources:
+    - access: proxy
+      editable: true
+      isDefault: false
+      jsonData:
+        httpHeaderName1: X-Scope-OrgID
+        tlsSkipVerify: true
+      name: Alertmanager
+      secureJsonData:
+        httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
+      type: alertmanager
+      uid: mimirAlertmanager
+      url: http://mimir
+  name: Alertmanager

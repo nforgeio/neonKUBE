@@ -40,7 +40,9 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Amazon;
@@ -51,8 +53,6 @@ using Amazon.ElasticLoadBalancingV2.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
-
-using Renci.SshNet.Common;
 
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
@@ -66,6 +66,21 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on Amazon Web Services.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>YES</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.Aws)]
     public class AwsHostingManager : HostingManager
     {
@@ -74,13 +89,13 @@ namespace Neon.Kube
         //
         // A neonKUBE AWS cluster will require provisioning these things:
         //
-        //      * VPC (virtual private cloud, equivilant to an Azure VNET)
+        //      * VPC (virtual private cloud, equivilent to an Azure VNET)
         //
         //      * Public subnet where the network load balancer, internet
         //        gateway and NAT gateway will be deployed to manage internet 
         //        traffic.
         //
-        //      * Node (private subnet) where the nodes will be deployed.
+        //      * Node private subnet where the nodes will be deployed.
         //
         //      * Instances & EC2 volumes
         //
@@ -100,29 +115,31 @@ namespace Neon.Kube
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly.  neonKUBE will default to reasonable ingress nodes when
-        // necessary.  We'll be automaticall managing the AWS target groups and
+        // necessary.  We'll be automatically managing the AWS target groups and
         // network ACLs to make this all work.
         //
         // External load balancer traffic can be enabled for specific ports via 
-        // [NetworkOptions.IngressRules] which specify two ports: 
+        // [NetworkOptions.IngressRules] which specify three ports: 
         // 
-        //      * The external load balancer port
-        //      * The node port where Istio is listening and will forward traffic
-        //        into the Kubernetes cluster
+        //      * The external load balancer port.
+        //
+        //      * The node port where where traffic will be routed 
+        //        into the cluster.
+        //
+        //      * The optional target port for traffic processed by the
+        //        Istio ingress gateway.  This is used bu Istio when processing
+        //        its routing rules.
         //
         // The [NetworkOptions.IngressRules] can also explicitly allow or deny traffic
         // from specific source IP addresses and/or subnets.
         //
-        // NOTE: Only TCP connections are supported at this time because Istio
-        //       doesn't support UDP, ICMP, etc. at this time.
-        //
-        // We're going to use two network ACLs to try make ingress rule changes
+        // We're going to use two network ACLs to try make ingress rule changessbname
         // as non-disruptive as possible.  The idea is to update the network ACL
         // not currently in use with any rule changes and then swap the ACLs
         // so all of the rules will be applied in a single opertation (rather
         // than performing multiple operations on the current ACL).
         //
-        // VMs are currently based on the Ubuntu-20.04 Server AMIs published to the
+        // VMs are currently based on the Ubuntu-22.04 Server AMIs published to the
         // AWS regions by Canonical.  Note that AWS VM images work differently from
         // Azure.  Azure images automatically exist in all of MSFT's regions and
         // each image has a unique ID that is the same across these regions.
@@ -133,23 +150,15 @@ namespace Neon.Kube
         // need to query for images within the region where we're deploying the
         // cluster (which is a bit of a pain).  AWS also appears to require that
         // the user "subscribe" to marketplace images via the portal before the
-        // image can be used.
+        // image can be used (which is a good thing).
         //
-        // This hosting manager will support creating VMs from the base Canonical
-        // image as well as from custom images published to the marketplace by
-        // neonFORGE.  The custom images will be preprovisioned with all of the
-        // software required, making cluster setup much faster and reliable.  The
-        // Canonical based images will need lots of configuration before they can
-        // be added to a cluster.  Note that the neonFORGE images are actually
-        // created by starting with a Canonical image and doing most of a cluster
-        // setup on that image, so we'll continue supporting the raw Canonical
-        // images.
+        // This hosting manager requires that the node image AMI be present in
+        // target region.  Project maintainers can deploy alpha node image releases
+        // from the US-WEST-2 (Oregon) region using the neonFORGE AWS account.
+        // Preview and Release node images can be used from the AWS Marketplace
+        // by normal users.
         //
-        // NOTE: We're not going to use the base Canonical image from the AWS 
-        //       Marketplace because marketplace images cannot be copied and
-        //       we'll need to do that when we make our own marketplace image.
-        //
-        // Node instance and disk types and sizes are specified by the 
+        // Node instance, disk types and sizes are specified by the 
         // [NodeDefinition.Aws] property.  Instance types are specified
         // using standard AWS names, disk type is an enum and disk sizes
         // are specified via strings including optional [ByteUnits].  Provisioning
@@ -160,8 +169,8 @@ namespace Neon.Kube
         // SSH connections and the cluster reserves 1000 external load balancer
         // ports (by default) to accomplish this.  When we need an external SSH
         // connection to any cluster node, the hosting manager will add one or
-        // more rules to allow traffic to the range of external SSH ports assigned to
-        // the cluster nodes.  Load balancer rules will also be created to 
+        // more rules to allow traffic to the range of external SSH ports assigned
+        // to the cluster nodes.  Load balancer rules will also be created to 
         // effectively port forward traffic from the external SSH port to 
         // port 22 on the nodes.
         //
@@ -169,12 +178,22 @@ namespace Neon.Kube
         // ingress and SSH rules and as well as destination address white/black
         // listing for general outbound cluster traffic.
         //
+        // DHCP:
+        // -----
+        // We are not using AWS [cloud-init] to configure instance network settings
+        // (this means that we're not provisioning [DhcpOptions].  Instead, we're
+        // creating instances with a user-data boot script that configures NetPlan.
+        //
+        // Node instances will be provisioned with the standard AWS nameserver at
+        // [169.254.169.253] when no nameservers are specified in the cluster definition,
+        // otherwise we'll configure the defined nameservers.
+        //
         // Managing the network load balancer and ACL rules:
         // -------------------------------------------------
         // AWS VPCs come with a default network ACL that allows all ingress/egress
         // traffic.  We're going to remove the allow rules, leaving just the deny-all
         // rules for each direction.  We're not going to rely on the default VPC rule
-        // in favor of rules we'll associate with the subnet.
+        // and instead control this via subnet rules.
         //
         // We're going to create two independent network ACLs and use these to control
         // traffic entering and leaving the subnet (and by extension, the cluster).
@@ -195,7 +214,8 @@ namespace Neon.Kube
         // and probably never.  The logic is that if you need more resilence, just deploy
         // another cluster in another availability zone or region and load balance
         // traffic between them.  I believe that will address most reasonable scenarios
-        // and this will be easy to implement and test.
+        // and this will be easy to implement and test.  Of course, we'll revisit this
+        // upon user demand.
         //
         // AWS supports three types of placement groups: cluster, partition, and spread:
         //
@@ -205,7 +225,8 @@ namespace Neon.Kube
         // nodes and the other for workers.  The number of master placement partitions is
         // controlled by [AwsHostingOptions.MasterPlacementPartitions] which defaults to
         // the number of master nodes in the cluster.  Doing this helps to avoid losing
-        // a majority of the master nodes which would dramatically impact cluster functionality.
+        // a majority of the master nodes with the loss of a single partition, which would
+        // dramatically impact cluster functionality.
         //
         // Worker placement partitions are controlled by [AwsOptions.WorkerPlacementGroups].
         // This defaults to one partition, which means that potentially all of the workers
@@ -219,6 +240,9 @@ namespace Neon.Kube
         // The AWS hosting manager is designed to be able to be interrupted and restarted
         // for cluster creation as well as management of the cluster afterwards.  This works
         // by reading the current state of the cluster resources.
+
+        //---------------------------------------------------------------------
+        // Local types
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -285,7 +309,7 @@ namespace Neon.Kube
             }
 
             /// <summary>
-            /// Returns the IP address of the node.
+            /// Returns the private IP address of the node.
             /// </summary>
             public string Address => Node.Address.ToString();
 
@@ -327,57 +351,6 @@ namespace Neon.Kube
             /// Disable external SSH to the cluster nodes.
             /// </summary>
             DisableSsh = 0x0004,
-        }
-
-        /// <summary>
-        /// Describes an Ubuntu ami from the AWS Marketplace.
-        /// </summary>
-        private class AwsUbuntuImage
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
-            /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
-            /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
-            /// <param name="isPrepared">
-            /// Pass <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
-            /// for unmodified base Ubuntu images.
-            /// </param>
-            public AwsUbuntuImage(string clusterVersion, string ubuntuVersion, string ubuntuBuild, bool isPrepared)
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
-
-                this.ClusterVersion = clusterVersion;
-                this.UbuntuVersion  = ubuntuVersion;
-                this.UbuntuBuild    = ubuntuBuild;
-                this.IsPrepared     = isPrepared;
-            }
-
-            /// <summary>
-            /// Returns the neonKUBE cluster version.
-            /// </summary>
-            public string ClusterVersion { get; private set; }
-
-            /// <summary>
-            /// Returns the Ubuntu version deployed by the image.
-            /// </summary>
-            public string UbuntuVersion { get; private set; }
-
-            /// <summary>
-            /// Returns the Ubuntu build version.
-            /// </summary>
-            public string UbuntuBuild { get; private set; }
-
-            /// <summary>
-            /// Returns <c>true</c> for Ubuntu images that have already seen basic
-            /// preparation for inclusion into a neonKUBE cluster.  This will be
-            /// <c>false</c> for unmodified base Ubuntu images.
-            /// </summary>
-            public bool IsPrepared { get; private set; }
         }
 
         /// <summary>
@@ -450,44 +423,115 @@ namespace Neon.Kube
         /// for internal AWS use only and must be cleared before comparing the
         /// status to one of these values.
         /// </summary>
-        private static class InstanceStatusCodes
+        private static class InstanceStateCode
         {
             /// <summary>
             /// The instance is provisioning or starting.
             /// </summary>
-            public static readonly int Pending = 0;
+            public const int Pending = 0;
 
             /// <summary>
             /// The instance is running.
             /// </summary>
-            public static readonly int Running = 16;
+            public const int Running = 16;
 
             /// <summary>
             /// The instance is shutting down.
             /// </summary>
-            public static readonly int ShuttingDown = 32;
+            public const int ShuttingDown = 32;
 
             /// <summary>
             /// The instance has been terminated.
             /// </summary>
-            public static readonly int Terminated = 48;
+            public const int Terminated = 48;
 
             /// <summary>
             /// The instance is stopping.
             /// </summary>
-            public static readonly int Stopping = 64;
+            public const int Stopping = 64;
 
             /// <summary>
             /// The instance has been stopped.
             /// </summary>
-            public static readonly int Stopped = 80;
+            public const int Stopped = 80;
+
+            /// <summary>
+            /// Clears the high byte of the raw code passed and returns one of the
+            /// constants above.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns>The cleaned code.</returns>
+            public static int GetCode(int rawCode)
+            {
+                return rawCode & 0x00FF;
+            }
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is pending.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns><c>true</c> for pending.</returns>
+            public static bool IsPending(int rawCode)
+            {
+                return (rawCode & 0x00FF) == Pending;
+            }
+
+            /// <summary>
+            /// Determines whether the instance state passed indicates that the
+            /// instance is running.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns><c>true</c> for running.</returns>
+            public static bool IsRunning(int rawCode)
+            {
+                return (rawCode & 0x00FF) == Running;
+            }
+
+            /// <summary>
+            /// Determines whether the instance state passed indicates that the
+            /// instance is stopping.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns><c>true</c> for stopping.</returns>
+            public static bool IsStopping(int rawCode)
+            {
+                return (rawCode & 0x00FF) == Stopping;
+            }
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is stopped.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns><c>true</c> for stopped.</returns>
+            public static bool IsStopped(int rawCode)
+            {
+                return (rawCode & 0x00FF) == Stopping;
+            }
+
+            /// <summary>
+            /// Determines whether the instance status passed indicates that the
+            /// instance is terminated.
+            /// </summary>
+            /// <param name="rawCode">The raw instance state code.</param>
+            /// <returns><c>true</c> for terminated.</returns>
+            public static bool IsTerminated(int rawCode)
+            {
+                return (rawCode & 0x00FF) == Terminated;
+            }
         }
 
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Specifies the ID to use when querying for Canonical images 
+        /// Used to limit how many threads will be created by parallel operations.
+        /// </summary>
+        private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
+
+        /// <summary>
+        /// Specifies the owner ID to use when querying for Canonical AMIs 
         /// </summary>
         private const string canonicalOwnerId = "099720109477";
 
@@ -497,9 +541,35 @@ namespace Neon.Kube
         private const string nameTagKey = "Name";
 
         /// <summary>
-        /// The (namespace) prefix used for neonKUBE related Azure resource tags.
+        /// The (namespace) prefix used for neonKUBE related AWS resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
+
+        /// <summary>
+        /// Used to tag <b>neon-image tool</b> related resources so they can be managed
+        /// by this class.  The tag value will be set to "true".
+        /// </summary>
+        private const string neonImageTagKey = neonTagKeyPrefix + "image";
+
+        /// <summary>
+        /// Used to tag instance volumes and published AMIs with the image type so 
+        /// that the underlying snapshots created when the AMI is published will also 
+        /// include this tag.  This is used to identify the snapshots that need to be
+        /// deleted when the AMI is deleted.
+        /// </summary>
+        private const string neonImageTypeTagKey = neonTagKeyPrefix + "image-type";
+
+        /// <summary>
+        /// Used to tag instance volume, snapshots and published AMIs with the image 
+        /// operating system.
+        /// </summary>
+        private const string neonImageOsTagKey = neonTagKeyPrefix + "image-os";
+
+        /// <summary>
+        /// Used to tag instance volume, snapshots and published AMIs with the image 
+        /// architecture: <b>amd64</b> or <b>arm64</b>.
+        /// </summary>
+        private const string neonArchTagKey = neonTagKeyPrefix + "image-arch";
 
         /// <summary>
         /// Used to tag resources with the cluster name.
@@ -562,11 +632,6 @@ namespace Neon.Kube
         private const int firstEgressAclRuleNumber = 2000;
 
         /// <summary>
-        /// Returns the list of supported Ubuntu images from the AWS Marketplace.
-        /// </summary>
-        private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
-
-        /// <summary>
         /// Identifies the instance VM block device for the OS disk. 
         /// </summary>
         private const string osDeviceName = "/dev/sda1";
@@ -586,24 +651,12 @@ namespace Neon.Kube
         /// target group to initialize and transition to healthy) can take a very long time 
         /// to complete.
         /// </summary>
-        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(15);
 
         /// <summary>
         /// Polling interval for slow operations.
         /// </summary>
         private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static AwsHostingManager()
-        {
-            ubuntuImages = new List<AwsUbuntuImage>()
-            {
-                new AwsUbuntuImage("0.1.0-alpha", "20.04", "20.04.20200729", isPrepared: false)
-            }
-            .AsReadOnly();
-        }
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -725,7 +778,7 @@ namespace Neon.Kube
 
             if (name.Length > 32)
             {
-                throw new KubeException($"Generated ELB related resource name [{name}] exceeds the 32 character AWS limit.");
+                throw new NeonKubeException($"Generated ELB related resource name [{name}] exceeds the 32 character AWS limit.");
             }
 
             return name;
@@ -734,13 +787,15 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private readonly TimeSpan timeout      = TimeSpan.FromMinutes(30);
+        private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(5);
+
         private ClusterProxy                        cluster;
         private string                              clusterName;
         private SetupController<NodeDefinition>     controller;
         private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
-        private bool                                prefixResourceNames;
         private AwsHostingOptions                   awsOptions;
         private NetworkOptions                      networkOptions;
         private BasicAWSCredentials                 awsCredentials;
@@ -749,8 +804,6 @@ namespace Neon.Kube
         private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
-        private KubeSshKey                          sshKey;
-        private string                              secureSshPassword;
         private List<Filter>                        clusterFilter;      // Used to filter resources that belong to our cluster
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
@@ -758,31 +811,28 @@ namespace Neon.Kube
 
         // These are the names we'll use for cluster AWS resources.
 
-        private readonly string                     ingressAddressName;
-        private readonly string                     egressAddressName;
-        private readonly string                     vpcName;
-        private readonly string                     dhcpOptionName;
-        private readonly string                     securityGroupName;
-        private readonly string                     publicSubnetName;
-        private readonly string                     nodeSubnetName;
-        private readonly string                     publicRouteTableName;
-        private readonly string                     nodeRouteTableName;
-        private readonly string                     internetGatewayName;
-        private readonly string                     natGatewayName;
-        private readonly string                     loadBalancerName;
-        private readonly string                     elbName;
-        private readonly string                     keyPairName;
-        private readonly string                     masterPlacementGroupName;
-        private readonly string                     workerPlacementGroupName;
+        private string                              ingressAddressName;
+        private string                              egressAddressName;
+        private string                              vpcName;
+        private string                              securityGroupName;
+        private string                              publicSubnetName;
+        private string                              nodeSubnetName;
+        private string                              publicRouteTableName;
+        private string                              nodeRouteTableName;
+        private string                              internetGatewayName;
+        private string                              natGatewayName;
+        private string                              loadBalancerName;
+        private string                              elbName;
+        private string                              masterPlacementGroupName;
+        private string                              workerPlacementGroupName;
 
         // These reference the AWS resources.
 
-        private string                              ami;
+        private Image                               nodeImage;
         private Group                               resourceGroup;
         private Address                             ingressAddress;
         private Address                             egressAddress;
         private Vpc                                 vpc;
-        private DhcpOptions                         dhcpOptions;
         private SecurityGroup                       securityGroup;
         private Subnet                              publicSubnet;
         private Subnet                              nodeSubnet;
@@ -791,7 +841,6 @@ namespace Neon.Kube
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
-        private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
@@ -861,18 +910,11 @@ namespace Neon.Kube
                 }
             };
 
-            // We're always going to prefix AWS resource names with the cluster name because
-            // AWS resource names have scope and because load balancer names need to be unique
-            // within an AWS account and region.
-
-            this.prefixResourceNames = true;
-
             // Initialize the cluster resource names.
 
             ingressAddressName       = GetResourceName("ingress-address");
             egressAddressName        = GetResourceName("egress-address");
             vpcName                  = GetResourceName("vpc");
-            dhcpOptionName           = GetResourceName("dhcp-opt");
             securityGroupName        = GetResourceName("security-group");
             publicSubnetName         = GetResourceName("public-subnet");
             nodeSubnetName           = GetResourceName("node-subnet");
@@ -882,7 +924,6 @@ namespace Neon.Kube
             natGatewayName           = GetResourceName("nat-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
-            keyPairName              = GetResourceName("ssh-keys");
             masterPlacementGroupName = GetResourceName("master-placement");
             workerPlacementGroupName = GetResourceName("worker-placement");
 
@@ -891,33 +932,15 @@ namespace Neon.Kube
 
             this.nameToTargetGroup = new Dictionary<string, ElbTargetGroup>();
 
-            // Initialize the instance/node mapping dictionaries and also ensure
-            // that each node has reasonable AWS node options.
-
-            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var node in cluster.Nodes)
-            {
-                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
-
-                if (node.Metadata.Aws == null)
-                {
-                    node.Metadata.Aws = new AwsNodeOptions();
-                }
-            }
-
-            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
-
-            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
-            {
-                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
-            }
-
             // This identifies the cluster manager instance with the cluster proxy
             // so that the proxy can have the hosting manager perform some operations
             // like managing the SSH port mappings on the load balancer.
 
             cluster.HostingManager = this;
+
+            // Initialize the mappings between node and AWS instanc information.
+
+            InitializeNodeDictionaries();
         }
 
         /// <inheritdoc/>
@@ -994,14 +1017,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
 
-            if (prefixResourceNames)
-            {
-                return $"{clusterName}.{resourceName}";
-            }
-            else
-            {
-                return $"{resourceName}";
-            }
+            return $"{clusterName}.{resourceName}";
         }
 
         /// <summary>
@@ -1085,6 +1101,42 @@ namespace Neon.Kube
             }
 
             AssignNodeAddresses(clusterDefinition);
+
+            // Set the cluster definition datacenter to the target region when the
+            // user hasn't explictly specified a datacenter.
+
+            if (string.IsNullOrEmpty(clusterDefinition.Datacenter))
+            {
+                clusterDefinition.Datacenter = clusterDefinition.Hosting.Aws.Region.ToUpperInvariant();
+            }
+        }
+
+        /// <summary>
+        /// Initializes the node mdictionaries: <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>.
+        /// </summary>
+        private void InitializeNodeDictionaries()
+        {
+            // Initialize the instance/node mapping dictionaries and also ensure
+            // that each node has reasonable AWS node options.
+
+            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
+
+                if (node.Metadata.Aws == null)
+                {
+                    node.Metadata.Aws = new AwsNodeOptions();
+                }
+            }
+
+            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
+
+            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
+            {
+                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
+            }
         }
 
         /// <inheritdoc/>
@@ -1093,7 +1145,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             this.controller = controller;
 
@@ -1101,162 +1153,201 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // AWS doesn't initialize a password for new instance so we need to specify
-            // the SSH key when the instances are provisioned and then upload and enable 
-            // the SSH password ourselves.
-
-            this.secureSshPassword = clusterLogin.SshPassword;
-            this.sshKey            = clusterLogin.SshKey;
-
-            Covenant.Assert(sshKey != null);
-
             var operation = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
-            controller.AddGlobalStep("locate ami", LocateAmiAsync);
+            controller.AddGlobalStep("locate node image", LocateNodeImageAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
-            controller.AddGlobalStep("elastic ip", CreateAddressesAsync);
+            controller.AddGlobalStep("elastic ip", InitializeAddressessAsync);
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
-            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("ssh keys", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddGlobalStep("ssh config", ConfigureNodeSsh);
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
                 },
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
             controller.AddNodeStep("load balancer targets", WaitForSshTargetAsync);
-            controller.AddGlobalStep("internet routing", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet access", async controller => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> setupController)
+        public override void AddPostProvisioningSteps(SetupController<NodeDefinition> controller)
         {
-            // Add a step to perform low-level node initialization.
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Assert(object.ReferenceEquals(controller, this.controller));
 
-            // We need to add any required OpenEBS cStor disks after the node has been otherwise
-            // prepared.  We need to do this here because if we created the data and OpenEBS disks
-            // when the VM is initially created, the disk setup scripts executed during prepare
-            // won't be able to distinguish between the two disks.
-            //
-            // At this point, the data disk should be partitioned, formatted, and mounted so
-            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+            var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            setupController.AddNodeStep("openebs",
-                async (controller, node) =>
-                {
-                    node.Status = "openebs: checking";
+            if (cluster.Definition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            {
+                // We need to add any required OpenEBS cStor disks after the node has been otherwise
+                // prepared.  We need to do this here because if we created the data and OpenEBS disks
+                // when the VM is initially created, the disk setup scripts executed during prepare
+                // won't be able to distinguish between the two disks.
+                //
+                // At this point, the data disk should be partitioned, formatted, and mounted so
+                // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-                    var volumeName        = GetResourceName($"{node.Name}-openebs");
-                    var awsInstance       = nodeNameToAwsInstance[node.Name];
-                    var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
-                    var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-                    var volume            = (Volume)null;
-
-                    // Check if we've already created the volume.
-
-                    await foreach (var volumeItem in volumePagenator.Volumes)
+                controller.AddNodeStep("openebs",
+                    async (controller, node) =>
                     {
-                        if (volumeItem.State != VolumeState.Deleting && 
-                            volumeItem.State != VolumeState.Deleted &&
-                            volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                            volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        node.Status = "openebs: checking";
+
+                        var volumeName        = GetResourceName($"{node.Name}-openebs");
+                        var awsInstance       = nodeNameToAwsInstance[node.Name];
+                        var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                        var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+                        var volume            = (Volume)null;
+
+                        // Check if we've already created the volume.
+
+                        await foreach (var volumeItem in volumePagenator.Volumes)
                         {
-                            volume = volumeItem;
-                            break;
-                        }
-                    }
-
-                    // Create the volume if it doesn't exist.
-
-                    if (volume == null)
-                    {
-                        node.Status = "openebs: create cStor volume";
-
-                        var volumeResponse = await ec2Client.CreateVolumeAsync(
-                            new CreateVolumeRequest()
+                            if (volumeItem.State != VolumeState.Deleting && 
+                                volumeItem.State != VolumeState.Deleted &&
+                                volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                             {
-                                AvailabilityZone   = availabilityZone,
-                                VolumeType         = openEBSVolumeType,
-                                Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
-                                MultiAttachEnabled = false,
-                                TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
-                            });
-
-                        volume = volumeResponse.Volume;
-                    }
-
-                    // Wait for the volume to become available.
-
-                    await NeonHelper.WaitForAsync(
-                        async () =>
-                        {
-                            node.Status = "openebs: waiting for cStor volume...";
-
-                            var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
-
-                            await foreach (var volumeItem in volumePagenator.Volumes)
-                            {
-                                if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
-                                    volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                                {
-                                    volume = volumeItem;
-                                    break;
-                                }
+                                volume = volumeItem;
+                                break;
                             }
+                        }
 
-                            return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
-                        },
-                        timeout:      operationTimeout,
-                        pollInterval: operationPollInternal);
+                        // Create the volume if it doesn't exist.
 
-                    // Attach the volume to the VM if it's not already attached.
-
-                    if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
-                    {
-                        await ec2Client.AttachVolumeAsync(
-                            new AttachVolumeRequest()
-                            {
-                                VolumeId   = volume.VolumeId,
-                                InstanceId = awsInstance.InstanceId,
-                                Device     = openEBSDeviceName,
-                            });
-                    }
-
-                    // AWS defaults to deleting volumes on termination only for the
-                    // volumes created along with the new instance.  We want the 
-                    // OpenEBS cStor volume to be deleted as well.
-
-                    await ec2Client.ModifyInstanceAttributeAsync(
-                        new ModifyInstanceAttributeRequest()
+                        if (volume == null)
                         {
-                            InstanceId          = awsInstance.InstanceId,
-                            BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
-                            {
-                                new InstanceBlockDeviceMappingSpecification()
+                            node.Status = "openebs: create cStor volume";
+
+                            var volumeResponse = await ec2Client.CreateVolumeAsync(
+                                new CreateVolumeRequest()
                                 {
-                                    DeviceName = openEBSDeviceName,
-                                    Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                    AvailabilityZone   = availabilityZone,
+                                    VolumeType         = openEBSVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    MultiAttachEnabled = false,
+                                    TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
+                                });
+
+                            volume = volumeResponse.Volume;
+                        }
+
+                        // Wait for the volume to become available.
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                node.Status = "openebs: waiting for cStor volume...";
+
+                                var volumePagenator = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
+
+                                await foreach (var volumeItem in volumePagenator.Volumes)
+                                {
+                                    if (volumeItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == volumeName) &&
+                                        volumeItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                                     {
-                                        DeleteOnTermination = true,
+                                        volume = volumeItem;
+                                        break;
                                     }
                                 }
-                            }
-                        });
-                },
-                (controller, node) => node.Metadata.OpenEbsStorage);
+
+                                return volume.State == VolumeState.Available || volume.State == VolumeState.InUse;
+                            },
+                            timeout:      operationTimeout,
+                            pollInterval: operationPollInternal);
+
+                        // Attach the volume to the VM if it's not already attached.
+
+                        if (!volume.Attachments.Any(attachment => attachment.InstanceId == awsInstance.InstanceId))
+                        {
+                            await ec2Client.AttachVolumeAsync(
+                                new AttachVolumeRequest()
+                                {
+                                    VolumeId   = volume.VolumeId,
+                                    InstanceId = awsInstance.InstanceId,
+                                    Device     = openEBSDeviceName,
+                                });
+                        }
+
+                        // AWS defaults to deleting volumes on termination only for the
+                        // volumes created along with the new instance.  We want the 
+                        // OpenEBS cStor volume to be deleted as well.
+
+                        await ec2Client.ModifyInstanceAttributeAsync(
+                            new ModifyInstanceAttributeRequest()
+                            {
+                                InstanceId          = awsInstance.InstanceId,
+                                BlockDeviceMappings = new List<InstanceBlockDeviceMappingSpecification>()
+                                {
+                                    new InstanceBlockDeviceMappingSpecification()
+                                    {
+                                        DeviceName = openEBSDeviceName,
+                                        Ebs        = new EbsInstanceBlockDeviceSpecification()
+                                        {
+                                            DeleteOnTermination = true,
+                                        }
+                                    }
+                                }
+                            });
+                    },
+                    (controller, node) => node.Metadata.OpenEbsStorage);
+            }
         }
 
         /// <inheritdoc/>
-        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
+        public override void AddSetupSteps(SetupController<NodeDefinition> controller)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("connect aws",
+                async controller =>
+                {
+                    await ConnectAwsAsync(controller);
+                });
+
+            controller.AddGlobalStep("ssh port mappings",
+                async controller =>
+                {
+                    await cluster.HostingManager.EnableInternetSshAsync();
+
+                    // We need to update the cluster node addresses and SSH ports
+                    // to match the cluster load balancer port forward rules.
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        var endpoint = cluster.HostingManager.GetSshEndpoint(node.Name);
+
+                        node.Address = IPAddress.Parse(endpoint.Address);
+                        node.SshPort = endpoint.Port;
+                    }
+                });
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            this.controller = controller;
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("ssh block ingress",
+                async controller =>
+                {
+                    await cluster.HostingManager.DisableInternetSshAsync();
+                });
         }
 
         /// <inheritdoc/>
@@ -1265,6 +1356,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
+            await SyncContext.Clear;
+
             var operations = NetworkOperations.InternetRouting;
 
             // Update the SSH listeners if there are any SSH listeners already.  This will
@@ -1296,23 +1389,25 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
+            await SyncContext.Clear;
             await UpdateNetworkAsync(NetworkOperations.EnableSsh);
         }
 
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
+            await SyncContext.Clear;
             await UpdateNetworkAsync(NetworkOperations.DisableSsh);
         }
 
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            ConnectAwsAsync(null).Wait();
+            ConnectAwsAsync(controller).WaitWithoutAggregate();
 
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {
-                throw new KubeException($"Node [{nodeName}] does not exist.");
+                throw new NeonKubeException($"Node [{nodeName}] does not exist.");
             }
 
             Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
@@ -1337,6 +1432,12 @@ namespace Neon.Kube
             return unpartitonedDisks.Single();
         }
 
+        /// <inheritdoc/>
+        public override IEnumerable<string> GetClusterAddresses()
+        {
+            return new List<string>() { ingressAddress.PublicIp } ;
+        }
+
         /// <summary>
         /// <para>
         /// Establishes the necessary client connection to AWS and validates the credentials,
@@ -1347,17 +1448,17 @@ namespace Neon.Kube
         /// even if an connection has already been established.
         /// </note>
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
+        /// <param name="controller">Optionally specifies the setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConnectAwsAsync(ISetupController controller)
+        private async Task ConnectAwsAsync(ISetupController controller = null)
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            await SyncContext.Clear;
 
-            controller.SetGlobalStepStatus("connect: AWS");
+            controller?.SetGlobalStepStatus("connect: AWS");
 
             if (isConnected)
             {
-                await GetResourcesAsync();
+                await LoadResourcesAsync();
                 return;
             }
 
@@ -1376,7 +1477,7 @@ namespace Neon.Kube
 
                 if (awsRegion == null)
                 {
-                    throw new KubeException($"AWS region [{region}] does not exist or is not available to your AWS account.");
+                    throw new NeonKubeException($"AWS region [{region}] does not exist or is not available to your AWS account.");
                 }
             }
 
@@ -1387,15 +1488,17 @@ namespace Neon.Kube
 
             // Load information about any existing cluster resources.
 
-            await GetResourcesAsync();
+            await LoadResourcesAsync();
         }
 
         /// <summary>
-        /// Loads information about cluster related resources already provisioned to AWS.
+        /// Loads references to any existing cluster resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task GetResourcesAsync()
+        private async Task LoadResourcesAsync()
         {
+            await SyncContext.Clear;
+
             // Resource group
 
             try
@@ -1416,12 +1519,6 @@ namespace Neon.Kube
             if (resourceGroup != null)
             {
                 // Ensure that the group was created exclusively for the cluster.
-                //
-                // For AWS, we're going to require that the resource group be restricted
-                // to just cluster resources.  This is different from what we do for Azure
-                // to reduce complexity and because there's less of a need for including
-                // non-cluster resources in the group because AWS supports nested resource
-                // groups.
 
                 var groupQueryResponse = await rgClient.GetGroupQueryAsync(
                     new GetGroupQueryRequest()
@@ -1434,8 +1531,46 @@ namespace Neon.Kube
 
             // Elastic IPs
 
-            ingressAddress = await GetElasticIpAsync(ingressAddressName);
-            egressAddress  = await GetElasticIpAsync(egressAddressName);
+            if (awsOptions.Network.HasCustomElasticIPs)
+            {
+                var describeResponse = await ec2Client.DescribeAddressesAsync(
+                    new DescribeAddressesRequest()
+                    {
+                        AllocationIds = new List<string>()
+                         {
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
+                         }
+                    });
+
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
+
+                if (ingressAddress == null)
+                {
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
+                }
+
+                if (egressAddress == null)
+                {
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
+                }
+
+                ingressAddressName = ingressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+
+                egressAddressName = egressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+            }
+            else
+            {
+                ingressAddress = await GetElasticIpAsync(ingressAddressName);
+                egressAddress  = await GetElasticIpAsync(egressAddressName);
+            }
 
             // VPC and it's default network ACL.
 
@@ -1447,20 +1582,6 @@ namespace Neon.Kube
                     vpcItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     vpc = vpcItem;
-                    break;
-                }
-            }
-
-            // DHCP options
-
-            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest() { Filters = clusterFilter });
-
-            await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
-            {
-                if (dhcpItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == dhcpOptionName) &&
-                    dhcpItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    dhcpOptions = dhcpItem;
                     break;
                 }
             }
@@ -1491,7 +1612,7 @@ namespace Neon.Kube
                     publicSubnet = subnetItem;
                 }
                 else if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == nodeSubnetName) &&
-                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                         subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     nodeSubnet = subnetItem;
                 }
@@ -1537,31 +1658,6 @@ namespace Neon.Kube
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
-
-            // SSH keypair
-
-            try
-            {
-                var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
-                    new DescribeKeyPairsRequest()
-                    {
-                        KeyNames = new List<string>() { keyPairName }
-                    });
-
-                keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
-            }
-            catch (AmazonServiceException e)
-            {
-                // AWS throw an exception when the named key pair doesn't exist.  We'll
-                // consider this to be normal and set [keyPairId=null].
-
-                if (e.ErrorCode != "InvalidKeyPair.NotFound")
-                {
-                    throw;
-                }
-
-                keyPairId = null;
-            }
 
             // Placement groups
 
@@ -1623,6 +1719,8 @@ namespace Neon.Kube
         /// <returns>The load balancer or <c>null</c>.</returns>
         private async Task<LoadBalancer> GetLoadBalancerAsync()
         {
+            await SyncContext.Clear;
+
             var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
 
             await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancers)
@@ -1642,6 +1740,8 @@ namespace Neon.Kube
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<InternetGateway> GetInternetGatewayAsync()
         {
+            await SyncContext.Clear;
+
             var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest() { Filters = clusterFilter });
 
             await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
@@ -1662,6 +1762,8 @@ namespace Neon.Kube
         /// <returns>The internet gateway or <c>null</c>.</returns>
         private async Task<NatGateway> GetNatGatewayAsync()
         {
+            await SyncContext.Clear;
+
             var gatewayPaginator = ec2Client.Paginators.DescribeNatGateways(new DescribeNatGatewaysRequest());
 
             await foreach (var gatewayItem in gatewayPaginator.NatGateways)
@@ -1684,6 +1786,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LoadElbTargetGroupsAsync()
         {
+            await SyncContext.Clear;
+
             nameToTargetGroup.Clear();
 
             if (vpc == null)
@@ -1709,6 +1813,8 @@ namespace Neon.Kube
         /// <returns>The <see cref="NetworkAcl"/>.</returns>
         private async Task<NetworkAcl> GetNetworkAclAsync(string networkAclId)
         {
+            await SyncContext.Clear;
+
             // $todo(jefflill): This would be more efficient with a filter.
 
             var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
@@ -1732,6 +1838,7 @@ namespace Neon.Kube
         /// <returns>The network ACL.</returns>
         private async Task<NetworkAcl> GetVpcNetworkAclAsync(Vpc vpc)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
 
             var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest() { Filters = clusterFilter });
@@ -1771,6 +1878,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task VerifyRegionAndInstanceTypesAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("verify: AWS region, availibility zone, and machine types exist");
@@ -1778,16 +1886,17 @@ namespace Neon.Kube
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;
 
-            // Verify that the zone and (implicitly the region) exist.
+            // Verify that the zone and (implicitly) the region exist.
 
             var regionsResponse = await ec2Client.DescribeRegionsAsync(new DescribeRegionsRequest());
 
             if (!regionsResponse.Regions.Any(region => region.RegionName.Equals(regionName, StringComparison.InvariantCultureIgnoreCase)))
             {
-                throw new KubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
+                throw new NeonKubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
             }
 
-            // Verify that the instance types required by the cluster are available in the region.
+            // Verify that the instance types required by the cluster are available in the region
+            // and also that all instance types support the [x86_64].
 
             var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
             var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
@@ -1803,12 +1912,12 @@ namespace Neon.Kube
 
                 if (!nameToInstanceTypeInfo.TryGetValue(instanceType, out var instanceTypeInfo))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}].  This is not available in the [{regionName}] AWS region.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}].  This is not available in the [{regionName}] AWS region.");
                 }
 
                 if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which is not supported.  neonKUBE requires an x86_64 CPU.");
+                    throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] which does not support the [x86_64] architecture.");
                 }
 
                 switch (node.Metadata.Role)
@@ -1817,12 +1926,12 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinMasterCores)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinMasterRamMiB)
                         {
-                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
+                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
                         }
                         break;
 
@@ -1830,12 +1939,12 @@ namespace Neon.Kube
 
                         if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerCores)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
                         }
 
                         if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerRamMiB)
                         {
-                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
                         }
                         break;
 
@@ -1848,7 +1957,6 @@ namespace Neon.Kube
 
                 node.Metadata.Labels.ComputeCores     = instanceTypeInfo.VCpuInfo.DefaultVCpus;
                 node.Metadata.Labels.ComputeRam       = (int)instanceTypeInfo.MemoryInfo.SizeInMiB;
-
                 node.Metadata.Labels.StorageSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
                 node.Metadata.Labels.StorageHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
                 node.Metadata.Labels.StorageEphemeral = false;
@@ -1858,75 +1966,62 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Locates tha AMI to use for provisioning the nodes in the target region.
+        /// Locates the AMI to use for provisioning the nodes in the target region.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task LocateAmiAsync(ISetupController controller)
+        private async Task LocateNodeImageAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("locate: VM AMI image");
+            // Locate the node image AMI.
+            // 
+            // ALPHA RELEASES
+            // --------------
+            // We'll use the local AMI from the current neonFORGE AWS account, 
+            // matching the tags applied by the [neon-image} tool.
+            //
+            // PRODUCTION RELEASES
+            // -------------------
+            // We'll use the matching AMI from our AWS Marketplace offering.
 
-            // $hack(jefflill):
-            //
-            // We're going to do this by querying the region for AMIs published by Canonical
-            // that satisfy somewhat fragile conditions.  This won't be a big risk after we
-            // publish our own marketplace image because we'll control things and hupefully,
-            // we won't need to build new markeplace images from base Canonical images more
-            // than a few times a year and we'll be able to debug problems if anything bad
-            // happens.  Here's how we're going to accomplish this:
-            //
-            //      * Filter for Cannonical owned images
-            //      * Filter for x86_64 architecture
-            //      * Filter for machine images
-            //      * Filter the description for Ubuntu 20.04 images
-            //
-            //      * Filter out images with "UNSUPPORTED" in the description (daily builds)
-            //        AWS doesn't support NOT filters, so we'll need to do this on the client.
-            //
-            //      * The image location specifies the date of the build at the and of the
-            //        string, like:
-            //
-            //            099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20200729
-            //
-            //        We'll use this to find the image for a specific Ubuntu release. 
+            controller.SetGlobalStepStatus("locate: node image");
 
-            var request = new DescribeImagesRequest()
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}";
+            var operatingSystem = "ubuntu-22.04";
+            var architecture    = "amd64";
+
+            if (neonKubeVersion.Prerelease != null && neonKubeVersion.Prerelease.StartsWith("alpha", StringComparison.InvariantCultureIgnoreCase))
             {
-                Owners  = new List<string>() { canonicalOwnerId },
-                Filters = new List<Filter>
+                var neonImageFilter = new List<Filter>()
                 {
-                    new Filter("architecture", new List<string>() { "x86_64" }),
-                    new Filter("image-type", new List<string>() { "machine" }),
-                    new Filter("description", new List<string>() { "Canonical, Ubuntu, 20.04 LTS*" }),
+                    new Filter() { Name = $"tag:{neonImageTagKey}", Values = new List<string>() { "true" } }
+                };
+
+                var response = await ec2Client.DescribeImagesAsync(
+                    new DescribeImagesRequest()
+                    {
+                        Filters = neonImageFilter,
+                    });
+
+                nodeImage = response.Images
+                    .Where(image => image.Name == nodeImageName &&
+                                    image.Tags.Any(tag => tag.Key == neonImageTypeTagKey && tag.Value == "node") &&
+                                    image.Tags.Any(tag => tag.Key == neonImageOsTagKey && tag.Value == operatingSystem) &&
+                                    image.Tags.Any(tag => tag.Key == neonArchTagKey && tag.Value == architecture))
+                    .SingleOrDefault();
+
+                if (nodeImage == null)
+                {
+                    throw new NeonKubeException($"Cannot locate the node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}] in region: [{region}]");
                 }
-            };
-
-            var response        = await ec2Client.DescribeImagesAsync(request);
-            var supportedImages = response.Images.Where(image => !image.Description.Contains("UNSUPPORTED")).ToList();
-
-            // Locate the AMI for the version of Ubuntu for the current cluster version.
-
-            var ubuntuImage = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == cluster.Definition.ClusterVersion && !img.IsPrepared);
-
-            // If this fails, we probably forgot to add the entry for a new cluster version to [ubuntuImages] above:
-
-            Covenant.Assert(ubuntuImage != null, $"Cannot locate AWS image information for cluster version [{cluster.Definition.ClusterVersion}].");
-
-            // Strip the date from the image Ubuntu build and use that to locate the AMI
-            // based on its location.
-
-            var pos       = ubuntuImage.UbuntuBuild.LastIndexOf('.');
-            var buildDate = ubuntuImage.UbuntuBuild.Substring(pos + 1);
-            var image     = supportedImages.SingleOrDefault(image => image.ImageLocation.EndsWith(buildDate));
-
-            if (image == null)
-            {
-                throw new KubeException($"Cannot locate the base Ubuntu [{ubuntuImage.UbuntuBuild}] AMI for the [{region}] region.");
             }
-
-            ami = image.ImageId;
+            else
+            {
+                throw new NotImplementedException("$todo(jefflill): Implement AWS Marketplace support.");
+            }
         }
 
         /// <summary>
@@ -1938,13 +2033,13 @@ namespace Neon.Kube
         /// Ensures that the resource group query was created exclusively for cluster.
         /// </summary>
         /// <param name="groupQuery">The resource group Query.</param>
-        /// <exception cref="KubeException">Thrown if the resource group is not valid.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the resource group is not valid.</exception>
         private void ValidateResourceGroupQuery(GroupQuery groupQuery)
         {
             if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
                 groupQuery.ResourceQuery.Query != ResourceGroupQuery)
             {
-                throw new KubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
+                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
             }
         }
 
@@ -1965,6 +2060,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateResourceGroupAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus($"create: [{resourceGroupName}] resource group");
@@ -2035,8 +2131,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigurePlacementGroupAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
 
             if (masterPlacementGroup == null)
             {
@@ -2074,6 +2170,7 @@ namespace Neon.Kube
         /// <returns>The elastic IP address or <c>null</c> if it doesn't exist.</returns>
         private async Task<Address> GetElasticIpAsync(string addressName)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(addressName), nameof(addressName));
 
             var addressResponse = await ec2Client.DescribeAddressesAsync();
@@ -2091,76 +2188,118 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist.
+        /// Creates the ingress and egress elastic IP addresses for the cluster if they don't already exist
+        /// or ensures that any existing Elastic IPs specified in the cluster definition actually exist.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateAddressesAsync(ISetupController controller)
+        private async Task InitializeAddressessAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            controller.SetGlobalStepStatus("create: elastic IP address");
-
-            if (ingressAddress == null)
+            if (awsOptions.Network.HasCustomElasticIPs)
             {
-                var allocateResponse = await ec2Client.AllocateAddressAsync(
-                    new AllocateAddressRequest()
-                    {
-                        Domain = DomainType.Vpc
-                    });
-                
-                var addressId = allocateResponse.AllocationId;
+                controller.SetGlobalStepStatus("check: elastic IP addresses");
 
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
+                var describeResponse = await ec2Client.DescribeAddressesAsync(
+                    new DescribeAddressesRequest()
                     {
-                        Resources = new List<string>() { addressId },
-                        Tags      = GetTags<Ec2Tag>(ingressAddressName)
+                         AllocationIds = new List<string>()
+                         {
+                             awsOptions.Network.ElasticIpIngressId,
+                             awsOptions.Network.ElasticIpEgressId
+                         }
                     });
 
-                // Retrieve the ingress address resource.
+                ingressAddress = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpIngressId);
+                egressAddress  = describeResponse.Addresses.SingleOrDefault(address => address.AllocationId == awsOptions.Network.ElasticIpEgressId);
 
-                var addressResponse = await ec2Client.DescribeAddressesAsync();
-
-                foreach (var addr in addressResponse.Addresses)
+                if (ingressAddress == null)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == ingressAddressName) &&
-                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    throw new NeonKubeException($"Ingress Elastic IP [{awsOptions.Network.ElasticIpIngressId}] does not exist.");
+                }
+
+                if (egressAddress == null)
+                {
+                    throw new NeonKubeException($"Egress Elastic IP [{awsOptions.Network.ElasticIpEgressId}] does not exist.");
+                }
+
+                ingressAddressName = ingressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+
+                egressAddressName = egressAddress.Tags
+                    .Where(tag => tag.Key == nameTagKey)
+                    .Select(tag => tag.Value)
+                    .Single();
+            }
+            else
+            {
+                controller.SetGlobalStepStatus("create: elastic IP addresses");
+
+                if (ingressAddress == null)
+                {
+                    var allocateResponse = await ec2Client.AllocateAddressAsync(
+                        new AllocateAddressRequest()
+                        {
+                            Domain = DomainType.Vpc
+                        });
+
+                    var addressId = allocateResponse.AllocationId;
+
+                    await ec2Client.CreateTagsAsync(
+                        new CreateTagsRequest()
+                        {
+                            Resources = new List<string>() { addressId },
+                            Tags      = GetTags<Ec2Tag>(ingressAddressName)
+                        });
+
+                    // Retrieve the ingress address resource.
+
+                    var describeResponse = await ec2Client.DescribeAddressesAsync();
+
+                    foreach (var addr in describeResponse.Addresses)
                     {
-                        ingressAddress = addr;
-                        break;
+                        if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == ingressAddressName) &&
+                            addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        {
+                            ingressAddress = addr;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (egressAddress == null)
-            {
-                var allocateResponse = await ec2Client.AllocateAddressAsync(
-                    new AllocateAddressRequest()
-                    {
-                        Domain = DomainType.Vpc
-                    });
-
-                var addressId = allocateResponse.AllocationId;
-
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
-                    {
-                        Resources = new List<string>() { addressId },
-                        Tags = GetTags<Ec2Tag>(egressAddressName)
-                    });
-
-                // Retrieve the egress address resource.
-
-                var addressResponse = await ec2Client.DescribeAddressesAsync();
-
-                foreach (var addr in addressResponse.Addresses)
+                if (egressAddress == null)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
-                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                    var allocateResponse = await ec2Client.AllocateAddressAsync(
+                        new AllocateAddressRequest()
+                        {
+                            Domain = DomainType.Vpc
+                        });
+
+                    var addressId = allocateResponse.AllocationId;
+
+                    await ec2Client.CreateTagsAsync(
+                        new CreateTagsRequest()
+                        {
+                            Resources = new List<string>() { addressId },
+                            Tags      = GetTags<Ec2Tag>(egressAddressName)
+                        });
+
+                    // Retrieve the egress address resource.
+
+                    var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+                    foreach (var addr in addressResponse.Addresses)
                     {
-                        egressAddress = addr;
-                        break;
+                        if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == egressAddressName) &&
+                            addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                        {
+                            egressAddress = addr;
+                            break;
+                        }
                     }
                 }
             }
@@ -2172,6 +2311,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateEgressAddressAsync()
         {
+            await SyncContext.Clear;
+
             if (egressAddress == null)
             {
                 var allocateResponse = await ec2Client.AllocateAddressAsync(
@@ -2206,12 +2347,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have one.  Note
+        /// Assigns external SSH ports to AWS instance records that don't already have one and update
+        /// the cluster nodes to reference the cluster's public IP and assigned SSH port.  Note
         /// that we're not actually going to write the instance tags here; we'll do that when we
         /// actually create any new instances.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        private void AssignExternalSshPorts(ISetupController controller)
+        private void ConfigureNodeSsh(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -2244,6 +2386,29 @@ namespace Neon.Kube
             {
                 awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
+
+            // The cluster node proxies were created before we made the external SSH port
+            // assignments above or obtained the ingress elastic IP for the load balancer,
+            // so the node proxies will be configured with the internal node IP addresses
+            // and the standard SSH port 22.
+            //
+            // These endpoints won't work from outside of the VPC, so we'll need to update
+            // the node proxies with the cluster's load balancer address and the unique
+            // SSH port assigned to each node.
+            //
+            // It would have been nicer to construct the node proxies with the correct
+            // endpoint but we have a bit of a chicken-and-egg problem so this seems
+            // to be the easiest approach.
+
+            Covenant.Assert(ingressAddress != null);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var awsInstance = nodeNameToAwsInstance[node.Name];
+
+                node.Address = IPAddress.Parse(ingressAddress.PublicIp);
+                node.SshPort = awsInstance.ExternalSshPort;
+            }
         }
 
         /// <summary>
@@ -2254,6 +2419,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             controller.SetGlobalStepStatus("configure: cluster network");
@@ -2272,45 +2438,6 @@ namespace Neon.Kube
                 vpc = vpcResponse.Vpc;
             }
 
-            // Override the default AWS DNS servers if the user has specified 
-            // custom nameservers in the cluster definition.  We'll accomplish
-            // this by creating DHCP options and associating them with the VPC.
-
-            if (networkOptions.Nameservers != null && networkOptions.Nameservers.Count > 0)
-            {
-                if (dhcpOptions == null)
-                {
-                    var sbNameservers = new StringBuilder();
-
-                    foreach (var nameserver in networkOptions.Nameservers)
-                    {
-                        sbNameservers.AppendWithSeparator(nameserver, ",");
-                    }
-
-                    var dhcpConfigurations = new List<DhcpConfiguration>()
-                    {
-                        new DhcpConfiguration() { Key = "domain-name-servers", Values = new List<string> { sbNameservers.ToString() } }
-                    };
-
-                    var dhcpOptionsResponse = await ec2Client.CreateDhcpOptionsAsync(
-                        new CreateDhcpOptionsRequest(dhcpConfigurations)
-                        {
-                            TagSpecifications = GetTagSpecifications(dhcpOptionName, ResourceType.DhcpOptions)
-                        });
-
-                    dhcpOptions = dhcpOptionsResponse.DhcpOptions;
-                }
-
-                // Associate the DHCP options with the VPC.
-
-                await ec2Client.AssociateDhcpOptionsAsync(
-                    new AssociateDhcpOptionsRequest()
-                    {
-                        VpcId         = vpc.VpcId,
-                        DhcpOptionsId = dhcpOptions.DhcpOptionsId
-                    });
-            }
-
             // Create the ALLOW-ALL security group if it doesn't exist.
 
             if (securityGroup == null)
@@ -2325,16 +2452,25 @@ namespace Neon.Kube
                     });
 
                 var securityGroupId = securityGroupResponse.GroupId;
-                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
 
-                await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
-                {
-                    if (securityGroupItem.GroupId == securityGroupId)
+                await NeonHelper.WaitForAsync(
+                    async () =>
                     {
-                        securityGroup = securityGroupItem;
-                        break;
-                    }
-                }
+                        var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
+
+                        await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
+                        {
+                            if (securityGroupItem.GroupId == securityGroupId)
+                            {
+                                securityGroup = securityGroupItem;
+                                break;
+                            }
+                        }
+
+                        return securityGroup != null;
+                    },
+                    timeout:      timeout,
+                    pollInterval: pollInterval);
 
                 Covenant.Assert(securityGroup != null);
 
@@ -2511,7 +2647,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        throw new KubeException($"Unexpected NAT Gateway state: [{natGateway.State}].");
+                        throw new NeonKubeException($"Unexpected NAT Gateway state: [{natGateway.State}].");
                     }
                 },
                 timeout:      operationTimeout,
@@ -2539,6 +2675,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureLoadBalancerAsync(ISetupController controller)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             // Create the load balancer in the subnet.
@@ -2572,33 +2709,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Imports the SSH key pair we'll use for the node security.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ImportKeyPairAsync(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            if (keyPairId == null)
-            {
-                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
-
-                controller.SetGlobalStepStatus("import: SSH keypair");
-
-                var keyPairResponse = await ec2Client.ImportKeyPairAsync(
-                    new ImportKeyPairRequest()
-                    {
-                        KeyName           = keyPairName,
-                        PublicKeyMaterial = Convert.ToBase64String(Encoding.UTF8.GetBytes(sshKey.PublicPUB)),
-                        TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
-                    });
-
-                keyPairId = keyPairResponse.KeyPairId;
-            }
-        }
-
-        /// <summary>
         /// Waits for the load balancer SSH target group for the node to become healthy.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -2606,6 +2716,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task WaitForSshTargetAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             node.Status = "waiting...";
@@ -2635,7 +2746,7 @@ namespace Neon.Kube
 
                     if (targetHealthState == TargetHealthStateEnum.Initial)
                     {
-                        node.Status = $"target: registering...";
+                        node.Status = $"target: registering (slow)...";
                         return false;
                     }
                     else if (targetHealthState == TargetHealthStateEnum.Unhealthy)
@@ -2651,7 +2762,7 @@ namespace Neon.Kube
 
                     // Report unexpected target health states.
 
-                    throw new KubeException($"Unexpected target group health state: [{targetHealthState}]");
+                    throw new NeonKubeException($"Unexpected target group health state: [{targetHealthState}]");
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
@@ -2665,7 +2776,10 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateNodeInstanceAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
@@ -2784,63 +2898,119 @@ namespace Neon.Kube
                 // SSH password by default; they use a SSH key instead.  We also want
                 // to rename the default [ubuntu] user to our standard [sysadmin].
                 //
-                // I'm going to address this by passing a first boot script as user-data
-                // when creating the instance, which will:
+                // I'm going to address this by passing a boot script as user-data when
+                // creating the instance, which will:
                 //
-                //      1. Remove [ec2-instance-connect]
-                //      1. Enable SSH password authentication
-                //      2. Rename the [ubuntu] user and home directory to [sysadmin]
-                //      3. Set the secure password for [sysadmin]
+                //      1. The script will run everytime the instance boots (because we
+                //         added the [#cloud-boothook] line but the script should only 
+                //         do anything once.  We'll touch a file the first time the script
+                //         runs and then exit the script immediately when this file exists
+                //         for subsequent restarts.
+                //
+                //         https://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-boothook
+                //
+                //      2. Set the secure password for [sysadmin].
+                //
+                //      3. Configure the node's static IP address, gateway and name servers.
+                //
+                //      4. Disable [cloud-init] network config to prevent the network
+                //         configuration from being overwritten again.
+                //
+                // Note that we needed to disable [cloud-init] networking when we created 
+                // the node image.  This means that we need to generate the NetPlan config
+                // ourselves for node instances.
+                //
+                // We're going to rely CIDR base + 1 being the default gateway and 
+                // [169.254.169.253] always being the AWS nameserver (we'll use the
+                // [169.254.169.253] nameserver when none are specified in the cluster
+                // definition.
+                //
+                //      x.x.x.1             - default gateway
+                //      169.254.169.253     - AWS DNS nameserver
+                //
+                // Note that we'll override the AWS nameserver when the cluster definition
+                // explicitly specifies nameservers.
 
-                var bootScript =
-$@"
-# To enable debugging for this AWS user-script, add the ""-ex"" options to the
-# comment at the top of the file and uncomment the command below.  These cause
-# each command and its output to be logged and can be viewable in the AWS portal.
+                var sbNameServers = new StringBuilder();
+
+                if (cluster.Definition.Network.Nameservers.Count == 0)
+                {
+                    sbNameServers.Append("169.254.169.253");
+                }
+                else
+                {
+                    foreach (var nameserver in cluster.Definition.Network.Nameservers)
+                    {
+                        sbNameServers.AppendWithSeparator(nameserver, ", ");
+                    }
+                }
+
+                var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
+                var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.NodeSubnet);
+                var bootScript       =
+$@"#cloud-boothook
+#!/bin/bash
+
+# To enable logging for this AWS user-data script, add ""-ex"" to the SHABANG above.
+# the SHEBANG above uncomment the EXEC command below.  Then each command and its
+# output to be logged and can be viewable in the AWS portal.
 #
-# WARNING: Do not leave any of this in production builds to avoid 
+#   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
+#
+# WARNING: Do not leave the ""-ex"" SHABANG option in production builds to avoid 
 #          leaking the secure SSH password to any logs!
 #          
-# Use: #!/bin/bash -ex
-#
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 #------------------------------------------------------------------------------
-# Install required packages.
+# Write a file indicating that this script was executed (for debugging).
 
-apt-get install -yq unzip
+mkdir -p /etc/neonkube/cloud-init
+echo $0 > /etc/neonkube/cloud-init/node-init
+date >> /etc/neonkube/cloud-init/node-init
+chmod 644 /etc/neonkube/cloud-init/node-init
+
+# Write this script's path to a file so that cluster setup can remove it.
+# This is important because we don't want to expose the SSH password we
+# set below.
+
+echo $0 > /etc/neonkube/cloud-init/boot-script-path
+chmod 600 /etc/neonkube/cloud-init/boot-script-path
 
 #------------------------------------------------------------------------------
-# Remove: ec2-instance-connect (this could potentially cause SSH auth issues)
+# Update the [sysadmin] user password:
 
-apt-get remove -qy ec2-instance-connect
+echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
 #------------------------------------------------------------------------------
-# Overwrite the OpenSSH configuration with a known good one and then 
-# restart OpenSSH.
+# Configure the node's static IP address:
 
-sshdConfigPath=/etc/ssh/sshd_config
+interface=$({netInterfacePath})
 
-cat <<EOF > /etc/ssh/sshd_config
-{KubeHelper.OpenSshConfig}
+rm -rf /etc/netplan/*
+
+cat <<EOF > /etc/netplan/50-static.yaml
+network:
+  version: 2
+  ethernets:
+    $interface:
+      dhcp4: false
+      dhcp6: false
+      addresses: [{node.Metadata.Address}/{privateSubnet.PrefixLength}]
+      routes:
+      - to: default
+        via: {privateSubnet.FirstUsableAddress}
+      nameservers:
+        addresses: [{sbNameServers}]
 EOF
 
-systemctl restart ssh
+chmod 644 /etc/netplan/50-static.yaml
+netplan apply
 
-#------------------------------------------------------------------------------
-# Update the [ubuntu] user password:
+# Disable [cloud-init] network configuration.
 
-echo 'ubuntu:{secureSshPassword}' | chpasswd
-
-#------------------------------------------------------------------------------
-# Rename the [ubuntu] user, home directory, and group to [sysadmin]
-
-usermod -l sysadmin ubuntu
-
-mv /home/ubuntu /home/sysadmin
-usermod -d /home/sysadmin sysadmin
-
-groupmod -n sysadmin ubuntu
+mkdir -p /etc/cloud/cloud.cfg.d
+echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 ";
                 var ebsOptimized = awsOptions.DefaultEbsOptimized;
 
@@ -2860,15 +3030,14 @@ groupmod -n sysadmin ubuntu
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
-                        ImageId          = ami,
+                        ImageId          = nodeImage.ImageId,
                         InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
                         MinCount         = 1,
                         MaxCount         = 1,
                         SubnetId         = nodeSubnet.SubnetId,
                         EbsOptimized     = ebsOptimized,
-                        PrivateIpAddress = node.Address.ToString(),
+                        PrivateIpAddress = node.Metadata.Address,
                         SecurityGroupIds = new List<string>() { securityGroup.GroupId },
-                        KeyName          = keyPairName,
                         UserData         = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript))),
                         Placement        = new Placement()
                         {
@@ -2880,11 +3049,21 @@ groupmod -n sysadmin ubuntu
                         {
                             new BlockDeviceMapping()
                             {
-                                DeviceName = dataDeviceName,
+                                DeviceName = osDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
                                     VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
                                     VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.VolumeSize) / ByteUnits.GibiBytes),
+                                    DeleteOnTermination = true
+                                }
+                            },
+                            new BlockDeviceMapping()
+                            {
+                                DeviceName = dataDeviceName,
+                                Ebs        = new EbsBlockDevice()
+                                {
+                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.OpenEBSVolumeType),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
                                     DeleteOnTermination = true
                                 }
                             }
@@ -2899,7 +3078,7 @@ groupmod -n sysadmin ubuntu
             // Wait for the instance to indicate that it's running.
             //
             // NOTE:
-            // ---- 
+            // -----
             // It's possible that the instance is still stopped when a previous user-data 
             // clearing operation was interrupted (below).  We'll just restart it here
             // to handle that.
@@ -2909,19 +3088,29 @@ groupmod -n sysadmin ubuntu
             var invalidStates = 
                 new HashSet<int>
                 {
-                    InstanceStatusCodes.ShuttingDown,
-                    InstanceStatusCodes.Stopping,
-                    InstanceStatusCodes.Terminated
+                    InstanceStateCode.ShuttingDown,
+                    InstanceStateCode.Stopping,
+                    InstanceStateCode.Terminated
                 };
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                        new DescribeInstanceStatusRequest()
+                    // It's possible that the instance created above hasn't gotten far enough
+                    // along in the provisioning process for the DescribeInstanceStatusAsync()
+                    // call below to see it.  We'll need to use a retry policy to deal with this.
+
+                    var retry = new LinearRetryPolicy(typeof(AmazonEC2Exception), retryInterval: pollInterval, timeout: timeout);
+
+                    var statusResponse = await retry.InvokeAsync(
+                        async () =>
                         {
-                            InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                            IncludeAllInstances = true
+                            return await ec2Client.DescribeInstanceStatusAsync(
+                                new DescribeInstanceStatusRequest()
+                                {
+                                    InstanceIds = new List<string>() { awsInstance.InstanceId },
+                                    IncludeAllInstances = true
+                                });
                         });
 
                     var status = statusResponse.InstanceStatuses.SingleOrDefault();
@@ -2935,16 +3124,16 @@ groupmod -n sysadmin ubuntu
 
                     if (invalidStates.Contains(state))
                     {
-                        throw new KubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
+                        throw new NeonKubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                     }
 
-                    if (state == InstanceStatusCodes.Running)
+                    if (InstanceStateCode.IsRunning(status.InstanceState.Code))
                     {
-                        node.Status = "starting...";
+                        node.Status = "starting (slow)...";
                     }
-                    else if (state == InstanceStatusCodes.Stopped)
+                    else if (InstanceStateCode.IsStopped(status.InstanceState.Code))
                     {
-                        node.Status = "restarting...";
+                        node.Status = "restarting (slow)...";
 
                         await ec2Client.StartInstancesAsync(
                             new StartInstancesRequest()
@@ -2956,6 +3145,9 @@ groupmod -n sysadmin ubuntu
                     {
                         return false;
                     }
+
+                    // This verifies that the instance has finished running thr boot
+                    // script and is ready to go.
 
                     if (!status.SystemStatus.Status.Value.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -2971,7 +3163,7 @@ groupmod -n sysadmin ubuntu
 
             //-----------------------------------------------------------------
             // Tag the EC2 volumes created for the instance.
-
+            
             node.Status = "tagging volumes";
 
             // We need to reload the instance to obtain information on its
@@ -3024,89 +3216,6 @@ groupmod -n sysadmin ubuntu
                     {
                         Resources = new List<string> { osVolumeMapping.Ebs.VolumeId },
                         Tags      = GetTags<Ec2Tag>(GetResourceName($"{node.Name}.os"), new ResourceTag(neonNodeNameTagKey, node.Name))
-                    });
-            }
-
-            //-----------------------------------------------------------------
-            // We need to clear the instance user-data because it can be displayed on
-            // the AWS portal which would expose the secure SSH password.  We'll
-            // need to stop the instance first and then restart it to pick up the change.
-            //
-            // Note that we're only going to do this once.  We'll use a tag to indicate
-            // that the user-data has been cleared for each instance.
-
-            if (!awsInstance.Instance.Tags.Any(tag => tag.Key == neonNodeUserDataTagKey && tag.Value == "cleared"))
-            {
-                node.Status = "user-data: stop instance";
-
-                await ec2Client.StopInstancesAsync(
-                    new StopInstancesRequest()
-                    {
-                         InstanceIds = new List<string>() { awsInstance.InstanceId }
-                    });
-
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                            new DescribeInstanceStatusRequest()
-                            {
-                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                                IncludeAllInstances = true
-                            });
-
-                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
-                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
-
-                        return state == InstanceStatusCodes.Stopped;
-                    },
-                    timeout:      operationTimeout,
-                    pollInterval: operationPollInternal);
-
-                node.Status = "user-data: clear";
-
-                await ec2Client.ModifyInstanceAttributeAsync(
-                    new ModifyInstanceAttributeRequest()
-                    {
-                        InstanceId = awsInstance.InstanceId,
-                        UserData   = string.Empty
-                    });
-
-                node.Status = "user-data: restart instance";
-
-                await ec2Client.StartInstancesAsync(
-                    new StartInstancesRequest()
-                    {
-                        InstanceIds = new List<string>() { awsInstance.InstanceId }
-                    });
-
-                // Wait for the instance to report being ready.
-
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                            new DescribeInstanceStatusRequest()
-                            {
-                                InstanceIds         = new List<string>() { awsInstance.InstanceId },
-                                IncludeAllInstances = true
-                            });
-
-                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
-                        var state  = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
-
-                        return state == InstanceStatusCodes.Running;
-                    },
-                    timeout: operationTimeout,
-                    pollInterval: operationPollInternal);
-
-                // Indicate that this instance's user-data has been cleared.
-
-                await ec2Client.CreateTagsAsync(
-                    new CreateTagsRequest()
-                    {
-                        Resources = new List<string>() { awsInstance.InstanceId },
-                        Tags      = new List<Ec2Tag> { new Ec2Tag(neonNodeUserDataTagKey, "cleared") }
                     });
             }
         }
@@ -3174,6 +3283,8 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateNetworkAsync(NetworkOperations operations)
         {
+            await SyncContext.Clear;
+
             // We're going to use the boolean VPC tag named [neonVpcSshEnabledTagKey]
             // to persist the current external SSH access status for the cluster.
             //
@@ -3214,7 +3325,7 @@ groupmod -n sysadmin ubuntu
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { vpc.VpcId },
-                        Tags = vpc.Tags
+                        Tags      = vpc.Tags
                     });
             }
 
@@ -3222,7 +3333,7 @@ groupmod -n sysadmin ubuntu
 
             if ((operations & NetworkOperations.InternetRouting) != 0)
             {
-                await UpdateIngressEgressRulesAsync();
+                await UpdateLoadBalancerAsync();
             }
 
             if ((operations & NetworkOperations.EnableSsh) != 0)
@@ -3237,16 +3348,23 @@ groupmod -n sysadmin ubuntu
         }
 
         /// <summary>
+        /// <para>
         /// Updates the load balancer and network ACLs to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </para>
+        /// <node>
+        /// This method <b>does not change the SSH inbound NAT rules in any way.</b>
+        /// </node>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task UpdateIngressEgressRulesAsync()
+        private async Task UpdateLoadBalancerAsync()
         {
+            await SyncContext.Clear;
+
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
+            // We need to add a special ingress rule for the Kubernetes API on port 6442 and
             // load balance this traffic to the master nodes.
 
             var clusterRules = new IngressRule[]
@@ -3257,7 +3375,7 @@ groupmod -n sysadmin ubuntu
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApiServer,
                         NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Neon,
+                        Target                = IngressRuleTarget.Masters,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -3326,12 +3444,12 @@ groupmod -n sysadmin ubuntu
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
+                    case IngressRuleTarget.Masters:
 
                         targetNodes = targetMasterNodes;
                         break;
 
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Ingress:
 
                         targetNodes = targetIngressNodes;
                         break;
@@ -3427,8 +3545,8 @@ groupmod -n sysadmin ubuntu
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Neon:
-                    case IngressRuleTarget.User:
+                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.Ingress:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;
@@ -3493,8 +3611,10 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshListenersAsync()
         {
-            await ConnectAwsAsync(null);
-            AssignExternalSshPorts(null);
+            await SyncContext.Clear;
+
+            await ConnectAwsAsync(controller);
+            ConfigureNodeSsh(controller);
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
@@ -3525,8 +3645,10 @@ groupmod -n sysadmin ubuntu
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshListenersAsync()
         {
-            await ConnectAwsAsync(null);
-            AssignExternalSshPorts(null);
+            await SyncContext.Clear;
+
+            await ConnectAwsAsync(controller);
+            ConfigureNodeSsh(controller);
 
             var listenerPagenator = elbClient.Paginators.DescribeListeners(
                 new DescribeListenersRequest()
@@ -3548,6 +3670,728 @@ groupmod -n sysadmin ubuntu
                     {
                         ListenerArn = listener.ListenerArn
                     });
+            }
+        }
+
+        /// <summary>
+        /// Returns the name to use for the virtual machine that will host the node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDefinition node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+        }
+
+        /// <summary>
+        /// Converts a virtual machine name to the matching node definition.
+        /// </summary>
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The matching node definition or <c>null</c>.</returns>
+        private NodeDefinition VmNameToNodeDefinition(string vmName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+
+            var prefix = $"{clusterName}.";
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            var nodeName = vmName.Substring(prefix.Length);
+
+            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            {
+                return nodeDefinition;
+            }
+
+            return null;
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        // $note(jefflill):
+        //
+        // AWS supports pausing instances but only for instances running on a limited number
+        // of instance types and only when running Amazon Linux, so we're not going to support
+        // pausing on AWS.
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Removable;
+
+        /// <inheritdoc/>
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            await SyncContext.Clear;
+
+            // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1544
+
+            var regionName = awsOptions.Region;
+            var zoneName   = awsOptions.AvailabilityZone;
+
+            await ConnectAwsAsync();
+
+            // Verify that the zone and (implicitly) the region exist.
+
+            var regionsResponse = await ec2Client.DescribeRegionsAsync(new DescribeRegionsRequest());
+
+            if (!regionsResponse.Regions.Any(region => region.RegionName.Equals(regionName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var constraint =
+                    new HostingResourceConstraint()
+                    {
+                        ResourceType = HostingConstrainedResourceType.VmHost,
+                        Details      = $"AWS region [{regionName}] not found or available.",
+                        Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
+                    };
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints   = 
+                        new Dictionary<string, List<HostingResourceConstraint>>()
+                        {
+                            { $"AWS/{regionName}", new List<HostingResourceConstraint>() { constraint } }
+                        }
+                };
+            }
+
+            // Verify that the instance types required by the cluster are available in the region
+            // and also that all instance types support the [x86_64] architecture.
+
+            var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
+            var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
+            var constraints            = new List<HostingResourceConstraint>();
+
+            await foreach (var instanceTypeInfo in instanceTypePaginator.InstanceTypes)
+            {
+                nameToInstanceTypeInfo[instanceTypeInfo.InstanceType] = instanceTypeInfo;
+            }
+
+            var instanceTypes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                var nodeInstanceType = node.Metadata.Aws.InstanceType;
+
+                if (!instanceTypes.Contains(nodeInstanceType))
+                {
+                    instanceTypes.Add(nodeInstanceType);
+                }
+            }
+
+            foreach (var instanceType in instanceTypes)
+            {
+                if (!nameToInstanceTypeInfo.TryGetValue(instanceType, out var instanceTypeInfo))
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"Instance type [{instanceType}] is not available in AWS region [{regionName}].",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Aws.InstanceType == instanceType)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+
+                    continue;
+                }
+
+                if (!instanceTypeInfo.ProcessorInfo.SupportedArchitectures.Any(architecture => architecture == "x86_64"))
+                {
+                    constraints.Add(
+                        new HostingResourceConstraint()
+                        {
+                            ResourceType = HostingConstrainedResourceType.VmHost,
+                            Details      = $"Instance type [{instanceType}] does not support the [x86_64] architecture.",
+                            Nodes        = cluster.Nodes
+                                               .Where(node => node.Metadata.Aws.InstanceType == instanceType)
+                                               .Select(node => node.Name)
+                                               .ToList()
+                        });
+
+                    continue;
+                }
+            }
+
+            if (constraints.Count == 0)
+            {
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = true
+                };
+            }
+            else
+            {
+                var constraintDictionary = new Dictionary<string, List<HostingResourceConstraint>>();
+
+                constraintDictionary.Add($"AWS/{regionName}", constraints);
+
+                return new HostingResourceAvailability()
+                {
+                    CanBeDeployed = false,
+                    Constraints   = constraintDictionary
+                };
+            }
+        }
+        /// <inheritdoc/>
+        public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            var clusterHealth = new ClusterHealth();
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
+            await ConnectAwsAsync();
+
+            // We're going to infer the cluster provisiong status by examining the
+            // cluster login and the state of the VMs deployed to AWS.
+
+            var contextName  = $"root@{cluster.Definition.Name}";
+            var context      = KubeHelper.Config.GetContext(contextName);
+            var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
+
+            // Create a hashset with the names of the nodes that map to deployed AWS
+            // machine instances.
+
+            var existingNodes = new HashSet<string>();
+
+            foreach (var item in instanceNameToAwsInstance)
+            {
+                var nodeDefinition = VmNameToNodeDefinition(item.Key);
+
+                if (nodeDefinition != null)
+                {
+                    existingNodes.Add(nodeDefinition.Name);
+                }
+            }
+
+            // Build the cluster status.
+
+            if (context == null && clusterLogin == null)
+            {
+                // The Kubernetes context for this cluster doesn't exist, so we know that any
+                // virtual machines with names matching the virtual machines that would be
+                // provisioned for the cluster definition are conflicting.
+
+                clusterHealth.State   = ClusterState.NotFound;
+                clusterHealth.Summary = "Cluster does not exist";
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
+                }
+
+                return clusterHealth;
+            }
+            else
+            {
+                // We're going to assume that all virtual machines that match cluster node names
+                // (after stripping off any cluster prefix) belong to the cluster and we'll
+                // map the actual VM states to public node states.
+
+                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                {
+                    var nodeState = ClusterNodeState.NotProvisioned;
+
+                    if (existingNodes.Contains(node.Name))
+                    {
+                        if (nodeNameToAwsInstance.TryGetValue(node.Name, out var awsInstance))
+                        {
+                            var stateCode = InstanceStateCode.GetCode(awsInstance.Instance.State.Code);
+
+                            switch (stateCode)
+                            {
+                                case InstanceStateCode.Pending:
+
+                                    nodeState = ClusterNodeState.Starting;
+                                    break;
+                                    
+                                case InstanceStateCode.Running:
+
+                                    nodeState = ClusterNodeState.Running;
+                                    break;
+
+                                case InstanceStateCode.Stopping:
+                                case InstanceStateCode.ShuttingDown:
+
+                                    // We don't currently have a status for stopping a node so we'll
+                                    // consider it to be running because technically, it still is.
+
+                                    nodeState = ClusterNodeState.Running;
+                                    break;
+
+                                case InstanceStateCode.Stopped:
+
+                                    nodeState = ClusterNodeState.Off;
+                                    break;
+
+                                case InstanceStateCode.Terminated:
+
+                                    nodeState = ClusterNodeState.NotProvisioned;
+                                    break;
+
+                                default:
+
+                                    Covenant.Assert(false, $"Unexpected node instance status: [{stateCode}]");
+                                    break;
+                            }
+                        }
+                    }
+
+                    clusterHealth.Nodes.Add(node.Name, nodeState);
+                }
+
+                // We're going to examine the node states from the AWS perspective and
+                // short-circuit the Kubernetes level cluster health check when the cluster
+                // nodes are not provisioned, are paused or appear to be transitioning
+                // between starting, stopping, or paused states.
+
+                var commonNodeState = clusterHealth.Nodes.Values.First();
+
+                foreach (var nodeState in clusterHealth.Nodes.Values)
+                {
+                    if (nodeState != commonNodeState)
+                    {
+                        // Nodes have differing states so we're going to consider the cluster
+                        // to be transitioning.
+
+                        clusterHealth.State   = ClusterState.Transitioning;
+                        clusterHealth.Summary = "Cluster is transitioning";
+                        break;
+                    }
+                }
+
+                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                {
+                    clusterHealth.State   = ClusterState.Configuring;
+                    clusterHealth.Summary = "Cluster is partially configured";
+                }
+                else if (clusterHealth.State != ClusterState.Transitioning)
+                {
+                    // If we get here then all of the nodes have the same state so
+                    // we'll use that common state to set the overall cluster state.
+
+                    switch (commonNodeState)
+                    {
+                        case ClusterNodeState.Starting:
+
+                            clusterHealth.State   = ClusterState.Unhealthy;
+                            clusterHealth.Summary = "Cluster is starting";
+                            break;
+
+                        case ClusterNodeState.Running:
+
+                            clusterHealth.State   = ClusterState.Healthy;
+                            clusterHealth.Summary = "Cluster is configured";
+                            break;
+
+                        case ClusterNodeState.Paused:
+                        case ClusterNodeState.Off:
+
+                            clusterHealth.State   = ClusterState.Off;
+                            clusterHealth.Summary = "Cluster is turned off";
+                            break;
+
+                        case ClusterNodeState.NotProvisioned:
+
+                            clusterHealth.State   = ClusterState.NotFound;
+                            clusterHealth.Summary = "Cluster is not found.";
+                            break;
+
+                        case ClusterNodeState.Unknown:
+                        default:
+
+                            clusterHealth.State   = ClusterState.NotFound;
+                            clusterHealth.Summary = "Cluster not found";
+                            break;
+                    }
+                }
+
+                if (clusterHealth.State == ClusterState.Off)
+                {
+                    clusterHealth.Summary = "Cluster is turned off";
+
+                    return clusterHealth;
+                }
+
+                return clusterHealth;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override async Task StartClusterAsync()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // We just need to start all instances.
+
+            var instanceIds = nodeNameToAwsInstance.Values
+                .Select(awsInstance => awsInstance.InstanceId)
+                .ToList();
+
+            await ec2Client.StartInstancesAsync(new StartInstancesRequest(instanceIds));
+
+            // ...and then wait for the cluster to report being healthy.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterHealthAsync();
+
+                    return status.State == ClusterState.Healthy;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // We just need to stop all cluster instances.
+
+            var instanceIds = nodeNameToAwsInstance.Values
+                .Select(awsInstance => awsInstance.InstanceId)
+                .ToList();
+
+            await ec2Client.StopInstancesAsync(new StopInstancesRequest(instanceIds) { Force = stopMode == StopMode.TurnOff });
+
+            // ...and then wait for cluster to report being stopped.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var status = await GetClusterHealthAsync();
+
+                    return status.State == ClusterState.Off;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+        }
+
+        /// <inheritdoc/>
+        public override async Task RemoveClusterAsync(bool removeOrphans = false)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // Connect to AWS and read any cluster resources.
+
+            await ConnectAwsAsync();
+
+            // Here's how we're going to do this:
+            //
+            //      1. Terminate all cluster instances
+            //      2. Remove the placement groups
+            //      3. Remove the load balancer
+            //      4. Remove all target groups
+            //      5. Remove the NAT gateway and the route tables
+            //      6. Remove resources referenced by the VPC
+            //      7. Remove the VPC
+            //      8. Release Elastic IPs created with the cluster
+            //      9. Remove the resource group
+            //
+            // Note that these resources need to be deleted in this order to unwind
+            // any dependencies and also that we're going to retry [DependencyViolation]
+            // failures because some resources take some time to be actually removed
+            // and we're also going to retry for network related problems.
+
+            var transientDetector = new Func<Exception, bool>(
+                e =>
+                {
+                    var ec2Exception = e as AmazonEC2Exception;
+
+                    if (ec2Exception != null)
+                    {
+                        switch (ec2Exception.ErrorCode)
+                        {
+                            case "DependencyViolation":
+                            case "InvalidPlacementGroup.InUse":
+
+                                return true;
+                        }
+
+                        if (e.InnerException != null)
+                        {
+                            return Retry.TransientDetector.NetworkOrHttp(e.InnerException);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+
+                    return Retry.TransientDetector.NetworkOrHttp(e);
+                });
+
+            var retry = new LinearRetryPolicy(transientDetector, retryInterval: TimeSpan.FromSeconds(5), timeout: TimeSpan.FromSeconds(900));
+
+            var instanceIds = instanceNameToAwsInstance.Values
+                .Where(value => value.InstanceId != null)
+                .Select(value => value.Instance.InstanceId)
+                .ToList();
+
+            //-----------------------------------------------------------------
+            // Step 1: Terminate all cluster instances
+
+            if (instanceIds.Count > 0)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.TerminateInstancesAsync(new TerminateInstancesRequest(instanceIds)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 2: Remove the placement groups
+
+            if (masterPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(masterPlacementGroup.GroupName)));
+            }
+
+            if (workerPlacementGroup != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(workerPlacementGroup.GroupName)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 3: Remove the load balancer
+
+            if (loadBalancer != null)
+            {
+                await retry.InvokeAsync(async () => await elbClient.DeleteLoadBalancerAsync(new DeleteLoadBalancerRequest() { LoadBalancerArn = loadBalancer.LoadBalancerArn }));
+            }
+
+            //-----------------------------------------------------------------
+            // Step #4: Remove all of the target groups
+
+            await Parallel.ForEachAsync(nameToTargetGroup.Values, parallelOptions,
+                async (targetGroup, cancellationToken) =>
+                {
+                    await retry.InvokeAsync(async () => await elbClient.DeleteTargetGroupAsync(new DeleteTargetGroupRequest() { TargetGroupArn = targetGroup.TargetGroupArn }));
+                });
+
+            //-----------------------------------------------------------------
+            // Step 5: Remove the NAT gateway
+
+            if (ingressAddress != null && ingressAddress.AssociationId != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            await ec2Client.DisassociateAddressAsync(
+                                new DisassociateAddressRequest()
+                                {
+                                    AssociationId = ingressAddress.AssociationId
+                                });
+                        }
+                        catch (AmazonEC2Exception e)
+                        {
+                            // $hack(jefflill):
+                            //
+                            // We're seeing these exceptions when it looks like the 
+                            // address was actually disassociated, so we're going to
+                            // ignore this.
+
+                            if (e.ErrorCode != "AuthFailure")
+                            {
+                                throw;
+                            }
+                        }
+                    });
+            }
+
+            if (egressAddress != null && egressAddress.AssociationId != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await retry.InvokeAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    await ec2Client.DisassociateAddressAsync(
+                                        new DisassociateAddressRequest()
+                                        {
+                                            AssociationId = egressAddress.AssociationId
+                                        });
+                                }
+                                catch (AmazonEC2Exception e)
+                                {
+                                    // $hack(jefflill):
+                                    //
+                                    // We're seeing these exceptions when it looks like the 
+                                    // address was actually disassociated, so we're going to
+                                    // ignore this.
+
+                                    if (e.ErrorCode != "AuthFailure")
+                                    {
+                                        throw;
+                                    }
+                                }
+                            });
+                    });
+            }
+
+            if (natGateway != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeleteNatGatewayAsync(new DeleteNatGatewayRequest() { NatGatewayId = natGateway.NatGatewayId }));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 6: Remove resources referenced by the VPC:
+            //
+            //      Internet Gateway
+            //      Node Subnet
+            //      Public Subnet
+            //      Security Group
+            //      Node Route Table
+            //      Public Route Table
+
+            if (internetGateway != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DetachInternetGatewayAsync(
+                            new DetachInternetGatewayRequest()
+                            {
+                                VpcId             = vpc.VpcId,
+                                InternetGatewayId = internetGateway.InternetGatewayId
+                            });
+                    });
+
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteInternetGatewayAsync(
+                            new DeleteInternetGatewayRequest()
+                            { 
+                                InternetGatewayId = internetGateway.InternetGatewayId 
+                            });
+                    });
+            }
+
+            if (nodeSubnet != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSubnetAsync(
+                            new DeleteSubnetRequest
+                            {
+                                SubnetId = nodeSubnet.SubnetId
+                            });
+                    });
+            }
+
+            if (publicSubnet != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSubnetAsync(
+                            new DeleteSubnetRequest
+                            {
+                                SubnetId = publicSubnet.SubnetId
+                            });
+                    });
+            }
+
+            if (securityGroup != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteSecurityGroupAsync(
+                            new DeleteSecurityGroupRequest
+                            {
+                                GroupId = securityGroup.GroupId
+                            });
+                    });
+            }
+
+            if (nodeRouteTable != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteRouteTableAsync(
+                            new DeleteRouteTableRequest()
+                            {
+                                RouteTableId = nodeRouteTable.RouteTableId
+                            });
+                    });
+            }
+
+            if (publicRouteTable != null)
+            {
+                await retry.InvokeAsync(
+                    async () =>
+                    {
+                        await ec2Client.DeleteRouteTableAsync(
+                            new DeleteRouteTableRequest()
+                            {
+                                RouteTableId = publicRouteTable.RouteTableId
+                            });
+                    });
+            }
+
+            //-----------------------------------------------------------------
+            // Step 7: Remove the VPC
+
+            if (vpc != null)
+            {
+                await retry.InvokeAsync(async () => await ec2Client.DeleteVpcAsync(new DeleteVpcRequest(vpc.VpcId)));
+            }
+
+            //-----------------------------------------------------------------
+            // Step 8: Release Elastic IPs created for the cluster
+
+            if (!cluster.Definition.Hosting.Aws.Network.HasCustomElasticIPs)
+            {
+                if (ingressAddress != null)
+                {
+                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = ingressAddress.AllocationId }));
+                }
+
+                if (egressAddress != null)
+                {
+                    await retry.InvokeAsync(async () => await ec2Client.ReleaseAddressAsync(new ReleaseAddressRequest() { AllocationId = egressAddress.AllocationId }));
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Step 9: Remove the resource group
+
+            if (resourceGroup != null)
+            {
+                await retry.InvokeAsync(async () => await rgClient.DeleteGroupAsync(new DeleteGroupRequest() { Group = resourceGroup.GroupArn }));
             }
         }
     }

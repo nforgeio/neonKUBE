@@ -9,9 +9,8 @@ spec:
     server:
       root_url: "https://grafana.{{ .Values.cluster.domain }}"
     feature_toggles:
-      enable: recordedQueries tempoSearch
+      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard 
     security:
-      disable_brute_force_login_protection: true
       cookie_secure: true
       cookie_samesite: none
       allow_embedding: true
@@ -27,7 +26,6 @@ spec:
         https://sso.{{ .Values.cluster.domain }}/auth
       client_id: $__env{CLIENT_ID}
       client_secret: $__env{CLIENT_SECRET}
-      empty_scopes: false
       enabled: true
       scopes: openid email profile groups
       token_url: >-
@@ -60,7 +58,10 @@ spec:
         port: 3001
         targetPort: grafana-http
   deployment:
+    labels:
+      app: grafana
     annotations:
+      sidecar.istio.io/inject: "true"
       reloader.stakater.com/search: "true"
     envFrom:
       - secretRef:
@@ -69,6 +70,16 @@ spec:
           name: grafana-env
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
+    priorityClassName: {{ .Values.priorityClassName }}
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: grafana
+              topologyKey: kubernetes.io/hostname
   dashboardLabelSelector:
     - matchExpressions:
         - { key: app, operator: In, values: [ grafana ] }

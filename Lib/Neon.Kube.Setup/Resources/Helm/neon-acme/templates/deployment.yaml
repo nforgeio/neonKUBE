@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neon-acme
+  namespace: neon-ingress
+  labels:
+    app: neon-acme
+spec:
+  replicas:
+  selector:
+    matchLabels:
+      app: neon-acme
+  template:
+    metadata:
+      labels:
+        app: neon-acme
+    spec:
+      serviceAccountName: neon-acme
+      priorityClassName: {{ .Values.priorityClassName }}
+      containers:
+        - name: neon-acme
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+          env:
+            - name: GROUP_NAME
+              value: "acme.neoncloud.io"
+            - name: HEADEND_URL
+              value: "https://headend.neoncloud.io/"
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          volumeMounts:
+            - name: certs
+              mountPath: /tls
+              readOnly: true
+          resources:
+            {}
+      volumes:
+        - name: certs
+          secret:
+            secretName: neon-acme-webhook-tls

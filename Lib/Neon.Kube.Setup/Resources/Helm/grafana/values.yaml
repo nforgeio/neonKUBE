@@ -52,7 +52,7 @@ operator:
   image:
     organization: neon-registry.node.local
     repository: grafana-operator-grafana-operator
-    tag: v4.1.0
+    tag: v4.4.0
     sha: ""
     pullPolicy: IfNotPresent
 
@@ -67,7 +67,7 @@ pluginsInit:
 image:
   organization: neon-registry.node.local
   repository: grafana-grafana
-  tag: 8.3.1
+  tag: 8.5.0-ubuntu
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
@@ -78,10 +78,15 @@ image:
   #   - myRegistrKeySecretName
 
 securityContext:
-  runAsUser: 472
-  runAsGroup: 472
-  fsGroup: 472
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
+tracing:
+  enabled: true
+
+serviceMesh:
+  enabled: true
 
 extraConfigmapMounts: []
   # - name: certs-configmap
@@ -311,6 +316,16 @@ plugins:
   - grafana-strava-datasource
   - thalysantana-appcenter-datasource
   - grafana-athena-datasource
+  - gapit-htmlgraphics-panel
+  - boazreicher-mosaicplot-panel
+  - marcusolsson-hexmap-panel
+  - hadesarchitect-cassandra-datasource
+  - grafana-github-datasource
+  - fifemon-graphql-datasource
+  - grafana-googlesheets-datasource
+  - grafana-timestream-datasource
+  - grafana-polystat-panel
+  - grafana-salesforce-datasource
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources

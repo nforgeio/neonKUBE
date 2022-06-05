@@ -35,6 +35,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Net;
 
 namespace Neon.Kube
 {
@@ -46,7 +47,7 @@ namespace Neon.Kube
     public class HypervisorHost
     {
         /// <summary>
-        /// The XenServer hostname.  This is used to by <see cref="NodeDefinition"/> instances
+        /// The XenServer name.  This is used to by <see cref="NodeDefinition"/> instances
         /// to specify where a cluster node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -85,27 +86,33 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
+            var hypervisorHostPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}";
+
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Name)}] is required when specifying a hypervisor host.");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Name)}] is required when specifying a hypervisor host.");
             }
 
             if (string.IsNullOrEmpty(Address))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Address)}] is required when specifying a hypervisor host.");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}] is required when specifying a hypervisor host.");
+            }
+
+            if (!IPAddress.TryParse(Address, out var ipAddress) && !NetHelper.IsValidHost(Address))
+            {
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}={Address}] is not a valid IP address or hostname.");
             }
 
             if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostUsername))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostUsername)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostUsername)}].");
             }
 
             if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostPassword))
             {
-                throw new ClusterDefinitionException($"[{nameof(HypervisorHost)}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostPassword)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostPassword)}].");
             }
         }
     }

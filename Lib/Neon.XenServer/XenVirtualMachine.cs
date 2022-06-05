@@ -28,7 +28,7 @@ namespace Neon.XenServer
     public class XenVirtualMachine : XenObject
     {
         /// <summary>
-        /// Constructs an instance from raw property values returned by the <b>xe CLI</b>.
+        /// Constructs an instance from raw property values returned by the <b>xe client</b>.
         /// </summary>
         /// <param name="rawProperties">The raw object properties.</param>
         internal XenVirtualMachine(IDictionary<string, string> rawProperties)
@@ -44,9 +44,12 @@ namespace Neon.XenServer
                 this.NameLabel = nameLabel;
             }
 
-            if (rawProperties.TryGetValue("power-state", out var powerState))
+            if (rawProperties.TryGetValue("power-state", out var rawPowerState))
             {
-                this.PowerState = powerState;
+                if (NeonHelper.TryParse<XenVmPowerState>(rawPowerState, out var powerState))
+                {
+                    this.PowerState = powerState;
+                }
             }
 
             // We're only going to explicitly support one network interface,
@@ -92,7 +95,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Returns the virtual machine state.
         /// </summary>
-        public string PowerState { get; private set; }
+        public XenVmPowerState PowerState { get; private set; } = XenVmPowerState.Unknown;
 
         /// <summary>
         /// Returns the IP address associated with the VM or <c>null</c>
@@ -103,6 +106,6 @@ namespace Neon.XenServer
         /// <summary>
         /// Indicates whether the virtual machine is running.
         /// </summary>
-        public bool IsRunning => PowerState == "running";
+        public bool IsRunning => PowerState == XenVmPowerState.Running;
     }
 }

@@ -20,6 +20,9 @@ enableJsonLogging: false
 
 replicas: 1
 
+serviceMesh:
+  enabled: true
+
 # general configuration parameters
 configGeneral:
   # choose if deployment creates/updates CRDs with OpenAPIV3Validation
@@ -50,7 +53,7 @@ configGeneral:
   # set_memory_request_to_limit: false
 
   # map of sidecar names to docker images
-  # sidecar_docker_images:
+  #  sidecar_docker_images:
   #  example: "exampleimage:exampletag"
 
   # number of routines the operator spawns to process requests concurrently
@@ -163,9 +166,9 @@ configKubernetes:
   secret_name_template: "{username}.{cluster}.credentials.{tprkind}"
   # set user and group for the spilo container (required to run Spilo as non-root process)
   spilo_runasuser: 101
-  spilo_runasgroup: 1337
+  spilo_runasgroup: 1000
   # group ID with write-access to volumes (required to run Spilo as non-root process)
-  spilo_fsgroup: 1337
+  spilo_fsgroup: 1000
 
   # whether the Spilo container should run in privileged mode
   spilo_privileged: false
@@ -240,7 +243,7 @@ configLoadBalancer:
 # options to aid debugging of the operator itself
 configDebug:
   # toggles verbose debug logs from the operator
-  debug_logging: true
+  debug_logging: false
   # toggles operator functionality that require access to the postgres database
   enable_database_access: true
 
@@ -398,7 +401,7 @@ resources:
     memory: 500Mi
   requests:
     cpu: 50m
-    memory: 100Mi
+    memory: 50Mi
 
 securityContext:
   runAsUser: 1000
@@ -420,6 +423,10 @@ tolerations:
   - key: node-role.kubernetes.io/master
     operator: Exists
     effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
 
 controllerID:
   # Specifies whether a controller ID should be defined for the operator
@@ -429,7 +436,13 @@ controllerID:
   # The name of the controller ID to use.
   # If not set and create is true, a name is generated using the fullname template
   name:
-
+  
+healthCheck:
+  enabled: true
+  image: 
+    organization: neon-registry.node.local
+    repository: zalan-postgres-health-check
+    tag: neonkube-0.5.0-alpha
 
 metrics:
   enabled: true

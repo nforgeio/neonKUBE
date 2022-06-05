@@ -69,12 +69,12 @@ namespace Neon.Kube
         /// <summary>
         /// Ensures that the login information is valid.
         /// </summary>
-        /// <exception cref="KubeException">Thrown if the instance is invalid.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the instance is invalid.</exception>
         public void Validate()
         {
             if (Context == null || User == null)
             {
-                throw new KubeException("Invalid login.");
+                throw new NeonKubeException("Invalid login.");
             }
         }
     }

@@ -56,9 +56,6 @@ namespace NeonCli
     [Command]
     public class ClusterSetupCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const string usage = @"
 Configures a neonKUBE cluster as described in the cluster definition file.
 
@@ -73,8 +70,12 @@ OPTIONS:
                           for debugging cluster setup  issues.  Do not
                           use for production clusters.
 
-    --max-parallel=#            - Specifies the maximum number of node related operations
-                                  to perform in parallel.  This defaults to [6].
+    --max-parallel=#    - Specifies the maximum number of node related operations
+                          to perform in parallel.  This defaults to [6].
+
+    --disable-pending   - Disable parallization of setup tasks across steps.
+                          This is generally intended for use while debugging
+                          cluster setup and may slow down setup substantially.
 
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
@@ -94,16 +95,16 @@ OPTIONS:
                           after it's been setup.  Note that checking is disabled
                           when [--debug] is specified.
 
-    --automation-folder - Indicates that the command must not impact normal clusters
+                          NOTE: A non-zero exit code will be returned when this
+                                option is specified and one or more chechks fail.
+
+    --clusterspace      - Indicates that the command must not impact normal clusters
                           by changing the current login, Kubernetes config or
                           other files like cluster deployment logs.  This is
                           used for automated CI/CD or unit test cluster deployments 
                           while not disrupting the built-in neonDESKTOP or
                           other normal clusters.
 ";
-        private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string        logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
-        private const string        logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
         private KubeConfigContext   kubeContext;
         private ClusterLogin        clusterLogin;
@@ -112,7 +113,16 @@ OPTIONS:
         public override string[] Words => new string[] { "cluster", "setup" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--unredacted", "--max-parallel", "--force", "--upload-charts", "--debug", "--check", "--automation-folder" };
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--unredacted",
+            "--max-parallel",
+            "--disable-pending",
+            "--force",
+            "--upload-charts",
+            "--debug",
+            "--check",
+            "--clusterspace" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -129,6 +139,8 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+            Console.WriteLine();
+
             // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
@@ -141,8 +153,9 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var check             = commandLine.HasOption("--check");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
-            var automationFolder  = commandLine.GetOption("--automation-folder");
+            var clusterspace      = commandLine.GetOption("--clusterspace");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var disablePending    = commandLine.HasOption("--disable-pending");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -154,7 +167,7 @@ OPTIONS:
 
             if (clusterLogin == null)
             {
-                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
+                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via: neon cluster prepare...");
                 Program.Exit(1);
             }
 
@@ -207,22 +220,15 @@ OPTIONS:
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
-#if ENTERPRISE
-            if (clusterDefinition.Hosting.Environment == HostingEnvironment.Wsl2)
-            {
-                var distro = new Wsl2Proxy(KubeConst.NeonDesktopWsl2BuiltInDistroName, KubeConst.SysAdminUser);
-
-                clusterDefinition.Masters.FirstOrDefault().Address = distro.Address;
-            }
-#endif
-
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                maxParallel:        maxParallel,
-                unredacted:         unredacted,
-                debugMode:          debug,
-                uploadCharts:       uploadCharts,
-                automationFolder:   automationFolder);
+                maxParallel:    maxParallel,
+                unredacted:     unredacted,
+                debugMode:      debug,
+                uploadCharts:   uploadCharts,
+                clusterspace:   clusterspace);
+
+            controller.DisablePendingTasks = disablePending;
 
             controller.StatusChangedEvent +=
                 status =>
@@ -234,13 +240,33 @@ OPTIONS:
             {
                 case SetupDisposition.Succeeded:
 
+                    var pendingGroups = controller.GetPendingGroups();
+
+                    if (pendingGroups.Count > 0)
+                    {
+                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.WriteLine();
+
+                        foreach (var groupName in pendingGroups)
+                        {
+                            Console.WriteLine($"   {groupName}");
+                        }
+
+                        Program.Exit(1);
+                    }
+
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is ready.");
                     Console.WriteLine();
 
                     if (check && !debug)
                     {
-                        await CheckAsync();
+                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
+
+                        if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
+                        {
+                            Program.Exit(1);
+                        }
                     }
 
                     Program.Exit(0);
@@ -270,85 +296,6 @@ OPTIONS:
             }
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Performs development related cluster checks.
-        /// </summary>
-        private async Task CheckAsync()
-        {
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile());
-
-            await CheckContainerImagesAsync(k8s);
-        }
-
-        /// <summary>
-        /// Verifies that all of the container images loaded on the pods are specified in the
-        /// container manifest.  Any images that aren't in the manifest need to be preloaded
-        /// into the node image.
-        /// </summary>
-        /// <param name="k8s">The cluster's Kubernertes client.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CheckContainerImagesAsync(Kubernetes k8s)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            Console.Error.WriteLine("* Checking container images");
-
-            var installedImages = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var image in KubeSetup.ClusterManifest.ContainerImages)
-            {
-                installedImages.Add(image.SourceRef);
-            }
-
-            var nodes      = await k8s.ListNodeAsync();
-            var badImages  = new List<string>();
-            var sbBadImage = new StringBuilder();
-
-            foreach (var node in nodes.Items)
-            {
-                foreach (var image in node.Status.Images)
-                {
-                    var found = false;
-
-                    foreach (var name in image.Names)
-                    {
-                        if (installedImages.Contains(name))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        sbBadImage.Clear();
-
-                        foreach (var name in image.Names.OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase))
-                        {
-                            sbBadImage.AppendWithSeparator(name, ", ");
-                        }
-
-                        badImages.Add(sbBadImage.ToString());
-                    }
-                }
-            }
-
-            if (badImages.Count > 0)
-            {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"WARNING!");
-                Console.Error.WriteLine($"========");
-                Console.Error.WriteLine($"[{badImages.Count}] container images are present in cluster without being included");
-                Console.Error.WriteLine($"in the cluster manifest.  These images need to be added to the node image.");
-                Console.Error.WriteLine();
-
-                foreach (var badImage in badImages)
-                {
-                    Console.Error.WriteLine(badImage);
-                }
-            }
         }
     }
 }

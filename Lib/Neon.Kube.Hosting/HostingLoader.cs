@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// will be ignored.
         /// </note>
         /// </summary>
-        /// <exception cref="KubeException">Thrown if multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="NeonKubeException">Thrown if multiple managers implement support for the same hosting environment.</exception>
         public static void Initialize()
         {
             lock (syncLock)
@@ -101,17 +101,7 @@ namespace Neon.Kube
                 BareMetalHostingManager.Load();
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
-                HyperVLocalHostingManager.Load();
                 XenServerHostingManager.Load();
-
-                // For enterprise releases, load any additional enterprise-only hosting managers.
-
-                var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-
-                if (enterpriseHelper != null)
-                {
-                    enterpriseHelper.LoadHostingManagers();
-                }
 
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
@@ -132,7 +122,7 @@ namespace Neon.Kube
                             {
                                 if (environmentToHostingManager.TryGetValue(providerAttribute.Environment, out var existingProviderType))
                                 {
-                                    throw new KubeException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
+                                    throw new NeonKubeException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
                                 }
                             }
 
@@ -170,14 +160,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-
-            if (enterpriseHelper == null)
-            {
-                return null;
-            }
-
-            return enterpriseHelper.GetHostingManager(environment);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={environment}]");
         }
 
         /// <inheritdoc/>
@@ -191,14 +174,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, (string)null, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-
-            if (enterpriseHelper == null)
-            {
-                return null;
-            }
-
-            return enterpriseHelper.GetManager(cluster, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -212,14 +188,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, nodeImageUri, (string)null, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-
-            if (enterpriseHelper == null)
-            {
-                return null;
-            }
-
-            return enterpriseHelper.GetManagerWithNodeImageUri(cluster, nodeImageUri, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -234,14 +203,7 @@ namespace Neon.Kube
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, nodeImagePath, logFolder);
             }
 
-            var enterpriseHelper = NeonHelper.ServiceContainer.GetService<IEnterpriseHelper>();
-
-            if (enterpriseHelper == null)
-            {
-                return null;
-            }
-
-            return enterpriseHelper.GetManagerWithNodeImageFile(cluster, nodeImagePath, logFolder);
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
     }
 }

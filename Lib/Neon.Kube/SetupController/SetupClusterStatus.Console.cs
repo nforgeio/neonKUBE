@@ -236,6 +236,11 @@ namespace Neon.Kube
                         sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
                         break;
 
+                    case SetupStepState.Cancelled:
+
+                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] CANCELLED");
+                        break;
+
                     case SetupStepState.Done:
 
                         sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
@@ -341,7 +346,7 @@ namespace Neon.Kube
 
             // Display the runtime for the steps after they all have been executed.
 
-            if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running))
+            if (showRuntime && !Steps.Any(step => step.State == SetupStepState.Pending || step.State == SetupStepState.Running || step.State == SetupStepState.NotInvolved))
             {
                 var totalLabel    = "Total Setup Time";
                 var maxLabelWidth = Steps.Max(step => step.Label.Length);
@@ -370,7 +375,7 @@ namespace Neon.Kube
                 {
                     filler = new string(' ', maxLabelWidth - step.Label.Length);
 
-                    if (step.State == SetupStepState.Done || step.State == SetupStepState.Failed)
+                    if (step.State == SetupStepState.Cancelled || step.State == SetupStepState.Done || step.State == SetupStepState.Failed)
                     {
                         sbDisplay.AppendLine($" {step.Label}:    {filler}{step.Runtime} ({step.Runtime.TotalSeconds} sec)");
                     }
@@ -391,7 +396,7 @@ namespace Neon.Kube
 
             // This updates the console without flickering.
 
-            controller.ConsoleWriter.Update(sbDisplay.ToString());
+            controller.ConsoleWriter?.Update(sbDisplay.ToString());
         }
     }
 }

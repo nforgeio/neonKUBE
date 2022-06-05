@@ -30,6 +30,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -191,6 +192,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         internal static async Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
@@ -405,6 +407,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -438,6 +441,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
+            await SyncContext.Clear;
+
             ActivityRegistration  invokeInfo;
 
             lock (syncLock)
@@ -504,6 +509,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityStoppingReply> ActivityStoppingRequest(CadenceClient client, ActivityStoppingRequest request)
         {
+            await SyncContext.Clear;
+
             lock (syncLock)
             {
                 if (idToActivity.TryGetValue(new ActivityKey(client, request.ContextId), out var activity))
@@ -605,6 +612,8 @@ namespace Neon.Cadence
         /// <returns>The encoded activity results.</returns>
         private async Task<byte[]> InvokeAsync(CadenceClient client, byte[] argBytes)
         {
+            await SyncContext.Clear;
+
             var parameters     = activityMethod.GetParameters();
             var parameterTypes = new Type[parameters.Length];
 
@@ -643,6 +652,7 @@ namespace Neon.Cadence
         /// <returns>The activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(CadenceClient client, byte[] args)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             // Capture the activity information.

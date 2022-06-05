@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -290,7 +291,7 @@ namespace Neon.Xunit
         {
             Covenant.Requires<InvalidOperationException>(IsRunning);
 
-            WebHost.StopAsync().Wait();
+            WebHost.StopAsync().WaitWithoutAggregate();
             StartServer<TStartup>(BaseAddress.Port);
         }
 
@@ -300,7 +301,7 @@ namespace Neon.Xunit
             if (!IsDisposed)
             {
                 JsonClient?.Dispose();
-                WebHost?.StopAsync().Wait();
+                WebHost?.StopAsync().WaitWithoutAggregate();
 
                 JsonClient = null;
                 WebHost    = null;

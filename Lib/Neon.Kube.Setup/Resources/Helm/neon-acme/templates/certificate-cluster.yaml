@@ -8,7 +8,6 @@ spec:
   dnsNames:
     - {{ .Values.cluster.domain }}
     - "*.{{ .Values.cluster.domain }}"
-  duration: 2160h0m0s
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
@@ -23,7 +22,8 @@ spec:
       - neoncluster.io
   privateKey:
     rotationPolicy: Always
-  renewBefore: 360h0m0s
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
   secretName: neon-cluster-certificate
   usages:
     - server auth
@@ -39,7 +39,6 @@ spec:
   dnsNames:
     - {{ .Values.cluster.domain }}
     - "*.{{ .Values.cluster.domain }}"
-  duration: 2160h0m0s
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
@@ -54,7 +53,8 @@ spec:
       - neoncluster.io
   privateKey:
     rotationPolicy: Always
-  renewBefore: 360h0m0s
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
   secretName: neon-cluster-certificate
   usages:
     - server auth

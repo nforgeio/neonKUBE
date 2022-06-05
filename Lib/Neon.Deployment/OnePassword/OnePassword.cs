@@ -248,8 +248,6 @@ namespace Neon.Deployment
             {
                 EnsureSignedIn();
 
-                vault = GetVault(vault);
-
 retry:          var response = NeonHelper.ExecuteCapture("op",
                     new string[]
                     {
@@ -327,8 +325,6 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
             {
                 EnsureSignedIn();
 
-                vault = GetVault(vault);
-
 retry:          var response = NeonHelper.ExecuteCapture("op",
                     new string[]
                     {
@@ -392,29 +388,6 @@ retry:          var response = NeonHelper.ExecuteCapture("op",
             {
                 throw new OnePasswordException("You are not signed into 1Password.");
             }
-        }
-
-        /// <summary>
-        /// Returns the target vault name.
-        /// </summary>
-        /// <param name="vault">Optionally specifies a specific vault.</param>
-        /// <returns>The target vault name.</returns>
-        /// <exception cref="OnePasswordException">Thrown for 1Password related problems.</exception>
-        private static string GetVault(string vault = null)
-        {
-            if (!string.IsNullOrWhiteSpace(vault))
-            {
-                return vault;
-            }
-
-            var user = Environment.GetEnvironmentVariable("NC_USER");
-
-            if (string.IsNullOrEmpty(user))
-            {
-                throw new OnePasswordException("The [NC_USER] environment variable is not defined.  You may need to re-run [$/buildenv.cmd] as administrator.");
-            }
-
-            return $"user-{user}";
         }
 
         /// <summary>

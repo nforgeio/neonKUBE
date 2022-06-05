@@ -156,12 +156,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            SearchRegistries = SearchRegistries ?? new List<string>();
+            SearchRegistries = SearchRegistries ?? new List<string>() { "docker.io" };
             Registries       = Registries ?? new List<Registry>();
 
             // Ensure that [SearchRegistries] references are formatted correctly.
@@ -175,7 +174,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(ContainerOptions)}.{nameof(SearchRegistries)}");
+                ValidateRegistryPrefix(registry, allowWildcard: false, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(SearchRegistries)}");
             }
 
             // Ensure that any registry customizations are valid.
@@ -187,11 +186,11 @@ namespace Neon.Kube
                     continue;
                 }
 
-                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
+                ValidateRegistryPrefix(registry.Prefix, allowWildcard: true, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(Registries)}.{nameof(registry.Prefix)}");
 
                 if (!string.IsNullOrEmpty(registry.Location))
                 {
-                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(ContainerOptions)}.{nameof(Registries)}.{nameof(registry.Location)}");
+                    ValidateRegistryPrefix(registry.Location, allowWildcard: true, propertyPath: $"{nameof(ClusterDefinition.Container)}.{nameof(Registries)}.{nameof(registry.Location)}");
                 }
             }
         }

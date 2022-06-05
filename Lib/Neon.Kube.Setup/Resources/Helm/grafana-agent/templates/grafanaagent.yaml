@@ -7,6 +7,10 @@ metadata:
     app: grafana-agent
 spec:
   image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+  priorityClassName: {{ .Values.priorityClassName }}
+  podMetadata:
+    annotations:
+      sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
   containers:
   - name: grafana-agent
     env:

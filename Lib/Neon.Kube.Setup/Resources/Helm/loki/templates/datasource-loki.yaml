@@ -1,0 +1,25 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: loki
+spec:
+  name: Loki
+  datasources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki
+      secureJsonData:
+        httpHeaderValue1: '{{ .Values.cluster.name | default "neonkube" }}'
+      jsonData:
+        httpHeaderName1: 'X-Scope-OrgID'
+        manageAlerts: true
+        alertmanagerUid: 'mimirAlertmanager'
+{{- if .Values.tracing.enabled }}
+        derivedFields:
+          - datasourceUid: tempo
+            matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
+            name: traceID
+            url: "$${__value.raw}"
+{{- end }}

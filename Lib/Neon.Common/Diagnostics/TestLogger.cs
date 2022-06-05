@@ -273,15 +273,15 @@ namespace Neon.Diagnostics
 
             switch (logLevel)
             {
-                case LogLevel.Critical:     level = "CRITICAL"; break;
-                case LogLevel.Debug:        level = "DEBUG"; break;
+                case LogLevel.Critical:     level = "CRITICAL";  break;
+                case LogLevel.Debug:        level = "DEBUG";     break;
                 case LogLevel.Transient:    level = "TRANSIENT"; break;
-                case LogLevel.Error:        level = "ERROR"; break;
-                case LogLevel.Info:         level = "INFO"; break;
-                case LogLevel.None:         level = "NONE"; break;
-                case LogLevel.SError:       level = "SERROR"; break;
-                case LogLevel.SInfo:        level = "SINFO"; break;
-                case LogLevel.Warn:         level = "WARN"; break;
+                case LogLevel.Error:        level = "ERROR";     break;
+                case LogLevel.Info:         level = "INFO";      break;
+                case LogLevel.None:         level = "NONE";      break;
+                case LogLevel.SError:       level = "SERROR";    break;
+                case LogLevel.SInfo:        level = "SINFO";     break;
+                case LogLevel.Warn:         level = "WARN";      break;
 
                 default:
 

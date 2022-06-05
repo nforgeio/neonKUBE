@@ -7,11 +7,14 @@ rules:
   - neonkube.io
   resources:
   - containerregistries
+  - nodetasks
+  - nodetasks/status
   verbs:
   - get
   - list
   - watch
   - update
+  - patch
 - apiGroups:
   - ""
   resources:

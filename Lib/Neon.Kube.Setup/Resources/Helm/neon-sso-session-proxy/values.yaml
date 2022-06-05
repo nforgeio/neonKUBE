@@ -9,7 +9,7 @@ image:
   repository: neon-sso-session-proxy
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "neonkube-0.3.0-alpha"
+  tag: null
 
 imagePullSecrets: []
 nameOverride: ""
@@ -23,6 +23,9 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+serviceMesh:
+  enabled: true
 
 podAnnotations: {}
 

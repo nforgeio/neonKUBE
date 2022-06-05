@@ -509,15 +509,20 @@ namespace Neon.Common
         /// <param name="timeout">Optionally specifies the maximum time to wait.</param>
         /// <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
         /// <param name="timeoutMessage">Optionally overrides the <see cref="TimeoutException"/> message.</param>
+        /// <param name="cancellationToken">Optionally specifies a <see cref="CancellationToken"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
         /// <remarks>
         /// This method periodically calls <paramref name="predicate"/> until it
         /// returns <c>true</c> or <pararef name="timeout"/> exceeded.
         /// </remarks>
-        public static async Task WaitForAsync(Func<Task<bool>> predicate, TimeSpan timeout, TimeSpan? pollInterval = null, string timeoutMessage = null)
+        public static async Task WaitForAsync(
+            Func<Task<bool>>    predicate, 
+            TimeSpan timeout,   TimeSpan? pollInterval = null, 
+            string              timeoutMessage         = null, 
+            CancellationToken   cancellationToken      = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
@@ -528,6 +533,8 @@ namespace Neon.Common
 
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (await predicate())
                 {
                     return;
@@ -652,7 +659,7 @@ namespace Neon.Common
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             foreach (var task in tasks)
             {
@@ -667,7 +674,7 @@ namespace Neon.Common
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             foreach (var task in tasks)
             {
@@ -680,7 +687,7 @@ namespace Neon.Common
         /// when <paramref name="threads"/> is <c>null</c> or empty.  Also and <c>null</c>
         /// threads passed will be ignored.
         /// </summary>
-        /// <param name="threads">The threads.</param>
+        /// <param name="threads">The threads being waited on.</param>
         public static void WaitAll(IEnumerable<Thread> threads)
         {
             if (threads == null)
@@ -700,16 +707,22 @@ namespace Neon.Common
         /// <summary>
         /// Asynchronously waits for all of the <see cref="Task"/>s passed to complete.
         /// </summary>
-        /// <param name="tasks">The tasks being performed.</param>
-        /// <param name="timeout">The optional timeout.</param>
-        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <param name="tasks">Specifies the tasks being waited on..</param>
+        /// <param name="timeout">Optionally specifies a timeout.</param>
+        /// <param name="cancellationToken">Optionally a cancellation token.</param>
+        /// <param name="timeoutMessage">
+        /// Optionally specifies a message to be included in any <see cref="TimeoutException"/>
+        /// thrown to help the what failed.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        public static async Task WaitAllAsync(
+            IEnumerable<Task>   tasks, 
+            TimeSpan?           timeout           = null, 
+            string              timeoutMessage    = null,
+            CancellationToken   cancellationToken = default)
         {
-            await SyncContext.ClearAsync;
-
-            // There isn't a super clean way to implement this other than polling.
+            await SyncContext.Clear;
 
             if (!timeout.HasValue)
             {
@@ -722,6 +735,8 @@ namespace Neon.Common
 
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var isCompleted = true;
 
                 foreach (var task in tasks)
@@ -738,16 +753,9 @@ namespace Neon.Common
                     return;
                 }
 
-                // $todo(jefflill):
-                //
-                // We should probably signal the sub-tasks to cancel here too
-                // if that's possible.
-
-                cancellationToken.ThrowIfCancellationRequested();
-
                 if (stopwatch.Elapsed >= timeout)
                 {
-                    throw new TimeoutException();
+                    throw new TimeoutException(timeoutMessage);
                 }
 
                 await Task.Delay(250);
@@ -1782,7 +1790,7 @@ namespace Neon.Common
 
         /// <summary>
         /// Renders a <c>bool</c> value as either <b>true</b> or <b>false</b>
-        /// (lower case).
+        /// (lowercase).
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns><b>true</b> or <b>false</b>,</returns>
@@ -2017,6 +2025,7 @@ namespace Neon.Common
         /// <returns>The task result.</returns>
         public static async Task<object> GetTaskResultAsObjectAsync(Task task)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             await task;
@@ -2072,6 +2081,7 @@ namespace Neon.Common
         /// be the fully qualified pathj to <b>docker.exe</b> on Windows and just <b>docker</b>
         /// on Linux and OS/X.
         /// </summary>
+        /// <exception cref="FileNotFoundException">Thrown when the Docker client could  not be located.</exception>
         public static string DockerCli
         {
             get
@@ -2101,7 +2111,7 @@ namespace Neon.Common
                         }
                     }
 
-                    throw new Exception("Cannot locate the docker CLI.");
+                    throw new FileNotFoundException("Cannot locate the docker CLI.");
                 }
                 else
                 {

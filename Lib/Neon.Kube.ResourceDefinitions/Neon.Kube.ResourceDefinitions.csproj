@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>latest</LangVersion>
+		<Version>10000.0.1650-dev-jeff</Version>
+		<Company>neonFORGE LLC</Company>
+		<Product>neonKUBE</Product>
+		<Description>INTERNAL USE ONLY: neonKUBE Kubernetes custom resource definitions.</Description>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<Authors>neonFORGE Team</Authors>
+		<AssemblyVersion>0.0.0.0</AssemblyVersion>
+		<FileVersion>0.0.0.0</FileVersion>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.ResourceDefinitions/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+		<RootNamespace>Neon.Kube.ResourceDefinitions</RootNamespace>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AnalysisLevel>5.0</AnalysisLevel>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- 
+		We need to prevent the KubeOps build targets from trying to call the non-existent
+		program entrypoint (due to this assembly being a Library) to generate the CRDs
+		and other installation related files.
+		-->
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
+		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
+		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
+		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;KUBEOPS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;KUBEOPS</DefineConstants>
+	  <Optimize>False</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;KUBEOPS</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="KubernetesClient" Version="7.0.15" />
+		<PackageReference Include="KubeOps" Version="6.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
+</Project>

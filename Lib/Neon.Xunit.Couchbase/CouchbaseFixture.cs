@@ -37,13 +37,9 @@ namespace Neon.Xunit.Couchbase
     /// <note>
     /// <para>
     /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
-    /// support parallel test execution because fixtures may impact global machine state
-    /// like starting a Docker container, modifying the local DNS <b>hosts</b> file, or 
-    /// configuring a test database.
-    /// </para>
-    /// <para>
-    /// You should explicitly disable parallel execution in all test assemblies that
-    /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+    /// support parallel test execution.  You need to explicitly disable parallel execution in 
+    /// all test assemblies that rely on thesex test fixtures by adding a C# file called 
+    /// <c>AssemblyInfo.cs</c> with:
     /// </para>
     /// <code language="csharp">
     /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
@@ -432,7 +428,7 @@ namespace Neon.Xunit.Couchbase
                         throw;
                     }
 
-                }).Wait();
+                }).WaitWithoutAggregate();
 
             // Use the new bucket if this is the first Couchbase container initialization
             // or else substitute the new underlying bucket into the existing bucket so
@@ -464,7 +460,7 @@ namespace Neon.Xunit.Couchbase
             {
                 foreach (var _index in fullTextIndexes.indexDefs)
                 {
-                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").Wait();
+                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").WaitWithoutAggregate();
                 }
             }
 
@@ -474,7 +470,7 @@ namespace Neon.Xunit.Couchbase
 
             foreach (var index in existingIndexes.Where(index => index.Name != "#primary"))
             {
-                Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").Wait();
+                Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").WaitWithoutAggregate();
             }
 
             // Flush the bucket data.
@@ -487,7 +483,7 @@ namespace Neon.Xunit.Couchbase
                         bucketManager.Flush();
                         await Bucket.WaitUntilReadyAsync();
 
-                    }).Wait();
+                    }).WaitWithoutAggregate();
             }
 
             // Wait until all of the indexes are actually deleted as well

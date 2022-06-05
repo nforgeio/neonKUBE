@@ -78,21 +78,26 @@ namespace Neon.Temporal
         {
             public async Task CancelAsync(WorkflowExecution execution)
             {
+                await SyncContext.Clear;
                 await Activity.Client.CancelWorkflowAsync(execution);
             }
 
             public async Task GetResultAsync(WorkflowExecution execution)
             {
+                await SyncContext.Clear;
                 await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task<byte[]> GetResultBytesAsync(WorkflowExecution execution)
             {
+                await SyncContext.Clear;
                 return await Activity.Client.GetWorkflowResultAsync(execution);
             }
 
             public async Task SignalAsync(WorkflowExecution execution, string signalName, params object[] args)
             {
+                await SyncContext.Clear;
+
                 var dataConverter = Activity.Client.DataConverter;
 
                 await Activity.Client.SignalWorkflowAsync(execution, signalName, TemporalHelper.ArgsToBytes(dataConverter, args));
@@ -149,7 +154,7 @@ namespace Neon.Temporal
         /// </summary>
         public async Task CancelAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {
@@ -171,7 +176,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -193,7 +198,7 @@ namespace Neon.Temporal
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetResultAsync()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {
@@ -214,7 +219,7 @@ namespace Neon.Temporal
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (parentWorkflow != null)
             {

@@ -84,7 +84,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_WithNoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -144,7 +144,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -157,7 +157,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_WithMemos()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -198,7 +198,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Logger()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that logging within a workflow doesn't barf.
 
@@ -237,7 +237,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestTrait.Buggy)] // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_UtcNow()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify: Workflow.UtcNow(). 
 
@@ -278,7 +278,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Sleep()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify: Workflow.SleepAsync(). 
 
@@ -312,7 +312,7 @@ namespace TestCadence
         [Trait(TestTrait.Category, TestTrait.Buggy)]    // https://github.com/nforgeio/neonKUBE/issues/1166
         public async Task Workflow_SleepUntilUtc()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
 
@@ -362,7 +362,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_StubExecTwice()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a single workflow stub instance may only be used
             // to start a workflow once.
@@ -402,7 +402,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_MultiEntrypoints()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call multiple entry points.
 
@@ -436,7 +436,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_MultipleStubs()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we CANNOT reuse a workflow stub to make multiple calls.
 
@@ -637,7 +637,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NextRandomDouble()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random doubles (0.0 <= value < 1.0)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -697,7 +697,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NextRandomInt()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (unconstrained)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -751,7 +751,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NextRandomInt_Max()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (<= 1 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -811,7 +811,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NextRandomInt_MinMax()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random integers (1 million <= value <= 2 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -904,7 +904,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_NextRandomBytes()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start a workflow that will return a set of random byte arrays and verify that there
             // are only a small number of duplicates.  Then do the same with another workflow and
@@ -987,7 +987,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Echo()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we send and receive varying sizes of content, from
             // small to pretty large (1MiB).
@@ -1038,7 +1038,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_SideEffect()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that SideEffect() and SideEffect<T>() work.
 
@@ -1079,7 +1079,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_MutableSideEffect()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that MutableSideEffect() and MutableSideEffect<T>() work.
 
@@ -1153,7 +1153,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_SignalOnce()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             WorkflowSignal.Reset();
 
@@ -1170,7 +1170,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_SignalTwice()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowSignal.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
@@ -1191,7 +1191,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_SignalBeforeStart()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we're not allowed to send a signal via a
             // stub before we started the workflow.
@@ -1284,7 +1284,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_QueryOnce()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1299,7 +1299,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_QueryTwice()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1320,7 +1320,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_QueryNoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Verify that we can call a query method that doesn't
@@ -1338,7 +1338,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_QueryBeforeStart()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Verify that we're not allowed to submit a query via a
@@ -1370,7 +1370,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_GetVersion()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             WorkflowQuery.Reset();
 
             // Minimally exercise the workflow GetVersion() API.
@@ -1514,7 +1514,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Complex()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can start a workflow via different entry point methods.
 
@@ -1937,7 +1937,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Child()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that doesn't return a result.
 
@@ -1952,7 +1952,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildHello()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that accepts a
             // parameter and returns a result.
@@ -1975,7 +1975,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can run a child workflow via a future that 
             // accepts no args and doesn't return a result.  This also tests
@@ -1994,7 +1994,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can run a child workflow via a future that 
             // accepts a parameter and returns a result.
@@ -2009,7 +2009,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildActivity()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a child workflow that calls an activity.
 
@@ -2024,7 +2024,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildSignal()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can signal a child workflow.
 
@@ -2041,7 +2041,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildQuery()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that querying a child workflow works.
 
@@ -2056,7 +2056,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildNested()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that calls a child which
             // calls another child.
@@ -2071,7 +2071,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call an
             // activity with no parameters or result.
@@ -2084,7 +2084,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call a
             // local activity with no parameters or result.
@@ -2097,7 +2097,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call an
             // activity with parameters and a result.
@@ -2110,7 +2110,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that uses a future to call a
             // local activity with parameters and a result.
@@ -2123,7 +2123,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ParallelActivity()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2135,7 +2135,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ParallelLocalActivity()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2223,7 +2223,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Parallel()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var stub    = client.NewWorkflowStub<IWorkflowParallel>();
             var results = await stub.RunAsync(10);
@@ -2257,7 +2257,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_DifferentNames()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a workflow whose class and interface names
             // don't match works.  This ensures that the Cadence client
@@ -2292,7 +2292,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_WithError()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we see an exception thrown by a workflow.
 
@@ -2331,7 +2331,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Unregistered()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we see an error when attempting to execute an
             // unregistered workflow.  In this case, there is no class
@@ -2374,7 +2374,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ComplexData()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can pass and return a complex object to/from
             // a workflow.
@@ -2454,7 +2454,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Info()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that the [Workflow.WorkflowInfo] properties are
             // set correctly for a workflow.
@@ -2585,7 +2585,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ContinueAsNew()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with the same options.
@@ -2598,7 +2598,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ContinueAsNew_Options()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with new options.
@@ -2617,7 +2617,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new using a stub
             // and with the same options.
@@ -2630,7 +2630,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can continue a workflow as new using a stub
             // and with new options.
@@ -2799,7 +2799,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2813,7 +2813,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2827,7 +2827,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2841,7 +2841,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2855,7 +2855,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalWaitForLongTime()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Create an external workflow that will run for a relatively long
             // time and then pass the external ID to a child workflow that will
@@ -3030,7 +3030,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildGetExecution()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
             // works correctly against a child workflow.
@@ -3045,7 +3045,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ToUntyped()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can convert an external workflow stub into an
             // untyped [WorkflowStub].
@@ -3073,7 +3073,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_FutureChild_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that creates a [ChildWorkflowStub] and starts a child
             // workflow, passing it a parameter, signalling it, and then verifying
@@ -3087,7 +3087,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Future_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that returns a result using the future stub.
 
@@ -3100,7 +3100,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Future_WithoutResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that returns no result using the future stub.
 
@@ -3240,7 +3240,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalIdNoReuse()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can have Cadence reject duplicate workflow IDs.
 
@@ -3268,7 +3268,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalIdReuseViaOptions()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via options.
@@ -3295,7 +3295,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ExternalIdReuseViaAttribute()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via a [WorkflowMethod] attribute.
@@ -3322,7 +3322,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildIdNoReuse()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can have Cadence reject duplicate child workflow IDs.
 
@@ -3334,7 +3334,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_ChildIdReuseViaOptions()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can have Cadence use duplicate child workflow IDs.
 
@@ -3483,7 +3483,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a child workflow with no arguments or result can be 
             // called and signalled via an untyped future stub.
@@ -3496,7 +3496,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a child workflow with an argument and result can be 
             // called and signalled via an untyped future stub.
@@ -3873,7 +3873,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Single()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue a single item locally within the workflow method.
@@ -3886,7 +3886,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Multiple()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue multiple items locally within the workflow method.
@@ -3900,7 +3900,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Multiple_200()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue multiple items locally within the workflow method.
@@ -3914,7 +3914,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Timeout()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that [cadence-proxy] honors dequeue timeouts.
 
@@ -3926,7 +3926,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_TimeoutWithDequeue()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that [cadence-proxy] honors dequeue timeouts.
 
@@ -3941,7 +3941,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Close()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify the simple case where a workflow creates a queue and then
             // can enqueue/dequeue a single item locally within the workflow method.
@@ -3954,7 +3954,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a workflow can process data received via a signal
             // when is then fed to the workflow via a queue.
@@ -3973,7 +3973,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_FromSignal_Multiple()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a workflow can process data received via multiple signals
             // when are then fed to the workflow via a queue.
@@ -4007,7 +4007,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_CloseViaSignal()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that a queue closed via a signal throws a [WorkflowQueueClosedException]
             // when dequeued in the workflow.
@@ -4043,7 +4043,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_ItemMax()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // The maximim size allowed for an encoded item is 64MiB-1.  This
             // test verifies that we proactively check for this by creating 
@@ -4090,7 +4090,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_Class()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that queues can handle arbetrary class instances.
 
@@ -4111,7 +4111,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_ViaExternalStub_ByExecution()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can create a typed stub using an execution for an existing workflow
             // and use that to send a signal.
@@ -4131,7 +4131,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_Queue_ViaExternalStub_ByIDs()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can create a typed stub using IDs for an existing workflow
             // and use that to send a signal.
@@ -4294,7 +4294,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Workflow_StartToCloseTimeout()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we get the expected exception when a workflow doesn't
             // complete within a START_TO_CLOSE_TIMEOUT.
@@ -4314,7 +4314,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_StartToCloseTimeout()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we get the expected exception when an activity doesn't
             // complete within a START_TO_CLOSE_TIMEOUT.
@@ -4327,7 +4327,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_Heartbeat_Timeout()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we see an [ActivityHeartbeatTimeoutException] when
             // we run an activity that doesn't heartbeat in time.
@@ -4340,7 +4340,7 @@ namespace TestCadence
         [Fact(Timeout = CadenceTestHelper.TestTimeout)]
         public async Task Activity_DotNetException()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Call a workflow that calls an activity that throws a .NET
             // exception and verify that the exception caught by the
@@ -4358,7 +4358,7 @@ namespace TestCadence
         {
             const string taskList = "test-cadence-container";
 
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Start the [ghcr.io/neonrelease/test-cadence:latest] Docker image locally, having it
             // connect to the local Cadence cluster and then start a bunch of workflows that

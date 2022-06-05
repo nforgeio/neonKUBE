@@ -1,0 +1,1103 @@
+# The default values specified in this file are enough to deploy all of the
+# Grafana Mimir microservices but are not suitable for production load.
+# To configure the resources for production load, refer to the the small.yaml or
+# large.yaml values files.
+
+# -- Overrides the chart's name
+nameOverride: null
+
+# -- Overrides the chart's computed fullname
+fullnameOverride: mimir
+
+# Container image settings.
+# Since the image is unique for all microservices, so are image settings.
+image:
+  organization: neon-registry.node.local
+  repository: grafana-mimir
+  tag: 2.0.0
+  pullPolicy: IfNotPresent
+  # Optionally specify an array of imagePullSecrets.
+  # Secrets must be manually created in the namespace.
+  # ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  # pullSecrets:
+  #   - myRegistryKeySecretName
+
+global:
+  # definitions to set up nginx resolver
+  dnsService: kube-dns
+  dnsNamespace: kube-system
+  clusterDomain: cluster.local
+
+serviceMesh:
+  enabled: false
+
+serviceAccount:
+  create: true
+  name:
+  annotations: {}
+
+# -- Configuration is loaded from the secret called 'externalConfigSecretName'. If 'useExternalConfig' is true, then the configuration is not generated, just consumed.
+useExternalConfig: false
+
+# -- Name of the secret that contains the configuration (used for naming even if config is internal).
+externalConfigSecretName: 'mimir-config'
+
+# -- When 'useExternalConfig' is true, then changing 'externalConfigVersion' triggers restart of services - otherwise changes to the configuration cause a restart.
+externalConfigVersion: '0'
+
+# -- Reserved for internal use
+skipConfigSecret: false
+
+mimir:
+  # -- Config file for Grafana Mimir, enables templates. Needs to be copied in full for modifications.
+  config: |
+    multitenancy_enabled: false
+
+    limits:
+      max_global_series_per_user: 0
+      max_global_series_per_metric: 0 
+      enforce_metadata_metric_name: true
+      max_global_metadata_per_user: 0
+      max_global_metadata_per_metric: 0
+      max_label_names_per_series: 100
+      ingestion_rate: 50000
+
+    alertmanager:
+      data_dir: '/alertmanager'
+      enable_api: true
+      external_url: '/alertmanager'
+      fallback_config_file: /etc/mimir-alertmanager/alertmanager.yaml
+      sharding_ring:
+        replication_factor: 1
+
+    alertmanager_storage:
+      backend: s3
+      s3:
+        endpoint: minio.neon-system.svc:80
+        bucket_name: mimir-ruler
+        access_key_id: ${ACCESS_KEY_ID}
+        secret_access_key: ${SECRET_ACCESS_KEY}
+        insecure: true
+
+    frontend_worker:
+      frontend_address: {{ template "mimir.fullname" . }}-query-frontend-headless.{{ .Release.Namespace }}.svc:{{ include "mimir.serverGrpcListenPort" . }}
+
+    ruler:
+      enable_api: true
+      rule_path: '/data'
+      alertmanager_url: dnssrvnoa+http://_http-metrics._tcp.{{ template "mimir.fullname" . }}-alertmanager-headless.{{ .Release.Namespace }}.svc.cluster.local:8080/alertmanager
+
+    server:
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_max_concurrent_streams: 1000
+
+    frontend:
+      log_queries_longer_than: 10s
+      align_queries_with_step: true
+
+    compactor:
+      data_dir: "/data"
+
+    store_gateway:
+      sharding_ring:
+        replication_factor: 1
+
+    ingester:
+      ring:
+        final_sleep: 0s
+        num_tokens: 512
+        replication_factor: 1
+
+    ingester_client:
+      grpc_client_config:
+        max_recv_msg_size: 104857600
+        max_send_msg_size: 104857600
+
+    runtime_config:
+      file: /var/mimir/runtime.yaml
+
+    memberlist:
+      abort_if_cluster_join_fails: false
+      compression_enabled: false
+      join_members:
+      - {{ include "mimir.fullname" . }}-gossip-ring
+
+    # This configures how the store-gateway synchronizes blocks stored in the bucket. It uses Minio by default for getting started (configured via flags) but this should be changed for production deployments.
+    blocks_storage:
+      {{- if .Values.minio.enabled }}
+      backend: s3
+      {{- end }}
+      tsdb:
+        dir: /data/tsdb
+      bucket_store:
+        sync_dir: /data/tsdb-sync
+        {{- if .Values.memcached.enabled }}
+        chunks_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+neon-memcached.neon-system:11211
+            max_item_size: {{ .Values.memcached.maxItemMemory }}
+            timeout: 1000ms
+        {{- end }}
+        {{- if index .Values "memcached-metadata" "enabled" }}
+        metadata_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+neon-memcached.neon-system:11211
+            max_item_size: {{ (index .Values "memcached-metadata").maxItemMemory }}
+            timeout: 1000ms
+        {{- end }}
+        {{- if index .Values "memcached-queries" "enabled" }}
+        index_cache:
+          backend: memcached
+          memcached:
+            addresses: dns+neon-memcached.neon-system:11211
+            max_item_size: {{ (index .Values "memcached-queries").maxItemMemory }}
+            timeout: 1000ms
+        {{- end }}
+      {{- if .Values.minio.enabled }}
+      s3:
+        endpoint: minio.neon-system.svc:80
+        bucket_name: mimir-tsdb
+        access_key_id: ${ACCESS_KEY_ID}
+        secret_access_key: ${SECRET_ACCESS_KEY}
+        insecure: true
+      {{- end }}
+
+    ruler_storage:
+      backend: s3
+      s3:
+        endpoint: minio.neon-system.svc:80
+        bucket_name: mimir-ruler
+        access_key_id: ${ACCESS_KEY_ID}
+        secret_access_key: ${SECRET_ACCESS_KEY}
+        insecure: true
+
+# runtimeConfig provides a reloadable runtime configuration file for some specific configuration.
+runtimeConfig: {}
+
+rbac:
+  create: true
+  pspEnabled: true
+
+# ServiceMonitor configuration
+serviceMonitor:
+  # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+  enabled: true
+  # -- Alternative namespace for ServiceMonitor resources
+  namespace: null
+  # -- Namespace selector for ServiceMonitor resources
+  namespaceSelector: {}
+  # -- ServiceMonitor annotations
+  annotations: {}
+  # -- Additional ServiceMonitor labels
+  labels: {}
+  # -- ServiceMonitor scrape interval
+  interval: 60s
+  # -- ServiceMonitor scrape timeout in Go duration format (e.g. 15s)
+  scrapeTimeout: null
+  # -- ServiceMonitor relabel configs to apply to samples before scraping
+  # https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
+  relabelings: []
+  # -- ServiceMonitor will use http by default, but you can pick https as well
+  scheme: http
+  # -- ServiceMonitor will use these tlsConfig settings to make the health check requests
+  tlsConfig: null
+
+alertmanager:
+  enabled: true
+  replicas: 1
+
+  statefulSet:
+    enabled: true
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations:
+    readiness.status.sidecar.istio.io/applicationPorts: '8080,9095'
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir-distributed
+                app.kubernetes.io/instance: mimir
+                app.kubernetes.io/component: alertmanager
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+  persistence:
+    # SubPath in emptyDir for persistence, only enabled if alertmanager.statefulSet.enabled is false
+    subPath:
+
+  persistentVolume:
+    # If true and alertmanager.statefulSet.enabled is true,
+    # Alertmanager will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # Alertmanager data Persistent Volume Claim annotations
+    #
+    annotations: {}
+
+    # Alertmanager data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    #
+    accessModes:
+      - ReadWriteOnce
+
+    # Alertmanager data Persistent Volume size
+    #
+    size: 1Gi
+
+    # Subdirectory of Alertmanager data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    #
+    subPath: ''
+
+    # Alertmanager data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    #   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    #   GKE, AWS & OpenStack)
+    #
+    storageClass: "neon-internal-mimir"
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  # Tolerations for pod assignment
+  # ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 60
+
+  initContainers: []
+  # Init containers to be added to the alertmanager pod.
+  # - name: my-init-container
+  #   image: busybox:latest
+  #   command: ['sh', '-c', 'echo hello']
+
+  extraContainers: []
+  # Additional containers to be added to the alertmanager pod.
+  # - name: reverse-proxy
+  #   image: angelbarrera92/basic-auth-reverse-proxy:dev
+  #   args:
+  #     - "serve"
+  #     - "--upstream=http://localhost:3100"
+  #     - "--auth-config=/etc/reverse-proxy-conf/authn.yaml"
+  #   ports:
+  #     - name: http
+  #       containerPort: 11811
+  #       protocol: TCP
+  #   volumeMounts:
+  #     - name: reverse-proxy-auth-config
+  #       mountPath: /etc/reverse-proxy-conf
+
+  extraVolumes: []
+  # Additional volumes to the alertmanager pod.
+  # - name: reverse-proxy-auth-config
+  #   secret:
+  #     secretName: reverse-proxy-auth-config
+
+  # Extra volume mounts that will be added to the alertmanager container
+  extraVolumeMounts: []
+
+  extraPorts: []
+  # Additional ports to the alertmanager services. Useful to expose extra container ports.
+  # - port: 11811
+  #   protocol: TCP
+  #   name: http
+  #   targetPort: http
+
+  # Extra env variables to pass to the alertmanager container
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
+
+distributor:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  # Additional distributor container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: mimir-distributed
+              app.kubernetes.io/instance: mimir
+              app.kubernetes.io/component: distributor
+          topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+  persistence:
+    subPath:
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 60
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+ingester:
+  replicas: 1
+
+  statefulSet:
+    enabled: true
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  # Additional ingester container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  podManagementPolicy: Parallel
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
+
+  persistentVolume:
+    # If true and ingester.statefulSet.enabled is true,
+    # Ingester will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    #
+    enabled: true
+
+    # Ingester data Persistent Volume Claim annotations
+    #
+    annotations: {}
+
+    # Ingester data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # Ingester data Persistent Volume size
+    size: 2Gi
+
+    # Subdirectory of Ingester data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+
+    # Ingester data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    #   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    #   GKE, AWS & OpenStack)
+    #
+    storageClass: "neon-internal-mimir"
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
+
+overrides_exporter:
+  replicas: 1
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+
+  initContainers: []
+
+  service:
+    annotations: {}
+    labels: {}
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  podLabels: {}
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  persistence:
+    subPath:
+
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  extraContainers: []
+  extraVolumes: []
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity: {}
+  tolerations: []
+  terminationGracePeriodSeconds: 60
+
+ruler:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Additional ruler container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+    # log.level: info
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations:
+    readiness.status.sidecar.istio.io/applicationPorts: '8080,9095'
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity: {}
+  annotations:
+    reloader.stakater.com/search: 'true'
+  persistence:
+    subPath:
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
+
+querier:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Additional querier container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir-distributed
+                app.kubernetes.io/instance: mimir
+                app.kubernetes.io/component: querier
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+  persistence:
+    subPath:
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
+
+query_frontend:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Additional query-frontend container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir-distributed
+                app.kubernetes.io/instance: mimir
+                app.kubernetes.io/component: query-frontend
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+  persistence:
+    subPath:
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+store_gateway:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Additional store-gateway container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations:
+    readiness.status.sidecar.istio.io/applicationPorts: '8080,9095'
+
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: mimir-distributed
+              app.kubernetes.io/instance: mimir
+              app.kubernetes.io/component: store-gateway
+          topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+
+  persistentVolume:
+    # If true Store-gateway will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    #
+    enabled: true
+
+    # Store-gateway data Persistent Volume Claim annotations
+    #
+    annotations: {}
+
+    # Store-gateway data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    #
+    accessModes:
+      - ReadWriteOnce
+
+    # Store-gateway data Persistent Volume size
+    #
+    size: 2Gi
+
+    # Subdirectory of Store-gateway data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    #
+    subPath: ''
+
+
+    # Store-gateway data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    #   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    #   GKE, AWS & OpenStack)
+    #
+    storageClass: "neon-internal-mimir"
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
+
+compactor:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Additional compactor container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs:
+    log.level: info
+    log.format: json
+
+  # Pod Labels
+  podLabels: {}
+
+  # Pod Annotations
+  podAnnotations: {}
+
+  # Pod Disruption Budget
+  podDisruptionBudget: {}
+
+  nodeSelector:
+    neonkube.io/monitor.metrics-internal: 'true'
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir-distributed
+                app.kubernetes.io/instance: mimir
+                app.kubernetes.io/component: compactor
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations:
+    reloader.stakater.com/search: 'true'
+
+  persistentVolume:
+    # If true compactor will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    #
+    enabled: true
+
+    # compactor data Persistent Volume Claim annotations
+    #
+    annotations: {}
+
+    # compactor data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    #
+    accessModes:
+      - ReadWriteOnce
+
+    # compactor data Persistent Volume size
+    #
+    size: 2Gi
+
+    # Subdirectory of compactor data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    #
+    subPath: ''
+
+
+    # compactor data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    #   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    #   GKE, AWS & OpenStack)
+    #
+    storageClass: "neon-internal-mimir"
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  strategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+memcached:
+  enabled: true
+  # maxItemMemory is in bytes. Should match memcached -I flag (which is in MB)
+  # It is a string to avoid https://github.com/helm/helm/issues/1707.
+  maxItemMemory: '1048576'  # (* 1 (* 1024 1024))
+
+memcached-queries:
+  enabled: true
+  maxItemMemory: '15728640'  # (* 15 (* 1024 1024))
+
+memcached-metadata:
+  enabled: true
+  maxItemMemory: '1048576'  # (* 1 (* 1024 1024))
+
+minio:
+  enabled: true
+
+# Configuration for istio gateway
+istio:
+  service:
+    # -- Port of the nginx service
+    port: 80
+    # -- Type of the nginx service
+    type: ClusterIP
+    # -- ClusterIP of the nginx service
+    clusterIP: null
+    # -- Node port if service type is NodePort
+    nodePort: null
+    # -- Annotations for the nginx service
+    annotations: {}
+    # -- Labels for nginx service
+    labels: {}

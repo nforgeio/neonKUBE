@@ -19,9 +19,11 @@ spec:
         goharbor.io/deploy-engine: Kustomization
         goharbor.io/deploy-mode: harbor
         goharbor.io/operator-version: v1.0.0
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
       labels:
         control-plane: harbor-operator
     spec:
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - args:
         - --enable-leader-election
@@ -57,11 +59,9 @@ spec:
             port: ready
         resources:
           limits:
-            cpu: 500m
             memory: 300Mi
           requests:
-            cpu: 300m
-            memory: 200Mi
+            memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:
@@ -77,6 +77,14 @@ spec:
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
+      nodeSelector:
+        neonkube.io/neon-system.registry: 'true'
+      {{- if .Values.tolerations }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
       volumes:
       - name: cert
         secret:

@@ -31,7 +31,7 @@ namespace Neon.HyperV
     /// <summary>
     /// Describes a virtual NAT.
     /// </summary>
-    public class VirtualNAT
+    public class VirtualNat
     {
         /// <summary>
         /// The NAT's name.

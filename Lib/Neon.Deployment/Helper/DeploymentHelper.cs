@@ -34,6 +34,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Deployment
 {
@@ -95,7 +96,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry          = null,
             TimeSpan                    partTimeout    = default)
         {
-            DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry).Wait();
+            DownloadMultiPartAsync(download, targetPath, progressAction, partTimeout, retry).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -118,7 +119,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry          = null,
             TimeSpan                    partTimeout    = default)
         {
-            DownloadMultiPartAsync(uri, targetPath, progressAction, partTimeout, retry).Wait();
+            DownloadMultiPartAsync(uri, targetPath, progressAction, partTimeout, retry).WaitWithoutAggregate();
         }
 
         /// <summary>
@@ -160,6 +161,7 @@ namespace Neon.Deployment
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(manifest != null, nameof(manifest));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetPath), nameof(targetPath));
 
@@ -177,12 +179,27 @@ namespace Neon.Deployment
             var targetMd5Path  = Path.Combine(Path.GetDirectoryName(targetPath), Path.GetFileName(targetPath) + ".md5");
             var nextPartNumber = 0;
 
-            // If the target file already exists along with its MD5 hash file, then compare the
-            // existing MD5 against the manifest MD5 and skip the download when these match.
+            // If the target file already exists along with its MD5 hash file:
+            //
+            //      1. Compare the manifest MD5 with the local MD5 hash file and
+            //         quickly continue with the download when these don't match.
+            //
+            //      2. When the MD5 files match, compute the MD5 of the downloaded
+            //         file and compare that with the manifest and continue with
+            //         the download when these don't match.
 
             if (File.Exists(targetPath) && File.Exists(targetMd5Path) && File.ReadAllText(targetMd5Path).Trim() == manifest.Md5)
             {
-                return targetPath;
+                if (File.ReadAllText(targetMd5Path).Trim() == manifest.Md5)
+                {
+                    using (var downloadStream = File.OpenRead(targetPath))
+                    {
+                        if (CryptoHelper.ComputeMD5String(downloadStream) == manifest.Md5)
+                        {
+                            return targetPath;
+                        }
+                    }
+                }
             }
 
             NeonHelper.DeleteFile(targetMd5Path);   // We'll recompute this below
@@ -269,7 +286,7 @@ namespace Neon.Deployment
                                 {
                                     output.Position = pos;
 
-                                    var response = await httpClient.GetAsync(part.Uri, cancellationToken);
+                                    var response = await httpClient.GetAsync(part.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
                                     response.EnsureSuccessStatusCode();
 
@@ -367,6 +384,8 @@ namespace Neon.Deployment
             IRetryPolicy                retry             = null,
             CancellationToken           cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             DownloadManifest manifest;
 
             using (var httpClient = new HttpClient())

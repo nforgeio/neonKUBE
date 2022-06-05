@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
@@ -18,8 +19,11 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Service;
+using Neon.Tasks;
 using Neon.Web;
+
 using Newtonsoft.Json;
+
 using Yarp;
 using Yarp.ReverseProxy;
 using Yarp.ReverseProxy.Forwarder;
@@ -29,7 +33,7 @@ namespace NeonSsoSessionProxy.Controllers
     [ApiController]
     public class AuthController : NeonControllerBase
     {
-        private NeonSsoSessionProxyService   NeonSsoSessionProxyService;
+        private Service   NeonSsoSessionProxyService;
         private HttpMessageInvoker           httpClient;
         private IHttpForwarder               forwarder;
         private SessionTransformer           transformer;
@@ -48,7 +52,7 @@ namespace NeonSsoSessionProxy.Controllers
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
         public AuthController(
-            NeonSsoSessionProxyService   NeonSsoSessionProxyService,
+            Service   NeonSsoSessionProxyService,
             HttpMessageInvoker           httpClient,
             IHttpForwarder               forwarder,
             IDistributedCache            cache,

@@ -188,8 +188,8 @@ namespace TestCadence
                 this.fixture       = fixture;
                 this.fixtureClient = fixture.Client;
 
-                fixtureClient.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                fixtureClient.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
+                fixtureClient.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                fixtureClient.StartWorkerAsync(CadenceTestHelper.TaskList).WaitWithoutAggregate();
 
                 // Initialize the test clients and workers
 
@@ -197,22 +197,22 @@ namespace TestCadence
                 test1Client                   = CadenceClient.ConnectAsync(test1Settings).Result;
                 fixture.State["test1-client"] = test1Client;
 
-                test1Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test1Client.StartWorkerAsync(test1Settings.DefaultTaskList).Wait();
+                test1Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test1Client.StartWorkerAsync(test1Settings.DefaultTaskList).WaitWithoutAggregate();
 
                 test2Settings.Servers         = fixtureClient.Settings.Servers;
                 test2Client                   = CadenceClient.ConnectAsync(test2Settings).Result;
                 fixture.State["test2-client"] = test2Client;
 
-                test2Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test2Client.StartWorkerAsync(test2Settings.DefaultTaskList).Wait();
+                test2Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test2Client.StartWorkerAsync(test2Settings.DefaultTaskList).WaitWithoutAggregate();
 
                 test3Settings.Servers         = fixtureClient.Settings.Servers;
                 test3Client                   = CadenceClient.ConnectAsync(test3Settings).Result;
                 fixture.State["test3-client"] = test3Client;
                 
-                test3Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test3Client.StartWorkerAsync(test1Settings.DefaultTaskList).Wait();
+                test3Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                test3Client.StartWorkerAsync(test1Settings.DefaultTaskList).WaitWithoutAggregate();
             }
             else
             {

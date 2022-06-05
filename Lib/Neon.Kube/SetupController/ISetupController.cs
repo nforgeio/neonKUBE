@@ -110,7 +110,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the console updater used internally to write the setup status to the
-        /// <see cref="Console"/> without flickering.
+        /// <see cref="Console"/> without flickering.  This will be <c>null</c> for non-console
+        /// applications.
         /// </summary>
         SetupConsoleWriter ConsoleWriter { get; }
 
@@ -175,12 +176,12 @@ namespace Neon.Kube
 
         /// <summary>
         /// Logs a progress for a specific node with a verb and message.  
-        /// This will be formatted like <b>VERB: MESSAGE</b>.
+        /// This will be formatted like <b>VERB MESSAGE</b>.
         /// </summary>
         /// <param name="node">Identifies the node</param>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogProgress(ILinuxSshProxy node, string verb, string message);
+        void LogProgress(SSH.ILinuxSshProxy node, string verb, string message);
 
         /// <summary>
         /// <para>
@@ -193,7 +194,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">Identifies the node</param>
         /// <param name="message">The message.</param>
-        void LogProgressError(ILinuxSshProxy node, string message);
+        void LogProgressError(SSH.ILinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>
@@ -322,10 +323,74 @@ namespace Neon.Kube
         void SetGlobalStepStatus(string status = null);
 
         /// <summary>
-        /// Indicates that setup should be cancelled.  Setting this will request
-        /// cancellation.  Note that once this has been set to <c>true</c>, subsequent
-        /// <c>false</c> assignments will be ignored.
+        /// Attempts to cancel the setup operation.  This will cause <see cref="IsCancelPending"/> 
+        /// to return <c>true</c> and calls to <see cref="ThrowIfCancelled()"/> to throw a
+        /// <see cref="OperationCanceledException"/>.
         /// </summary>
-        bool CancelPending { get; set; }
+        void Cancel();
+
+        /// <summary>
+        /// Throws a <see cref="OperationCanceledException"/> after <see cref="Cancel()"/> has been called.
+        /// </summary>
+        void ThrowIfCancelled();
+
+        /// <summary>
+        /// Returns the <see cref="CancellationToken"/> that will be signalled when setup is cancelled.
+        /// </summary>
+        CancellationToken CancellationToken { get; }
+
+        /// <summary>
+        /// Indicates that setup is being cancelled.
+        /// </summary>
+        bool IsCancelPending { get; }
+
+        /// <summary>
+        /// This controls whether <see cref="AddPendingTaskAsync(string, Task, string, string, INodeSshProxy)"/> actually
+        /// holds pending tasks to be awaited by a future step (the default) or whether the <see cref="AddPendingTaskAsync(string, Task, string, string, INodeSshProxy)"/>
+        /// awaits the task itself.  This is useful for debugging because executing a bunch of tasks in parallel is
+        /// likely to mess with the node and global logs since those are not really structured to handle parallel
+        /// operations at this time.
+        /// </summary>
+        bool DisablePendingTasks { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Adds a pending task to a group of related tasks, creating the group when necessary.  This is used
+        /// as an aid to parallelizing setup operations to improve cluster setup times.
+        /// </para>
+        /// <note>
+        /// If <see cref="DisablePendingTasks"/> is <c>true</c>, then this method will await the task immediately,
+        /// creating any empty group if necessary.  This is useful for debugging because executing a bunch of tasks in 
+        /// parallel is likely to mess with the node and global logs since those are not really structured to handle
+        /// parallel operations at this time.
+        /// </note>
+        /// </summary>
+        /// <param name="groupName">The task group name.</param>
+        /// <param name="task">The pending task.</param>
+        /// <param name="verb">The progress verb.</param>
+        /// <param name="message">The progress message.</param>
+        /// <param name="node">
+        /// Optionally specifies the node where the operation is happening.  The operation will
+        /// be considered to be cluster global when this is <c>null</c>.
+        /// </param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="WaitForPendingTasksAsync(string)"/> has already been called for this group.</exception>
+        Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null);
+
+        /// <summary>
+        /// Waits for the pending tasks in a group to complete.
+        /// </summary>
+        /// <param name="groupName">The task group name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="WaitForPendingTasksAsync(string)"/> has already been called for this group.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no group named <paramref name="groupName"/>.</exception>
+        Task WaitForPendingTasksAsync(string groupName);
+
+        /// <summary>
+        /// Returns the names of any pending task groups that have not been awaited via <see cref="WaitForPendingTasksAsync(string)"/>.
+        /// This can be used by setup implementations to verify that all pending tasks have completed.
+        /// </summary>
+        /// <returns>The list of pending task group names.</returns>
+        List<string> GetPendingGroups();
     }
 }

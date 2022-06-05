@@ -12,7 +12,7 @@ data:
       agent:
         enabled: true
         instance: ${HOSTNAME}
-        scrape_integration: true
+        scrape_integration: false
       node_exporter:
         enabled: true
         wal_truncate_frequency: 15m
@@ -27,22 +27,29 @@ data:
     metrics:
       global:
         remote_write:
-          - url: http://cortex:9009/api/prom/push
+          - url: http://mimir-distributor:8080/api/v1/push
             headers: 
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
+            queue_config:
+              min_backoff: 1m
+              max_backoff: 5m
+              batch_send_deadline: 5m
         external_labels:
           cluster: {{ .Values.cluster.name }}
           node: ${HOSTNAME}
+          datacenter: {{ .Values.cluster.datacenter }}
+          neonkube_version: {{ .Values.cluster.version }}
+          hosting_environment: {{ .Values.cluster.hostingEnvironment }}
         scrape_interval: {{ .Values.metrics.global.scrapeInterval | default "60s" }}
       wal_directory: /var/lib/agent/data
-      wal_cleanup_age: 1h
+      wal_cleanup_age: 15m
       wal_cleanup_period: 15m
       configs:
         - name: node
           host_filter: false
           wal_truncate_frequency: 15m
-          max_wal_time: 1h
+          max_wal_time: 15m
           scrape_configs:
             - job_name: crio
               scrape_interval:  {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
@@ -53,13 +60,8 @@ data:
                     instance: ${HOSTNAME}
         - host_filter: true
           name: agent
-          wal_truncate_frequency: 15m
-          max_wal_time: 1h
-          remote_write:
-            - url: http://cortex:9009/api/prom/push
-              headers: 
-                X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
-              send_exemplars: true
+          wal_truncate_frequency: 5m
+          max_wal_time: 15m
           scrape_configs:
             - job_name: 'istiod'
               scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
@@ -118,14 +120,18 @@ data:
     logs:
       configs:
         - clients:
-            - url: http://loki:3100/loki/api/v1/push
+            - url: http://loki-distributor:3100/loki/api/v1/push
               tenant_id: {{ .Values.cluster.name | default "neonkube" }}
+              backoff_config:
+                min_period: 500ms
+                max_period: 5m
+                max_retries: 3
           name: default
           scrape_configs:
             - job_name: journal
               journal:
                 path: /var/log/journal
-                max_age: 12h
+                max_age: 1h
                 labels:
                   job: systemd-journal
               relabel_configs:
@@ -135,6 +141,17 @@ data:
                 - source_labels:
                     - '__journal__hostname'
                   target_label: 'hostname'
+            - job_name: syslog
+              syslog:
+                listen_address: 0.0.0.0:5140
+                idle_timeout: 120s
+                label_structured_data: yes
+                use_incoming_timestamp: true
+                labels:
+                  job: "syslog"
+              relabel_configs:
+                - source_labels: ['__syslog_message_hostname']
+                  target_label: 'host'
             - job_name: kubernetes-pods
               kubernetes_sd_configs:
                 - role: pod
@@ -218,6 +235,7 @@ data:
                     - __meta_kubernetes_pod_container_name
                   target_label: __path__
       positions_directory: /tmp/positions
+{{- if .Values.tracing.enabled }}
     traces:
       configs:
         - batch:
@@ -236,7 +254,7 @@ data:
                 grpc:
                   endpoint: "0.0.0.0:4317"
           remote_write:
-            - endpoint: tempo:55680
+            - endpoint: tempo-distributor:55680
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               insecure: true
@@ -290,4 +308,7 @@ data:
               tls_config:
                   ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   insecure_skip_verify: false
-  strategies.json: '{"default_strategy": {"param": 1.000, "type": "probabilistic"}}'
+{{- end }}
+{{- if .Values.tracing.enabled }}
+  strategies.json: '{"default_strategy": {"param": 0.010, "type": "probabilistic"}}'
+{{- end }}

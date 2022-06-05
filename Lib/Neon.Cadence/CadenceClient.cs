@@ -473,7 +473,7 @@ namespace Neon.Cadence
                                 _ = Task.Factory.StartNew(
                                     async (object arg) =>
                                     {
-                                        await SyncContext.ClearAsync;
+                                        await SyncContext.Clear;
 
                                         using (var context = (RequestContext)arg)
                                         {
@@ -518,7 +518,7 @@ namespace Neon.Cadence
                 {
                     app.Run(async context =>
                     {
-                        await SyncContext.ClearAsync;
+                        await SyncContext.Clear;
                         await OnKestralRequestAsync(context);
                     });
                 }
@@ -875,7 +875,7 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specify a non-empty default Cadence domain.");
 
@@ -953,7 +953,7 @@ namespace Neon.Cadence
                             CreateDomain  = settings.CreateDomain
                         };
 
-                    client.CallProxyAsync(connectRequest).Result.ThrowOnError();
+                    client.CallProxyAsync(connectRequest).ResultWithoutAggregate().ThrowOnError();
                 }
                 catch (Exception e)
                 {
@@ -991,6 +991,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnListenerRequestAsync(RequestContext context)
         {
+            await SyncContext.Clear;
+
             var request  = context.Request;
             var response = context.Response;
 
@@ -1079,6 +1081,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task OnKestralRequestAsync(HttpContext context)
         {
+            await SyncContext.Clear;
+
             var request  = context.Request;
             var response = context.Response;
 
@@ -1162,6 +1166,7 @@ namespace Neon.Cadence
         /// <returns>The HTTP reply information.</returns>
         private static async Task<HttpReply> OnRootRequestAsync(ProxyMessage proxyMessage)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(proxyMessage != null, nameof(proxyMessage));
 
             var httpReply = new HttpReply() { StatusCode = 200 };   // OK
@@ -1253,6 +1258,8 @@ namespace Neon.Cadence
 
         private static async Task OnLogRequestAsync(CadenceClient client, ProxyRequest request)
         {
+            await SyncContext.Clear;
+
             var logRequest = (LogRequest)request;
 
             if (logRequest.FromCadence)
@@ -1684,7 +1691,7 @@ namespace Neon.Cadence
 
                     try
                     {
-                        CallProxyAsync(new DisconnectRequest()).Wait();
+                        CallProxyAsync(new DisconnectRequest()).WaitWithoutAggregate();
                     }
                     catch (CancelledException)
                     {
@@ -1958,6 +1965,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             request.ClientId = this.ClientId;
 
             try
@@ -2028,6 +2037,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 

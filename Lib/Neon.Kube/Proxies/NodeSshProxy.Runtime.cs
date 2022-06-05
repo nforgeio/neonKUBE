@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Installs one of the Helm charts that was pre-positioned on the node
-        /// VM image.  These can be fond in the <see cref="KubeNodeFolders.Helm"/>
+        /// VM image.  These can be fond in the <see cref="KubeNodeFolder.Helm"/>
         /// with a folder for each chart. 
         /// </para>
         /// <note>
@@ -116,7 +116,7 @@ namespace Neon.Kube
                 timeoutArg = $"--timeout {(int)Math.Ceiling(timeout.TotalSeconds)}s";
             }
 
-            var chartFolderPath = LinuxPath.Combine(KubeNodeFolders.Helm, chartName);
+            var chartFolderPath = LinuxPath.Combine(KubeNodeFolder.Helm, chartName);
             var chartValuesPath = LinuxPath.Combine(chartFolderPath, "values.yaml");
 
             SudoCommand($"helm install {releaseName} {chartFolderPath} --namespace {@namespace} -f {chartValuesPath} {valueArgs} {timeoutArg}", RunOptions.Defaults | RunOptions.FaultOnError);

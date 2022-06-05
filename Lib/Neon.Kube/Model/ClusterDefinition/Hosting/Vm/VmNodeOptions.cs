@@ -174,15 +174,25 @@ namespace Neon.Kube
         /// <returns>The size in bytes.</returns>
         public long GetOpenEbsDisk(ClusterDefinition clusterDefinition)
         {
-            var minOpenEbsSize = "50 GiB";
+            const string minOpenEbsSize = "50 GiB";
 
-            if (!string.IsNullOrEmpty(OpenEbsDisk))
+            switch (clusterDefinition.Storage.OpenEbs.Engine)
             {
-                return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk), minimum: minOpenEbsSize);
-            }
-            else
-            {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk), minimum: minOpenEbsSize);
+                case OpenEbsEngine.cStor:
+                case OpenEbsEngine.Mayastor:
+
+                if (!string.IsNullOrEmpty(OpenEbsDisk))
+                {
+                    return ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk), minimum: minOpenEbsSize);
+                }
+                else
+                {
+                    return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk), minimum: minOpenEbsSize);
+                }
+
+                default:
+
+                    return 0;
             }
         }
 
@@ -192,36 +202,37 @@ namespace Neon.Kube
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeName">The node name.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
+            var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
+
+            if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
                 if (string.IsNullOrEmpty(Host))
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.Vm.Host)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nodeDefinitionPrefix}.{nameof(NodeDefinition.Vm.Host)}].");
                 }
                 else if (clusterDefinition.Hosting.Vm.Hosts.FirstOrDefault(h => h.Name.Equals(Host, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.Vm.Hosts)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is not defined in [{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}.{nameof(ClusterDefinition.Hosting.Vm.Hosts)}].");
                 }
             }
 
             if (Memory != null)
             {
-                ClusterDefinition.ValidateSize(Memory, this.GetType(), nameof(Memory));
+                ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(Memory)}");
             }
 
             if (OsDisk != null)
             {
-                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
+                ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OsDisk)}");
             }
 
             if (OpenEbsDisk != null)
             {
-                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
+                ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{nodeDefinitionPrefix}.{nameof(OpenEbsDisk)}");
             }
         }
     }

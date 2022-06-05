@@ -47,8 +47,10 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Configures cloud platform virtual machines so that they are prepared 
-to host a Kubernetes cluster.
+Provisions local and/or cloud infrastructure required to host a neonKUBE cluster.
+This includes provisioning networks, load balancers, virtual machines, etc.  Once
+the infrastructure is ready, you'll use the [neon cluster setup ...] command to
+actually configure the cluster.
 
 USAGE:
 
@@ -71,10 +73,6 @@ OPTIONS:
                                   downloading the node image from GitHub Releases.  This
                                   is useful for debugging node image changes.
 
-    --ready-to-go               - Optionally indicates that the default ready-to-go image
-                                  should be used when [--node-image-uri] and [--node-image-path]
-                                  aren't specified.  This is not compatible with [--debug].
-
     --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
                                   Specify multiple servers by separating the endpoints 
@@ -87,6 +85,10 @@ OPTIONS:
 
     --max-parallel=#            - Specifies the maximum number of node related operations
                                   to perform in parallel.  This defaults to [6].
+
+    --disable-pending           - Disable parallization of setup tasks across steps.
+                                  This is generally intended for use while debugging
+                                  cluster setup and may slow down setup substantially.
 
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 
@@ -107,13 +109,12 @@ OPTIONS:
                                   image file as published to our public S3 bucket for
                                   the target hosting manager.  Examples:
 
-                                        Hyper-V:   ubuntu-20.04.1.hyperv.vhdx
-                                        WSL2:      ubuntu-20.04.20210206.wsl2.tar
-                                        XenServer: ubuntu-20.04.1.xenserver.xva
+                                        Hyper-V:   ubuntu-22.04.hyperv.vhdx
+                                        XenServer: ubuntu-22.04.xenserver.xva
 
                                   NOTE: This is required for [--debug]
 
-    --automation-folder         - Indicates that the command must not impact normal clusters
+    --clusterspace              - Indicates that the command must not impact normal clusters
                                   by changing the current login, Kubernetes config or
                                   other files like cluster deployment logs.  This is
                                   used for automated CI/CD or unit test cluster deployments 
@@ -122,22 +123,25 @@ OPTIONS:
 
     --headend-uri               - Set the URI for the headend service.
 
-Server Requirements:
---------------------
-
-    * Ubuntu 20.04.x (server)
-    * Known [sysadmin] sudoer user
-    * OpenSSH installed
 ";
-        private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
-        private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
-        private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "prepare" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--node-image-uri", "--node-image-path", "--ready-to-go",  "--package-caches", "--unredacted", "--max-parallel", "--remove-templates", "--debug", "--base-image-name", "--automation-folder", "--headend-uri" };
+        public override string[] ExtendedOptions => new string[] 
+        { 
+            "--node-image-uri", 
+            "--node-image-path",
+            "--package-caches",
+            "--unredacted", 
+            "--max-parallel", 
+            "--disable-pending", 
+            "--remove-templates", 
+            "--debug",
+            "--base-image-name",
+            "--clusterspace", 
+            "--headend-uri" };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -156,6 +160,8 @@ Server Requirements:
                 Help();
                 Program.Exit(0);
             }
+
+            Console.WriteLine();
 
             // Cluster prepare/setup uses the [ProfileClient] to retrieve secrets and profile values.
             // We need to inject an implementation for [PreprocessReader] so it will be able to
@@ -177,12 +183,12 @@ Server Requirements:
            
             var nodeImageUri      = commandLine.GetOption("--node-image-uri");
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
-            var readyToGo         = commandLine.HasOption("--ready-to-go");
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
-            var automationFolder  = commandLine.GetOption("--automation-folder");
-            var headendUri        = commandLine.GetOption("--headend-uri") ?? "https://headend.neoncloud.io";
+            var clusterspace      = commandLine.GetOption("--clusterspace");
+            var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeConst.NeonCloudHeadendUri;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var disablePending    = commandLine.HasOption("--disable-pending");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -193,12 +199,6 @@ Server Requirements:
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
                 Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
-                Program.Exit(1);
-            }
-
-            if (debug && readyToGo)
-            {
-                Console.Error.WriteLine($"*** ERROR: [--ready-to-go] is not compatible with [--debug] mode.");
                 Program.Exit(1);
             }
 
@@ -221,34 +221,49 @@ Server Requirements:
             var clusterDefPath    = commandLine.Arguments[0];
             var clusterDefinition = (ClusterDefinition)null;            
 
-            if (clusterDefPath.Equals("WSL2", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // This special-case argument indicates that we should use the built-in 
-                // WSL2 cluster definition.
+            ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
-                clusterDefinition = KubeSetup.GetReadyToGoClusterDefinition(HostingEnvironment.Wsl2);
+            clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
+
+            // Do a quick sanity check to ensure that the hosting environment has enough
+            // resources (memory and disk) to actually host the cluster.
+
+            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
+            {
+                var status = await cluster.GetResourceAvailabilityAsync();
+
+                if (!status.CanBeDeployed)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"*** ERROR: Insufficent resources available to deploy cluster.");
+                    Console.Error.WriteLine();
+
+                    foreach (var entity in status.Constraints.Keys
+                        .OrderBy(key => key, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"{entity}:");
+
+                        foreach (var constraint in status.Constraints[entity])
+                        {
+                            Console.Error.WriteLine($"    {constraint.ResourceType.ToString().ToUpperInvariant()}: {constraint.Details}");
+                        }
+                    }
+
+                    Console.Error.WriteLine();
+                    Program.Exit(1);
+                }
             }
-            else
+
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
             {
-                ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
+                // Use the default node image for the hosting environment unless [--node-image-uri]
+                // or [--node-image-path] was specified.
 
-                clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
-            }
-
-            // Use the default node image for the hosting environment unless [--node-image-uri]
-            // or [--node-image-path] was specified.
-
-            if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
-            {
-                nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment, readyToGo: readyToGo);
-            }
-
-            // Ensure that the cluster only has a single node for ready-to-go mode.
-
-            if (readyToGo && clusterDefinition.NodeDefinitions.Count > 1)
-            {
-                Console.Error.WriteLine("*** ERROR: Only single node clusters can be deployed for [--ready-to-go] mode.");
-                Program.Exit(1);
+                if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
+                {
+                    nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                }
             }
 
             // Parse any specified package cache endpoints.
@@ -281,9 +296,10 @@ Server Requirements:
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                automationFolder:       automationFolder,
-                headendUri:             headendUri,
-                readyToGoMode:          readyToGo ? ReadyToGoMode.Setup : ReadyToGoMode.Normal);
+                clusterspace:           clusterspace,
+                neonCloudHeadendUri:    headendUri);
+
+            controller.DisablePendingTasks = disablePending;
 
             controller.StatusChangedEvent +=
                 status =>
@@ -294,6 +310,21 @@ Server Requirements:
             switch (await controller.RunAsync())
             {
                 case SetupDisposition.Succeeded:
+
+                    var pendingGroups = controller.GetPendingGroups();
+
+                    if (pendingGroups.Count > 0)
+                    {
+                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.WriteLine();
+
+                        foreach (var groupName in pendingGroups)
+                        {
+                            Console.WriteLine($"   {groupName}");
+                        }
+
+                        Program.Exit(1);
+                    }
 
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");

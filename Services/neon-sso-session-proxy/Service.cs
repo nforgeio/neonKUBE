@@ -29,7 +29,7 @@ namespace NeonSsoSessionProxy
     /// <summary>
     /// Implements the <b>neon-sso-session-proxy</b> service.
     /// </summary>
-    public class NeonSsoSessionProxyService : NeonService
+    public class Service : NeonService
     {
         // class fields
         private IWebHost webHost;
@@ -43,8 +43,8 @@ namespace NeonSsoSessionProxy
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        public NeonSsoSessionProxyService(string name)
-             : base(name, version: KubeVersions.NeonKube)
+        public Service(string name)
+             : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonssosessionproxy")
         {
         }
 
@@ -70,9 +70,14 @@ namespace NeonSsoSessionProxy
             // Start the web service.
 
             webHost = new WebHostBuilder()
+                .ConfigureAppConfiguration(
+                    (hostingcontext, config) =>
+                    {
+                        config.Sources.Clear();
+                    })
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.Listen(IPAddress.Any, 80))
-                .ConfigureServices(services => services.AddSingleton(typeof(NeonSsoSessionProxyService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 
@@ -84,13 +89,12 @@ namespace NeonSsoSessionProxy
 
             await SetStatusAsync(NeonServiceStatus.Running);
 
-            // Wait for the process terminator to signal that the service is stopping.
+            // Handle termination gracefully.
 
             await Terminator.StopEvent.WaitAsync();
+            Terminator.ReadyToExit();
 
-            // Return the exit code specified by the configuration.
-
-            return await Task.FromResult(0);
+            return 0;
         }
     }
 }

@@ -81,8 +81,8 @@ namespace TestTemporal
 
                 var worker = client.NewWorkerAsync().Result;
 
-                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                worker.StartAsync().Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).WaitWithoutAggregate();
+                worker.StartAsync().WaitWithoutAggregate();
             }
             else
             {
@@ -116,7 +116,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task Workflow_WithResult1()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
             
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.
@@ -129,7 +129,7 @@ namespace TestTemporal
         [Fact(Timeout = TemporalTestHelper.TestTimeout)]
         public async Task Workflow_WithResult2()
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and returns a result.

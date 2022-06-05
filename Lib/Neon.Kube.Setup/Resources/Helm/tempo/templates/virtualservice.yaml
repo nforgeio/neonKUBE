@@ -1,0 +1,76 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ template "tempo.name" . }}
+  namespace: neon-monitor
+spec:
+  hosts:
+    - {{ template "tempo.name" . }}
+  http:
+    - match:
+        - uri:
+            prefix: /jaeger/api/traces
+      name: {{ include "tempo.distributorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.distributorFullname" . }}
+            port:
+              number: 14268
+    - match:
+        - uri:
+            prefix: /zipkin/spans
+      name: {{ include "tempo.distributorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.distributorFullname" . }}
+            port:
+              number: 9411
+    - match:
+        - uri:
+            prefix: /otlp/v1/traces
+      name: {{ include "tempo.distributorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.distributorFullname" . }}
+            port:
+              number: 55681
+    - match:
+        - uri:
+            prefix: /distributor
+      name: {{ include "tempo.distributorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.distributorFullname" . }}
+            port:
+              number: 3100
+    - match:
+        - uri:
+            prefix: /api
+      name: {{ include "tempo.queryFrontendFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.queryFrontendFullname" . }}
+            port:
+              number: 3100
+    - match:
+        - uri:
+            prefix: /ingester
+        - uri:
+            prefix: /flush
+        - uri:
+            prefix: /shutdown
+      name: {{ include "tempo.ingesterFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.ingesterFullname" . }}
+            port:
+              number: 3100
+    - match:
+        - uri:
+            prefix: /compactor
+      name: {{ include "tempo.compactorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "tempo.compactorFullname" . }}
+            port:
+              number: 3100

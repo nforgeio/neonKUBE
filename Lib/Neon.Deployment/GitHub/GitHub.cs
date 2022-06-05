@@ -111,7 +111,12 @@ namespace Neon.Deployment
         /// <summary>
         /// Returns the API class for managing GitHub releases.
         /// </summary>
-        public static GitHubReleaseApi Release { get; private set; } = new GitHubReleaseApi();
+        public static GitHubReleaseApi Releases { get; private set; } = new GitHubReleaseApi();
+
+        /// <summary>
+        /// Returns the API class for managing GutHub tags.
+        /// </summary>
+        public static GitHubTagApi Tags { get; private set; } = new GitHubTagApi();
 
         /// <summary>
         /// Creates a REST client that can be used to manage GitHub.

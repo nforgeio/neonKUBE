@@ -45,12 +45,28 @@ using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Optional capability support:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Pausable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="HostingCapabilities.Stoppable"/></term>
+    ///     <description><b>NO</b></description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     [HostingProvider(HostingEnvironment.BareMetal)]
     public partial class BareMetalHostingManager : HostingManager
     {
@@ -137,9 +153,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool GenerateSecurePassword => true;
-
-        /// <inheritdoc/>
         public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -147,12 +160,6 @@ namespace Neon.Kube
 
             this.controller = controller;
 
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public override void AddDeprovisoningSteps(SetupController<NodeDefinition> controller)
-        {
             throw new NotImplementedException();
         }
 
@@ -258,6 +265,45 @@ namespace Neon.Kube
             Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
 
             return unpartitonedDisks.Single();
+        }
+
+        /// <inheritdoc/>
+        public override IEnumerable<string> GetClusterAddresses()
+        {
+            if (!(cluster.Definition.PublicAddresses?.Any() ?? false))
+            {
+                return cluster.Definition.PublicAddresses;
+            }
+
+            return cluster.Definition.Masters.Select(master => master.Address);
+        }
+
+        /// <inheritdoc/>
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+
+            await Task.CompletedTask;
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster life-cycle methods
+
+        /// <inheritdoc/>
+        public override HostingCapabilities Capabilities => HostingCapabilities.None;
+
+        /// <inheritdoc/>
+        public override Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
+        {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DefaultStatusTimeout;
+            }
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
     }
 }

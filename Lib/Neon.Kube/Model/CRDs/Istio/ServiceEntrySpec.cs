@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <note>
         /// If the hostname matches with the name of a service from another service registry such as Kubernetes that also supplies its own set of endpoints, 
         /// the ServiceEntry will be treated as a decorator of the existing Kubernetes service. Properties in the service entry will be added to the Kubernetes 
-        /// service if applicable. Currently, the only the following additional properties will be considered by istiod:
+        /// service if applicable. Currently, only the following additional properties will be considered by istiod:
         /// 1. subjectAltNames: In addition to verifying the SANs of the service accounts associated with the pods of the service, the SANs specified here will 
         /// also be verified.
         /// </note>

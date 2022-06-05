@@ -63,12 +63,12 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum RAM (MiB) required for master nodes.
         /// </summary>
-        public const int MinMasterRamMiB = 4096;
+        public const int MinMasterRamMiB = 8192;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
         /// </summary>
-        public const int MinWorkerRamMiB = 4096;
+        public const int MinWorkerRamMiB = 8192;
 
         /// <summary>
         /// The minimum required network interface cards for master nodes.
@@ -84,58 +84,6 @@ namespace Neon.Kube
         /// The root Kubernetes context username for provisioned clusters. 
         /// </summary>
         public const string RootUser = "root";
-
-        //---------------------------------------------------------------------
-        // The following constants define the default network endpoints exposed
-        // by the neonDESKTOP application.  These can be customized by
-        // editing the [KubeClientConfig] file persisted on the client
-        // workstation.  I tried to select ports that would be unlikely
-        // to conflict with important registrations:
-        //
-        //      https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
-
-        /// <summary>
-        /// The default local network port for the neonDESKTOP API
-        /// used by the <b>neon-cli</b> tool for communicating with
-        /// the neonDESKTOP.
-        /// </summary>
-        public const int DesktopServicePort = 1058;
-
-        /// <summary>
-        /// The default local network port where <b>kubectl proxy</b> will 
-        /// listen and forward traffic to the Kubernetes API server.
-        /// </summary>
-        public const int KubectlProxyPort = 1059;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kubernetes dashboard for the current cluster.
-        /// </summary>
-        public const int KubeDashboardProxyPort = 1060;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kibana dashboard for the current cluster.
-        /// </summary>
-        public const int KibanaDashboardProxyPort = 5601;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Prometheus dashboard for the current cluster.
-        /// </summary>
-        public const int PrometheusDashboardProxyPort = 9090;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Kiali dashboard for the current cluster.
-        /// </summary>
-        public const int KialiDashboardProxyPort = 20001;
-
-        /// <summary>
-        /// The default local network port used for proxying requests to
-        /// the Grafana dashboard for the current cluster.
-        /// </summary>
-        public const int GrafanaDashboardProxyPort = 3000;
 
         /// <summary>
         /// The default host machine sysadmin username.
@@ -158,42 +106,11 @@ namespace Neon.Kube
         public const int SysAdminGID = 1000;
 
         /// <summary>
-        /// The root account password baked into the Hyper-V and XenServer cluster
-        /// neonKUBE node images.
+        /// The default <b>sysadmin</b> account password baked into neonKUBE
+        /// base images.  This will be set to a secure password during cluster
+        /// provisioning.
         /// </summary>
         public const string SysAdminPassword = "sysadmin0000";
-
-        /// <summary>
-        /// The default host machine container username.
-        /// </summary>
-        public const string ContainerUsername = "container";
-
-        /// <summary>
-        /// <para>
-        /// The default host machine container user ID.
-        /// </para>
-        /// <note>
-        /// This explicitly set to the first valid normal Linux user ID to
-        /// be compatible with as many Docker images as possible.
-        /// </note>
-        /// </summary>
-        public const int ContainerUID = 1000;
-
-        /// <summary>
-        /// The default host machine container group name.
-        /// </summary>
-        public const string ContainerGroup = "container";
-
-        /// <summary>
-        /// <para>
-        /// The default host machine container group ID.
-        /// </para>
-        /// <note>
-        /// This explicitly set to the first valid normal Linux user ID to
-        /// be compatible with as many Docker images as possible.
-        /// </note>
-        /// </summary>
-        public const int ContainerGID = 1000;
 
         /// <summary>
         /// <para>
@@ -295,9 +212,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local
-        /// Harbor registry via <b>podman.</b>
+        /// Harbor registry via <b>podman</b>.
         /// </summary>
-        public const string LocalClusterRegistryUser = "root";  // $todo(jefflill): change this to "neon-node-cri" (https://github.com/nforgeio/neonKUBE/issues/1404)
+        public const string HarborCrioUser = "root";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/neonKUBE/issues/1404)
 
         /// <summary>
         /// Returns the Harbor Project name.
@@ -412,21 +329,21 @@ namespace Neon.Kube
         public const string ClusterImagesLastChecked = "cluster-images-last-checked";
 
         /// <summary>
-        /// The name used by the <see cref="HostingEnvironment.HyperVLocal"/> hosting manager
+        /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
         /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
-        /// as well as internal user-defined clusters will be attached.
+        /// as well as user-defined internal clusters will be attached.
         /// </summary>
-        public const string HyperVLocalInternalSwitchName = "neonkube";
+        public const string HyperVInternalSwitchName = "neonkube";
 
         /// <summary>
-        /// Identifies the WSL2 distro used to host the neonDESKTOP built-in cluster.
+        /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
         /// </summary>
-        public const string NeonDesktopWsl2BuiltInDistroName = "neon-desktop";
+        public const string NeonDesktopContextName = $"{RootUser}@neon-desktop";
 
         /// <summary>
         /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.
         /// </summary>
-        public const string NeonDesktopHyperVBuiltInVmName = NeonDesktopWsl2BuiltInDistroName;
+        public const string NeonDesktopHyperVBuiltInVmName = "neon-desktop";
 
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.
@@ -441,6 +358,21 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the Kubernetes group where neonKUBE custom resources will be located.
         /// </summary>
-        public const string NeonResourceGroup = "neonkube.io";
+        public const string NeonKubeResourceGroup = "neonkube.io";
+
+        /// <summary>
+        /// The base URI for the neonCLOUD production headend services.
+        /// </summary>
+        public const string NeonCloudHeadendUri = "https://headend.neoncloud.io";
+
+        /// <summary>
+        /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
+        /// </summary>
+        public const string MinimumOsDiskAfterMinio = "40 GiB";
+
+        /// <summary>
+        /// The CIR-O socket.
+        /// </summary>
+        public const string CrioSocket = "/var/run/crio/crio.sock";
     }
 }

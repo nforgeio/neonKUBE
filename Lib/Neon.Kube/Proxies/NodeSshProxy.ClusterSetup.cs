@@ -37,6 +37,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Newtonsoft.Json;
@@ -166,9 +167,9 @@ do
     fi
 done
 
-# Generate the [{KubeNodeFolders.Bin}/update-time] script.
+# Generate the [{KubeNodeFolder.Bin}/update-time] script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/update-time
+cat <<EOF > {KubeNodeFolder.Bin}/update-time
 #!/bin/bash
 #------------------------------------------------------------------------------
 # This script stops the NTP time service and forces an immediate update.  This 
@@ -204,7 +205,7 @@ if \${{restart}} ; then
 fi
 EOF
 
-chmod 700 {KubeNodeFolders.Bin}/update-time
+chmod 700 {KubeNodeFolder.Bin}/update-time
 
 # Edit the NTP [/etc/init.d/ntp] script to initialize the hardware clock and
 # call [update-time] before starting NTP.
@@ -284,7 +285,7 @@ case $1 in
 		log_daemon_msg ""Finished: Disabling Hyper-V time synchronization"" ""ntpd""
         
         log_daemon_msg ""Start: Updating current time"" ""ntpd""
-        {KubeNodeFolders.Bin}/update-time --norestart
+        {KubeNodeFolder.Bin}/update-time --norestart
         log_daemon_msg ""Finished: Updating current time"" ""ntpd""
 
         #------------------------------
@@ -341,10 +342,10 @@ service ntp restart
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
+            controller.LogProgress(this, verb: "configure", message: "environment");
+
             var clusterDefinition = Cluster.Definition;
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
-
-            Status = "environment variables";
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
 
@@ -368,9 +369,9 @@ service ntp restart
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(KubeNodeFolders.Bin))
+                            if (!line.Contains(KubeNodeFolder.Bin))
                             {
-                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolders.Bin}");
+                                sb.AppendLine(line + $":/snap/bin:{KubeNodeFolder.Bin}");
                             }
                             else
                             {
@@ -417,11 +418,12 @@ service ntp restart
                 sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolders.Bin}");
-            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolders.Config}");
-            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolders.Setup}");
-            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolders.State}");
-            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolders.Tmpfs}");
+            sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolder.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolder.Config}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolder.Setup}");
+            sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolder.State}");
+            sb.AppendLine($"NEON_TASK_FOLDER={KubeNodeFolder.NodeTasks}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolder.Tmpfs}");
 
             // Kubernetes related variables for masters.
 
@@ -438,18 +440,37 @@ service ntp restart
         /// <summary>
         /// Updates the node hostname and related configuration.
         /// </summary>
-        private void UpdateHostname()
+        /// <param name="controller">The setup controller.</param>
+        private void UpdateHostname(ISetupController controller)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            controller.LogProgress(this, verb: "configure", message: "hostname");
+            
             // Update the hostname.
 
             SudoCommand($"hostnamectl set-hostname {Name}");
 
             // Update the [/etc/hosts] file to resolve the new hostname.
 
-            var sbHosts = new StringBuilder();
+            // $hack(jefflill):
+            //
+            // We need to obtain the private address of the node when [TMetadata]
+            // is a [NodeDefinition] since the [Address] for cloud cluster nodes
+            // will reference the external load balancer IP.
+            //
+            // We'll use [Address] when the [TMetadata != NodeDefinition].
 
-            var nodeAddress = Address.ToString();
+            var nodeAddress    = Address.ToString();
+            var nodeDefinition = Metadata as NodeDefinition;
+
+            if (nodeDefinition != null)
+            {
+                nodeAddress = nodeDefinition.Address;
+            }
+
             var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+            var sbHosts   = new StringBuilder();
 
             sbHosts.Append(
 $@"
@@ -478,6 +499,8 @@ ff02::2         ip6-allrouters
             InvokeIdempotent("setup/package-caching",
                 () =>
                 {
+                    controller.LogProgress(this, verb: "configure", message: "apt package proxy");
+
                     // Configure the [apt-cacher-ng] pckage proxy service on master nodes.
 
                     if (NodeDefinition.Role == NodeRole.Master)
@@ -486,8 +509,8 @@ ff02::2         ip6-allrouters
 $@"
 	set -eou pipefail	# Enable full failure detection
 
-	{KubeNodeFolders.Bin}/safe-apt-get update
-	{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng
+	{KubeNodeFolder.Bin}/safe-apt-get update
+	{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
 
 	# Configure the cache to pass-thru SSL requests
 	# and then restart.
@@ -521,7 +544,7 @@ $@"
 $@"
 # Configure APT proxy selection.
 
-echo {sbPackageProxies} > {KubeNodeFolders.Config}/package-proxy
+echo {sbPackageProxies} > {KubeNodeFolder.Config}/package-proxy
 
 cat <<EOF > /usr/local/bin/get-package-proxy
 #!/bin/bash
@@ -532,7 +555,7 @@ cat <<EOF > /usr/local/bin/get-package-proxy
 # This script determine which (if any) configured APT proxy caches are running
 # and returns its endpoint or ""DIRECT"" if none of the proxies are available and 
 # the distribution's mirror should be accessed directly.  This uses the
-# [{KubeNodeFolders.Config}/package-proxy] file to obtain the list of proxies.
+# [{KubeNodeFolder.Config}/package-proxy] file to obtain the list of proxies.
 #
 # This is called when the following is specified in the APT configuration,
 # as we do further below:
@@ -542,7 +565,7 @@ cat <<EOF > /usr/local/bin/get-package-proxy
 # See this link for more information:
 #
 #		https://trent.utfs.org/wiki/Apt-get#Failover_Proxy
-NEON_PACKAGE_PROXY=$(cat {KubeNodeFolders.Config}/package-proxy)
+NEON_PACKAGE_PROXY=$(cat {KubeNodeFolder.Config}/package-proxy)
 if [ ""\${{NEON_PACKAGE_PROXY}}"" == """" ] ; then
     echo DIRECT
     exit 0
@@ -600,7 +623,7 @@ EOF
                     PrepareNode(controller);
                     ConfigureEnvironmentVariables(controller);
                     SetupPackageProxy(controller);
-                    UpdateHostname();
+                    UpdateHostname(controller);
                     NodeInitialize(controller);
                     NodeInstallCriO(controller, clusterManifest);
                     NodeInstallIPVS(controller);
@@ -611,9 +634,15 @@ EOF
         }
 
         /// <summary>
-        /// Configures the the <b>kublet</b> service.
+        /// Configures the <b>kublet</b> service.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <remarks>
+        /// <note>
+        /// Kubelet is installed in <see cref="NodeSshProxy{TMetadata}.NodeInstallKubernetes"/> when configuring
+        /// the node image and is then configured for the cluster here.
+        /// </note>
+        /// </remarks>
         public void SetupKublet(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -623,13 +652,95 @@ EOF
                 {
                     controller.LogProgress(this, verb: "setup", message: "kublet");
 
+                    // Configure the image GC thesholds.  We'll stick with the defaults of 80/85% of the
+                    // OS disk for most nodes and customize this at 93/95% for clusters with OS disks
+                    // less than 64GB.  We want higher thesholds for smaller disks to leave more space
+                    // for user images and local volumes, especially for the neonDESKTOP built-in cluster.
+                    //
+                    // We're going to use this command to retrieve the node's disk information:
+                    //
+                    //       fdisk --list -o Device,Size,Type | grep ^/dev
+                    //
+                    // which will produce output like:
+                    //
+                    //      /dev/sda1     1M BIOS boot
+                    //      /dev/sda2   128G Linux filesystem
+                    //
+                    // We're going to look for the line with "Linux filesystem" and and then extract and
+                    // parse the size in the second column to decide which GC thresholds to use.
+                    //
+                    // $note(jefflill):
+                    //
+                    // This assumes that there's only one Linux filesystem for each cluster node which is 
+                    // currently the case for all neonKUBE clusters.  The cStor disks are managed by OpenEBS
+                    // and will not be reported as a file system.  I'll add an assert to verify this to
+                    // make this easier diagnose in the future if we decide to allow multiple file systems.
+                    //
+                    // $todo(jefflill):
+                    //
+                    // We're hardcoding this now based on the current node disk size but eventually it
+                    // might make sense to add settings to the cluster definition so user can override
+                    // this, perhaps customizing specfic nodes.
+
+                    var imageLowGcThreshold  = 80;
+                    var imageHighGcThreshold = 85;
+                    var diskSize             = 0L;
+                    var result               = SudoCommand(CommandBundle.FromScript("fdisk --list -o Device,Size,Type | grep ^/dev")).EnsureSuccess();
+
+                    using (var reader = new StringReader(result.OutputText))
+                    {
+                        var filesystemCount = 0;
+
+                        foreach (var line in reader.Lines())
+                        {
+                            if (!line.EndsWith("Linux filesystem") && !line.EndsWith("Linux"))
+                            {
+                                continue;
+                            }
+
+                            filesystemCount++;
+
+                            var fields    = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            var sizeField = fields[1];
+                            var sizeUnit  = sizeField.Last();
+                            var rawSize   = decimal.Parse(sizeField.Substring(0, sizeField.Length - 1));
+
+                            switch (sizeUnit)
+                            {
+                                case 'G':
+
+                                    diskSize = (long)(rawSize * ByteUnits.GibiBytes);
+                                    break;
+
+                                case 'T':
+
+                                    diskSize = (long)(rawSize * ByteUnits.TebiBytes);
+                                    break;
+
+                                default:
+
+                                    Covenant.Assert(false, $"Expecting partition size unit to be [G] or [T], not [{sizeUnit}].");
+                                    break;
+                            }
+                        }
+
+                        Covenant.Assert(filesystemCount == 1, $"Expected exactly [1] Linux file system but are seeing [{filesystemCount}].");
+                    }
+
+                    if (diskSize < 64 * ByteUnits.GibiBytes)
+                    {
+                        imageLowGcThreshold  = 93;
+                        imageHighGcThreshold = 95;
+                    }
+
                     var script =
-@"
+$@"
 set -euo pipefail
 
-echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --feature-gates=\""AllAlpha=false,RunAsGroup=true\"" --cni-conf-dir=/etc/cni/net.d --container-runtime=remote --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--feature-gates=\""AllAlpha=false\"" --cgroup-driver=systemd --container-runtime-endpoint='unix:///var/run/crio/crio.sock' --runtime-request-timeout=5m --resolv-conf=/run/systemd/resolve/resolv.conf --image-gc-low-threshold={imageLowGcThreshold} --image-gc-high-threshold={imageHighGcThreshold} > /etc/default/kubelet
 systemctl daemon-reload
-service kubelet restart
+systemctl restart kubelet
+systemctl enable kubelet
 ";
                     SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
                 });
@@ -652,9 +763,22 @@ service kubelet restart
         /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
         /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
+        /// <param name="prioritySpec">
+        /// <para>
+        /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.
+        /// This needs to be specified as: <b>PRIORITYCLASSNAME</b> or <b>VALUENAME=PRIORITYCLASSNAME</b>,
+        /// where <b>VALUENAME</b> optionally specifies the name of the Helm value and <b>PRIORITYCLASSNAME</b>
+        /// is one of the priority class names defined by <see cref="PriorityClass"/>.
+        /// </para>
+        /// <note>
+        /// The priority class will saved as the <b>priorityClassName</b> Helm value when no value
+        /// name is specified.
+        /// </note>
+        /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
         /// neonKUBE images prepositions the Helm chart files embedded as resources in the <b>Resources/Helm</b>
         /// project folder to cluster node images as the <b>/lib/neonkube/helm/charts.zip</b> archive.  This
@@ -666,9 +790,11 @@ service kubelet restart
             string                              chartName,
             string                              releaseName     = null,
             string                              @namespace      = "default",
+            string                              prioritySpec    = null,
             Dictionary<string, object>          values          = null,
             string                              progressMessage = null)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
 
@@ -679,6 +805,35 @@ service kubelet restart
                 releaseName = chartName.Replace("_", "-");
             }
 
+            // Extract the Helm chart value name and priority class name from [priorityClass]
+            // when passed.
+
+            string priorityClassVariable = null;
+            string priorityClassName     = null;
+
+            if (!string.IsNullOrEmpty(prioritySpec))
+            {
+                var equalPos = prioritySpec.IndexOf('=');
+
+                if (equalPos == -1)
+                {
+                    priorityClassVariable = "priorityClassName";
+                    priorityClassName     = prioritySpec;
+                }
+                else
+                {
+                    priorityClassVariable = prioritySpec.Substring(0, equalPos).Trim();
+                    priorityClassName     = prioritySpec.Substring(equalPos + 1).Trim();
+
+                    if (string.IsNullOrEmpty(priorityClassVariable) || string.IsNullOrEmpty(priorityClassName))
+                    {
+                        throw new FormatException($"[{prioritySpec}] is not valid.  This must be formatted like: NAME=PRIORITYCLASSNAME");
+                    }
+                }
+
+                PriorityClass.EnsureKnown(priorityClassName);
+            }
+
             // Unzip the Helm chart archive if we haven't done so already.
 
             InvokeIdempotent("setup/helm-unzip",
@@ -686,9 +841,9 @@ service kubelet restart
                 {
                     controller.LogProgress(this, verb: "unzip", message: "helm charts");
 
-                    var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+                    var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
                     
-                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolders.Helm} || true");
+                    SudoCommand($"unzip -o {zipPath} -d {KubeNodeFolder.Helm} || true");
                     SudoCommand($"rm -f {zipPath}");
                 });
 
@@ -697,9 +852,14 @@ service kubelet restart
             InvokeIdempotent($"setup/helm-install-{releaseName}",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "helm install", message: progressMessage ?? releaseName);
+                    controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
                     var valueOverrides = new StringBuilder();
+
+                    if (!string.IsNullOrEmpty(priorityClassVariable))
+                    {
+                        valueOverrides.AppendWithSeparator($"--set {priorityClassVariable}={priorityClassName}");
+                    }
 
                     if (values != null)
                     {
@@ -713,13 +873,17 @@ service kubelet restart
 
                             var valueType = value.Value.GetType();
 
-                            if (valueType == typeof(string))
+                            switch (value.Value)
                             {
-                                valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
-                            }
-                            else
-                            {
-                                valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                case string s:
+                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
+                                    break;
+                                case Boolean b:
+                                    valueOverrides.AppendWithSeparator($"--set {value.Key}=\"{value.Value.ToString().ToLower()}\"");
+                                    break;
+                                default:
+                                    valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
+                                    break;
                             }
                         }
                     }
@@ -728,7 +892,7 @@ service kubelet restart
 $@"
 set -euo pipefail
 
-cd {KubeNodeFolders.Helm}
+cd {KubeNodeFolder.Helm}
 
 helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
@@ -746,7 +910,7 @@ do
    sleep 1
 done
 ";
-                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None).EnsureSuccess();
+                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
                 });
 
             await Task.CompletedTask;

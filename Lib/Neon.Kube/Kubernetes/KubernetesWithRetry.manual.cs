@@ -23,15 +23,21 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Rest;
 
 using k8s;
 using k8s.Models;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
+using Neon.Collections;
 
 namespace Neon.Kube
 {
@@ -52,6 +58,8 @@ namespace Neon.Kube
         /// <returns>The updated secret.</returns>
         public async Task<V1Secret> UpsertSecretAsync(V1Secret secret, string @namespace = null)
         {
+            await SyncContext.Clear;
+
             return await NormalizedRetryPolicy.InvokeAsync(
                 async () =>
                 {
@@ -67,8 +75,8 @@ namespace Neon.Kube
         /// <param name="name">Specifies the target pod name.</param>
         /// <param name="container">Identifies the target container within the pod.</param>
         /// <param name="command">Specifies the program and arguments to be executed.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="noSuccessCheck">Optionally disables the <see cref="ExecuteResponse.EnsureSuccess"/> check.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public async Task<ExecuteResponse> NamespacedPodExecAsync(
@@ -76,13 +84,15 @@ namespace Neon.Kube
             string              name,
             string              container,
             string[]            command,
-            CancellationToken   cancellationToken = default,
-            bool                noSuccessCheck    = false)
+            bool                noSuccessCheck    = false,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await NormalizedRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    return await k8s.NamespacedPodExecAsync(@namespace, name, container, command, cancellationToken, noSuccessCheck);
+                    return await k8s.NamespacedPodExecAsync(@namespace, name, container, command, noSuccessCheck, cancellationToken);
                 });
         }
 
@@ -112,6 +122,7 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.Clear;
             await k8s.WaitForDeploymentAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
 
@@ -137,6 +148,7 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.Clear;
             await k8s.WaitForStatefulSetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
         }
 
@@ -162,7 +174,72 @@ namespace Neon.Kube
             TimeSpan            pollInterval  = default,
             TimeSpan            timeout       = default)
         {
+            await SyncContext.Clear;
             await k8s.WaitForDaemonsetAsync(@namespace, name, labelSelector, fieldSelector, pollInterval, timeout);
+        }
+
+        /// <summary>
+        /// Helper method to watch a Kubernetes object type. It will loop indefinitely and handle any timeouts from the server.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="funcAsync">The function to handle updates.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="updatesOnly">Optionally specifies whether to read all objects before watching.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public async Task WatchAsync<T>(Func<WatchEvent<T>, Task> funcAsync, string namespaceParameter = null, string resourceVersion = "0", bool allowWatchBookmarks = true, bool updatesOnly = false, CancellationToken cancellationToken = default) where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            await k8s.WatchAsync<T>(funcAsync, namespaceParameter, resourceVersion, allowWatchBookmarks, updatesOnly, cancellationToken);
+        }
+
+        /// <summary>
+        /// Watches a resource type from the Kubernetes API.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public async Task<HttpOperationResponse<WatchStream<T>>> WatchAsyncWithHttpMessagesAsync<T>(string namespaceParameter = null, string resourceVersion = default, bool allowWatchBookmarks = default, CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
+        {
+            await SyncContext.Clear;
+            return await k8s.WatchAsyncWithHttpMessagesAsync<T>(namespaceParameter, resourceVersion, allowWatchBookmarks, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets a generic type from the Kubernetes API.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="watch">Whether to watch the resource.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync<T>(string namespaceParameter, bool watch, string resourceVersion = default, bool allowWatchBookmarks = default, CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
+        {
+            await SyncContext.Clear;
+            return await k8s.GetAsyncWithHttpMessagesAsync<T>(namespaceParameter, watch, resourceVersion, allowWatchBookmarks, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets a type from the Kubernetes API.
+        /// </summary>
+        /// <param name="type">The type parameter.</param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="watch">Whether to watch the resource.</param>
+        /// <param name="resourceVersion">The start resource version.</param>
+        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync(Type type, string namespaceParameter = null, bool watch = false, string resourceVersion = default, bool allowWatchBookmarks = default, CancellationToken cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            return await k8s.GetAsyncWithHttpMessagesAsync(type, namespaceParameter, watch, resourceVersion, allowWatchBookmarks, cancellationToken);
         }
     }
 }

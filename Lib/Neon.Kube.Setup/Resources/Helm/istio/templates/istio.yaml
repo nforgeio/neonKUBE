@@ -48,10 +48,32 @@ spec:
           service: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
         name: neon-sso-service
   components:
+    pilot:
+      k8s:
+        env:
+          - name: "GOGC"
+            value: "25"
+        priorityClassName: {{ .Values.priorityClassName }}
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.pilot.requests.cpu }}"
+            memory: "{{ .Values.resources.pilot.requests.memory }}"
+        hpaSpec:
+          maxReplicas: 1
     ingressGateways:
     - name: istio-ingressgateway
       enabled: true
       k8s:
+        env:
+          - name: "GOGC"
+            value: "25"
+        priorityClassName: {{ .Values.priorityClassName }}
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -60,7 +82,8 @@ spec:
               - path: kind
                 value: DaemonSet
               - path: spec.strategy
-        hpaSpec: {}
+        hpaSpec:
+          maxReplicas: 1
         service:
           {{- with .Values.nodePorts }}
             ports:
@@ -70,13 +93,19 @@ spec:
           requests:
             cpu: "{{ .Values.resources.ingress.requests.cpu }}"
             memory: "{{ .Values.resources.ingress.requests.memory }}"
-          limits:
-            cpu: "{{ .Values.resources.ingress.limits.cpu }}"
-            memory: "{{ .Values.resources.ingress.limits.memory }}"
     cni:
+      k8s:
+        tolerations:
+          - operator: Exists
+            effect: NoSchedule
+        env:
+          - name: "GOGC"
+            value: "25"
       enabled: true
       namespace: kube-system
   values:
+    sidecarInjectorWebhook:
+      enableNamespacesByDefault: true
     global:
       istioNamespace: {{ .Release.Namespace }}
       logging:
@@ -90,9 +119,6 @@ spec:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
             memory: "{{ .Values.resources.proxy.requests.memory }}"
-          limits:
-            cpu: "{{ .Values.resources.proxy.limits.cpu }}"
-            memory: "{{ .Values.resources.proxy.limits.memory }}"
       defaultNodeSelector: 
         neonkube.io/istio: true
       tracer:

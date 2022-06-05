@@ -82,13 +82,15 @@ USER@CLUSTER[/NAMESPACE is not specified.
             KubeConfigContext   context     = null;
             KubeContextName     contextName = null;
 
+            Console.WriteLine();
+
             var force = commandLine.HasOption("--force");
 
             if (commandLine.Arguments.Length > 0)
             {
                 contextName = KubeContextName.Parse(commandLine.Arguments.FirstOrDefault());
 
-                if (!contextName.IsNeonKubeContext)
+                if (!contextName.IsNeonKube)
                 {
                     Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
                     Program.Exit(1);

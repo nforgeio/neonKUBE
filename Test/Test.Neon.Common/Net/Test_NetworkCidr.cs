@@ -191,6 +191,11 @@ namespace TestCommon
             Assert.Equal(Math.Pow(2, 24), NetworkCidr.Parse("10.0.0.1/8").AddressCount);
             Assert.Equal(Math.Pow(2, 16), NetworkCidr.Parse("10.0.0.1/16").AddressCount);
             Assert.Equal(Math.Pow(2, 8), NetworkCidr.Parse("10.0.0.1/24").AddressCount);
+
+            Assert.Equal(Math.Pow(2, 32) - 2, NetworkCidr.Parse("10.0.0.1/0").UsableAddressCount);
+            Assert.Equal(Math.Pow(2, 24) - 2, NetworkCidr.Parse("10.0.0.1/8").UsableAddressCount);
+            Assert.Equal(Math.Pow(2, 16) - 2, NetworkCidr.Parse("10.0.0.1/16").UsableAddressCount);
+            Assert.Equal(Math.Pow(2, 8) - 2, NetworkCidr.Parse("10.0.0.1/24").UsableAddressCount);
         }
 
         [Fact]

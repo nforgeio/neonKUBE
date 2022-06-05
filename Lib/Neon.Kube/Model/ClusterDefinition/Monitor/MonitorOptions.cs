@@ -44,7 +44,7 @@ namespace Neon.Kube
     public class MonitorOptions
     {
         /// <summary>
-        /// Elasticsearch options.
+        /// Logging options.
         /// </summary>
         [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
         [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
@@ -52,12 +52,20 @@ namespace Neon.Kube
         public LogOptions Logs { get; set; } = new LogOptions();
 
         /// <summary>
-        /// Prometheus options
+        /// Metrics options
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
         [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public MetricsOptions Metrics { get; set; } = new MetricsOptions();
+
+        /// <summary>
+        /// Tracing options
+        /// </summary>
+        [JsonProperty(PropertyName = "Traces", Required = Required.Default)]
+        [YamlMember(Alias = "traces", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public TraceOptions Traces { get; set; } = new TraceOptions();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -69,9 +77,11 @@ namespace Neon.Kube
         {
             Logs    = Logs ?? new LogOptions();
             Metrics = Metrics ?? new MetricsOptions();
+            Traces  = Traces ?? new TraceOptions();
 
             Logs.Validate(clusterDefinition);
             Metrics.Validate(clusterDefinition);
+            Traces.Validate(clusterDefinition);
         }
     }
 }

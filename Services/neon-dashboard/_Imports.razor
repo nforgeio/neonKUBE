@@ -3,6 +3,7 @@
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
 
+@using System.Diagnostics.CodeAnalysis
 @using System.Net.Http
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Http
@@ -13,7 +14,9 @@
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
 
+@using Neon.Common
 @using Neon.Diagnostics
+@using Neon.Kube
 
 @using NeonDashboard
 @using NeonDashboard.Pages
@@ -23,10 +26,24 @@
 @using Blazor.Analytics
 @using Blazor.Analytics.Components
 
+@using PSC.Blazor.Components.Chartjs
+@using PSC.Blazor.Components.Chartjs.Enums
+@using PSC.Blazor.Components.Chartjs.Models
+@using PSC.Blazor.Components.Chartjs.Models.Common
+@using PSC.Blazor.Components.Chartjs.Models.Bar
+@using PSC.Blazor.Components.Chartjs.Models.Bubble
+@using PSC.Blazor.Components.Chartjs.Models.Doughnut
+@using PSC.Blazor.Components.Chartjs.Models.Line
+@using PSC.Blazor.Components.Chartjs.Models.Pie
+@using PSC.Blazor.Components.Chartjs.Models.Polar
+@using PSC.Blazor.Components.Chartjs.Models.Radar
+@using PSC.Blazor.Components.Chartjs.Models.Scatter
+
 @inject AppState AppState
-@inject NeonDashboardService NeonDashboardService
+@inject Service NeonDashboardService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 @inject Blazor.Analytics.IAnalytics Analytics
 @inject IHttpContextAccessor httpContextAccessor
 @inject INeonLogger neonLogger
+@inject Blazored.LocalStorage.ILocalStorageService localStorage

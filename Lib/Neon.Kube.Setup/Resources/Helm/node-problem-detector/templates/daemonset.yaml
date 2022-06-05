@@ -33,6 +33,7 @@ spec:
         {{ $key }}: {{ $val | quote }}
         {{- end}}
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
         checksum/config: {{ include (print $.Template.BasePath "/custom-config-configmap.yaml") . | sha256sum }}
         scheduler.alpha.kubernetes.io/critical-pod: ''
         {{- if .Values.annotations }}
@@ -56,7 +57,7 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - "exec /node-problem-detector --logtostderr {{ include "npd.cli.args" $ }}"
+            - "exec /node-problem-detector --logtostderr --port=0 {{ include "npd.cli.args" $ }}"
           {{- if .Values.securityContext }}
           securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
@@ -84,7 +85,7 @@ spec:
           {{- end }}
           ports:
             - containerPort: {{ .Values.settings.prometheus_port }}
-              name: exporter
+              name: http-exporter
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
       {{- if .Values.extraContainers }}

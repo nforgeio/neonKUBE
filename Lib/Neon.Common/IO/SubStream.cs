@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.IO
 {
@@ -279,6 +280,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
+            await SyncContext.Clear;
+
             CopyTo(destination, bufferSize);
             await Task.CompletedTask;
         }
@@ -286,6 +289,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task FlushAsync(CancellationToken cancellationToken)
         {
+            await SyncContext.Clear;
+
             Flush();
             await Task.CompletedTask;
         }
@@ -293,6 +298,8 @@ namespace Neon.IO
         /// <inheritdoc/>
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(Read(buffer, offset, count));
         }
 

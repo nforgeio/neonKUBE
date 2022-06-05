@@ -108,9 +108,12 @@ namespace Neon.XenServer
             /// Optionally specifies the target storage repository by name or UUID.  
             /// This defaults to <b>Local storage</b>.
             /// </param>
+            /// <param name="description">
+            /// Optionally specifies the template description.
+            /// </param>
             /// <returns>The installed template.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenTemplate ImportVmTemplate(string path, string name = null, string repositoryNameOrUuid = "Local storage")
+            public XenTemplate ImportVmTemplate(string path, string name = null, string repositoryNameOrUuid = "Local storage", string description = null)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repositoryNameOrUuid), nameof(repositoryNameOrUuid));
@@ -126,10 +129,13 @@ namespace Neon.XenServer
                     template = Rename(template, name);
                 }
 
+                if (!string.IsNullOrEmpty(description))
+                {
+                    client.SafeInvoke("template-param-set", $"uuid={template.Uuid}", $"name-description={description}");
+                }
+
                 return template;
             }
-
-
 
             /// <summary>
             /// Renames a virtual machine template.

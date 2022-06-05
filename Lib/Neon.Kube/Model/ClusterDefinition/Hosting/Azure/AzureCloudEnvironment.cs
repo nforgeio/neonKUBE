@@ -77,13 +77,11 @@ namespace Neon.Kube
     /// </item>
     /// </list>
     /// <para>
-    /// Alternatively, you can set <see cref="Name"/> to <b>custom</b> and then set
-    /// the specific environment endpoint URLs:
+    /// Alternatively, you can set <see cref="Name"/> to <b>custom</b> and specify
+    /// a custom endpoint URI and audience.  This is useful for deploying a cluster
+    /// to a new Azure environment unknown to the current neonKUBE release or other
+    /// private/internal Azure clouds.
     /// </para>
-    /// <para><see cref="AuthenticationEndpoint"/></para>
-    /// <para><see cref="ResourceManagerEndpoint"/></para>
-    /// <para><see cref="GraphEndpoint"/></para>
-    /// <para><see cref="ManagementEnpoint"/></para>
     /// </remarks>
     public class AzureCloudEnvironment
     {
@@ -103,32 +101,18 @@ namespace Neon.Kube
         public AzureCloudEnvironments Name { get; set; } = AzureCloudEnvironments.GlobalCloud;
 
         /// <summary>
-        /// Environment authentication endpoint.
+        /// Environment authentication endpoint URI.
         /// </summary>
-        [JsonProperty(PropertyName = "AuthenticationEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "authenticationEndpoint", ApplyNamingConventions = false)]
-        public string AuthenticationEndpoint { get; set; }
+        [JsonProperty(PropertyName = "Endpoint", Required = Required.AllowNull)]
+        [YamlMember(Alias = "endpoint", ApplyNamingConventions = false)]
+        public string Endpoint { get; set; }
 
         /// <summary>
-        /// Environment resource manager endpoint.
+        /// Specifies the audience.
         /// </summary>
-        [JsonProperty(PropertyName = "ResourceManagerEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "resourceManagerEndpoint", ApplyNamingConventions = false)]
-        public string ResourceManagerEndpoint { get; set; }
-
-        /// <summary>
-        /// Environment graph endpoint.
-        /// </summary>
-        [JsonProperty(PropertyName = "GraphEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "graphEndpoint", ApplyNamingConventions = false)]
-        public string GraphEndpoint { get; set; }
-
-        /// <summary>
-        /// Environment management endpoint.
-        /// </summary>
-        [JsonProperty(PropertyName = "ManagementEnpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "managementEnpoint", ApplyNamingConventions = false)]
-        public string ManagementEnpoint { get; set; }
+        [JsonProperty(PropertyName = "Audience", Required = Required.AllowNull)]
+        [YamlMember(Alias = "audience", ApplyNamingConventions = false)]
+        public string Audience { get; set; }
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -136,31 +120,13 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             if (Name == AzureCloudEnvironments.Custom)
             {
-                Uri uri;
-
-                if (string.IsNullOrEmpty(AuthenticationEndpoint) || !Uri.TryCreate(AuthenticationEndpoint, UriKind.Absolute, out uri))
+                if (string.IsNullOrEmpty(Endpoint) || !Uri.TryCreate(Endpoint, UriKind.Absolute, out var uri))
                 {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(AuthenticationEndpoint)}={AuthenticationEndpoint}].");
-                }
-
-                if (string.IsNullOrEmpty(ResourceManagerEndpoint) || !Uri.TryCreate(ResourceManagerEndpoint, UriKind.Absolute, out uri))
-                {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(ResourceManagerEndpoint)}={ResourceManagerEndpoint}].");
-                }
-
-                if (string.IsNullOrEmpty(GraphEndpoint) || !Uri.TryCreate(GraphEndpoint, UriKind.Absolute, out uri))
-                {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(GraphEndpoint)}={GraphEndpoint}].");
-                }
-
-                if (string.IsNullOrEmpty(AuthenticationEndpoint) || !Uri.TryCreate(AuthenticationEndpoint, UriKind.Absolute, out uri))
-                {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(ManagementEnpoint)}={ManagementEnpoint}].");
+                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(Endpoint)}={Endpoint}].");
                 }
             }
         }

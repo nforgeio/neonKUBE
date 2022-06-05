@@ -38,6 +38,7 @@ spec:
       hostPID: true
 {{- end}}
 {{- end}}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-ndm
         image: "{{ .Values.ndm.image.organization }}/{{ .Values.ndm.image.repository }}:{{ .Values.ndm.image.tag }}"

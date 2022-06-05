@@ -124,7 +124,7 @@ namespace Neon.Kube
 
             if (manager == null)
             {
-                throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.  This may be an enterprise-only feature.");
+                throw new NeonKubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.  This may be a premium-only feature.");
             }
 
             manager.Validate(clusterDefinition);

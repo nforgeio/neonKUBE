@@ -37,6 +37,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Kube
@@ -46,6 +47,49 @@ namespace Neon.Kube
     /// </summary>
     public abstract class HostingManager : IHostingManager
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Maximum number of async operations that hosting managers should perform
+        /// in parallel.
+        /// </summary>
+        protected const int MaxAsyncParallelHostingOperations = 25;
+
+        /// <summary>
+        /// Determines whether the hosting environment supports <b>fstrim</b>.
+        /// </summary>
+        /// <param name="environment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
+        public static bool SupportsFsTrim(HostingEnvironment environment)
+        {
+            return environment != HostingEnvironment.Aws &&
+                   environment != HostingEnvironment.XenServer;
+        }
+
+        /// <summary>
+        /// Determines whether the hosting environment supports <b>zeroing</b>
+        /// clock devices.
+        /// </summary>
+        /// <param name="environment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
+        public static bool SupportsFsZero(HostingEnvironment environment)
+        {
+            // AWS EC2 backed block devices shouldn't be zeroed because that will
+            // actually make snapshots and thus AMIs created from the snapshots
+            // bigger and initially slower to boot.
+            //
+            // https://aws.amazon.com/blogs/apn/how-to-build-sparse-ebs-volumes-for-fun-and-easy-snapshotting/
+            //
+            // The same thing will happen on other cloud environments with sparse
+            // page blobs, so we'll disable this for all clouds.
+
+            return !KubeHelper.IsCloudEnvironment(environment);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Finalizer.
         /// </summary>
@@ -81,13 +125,7 @@ namespace Neon.Kube
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
-        public virtual bool RequiresAdminPrivileges => true;
-
-        /// <inheritdoc/>
         public virtual bool RequiresNodeAddressCheck => false;
-
-        /// <inheritdoc/>
-        public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
         public abstract void AddProvisioningSteps(SetupController<NodeDefinition> controller);
@@ -98,7 +136,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract void AddDeprovisoningSteps(SetupController<NodeDefinition> controller);
+        public virtual void AddSetupSteps(SetupController<NodeDefinition> controller)
+        {
+        }
+
+        /// <inheritdoc/>
+        public virtual void AddPostSetupSteps(SetupController<NodeDefinition> controllerd)
+        {
+        }
 
         /// <inheritdoc/>
         public virtual bool CanManageRouter => false;
@@ -106,19 +151,21 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public virtual async Task UpdateInternetRoutingAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public virtual async Task EnableInternetSshAsync()
         {
+            await SyncContext.Clear;
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
         public virtual async Task DisableInternetSshAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
         }
 
         /// <inheritdoc/>
@@ -126,6 +173,9 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public abstract string GetDataDisk(LinuxSshProxy node);
+
+        /// <inheritdoc/>
+        public abstract IEnumerable<string> GetClusterAddresses();
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the
@@ -188,7 +238,7 @@ namespace Neon.Kube
             // or neonKUBE.
 
             var nodeSubnetInfo = clusterDefinition.NodeSubnet;
-            var nodeSubnet = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
+            var nodeSubnet     = NetworkCidr.Parse(nodeSubnetInfo.Subnet);
 
             if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - nodeSubnetInfo.ReservedAddresses)
             {
@@ -274,52 +324,52 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Cluster life cycle methods
 
+        /// <summary>
+        /// The default timeout for <see cref="GetClusterHealthAsync(TimeSpan)"/> implementations.
+        /// </summary>
+        protected readonly TimeSpan DefaultStatusTimeout = TimeSpan.FromSeconds(15);
+
         /// <inheritdoc/>
-        public virtual async Task StartClusterAsync(bool noWait = false)
+        public abstract HostingCapabilities Capabilities { get; }
+
+        /// <inheritdoc/>
+        public abstract Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
+
+        /// <inheritdoc/>
+        public abstract Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default);
+
+        /// <inheritdoc/>
+        public virtual async Task StartClusterAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful, bool noWait = false)
+        public virtual async Task StopClusterAsync(StopMode stopMode = StopMode.Graceful)
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task RemoveClusterAsync(bool noWait = false, bool removeOrphansByPrefix = false)
+        public virtual async Task PauseClusterAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task StartNodeAsync(string nodeName)
+        public virtual async Task ResumeClusterAsync()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            await Task.CompletedTask;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public virtual async Task StopNodeAsync(string nodeName, StopMode stopMode = StopMode.Graceful)
+        public virtual async Task RemoveClusterAsync(bool removeOrphans = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-
-            await Task.CompletedTask;
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<string> GetNodeImageAsync(string nodeName, string folder)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-
-            await Task.CompletedTask;
+            await SyncContext.Clear;
             throw new NotSupportedException();
         }
     }

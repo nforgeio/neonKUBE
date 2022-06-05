@@ -66,7 +66,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -108,7 +108,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -143,7 +143,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -180,7 +180,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -217,7 +217,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -234,7 +234,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -254,7 +254,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -271,7 +271,7 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -291,7 +291,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -328,7 +328,7 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -374,7 +374,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
 
@@ -420,7 +420,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
 
@@ -466,7 +466,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
 
@@ -512,7 +512,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
 
@@ -559,7 +559,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
 
@@ -608,7 +608,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(deleteMethod, requestUri);
 
@@ -657,7 +657,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
 
@@ -703,7 +703,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(patchMethod, requestUri);
 
@@ -749,7 +749,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
 
@@ -798,7 +798,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(optionsMethod, requestUri);
 
@@ -847,7 +847,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(headMethod, requestUri);
 
@@ -896,7 +896,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             var request = new HttpRequestMessage(headMethod, requestUri);
 
@@ -944,7 +944,7 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
-            await SyncContext.ClearAsync;
+            await SyncContext.Clear;
 
             if (!string.IsNullOrEmpty(activity.Id))
             {

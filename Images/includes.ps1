@@ -45,6 +45,16 @@ ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
 
+# Override the common image tag if the [NEON_CONTAINER_TAG_OVERRIDE] is defined.\
+# This is used for development purposes.
+
+$tagOverride = $env:NEON_CONTAINER_TAG_OVERRIDE
+
+if (-not [System.String]::IsNullOrEmpty($tagOverride))
+{
+	$neonKUBE_Tag = $tagOverride
+}
+
 #------------------------------------------------------------------------------
 # Deletes a file if it exists.
 

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -67,7 +68,7 @@ namespace Neon.Cadence
             {
                 IsDisposed = true;
 
-                Client.StopWorkerAsync(this).Wait();
+                Client.StopWorkerAsync(this).WaitWithoutAggregate();
                 Client = null;
 
                 GC.SuppressFinalize(this);

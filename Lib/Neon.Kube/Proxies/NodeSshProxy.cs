@@ -35,6 +35,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
+using Neon.Tasks;
 using Neon.Time;
 
 using Newtonsoft.Json;
@@ -109,7 +110,7 @@ namespace Neon.Kube
 
             // Append the neonKUBE cluster binary folder to the remote path.
 
-            RemotePath += $":{KubeNodeFolders.Bin}";
+            RemotePath += $":{KubeNodeFolder.Bin}";
 
             // We're going to maintain an internal log writer as well as the external writer
             // so that we'll always have easy access to the log even when the external writer
@@ -135,12 +136,7 @@ namespace Neon.Kube
                 return this.cluster;
             }
 
-            set 
-            {
-                Covenant.Assert(value.HostingManager != null);
-
-                this.cluster = value;
-            }
+            set => this.cluster = value;
         }
 
         /// <summary>
@@ -366,7 +362,7 @@ namespace Neon.Kube
         /// <returns>The cloned <see cref="NodeSshProxy{TMetadata}"/>.</returns>
         public new NodeSshProxy<TMetadata> Clone()
         {
-            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, this.Role, SshPort);
+            var clone = new NodeSshProxy<TMetadata>(Name, Address, credentials, role: Role, port: SshPort);
 
             CloneTo(clone);
 
@@ -376,13 +372,13 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public bool GetIdempotentState(string actionId)
         {
-            return FileExists(LinuxPath.Combine(KubeNodeFolders.State, actionId));
+            return FileExists(LinuxPath.Combine(KubeNodeFolder.State, actionId));
         }
 
         /// <inheritdoc/>
         public void SetIdempotentState(string actionId)
         {
-            SudoCommand($"mkdir -p {KubeNodeFolders.State} && touch {KubeNodeFolders.State}/{actionId}", RunOptions.FaultOnError);
+            SudoCommand($"mkdir -p {KubeNodeFolder.State} && touch {KubeNodeFolder.State}/{actionId}", RunOptions.FaultOnError);
         }
 
         /// <inheritdoc/>
@@ -401,7 +397,7 @@ namespace Neon.Kube
                 throw new ArgumentException($"Possible async delegate passed to [{nameof(InvokeIdempotent)}()]", nameof(action));
             }
 
-            var stateFolder = KubeNodeFolders.State;
+            var stateFolder = KubeNodeFolder.State;
             var slashPos = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -437,11 +433,12 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public async Task<bool> InvokeIdempotentAsync(string actionId, Func<Task> action)
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
-            var stateFolder = KubeNodeFolders.State;
+            var stateFolder = KubeNodeFolder.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -475,32 +472,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that the provisioned node image is actually a ready-to-go node image.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns><c>true</c> if the operation system is supported.</returns>
-        public void VerifyImageIsReadyToGo(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var readyToGoMode = controller.Get<ReadyToGoMode>(KubeSetupProperty.ReadyToGoMode);
-
-            if (readyToGoMode != ReadyToGoMode.Setup)
-            {
-                return;
-            }
-
-            controller.LogProgress(this, verb: "check", message: "ready-to-go image");
-
-            var imageType = ImageType;
-
-            if (imageType != KubeImageType.ReadyToGo)
-            {
-                Fault($"Node image type is [{imageType}] rather than the expected [{KubeImageType.ReadyToGo}].");
-            }
-        }
-
-        /// <summary>
         /// Ensures that the node operating system and version is supported for a neonKUBE
         /// cluster.  This faults the node proxy on failure.
         /// </summary>
@@ -513,11 +484,9 @@ namespace Neon.Kube
                 controller.LogProgress(this, verb: "check", message: "operating system");
             }
 
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
-
-            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion < Version.Parse("20.04"))
+            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion != Version.Parse("22.04"))
             {
-                Fault("Expected: Ubuntu 20.04+");
+                Fault("Expected: Ubuntu 22.04");
                 return false;
             }
 
@@ -549,33 +518,24 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Installs any security related updates on the node.  These are
-        /// the <b>unattended updates</b>.
-        /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void PatchLinux(HostingEnvironment hostingEnvironment)
-        {
-            SudoCommand("unattended-upgrade");
-        }
-
-        /// <summary>
-        /// Updates the node by applying all outstanding package updates but without 
+        /// Patches Linux on the node applying all outstanding package updates but without 
         /// upgrading the Linux distribution.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void UpdateLinux(HostingEnvironment hostingEnvironment)
+        public void UpdateLinux()
         {
-            SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
-            SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+            SudoCommand("safe-apt-get upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
         }
 
         /// <summary>
         /// Upgrades the Linux distribution on the node.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        public void UpgradeLinux(HostingEnvironment hostingEnvironment)
+        public void UpgradeLinuxDistribution()
         {
-            // $todo(jefflill): We haven't actually tested this yet.
+            // $todo(jefflill):
+            //
+            // We haven't actually tested this yet.  Seems like we'll probably need to
+            // reboot the node and report that to the caller.
 
             SudoCommand("safe-apt-get update -yq", RunOptions.Defaults | RunOptions.FaultOnError);
             SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.Defaults | RunOptions.FaultOnError);
@@ -596,6 +556,24 @@ namespace Neon.Kube
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
+            var fstrim = string.Empty;
+            var fsZero = string.Empty;
+
+            if (HostingManager.SupportsFsTrim(hostingEnvironment))
+            {
+                // Not all hosting enviuronments supports: fstrim
+
+                fstrim = "fstrim /";
+            }
+
+            if (HostingManager.SupportsFsZero(hostingEnvironment))
+            {
+                // Zeroing block devices can actually make things worse for
+                // some environment.
+
+                fsZero = "sfill -fllz /";
+            }
+
             var cleanScript =
 $@"#!/bin/bash
 
@@ -613,8 +591,8 @@ rm -rf /var/lib/dhcp/*
 
 # Filesystem cleaning
 
-fstrim /
-sfill -fllz /
+{fsZero}
+{fstrim}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }
@@ -643,12 +621,12 @@ sfill -fllz /
                     if (fullUpgrade)
                     {
                         Status = "upgrade: full";
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get dist-upgrade -yq");
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get dist-upgrade -yq");
                     }
                     else
                     {
                         Status = "upgrade: partial";
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get upgrade -yq");
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get upgrade -yq");
                     }
 
                     // Check to see whether the upgrade requires a reboot and
@@ -663,7 +641,7 @@ sfill -fllz /
                     // Clean up any cached APT files.
 
                     Status = "clean up";
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get clean -yq");
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get clean -yq");
                     SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }

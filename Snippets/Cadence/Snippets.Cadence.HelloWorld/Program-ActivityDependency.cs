@@ -1,4 +1,6 @@
-﻿namespace HelloWorld_ActivityDependency
+﻿#pragma warning disable CS8892 // Method 'Program.Main(string[])' will not be used as an entry point because a synchronous entry point 'Program.Main(string[])' was found.
+
+namespace HelloWorld_ActivityDependency
 {
     #region code
     using System;

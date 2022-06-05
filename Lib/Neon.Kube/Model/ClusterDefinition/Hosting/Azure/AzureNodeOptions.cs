@@ -50,11 +50,11 @@ namespace Neon.Kube
         /// This defaults to <see cref="AzureHostingOptions.DefaultVmSize"/>.
         /// </para>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes.  You must
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure V, sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -62,34 +62,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "vmSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmSize { get; set; } = null;
-
-        /// <summary>
-        /// Optionally overrides the default VM generation assignment made by neonKUBE
-        /// cluster setup for this node.  This defaults to <c>null</c> which allows
-        /// setup to make the choice.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Azure supports two generations of VM images that correspond roughly to HYPER-V
-        /// VM generations. <b>Gen1</b> VMs are are older.  These VMs use BIOS to boot,
-        /// IDE to access disk drives and are somewhat slower to provision and boot.
-        /// <b>Gen2</b> images use UEFI to boot (which supports PXE), OS disk drives
-        /// larger than 2TiB, and accelerated netwoking but Gen2 images don't support
-        /// disk encryption.  Here's a link with additional detail:
-        /// </para>
-        /// <para>
-        /// https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2
-        /// </para>
-        /// <para>
-        /// Not all Azure VM sizes support Gen1 or Gen2 VMs.  neonKUBE attempts to deploy
-        /// Gen2 VMs when supported for best performance.  You can override this behavior
-        /// by setting this value to <b>1</b> or <b>2</b>.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "VmGen", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vmGen", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public int? VmGen { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -103,13 +75,23 @@ namespace Neon.Kube
         /// <see cref="AzureStorageType.StandardHDD"/> specifies relatively slow rotating hard drives,
         /// <see cref="AzureStorageType.StandardSSD"/> specifies standard SSD based drives,
         /// <see cref="AzureStorageType.PremiumSSD"/> specifies fast SSD based drives, and finally
-        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.  Azure recommends that
-        /// most production VMs deploy with SSDs.
+        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.
+        /// <note>
+        /// Azure recommends that most production VMs deploy with SSDs.
+        /// </note>
         /// </para>
         /// <note>
+        /// <para>
         /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
         /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
         /// for more information.
+        /// </para>
+        /// <para>
+        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
+        /// neonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
+        /// <see cref="AzureStorageType.UltraSSD"/>.
+        /// </para>
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "StorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -124,7 +106,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -150,7 +132,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -166,10 +148,11 @@ namespace Neon.Kube
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeName">The associated node name.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var azureNodeOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
 
             // Set the cluster default storage types if necessary.
 
@@ -193,13 +176,6 @@ namespace Neon.Kube
                 }
             }
 
-            // Validate the VM generation override.
-
-            if (VmGen.HasValue && (VmGen.Value != 1 && VmGen.Value != 2))
-            {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureHostingOptions)}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
-            }
-
             // Validate the VM size, setting the cluster default if necessary.
 
             var vmSize = this.VmSize;
@@ -220,7 +196,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureNodeOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
@@ -236,7 +212,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.OpenEBSDiskSize, out var openEbsDiskSizeBytes) || openEbsDiskSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureNodeOptions)}.{nameof(OpenEBSDiskSize)}={OpenEBSDiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{azureNodeOptionsPrefix}.{nameof(OpenEBSDiskSize)}={OpenEBSDiskSize}] which is not valid.");
             }
 
             var openEBSDiskSizeGiB = AzureHelper.GetDiskSizeGiB(OpenEBSStorageType, openEbsDiskSizeBytes);

@@ -1,105 +1,112 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
-    <LangVersion>latest</LangVersion>
-    <RootNamespace>NeonClusterOperator</RootNamespace>
-    <LangVersion>latest</LangVersion>
-    <ServerGarbageCollection>true</ServerGarbageCollection>
-    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-    <AssemblyName>neon-cluster-operator</AssemblyName>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>NeonClusterOperator</RootNamespace>
+		<LangVersion>latest</LangVersion>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+		<AssemblyName>neon-cluster-operator</AssemblyName>
+		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<AnalysisLevel>5.0</AnalysisLevel>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Write generated installation YAML to an git-ignored folder -->
-	<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-	<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<!-- Write generated installation YAML to an git-ignored folder -->
+		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants />
+		<Optimize>False</Optimize>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DefineConstants />
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+		<DefineConstants />
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\cluster-manifest.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\cluster-manifest.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="KubeOps" Version="6.2.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KubeOps" Version="6.5.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controller\" />
-  </ItemGroup>
- 
-  <!--
-  The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
-  download the cluster manifest JSON file for the current cluster version.  The manifest
-  will be generated during image builds in neonCLOUD and uploaded to S3.
+	<ItemGroup>
+		<Folder Include="Controllers\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
+	<!--
+	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
+	download the cluster manifest JSON file for the current cluster version.  The manifest
+	will be generated during image builds in neonCLOUD and uploaded to S3.
   
-  The [neon-build download-const-uri] obtains the URI for the manifest from:
+	The [neon-build download-const-uri] obtains the URI for the manifest from:
   
-      assembly:   Neon.Kube.dll
-      constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
+		assembly:   Neon.Kube.dll
+		constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
   
-  We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
-  build configuration and target runtime as this project.  This is a bit fragile.
+	We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
+	build configuration and target runtime as this project.  This is a bit fragile.
   
-  Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
-  file so that developers will be able to work offline.  We'll just build with the existing
-  manifest file which is checked into git and won't change very often.
-  -->
+	Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
+	file so that developers will be able to work offline.  We'll just build with the existing
+	manifest file which is checked into git and won't change very often.
+	-->
 
-  <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-    <Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
-  </Target>
- 
-  <!-- 
-  The KubeOps config file generator doesn't rebuild the files when the config output
-  directory already exists.  We're going to delete this folder to ensure that these
-  files are always regenerated.
-  -->
+	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
+		<Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+	</Target>
 
-  <Target Name="RemoveConfig">
-    <RemoveDir Directories="$(ProjectDir)config.gitignore" />
-  </Target>
-  
-  <!--
-  This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
-  deleting any existing CRD files first to ensure that the CRDs are fully in sync.
-  
-  NOTE: This does not copy any other deployment related files to [$/Lib/Neon.Kube.Setup].  We'll edit deployment,
-	      RBAC and other files in place there, like we do for all other charts.
-  
-  NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernetes manifest 
-        and kustomization files.
-  -->
+	<!-- 
+    The KubeOps config file generator doesn't rebuild the files when the config output
+    directory already exists.  We're going to delete this folder to ensure that these
+    files are always regenerated.
+    -->
 
-  <Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-	  <Message Importance="high" Text="Publish CRDs" />
-	  <Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
-	  <Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NF_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />  
-  </Target>
+	<Target Name="RemoveConfig">
+		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
+	</Target>
+
+	<!--
+    This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
+    deleting any existing CRD files first to ensure that the CRDs are fully in sync.
   
+    NOTE: This does not copy any other deployment related files to [$/Lib/Neon.Kube.Setup].  We'll edit deployment,
+  	      RBAC and other files in place there, like we do for all other charts.
+  
+    NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernetes manifest 
+          and kustomization files.
+    -->
+
+	<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
+		<Message Importance="high" Text="Publish CRDs" />
+		<Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
+		<Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NF_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
+	</Target>
+
 </Project>

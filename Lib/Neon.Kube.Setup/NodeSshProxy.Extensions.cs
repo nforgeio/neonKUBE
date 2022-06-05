@@ -72,7 +72,7 @@ namespace Neon.Kube
                 helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
 
                 ms.Seek(0, SeekOrigin.Begin);
-                node.Upload(LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip"), ms, permissions: "660");
+                node.Upload(LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip"), ms, permissions: "660");
             }
         }
     }

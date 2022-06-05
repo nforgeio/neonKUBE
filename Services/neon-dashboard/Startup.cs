@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,12 +16,15 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
@@ -28,7 +32,15 @@ using Neon.Web;
 using Blazor.Analytics;
 using Blazor.Analytics.Components;
 
+using Blazored.LocalStorage;
+
+using k8s;
+
 using Prometheus;
+
+using Segment;
+
+using StackExchange.Redis;
 
 namespace NeonDashboard
 {
@@ -37,18 +49,21 @@ namespace NeonDashboard
     /// </summary>
     public class Startup
     {
-        public IConfiguration Configuration { get; }
-        public NeonDashboardService NeonDashboardService;
+        public IConfiguration                       Configuration { get; }
+        public Service                              NeonDashboardService;
+        public KubernetesWithRetry                  k8s;
+        public static Dictionary<string, string>    Svgs;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Specifies the service configuration.</param>
         /// <param name="service">Specifies the service.</param>
-        public Startup(IConfiguration configuration, NeonDashboardService service)
+        public Startup(IConfiguration configuration, Service service)
         {
             Configuration             = configuration;
             this.NeonDashboardService = service;
+            k8s                       = service.Kubernetes;
         }
 
         /// <summary>
@@ -57,14 +72,28 @@ namespace NeonDashboard
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")))
-            {
-                NeonDashboardService.SetEnvironmentVariable("CLUSTER_DOMAIN", Environment.GetEnvironmentVariable("CLUSTER_DOMAIN"));
-            }
+            Analytics.Initialize("nadwV6twqGHRLB451dblyqZVCwulUCFV",
+                new Config()
+                .SetAsync(!NeonHelper.IsDevWorkstation));
 
-            if (string.IsNullOrEmpty(NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET")))
+            if (NeonHelper.IsDevWorkstation)
             {
-                NeonDashboardService.SetEnvironmentVariable("SSO_CLIENT_SECRET", Environment.GetEnvironmentVariable("SSO_CLIENT_SECRET"));
+                services.AddDistributedMemoryCache();
+            }
+            else
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = "neon-redis.neon-system";
+                    options.InstanceName = "neon-redis";
+                    options.ConfigurationOptions = new ConfigurationOptions()
+                    {
+                        AllowAdmin = true,
+                        ServiceName = "master"
+                    };
+
+                    options.ConfigurationOptions.EndPoints.Add("neon-redis.neon-system:26379");
+                });
             }
 
             services.AddServerSideBlazor();
@@ -73,32 +102,43 @@ namespace NeonDashboard
                 options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
-            .AddCookie()
+            .AddCookie(options =>
+            {
+                options.ExpireTimeSpan    = TimeSpan.FromMinutes(20);
+                options.SlidingExpiration = true;
+                options.AccessDeniedPath  = "/Forbidden/";
+            })
             .AddOpenIdConnect("oidc", options =>
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
-                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.GetEnvironmentVariable("CLUSTER_DOMAIN")}";
+                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
-                options.GetClaimsFromUserInfoEndpoint = true;
                 options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.SaveTokens                    = true;
-                options.RequireHttpsMetadata          = false;
+                options.RequireHttpsMetadata          = true;
                 options.RemoteAuthenticationTimeout   = TimeSpan.FromSeconds(120);
                 options.CallbackPath                  = "/oauth2/callback";
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
-                options.UseTokenLifetime = false;
-                options.TokenValidationParameters = new TokenValidationParameters { NameClaimType = "name" };
+                options.UsePkce                       = false;
+                options.UseTokenLifetime              = false;
+                options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
+                {
+                    RequireNonce = false,
+                    RequireState = false
+                };
             });
 
             services
                 .AddHttpContextAccessor()
                 .AddHttpClient()
+                .AddBlazoredLocalStorage()
                 .AddSingleton<INeonLogger>(NeonDashboardService.LogManager.GetLogger())
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
+                .AddRouting()
                 .AddScoped<AppState>()
                 .AddMvc();
 
@@ -128,8 +168,12 @@ namespace NeonDashboard
                 app.UseExceptionHandler("/Error");
             }
 
-            app.UseStaticFiles();
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedProto
+            });
 
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseCookiePolicy();

@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string                defaultVmSize             = "Standard_A3";
+        private const string                defaultVmSize             = "Standard_D4as_v4";
         internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
         private const string                defaultDiskSize           = "128 GiB";
         internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
@@ -74,20 +74,20 @@ namespace Neon.Kube
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
+        /// Client/Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
         /// </summary>
-        [JsonProperty(PropertyName = "AppId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "appId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string AppId { get; set; }
+        public string ClientId { get; set; }
 
         /// <summary>
-        /// Password generated when creating the neon tool's Azure service principal.
+        /// ClientSecret/AppPassword generated when creating the neon tool's Azure service principal.
         /// </summary>
-        [JsonProperty(PropertyName = "AppPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "appPassword", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClientSecret", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientSecret", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string AppPassword { get; set; }
+        public string ClientSecret { get; set; }
 
         /// <summary>
         /// Identifies the target Azure region (e.g. <b>westus</b>).
@@ -98,8 +98,17 @@ namespace Neon.Kube
         public string Region { get; set; }
 
         /// <summary>
+        /// <para>
         /// Azure resource group where all cluster components are to be provisioned.  This defaults
         /// to "neon-" plus the cluster name but can be customized as required.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// <b>IMPORTANT:</b> Everything in this resource group will be deleted when the cluster is
+        /// removed.  This means that you must be very careful when adding other resources to this
+        /// group because these will be deleted as well.
+        /// </para>
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
@@ -142,6 +151,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "disableProximityPlacement", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool DisableProximityPlacement { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the Azure related cluster network options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "network", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public AzureNetworkOptions Network { get; set; }
 
         /// <summary>
         /// The DNS domain prefix for the public IP address to be assigned to the cluster.
@@ -213,7 +230,7 @@ namespace Neon.Kube
         /// <para>
         /// Azure automatically distributes VMs across the specified number of update
         /// domains and when it's necessary to perform planned maintenance on the underlying
-        /// hardware or to relocate a VM to another host, Azure gaurantees that it will
+        /// hardware or to relocate a VM to another host, Azure guarantees that it will
         /// reboot hosts in only one update domain at a time and then wait 30 minutes between
         /// update domains to give the application a chance to stablize.
         /// </para>
@@ -261,15 +278,15 @@ namespace Neon.Kube
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
         /// </para>
         /// <note>
-        /// This defaults to <b>Standard_A3</b> which includes includes 4 virtual CPUs and 7 GiB RAM but
-        /// you can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
+        /// This defaults to <b>Standard_D4as_v4</b> which includes includes 4 virtual CPUs and 16 GiB RAM.
+        /// You can override this for specific cluster nodfes via <see cref="AzureNodeOptions.VmSize"/>.
         /// </note>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes.  You must
+        /// neonKUBE clusters cannot be deployed to ARM-based Azure VM sizes at this time.  You must
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 4GiB RAM.  Choose
+        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -283,6 +300,21 @@ namespace Neon.Kube
         /// This defaults to <see cref="AzureStorageType.StandardSSD"/> and be
         /// overridden for specific cluster nodes via <see cref="AzureNodeOptions.StorageType"/>.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
+        /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
+        /// for more information.
+        /// </para>
+        /// <para>
+        /// Note also that Azure does not support OS disks with <see cref="AzureStorageType.UltraSSD"/>.
+        /// neonKUBE automatically provisions OS disks with <see cref="AzureStorageType.PremiumSSD"/> when
+        /// <see cref="AzureStorageType.UltraSSD"/> is specified while provisioning data disks with 
+        /// <see cref="AzureStorageType.UltraSSD"/>.
+        /// </para>
+        /// </note>
+        /// </remarks>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageType)]
@@ -374,10 +406,15 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            Network ??= new AzureNetworkOptions();
+
+            Network.Validate(clusterDefinition);
+
+            var azureHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Azure)}";
 
             foreach (var ch in clusterDefinition.Name)
             {
@@ -391,27 +428,27 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(SubscriptionId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(TenantId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(AppId))
+            if (string.IsNullOrEmpty(ClientId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(AppPassword))
+            if (string.IsNullOrEmpty(ClientSecret))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ClientSecret)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] cannot be empty.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(Region)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
@@ -430,24 +467,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
+                    throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -474,7 +511,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }
 
             // Verify [DefaultOpenEBSDiskSize].
@@ -486,7 +523,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(DefaultOpenEBSDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.
@@ -505,17 +542,17 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(VnetSubnet, out var vnetSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
             }
 
             if (!NetworkCidr.TryParse(NodeSubnet, out var nodeSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
             }
 
             if (!vnetSubnet.Contains(nodeSubnet))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
 
@@ -526,8 +563,8 @@ namespace Neon.Kube
         {
             SubscriptionId = null;
             TenantId       = null;
-            AppId          = null;
-            AppPassword    = null;
+            ClientId       = null;
+            ClientSecret   = null;
         }
     }
 }

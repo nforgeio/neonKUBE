@@ -49,42 +49,31 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Returns the cluster definition required to prepare a ready-to-go cluster for 
+        /// Returns the cluster definition required to prepare a neonDESKTOP built-in cluster for 
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
         /// <param name="deploymentPrefix">
         /// <para>
         /// Optionally specifies a deployment prefix string to be set as <see cref="DeploymentOptions.Prefix"/>
-        /// in the cluster definition returned.  This can be used by <b>KubernetesFixture</b> and custom tools
+        /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
         /// to help isolated temporary cluster assets from production clusters.
         /// </para>
         /// <note>
-        /// This parameter has no effect unless <see cref="KubeHelper.AutomationMode"/> is set to something
-        /// other than <see cref="KubeAutomationMode.Disabled"/>.
+        /// This parameter has no effect unless <see cref="KubeHelper.ClusterspaceMode"/> is set to something
+        /// other than <see cref="KubeClusterspaceMode.Disabled"/>.
         /// </note>
         /// </param>
         /// <returns>The cluster definition.</returns>
-        /// <exception cref="NotSupportedException">Thrown when the <paramref name="hostEnvironment"/> does not (yet) support ready-to-go.</exception>
-        public static ClusterDefinition GetReadyToGoClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
+        public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
-            // $todo(jefflill):
-            //
-            // We'll need to flesh this out as we support ready-to-go for more hosting environments.
-
             var resourceName = "Neon.Kube.ClusterDefinitions.";
 
             switch (hostEnvironment)
             {
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
 
                     resourceName += "neon-desktop.hyperv.cluster.yaml";
-                    break;
-
-                case HostingEnvironment.Wsl2:
-
-                    resourceName += "neon-desktop.wsl2.cluster.yaml";
                     break;
 
                 case HostingEnvironment.Aws:
@@ -95,7 +84,7 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotSupportedException($"Ready-To-Go is not yet supported for [{hostEnvironment}].");
+                    throw new NotSupportedException($"[{nameof(hostEnvironment)}={hostEnvironment}].");
             }
 
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
@@ -105,7 +94,7 @@ namespace Neon.Kube
                     var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
 
                     clusterDefinition.Validate();
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Ready-to-go cluster definitions must include exactly one node.");
+                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Built-in cluster definitions must include exactly one node.");
 
                     if (!string.IsNullOrEmpty(deploymentPrefix))
                     {
@@ -138,63 +127,75 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name="automationFolder">
-        /// Optionally specifies that the operation is to be performed in <b>automation mode</b> by specifying
-        /// the non-default directory where cluster state such as logs, logins, etc. will be written, overriding
-        /// the default <b>$(USERPROFILE)\.neonkube</b> directory.
-        /// </param>
-        /// <param name="headendUri">Optionally override the headend service URI</param>
-        /// <param name="readyToGoMode">
-        /// Optionally creates a setup controller that prepares and partially sets up a ready-to-go image or completes
-        /// the cluster setup for a provisioned ready-to-go cluster.  This defaults to <see cref="ReadyToGoMode.Normal"/>
-        /// which doesn't perform any special ready-to-go operations.
+        /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        
+        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
         /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
-        /// <exception cref="KubeException">Thrown when there's a problem.</exception>
-        /// <remarks>
-        /// <para>
-        /// Node images prepared as <b>ready-to-go</b> can be identified by the presence of a 
-        /// <b>/etc/neonkube/image-type</b> file set to <see cref="KubeImageType.ReadyToGo"/>.
-        /// is passed.
-        /// </para>
-        /// </remarks>
+        /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
-            int                 maxParallel      = 500,
-            bool                unredacted       = false,
-            bool                debugMode        = false,
-            bool                uploadCharts     = false,
-            string              automationFolder = null,
-            string              headendUri       = "https://headend.neoncloud.io",
-            ReadyToGoMode       readyToGoMode    = ReadyToGoMode.Normal)
+            int                 maxParallel          = 500,
+            bool                unredacted           = false,
+            bool                debugMode            = false,
+            bool                uploadCharts         = false,
+            string              clusterspace         = null,
+            string              neonCloudHeadendUri  = null,
+            bool                disableConsoleOutput = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            if (debugMode && readyToGoMode != ReadyToGoMode.Normal)
-            {
-                throw new ArgumentException($"[{nameof(readyToGoMode)}] must be [{ReadyToGoMode.Normal}] when [{nameof(debugMode)}=TRUE].");
-            }
+            neonCloudHeadendUri ??= KubeConst.NeonCloudHeadendUri;
 
-            // Do some quick checks to ensure that component versions look reasonable.
+            clusterDefinition.Validate();
 
-            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
-            var crioVersion       = new Version(KubeVersions.Crio);
-
-            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
-            {
-                throw new KubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
-            }
-
-            // Create the automation subfolder for the operation if required and determine
-            // where the log files should go.
+            // Determine where the log files should go.
 
             var logFolder = KubeHelper.LogFolder;
 
-            if (!string.IsNullOrEmpty(automationFolder))
+            // Ensure that the [prepare-ok] file in the log folder exists, indicating that
+            // the last prepare operation succeeded.
+
+            var prepareOkPath = Path.Combine(logFolder, "prepare-ok");
+
+            if (!File.Exists(prepareOkPath))
             {
-                logFolder = Path.Combine(automationFolder, logFolder);
+                throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
             }
+
+            // Clear the log folder except for the [prepare-ok] file.
+
+            if (Directory.Exists(logFolder))
+            {
+                foreach (var file in Directory.GetFiles(logFolder, "*", SearchOption.TopDirectoryOnly))
+                {
+                    if (Path.GetFileName(file) != "prepare-ok")
+                    {
+                        NeonHelper.DeleteFile(file);
+                    }
+                }
+            }
+            else
+            {
+                throw new DirectoryNotFoundException(logFolder);
+            }
+
+            // Reload the any KubeConfig file to ensure we're up-to-date.
+
+            KubeHelper.LoadConfig();
+
+            // Do some quick checks to ensure that component versions look reasonable.
+
+            //var kubernetesVersion = new Version(KubeVersions.Kubernetes);
+            //var crioVersion       = new Version(KubeVersions.Crio);
+
+            //if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
+            //{
+            //    throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+            //}
 
             // Initialize the cluster proxy.
 
@@ -203,7 +204,9 @@ namespace Neon.Kube
 
             KubeHelper.InitContext(kubeContext);
 
-            var cluster = new ClusterProxy(
+            ClusterProxy cluster = null;
+
+            cluster = new ClusterProxy(
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
                 operation:              ClusterProxy.Operation.Setup,
                 clusterDefinition:      clusterDefinition,
@@ -224,12 +227,12 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
             {
                 MaxParallel     = maxParallel,
-                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################",
-                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################",
-                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################"
+                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
+                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ###################################################",
+                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
             };
 
             // Load the cluster login information if it exists and when it indicates that
@@ -253,25 +256,13 @@ namespace Neon.Kube
                 clusterLogin.Save();
             }
 
-            if (cluster.Nodes.Count() == 1 && readyToGoMode != ReadyToGoMode.Prepare)
+            // Update the cluster node SSH credentials to use the secure password.
+
+            var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
+
+            foreach (var node in cluster.Nodes)
             {
-                if (cluster.Nodes.First().ImageType == KubeImageType.ReadyToGo)
-                {
-                    readyToGoMode = ReadyToGoMode.Setup;
-                }
-            }
-
-            // Update the cluster node SSH credentials to use the secure password
-            // when we're not preparing a ready-to-go image.
-
-            if (readyToGoMode != ReadyToGoMode.Prepare)
-            {
-                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
-
-                foreach (var node in cluster.Nodes)
-                {
-                    node.UpdateCredentials(sshCredentials);
-                }
+                node.UpdateCredentials(sshCredentials);
             }
 
             // Configure the setup controller state.
@@ -284,20 +275,21 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.AutomationFolder, automationFolder);
-            controller.Add(KubeSetupProperty.ReadyToGoMode, readyToGoMode);
-            controller.Add(KubeSetupProperty.ClusterIp, clusterDefinition.Kubernetes.ApiLoadBalancer ?? clusterDefinition.SortedMasterNodes.First().Address);
-            controller.Add(KubeSetupProperty.HeadendUri, headendUri);
+            controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
+            controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the setup steps.
 
             controller.AddGlobalStep("resource requirements", KubeSetup.CalculateResourceRequirements);
+
+            cluster.HostingManager.AddSetupSteps(controller);
+
             controller.AddWaitUntilOnlineStep("connect nodes");
             controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
             controller.AddNodeStep("check image version",
-                (state, node) =>
+                (controller, node) =>
                 {
                     // Ensure that the node image version matches the current neonKUBE (build) version.
 
@@ -314,11 +306,7 @@ namespace Neon.Kube
                         }
                 });
 
-            if (readyToGoMode == ReadyToGoMode.Setup)
-            {
-                controller.AddNodeStep("verify ready-to-go image", (controller, node) => node.VerifyImageIsReadyToGo(controller));
-            }
-
+            controller.AddNodeStep("disable cloud-init", (controller, node) => node.SudoCommand("touch /etc/cloud/cloud-init.disabled"));
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("root certificates", (controller, node) => node.UpdateRootCertificates());
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
@@ -328,9 +316,9 @@ namespace Neon.Kube
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+            var configureMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-            controller.AddNodeStep(configureFirstMasterStepLabel,
+            controller.AddNodeStep(configureMasterStepLabel,
                 (controller, node) =>
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest);
@@ -372,12 +360,12 @@ namespace Neon.Kube
                 controller.AddNodeStep("upload helm charts",
                     (controller, node) =>
                     {
-                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolders.Helm}/*");
+                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
                         cluster.FirstMaster.NodeInstallHelmArchive(controller);
 
-                        var zipPath = LinuxPath.Combine(KubeNodeFolders.Helm, "charts.zip");
+                        var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 
-                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolders.Helm}");
+                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
                         cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
                     },
                     (controller, node) => node == cluster.FirstMaster);
@@ -416,6 +404,8 @@ namespace Neon.Kube
                     },
                     (controller, node) => node.Metadata.IsWorker);
             }
+
+            cluster.HostingManager.AddPostSetupSteps(controller);
 
             // We need to dispose this after the setup controller runs.
 

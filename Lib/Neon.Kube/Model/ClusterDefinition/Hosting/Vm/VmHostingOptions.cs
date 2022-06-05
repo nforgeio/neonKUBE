@@ -162,7 +162,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperVLocal"/>,
+        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperV"/>,
         /// and <see cref="HostingEnvironment.XenServer"/> environments.  This is used to avoid
         /// VM naming conflicts between different clusters.
         /// </para>
@@ -192,6 +192,13 @@ namespace Neon.Kube
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
+            // We don't add a prefix for the special neon-desktop cluster.
+
+            if (clusterDefinition.IsDesktopBuiltIn)
+            {
+                return String.Empty;
+            }
+
             var prefix = string.Empty;
 
             if (NamePrefix == null)
@@ -207,7 +214,7 @@ namespace Neon.Kube
                 prefix = $"{NamePrefix}-".ToLowerInvariant();
             }
 
-            if (KubeHelper.AutomationMode != KubeAutomationMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
+            if (KubeHelper.ClusterspaceMode != KubeClusterspaceMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
             {
                 prefix = $"{clusterDefinition.Deployment.Prefix}-{prefix}";
             }
@@ -221,10 +228,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var vmHostingOptionsPrefix = $"{nameof(ClusterDefinition.Hosting)}";
 
             // Validate the VM name prefix.
 
@@ -238,16 +246,16 @@ namespace Neon.Kube
 
             if (Cores <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(HyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
             }
 
             Memory = Memory ?? DefaultMemory;
             OsDisk = OsDisk ?? DefaultOsDisk;
             Hosts  = Hosts ?? new List<HypervisorHost>();
 
-            ClusterDefinition.ValidateSize(Memory, this.GetType(), nameof(Memory));
-            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), nameof(OsDisk));
-            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), nameof(OpenEbsDisk));
+            ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(Memory)}");
+            ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(OsDisk)}");
+            ClusterDefinition.ValidateSize(OpenEbsDisk, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(OpenEbsDisk)}");
 
             // Verify that the hypervisor host machines have unique names and addresses.
 
@@ -271,32 +279,14 @@ namespace Neon.Kube
                 hostAddressSet.Add(vmHost.Address);
             }
 
-            // Ensure that some hypervisor hosts have been specified if we're deploying to remote
-            // hypervisors and also that each node definition specifies a host hypervisor.
+            // Ensure that some hypervisor hosts have been specified if we're deploying
+            // to remote hypervisors.
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
+            if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
-                if (clusterDefinition.Hosting.Vm.Hosts.Count == 0)
-                {
-                    throw new ClusterDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.Hosts)}].");
-                }
-
                 foreach (var vmHost in Hosts)
                 {
                     vmHost.Validate(clusterDefinition);
-                }
-
-                foreach (var node in clusterDefinition.Nodes)
-                {
-                    if (string.IsNullOrEmpty(node.Vm?.Host))
-                    {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.Vm.Host)}].");
-                    }
-
-                    if (!hostNameSet.Contains(node.Vm.Host))
-                    {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(HypervisorHost)}={node.Vm.Host}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.Hosts)}].");
-                    }
                 }
             }
         }

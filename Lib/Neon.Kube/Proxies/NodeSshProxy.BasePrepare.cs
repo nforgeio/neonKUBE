@@ -90,7 +90,7 @@ namespace Neon.Kube
 
             if (upgradeLinux)
             {
-                BaseUpgradeLinux(controller);
+                BaseUpgradeLinuxDistribution(controller);
             }
         }
 
@@ -105,7 +105,7 @@ namespace Neon.Kube
             InvokeIdempotent("base/debian-frontend",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "non-interactive tty");
+                    controller.LogProgress(this, verb: "configure", message: "tty");
 
                     // We need to append [DEBIAN_FRONTEND] to the [/etc/environment] file but
                     // we haven't installed [zip/unzip] yet so we can't use a command bundle.
@@ -177,7 +177,7 @@ sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/
             InvokeIdempotent("base/bash-environment",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "configure", message: "environmant variables");
+                    controller.LogProgress(this, verb: "configure", message: "environment variables");
 
                     var script =
 @"
@@ -204,8 +204,8 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     // Install the packages.  Note that we haven't added our tool folder to the PATH 
                     // yet, so we'll use the fully qualified path to [safe-apt-get].
 
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
-                    SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get update", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng ntp secure-delete sysstat zip", RunOptions.Defaults | RunOptions.FaultOnError);
 
                     // $note(jefflill):
                     //
@@ -249,9 +249,9 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                     //
                     //      https://github.com/jirka-h/haveged/blob/master/README.md
 
-                    if (this.KernelVersion < new Version(5, 6, 0) && controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) != HostingEnvironment.Wsl2)
+                    if (this.KernelVersion < new Version(5, 6, 0))
                     {
-                        SudoCommand($"{KubeNodeFolders.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
+                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get install -yq haveged", RunOptions.Defaults | RunOptions.FaultOnError);
                     }
                 });
         }
@@ -264,53 +264,27 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
             InvokeIdempotent("base/patch-linux",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "security updates");
-
-                    PatchLinux(hostingEnvironment);
+                    controller.LogProgress(this, verb: "patch", message: "linux");
+                    UpdateLinux();
                 });
         }
 
         /// <summary>
-        /// Updates Linux by applying all outstanding package updates but without 
-        /// upgrading the Linux distribution.
+        /// Upgrades the Linux distribution on the node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void BaseUpdateLinux(ISetupController controller)
+        public void BaseUpgradeLinuxDistribution(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
-            InvokeIdempotent("base/update-linux",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "linux security patches");
-
-                    UpdateLinux(hostingEnvironment);
-                });
-        }
-
-        /// <summary>
-        /// Updates the Linux distribution.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void BaseUpgradeLinux(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             InvokeIdempotent("base/upgrade-linux",
                 () =>
                 {
                     controller.LogProgress(this, verb: "upgrade", message: "linux distribution");
-
-                    UpgradeLinux(hostingEnvironment);
+                    UpgradeLinuxDistribution();
                 });
         }
 
@@ -379,7 +353,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-{KubeNodeFolders.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+{KubeNodeFolder.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
@@ -395,11 +369,6 @@ update-initramfs -u
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
-            if (hostingEnvironment == HostingEnvironment.Wsl2)
-            {
-                return;
-            }
 
             InvokeIdempotent("base/dhcp",
                 () =>
@@ -493,11 +462,6 @@ touch /etc/cloud/cloud-init.disabled
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
-            // NOTE:
-            //
-            // The "base/remove-snap" action ID string below must match the string
-            // used within [Wsl2Proxy.StartAsync()]
-
             InvokeIdempotent("base/remove-snap",
                 () =>
                 {
@@ -536,10 +500,7 @@ var removePackagesScript =
 $@"
 set -euo pipefail
 
-cloud-init clean
-
-{KubeNodeFolders.Bin}/safe-apt-get purge -y \
-    cloud-init \
+{KubeNodeFolder.Bin}/safe-apt-get purge -y \
     git git-man \
     iso-codes \
     locales \
@@ -548,7 +509,7 @@ cloud-init clean
     snapd \
     vim vim-runtime vim-tiny
 
-{KubeNodeFolders.Bin}/safe-apt-get autoremove -y
+{KubeNodeFolder.Bin}/safe-apt-get autoremove -y
 ";
                     SudoCommand(CommandBundle.FromScript(removePackagesScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -632,8 +593,8 @@ EOF
         }
 
         /// <summary>
-        /// Installs the <b>neon-init</b> service which is a cloud-init like service we
-        /// use to configure the network and credentials for VMs hosted in non-cloud
+        /// Installs the <b>neon-init</b> service which is a poor man's cloud-init like 
+        /// service we use to configure the network and credentials for VMs hosted in non-cloud
         /// hypervisors.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -657,22 +618,10 @@ EOF
         /// The script won't create the [/etc/neon-init] when the script ISO doesn't exist 
         /// for debugging purposes.
         /// </note>
-        /// <note>
-        /// This is not required or installed for WSL2 clusters.
-        /// </note>
         /// </remarks>
         public void BaseInstallNeonInit(ISetupController controller)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            // We don't control the distro IP address for WSL2 and there really
-            // isn't a way to mount a DVD either, so we're not going to install
-            // the [neon-init] service for this environment.
-
-            if (controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment) == HostingEnvironment.Wsl2)
-            {
-                return;
-            }
 
             InvokeIdempotent("base/neon-init",
                 () =>
@@ -682,7 +631,7 @@ EOF
                     var neonNodePrepScript =
 $@"# Ensure that the neon binary folder exists.
 
-mkdir -p {KubeNodeFolders.Bin}
+mkdir -p {KubeNodeFolder.Bin}
 
 # Create the systemd unit file.
 
@@ -694,7 +643,7 @@ After=systemd-networkd.service
 
 [Service]
 Type=oneshot
-ExecStart={KubeNodeFolders.Bin}/neon-init
+ExecStart={KubeNodeFolder.Bin}/neon-init
 RemainAfterExit=false
 StandardOutput=journal+console
 
@@ -704,7 +653,7 @@ EOF
 
 # Create the service script.
 
-cat <<EOF > {KubeNodeFolders.Bin}/neon-init
+cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:	        neon-init
@@ -750,6 +699,9 @@ cat <<EOF > {KubeNodeFolders.Bin}/neon-init
 #       7. The service just exits if the DVD and/or script file are 
 #          not present.  This shouldn't happen in production but is useful
 #          for script debugging.
+#
+# NOTE: Ubuntu 22.04 seems to have removed the [/dev/dvd] device but 
+#       [/dev/cdrom] works, su we're swiching to that.
 
 # Run the prep script only once.
 
@@ -758,26 +710,47 @@ if [ -f /etc/neon-init/ready ] ; then
     exit 0
 fi
 
-# Check for the DVD and prep script.
+# Create a mount point for the DVD.
 
-mkdir -p /media/neon-init
-
-if [ ! $? ] ; then
+if ! mkdir -p /media/neon-init ; then
     echo ""ERROR: Cannot create DVD mount point.""
-    rm -rf /media/neon-init
     exit 1
 fi
 
-mount /dev/dvd /media/neon-init
+# Wait up to 120 seconds for for the DVD to be discovered.  It can
+# take some time for this to happen.
 
-if [ ! $? ] ; then
-    echo ""WARNING: No DVD is present.""
-    rm -rf /media/neon-init
-    exit 0
+mounted=$false
+
+for i in {{1..24}}; do
+
+    # Sleep for 5 seconds.  We're doing this first to give Linux
+    # a chance to discover the DVD and then this will act as a
+    # retry interval.  24 iterations at 5 seconds each is 120 seconds.
+
+    sleep 5
+
+    # Try mounting the DVD.
+
+    if mount /dev/cdrom /media/neon-init ; then
+        
+        mounted=$true
+        break
+    fi
+
+    echo ""WARNING: No DVD is present (yet).""
+
+done
+
+if ! $mounted; then
+    echo ""WARNING: No DVD is present: exiting""
+    exit 1
 fi
 
+# Check for the [neon-init.sh] script and execute it.
+
 if [ ! -f /media/neon-init/neon-init.sh ] ; then
-    echo ""WARNING: No [neon-init.sh] script is present on the DVD.""
+    echo ""WARNING: No [neon-init.sh] script is present on the DVD: exiting""
     rm -rf /media/neon-init
     exit 0
 fi
@@ -794,13 +767,13 @@ echo ""INFO: Cleanup""
 umount /media/neon-init
 rm -rf /media/neon-init
 
-# Disable [neon-init] the next time it starts.
+# Disable [neon-init] so it does nothing the next time it's launched.
 
 mkdir -p /etc/neon-init
 touch /etc/neon-init/ready
 EOF
 
-chmod 744 {KubeNodeFolders.Bin}/neon-init
+chmod 744 {KubeNodeFolder.Bin}/neon-init
 
 # Configure [neon-init] to start at boot.
 
@@ -830,23 +803,26 @@ systemctl daemon-reload
 $@"
 set -euo pipefail
 
-mkdir -p {KubeNodeFolders.Bin}
-chmod 750 {KubeNodeFolders.Bin}
+mkdir -p {KubeNodeFolder.Bin}
+chmod 750 {KubeNodeFolder.Bin}
 
-mkdir -p {KubeNodeFolders.Config}
-chmod 750 {KubeNodeFolders.Config}
+mkdir -p {KubeNodeFolder.Config}
+chmod 750 {KubeNodeFolder.Config}
 
-mkdir -p {KubeNodeFolders.Setup}
-chmod 750 {KubeNodeFolders.Setup}
+mkdir -p {KubeNodeFolder.Setup}
+chmod 750 {KubeNodeFolder.Setup}
 
-mkdir -p {KubeNodeFolders.Helm}
-chmod 750 {KubeNodeFolders.Helm}
+mkdir -p {KubeNodeFolder.Helm}
+chmod 750 {KubeNodeFolder.Helm}
 
-mkdir -p {KubeNodeFolders.State}
-chmod 750 {KubeNodeFolders.State}
+mkdir -p {KubeNodeFolder.State}
+chmod 750 {KubeNodeFolder.State}
 
-mkdir -p {KubeNodeFolders.State}/setup
-chmod 750 {KubeNodeFolders.State}/setup
+mkdir -p {KubeNodeFolder.State}/setup
+chmod 750 {KubeNodeFolder.State}/setup
+
+mkdir -p {KubeNodeFolder.NodeTasks}
+chmod 740 {KubeNodeFolder.NodeTasks}
 ";
                     SudoCommand(CommandBundle.FromScript(folderScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
@@ -868,7 +844,7 @@ chmod 750 {KubeNodeFolders.State}/setup
             InvokeIdempotent("base/tool-scripts",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "tools");
+                    controller.LogProgress(this, verb: "setup", message: "tools (base)");
 
                     // Upload any tool scripts to the neonKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute
@@ -887,7 +863,7 @@ chmod 750 {KubeNodeFolders.State}/setup
 
                         using (var toolStream = file.OpenStream())
                         {
-                            UploadText(LinuxPath.Combine(KubeNodeFolders.Bin, targetName), toolStream, permissions: "744");
+                            UploadText(LinuxPath.Combine(KubeNodeFolder.Bin, targetName), toolStream, permissions: "744");
                         }
                     }
                 });

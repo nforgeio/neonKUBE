@@ -16,10 +16,13 @@ spec:
     metadata:
       labels:
         app: grafana-agent-operator
+      annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: grafana-agent-operator
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: operator
         image: "{{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"

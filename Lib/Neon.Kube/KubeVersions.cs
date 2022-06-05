@@ -34,25 +34,39 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
+        /// <para>
         /// The current neonKUBE version.
+        /// </para>
+        /// <note>
+        /// Pre-release versions should append <b>-alpha</b>, <b>-beta</b>,
+        /// or <b>-preview</b> to the version number.  When multiple prereleases
+        /// with the same tag have been released, we will append a two digits like
+        /// <b>0.3.0-alpha.01</b> which will allow us to describe up to 101
+        /// pre-preleases for the same version.
+        /// </note>
         /// </summary>
-        public const string NeonKube = "0.3.0-alpha";
+        public const string NeonKube = "0.6.0-alpha";
+
+        /// <summary>
+        /// Returns the prefix used for neonKUBE container tags.
+        /// </summary>
+        public const string NeonKubeContainerImageTagPrefix = "neonkube-";
 
         /// <summary>
         /// Returns the container image tag for the current neonKUBE release.  This adds the
         /// <b>neonkube-</b> prefix to <see cref="NeonKube"/>.
         /// </summary>
-        public const string NeonKubeContainerImageTag = "neonkube-" + NeonKube;
+        public const string NeonKubeContainerImageTag = NeonKubeContainerImageTagPrefix + NeonKube;
 
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string Kubernetes = "1.21.4";
+        public const string Kubernetes = "1.24.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboard = "2.3.1";
+        public const string KubernetesDashboard = "2.5.1";
 
         /// <summary>
         /// The version of the Kubernetes dashboard metrics scraper to be installed.
@@ -95,12 +109,17 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public const string Crio = "1.21.4";
+        public const string Crio = Kubernetes;
+
+        /// <summary>
+        /// The version of Podman to be installed.
+        /// </summary>
+        public const string Podman = "3.4.2";
 
         /// <summary>
         /// The version of Calico to install.
         /// </summary>
-        public const string Calico = "3.16";
+        public const string Calico = "3.22.2";
 
         /// <summary>
         /// The version of dnsutils to install.
@@ -150,7 +169,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of pause image to be installed.
         /// </summary>
-        public const string Pause = "3.4.1";
+        public const string Pause = "3.7";
 
         /// <summary>
         /// The version of busybox image to be installed.

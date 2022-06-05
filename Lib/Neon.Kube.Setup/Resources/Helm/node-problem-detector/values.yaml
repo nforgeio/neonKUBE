@@ -32,7 +32,7 @@ settings:
             "args": [
               "--component=cri",
               "--crictl-path=/host/usr/bin/crictl",
-              "--cri-socket-path=/var/run/crio/crio.sock",
+              "--cri-socket-path=unix:///var/run/crio/crio.sock",
               "--enable-repair=true",
               "--cooldown-time=2m",
               "--health-check-timeout=60s"
@@ -61,7 +61,7 @@ settings:
   # settings.prometheus_address -- Prometheus exporter address
   prometheus_address: 0.0.0.0
   # settings.prometheus_port -- Prometheus exporter port
-  prometheus_port: 20257
+  prometheus_port: 20259
 
   # The period at which k8s-exporter does forcibly sync with apiserver
   # settings.heartBeatPeriod -- Syncing interval with API server
@@ -82,6 +82,9 @@ imagePullSecrets: []
 
 nameOverride: ""
 fullnameOverride: ""
+
+serviceMesh:
+  enabled: true
 
 rbac:
   create: true

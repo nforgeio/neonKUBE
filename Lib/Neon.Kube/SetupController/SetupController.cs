@@ -30,6 +30,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.SSH;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -83,20 +84,21 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private object                              syncLock    = new object();
-        private List<IDisposable>                   disposables = new List<IDisposable>();
-        private ISetupController                    parent      = null;
-        private bool                                isRunning   = false;
-        private int                                 maxStackSize;
-        private string                              globalStatus;
-        private List<NodeSshProxy<NodeMetadata>>    nodes;
-        private List<INodeSshProxy>                 hosts;
-        private List<Step>                          steps;
-        private Step                                currentStep;
-        private bool                                isFaulted;
-        private bool                                cancelPending;
-        private string                              clusterLogPath;
-        private TextWriter                          clusterLogWriter;
+        private object                                  syncLock      = new object();
+        private List<IDisposable>                       disposables   = new List<IDisposable>();
+        private ISetupController                        parent        = null;
+        private bool                                    isRunning     = false;
+        private Dictionary<string, SetupPendingTasks>   pendingGroups = new Dictionary<string, SetupPendingTasks>(StringComparer.InvariantCultureIgnoreCase);
+        private CancellationTokenSource                 cts           = new CancellationTokenSource();
+        private int                                     maxStackSize;
+        private string                                  globalStatus;
+        private List<NodeSshProxy<NodeMetadata>>        nodes;
+        private List<INodeSshProxy>                     hosts;
+        private List<Step>                              steps;
+        private Step                                    currentStep;
+        private bool                                    isFaulted;
+        private string                                  clusterLogPath;
+        private TextWriter                              clusterLogWriter;
 
         /// <summary>
         /// Constructor.
@@ -104,8 +106,12 @@ namespace Neon.Kube
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
         /// <param name="logFolder">Specifies the path to the log folder.</param>
-        public SetupController(string operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder)
-            : this(new string[] { operationTitle }, nodes, logFolder)
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
+        public SetupController(string operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder, bool disableConsoleOutput = false)
+            : this(new string[] { operationTitle }, nodes, logFolder, disableConsoleOutput: disableConsoleOutput)
         {
         }
 
@@ -115,7 +121,11 @@ namespace Neon.Kube
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
         /// <param name="logFolder">Specifies the path to the log folder.</param>
-        public SetupController(string[] operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder)
+        /// <param name="disableConsoleOutput">
+        /// Optionally disables status output to the console.  This is typically
+        /// enabled for non-console applications.
+        /// </param>
+        public SetupController(string[] operationTitle, IEnumerable<NodeSshProxy<NodeMetadata>> nodes, string logFolder, bool disableConsoleOutput = false)
         {
             Covenant.Requires<ArgumentNullException>(operationTitle != null, nameof(operationTitle));
             Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
@@ -138,6 +148,11 @@ namespace Neon.Kube
             this.hosts          = new List<INodeSshProxy>();
             this.steps          = new List<Step>();
             this.clusterLogPath = Path.Combine(logFolder, KubeConst.ClusterLogName);
+
+            if (!disableConsoleOutput)
+            {
+                ConsoleWriter = new SetupConsoleWriter();
+            }
         }
 
         /// <inheritdoc/>
@@ -762,7 +777,7 @@ namespace Neon.Kube
                 }
 
                 // NOTE: We're not going to notify the UX for quiet/hidden steps but
-                //       we will report this in the logs.
+                //       we will report these in the logs.
 
                 if (!step.IsQuiet)
                 {
@@ -837,14 +852,24 @@ namespace Neon.Kube
                             Parallel.ForEach(stepNodes, parallelOptions,
                                 node =>
                                 {
+                                    if (IsCancelPending)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
+                                        return;
+                                    }
+
                                     try
                                     {
                                         node.IsConfiguring = true;
 
                                         step.SyncNodeAction(this, node);
 
-                                        node.Status  = "[x] DONE";
+                                        node.Status = "[x] DONE";
                                         node.IsReady = true;
+                                    }
+                                    catch (OperationCanceledException)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
                                     }
                                     catch (Exception e)
                                     {
@@ -862,6 +887,12 @@ namespace Neon.Kube
                             Parallel.ForEach(stepNodes, parallelOptions,
                                 node =>
                                 {
+                                    if (IsCancelPending)
+                                    {
+                                        stepDisposition = SetupStepState.Cancelled;
+                                        return;
+                                    }
+
                                     try
                                     {
                                         var nodeDefinition = node.Metadata as NodeDefinition;
@@ -874,7 +905,7 @@ namespace Neon.Kube
                                                 await step.AsyncNodeAction(this, node);
                                             });
 
-                                        runTask.Wait();
+                                        runTask.WaitWithoutAggregate();
 
                                         node.Status  = "[x] DONE";
                                         node.IsReady = true;
@@ -888,7 +919,7 @@ namespace Neon.Kube
                                             e = aggregateException.InnerExceptions.Single();
                                         }
 
-                                        stepDisposition = SetupStepState.Done;
+                                        stepDisposition = SetupStepState.Failed;
 
                                         node.Fault(NeonHelper.ExceptionError(e));
                                         node.LogException(e);
@@ -897,6 +928,12 @@ namespace Neon.Kube
                         }
                         else if (step.SyncGlobalAction != null)
                         {
+                            if (IsCancelPending)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+                                return;
+                            }
+
                             try
                             {
                                 step.SyncGlobalAction(this);
@@ -907,6 +944,12 @@ namespace Neon.Kube
                                 }
 
                                 SetGlobalStepStatus();
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+
+                                SetGlobalStepStatus($"*** CANCELLED");
                             }
                             catch (Exception e)
                             {
@@ -919,6 +962,12 @@ namespace Neon.Kube
                         }
                         else if (step.AsyncGlobalAction != null)
                         {
+                            if (IsCancelPending)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+                                return;
+                            }
+
                             try
                             {
                                 var runTask = Task.Run(
@@ -927,7 +976,7 @@ namespace Neon.Kube
                                         await step.AsyncGlobalAction(this);
                                     });
 
-                                runTask.Wait();
+                                runTask.WaitWithoutAggregate();
 
                                 foreach (var node in stepNodes)
                                 {
@@ -936,15 +985,31 @@ namespace Neon.Kube
 
                                 SetGlobalStepStatus();
                             }
+                            catch (OperationCanceledException)
+                            {
+                                stepDisposition = SetupStepState.Cancelled;
+
+                                SetGlobalStepStatus($"*** CANCELLED");
+                            }
+                            catch (AggregateException e)
+                            {
+                                if (e.Contains<OperationCanceledException>())
+                                {
+                                    stepDisposition = SetupStepState.Cancelled;
+
+                                    SetGlobalStepStatus($"*** CANCELLED");
+                                }
+                                else
+                                {
+                                    isFaulted       = true;
+                                    stepDisposition = SetupStepState.Failed;
+
+                                    SetGlobalStepStatus($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                                    LogGlobalException(e);
+                                }
+                            }
                             catch (Exception e)
                             {
-                                var aggregateException = e as AggregateException;
-
-                                if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
-                                {
-                                    e = aggregateException.InnerExceptions.Single();
-                                }
-
                                 isFaulted       = true;
                                 stepDisposition = SetupStepState.Failed;
 
@@ -977,8 +1042,8 @@ namespace Neon.Kube
                     },
                     maxStackSize: maxStackSize);
 
-                // The setup step is executing above in a thread and we're going to loop here
-                // to raise [StatusChangedEvent] when we detect a status change giving any UI
+                // While the setup step is executing above in a thread, we're going to loop here
+                // and raise [StatusChangedEvent] when we detect a status change giving any UI
                 // a chance to update.
                 //
                 // Note that we're going to loop here until the step execution thread above
@@ -998,7 +1063,7 @@ namespace Neon.Kube
                     {
                         lock (syncLock)
                         {
-                            StatusChangedEvent?.Invoke(status.Clone());
+                            StatusChangedEvent?.Invoke(status);
                         }
 
                         lastJson = newJson;
@@ -1029,7 +1094,7 @@ namespace Neon.Kube
         {
             if (isFaulted)
             {
-                throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new NeonKubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
         }
 
@@ -1069,7 +1134,7 @@ namespace Neon.Kube
         public event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <inheritdoc/>
-        public SetupConsoleWriter ConsoleWriter { get; private set; } = new SetupConsoleWriter();
+        public SetupConsoleWriter ConsoleWriter { get; private set; }
 
         /// <inheritdoc/>
         public event SetupProgressDelegate ProgressEvent;
@@ -1092,7 +1157,7 @@ namespace Neon.Kube
                         new SetupProgressMessage()
                         {
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1115,14 +1180,14 @@ namespace Neon.Kube
                         {
                             Verb          = verb,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
         }
 
         /// <inheritdoc/>
-        public void LogProgress(ILinuxSshProxy node, string message)
+        public void LogProgress(SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1138,20 +1203,20 @@ namespace Neon.Kube
                         {
                             Node          = node,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
         }
 
         /// <inheritdoc/>
-        public void LogProgress(ILinuxSshProxy node, string verb, string message)
+        public void LogProgress(SSH.ILinuxSshProxy node, string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
 
-            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb}: {message}";
+            ((NodeSshProxy<NodeMetadata>)node).Status = $"{verb} {message}";
 
             if (ProgressEvent != null)
             {
@@ -1163,7 +1228,7 @@ namespace Neon.Kube
                             Node          = node,
                             Verb          = verb,
                             Text          = message,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1189,14 +1254,14 @@ namespace Neon.Kube
                         {
                             Text          = message,
                             IsError       = true,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
         }
 
         /// <inheritdoc/>
-        public void LogProgressError(ILinuxSshProxy node, string message)
+        public void LogProgressError(SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1214,7 +1279,7 @@ namespace Neon.Kube
                             Node          = node,
                             Text          = message,
                             IsError       = true,
-                            CancelPending = cancelPending
+                            CancelPending = IsCancelPending
                         });
                 }
             }
@@ -1330,11 +1395,11 @@ namespace Neon.Kube
             this.isRunning    = true;
             this.maxStackSize = maxStackSize;
 
-            // This method had been synchronous for a very long time (maybe 5 years)
-            // but we need to make this async now so that it would integrate well
-            // with the neonDESKTOP UX. 
+            // This method has been synchronous for a very long time (maybe 5 years).
+            // We need to make this async now so that it will integrate well with
+            // the neonDESKTOP UX. 
             //
-            // We're simply going to wrap the main setup loop into a new thread and
+            // We're simply going to wrap the main setup loop onto a new thread and
             // have setup execute there.  We'll use a task completion source to signal
             // the caller when we're done.
 
@@ -1357,7 +1422,7 @@ namespace Neon.Kube
                         LogGlobal(LogBeginMarker);
                         cluster?.LogLine(LogBeginMarker);
 
-                        // Number the steps.  Note that quiet steps don't get their own step number.
+                        // Number the steps.  Note that [quiet] steps aren't assigned a step number.
 
                         var position = 1;
 
@@ -1377,16 +1442,17 @@ namespace Neon.Kube
 
                         foreach (var step in steps)
                         {
-                            if (cancelPending)
+                            if (IsCancelPending)
                             {
+                                step.State = SetupStepState.Cancelled;
+
                                 LogGlobal();
                                 LogGlobal(LogFailedMarker);
                                 cluster?.LogLine(LogFailedMarker);
-                                ConsoleWriter.Stop();
+                                ConsoleWriter?.Stop();
 
                                 Cleanup();
-                                tcs.SetResult(SetupDisposition.Cancelled);
-                                return;
+                                tcs.TrySetResult(SetupDisposition.Cancelled);
                             }
 
                             if (!ExecuteStep(step))
@@ -1405,7 +1471,7 @@ namespace Neon.Kube
                                 LogGlobal("FAULTED HOSTS:");
                                 LogGlobal();
 
-                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var maxNodeName = nodes.Max(node => node.Name.Length);
                                 var nameColumnWidth = maxNodeName + 4;
 
                                 foreach (var host in hosts
@@ -1427,7 +1493,7 @@ namespace Neon.Kube
                                 LogGlobal("FAULTED NODES:");
                                 LogGlobal();
 
-                                var maxNodeName     = nodes.Max(node => node.Name.Length);
+                                var maxNodeName = nodes.Max(node => node.Name.Length);
                                 var nameColumnWidth = maxNodeName + 4;
 
                                 foreach (var node in nodes
@@ -1446,16 +1512,16 @@ namespace Neon.Kube
                             LogGlobal();
                             LogGlobal(LogFailedMarker);
                             cluster?.LogLine(LogFailedMarker);
-                            ConsoleWriter.Stop();
+                            ConsoleWriter?.Stop();
 
                             Cleanup();
-                            tcs.SetResult(SetupDisposition.Failed);
+                            tcs.TrySetResult(SetupDisposition.Failed);
                             return;
                         }
 
                         foreach (var node in nodes)
                         {
-                            node.Status = "[x] READY";
+                            node.Status = IsCancelPending ? "[x] CANCELLED" : "[x] READY";
                         }
 
                         // Raise one more status changed and then stop the console writer
@@ -1474,17 +1540,15 @@ namespace Neon.Kube
                         LogGlobal();
                         LogGlobal(LogEndMarker);
                         cluster?.LogLine(LogEndMarker);
-                        ConsoleWriter.Stop();
+                        ConsoleWriter?.Stop();
 
                         Cleanup();
-                        tcs.SetResult(SetupDisposition.Succeeded);
+
+                        tcs.TrySetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
                         return;
                     }
-                    catch (Exception e)
+                    catch (OperationCanceledException)
                     {
-                        // Raise one more status changed and then stop the console
-                        // writer so the console will be configure to write normally.
-
                         if (StatusChangedEvent != null)
                         {
                             lock (syncLock)
@@ -1493,9 +1557,54 @@ namespace Neon.Kube
                             }
                         }
 
-                        ConsoleWriter.Stop();
+                        ConsoleWriter?.Stop();
                         Cleanup();
-                        tcs.SetException(e);
+                        tcs.TrySetResult(SetupDisposition.Cancelled);
+                    }
+                    catch (AggregateException e)
+                    {
+                        if (e.Contains<OperationCanceledException>())
+                        {
+                            if (StatusChangedEvent != null)
+                            {
+                                lock (syncLock)
+                                {
+                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                }
+                            }
+
+                            ConsoleWriter?.Stop();
+                            Cleanup();
+                            tcs.TrySetResult(SetupDisposition.Cancelled);
+                        }
+                        else
+                        {
+                            if (StatusChangedEvent != null)
+                            {
+                                lock (syncLock)
+                                {
+                                    StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                                }
+                            }
+
+                            ConsoleWriter?.Stop();
+                            Cleanup();
+                            tcs.TrySetException(e);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (StatusChangedEvent != null)
+                        {
+                            lock (syncLock)
+                            {
+                                StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
+                            }
+                        }
+
+                        ConsoleWriter?.Stop();
+                        Cleanup();
+                        tcs.TrySetException(e);
                     }
                     finally
                     {
@@ -1532,27 +1641,25 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool CancelPending
+        public void Cancel()
         {
-            get => cancelPending;
-
-            set
+            if (!cts.IsCancellationRequested)
             {
-                if (value == true)
-                {
-                    cancelPending = true;
-                }
+                cts.Cancel();
             }
         }
 
         /// <inheritdoc/>
-        public IEnumerable<SetupNodeStatus> GetNodeStatus()
+        public void ThrowIfCancelled()
         {
-            return nodes
-                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
-                .Select(node => new SetupNodeStatus(node, node.Metadata))
-                .ToArray();
+            cts.Token.ThrowIfCancellationRequested();
         }
+
+        /// <inheritdoc/>
+        public CancellationToken CancellationToken => cts.Token;
+
+        /// <inheritdoc/>
+        public bool IsCancelPending => cts.IsCancellationRequested;
 
         /// <inheritdoc/>
         public IEnumerable<SetupNodeStatus> GetHostStatus()
@@ -1565,6 +1672,100 @@ namespace Neon.Kube
             }
 
             return currentStep.SubController.GetNodeStatus();
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<SetupNodeStatus> GetNodeStatus()
+        {
+            return nodes
+                .OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase)
+                .Select(node => new SetupNodeStatus(node, node.Metadata))
+                .ToArray();
+        }
+
+        /// <inheritdoc/>
+        public bool DisablePendingTasks { get; set; } = false;
+
+        /// <inheritdoc/>
+        public async Task AddPendingTaskAsync(string groupName, Task task, string verb, string message, INodeSshProxy node = null)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(groupName), nameof(groupName));
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
+
+            if (DisablePendingTasks)
+            {
+                lock (syncLock)
+                {
+                    if (!pendingGroups.TryGetValue(groupName, out var group))
+                    {
+                        pendingGroups.Add(groupName, new SetupPendingTasks());
+                    }
+
+                    if (node != null)
+                    {
+                        LogProgress(node, verb: verb, message: message);
+                    }
+                    else
+                    {
+                        LogProgress(verb: verb, message: message);
+                    }
+                }
+
+                await task;
+
+                if (node != null)
+                {
+                    LogProgress(node, verb: string.Empty, message: string.Empty);
+                }
+                else
+                {
+                    LogProgress(verb: string.Empty, message: string.Empty);
+                }
+            }
+            else
+            {
+                lock (syncLock)
+                {
+                    if (!pendingGroups.TryGetValue(groupName, out var group))
+                    {
+                        group = new SetupPendingTasks();
+
+                        pendingGroups.Add(groupName, group);
+                    }
+
+                    group.Add(task, verb, message, node);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task WaitForPendingTasksAsync(string groupName)
+        {
+            await SyncContext.Clear;
+
+            SetupPendingTasks group;
+
+            lock (syncLock)
+            {
+                group = pendingGroups[groupName];
+            }
+
+            await group.WaitAsync(this);
+        }
+
+        /// <inheritdoc/>
+        public List<string> GetPendingGroups()
+        {
+            lock (syncLock)
+            {
+                return pendingGroups
+                    .Where(item => !item.Value.IsComplete)
+                    .Select(item => item.Key)
+                    .ToList();
+            }
         }
     }
 }

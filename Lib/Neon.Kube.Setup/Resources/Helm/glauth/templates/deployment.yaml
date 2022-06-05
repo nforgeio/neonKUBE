@@ -15,13 +15,15 @@ spec:
       {{- include "glauth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "glauth.selectorLabels" . | nindent 8 }}
     spec:
+      priorityClassName: {{ .Values.priorityClassName }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -29,6 +31,7 @@ spec:
       serviceAccountName: {{ include "glauth.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

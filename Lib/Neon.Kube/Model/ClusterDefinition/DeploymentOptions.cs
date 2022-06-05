@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies cluster deployment options used by <b>KubernetesFixture</b> as well
+    /// Specifies cluster deployment options used by <b>ClusterFixture</b> as well
     /// as potentially by custom tools.
     /// </summary>
     public class DeploymentOptions
@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// <para>
         /// Optional prefix combined with the cluster name to generate the resource group name
         /// when deploying the cluster to a cloud environment or combined with the node name
-        /// for other environments.  This is typically used by unit tests deployed by <b>KubernetesFixture</b>
+        /// for other environments.  This is typically used by unit tests deployed by <b>ClusterFixture</b>
         /// but can also be used by custom tools to avoid conflicts when multiple tests may be 
         /// running in parallel (probably on different machines) as well as providing a way to 
         /// identify and remove clusters or VMs orphaned by previous interrupted tests or tool runs.
@@ -72,12 +72,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         internal void Validate(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(Prefix) && !ClusterDefinition.PrefixRegex.IsMatch(Prefix))
             {
-                throw new ClusterDefinitionException($"[{nameof(DeploymentOptions)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
+                throw new ClusterDefinitionException($"[{nameof(ClusterDefinition.Deployment)}.{nameof(Prefix)}={Prefix}] is not a valid prefix.");
             }
         }
 

@@ -73,7 +73,7 @@ namespace TestDeployment
 
             OnePassword.Configure(signinAddress, account, secretKey, masterPassword, defaultVault);
 
-            var value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
+            var value = OnePassword.GetSecretPassword("AWS_NEONFORGE");
 
             Assert.NotEmpty(value);
 
@@ -84,7 +84,7 @@ namespace TestDeployment
 
             OnePassword.Signin(account, masterPassword, defaultVault);
 
-            value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
+            value = OnePassword.GetSecretPassword("AWS_NEONFORGE");
 
             Assert.NotEmpty(value);
 
@@ -94,7 +94,7 @@ namespace TestDeployment
 
             Thread.Sleep(TimeSpan.FromMinutes(35));
 
-            value = OnePassword.GetSecretPassword("AWS_ACCESS_KEY_ID");
+            value = OnePassword.GetSecretPassword("AWS_NEONFORGE");
 
             Assert.NotEmpty(value);
         }

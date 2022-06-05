@@ -13,8 +13,9 @@ spec:
       {{- include "neon-dashboard.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -27,12 +28,19 @@ spec:
       serviceAccountName: {{ include "neon-dashboard.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name:  neon-sso-dex
+                  key: KUBERNETES_CLIENT_SECRET
           ports:
             - name: http-web
               containerPort: {{ .Values.service.port }}
@@ -40,6 +48,9 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.metrics.port }}
               protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/neon-dashboard
           startupProbe:
             exec:
               command:
@@ -76,3 +87,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: neon-dashboard

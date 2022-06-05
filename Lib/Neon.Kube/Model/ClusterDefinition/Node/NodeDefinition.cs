@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <note>
         /// The name may include only letters, numbers, periods, dashes, and underscores and
-        /// also that all names will be converted to lower case.
+        /// also that all names will be converted to lowercase.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -231,14 +231,92 @@ namespace Neon.Kube
         public AwsNodeOptions Aws { get; set; }
 
         /// <summary>
+        /// Returns the size of the operating system boot disk as a string with optional
+        /// <see cref="ByteUnits"/> unit suffix.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The disk size.</returns>
+        public string GetOsDiskSize(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            switch (clusterDefinition.Hosting.Environment)
+            {
+                case HostingEnvironment.Aws:
+
+                    return Aws.VolumeSize ?? clusterDefinition.Hosting.Aws.DefaultVolumeSize;
+
+                case HostingEnvironment.Azure:
+
+                    return Azure.DiskSize ?? clusterDefinition.Hosting.Azure.DefaultDiskSize;
+
+                case HostingEnvironment.BareMetal:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.Google:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.XenServer:
+
+                    return Vm.GetOsDisk(clusterDefinition).ToString();
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Returns the size of the data disk as a string with optional <see cref="ByteUnits"/> unit suffix.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The disk size or <c>null</c> when the node has no data disk.</returns>
+        public string GetDataDiskSize(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            switch (clusterDefinition.Hosting.Environment)
+            {
+                case HostingEnvironment.Aws:
+
+                    return Aws.OpenEBSVolumeSize ?? clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeSize;
+
+                case HostingEnvironment.Azure:
+
+                    return Azure.OpenEBSDiskSize ?? clusterDefinition.Hosting.Azure.DefaultOpenEBSDiskSize;
+
+                case HostingEnvironment.BareMetal:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.Google:
+
+                    throw new NotImplementedException();
+
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.XenServer:
+
+                    return Vm.GetOsDisk(clusterDefinition).ToString();
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
         /// Validates the node definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
 
             // Ensure that the labels are wired up to the parent node.
 
@@ -253,22 +331,22 @@ namespace Neon.Kube
 
             if (Name == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}] property is required.");
             }
 
             if (!ClusterDefinition.IsValidName(Name))
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (name == "localhost")
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
             if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase) && !clusterDefinition.IsSpecialNeonCluster)
             {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid because node names starting with [neon-] are reserved.");
             }
 
             if (name.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
@@ -281,7 +359,7 @@ namespace Neon.Kube
                 //
                 // See: KubeConst.ClusterSetupLogName
 
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
+                throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
             }
 
             if (string.IsNullOrEmpty(Role))
@@ -291,21 +369,21 @@ namespace Neon.Kube
 
             if (!Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase) && !Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new ClusterDefinitionException($"Node [{Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
+                throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
             }
 
-            // We don't need to check the node address for cloud and WSL2 providers.
+            // We don't need to check the node address for cloud providers.
 
-            if (clusterDefinition.Hosting.IsOnPremiseProvider && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
+            if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(Address))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
+                    throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
                 }
 
                 if (!NetHelper.TryParseIPv4Address(Address, out var nodeAddress))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{Address}].");
+                    throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid IP address [{Address}].");
                 }
             }
 
@@ -334,9 +412,7 @@ namespace Neon.Kube
                     break;
 
                 case HostingEnvironment.HyperV:
-                case HostingEnvironment.HyperVLocal:
                 case HostingEnvironment.XenServer:
-                case HostingEnvironment.Wsl2:
 
                     Vm = Vm ?? new VmNodeOptions();
                     Vm.Validate(clusterDefinition, this.Name);

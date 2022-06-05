@@ -54,6 +54,32 @@ namespace Neon.Kube.Xunit
         public const string TestGID = "6666";
 
         /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubeTestHelper()
+        {
+            ClusterDefinitions =
+                new Dictionary<string, string>()
+                {
+                    { "hyperv/tiny", HyperVClusters.Tiny },
+                    { "hyperv/small", HyperVClusters.Small },
+                    { "hyperv/large", HyperVClusters.Large },
+
+                    { "xenserver/tiny", XenServerClusters.Tiny },
+                    { "xenserver/small", XenServerClusters.Small },
+                    { "xenserver/large", XenServerClusters.Large },
+                };
+        }
+
+        /// <summary>
+        /// Returns a dictionary mapping test cluster definitions keyed like <b>hyperv/tiny</b> or
+        /// <b>xenserver/large</b> to the actual cluster definition text.  This is used so that
+        /// maintainers can configure their <b>neon-assistant</b> profile to specify which cluster
+        /// definition they wish to use for running unit tests in their environment.
+        /// </summary>
+        public static IReadOnlyDictionary<string, string> ClusterDefinitions { get; private set; }
+
+        /// <summary>
         /// Creates and optionally populates a temporary test folder with test files.
         /// </summary>
         /// <param name="files">

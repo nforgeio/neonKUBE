@@ -51,13 +51,34 @@ namespace CadenceService
     public static class Program
     {
         /// <summary>
+        /// Returns the program's service implementation.
+        /// </summary>
+        public static Service Service { get; private set; }
+
+        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            await new Service("test-cadence").RunAsync();
+            NeonService.Initialize();
+
+            try
+            {
+                Service = new Service("test-cadence");
+
+                Environment.Exit(await Service.RunAsync());
+            }
+            catch (Exception e)
+            {
+                // We really shouldn't see exceptions here but let's log something
+                // just in case.  Note that logging may not be initialized yet so
+                // we'll just output a string.
+
+                Console.Error.WriteLine(NeonHelper.ExceptionError(e));
+                Environment.Exit(-1);
+            }
         }
     }
 }

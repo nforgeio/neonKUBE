@@ -11,8 +11,6 @@ metadata:
   name: {{ .Values.cr.name }}
   labels:
   {{- include "kiali-operator.labels" . | nindent 4 }}
-annotations:
-  ansible.operator-sdk/verbosity: {{ .Values.debug.verbosity | quote }}
 spec:
   version: default
   istio_namespace: neon-ingress
@@ -31,7 +29,8 @@ spec:
     image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
     image_version: {{ .Values.image.kiali.tag }}
     image_pull_policy: {{ .Values.image.kiali.pullPolicy }}
-    pullPolicy: {{ .Values.image.kiali.pullSecrets }}
+    image_pull_secrets: {{ .Values.image.kiali.pullSecrets }}
+    priority_class_name: {{ .Values.priorityClassName }}
     accessible_namespaces:
     - '**'
     service_type: "ClusterIP"
@@ -47,15 +46,13 @@ spec:
       in_cluster_url: http://grafana.neon-monitor:3000
       url: https://grafana.{{ .Values.cluster.domain }}
     istio:
-      enabled: true
+      component_status:
+        enabled: true
     prometheus:
-      enabled: true
-      health_check_url: http://cortex.neon-monitor:9009/api/prom
-      url: http://cortex.neon-monitor:9009/api/prom
+      health_check_url: http://mimir.neon-monitor/prometheus
+      url: http://mimir.neon-monitor/prometheus
       custom_headers: 
         X-Scope-OrgID: {{ .Values.cluster.name }}
     tracing:
-      enabled: true
-      in_cluster_url: http://tempo.neon-monitor:16686
-      url: http://localhost:16686
+      enabled: false
 {{ end }}

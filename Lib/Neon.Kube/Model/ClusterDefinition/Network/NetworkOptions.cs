@@ -35,6 +35,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Time;
 
 namespace Neon.Kube
 {
@@ -82,6 +83,8 @@ namespace Neon.Kube
         private const int       defaultReservedIngressStartPort = 64000;
         private const int       defaultReservedIngressEndPort   = 64999;
         private const int       additionalReservedPorts         = 100;
+        private const string    defaultCertificateDuration      = "504h";
+        private const string    defaultCertificateRenewBefore   = "336h";
 
         /// <summary>
         /// Default constructor.
@@ -92,7 +95,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
+        /// <see cref="HostingEnvironment.BareMetal"/>, <see cref="HostingEnvironment.HyperV"/> and
         /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments and
         /// ignored for other environments which specify network subnets in their related hosting
         /// options.
@@ -128,8 +131,13 @@ namespace Neon.Kube
         public string ServiceSubnet { get; set; } = defaultServiceSubnet;
 
         /// <summary>
-        /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
-        /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
+        /// <para>
+        /// The IP addresses of the DNS nameservers to be used by the cluster.
+        /// </para>
+        /// <para>
+        /// For cloud environments, this defaults the name servers provided by the cloud.  For on-premise
+        /// environments, this defaults to the Google Public DNS servers: <b>["8.8.8.8", "8.8.4.4" ]</b>.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
         [YamlMember(Alias = "nameservers", ApplyNamingConventions = false)]
@@ -157,10 +165,16 @@ namespace Neon.Kube
         public bool MutualPodTLS { get; set; } = false;
 
         /// <summary>
+        /// <para>
         /// Optionally sets the ingress routing rules external traffic received by nodes
         /// with <see cref="NodeDefinition.Ingress"/> enabled into one or more Istio ingress
         /// gateway services which are then responsible for routing to the target Kubernetes 
         /// services.
+        /// </para>
+        /// <para>
+        /// This defaults to allowing inbound <b>HTTP/HTTPS</b> traffic and cluster setup
+        /// also adds a TCP rule for the Kubernetes API server on port <b>6442</b>.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "IngressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ingressRules", ApplyNamingConventions = false)]
@@ -285,24 +299,51 @@ namespace Neon.Kube
         internal int LastExternalSshPort => ReservedIngressEndPort;
 
         /// <summary>
+        /// Specifies the maximum lifespan for internal cluster TLS certificates as a GOLANG formatted string.  
+        /// This defaults to <b>504h</b> (21 days).  See <see cref="GoDuration.Parse(string)"/> for details 
+        /// about the timespan format.
+        /// </summary>
+        [JsonProperty(PropertyName = "CertificateDuration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "certificateDuration", ApplyNamingConventions = false)]
+        [DefaultValue(defaultCertificateDuration)]
+        public string CertificateDuration { get; set; } = defaultCertificateDuration;
+
+        /// <summary>
+        /// Specifies the time to wait before attempting to renew for internal cluster TLS certificates.
+        /// This must be less than <see cref="CertificateDuration"/> and defaults to <b>336h</b> (14 days).
+        /// See <see cref="GoDuration.Parse(string)"/> for details about the timespan format.
+        /// </summary>
+        [JsonProperty(PropertyName = "CertificateRenewBefore", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "certificateRenewBefore", ApplyNamingConventions = false)]
+        [DefaultValue(defaultCertificateRenewBefore)]
+        public string CertificateRenewBefore { get; set; } = defaultCertificateRenewBefore;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var isCloud       = clusterDefinition.Hosting.IsCloudProvider;
-            var subnets       = new List<SubnetDefinition>();
-            var gateway       = (IPAddress)null;
-            var premiseSubnet = (NetworkCidr)null;
+            var networkOptionsPrefix = $"{nameof(ClusterDefinition.Network)}";
+            var isCloud              = clusterDefinition.Hosting.IsCloudProvider;
+            var subnets              = new List<SubnetDefinition>();
+            var gateway              = (IPAddress)null;
+            var premiseSubnet        = (NetworkCidr)null;
 
-            // Nameservers
+            // Nameservers:
+            //
+            // For cloud environments, we'll going to leave the nameserver list alone and possibly
+            // empty, letting the specific cloud hosting manager configure the default cloud nameserver
+            // when none are specified.
+            //
+            // For non-cloud environments, we'll set the Google Public DNS nameservers when none
+            // are specified.
 
-            Nameservers = Nameservers ?? new List<string>();
+            Nameservers ??= new List<string>();
 
             if (!isCloud && (Nameservers == null || Nameservers.Count == 0))
             {
@@ -313,20 +354,20 @@ namespace Neon.Kube
             {
                 if (!NetHelper.TryParseIPv4Address(nameserver, out var address))
                 {
-                    throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ClusterDefinition.Network.Nameservers)}={nameserver}] is not a valid IPv4 address.");
                 }
             }
 
-            // Note that we don't need to check the network settings for cloud environments or
-            // WSL2 deployments because we'll just use ambient settings in these cases.
+            // Note that we don't need to check the network settings for cloud environments
+            // because we'll just use ambient settings in these cases.
 
-            if (!isCloud && clusterDefinition.Hosting.Environment != HostingEnvironment.Wsl2)
+            if (!isCloud)
             {
                 // Verify [PremiseSubnet].
 
                 if (!NetworkCidr.TryParse(PremiseSubnet, out premiseSubnet))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 // Verify [Gateway]
@@ -341,12 +382,12 @@ namespace Neon.Kube
 
                 if (!NetHelper.TryParseIPv4Address(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseSubnet.Contains(gateway))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(Gateway)}={Gateway}] address is not within the [{networkOptionsPrefix}.{nameof(NetworkOptions.PremiseSubnet)}={PremiseSubnet}] subnet.");
                 }
             }
 
@@ -354,7 +395,7 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(PodSubnet, out var podSubnet))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PodSubnet), podSubnet));
@@ -363,7 +404,7 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(ServiceSubnet, out var serviceSubnet))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
             }
 
             subnets.Add(new SubnetDefinition(nameof(ServiceSubnet), serviceSubnet));
@@ -381,35 +422,57 @@ namespace Neon.Kube
 
                     if (subnet.Cidr.Overlaps(next.Cidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
                     }
                 }
             }
 
-            // Verify [IngressRules] and also ensure that all rule names are unique.
+            // Rules for HTTP/HTTPS are required.
+            //
+            // NOTE:
+            // -----
+            // We're not going to allow users to specify an ingress rule for the Kubernetes
+            // API server here because that mapping is special and needs to be routed only
+            // to the master nodes.  We're just going to delete any rule using this port.
 
-            if (IngressRules == null || IngressRules?.Count == 0)
+            IngressRules ??= new List<IngressRule>();
+
+            if (!IngressRules.Any(rule => rule.Name == "http"))
             {
-                IngressRules = new List<IngressRule>()
-                {
+                IngressRules.Add(
                     new IngressRule()
                     {
-                        Name = "http2",
-                        Protocol = IngressProtocol.Tcp,
-                        ExternalPort = 80,
-                        TargetPort = 8080,
-                        NodePort = KubeNodePorts.IstioIngressHttp
-                    },
-                    new IngressRule()
-                    {
-                        Name = "https",
-                        Protocol = IngressProtocol.Tcp,
-                        ExternalPort = 443,
-                        TargetPort = 8443,
-                        NodePort = KubeNodePorts.IstioIngressHttps
-                    }
-                };
+                        Name         = "http",
+                        Protocol     = IngressProtocol.Tcp,
+                        ExternalPort = NetworkPorts.HTTP,
+                        NodePort     = KubeNodePort.IstioIngressHttp,
+                        TargetPort   = 8080
+                    });
             }
+
+            if (!IngressRules.Any(rule => rule.Name == "https"))
+            {
+                IngressRules.Add(
+                    new IngressRule()
+                    {
+                        Name         = "https",
+                        Protocol     = IngressProtocol.Tcp,
+                        ExternalPort = NetworkPorts.HTTPS,
+                        NodePort     = KubeNodePort.IstioIngressHttps,
+                        TargetPort   = 8443
+                    });
+            }
+
+            var apiServerRules = IngressRules
+                .Where(rule => rule.ExternalPort == NetworkPorts.KubernetesApiServer)
+                .ToList();
+
+            foreach (var rule in apiServerRules)
+            {
+                IngressRules.Remove(rule);
+            }
+
+            // Ensure that ingress rules are valid and that their names are unique.
 
             var ingressRuleNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -419,10 +482,24 @@ namespace Neon.Kube
 
                 if (ingressRuleNames.Contains(rule.Name))
                 {
-                    throw new ClusterDefinitionException($"Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}]");
                 }
 
                 ingressRuleNames.Add(rule.Name);
+            }
+
+            // Ensure that external ports are unique.
+
+            var externalPorts = new HashSet<int>();
+
+            foreach (var rule in IngressRules)
+            {
+                if (externalPorts.Contains(rule.ExternalPort))
+                {
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: Ingress Rule Conflict: Multiple rules use the same external port: [{rule.ExternalPort}]");
+                }
+
+                externalPorts.Add(rule.ExternalPort);
             }
 
             // Verify [EgressAddressRules].
@@ -447,18 +524,48 @@ namespace Neon.Kube
             // include common reserved ports.
 
             var reservedPorts = new int[]
-                {
-                    NetworkPorts.HTTP,
-                    NetworkPorts.HTTPS,
-                    NetworkPorts.KubernetesApiServer
-                };
+            {
+                NetworkPorts.HTTP,
+                NetworkPorts.HTTPS,
+                NetworkPorts.KubernetesApiServer
+            };
 
             foreach (int reservedPort in reservedPorts)
             {
                 if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
                 {
-                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
+                    throw new ClusterDefinitionException($"[{networkOptionsPrefix}]: The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the port [{reservedPort}].");
                 }
+            }
+
+            // Validate the certificate durations.
+
+            CertificateDuration    ??= defaultCertificateDuration;
+            CertificateRenewBefore ??= defaultCertificateRenewBefore;
+
+            if (!GoDuration.TryParse(CertificateDuration, out var duration))
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be parsed as a GOLANG duration.");
+            }
+
+            if (!GoDuration.TryParse(CertificateRenewBefore, out var renewBefore))
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be parsed as a GOLANG duration.");
+            }
+
+            if (duration.TimeSpan < TimeSpan.FromSeconds(1))
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] cannot be less than 1 second.");
+            }
+
+            if (renewBefore.TimeSpan < TimeSpan.FromSeconds(1))
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}] cannot be less than 1 second.");
+            }
+
+            if (duration.TimeSpan < renewBefore.TimeSpan)
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(CertificateDuration)}={CertificateDuration}] is not greater than or equal to [{networkOptionsPrefix}.{nameof(CertificateRenewBefore)}={CertificateRenewBefore}].");
             }
         }
 
@@ -470,41 +577,6 @@ namespace Neon.Kube
         internal bool IsExternalSshPort(int port)
         {
             return FirstExternalSshPort <= port && port <= LastExternalSshPort;
-        }
-
-        /// <summary>
-        /// Ensures that for cloud deployments, an explicit node address assignment does not conflict 
-        /// with any VNET addresses reserved by the cloud provider or neonKUBE.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <param name="nodeDefinition">The node definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown for cloud deployments where the node specifies an explicit IP address that conflicts with a reserved VNET address.</exception>
-        internal void ValidateCloudNodeAddress(ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
-
-            if (!NetHelper.IsValidPort(ReservedIngressStartPort))
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressStartPort)}={ReservedIngressStartPort}] port.");
-            }
-
-            if (!NetHelper.IsValidPort(ReservedIngressEndPort))
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressEndPort)}={ReservedIngressEndPort}] port.");
-            }
-
-            if (ReservedIngressStartPort >= ReservedIngressEndPort)
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(ReservedIngressStartPort)}={ReservedIngressStartPort}]-[{nameof(ReservedIngressEndPort)}={ReservedIngressEndPort}] range.  [{nameof(ReservedIngressStartPort)}] must be greater than [{nameof(ReservedIngressEndPort)}].");
-            }
-
-            if (ReservedIngressEndPort - ReservedIngressStartPort + additionalReservedPorts < clusterDefinition.Nodes.Count())
-            {
-                throw new ClusterDefinitionException($"[{nameof(ReservedIngressStartPort)}]-[{nameof(ReservedIngressEndPort)}] range is not large enough to support [{clusterDefinition.Nodes.Count()}] cluster nodes in addition to [{additionalReservedPorts}] additional reserved ports.");
-            }
-
-            IngressHealthCheck?.Validate(clusterDefinition, nameof(NetworkOptions));
         }
     }
 }

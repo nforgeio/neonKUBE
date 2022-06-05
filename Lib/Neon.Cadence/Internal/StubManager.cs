@@ -246,72 +246,84 @@ namespace Neon.Cadence.Internal
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, WorkflowOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> GetWorkflowResultAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<ChildExecution> StartChildWorkflowAsync(CadenceClient client, Workflow parentWorkflow, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<ChildExecution>)startChildWorkflowAsync.Invoke(client, new object[] { parentWorkflow, workflowTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> GetChildWorkflowResultAsync(CadenceClient client, Workflow parentWorkflow, ChildExecution execution)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)getChildWorkflowResultAsync.Invoke(client, new object[] { parentWorkflow, execution });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
+                await SyncContext.Clear;
                 return await (Task<WorkflowDescription>)describeWorkflowExecutionAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task CancelWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
+                await SyncContext.Clear;
                 await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task TerminateWorkflowAsync(CadenceClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
             {
+                await SyncContext.Clear;
                 await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
             {
+                await SyncContext.Clear;
                 await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowWithStartAsync(CadenceClient client, string workflowTypeName, string signalName, byte[] signalArgs, byte[] workflowArgs, WorkflowOptions options)
             {
+                await SyncContext.Clear;
                 await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowTypeName, signalName, signalArgs, workflowArgs, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> SyncSignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)syncSignalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalId, signalArgs, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> SyncSignalChildWorkflowAsync(CadenceClient client, Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)syncSignalChildWorkflowAsync.Invoke(client, new object[] { parentWorkflow, childExecution, signalName, signalId, signalArgs });
             }
 
@@ -330,18 +342,21 @@ namespace Neon.Cadence.Internal
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalChildWorkflowAsync(CadenceClient client, Workflow workflow, ChildExecution child, string signalName, byte[] signalArgs)
             {
+                await SyncContext.Clear;
                 await (Task)signalChildWorkflowAsync.Invoke(client, new object[] { workflow, child, signalName, signalArgs });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, ConstructorInfo constructor, MethodInfo method, byte[] args, LocalActivityOptions options)
             {
+                await SyncContext.Clear;
                 return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, constructor, method, args, options });
             }
 
@@ -730,7 +745,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public async Task<WorkflowStub> ToUntypedAsync()");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+            sbSource.AppendLine($"            await SyncContext.Clear;");
             sbSource.AppendLine($"            await WaitForExecutionAsync();");
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (isChild)");
@@ -753,6 +768,8 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public async Task WaitForExecutionAsync()");
             sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            await SyncContext.Clear;");
+            sbSource.AppendLine();
             sbSource.AppendLine($"            if (!hasStarted)");
             sbSource.AppendLine($"            {{");
             sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started (by calling a workflow method).\");");
@@ -766,6 +783,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public async Task<WorkflowExecution> GetExecutionAsync()");
             sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            await SyncContext.Clear;");
             sbSource.AppendLine($"            await WaitForExecutionAsync();");
             sbSource.AppendLine();
             sbSource.AppendLine($"            return execution ?? childExecution?.Execution;");
@@ -797,7 +815,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            if (this.continueAsNew)");
                 sbSource.AppendLine($"            {{");
@@ -946,7 +964,7 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine($"            await WaitForExecutionAsync();");
                 sbSource.AppendLine();
 
@@ -1022,7 +1040,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine($"            await WaitForExecutionAsync();");
                 sbSource.AppendLine();
 
@@ -1508,7 +1526,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await SyncContext.Clear;");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            byte[]    ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                 sbSource.AppendLine($"            byte[]    ___resultBytes;");

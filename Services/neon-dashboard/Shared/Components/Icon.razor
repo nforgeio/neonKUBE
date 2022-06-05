@@ -1,0 +1,17 @@
+@using System.Text.Json;
+@using System.IO;
+@using System; 
+
+@using Neon.Common;
+
+<div class="icon">
+    @((MarkupString)content)
+</div>
+
+@code {
+    /// <summary>
+    /// type of icon to display
+    /// </summary>
+    [Parameter]
+    public string content { get; set; }
+}

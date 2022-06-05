@@ -70,9 +70,9 @@ Follow the steps below to configure a development or test workstation:
     dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
     ```
 
-    * Execute these Powershell commands to install Ubuntu-20.04 on WSL2:
+    * Execute these Powershell commands in **pwsh** to install Ubuntu-20.04 on WSL2:
     ```
-    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
+    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/downloads/ubuntu-20.04.tar -OutFile ubuntu.tar
     wsl --import Ubuntu-20.04 $env:USERPROFILE ubuntu.tar
     Remove-Item ubuntu.tar
     wsl --set-default-version 2
@@ -110,22 +110,32 @@ Follow the steps below to configure a development or test workstation:
     * Select **Tools/Options...**
     * Navigate to **Text Editor/Plain Text/Tabs**
     * Set:
-      * **Tab Size** = 2
-      * **Indent Size** = 2
+      * **Tab Size** = 4
+      * **Indent Size** = 4
       * Select **Insert Spaces**
 
-14. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
+14: *Optional/maintainers:* Install Git Extensions:
+
+    * Start Visual Studio
+    * Select **Extensions/Manage Extensions**
+    * Search for and install **Git Extensions**
+    * Close Visual Studio to complete the installation
+    * Install the latest Git Extentions App from [here](https://github.com/gitextensions/gitextensions/releases)
+
+15. Download the SysInternals utiliies from [here](https://download.sysinternals.com/files/SysinternalsSuite.zip) and extract them to a folder on your PATH.
+
+16. _(VS 2019 only):_ Disable **Python Import Warnings** via **Tools/Options** by unchecking this:
 
    ![System Tray](Images/Developer/PythonImports.png?raw=true)
   
-15. Install some SDKs:
+17. Install some SDKs:
 
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET 5.0 SDK 5.0.403** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET 6.0 SDK 6.0.101** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
 
-16. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+18. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
@@ -136,31 +146,14 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder (like **C:\src**) to keep the file paths short.
     * Click **Clone**
 
-17. Configure the build **environment variables**:
+19. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
   
-17. Enable **WSL2**:
-
-    * Open a **pwsh** console **as administrator** and execute these commands:
-    ```
-    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-    ```
-
-    * Execute these commands to install Ubuntu-20.04 on WSL2:
-    ```
-    Invoke-WebRequest https://neon-public.s3.us-west-2.amazonaws.com/vm-images/wsl2/virgin/virgin-ubuntu-20.04.20210206.wsl2.tar -OutFile ubuntu.tar
-    wsl --import Ubuntu-20.04 "%USERPROFILE%\wsl-Ubuntu" ubuntu.tar
-    Remove-Item ubuntu.tar
-    wsl --set-default-version 2
-    wsl --set-default Ubuntu-20.04
-    ```
-
-18. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
+20. **Clone** the other neonFORGE repos to the same parent directory as **neonKUBE** without changing their folder names:
 
     * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
     * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
@@ -182,37 +175,45 @@ Follow the steps below to configure a development or test workstation:
     git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
-19. **Close** any running instances of **Visual Studio**
+21. **Close** any running instances of **Visual Studio**
 
-20. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+22. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-21. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+23. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+    then run this in a command window to add it to the PATH:
 
-22. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer.  Install both programs to their default directories:
+    `%NF_TOOLBIN%\pathtool -dedup -system -add "C:\cygwin64\bin"`
+
+24. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently 
+    standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer.  Install both programs to their default
+    directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
-    * *Optional:* The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
-    * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left and check **Show hidden files**:
+    * *Optional:* The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update 
+      the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** 
+      and selecting **Merge**
+    * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **View/Preferences...**, and then click **Panels** on the left 
+      and check **Show hidden files**:
     
       ![WinSCP Hidden Files](Images/Developer/WinSCPHiddenFiles.png?raw=true)
 
-23. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
+25. Install Visual Studio Code and GO (needed for the Cadence and Temporal proxy builds):
 
     * Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
     * Install **go1.17.2.windows-amd64.msi** from: [here](https://golang.org/dl/go1.17.2.windows-amd64.msi)
 
-24. Confirm that the solution builds:
+26. Confirm that the solution builds:
 
     * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-25. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+27. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-26. *Optional:* Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+28. *Optional:* Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-27. *Optional:* Install **Cmdr/Mini** command shell:
+29. *Optional:* Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -221,9 +222,9 @@ Follow the steps below to configure a development or test workstation:
   * Consider removing the alias definitions in `$\vendor\user_aliases.cmd.default` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
   * Run Cmdr to complete the installation.
 
-28. *Optional:* Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+30. *Optional:* Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional:* Maintainers who will be publishing releases will need to:
+31. *Optional:* Maintainers who will be publishing releases will need to:
 
     * **Download:** the latest recommended (at least **v5.8.0**) **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
 
@@ -244,16 +245,16 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** until you get to the last page.
       * Click **Close** to close the SHFB installer.
 
-30. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this:
+32. *Optional:* Disable **Visual Studio Complete Line Intellicode**.  I (jefflill) personally find this distracting.  This blog post agrees and describes how to disable this:
 
     https://dotnetcoretutorials.com/2021/11/27/turning-off-visual-studio-2022-intellicode-complete-line-intellisense/
 
-31. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
+33. *Optional:* Install the [Bridge to Kubernetes](https://docs.microsoft.com/en-us/visualstudio/bridge/overview-bridge-to-kubernetes) Visual Studio extension to be able to debug service code from outside the cluster.
 
-32. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+34. *Optional:* Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
-33. *Optional:* Maintainers will need to install the **GitHub CLI** from here: https://cli.github.com/
+35. *Optional:* Maintainers will need to install the **GitHub CLI** from here: https://cli.github.com/
 
-34: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
+36: *Optional:* Maintainers will need to **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
 
-35: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+37: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.

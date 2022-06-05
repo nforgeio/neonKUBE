@@ -55,10 +55,10 @@ namespace Neon.Kube
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns the current KubeConfig.
+        /// Reads and returns information loaded from the current <b>~/.kube/config</b> file.
         /// </summary>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
-        /// <exception cref="KubeException">Thrown when the current config is invalid.</exception>
+        /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public static KubeConfig Load()
         {
             var configPath = KubeHelper.KubeConfigPath;
@@ -209,7 +209,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace Neon.Kube
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKubeContext);
+            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
         }
 
         /// <summary>
@@ -391,19 +391,19 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the configuration.
         /// </summary>
-        /// <exception cref="KubeException">Thrown when the current config is invalid.</exception>
+        /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public void Validate()
         {
             if (Kind != "Config")
             {
-                throw new KubeException($"Invalid [{nameof(Kind)}={Kind}].");
+                throw new NeonKubeException($"Invalid [{nameof(Kind)}={Kind}].");
             }
 
             // Ensure that the current context exists.
 
             if (!string.IsNullOrEmpty(CurrentContext) && GetContext(CurrentContext) == null)
             {
-                throw new KubeException($"Current context [{CurrentContext}] doesn't exist.");
+                throw new NeonKubeException($"Current context [{CurrentContext}] doesn't exist.");
             }
 
             // Ensure that referenced users and clusters actually exist.
@@ -412,12 +412,12 @@ namespace Neon.Kube
             {
                 if (!string.IsNullOrEmpty(context.Properties.User) && GetUser(context.Properties.User) == null)
                 {
-                    throw new KubeException($"Context [{context.Name}] references [User={context.Properties.User}] that doesn't exist.");
+                    throw new NeonKubeException($"Context [{context.Name}] references [User={context.Properties.User}] that doesn't exist.");
                 }
 
                 if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
                 {
-                    throw new KubeException($"Context [{context.Name}] references cluster [{context.Properties.Cluster}] doesn't exist.");
+                    throw new NeonKubeException($"Context [{context.Name}] references cluster [{context.Properties.Cluster}] doesn't exist.");
                 }
             }
         }
@@ -426,7 +426,7 @@ namespace Neon.Kube
         /// Sets the current context.
         /// </summary>
         /// <param name="contextName">The name of the current context or <c>null</c> to deselect the context.</param>
-        /// <exception cref="KubeException">Thrown if the context does not exist.</exception>
+        /// <exception cref="NeonKubeException">Thrown if the context does not exist.</exception>
         public void SetContext(string contextName = null)
         {
             if (string.IsNullOrEmpty(contextName))
@@ -437,7 +437,7 @@ namespace Neon.Kube
             {
                 if (GetContext(contextName) == null)
                 {
-                    throw new KubeException($"Context [{contextName}] does not exist.");
+                    throw new NeonKubeException($"Context [{contextName}] does not exist.");
                 }
 
                 CurrentContext = contextName;

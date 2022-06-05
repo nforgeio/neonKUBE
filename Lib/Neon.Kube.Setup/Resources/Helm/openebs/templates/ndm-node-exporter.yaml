@@ -23,6 +23,7 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
+      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ template "openebs.ndm-node-exporter.fullname" . }}
           image: "{{ .Values.ndmExporter.image.organization }}/{{ .Values.ndmExporter.image.repository }}:{{ .Values.ndmExporter.image.tag }}"

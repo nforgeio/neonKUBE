@@ -177,6 +177,8 @@ function PublishCore
 
 Push-Cwd $nfRoot | Out-Null
 
+$verbosity = "minimal"
+
 try
 {
     # Build the solution.
@@ -186,7 +188,12 @@ try
         # We see somewhat random build problems when Visual Studio has the solution open,
         # so have the user close Visual Studio instances first.
 
-        Ensure-VisualStudioNotRunning
+        # $todo(jefflill): 
+        #
+        # I'm not sure if we still need this.  I believe we were running into trouble
+        # building the neonKUBE CodeDoc using SHFB, which we're no longer using.
+
+        # Ensure-VisualStudioNotRunning
 
         # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
         # to be really sure we're doing a clean build.  I've run into 
@@ -204,7 +211,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
 
         if (-not $?)
         {
@@ -219,7 +226,7 @@ try
 
         dotnet restore
 
-        & "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+        & "$msbuild" "$nfSolution" -t:restore -verbosity:minimal
 
         if (-not $?)
         {
@@ -232,7 +239,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" $buildConfig -restore -m -verbosity:$verbosity
 
         if (-not $?)
         {
@@ -259,7 +266,7 @@ try
     {
         # Publish the Windows .NET Core tool binaries to the build folder.
 
-        PublishCore "Tools\neon-cli\neon-cli.csproj"           "neon"
+        PublishCore "Tools\neon-cli\neon-cli.csproj" "neon"
         PublishCore "Tools\neon-modelgen\neon-modelgen.csproj" "neon-modelgen"
      }
 
@@ -284,7 +291,7 @@ try
             throw "ERROR: Cannot remove: $nfBuild\codedoc"
         }
 
-        & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:quiet
+        & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity
 
         if (-not $?)
         {
