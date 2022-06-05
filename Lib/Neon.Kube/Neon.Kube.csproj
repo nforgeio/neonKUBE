@@ -109,6 +109,10 @@
     <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Model\Prometheus\" />
+  </ItemGroup>
   
   <!--
   Generates the [KubernetesWithRetry.cs] file.
