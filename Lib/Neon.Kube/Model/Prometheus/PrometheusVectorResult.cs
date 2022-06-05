@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusResponseData.cs
+// FILE:	    PrometheusVectorResult.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,28 +36,32 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models the Prometheus result.
+    /// Models a Prometheus vector result.
     /// </summary>
-    public class PrometheusResponseData<T>
+    public class PrometheusVectorResult
     {
-        public PrometheusResponseData()
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public PrometheusVectorResult() 
         {
         }
 
         /// <summary>
         /// Specifies the result type of the response.
         /// </summary>
-        [JsonProperty(PropertyName = "resultType", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public PrometheusResultType ResultType { get; set; }
+        [JsonProperty(PropertyName = "resultType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(PrometheusResultType.Matrix)]
+        public PrometheusResultType ResultType { get; set; } = PrometheusResultType.Matrix;
 
         /// <summary>
         /// The result.
         /// </summary>
         [JsonProperty(PropertyName = "result", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public T Result { get; set; }
+        public List<PrometheusVectorValue> Result { get; set; }
     }
 }

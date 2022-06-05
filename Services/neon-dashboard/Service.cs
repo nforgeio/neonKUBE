@@ -27,6 +27,7 @@ using k8s.Models;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonDashboard
 {
@@ -105,6 +106,7 @@ namespace NeonDashboard
 
             _ = Kubernetes.WatchAsync<V1ConfigMap>(async (watchEvent) =>
             {
+                await SyncContext.Clear;
                 try
                 {
                     await Task.CompletedTask;

@@ -51,9 +51,6 @@ namespace NeonDashboard
                 AppState = state;
             }
 
-            private static string cachePrefix = "neon-dashboard";
-            
-
             public async Task<V1NodeList> GetNodesAsync()
             {
                 var key = "nodes";
