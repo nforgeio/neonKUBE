@@ -67,7 +67,6 @@ namespace Neon.Kube
                 });
         }
 
-
         /// <summary>
         /// Executes a program within a pod container.
         /// </summary>

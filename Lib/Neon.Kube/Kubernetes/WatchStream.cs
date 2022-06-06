@@ -38,12 +38,12 @@ namespace Neon.Kube
     /// <typeparam name="T">The type of resource being watched.</typeparam>
     public class WatchStream<T> : IAsyncEnumerable<WatchEvent<T>>, IDisposable where T : new()
     {
-        private readonly StreamReader _reader;
-        private readonly IDisposable _response;
-        private readonly List<Memory<char>> _previousData = new List<Memory<char>>();
-        private Memory<char> _currentBuffer = Memory<char>.Empty;
-        private Memory<char> _currentData = Memory<char>.Empty;
-        private static JsonSerializerOptions jsonSerializerOptions;
+        private readonly StreamReader           reader;
+        private readonly IDisposable            response;
+        private readonly List<Memory<char>>     previousData   = new List<Memory<char>>();
+        private Memory<char>                    currentBuffer  = Memory<char>.Empty;
+        private Memory<char>                    currentData    = Memory<char>.Empty;
+        private static JsonSerializerOptions    jsonSerializerOptions;
 
         /// <summary>
         /// Constructor.
@@ -52,8 +52,8 @@ namespace Neon.Kube
         /// <param name="response"></param>
         public WatchStream(Stream stream, IDisposable response)
         {
-            _reader = new StreamReader(stream, leaveOpen: false);
-            _response = response;
+            reader        = new StreamReader(stream, leaveOpen: false);
+            this.response = response;
 
             jsonSerializerOptions = new JsonSerializerOptions();
 
@@ -66,11 +66,11 @@ namespace Neon.Kube
         {
             try
             {
-                _reader.Dispose();
+                reader.Dispose();
             }
             finally
             {
-                _response.Dispose();
+                response.Dispose();
             }
         }
 
@@ -86,34 +86,37 @@ namespace Neon.Kube
             if (TryGetLine(out var line))
             {
                 var data = JsonSerializer.Deserialize<Watcher<T>.WatchEvent>(line, jsonSerializerOptions);
+
                 return (data.Type, data.Object, true);
             }
 
             while (true)
             {
-                if (_currentBuffer.IsEmpty)
+                if (currentBuffer.IsEmpty)
                 {
-                    _currentBuffer = new Memory<char>(new char[4096]);
+                    currentBuffer = new Memory<char>(new char[4096]);
                 }
-                if (!_currentData.IsEmpty)
+                if (!currentData.IsEmpty)
                 {
-                    _previousData.Add(_currentData);
-                    _currentData = Memory<char>.Empty;
+                    previousData.Add(currentData);
+                    currentData = Memory<char>.Empty;
                 }
 
-                var length = await _reader.ReadAsync(_currentBuffer, cancellationToken);
+                var length = await reader.ReadAsync(currentBuffer, cancellationToken);
+
                 if (length == 0)
                 {
                     // stream closed
                     return (default, default, false);
                 }
 
-                _currentData = _currentBuffer.Slice(0, length);
-                _currentBuffer = _currentBuffer.Slice(length);
+                currentData   = currentBuffer.Slice(0, length);
+                currentBuffer = currentBuffer.Slice(length);
 
                 if (TryGetLine(out line))
                 {
                     var data = JsonSerializer.Deserialize<Watcher<T>.WatchEvent>(line, jsonSerializerOptions);
+
                     return (data.Type, data.Object, true);
                 }
             }
@@ -121,37 +124,42 @@ namespace Neon.Kube
 
         private bool TryGetLine(out string line)
         {
-            var delimiterIndex = _currentData.Span.IndexOf('\n');
+            var delimiterIndex = currentData.Span.IndexOf('\n');
+
             if (delimiterIndex == -1)
             {
                 line = null;
                 return false;
             }
 
-            if (_previousData.Count != 0)
+            if (previousData.Count != 0)
             {
                 var sb = new StringBuilder();
-                foreach (var buffer in _previousData)
+
+                foreach (var buffer in previousData)
                 {
                     sb.Append(buffer);
                 }
-                _previousData.Clear();
 
-                sb.Append(_currentData.Slice(0, delimiterIndex));
-                _currentData = _currentData.Slice(delimiterIndex + 1);
-                line = sb.ToString();
+                previousData.Clear();
+
+                sb.Append(currentData.Slice(0, delimiterIndex));
+
+                currentData = currentData.Slice(delimiterIndex + 1);
+                line        = sb.ToString();
+
                 return true;
             }
 
-            line = new string(_currentData.Slice(0, delimiterIndex).Span);
-            _currentData = _currentData.Slice(delimiterIndex + 1);
+            line        = new string(currentData.Slice(0, delimiterIndex).Span);
+            currentData = currentData.Slice(delimiterIndex + 1);
             return true;
         }
 
         internal class AsyncEnumerator : IAsyncEnumerator<WatchEvent<T>>
         {
-            private WatchStream<T> _self;
-            private CancellationToken _cancellationToken;
+            private WatchStream<T>      self;
+            private CancellationToken   cancellationToken;
 
             /// <summary>
             /// Constructor.
@@ -160,8 +168,8 @@ namespace Neon.Kube
             /// <param name="cancellationToken"></param>
             public AsyncEnumerator(WatchStream<T> self, CancellationToken cancellationToken)
             {
-                _self = self;
-                _cancellationToken = cancellationToken;
+                this.self              = self;
+                this.cancellationToken = cancellationToken;
             }
 
             public WatchEvent<T> Current { get; set; }
@@ -169,15 +177,17 @@ namespace Neon.Kube
             /// <inheritdoc/>
             public ValueTask DisposeAsync()
             {
-                _self.Dispose();
+                self.Dispose();
                 return ValueTask.CompletedTask;
             }
 
             /// <inheritdoc/>
             public async ValueTask<bool> MoveNextAsync()
             {
-                var (eventType, resource, connected) = await _self.ReadNextAsync(_cancellationToken);
+                var (eventType, resource, connected) = await self.ReadNextAsync(cancellationToken);
+
                 Current = new WatchEvent<T>(eventType, resource);
+
                 return connected;
             }
         }

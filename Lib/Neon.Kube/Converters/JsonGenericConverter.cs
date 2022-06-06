@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -19,28 +20,29 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// A JSON converter for converting generic types using JSON.NET.
+    /// Converts generic types using JSON.NET.
     /// </summary>
-    public class JsonGenericConverter<T> : System.Text.Json.Serialization.JsonConverter<T>
+    public class JsonGenericConverter<T> : JsonConverter<T>
     {
         /// <inheritdoc/>
         public override T Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+            ref Utf8JsonReader      reader,
+            Type                    type,
+            JsonSerializerOptions   options)
         {
-            string value = reader.GetString()!;
+            reader.GetString();
 
             return NeonHelper.JsonDeserialize<T>(reader.GetString());
         }
 
         /// <inheritdoc/>
         public override void Write(
-            Utf8JsonWriter writer,
-            T value,
-            JsonSerializerOptions options)
+            Utf8JsonWriter          writer,
+            T                       value,
+            JsonSerializerOptions   options)
         {
             var stringValue = NeonHelper.JsonSerialize(value);
+
             writer.WriteRawValue(stringValue);
         }
     }

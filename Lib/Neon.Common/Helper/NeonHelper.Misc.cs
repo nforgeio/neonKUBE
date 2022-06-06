@@ -372,7 +372,7 @@ namespace Neon.Common
             }
 
             var lineEndings = input.IndexOfAny(new char[] { '\r', '\n' }) >= 0;
-            var sb = new StringBuilder((int)(input.Length * 1.25));
+            var sb          = new StringBuilder((int)(input.Length * 1.25));
 
             using (var reader = new StringReader(input))
             {

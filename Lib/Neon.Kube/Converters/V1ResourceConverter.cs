@@ -23,7 +23,7 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// A JSON converter for converting generic types using JSON.NET.
+    /// Converts generic types using JSON.NET.
     /// </summary>
     public class V1ResourceConverter : JsonConverter<V1ResourceRequirements>
     {
