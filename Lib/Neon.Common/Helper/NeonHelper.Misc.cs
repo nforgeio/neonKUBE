@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
@@ -2340,6 +2341,51 @@ namespace Neon.Common
             }
 
             return maxValue;
+        }
+
+        /// <summary>
+        /// Generates a <see cref="Guid"/> and then renders it as a base-36 string,
+        /// including digits and lowercase ASCII characters.  This is Kubernetes 
+        /// friendly and is more compact.
+        /// </summary>
+        /// <returns>The new base-36 string.</returns>
+        public static string CreateBase36Guid()
+        {
+            var guid  = Guid.NewGuid();
+            var bytes = guid.ToByteArray();
+
+            // Convert the GUID into a bigint
+
+            var value = (BigInteger)0;
+
+            foreach (var b in bytes)
+            {
+                value = (value * 256) + b;
+            }
+
+            Covenant.Assert(value > 0, "GUIDs should never be zero.");
+
+            // Convert the value into a base-36 string.
+
+            var sb = new StringBuilder();
+
+            while (value > 0)
+            {
+                var digit = (int)(value % 36);
+
+                if (digit < 10)
+                {
+                    sb.Append((char)('0' + digit));
+                }
+                else
+                {
+                    sb.Append((char)('a' + (digit - 10)));
+                }
+
+                value /= 36;
+            }
+
+            return sb.ToString();
         }
     }
 }
