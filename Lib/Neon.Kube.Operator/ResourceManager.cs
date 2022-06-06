@@ -525,7 +525,7 @@ namespace Neon.Kube.Operator
                         // waiting for resources and configure to raise an immediate NO-CHANGE
                         // event below.
 
-                        log.LogInfo($"All existing resources loaded.");
+                        log.LogInfo($"All resources discovered.");
 
                         waitForAll                = false;
                         changed                   = true;

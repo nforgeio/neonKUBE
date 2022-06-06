@@ -105,7 +105,7 @@ namespace NeonNodeAgent
         {
             hostNeonRunFolder    = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
             hostAgentFolder      = Path.Combine(hostNeonRunFolder, "node-agent");
-            hostAgentTasksFolder = Path.Combine(hostAgentFolder, "nodetasks");
+            hostAgentTasksFolder = Path.Combine(hostAgentFolder, "node-tasks");
         }
 
         //---------------------------------------------------------------------
@@ -287,10 +287,10 @@ log.LogDebug($"*** RECONCILE: 8B");
                         }
 log.LogDebug($"*** RECONCILE: 10");
 
-                        if (nodeTask.Status.FinishedUtc.HasValue)
+                        if (nodeTask.Status.FinishTimestamp.HasValue)
                         {
 log.LogDebug($"*** RECONCILE: 11");
-                            var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishedUtc;
+                            var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
 
                             if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetainSeconds))
                             {
@@ -432,8 +432,8 @@ log.LogDebug($"*** RECONCILE: 16");
                         var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
                         patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Orphaned);
-                        patch.Replace(path => path.Status.FinishedUtc, utcNow);
-                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartedUtc).ToString());
+                        patch.Replace(path => path.Status.FinishTimestamp, utcNow);
+                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -442,7 +442,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                     // Kill tasks that have been running for too long.
 
-                    if (utcNow - nodeTask.Status.StartedUtc >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
+                    if (utcNow - nodeTask.Status.StartTimestamp >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
                     {
                         log.LogWarn($"Detected timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
                         await KillTaskAsync(nodeTask);
@@ -452,8 +452,8 @@ log.LogDebug($"*** RECONCILE: 16");
                         var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
                         patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Timeout);
-                        patch.Replace(path => path.Status.FinishedUtc, utcNow);
-                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartedUtc).ToString());
+                        patch.Replace(path => path.Status.FinishTimestamp, utcNow);
+                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -560,12 +560,12 @@ log.LogDebug($"*** EXECUTE: 2");
 
             // Generate the execution UUID and determin where the script will be located.
 
-            var executionId  = NeonHelper.CreateBase36Guid();
-            var scriptFolder = LinuxPath.Combine(hostAgentTasksFolder, executionId);
-            var scriptPath   = LinuxPath.Combine(scriptFolder, "script.sh");
+            var executionId = NeonHelper.CreateBase36Guid();
+            var taskFolder  = LinuxPath.Combine(hostAgentTasksFolder, executionId);
+            var scriptPath  = LinuxPath.Combine(taskFolder, "task.sh");
 log.LogDebug($"*** EXECUTE: 3");
 
-            // Prepend the script to be deployed with code to set the special
+            // Prepend the script to be deployed with code that sets the special
             // environment variables.
 
             var deployedScript =
@@ -574,20 +574,20 @@ $@"
 # neon-node-task: Initialze special script variables
 
 export NODE_ROOT={Node.HostMount}
-export SCRIPT_DIR={scriptFolder}
+export SCRIPT_DIR={taskFolder}
 
 #------------------------------------------------------------------------------
 
 {nodeTask.Spec.BashScript}
 ";
-            Directory.CreateDirectory(scriptFolder);
+            Directory.CreateDirectory(taskFolder);
             File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(deployedScript));
 
-            nodeTask.Status.Phase       = V1NodeTask.NodeTaskPhase.Running;
-            nodeTask.Status.StartedUtc  = DateTime.UtcNow;
-            nodeTask.Status.AgentId     = Node.AgentId;
-            nodeTask.Status.CommandLine = Node.GetBashCommandLine(scriptPath);
-            nodeTask.Status.ExecutionId = executionId;
+            nodeTask.Status.Phase           = V1NodeTask.NodeTaskPhase.Running;
+            nodeTask.Status.StartTimestamp  = DateTime.UtcNow;
+            nodeTask.Status.AgentId         = Node.AgentId;
+            nodeTask.Status.CommandLine     = Node.GetBashCommandLine(scriptPath);
+            nodeTask.Status.ExecutionId     = executionId;
 log.LogDebug($"*** EXECUTE: 4");
 
             // Start the command process.
@@ -629,11 +629,11 @@ log.LogDebug($"*** EXECUTE: 10");
 
                 log.LogWarn(e);
 
-                nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Finished;
-                nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
-                nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
-                nodeTask.Status.ExitCode      = -1;
-                nodeTask.Status.Error         = $"EXECUTE FAILED: {e.Message}";
+                nodeTask.Status.Phase           = V1NodeTask.NodeTaskPhase.Finished;
+                nodeTask.Status.FinishTimestamp = DateTime.UtcNow;
+                nodeTask.Status.ExecutionTime   = (nodeTask.Status.StartTimestamp - nodeTask.Status.FinishTimestamp).ToString();
+                nodeTask.Status.ExitCode        = -1;
+                nodeTask.Status.Error           = $"EXECUTE FAILED: {e.Message}";
 
 log.LogDebug($"*** EXECUTE: 11");
                 await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
@@ -662,7 +662,7 @@ log.LogDebug($"*** EXECUTE: 13");
             var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
             patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
-            patch.Replace(path => path.Status.StartedUtc, nodeTask.Status.StartedUtc);
+            patch.Replace(path => path.Status.StartTimestamp, nodeTask.Status.StartTimestamp);
             patch.Replace(path => path.Status.AgentId, nodeTask.Status.AgentId);
             patch.Replace(path => path.Status.CommandLine, nodeTask.Status.CommandLine);
             patch.Replace(path => path.Status.ExecutionId, nodeTask.Status.ExecutionId);
@@ -694,8 +694,8 @@ log.LogDebug($"*** EXECUTE: 15");
                 if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Running)
                 {
 log.LogDebug($"*** EXECUTE: 16");
-                    nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
-                    nodeTask.Status.ExecutionTime = (nodeTask.Status.FinishedUtc - nodeTask.Status.StartedUtc).ToString();
+                    nodeTask.Status.FinishTimestamp  = DateTime.UtcNow;
+                    nodeTask.Status.ExecutionTime    = (nodeTask.Status.FinishTimestamp - nodeTask.Status.StartTimestamp).ToString();
 
                     if (timeout)
                     {
@@ -720,7 +720,7 @@ log.LogDebug($"*** EXECUTE: 19");
                     patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
                     patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
-                    patch.Replace(path => path.Status.FinishedUtc, nodeTask.Status.FinishedUtc);
+                    patch.Replace(path => path.Status.FinishTimestamp, nodeTask.Status.FinishTimestamp);
                     patch.Replace(path => path.Status.ExecutionTime, nodeTask.Status.ExecutionTime);
                     patch.Replace(path => path.Status.ExitCode, nodeTask.Status.ExitCode);
 

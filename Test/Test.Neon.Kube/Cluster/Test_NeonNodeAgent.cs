@@ -116,7 +116,7 @@ namespace TestKube
             // succeeded.
 
             // Create a string dictionary that maps cluster node names to the unique
-            // name to use for the test task targeting each node.
+            // name to use for the test tasks targeting each node.
 
             var nodeToTaskName = new Dictionary<string, string>();
 
@@ -146,7 +146,7 @@ namespace TestKube
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
                 spec.Node       = node.Name;
-                spec.BashScript = $"touch {GetTestFilePath(node.Name)}";
+                spec.BashScript = $"touch $NODE_ROOT/{GetTestFilePath(node.Name)}";
 
                 await fixture.K8s.CreateClusterCustomObjectAsync(nodeTask);
             }
@@ -167,6 +167,7 @@ namespace TestKube
                     {
                         switch (nodeTask.Status.Phase)
                         {
+                            case V1NodeTask.NodeTaskPhase.New:
                             case V1NodeTask.NodeTaskPhase.Pending:
                             case V1NodeTask.NodeTaskPhase.Running:
 

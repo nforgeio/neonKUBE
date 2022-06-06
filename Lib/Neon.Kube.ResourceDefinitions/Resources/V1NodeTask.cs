@@ -54,29 +54,39 @@ namespace Neon.Kube.Resources
     /// Node tasks are simply Bash scripts executed on the node by the <b>neon-node-agent</b> daemon running
     /// on the node.  These scripts will be written to the node's file system like:
     /// </para>
-    /// <para><b>/var/run/neonkube/node-agent/nodetasks/GUID/script.sh</b></para>
+    /// <para><b>/var/run/neonkube/node-agent/nodetasks/GUID/task.sh</b></para>
     /// <para>
     /// where GUID is a base-36 encoded GUID generated and assigned to the task by the agent.
     /// </para>
     /// <para>
-    /// <b>neon-node-agent</b> adds some variable to the beginning of the deployed script before executing it:
+    /// <b>neon-node-agent</b> adds some variable assignments to the beginning of the deployed script before executing it:
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>$NODE_ROOT></b></term>
+    ///     <term><b>$NODE_ROOT</b></term>
     ///     <description>
+    ///     <para>
     ///     Identifies where the host node's file system is mounted to the <b>neon-node-agent</b> container.
     ///     Since the script is executing in the context of the container, your script will need to use this
     ///     to reference files and directories on the host node.  This currently returns <b>/mnt/host</b> but
     ///     you should always use this variable instead of hardcoding the path.
+    ///     </para>
+    ///     <note>
+    ///     This <b>does not include</b> a terminating <b>"/"</b>
+    ///     </note>
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>$SCRIPT_DIR</b></term>
     ///     <description>
+    ///     <para>
     ///     Set to the directory where the script is executing (like <b>/var/run/neonkube/node-agent/nodetasks/GUID</b>.
     ///     Your scripts should generally store any temporary files here so they will be removed automaticaly by the
     ///     node agent.
+    ///     </para>
+    ///     <note>
+    ///     This <b>does not include</b> a terminating <b>"/"</b>
+    ///     </note>
     ///     </description>
     /// </item>
     /// </list>
@@ -99,7 +109,7 @@ namespace Neon.Kube.Resources
     /// <item>
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
-    /// <see cref="V1NodeTaskStatus.StartedUtc"/> to the current time and change the state to
+    /// <see cref="V1NodeTaskStatus.StartTimestamp"/> to the current time and change the state to
     /// <see cref="NodeTaskPhase.Running"/>.
     /// </item>
     /// <item>
@@ -125,7 +135,7 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command completes without timing out, the agent will set its state to <see cref="NodeTaskPhase.Finished"/>,
-    /// set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time and <see cref="V1NodeTaskStatus.ExitCode"/>,
+    /// set <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the current time and <see cref="V1NodeTaskStatus.ExitCode"/>,
     /// <see cref="V1NodeTaskStatus.Output"/> and <see cref="V1NodeTaskStatus.Error"/> to the command results.
     /// </item>
     /// <note>
@@ -137,7 +147,7 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishedUtc"/> to the
+    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the
     /// current time.
     /// </item>
     /// <item>
@@ -146,7 +156,7 @@ namespace Neon.Kube.Resources
     /// happen when the previous agent pod started executing the command and then was terminated before the
     /// command completed.  The agent will attempt to locate the running pod by its command line and
     /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskPhase.Orphaned"/>
-    /// and <see cref="V1NodeTaskStatus.FinishedUtc"/> to the current time.
+    /// and <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the current time.
     /// </item>
     /// <item>
     /// Finally, <b>neon-node-agent</b> periodically looks for Bash scripts that don't have corresponding node
@@ -247,6 +257,21 @@ namespace Neon.Kube.Resources
             public string BashScript { get; set; }
 
             /// <summary>
+            /// <para>
+            /// Optionally specifies that the task should be started after a specific time.
+            /// This is intended to make it easier for operators to schedule tasks across
+            /// the cluster nodes while reducing the chance that all of the tasks will
+            /// execute at the same time.
+            /// </para>
+            /// <note>
+            /// This property only guarentees that the task will be started <b>after</b> the
+            /// specified time, not at that time.  Task execution may happen some minutes 
+            /// afterwards.
+            /// </note>
+            /// </summary>
+            public DateTime? StartAfterTimestamp { get; set; }
+
+            /// <summary>
             /// Specifies the maximum time in seconds the command will be allowed to execute.
             /// This defaults to 300 seconds (5 minutes).
             /// </summary>
@@ -258,7 +283,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
             /// ended, for any reason.  <b>neon-cluster-operator</b> will add
-            /// this to <see cref="V1NodeTaskStatus.FinishedUtc"/> to determine
+            /// this to <see cref="V1NodeTaskStatus.FinishTimestamp"/> to determine
             /// when it should delete the task.  This defaults to 600 seconds
             /// (10 minutes).
             /// </summary>
@@ -331,12 +356,12 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Indicates when the task started executing. 
             /// </summary>
-            public DateTime? StartedUtc { get; set; }
+            public DateTime? StartTimestamp { get; set; }
 
             /// <summary>
             /// Indicates when the task finished executing.
             /// </summary>
-            public DateTime? FinishedUtc { get; set;}
+            public DateTime? FinishTimestamp { get; set;}
 
             /// <summary>
             /// Set to the task execution time serialized to a string.
