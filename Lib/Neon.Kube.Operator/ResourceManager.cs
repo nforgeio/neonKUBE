@@ -623,7 +623,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"DELETED: {resource.Metadata.Name} (waiting for existing resources)");
+                        log.LogInfo($"DELETED: {resource.Metadata.Name} (discovering resources)");
                         return null;
                     }
                 }
@@ -691,7 +691,7 @@ namespace Neon.Kube.Operator
                     }
                     else
                     {
-                        log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (waiting for existing resources)");
+                        log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (discovering resources)");
                         return null;
                     }
                 }

@@ -189,7 +189,7 @@ rm $0
 log.LogDebug($"*** NODETASK-CONTROLLER: 5");
                 try
                 {
-                    Node.ExecuteCapture("/bin/bash", new object[] { scriptPath }).EnsureSuccess();
+                    Node.BashExecuteCapture(scriptPath).EnsureSuccess();
 log.LogDebug($"*** NODETASK-CONTROLLER: 6");
                 }
                 finally
@@ -611,7 +611,7 @@ log.LogDebug($"*** EXECUTE: 3");
             nodeTask.Status.Phase       = V1NodeTask.NodeTaskPhase.Running;
             nodeTask.Status.StartedUtc  = DateTime.UtcNow;
             nodeTask.Status.AgentId     = Node.AgentId;
-            nodeTask.Status.CommandLine = NeonHelper.GetExecuteCommandLine("/bin/bash", scriptPath);
+            nodeTask.Status.CommandLine = Node.GetBashCommandLine(scriptPath);
             nodeTask.Status.ProcessId   = process.Id;
             nodeTask.Status.ExecutionId = executionId;
 log.LogDebug($"*** EXECUTE: 4");
@@ -644,9 +644,8 @@ log.LogDebug($"*** EXECUTE: 8");
                     };
 
 log.LogDebug($"*** EXECUTE: 9");
-                task = Node.ExecuteCaptureAsync(
-                    path:            "/bin/bash", 
-                    args:            new object[] { scriptPath }, 
+                task = Node.BashExecuteCaptureAsync(
+                    path:            scriptPath, 
                     timeout:         TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), 
                     processCallback: processCallback);
 log.LogDebug($"*** EXECUTE: 10");

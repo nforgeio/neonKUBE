@@ -75,14 +75,85 @@ namespace NeonNodeAgent
         public static string AgentId { get; private set; }
 
         /// <summary>
+        /// Returns the actual command line used to execute a bash script by one of the methods
+        /// below.  The result will be prefixed by the the <b>chroot</b> command and parameter.
+        /// </summary>
+        /// <param name="path">The command path.</param>
+        /// <returns>The command line string.</returns>
+        public static string GetBashCommandLine(string path)
+        {
+            return NeonHelper.GetExecuteCommandLine(path);
+        }
+
+        /// <summary>
+        /// Synchronously executes a Bash script and captures the result.
+        /// </summary>
+        /// <param name="path">Path to the script.</param>
+        /// <param name="timeout">
+        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the process created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse BashExecuteCapture(
+            string          path,
+            TimeSpan?       timeout         = null,
+            Action<Process> processCallback = null)
+        {
+            return NeonHelper.ExecuteCapture(
+                path:            "/bin/bash",
+                args:            path,
+                timeout:         timeout,
+                processCallback: processCallback);
+        }
+
+        /// <summary>
+        /// Asynchronously executes a Bash script and captures the result.
+        /// </summary>
+        /// <param name="path">Path to the script.</param>
+        /// <param name="timeout">
+        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="processCallback">
+        /// Optionally passed to obtain the details of the process created to execute the command.
+        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
+        /// instances just after it is launched.
+        /// </param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static async Task<ExecuteResponse> BashExecuteCaptureAsync(
+            string          path,
+            TimeSpan?       timeout         = null,
+            Action<Process> processCallback = null)
+        {
+            return await NeonHelper.ExecuteCaptureAsync(
+                path:            "/bin/bash", 
+                args:            path,
+                timeout:         timeout,
+                processCallback: processCallback);
+        }
+
+        /// <summary>
+        /// Returns the actual command line used to execute a command under <b>chroot</b> by one of the methods
+        /// below.  The result will be prefixed by the the <b>chroot</b> command and parameter.
+        /// </summary>
+        /// <param name="path">The command path.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <returns></returns>
+        public static string GetExecuteCommandLine(string path, object[] args)
+        {
+            return $"chroot {HostMount} {NeonHelper.GetExecuteCommandLine(path, args)}";
+        }
+
+        /// <summary>
         /// <para>
-        /// Synchronously executes a process to run an executable file and then waits for the process to terminate
-        /// while capturing any output written to the standard output and error streams.
+        /// Synchronously executes a process using <b>chroot</b> to map the file system root <b>/</b>
+        /// to <see cref="HostMount"/>.
         /// </para>
-        /// <note>
-        /// This method is nearly the same as <see cref="NeonHelper.ExecuteCaptureAsync(string, object[], string, Dictionary{string, string}, TimeSpan?, Process, TextReader, Encoding, Action{Process})"/>
-        /// with the only difference being that the <b>workingDirectory</b> parameter has been removed here.
-        /// </note>
         /// </summary>
         /// <param name="path">
         /// <para>
@@ -101,9 +172,6 @@ namespace NeonNodeAgent
         /// <param name="process">
         /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
-        /// <param name="workingDirectory">
-        /// Optionally specifies the working directory for executing the program.
-        /// </param>
         /// <param name="environmentVariables">
         /// Optionally specifies the environment variables to be passed into the process.
         /// The new process inherits the current processes variables when this is <c>null</c>.
@@ -119,7 +187,7 @@ namespace NeonNodeAgent
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -154,12 +222,21 @@ namespace NeonNodeAgent
             Encoding                    outputEncoding       = null,
             Action<Process>             processCallback      = null)
         {
+            var actualArgs = new List<object>();
+
+            actualArgs.Add(HostMount);
+            actualArgs.Add(path);
+
+            foreach (var arg in args)
+            {
+                actualArgs.Add(arg);
+            }
+
             return NeonHelper.ExecuteCapture(
-                path:                 path,
-                args:                 args,
+                path:                 "chroot",
+                args:                 actualArgs.ToArray(),
                 timeout:              timeout,
                 process:              process, 
-                workingDirectory:     Environment.CurrentDirectory,
                 environmentVariables: environmentVariables,
                 outputAction:         outputAction,
                 errorAction:          errorAction,
@@ -170,13 +247,9 @@ namespace NeonNodeAgent
 
         /// <summary>
         /// <para>
-        /// Asynchronously executes a process to run an executable file and then waits for the process to terminate
-        /// while capturing any output written to the standard output and error streams.
+        /// Asynchronously executes a process using <b>chroot</b> to map the file system root <b>/</b>
+        /// to <see cref="HostMount"/>.
         /// </para>
-        /// <note>
-        /// This method is nearly the same as <see cref="NeonHelper.ExecuteCaptureAsync(string, object[], string, Dictionary{string, string}, TimeSpan?, Process, TextReader, Encoding, Action{Process})"/>
-        /// with the only difference being that the <b>workingDirectory</b> parameter has been removed here.
-        /// </note>
         /// </summary>
         /// <param name="path">
         /// <para>
@@ -195,10 +268,6 @@ namespace NeonNodeAgent
         /// <param name="process">
         /// Optional existing <see cref="Process"/> instance used to launch the process.
         /// </param>
-        /// <param name="workingDirectory">
-        /// Optionally specifies the working directory for executing the program.  This defaults
-        /// to <b>/tmp</b>.
-        /// </param>
         /// <param name="environmentVariables">
         /// Optionally specifies the environment variables to be passed into the process.
         /// The new process inherits the current processes variables when this is <c>null</c>.
@@ -212,7 +281,7 @@ namespace NeonNodeAgent
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -241,9 +310,19 @@ namespace NeonNodeAgent
         {
             await SyncContext.Clear;
 
+            var actualArgs = new List<object>();
+
+            actualArgs.Add(HostMount);
+            actualArgs.Add(path);
+
+            foreach (var arg in args)
+            {
+                actualArgs.Add(arg);
+            }
+
             return await NeonHelper.ExecuteCaptureAsync(
-                path:                 path,
-                args:                 args,
+                path:                 "chroot",
+                args:                 actualArgs.ToArray(),
                 workingDirectory:     Environment.CurrentDirectory,
                 environmentVariables: environmentVariables,
                 timeout:              timeout,
