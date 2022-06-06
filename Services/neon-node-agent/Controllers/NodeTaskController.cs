@@ -64,8 +64,14 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger         log = Program.Service.LogManager.GetLogger<NodeTaskController>();
+        private static readonly INeonLogger         log             = Program.Service.LogManager.GetLogger<NodeTaskController>();
         private static ResourceManager<V1NodeTask>  resourceManager;
+
+        // Paths to relevant folders in the host file system.
+
+        private static readonly string hostNeonRunFolder;
+        private static readonly string hostAgentFolder;
+        private static readonly string hostAgentTasksFolder;
 
         // Configuration settings
 
@@ -91,6 +97,16 @@ namespace NeonNodeAgent
         private static readonly Counter promotionCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions");
         private static readonly Counter demotedCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions");
         private static readonly Counter newLeaderCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes");
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static NodeTaskController()
+        {
+            hostNeonRunFolder    = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
+            hostAgentFolder      = Path.Combine(hostNeonRunFolder, "node-agent");
+            hostAgentTasksFolder = Path.Combine(hostAgentFolder, "nodetasks");
+        }
 
         //---------------------------------------------------------------------
         // Instance members
@@ -121,7 +137,7 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 2");
                     new LeaderElectionConfig(
                         this.k8s,
                         @namespace: KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.nodetask-{HostNode.Name}",
+                        leaseName:        $"{Program.Service.Name}.nodetask-{Node.Name}",
                         identity:         Pod.Name,
                         promotionCounter: promotionCounter,
                         demotionCounter:  demotedCounter,
@@ -136,6 +152,55 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 3");
                 };
 log.LogDebug($"*** NODETASK-CONTROLLER: 4");
 
+                // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
+
+                var scriptPath = Path.Combine(Node.HostMount, "tmp/node-agent-folder.sh");
+
+                var script = 
+$@"#!/bin/bash
+
+set -euo pipefail
+
+# Ensure that the node runtime folders exist and have the correct permissions.
+
+if [ ! -d {hostNeonRunFolder} ]; then
+
+    mkdir -p {hostNeonRunFolder}
+    chmod 700 {hostNeonRunFolder}
+fi
+
+if [ ! -d {hostAgentFolder} ]; then
+
+    mkdir -p {hostAgentFolder}
+    chmod 700 {hostAgentFolder}
+fi
+
+if [ ! -d {hostAgentTasksFolder} ]; then
+
+    mkdir -p {hostAgentTasksFolder}
+    chmod 700 {hostAgentTasksFolder}
+fi
+
+# Remove this script.
+
+rm $0
+";
+                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
+log.LogDebug($"*** NODETASK-CONTROLLER: 5");
+                try
+                {
+                    Node.ExecuteCapture("/bin/bash", new object[] { scriptPath }).EnsureSuccess();
+log.LogDebug($"*** NODETASK-CONTROLLER: 6");
+                }
+                finally
+                {
+log.LogDebug($"*** NODETASK-CONTROLLER: 7: {scriptPath}");
+                    NeonHelper.DeleteFile(scriptPath);
+log.LogDebug($"*** NODETASK-CONTROLLER: 8");
+                }
+
+log.LogDebug($"*** NODETASK-CONTROLLER: 9");
+
                 configured = true;
             }
         }
@@ -149,7 +214,7 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 4");
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
-            return task.Spec.Node.Equals(HostNode.Name, StringComparison.InvariantCultureIgnoreCase);
+            return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -171,6 +236,7 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 4");
                     log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
 log.LogDebug($"*** RECONCILE: 0A");
+return null;
 try
 {
     await k8s.ListClusterCustomObjectAsync<V1NodeTask>();
@@ -400,9 +466,9 @@ log.LogDebug($"*** RECONCILE: 16");
                 {
                     // Detect and kill orphaned tasks.
 
-                    if (nodeTask.Status.AgentId != HostNode.AgentId)
+                    if (nodeTask.Status.AgentId != Node.AgentId)
                     {
-                        log.LogWarn($"Detected orphaned [nodetask={taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={HostNode.AgentId}]");
+                        log.LogWarn($"Detected orphaned [nodetask={taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={Node.AgentId}]");
                         await KillTaskAsync(nodeTask);
 
                         // Update the node task status to: ORPHANED
@@ -446,7 +512,7 @@ log.LogDebug($"*** RECONCILE: 16");
                 nodeTaskExecuteIds.Add(nodeTask.Status.ExecutionId);
             }
 
-            foreach (var scriptFolderPath in Directory.GetDirectories(LinuxPath.Combine(HostNode.HostMount, KubeNodeFolder.NodeTasks), "*", SearchOption.TopDirectoryOnly))
+            foreach (var scriptFolderPath in Directory.GetDirectories(hostAgentTasksFolder, "*", SearchOption.TopDirectoryOnly))
             {
                 var scriptFolderName = LinuxPath.GetFileName(scriptFolderPath);
 
@@ -483,8 +549,8 @@ log.LogDebug($"*** RECONCILE: 16");
             // will return an empty line when the process doesn't exist and a single line
             // with the process command line when the process exists.
 
-            var result = await HostNode.ExecuteCaptureAsync($"ps --pid={nodeTask.Status.ProcessId} --format cmd=", timeout: null);
-
+            var result = await Node.ExecuteCaptureAsync("ps", new object[] { $"--pid={nodeTask.Status.ProcessId}", "--format cmd=" });
+                
             if (result.ExitCode == 0)
             {
                 using (var reader = new StringReader(result.OutputText))
@@ -495,7 +561,7 @@ log.LogDebug($"*** RECONCILE: 16");
                     {
                         // The process ID and command line match, so kill it.
 
-                        result = await HostNode.ExecuteCaptureAsync("kill", null, "-s", "SIGTERM", nodeTask.Status.ProcessId);
+                        result = await Node.ExecuteCaptureAsync("kill", new object[] { "-s", "SIGTERM", nodeTask.Status.ProcessId });
 
                         if (result.ExitCode != 0)
                         {
@@ -535,7 +601,7 @@ log.LogDebug($"*** EXECUTE: 2");
             // Generate the execution UUID and write the script to the host node.
 
             var executionId  = Guid.NewGuid().ToString("d");
-            var scriptFolder = LinuxPath.Combine(HostNode.HostMount, KubeNodeFolder.NodeTasks, executionId);
+            var scriptFolder = LinuxPath.Combine(hostAgentTasksFolder, executionId);
             var scriptPath   = LinuxPath.Combine(scriptFolder, executionId);
 log.LogDebug($"*** EXECUTE: 3");
 
@@ -544,8 +610,8 @@ log.LogDebug($"*** EXECUTE: 3");
 
             nodeTask.Status.Phase       = V1NodeTask.NodeTaskPhase.Running;
             nodeTask.Status.StartedUtc  = DateTime.UtcNow;
-            nodeTask.Status.AgentId     = HostNode.AgentId;
-            nodeTask.Status.CommandLine = $"/bin/bash {scriptPath}";
+            nodeTask.Status.AgentId     = Node.AgentId;
+            nodeTask.Status.CommandLine = NeonHelper.GetExecuteCommandLine("/bin/bash", scriptPath);
             nodeTask.Status.ProcessId   = process.Id;
             nodeTask.Status.ExecutionId = executionId;
 log.LogDebug($"*** EXECUTE: 4");
@@ -556,7 +622,7 @@ log.LogDebug($"*** EXECUTE: 4");
 
             try
             {
-                // This callback will be executed once the [HostNode.ExecuteCaptureAsync()]
+                // This callback will be executed once the [Node.ExecuteCaptureAsync()]
                 // call has the process details.  We'll save the details, update the node task
                 // status and persist the status changes to the API server.
 
@@ -578,7 +644,11 @@ log.LogDebug($"*** EXECUTE: 8");
                     };
 
 log.LogDebug($"*** EXECUTE: 9");
-                task = HostNode.ExecuteCaptureAsync(LinuxPath.Combine(HostNode.HostMount, "/bin/bash"), processCallback, TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), scriptPath);
+                task = Node.ExecuteCaptureAsync(
+                    path:            "/bin/bash", 
+                    args:            new object[] { scriptPath }, 
+                    timeout:         TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), 
+                    processCallback: processCallback);
 log.LogDebug($"*** EXECUTE: 10");
             }
             catch (Exception e)

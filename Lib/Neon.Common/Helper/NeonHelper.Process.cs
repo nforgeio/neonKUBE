@@ -268,6 +268,20 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the actual command line that will be executed from the command 
+        /// and arguments passed.
+        /// </summary>
+        /// <param name="command">The command to be executed.</param>
+        /// <param name="args">Optional command arguments.</param>
+        /// <returns>The actual command line to be executed.</returns>
+        public static string GetExecuteCommandLine(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            return $"{command} {NeonHelper.NormalizeExecArgs()}";
+        }
+
+        /// <summary>
         /// Starts a process with an array of arguments to run an executable file and
         /// then waits for the process to terminate.
         /// </summary>

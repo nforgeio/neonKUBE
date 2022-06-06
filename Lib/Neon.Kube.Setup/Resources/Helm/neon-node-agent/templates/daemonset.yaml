@@ -65,6 +65,9 @@ spec:
         securityContext: 
           privileged: true
         volumeMounts:
+        # This is where the host node file system will be mounted to the 
+        # [neon-node-agent] container.  This corresponds the the [HostMount]
+        # constant defined in [neon-node-agent/Node.cs].
         - name: host
           mountPath: /mnt/host
         startupProbe:
