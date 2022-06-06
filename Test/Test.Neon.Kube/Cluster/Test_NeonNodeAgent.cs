@@ -122,10 +122,11 @@ namespace TestKube
 
             foreach (var node in fixture.Cluster.Nodes)
             {
-                nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{Guid.NewGuid().ToString("d")}");
+                nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Guid()}");
             }
 
-            // Initalize the nodes and submit a node task for each.
+            // Initalize a test folder on each node where the task will update a file
+            // indicating that it ran and then submit a task for each node.
 
             foreach (var node in fixture.Cluster.Nodes)
             {

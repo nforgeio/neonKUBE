@@ -49,6 +49,39 @@ namespace Neon.Kube.Resources
     /// every node in the cluster.  This runs as a privileged pod and has full access to the host node's
     /// file system, network, and processes and is typically used for low-level node maintainance activities.
     /// </para>
+    /// <para><b>NODETASK SCRIPTS</b></para>
+    /// <para>
+    /// Node tasks are simply Bash scripts executed on the node by the <b>neon-node-agent</b> daemon running
+    /// on the node.  These scripts will be written to the node's file system like:
+    /// </para>
+    /// <para><b>/var/run/neonkube/node-agent/nodetasks/GUID/script.sh</b></para>
+    /// <para>
+    /// where GUID is a base-36 encoded GUID generated and assigned to the task by the agent.
+    /// </para>
+    /// <para>
+    /// <b>neon-node-agent</b> adds some variable to the beginning of the deployed script before executing it:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>$NODE_ROOT></b></term>
+    ///     <description>
+    ///     Identifies where the host node's file system is mounted to the <b>neon-node-agent</b> container.
+    ///     Since the script is executing in the context of the container, your script will need to use this
+    ///     to reference files and directories on the host node.  This currently returns <b>/mnt/host</b> but
+    ///     you should always use this variable instead of hardcoding the path.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>$SCRIPT_DIR</b></term>
+    ///     <description>
+    ///     Set to the directory where the script is executing (like <b>/var/run/neonkube/node-agent/nodetasks/GUID</b>.
+    ///     Your scripts should generally store any temporary files here so they will be removed automaticaly by the
+    ///     node agent.
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// </para>
     /// <para><b>LIFECYCLE</b></para>
     /// <para>
     /// Here is the description of a NodeTask lifecycle:
@@ -169,6 +202,11 @@ namespace Neon.Kube.Resources
             /// this sutuation.
             /// </summary>
             Orphaned,
+
+            /// <summary>
+            /// The task failed with a non-zero exit code.
+            /// </summary>
+            Failed,
 
             /// <summary>
             /// The task finished executing.

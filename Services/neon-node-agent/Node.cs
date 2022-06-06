@@ -82,7 +82,7 @@ namespace NeonNodeAgent
         /// <returns>The command line string.</returns>
         public static string GetBashCommandLine(string path)
         {
-            return NeonHelper.GetExecuteCommandLine(path);
+            return NeonHelper.GetExecuteCommandLine($"/bin/bash {path}");
         }
 
         /// <summary>

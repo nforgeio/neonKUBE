@@ -122,16 +122,13 @@ namespace NeonNodeAgent
 
             this.k8s = k8s;
 
-log.LogDebug($"*** NODETASK-CONTROLLER: 0");
             // Load the configuration settings the first time a controller instance is created.
 
             if (!configured)
             {
-log.LogDebug($"*** NODETASK-CONTROLLER: 1");
                 reconciledNoChangeInterval = Program.Service.Environment.Get("NODETASK_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
                 errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
                 errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
-log.LogDebug($"*** NODETASK-CONTROLLER: 2");
 
                 var leaderConfig = 
                     new LeaderElectionConfig(
@@ -142,7 +139,6 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 2");
                         promotionCounter: promotionCounter,
                         demotionCounter:  demotedCounter,
                         newLeaderCounter: newLeaderCounter);
-log.LogDebug($"*** NODETASK-CONTROLLER: 3");
 
                 resourceManager = new ResourceManager<V1NodeTask>(filter: NodeTaskFilter, leaderConfig: leaderConfig)
                 {
@@ -150,11 +146,10 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 3");
                      ErrorMinRequeueInterval   = errorMinRequeueInterval,
                      ErrorMaxRequeueInterval   = errorMaxRequeueInterval
                 };
-log.LogDebug($"*** NODETASK-CONTROLLER: 4");
 
                 // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
 
-                var scriptPath = Path.Combine(Node.HostMount, "tmp/node-agent-folder.sh");
+                var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
 
                 var script = 
 $@"#!/bin/bash
@@ -186,20 +181,14 @@ fi
 rm $0
 ";
                 File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
-log.LogDebug($"*** NODETASK-CONTROLLER: 5");
                 try
                 {
                     Node.BashExecuteCapture(scriptPath).EnsureSuccess();
-log.LogDebug($"*** NODETASK-CONTROLLER: 6");
                 }
                 finally
                 {
-log.LogDebug($"*** NODETASK-CONTROLLER: 7: {scriptPath}");
                     NeonHelper.DeleteFile(scriptPath);
-log.LogDebug($"*** NODETASK-CONTROLLER: 8");
                 }
-
-log.LogDebug($"*** NODETASK-CONTROLLER: 9");
 
                 configured = true;
             }
@@ -235,20 +224,7 @@ log.LogDebug($"*** NODETASK-CONTROLLER: 9");
                 {
                     log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
-log.LogDebug($"*** RECONCILE: 0A");
-return null;
-try
-{
-    await k8s.ListClusterCustomObjectAsync<V1NodeTask>();
-}
-catch (Exception e)
-{
-log.LogError("#############################################################");
-log.LogError(e);
-log.LogError("#############################################################");
-return null;
-}
-log.LogDebug($"*** RECONCILE: 0B");
+log.LogDebug($"*** RECONCILE: 0");
 
                     if (name == null)
                     {
@@ -301,32 +277,12 @@ log.LogDebug($"*** RECONCILE: 8A");
                             //nodeTask.Status.State = V1NodeTask.NodeTaskState.Pending;
 
 log.LogDebug($"*** RECONCILE: 8B");
-try
-{
-                                var patchString =
-$@"
-{{
-    ""spec"": {{
-        ""state"": ""{ NeonHelper.EnumToString(nodeTask.Status.Phase) }""
-    }}
-}}
-";
-                                var patch = OperatorHelper.CreatePatch<V1NodeTask>();
+                            var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                                patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
-                                patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
+                            patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
+                            patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
 
-                                nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
-                            }
-catch (Exception e)
-{
-log.LogDebug(e);
-log.LogDebug("===============================================");
-log.LogDebug(e.Message);
-log.LogDebug("===============================================");
-log.LogDebug($"Base URI: {k8s.BaseUri}");
-log.LogDebug("===============================================");
-}
+                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                             log.LogDebug($"*** RECONCILE: 9");
                         }
 log.LogDebug($"*** RECONCILE: 10");
@@ -473,12 +429,14 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         // Update the node task status to: ORPHANED
 
-                        nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Orphaned;
-                        nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
-                        nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
-                        nodeTask.Status.ExitCode      = -1;
+                        var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                        await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Orphaned);
+                        patch.Replace(path => path.Status.FinishedUtc, utcNow);
+                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartedUtc).ToString());
+                        patch.Replace(path => path.Status.ExitCode, -1);
+
+                        await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                         continue;
                     }
 
@@ -491,12 +449,14 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         // Update the node task status to: TIMEOUT
 
-                        nodeTask.Status.Phase         = V1NodeTask.NodeTaskPhase.Timeout;
-                        nodeTask.Status.FinishedUtc   = DateTime.UtcNow;
-                        nodeTask.Status.ExecutionTime = (nodeTask.Status.StartedUtc - nodeTask.Status.FinishedUtc).ToString();
-                        nodeTask.Status.ExitCode      = -1;
+                        var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                        await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Timeout);
+                        patch.Replace(path => path.Status.FinishedUtc, utcNow);
+                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartedUtc).ToString());
+                        patch.Replace(path => path.Status.ExitCode, -1);
+
+                        await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                         continue;
                     }
                 }
@@ -598,21 +558,35 @@ log.LogDebug($"*** EXECUTE: 2");
             var process       = (Process)null;
             var statusUpdated = false;
 
-            // Generate the execution UUID and write the script to the host node.
+            // Generate the execution UUID and determin where the script will be located.
 
-            var executionId  = Guid.NewGuid().ToString("d");
+            var executionId  = NeonHelper.CreateBase36Guid();
             var scriptFolder = LinuxPath.Combine(hostAgentTasksFolder, executionId);
-            var scriptPath   = LinuxPath.Combine(scriptFolder, executionId);
+            var scriptPath   = LinuxPath.Combine(scriptFolder, "script.sh");
 log.LogDebug($"*** EXECUTE: 3");
 
+            // Prepend the script to be deployed with code to set the special
+            // environment variables.
+
+            var deployedScript =
+$@"
+#------------------------------------------------------------------------------
+# neon-node-task: Initialze special script variables
+
+export NODE_ROOT={Node.HostMount}
+export SCRIPT_DIR={scriptFolder}
+
+#------------------------------------------------------------------------------
+
+{nodeTask.Spec.BashScript}
+";
             Directory.CreateDirectory(scriptFolder);
-            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(nodeTask.Spec.BashScript));
+            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(deployedScript));
 
             nodeTask.Status.Phase       = V1NodeTask.NodeTaskPhase.Running;
             nodeTask.Status.StartedUtc  = DateTime.UtcNow;
             nodeTask.Status.AgentId     = Node.AgentId;
             nodeTask.Status.CommandLine = Node.GetBashCommandLine(scriptPath);
-            nodeTask.Status.ProcessId   = process.Id;
             nodeTask.Status.ExecutionId = executionId;
 log.LogDebug($"*** EXECUTE: 4");
 
@@ -628,16 +602,14 @@ log.LogDebug($"*** EXECUTE: 4");
 
 log.LogDebug($"*** EXECUTE: 5");
                 var processCallback =
-                    (Process _process) =>
+                    (Process newProcess) =>
                     {
-log.LogDebug($"*** EXECUTE: 6: processID = {process.Id}");
-                        process                   = _process;
+log.LogDebug($"*** EXECUTE: 6A: processID is NULL: {newProcess == null}");
+log.LogDebug($"*** EXECUTE: 6B: processID = {newProcess.Id}");
+                        process                   = newProcess;
                         nodeTask.Status.ProcessId = process.Id;
 
 log.LogDebug($"*** EXECUTE: 7");
-                        nodeTask = k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName).Result;
-log.LogDebug($"*** EXECUTE: 8");
-
                         log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={process.Id}]");
 
                         statusUpdated = true;
@@ -685,6 +657,18 @@ log.LogDebug($"*** EXECUTE: 12");
             }
 log.LogDebug($"*** EXECUTE: 13");
 
+            // Update the node task status.
+
+            var patch = OperatorHelper.CreatePatch<V1NodeTask>();
+
+            patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
+            patch.Replace(path => path.Status.StartedUtc, nodeTask.Status.StartedUtc);
+            patch.Replace(path => path.Status.AgentId, nodeTask.Status.AgentId);
+            patch.Replace(path => path.Status.CommandLine, nodeTask.Status.CommandLine);
+            patch.Replace(path => path.Status.ExecutionId, nodeTask.Status.ExecutionId);
+
+            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+
             // Wait for the command to complete and the update the node task status.
 
             try
@@ -722,7 +706,7 @@ log.LogDebug($"*** EXECUTE: 17");
                     else
                     {
 log.LogDebug($"*** EXECUTE: 18");
-                        nodeTask.Status.Phase    = V1NodeTask.NodeTaskPhase.Finished;
+                        nodeTask.Status.Phase    = result.ExitCode == 0 ? V1NodeTask.NodeTaskPhase.Finished : V1NodeTask.NodeTaskPhase.Failed;
                         nodeTask.Status.ExitCode = result.ExitCode;
 
                         if (nodeTask.Spec.CaptureOutput)
@@ -733,8 +717,21 @@ log.LogDebug($"*** EXECUTE: 18");
                     }
 
 log.LogDebug($"*** EXECUTE: 19");
-                    await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
-log.LogDebug($"*** EXECUTE: 20");
+                    patch = OperatorHelper.CreatePatch<V1NodeTask>();
+
+                    patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
+                    patch.Replace(path => path.Status.FinishedUtc, nodeTask.Status.FinishedUtc);
+                    patch.Replace(path => path.Status.ExecutionTime, nodeTask.Status.ExecutionTime);
+                    patch.Replace(path => path.Status.ExitCode, nodeTask.Status.ExitCode);
+
+                    if (nodeTask.Spec.CaptureOutput)
+                    {
+                        patch.Replace(path => path.Status.Output, nodeTask.Status.Output);
+                        patch.Replace(path => path.Status.Error, nodeTask.Status.Error);
+                    }
+
+                    nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                    log.LogDebug($"*** EXECUTE: 20");
                 }
             }
             catch (Exception e)

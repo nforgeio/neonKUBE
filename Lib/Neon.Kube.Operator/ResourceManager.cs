@@ -110,7 +110,7 @@ namespace Neon.Kube.Operator
     /// </para>
     /// <note>
     /// <para>
-    /// We currently use the first no-change reconciled event raised by KubeOps to determine that
+    /// We currently use the first NO-CHANGE reconciled event raised by KubeOps to determine that
     /// all resources have been received.
     /// </para>
     /// <para>
@@ -393,7 +393,7 @@ namespace Neon.Kube.Operator
         /// matches the corresponding cluster or physical state.  For example, if you have 
         /// custom resources that map to running pods and one of the pods was manually deleted,
         /// after <see cref="ReconcileNoChangeInterval"/> and up to minute or so more, your 
-        /// operator will receive a no-change reconciled event which your handler can take as
+        /// operator will receive a NO-CHANGE reconciled event which your handler can take as
         /// an oppertunity to ensure that all of the expected pods actually exist.
         /// </para>
         /// <note>
@@ -536,13 +536,13 @@ namespace Neon.Kube.Operator
                     {
                         // We're still receiving known resources.
 
-                        log.LogInfo($"RECONCILED: {name} (waiting for existing resources)");
+                        log.LogInfo($"RECONCILED: {name} (discovering resources)");
                         return null;
                     }
 
                     if (!changed && utcNow < nextNoChangeReconciledUtc)
                     {
-                        // It's not time yet for another no-change handler call.
+                        // It's not time yet for another NO-CHANGE handler call.
 
                         return null;
                     }
