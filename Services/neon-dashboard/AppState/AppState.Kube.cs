@@ -39,80 +39,67 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
-        private static string cachePrefix = "neon-dashboard";
-        private static DistributedCacheEntryOptions cacheEntryOptions = new DistributedCacheEntryOptions()
+        public class __Kube 
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-        };
+            private AppState AppState;
+            private Service NeonDashboardService => AppState.NeonDashboardService;
+            private __Cache Cache => AppState.Cache;
+            private INeonLogger Logger => AppState.Logger;
 
-        public async Task<V1NodeList> GetNodesAsync()
-        {
-            var key = createCacheKey("nodes");
-
-            try
+            public __Kube(AppState state)
             {
-                var value = await GetAsync<V1NodeList>(key);
-                if (value != null)
+                AppState = state;
+            }
+
+            public async Task<V1NodeList> GetNodesAsync()
+            {
+                var key = "nodes";
+
+                try
                 {
-                    return value;
+                    var value = await Cache.GetAsync<V1NodeList>(key);
+                    if (value != null)
+                    {
+                        return value;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e);
-            }
-
-            var nodes = await NeonDashboardService.Kubernetes.ListNodeAsync();
-
-            _ = SetAsync(key, nodes);
-
-            return nodes;
-        }
-
-        public async Task<NodeMetricsList> GetNodeMetricsAsync()
-        {
-            var key = createCacheKey("node-metrics");
-
-            try
-            {
-                var value = await GetAsync<NodeMetricsList>(key);
-                if (value != null)
+                catch (Exception e)
                 {
-                    return value;
+                    Logger.LogError(e);
                 }
+
+                var nodes = await NeonDashboardService.Kubernetes.ListNodeAsync();
+
+                _ = Cache.SetAsync("nodes", nodes);
+
+                return nodes;
             }
-            catch (Exception e)
+
+            public async Task<NodeMetricsList> GetNodeMetricsAsync()
             {
-                Logger.LogError(e);
+                var key = "node-metrics";
+
+                try
+                {
+                    var value = await Cache.GetAsync<NodeMetricsList>(key);
+                    if (value != null)
+                    {
+                        return value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+
+                var nodeMetricsList = await NeonDashboardService.Kubernetes.GetKubernetesNodesMetricsAsync();
+
+                _ = Cache.SetAsync(key, nodeMetricsList);
+
+                return nodeMetricsList;
             }
 
-            var nodeMetricsList = await NeonDashboardService.Kubernetes.GetKubernetesNodesMetricsAsync();
-
-            _ = SetAsync(key, nodeMetricsList);
-
-            return nodeMetricsList;
-        }
-
-        private async Task<T> GetAsync<T>(string key)
-        {
-            var value = await Cache.GetAsync(key);
-
-            if (value != null)
-            {
-                return NeonHelper.JsonDeserialize<T>(value);
-            }
-
-            return default;
-        }
-
-        private async Task SetAsync(string key, object value)
-        {
-            await Cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
-        }
-
-        private string createCacheKey(string key)
-        {
-            return $"{cachePrefix}_{key}";
+            
         }
     }
 }

@@ -66,10 +66,11 @@
 	<ItemGroup>
 	  <None Include="wwwroot\fonts\PPPangramSans-Bold.otf" />
 	  <None Include="wwwroot\fonts\PPPangramSans-Medium.otf" />
+
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="./prebuild.ps1" ContinueOnError="true" />
+		<Exec Command="pwsh -f ./prebuild.ps1" ContinueOnError="true" />
 	</Target>
 
 	<Target Name="NodeCheck" BeforeTargets="PreBuild">
