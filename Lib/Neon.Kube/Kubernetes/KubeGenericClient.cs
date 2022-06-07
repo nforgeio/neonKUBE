@@ -34,9 +34,6 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using k8s;
 using k8s.Models;
 
@@ -67,41 +64,20 @@ namespace Neon.Kube
     /// The <see cref="KubeGenericClient"/> class attempts to address these issues at the cost of
     /// a bit of performance.  This class wraps an <see cref="IKubernetes"/> client and manages 
     /// multiple <see cref="GenericClient"/> instances internally.  This also uses reflection
-    /// to retrieve resource type attributes from public constants:
+    /// to retrieve the type's <see cref="KubernetesEntityAttribute"/> holding the objects <b>group</b>,
+    /// <b>version</b>, <b>plural name</b>, and <b>kind</b> properties.
     /// </para>
-    /// <list type="table">
-    /// <item>
-    ///     <term><c>public const string KubeGroup;</c></term>
-    ///     <description>
-    ///     Returns the type's <b>group</b>.
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><c>public const string KubeVersion;</c></term>
-    ///     <description>
-    ///     Returns the type's <b>version</b>.
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><c>public const string KubePlural;</c></term>
-    ///     <description>
-    ///     Returns the type's <b>plural name</b>.
-    ///     </description>
-    /// </item>
-    /// </list>
-    /// <para>
-    /// All custom object types must define these constants; <see cref="NotSupportedException"/>
-    /// will be thrown for types without any of these constants.
-    /// </para>
+    /// <note>
     /// <para>
     /// This class maintains a cache of <see cref="GenericClient"/> instances for the types passed
     /// to the class methods so you don't have to.  The performance cost should be acceptable for
-    /// most scenarios:
+    /// many scenarios:
     /// </para>
     /// <list type="bullet">
     /// <item>We need to reflect each object type once to load the attributes.</item>
     /// <item>Each subesquent call will need to lookup the correct client, which requires a lock.</item>
     /// </list>
+    /// </note>
     /// </remarks>
     public class KubeGenericClient
     {
@@ -117,18 +93,29 @@ namespace Neon.Kube
             /// Constructor.
             /// </summary>
             /// <param name="k8s">The underlying Kubernetes client.</param>
-            /// <param name="group">The type's group.</param>
+            /// <param name="group">
+            /// <para>
+            /// The type's group.
+            /// </para>
+            /// <note>
+            /// Empty strings are allowed here because core Kubernetes objects
+            /// use this.
+            /// </note>
+            /// </param>
             /// <param name="version">The type's version.</param>
+            /// <param name="kind">The type's kind.</param>
             /// <param name="plural">The type's plural name.</param>
-            public ClientProxy(IKubernetes k8s, string group, string version, string plural)
+            public ClientProxy(IKubernetes k8s, string group, string version, string kind, string plural)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(group), nameof(group));
+                Covenant.Requires<ArgumentNullException>(group != null, nameof(group));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(plural), nameof(plural));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(kind), nameof(kind));
 
                 this.Client  = new GenericClient(k8s, group: group, version: version, plural: plural);
                 this.Group   = group;
                 this.Version = version;
+                this.Kind    = kind;
                 this.Plural  = plural;
             }
 
@@ -148,9 +135,36 @@ namespace Neon.Kube
             public readonly string Version;
 
             /// <summary>
+            /// Returns the associated types kind.
+            /// </summary>
+            public readonly string Kind;
+
+            /// <summary>
             /// Returns the associated type's plural name.
             /// </summary>
             public readonly string Plural;
+        }
+
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// The Kubernetes API appears to want the <b>default</b> namespace to be specified
+        /// as an empty string.  This method converts namespaces passed as <b>default</b> or
+        /// <c>null</c> to an empty string.
+        /// </summary>
+        /// <param name="namespace">The input namespace.</param>
+        /// <returns>The normalized namespace.</returns>
+        private static string NormalizeNamespace(string @namespace)
+        {
+            if (@namespace == null || @namespace == "default")
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return @namespace;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -201,53 +215,18 @@ namespace Neon.Kube
                 }
             }
 
-            // Reflect the type to obtain the custom object attributes and check them.
+            // Reflect the type to obtain the custom object attributes.
 
-            var groupConst = type.GetField("KubeGroup");
+            var attributes = type.GetCustomAttribute<KubernetesEntityAttribute>();
 
-            if (groupConst == null)
+            if (attributes == null)
             {
-                throw new NotSupportedException($"Type [{type.FullName}]: missing the [KubeGroup] constant.");
-            }
-
-            if (groupConst.FieldType != typeof(string))
-            {
-                throw new NotSupportedException($"Type [{type.FullName}]: [KubeGroup] constant is not a string.");
-            }
-
-            var group = (string)groupConst.GetValue(null);
-
-            var versionConst = type.GetField("KubeVersion");
-
-            if (versionConst == null)
-            {
-                throw new NotSupportedException($"Type [{type.FullName}]: missing the [KubeVersion] constant.");
-            }
-
-            if (versionConst.FieldType != typeof(string))
-            {
-                throw new NotSupportedException($"Type [{type.FullName}]: [KubeVersion] constant is not a string.");
-            }
-
-            var version = (string)groupConst.GetValue(null);
-
-            var pluralConst = type.GetField("KubePlural");
-
-            if (pluralConst == null)
-            {
-                throw new NotSupportedException($"Type [{type.FullName}]: missing the [KubePlural] constant.");
-            }
-
-            var plural = (string)groupConst.GetValue(null);
-
-            if (pluralConst.FieldType != typeof(string))
-            {
-                throw new NotSupportedException($"Type [{type.FullName}]: [KubePlural] constant is not a string.");
+                throw new NotSupportedException($"Type [{type.FullName}]: missing the [{nameof(KubernetesEntityAttribute)}].");
             }
 
             // Construct the new client and associate it with the type.
 
-            var newProxy = new ClientProxy(k8s, group: group, version: version, plural: plural);
+            var newProxy = new ClientProxy(k8s, attributes.Group, version: attributes.ApiVersion, kind: attributes.Kind, plural: attributes.PluralName);
 
             lock (syncLock)
             {
@@ -262,16 +241,21 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">Specifies the custom object type.</typeparam>
         /// <param name="obj">The object.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The new custom resource.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<T> CreateAsync<T>(T obj, CancellationToken cancellationToken = default)
-            where T : IKubernetesObject
+        public async Task<T> CreateAsync<T>(T obj, string name, CancellationToken cancellationToken = default)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(obj != null, nameof(obj));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            obj.Metadata.Name = name;
 
             return await GetClient<T>().CreateAsync(obj, cancellationToken);
         }
@@ -282,41 +266,47 @@ namespace Neon.Kube
         /// <typeparam name="T">Specifies the custom object type.</typeparam>
         /// <param name="obj">The object.</param>
         /// <param name="namespaceParameter">Specifies the target namespace.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The new custom resource.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<T> CreateNamespacedAsync<T>(T obj, string namespaceParameter, CancellationToken cancellationToken = default)
-            where T : IKubernetesObject
+        public async Task<T> CreateNamespacedAsync<T>(T obj, string namespaceParameter, string name, CancellationToken cancellationToken = default)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(obj != null, nameof(obj));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return await GetClient<T>().CreateNamespacedAsync(obj, namespaceParameter, cancellationToken);
+            obj.Metadata.Name = name;
+
+            return await GetClient<T>().CreateNamespacedAsync(obj, NormalizeNamespace(namespaceParameter), cancellationToken);
         }
 
         /// <summary>
         /// Lists cluster scoped resources.
         /// </summary>
-        /// <typeparam name="TList">Specifies the custom object's list type.</typeparam>
+        /// <typeparam name="T">Specifies the custom object type.</typeparam>
         /// <param name="cancellationToken"></param>
         /// <returns>The resource list.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<TList> ListAsync<TList>(CancellationToken cancellationToken = default)
-            where TList : IKubernetesObject
+        public async Task<V1CustomObjectList<T>> ListAsync<T>(CancellationToken cancellationToken = default)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>
         {
-            return await GetClient<TList>().ListAsync<TList>(cancellationToken);
-        }
+            await SyncContext.Clear;
 
+            return await GetClient<T>().ListAsync<V1CustomObjectList<T>>(cancellationToken);
+        }
+        
         /// <summary>
         /// Lists namespace scoped resources.
         /// </summary>
-        /// <typeparam name="TList">Specifies the custom object's list type.</typeparam>
+        /// <typeparam name="T">Specifies the custom object type.</typeparam>
         /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The resource list.</returns>
@@ -324,12 +314,12 @@ namespace Neon.Kube
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<TList> ListNamespacedAsync<TList>(string namespaceParameter, CancellationToken cancellationToken = default)
-            where TList : IKubernetesObject
+        public async Task<V1CustomObjectList<T>> ListNamespacedAsync<T>(string namespaceParameter, CancellationToken cancellationToken = default)
+            where T : IKubernetesObject, IMetadata<V1ObjectMeta>
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            await SyncContext.Clear;
 
-            return await GetClient<TList>().ListNamespacedAsync<TList>(namespaceParameter, cancellationToken);
+            return await GetClient<T>().ListNamespacedAsync<V1CustomObjectList<T>>(NormalizeNamespace(namespaceParameter), cancellationToken);
         }
 
         /// <summary>
@@ -346,6 +336,7 @@ namespace Neon.Kube
         public async Task<T> ReadAsync<T>(string name, CancellationToken cancellationToken = default)
             where T : IKubernetesObject
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             return await GetClient<T>().ReadAsync<T>(name, cancellationToken);
@@ -366,10 +357,10 @@ namespace Neon.Kube
         public async Task<T> ReadNamespacedAsync<T>(string namespaceParameter, string name, CancellationToken cancellationToken = default)
             where T : IKubernetesObject
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return await GetClient<T>().ReadNamespacedAsync<T>(namespaceParameter, name, cancellationToken);
+            return await GetClient<T>().ReadNamespacedAsync<T>(NormalizeNamespace(namespaceParameter), name, cancellationToken);
         }
 
         /// <summary>
@@ -378,17 +369,27 @@ namespace Neon.Kube
         /// <typeparam name="T">Specifies the custom object type.</typeparam>
         /// <param name="name"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>The deleted custom resource.</returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<T> DeleteAsync<T>(string name, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync<T>(string name, CancellationToken cancellationToken = default)
             where T : IKubernetesObject
         {
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return await GetClient<T>().DeleteAsync<T>(name, cancellationToken);
+            try
+            {
+                await GetClient<T>().DeleteAsync<T>(name, cancellationToken);
+            }
+            catch (JsonException)
+            {
+                // $todo(jefflill): I'm not sure why we're seeing these.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1586
+            }
         }
 
         /// <summary>
@@ -398,18 +399,27 @@ namespace Neon.Kube
         /// <param name="namespaceParameter">Specifies the target namespace.</param>
         /// <param name="name"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>The deleted resource.</returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when <typeparamref name="T"/> is missing any of the <b>KubeGroup</b>,
         /// <b>KubeVersion</b>, or <b>KubePlural</b> constants.
         /// </exception>
-        public async Task<T> DeleteNamespacedAsync<T>(string namespaceParameter, string name, CancellationToken cancellationToken = default)
+        public async Task DeleteNamespacedAsync<T>(string namespaceParameter, string name, CancellationToken cancellationToken = default)
             where T : IKubernetesObject
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return await GetClient<T>().DeleteNamespacedAsync<T>(namespaceParameter, name, cancellationToken);
+            try
+            {
+                await GetClient<T>().DeleteNamespacedAsync<T>(NormalizeNamespace(namespaceParameter), name, cancellationToken);
+            }
+            catch (JsonException)
+            {
+                // $todo(jefflill): I'm not sure why we're seeing these.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1586
+            }
         }
     }
 }

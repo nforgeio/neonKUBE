@@ -137,7 +137,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_ListNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
@@ -266,7 +266,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> JNET_ListNamespacedCustomObjectMetadataAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
@@ -326,7 +326,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_CreateNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
@@ -364,7 +364,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_GetNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
@@ -408,7 +408,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_ReplaceNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body, 
@@ -459,7 +459,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_UpsertNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
@@ -539,7 +539,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_PatchNamespacedCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
             V1Patch             patch,
@@ -608,7 +608,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task JNET_DeleteNamespacedCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              namespaceParameter,

@@ -2,6 +2,7 @@
 
 REM neon delete crd containerregistries.neonkube.io
 REM neon delete crd nodetasks.neonkube.io
+REM neon delete crd neontestobjects.neonkube.io
 
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-cluster-operator

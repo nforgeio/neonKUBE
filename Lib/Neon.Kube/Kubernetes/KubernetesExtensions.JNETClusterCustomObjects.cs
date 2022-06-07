@@ -137,7 +137,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<V1CustomObjectList<T>> JNET_ListClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             bool?               allowWatchBookmarks  = null,
@@ -263,7 +263,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> JNET_ListClusterCustomObjectMetadataAsync(
             this IKubernetes    k8s,
             string              group,
@@ -323,7 +323,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_CreateClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
@@ -358,7 +358,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_GetClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              name,
@@ -399,7 +399,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_ReplaceClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
@@ -447,7 +447,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_UpsertClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
@@ -521,7 +521,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task<T> JNET_PatchClusterCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
             V1Patch             patch,
@@ -586,7 +586,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
         public static async Task JNET_DeleteClusterCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              name,

@@ -169,7 +169,7 @@ namespace Neon.Kube.Resources
     /// </item>
     /// </list>
     /// </remarks>
-    [KubernetesEntity(Group = Helper.NeonKubeResourceGroup, ApiVersion = "v1alpha1", Kind = "NodeTask", PluralName = "nodetasks")]
+    [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
 #if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
@@ -177,6 +177,26 @@ namespace Neon.Kube.Resources
 #endif
     public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.V1NodeTaskSpec, V1NodeTask.V1NodeTaskStatus>
     {
+        /// <summary>
+        /// Object API group.
+        /// </summary>
+        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+
+        /// <summary>
+        /// Object API version.
+        /// </summary>
+        public const string KubeApiVersion = "v1alpha1";
+
+        /// <summary>
+        /// Object API kind.
+        /// </summary>
+        public const string KubeKind = "NodeTask";
+
+        /// <summary>
+        /// Object plural name.
+        /// </summary>
+        public const string KubePlural = "nodetasks";
+
         //---------------------------------------------------------------------
         // Local types
 
@@ -232,7 +252,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         public V1NodeTask()
         {
-            ((IKubernetesObject)this).SetMetadata();
+            this.SetMetadata();
         }
 
         /// <summary>
