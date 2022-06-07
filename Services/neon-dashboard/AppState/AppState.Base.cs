@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AppState.cs
+// FILE:	    AppState.Base.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
@@ -43,30 +43,17 @@ using Neon.Collections;
 
 namespace NeonDashboard
 {
-    public partial class AppState
+    public class AppStateBase
     {
-        public class __Metrics : AppStateBase
+        public AppState AppState;
+        public Service NeonDashboardService => AppState.NeonDashboardService;
+        public IKubernetes K8s => NeonDashboardService.Kubernetes;
+        public AppState.__Cache Cache => AppState.Cache;
+        public INeonLogger Logger => AppState.Logger;
+
+        public AppStateBase(AppState state)
         {
-            private PrometheusClient mimirClient;
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="state"></param>
-            public __Metrics(AppState state)
-                : base(state)
-            {
-                AppState = state;
-                mimirClient = new PrometheusClient("http://localhost:1234/prometheus/");
-            }
-
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
-            {
-                var query = $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
-
-                return result;
-            }
+            AppState = state;
         }
     }
 }

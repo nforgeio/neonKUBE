@@ -37,19 +37,20 @@ using k8s.Models;
 
 namespace NeonDashboard
 {
-    public partial class AppState
+    public partial class AppState 
     {
-        public class __Cache 
+        public class __Cache : AppStateBase
         {
-            private AppState AppState;
-            private Service NeonDashboardService => AppState.NeonDashboardService;
-            private IDistributedCache Cache => AppState.DistributedCache;
-            private INeonLogger Logger => AppState.Logger;
-
             private static DistributedCacheEntryOptions cacheEntryOptions;
+            private IDistributedCache cache => AppState.DistributedCache;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="state"></param>
             public __Cache(AppState state)
+                : base(state)
             {
-                AppState = state;
                 cacheEntryOptions = new DistributedCacheEntryOptions()
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
@@ -58,7 +59,7 @@ namespace NeonDashboard
 
             public async Task SetAsync(string key, object value)
             {
-                await Cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
+                await cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
             }
 
             public string CreateKey(string key)
@@ -68,7 +69,7 @@ namespace NeonDashboard
 
             public async Task<T> GetAsync<T>(string key)
             {
-                var value = await Cache.GetAsync(key);
+                var value = await cache.GetAsync(key);
 
                 if (value != null)
                 {
