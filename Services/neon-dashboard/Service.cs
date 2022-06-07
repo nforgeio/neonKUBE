@@ -18,9 +18,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Service;
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Service;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
@@ -103,26 +105,15 @@ namespace NeonDashboard
                 await ConfigureSsoAsync();
             }
 
-            _ = Kubernetes.WatchAsync<V1ConfigMap>(async (watchEvent) =>
+            _ = Kubernetes.WatchAsync<V1ConfigMap>(async (@event) =>
             {
-                try
-                {
-                    await Task.CompletedTask;
+                await SyncContext.Clear;
 
-                    if (watchEvent.Object.Name() == KubeConfigMapName.ClusterInfo)
-                    {
-                        ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(watchEvent.Object).Config;
-                        Log.LogInfo($"Updated cluster info");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.LogError("Error updating cluster info", ex);
-                }
-            },
-            namespaceParameter: KubeNamespace.NeonStatus,
-            updatesOnly: false,
-            cancellationToken: Terminator.CancellationToken);
+                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                Log.LogInfo($"Updated cluster info");
+            }, 
+            KubeNamespace.NeonStatus, 
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
             // Start the web service.
 

@@ -21,16 +21,19 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Rest;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Retry;
 using Neon.Tasks;
 
@@ -812,188 +815,39 @@ namespace Neon.Kube
                 });
         }
 
+
         /// <summary>
-        /// Helper method to watch a Kubernetes object type. It will loop indefinitely and handle any timeouts from the server.
+        /// Watches a Kubernetes resource with a callback.
         /// </summary>
         /// <typeparam name="T">The type parameter.</typeparam>
         /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="funcAsync">The function to handle updates.</param>
+        /// <param name="action">The function to handle updates.</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
+        /// <param name="fieldSelector">The optional field selector</param>
+        /// <param name="labelSelector">The optional label selector</param>
         /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
-        /// <param name="updatesOnly">Optionally specifies whether to read all objects before watching.</param>
-        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
+        /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="logger">Optional <see cref="INeonLogger"/></param>
         /// <returns></returns>
         public static async Task WatchAsync<T>(
             this IKubernetes k8s,
-            Func<WatchEvent<T>, Task> funcAsync, 
-            string namespaceParameter = null, 
-            string resourceVersion = "0", 
-            bool allowWatchBookmarks = true, 
-            bool updatesOnly = false, 
-            CancellationToken cancellationToken = default) where T : IKubernetesObject<V1ObjectMeta>, new()
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (updatesOnly)
-                {
-                    var definedTypes = typeof(T).Assembly.DefinedTypes;
-
-                    // hack(marcusbooyah):
-                    // We need to get the list type so that we can get the list of resources and grab the resource version from it.
-                    var listType = definedTypes.Where(
-                        dt => dt.CustomAttributes.Any(
-                            ca => ca.NamedArguments.Any(
-                                na => na.MemberName == "PluralName"
-                                && na.TypedValue.ArgumentType == typeof(string)
-                                && (string)na.TypedValue.Value == typeof(T).GetKubernetesTypeMetadata().PluralName))
-                        && dt.GetProperty("Metadata", BindingFlags.Instance | BindingFlags.Public).PropertyType == typeof(V1ListMeta)).FirstOrDefault().UnderlyingSystemType;
-
-                    var configMapListResponse = await GetAsyncWithHttpMessagesAsync(k8s, listType, namespaceParameter, false, resourceVersion, allowWatchBookmarks, cancellationToken);
-                    var configMapList         = System.Text.Json.JsonSerializer.Deserialize(await configMapListResponse.Content.ReadAsStringAsync(), listType);
-
-                    resourceVersion      = ((IKubernetesObject<V1ListMeta>)configMapList).Metadata.ResourceVersion;
-                    var continueProperty = ((IKubernetesObject<V1ListMeta>)configMapList).Metadata.ContinueProperty;
-                }
-
-                while (!cancellationToken.IsCancellationRequested && !string.IsNullOrEmpty(resourceVersion))
-                {
-                    try
-                    {
-                        using var watch = (await WatchAsyncWithHttpMessagesAsync<T>(k8s, namespaceParameter, resourceVersion, allowWatchBookmarks, cancellationToken)).Body;
-
-                        // inner loop: receive items as lines arrive
-                        await foreach (var watchEventArgs in watch.WithCancellation(cancellationToken))
-                        {
-                            switch (watchEventArgs.Type)
-                            {
-                                case WatchEventType.Bookmark:
-                                    resourceVersion = watchEventArgs.Object.ResourceVersion();
-                                    break;
-                                case WatchEventType.Error:
-                                    break;
-                                case WatchEventType.Added:
-                                case WatchEventType.Modified:
-                                case WatchEventType.Deleted:
-                                    resourceVersion = watchEventArgs.Object.ResourceVersion();
-                                    await funcAsync(watchEventArgs);
-                                    break;
-                                default:
-                                    throw new KubernetesException();
-                            }
-                        }
-                    }
-                    catch (Exception error)
-                    {
-                        if (error is KubernetesException kubernetesError)
-                        {
-                            // deal with this non-recoverable condition "too old resource version"
-                            if (string.Equals(kubernetesError.Status.Reason, "Expired", StringComparison.Ordinal))
-                            {
-                                // force control back to outer loop
-                                resourceVersion = null;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Watches a resource type from the Kubernetes API.
-        /// </summary>
-        /// <typeparam name="T">The type parameter.</typeparam>
-        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
-        /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
-        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
-        /// <returns></returns>
-        public static async Task<HttpOperationResponse<WatchStream<T>>> WatchAsyncWithHttpMessagesAsync<T>(
-            this IKubernetes k8s, 
-            string namespaceParameter = null, 
-            string resourceVersion = default,
-            bool allowWatchBookmarks = default,
-            CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
-        {
-            var message = await GetAsyncWithHttpMessagesAsync<T>(k8s, namespaceParameter: namespaceParameter, watch: true, resourceVersion, allowWatchBookmarks, cancellationToken);
-
-            var stream = await message.Content.ReadAsStreamAsync(cancellationToken);
-
-            return new HttpOperationResponse<WatchStream<T>>
-            {
-                Request = message.RequestMessage,
-                Response = message,
-                Body = new WatchStream<T>(stream, message),
-            };
-        }
-
-        /// <summary>
-        /// Gets a generic type from the Kubernetes API.
-        /// </summary>
-        /// <typeparam name="T">The type parameter.</typeparam>
-        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
-        /// <param name="watch">Whether to watch the resource.</param>
-        /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
-        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
-        /// <returns></returns>
-        public static async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync<T>(
-            this IKubernetes k8s, 
+            Func<WatchEvent<T>, Task> action,
             string namespaceParameter = null,
-            bool watch = false, 
-            string resourceVersion = default, 
-            bool allowWatchBookmarks = default,
-            CancellationToken cancellationToken = default) where T : IKubernetesObject, new()
+            string fieldSelector = null,
+            string labelSelector = null,
+            string resourceVersion = null,
+            string resourceVersionMatch = null,
+            int? timeoutSeconds = null,
+            INeonLogger logger = null) where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            return await GetAsyncWithHttpMessagesAsync(k8s, typeof(T), namespaceParameter, watch, resourceVersion, allowWatchBookmarks, cancellationToken);
-        }
-
-        /// <summary>
-        /// Gets a type from the Kubernetes API.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="type">The type parameter.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
-        /// <param name="watch">Whether to watch the resource.</param>
-        /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="allowWatchBookmarks">Whether to allow watch bookmarks.</param>
-        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
-        /// <returns></returns>
-        public static async Task<HttpResponseMessage> GetAsyncWithHttpMessagesAsync(
-            this IKubernetes k8s, 
-            Type type, 
-            string namespaceParameter = null,
-            bool watch = false, 
-            string resourceVersion = default,
-            bool allowWatchBookmarks = default, 
-            CancellationToken cancellationToken = default)
-        {
-            var typeMetaData = ((IKubernetesObject)Activator.CreateInstance(type)).GetKubernetesTypeMetadata();
-
-            var requestUri = new StringBuilder();
-
-            requestUri.Append($"{k8s.BaseUri}api/{typeMetaData.ApiVersion}/");
-
-            if (!string.IsNullOrEmpty(namespaceParameter))
-            {
-                requestUri.Append($"namespaces/{namespaceParameter}/");
-            }
-
-            requestUri.Append(typeMetaData.PluralName);
-            requestUri.Append("?");
-            requestUri.Append($"allowWatchBookmarks={allowWatchBookmarks.ToString().ToLower()}");
-            requestUri.Append($"&watch={(watch ? "1" : "0")}");
-            requestUri.Append($"&resourceVersion={resourceVersion}");
-
-
-            var request = new HttpRequestMessage
-            {
-                RequestUri = new Uri(requestUri.ToString()),
-            };
-
-            return await k8s.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            await new Neon.Kube.Watcher<T>(k8s, logger).WatchAsync(action,
+                namespaceParameter,
+                fieldSelector: fieldSelector,
+                labelSelector: labelSelector,
+                resourceVersion: resourceVersion,
+                resourceVersionMatch: resourceVersionMatch,
+                timeoutSeconds: timeoutSeconds);
         }
     }
 }
