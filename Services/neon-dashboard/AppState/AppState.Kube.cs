@@ -39,16 +39,15 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
-        public class __Kube 
+        public class __Kube : AppStateBase
         {
-            private AppState AppState;
-            private Service NeonDashboardService => AppState.NeonDashboardService;
-            private __Cache Cache => AppState.Cache;
-            private INeonLogger Logger => AppState.Logger;
-
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="state"></param>
             public __Kube(AppState state)
+                : base(state)
             {
-                AppState = state;
             }
 
             public async Task<V1NodeList> GetNodesAsync()
@@ -68,7 +67,7 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                var nodes = await NeonDashboardService.Kubernetes.ListNodeAsync();
+                var nodes = await K8s.ListNodeAsync();
 
                 _ = Cache.SetAsync("nodes", nodes);
 
@@ -92,7 +91,7 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                var nodeMetricsList = await NeonDashboardService.Kubernetes.GetKubernetesNodesMetricsAsync();
+                var nodeMetricsList = await K8s.GetKubernetesNodesMetricsAsync();
 
                 _ = Cache.SetAsync(key, nodeMetricsList);
 
