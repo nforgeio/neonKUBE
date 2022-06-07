@@ -29,7 +29,6 @@ using k8s.Models;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
-using Neon.Tasks;
 
 namespace NeonDashboard
 {
