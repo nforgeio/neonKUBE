@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusResponse.cs
+// FILE:	    PrometheusResult.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,29 +36,25 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models a Prometheus matrix result.
+    /// Models a Prometheus result.
     /// </summary>
-    public class PrometheusMatrixResult
+    public class PrometheusResult
     {
-        public PrometheusMatrixResult() 
-        {
-        }
-
         /// <summary>
-        /// Specifies the result type of the response.
+        /// Constructor.
         /// </summary>
-        [JsonProperty(PropertyName = "resultType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(PrometheusResultType.Matrix)]
-        public PrometheusResultType ResultType { get; set; } = PrometheusResultType.Matrix;
+        public PrometheusResult()
+        {               
+        }
 
         /// <summary>
         /// The result.
         /// </summary>
-        [JsonProperty(PropertyName = "result", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<PrometheusMatrixValue> Result { get; set; }
+        public dynamic Metric { get; set; }
     }
 }

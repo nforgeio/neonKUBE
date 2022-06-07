@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusResponseStatus.cs
+// FILE:	    PrometheusMatrixValue.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,25 +35,33 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
-using System.Runtime.Serialization;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies response status from Prometheus HTTP API.
+    /// Models a Prometheus matrix value.
     /// </summary>
-    public enum PrometheusResponseStatus
+    public class PrometheusMatrixValue
     {
         /// <summary>
-        /// Indicates that the request was processed successfully.
+        /// Constructor.
         /// </summary>
-        [EnumMember(Value = "success")]
-        Success = 0,
+        public PrometheusMatrixValue() 
+        {
+        }
 
         /// <summary>
-        /// Indicates that there was an error processing the request.
+        /// The metric metadata.
         /// </summary>
-        [EnumMember(Value = "error")]
-        Error
+        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> Metric { get; set; }
+
+        /// <summary>
+        /// The values.
+        /// </summary>
+        [JsonProperty(PropertyName = "values", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<PrometheusTimeSeriesValue> Values { get; set; }
     }
 }

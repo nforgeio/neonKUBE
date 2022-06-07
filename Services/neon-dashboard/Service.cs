@@ -29,6 +29,7 @@ using k8s.Models;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+using Neon.Tasks;
 
 namespace NeonDashboard
 {
@@ -147,6 +148,8 @@ namespace NeonDashboard
 
         public async Task ConfigureSsoAsync()
         {
+            Log.LogInfo("Configuring cluster SSO for development.");
+
             try
             {
                 // set config map
@@ -171,6 +174,8 @@ namespace NeonDashboard
                     dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
                     await Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem);
                 }
+
+                Log.LogInfo("SSO configured.");
             }
             catch (Exception e)
             {

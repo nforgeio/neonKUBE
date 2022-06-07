@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusScalarResult.cs
+// FILE:	    PrometheusResultType.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,30 +35,51 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using System.Runtime.Serialization;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models a Prometheus scalar result.
+    /// Specifies the result type.
     /// </summary>
-    public class PrometheusMatrixValue
+    public enum PrometheusResultType
     {
-        public PrometheusMatrixValue() 
-        {
-        }
+        /// <summary>
+        /// The result is a matrix value.
+        /// [
+        ///     {
+        ///         "metric": { "<label_name>": "<label_value>", ... },
+        ///         "values": [ [ <unix_time>, "<sample_value>" ], ... ]
+        ///     },
+        ///      ...
+        /// ]
+        /// </summary>
+        [EnumMember(Value = "matrix")]
+        Matrix = 0,
 
         /// <summary>
-        /// The metric metadata.
+        /// The result is a vector value.
+        /// [
+        ///     {
+        ///         "metric": { "<label_name>": "<label_value>", ... },
+        ///         "value": [ <unix_time>, "<sample_value>" ]
+        ///     },
+        ///      ...
+        /// ]
         /// </summary>
-        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> Metric { get; set; }
+        [EnumMember(Value = "vector")]
+        Vector,
 
         /// <summary>
-        /// The values.
+        /// The result is a scalar value. [ <unix_time>, "<scalar_value>" ]
         /// </summary>
-        [JsonProperty(PropertyName = "values", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public List<PrometheusTimeSeriesValue> Values { get; set; }
+        [EnumMember(Value = "scalar")]
+        Scalar,
+
+        /// <summary>
+        /// The result is a string value. [ <unix_time>, "<string_value>" ]
+        /// </summary>
+        [EnumMember(Value = "string")]
+        String
     }
 }

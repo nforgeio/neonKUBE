@@ -36,13 +36,16 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
     /// Models the Prometheus HTTP API response.
     /// </summary>
     public class PrometheusResponse<T>
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public PrometheusResponse() 
         {
 

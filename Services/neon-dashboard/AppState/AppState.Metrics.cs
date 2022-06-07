@@ -26,7 +26,6 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.Tasks;
 
-using NeonDashboard.Model;
 using NeonDashboard.Shared;
 using NeonDashboard.Shared.Components;
 
@@ -52,35 +51,21 @@ namespace NeonDashboard
             private Service NeonDashboardService => AppState.NeonDashboardService;
             private __Cache Cache => AppState.Cache;
             private INeonLogger Logger => AppState.Logger;
-            private JsonClient mimirClient;
+            private PrometheusClient mimirClient;
 
 
             public __Metrics(AppState state)
             {
                 AppState = state;
-                mimirClient = new JsonClient()
-                {
-                    BaseAddress = new Uri("http://10.10.100.2:1234/prometheus/")
-                };
+                mimirClient = new PrometheusClient("http://localhost:1234/prometheus/");
             }
 
             public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
             {
-                var args = new ArgDictionary();
-
-                args.Add("query", $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})");
-                args.Add("start", start.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo));
-                args.Add("end", end.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo));
-                args.Add("step", stepSize);
-
-                var result = await QueryAsync<PrometheusResponse<PrometheusMatrixResult>>("api/v1/query_range", args);
+                var query = $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
 
                 return result;
-            }
-
-            public async Task<T> QueryAsync<T>(string url, ArgDictionary args)
-            {
-                return await mimirClient.GetAsync<T>(url, args);
             }
         }
     }

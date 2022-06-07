@@ -37,11 +37,17 @@ using Neon.Common;
 using Neon.IO;
 using Newtonsoft.Json.Linq;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
+    /// <summary>
+    /// Models a prometheus time series value.
+    /// </summary>
     [JsonConverter(typeof(PrometheusTimeSeriesValueConverter))]
     public struct PrometheusTimeSeriesValue
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public PrometheusTimeSeriesValue(int time, string value)
         {
             Time = time;

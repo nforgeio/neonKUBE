@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusResultType.cs
+// FILE:	    PrometheusMatrixResult.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,51 +35,33 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
-using System.Runtime.Serialization;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the result type.
+    /// Models a Prometheus matrix result.
     /// </summary>
-    public enum PrometheusResultType
+    public class PrometheusMatrixResult
     {
         /// <summary>
-        /// The result is a matrix value.
-        /// [
-        ///     {
-        ///         "metric": { "<label_name>": "<label_value>", ... },
-        ///         "values": [ [ <unix_time>, "<sample_value>" ], ... ]
-        ///     },
-        ///      ...
-        /// ]
+        /// Constructor.
         /// </summary>
-        [EnumMember(Value = "matrix")]
-        Matrix = 0,
+        public PrometheusMatrixResult() 
+        {
+        }
 
         /// <summary>
-        /// The result is a vector value.
-        /// [
-        ///     {
-        ///         "metric": { "<label_name>": "<label_value>", ... },
-        ///         "value": [ <unix_time>, "<sample_value>" ]
-        ///     },
-        ///      ...
-        /// ]
+        /// Specifies the result type of the response.
         /// </summary>
-        [EnumMember(Value = "vector")]
-        Vector,
+        [JsonProperty(PropertyName = "resultType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(PrometheusResultType.Matrix)]
+        public PrometheusResultType ResultType { get; set; } = PrometheusResultType.Matrix;
 
         /// <summary>
-        /// The result is a scalar value. [ <unix_time>, "<scalar_value>" ]
+        /// The result.
         /// </summary>
-        [EnumMember(Value = "scalar")]
-        Scalar,
-
-        /// <summary>
-        /// The result is a string value. [ <unix_time>, "<string_value>" ]
-        /// </summary>
-        [EnumMember(Value = "string")]
-        String
+        [JsonProperty(PropertyName = "result", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<PrometheusMatrixValue> Result { get; set; }
     }
 }

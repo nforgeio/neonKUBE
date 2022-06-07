@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusResult.cs
+// FILE:	    PrometheusResponseData.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,18 +36,31 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models a Prometheus result.
+    /// Models the Prometheus result data.
     /// </summary>
-    public class PrometheusResult
+    public class PrometheusResponseData<T>
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public PrometheusResponseData()
+        {
+        }
+
+        /// <summary>
+        /// Specifies the result type of the response.
+        /// </summary>
+        [JsonProperty(PropertyName = "resultType", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public PrometheusResultType ResultType { get; set; }
+
         /// <summary>
         /// The result.
         /// </summary>
-        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "result", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public dynamic Metric { get; set; }
+        public T Result { get; set; }
     }
 }

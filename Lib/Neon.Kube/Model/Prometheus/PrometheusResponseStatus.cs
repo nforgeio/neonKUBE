@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusScalarResult.cs
+// FILE:	    PrometheusResponseStatus.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -35,30 +35,25 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using System.Runtime.Serialization;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models a Prometheus scalar result.
+    /// Specifies response status from Prometheus HTTP API.
     /// </summary>
-    public class PrometheusVectorValue
+    public enum PrometheusResponseStatus
     {
-        public PrometheusVectorValue()
-        {
-        }
+        /// <summary>
+        /// Indicates that the request was processed successfully.
+        /// </summary>
+        [EnumMember(Value = "success")]
+        Success = 0,
 
         /// <summary>
-        /// The metric metadata.
+        /// Indicates that there was an error processing the request.
         /// </summary>
-        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> Metric { get; set; }
-
-        /// <summary>
-        /// The values.
-        /// </summary>
-        [JsonProperty(PropertyName = "value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public PrometheusTimeSeriesValue Value { get; set; }
+        [EnumMember(Value = "error")]
+        Error
     }
 }

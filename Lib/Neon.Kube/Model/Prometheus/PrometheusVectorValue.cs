@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusVectorResult.cs
+// FILE:	    PrometheusVectorValue.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -36,29 +36,32 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace NeonDashboard.Model
+namespace Neon.Kube
 {
     /// <summary>
-    /// Models a Prometheus matrix result.
+    /// Models a Prometheus vector value.
     /// </summary>
-    public class PrometheusVectorResult
+    public class PrometheusVectorValue
     {
-        public PrometheusVectorResult() 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public PrometheusVectorValue()
         {
         }
 
         /// <summary>
-        /// Specifies the result type of the response.
+        /// The metric metadata.
         /// </summary>
-        [JsonProperty(PropertyName = "resultType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(PrometheusResultType.Matrix)]
-        public PrometheusResultType ResultType { get; set; } = PrometheusResultType.Matrix;
+        [JsonProperty(PropertyName = "metric", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> Metric { get; set; }
 
         /// <summary>
-        /// The result.
+        /// The values.
         /// </summary>
-        [JsonProperty(PropertyName = "result", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<PrometheusVectorValue> Result { get; set; }
+        public PrometheusTimeSeriesValue Value { get; set; }
     }
 }
