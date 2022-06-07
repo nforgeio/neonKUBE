@@ -34,9 +34,7 @@ namespace Neon.Kube.Resources
     internal static class Helper
     {
         /// <summary>
-        /// Identifes a special configmap used to report cluster status.  This configmap will
-        /// be located in the <b>neon-status</b> namespace and is created during cluster setup
-        /// and then is maintained by the neon-cluster-operator thereafter.
+        /// Identifies the standard neonKUBE Kubernetes resource group.
         /// </summary>
         public const string NeonKubeResourceGroup = "neonkube.io";
     }

@@ -148,7 +148,7 @@ namespace TestKube
                 spec.Node       = node.Name;
                 spec.BashScript = $"touch $NODE_ROOT/{GetTestFilePath(node.Name)}";
 
-                await fixture.K8s.CreateClusterCustomObjectAsync(nodeTask);
+                await fixture.K8s.JNET_CreateClusterCustomObjectAsync(nodeTask);
             }
 
             // Wait for all of the node tasks to report completion.
@@ -163,7 +163,7 @@ namespace TestKube
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                    foreach (var nodeTask in (await fixture.K8s.JNET_ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                     {
                         switch (nodeTask.Status.Phase)
                         {

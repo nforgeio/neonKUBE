@@ -2773,7 +2773,7 @@ EOF
                         }
                     };
 
-                    var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDeviceList>(KubeNamespace.NeonStorage);
+                    var blockDevices = await k8s.JNET_ListNamespacedCustomObjectAsync<V1CStorBlockDeviceList>(KubeNamespace.NeonStorage);
 
                     foreach (var node in cluster.Definition.Nodes)
                     {
@@ -2816,7 +2816,7 @@ EOF
                         }
                     }
 
-                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
+                    await k8s.JNET_CreateNamespacedCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
                 });
 
             controller.ThrowIfCancelled();

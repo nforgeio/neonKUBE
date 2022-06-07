@@ -15,6 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// $todo(jefflill):
+//
+// These methods are deprecated and stupid and this file should be deleted after
+// existing code referencing this is fixed.
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1585
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -130,7 +137,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<V1CustomObjectList<T>> JNET_ListClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
@@ -255,7 +263,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> ListClusterCustomObjectMetadataAsync(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> JNET_ListClusterCustomObjectMetadataAsync(
             this IKubernetes    k8s,
             string              group,
             string              version,
@@ -314,7 +323,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
-        public static async Task<T> CreateClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<T> JNET_CreateClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              dryRun            = null,
@@ -348,7 +358,8 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> GetClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<T> JNET_GetClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              name,
             CancellationToken   cancellationToken = default(CancellationToken)) 
@@ -388,7 +399,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<T> JNET_ReplaceClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -435,7 +447,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task<T> UpsertClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<T> JNET_UpsertClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -458,13 +471,13 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.GetClusterCustomObjectAsync<T>(name, cancellationToken);
+                await k8s.JNET_GetClusterCustomObjectAsync<T>(name, cancellationToken);
             }
             catch (HttpOperationException e)
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager, cancellationToken);
+                    return await k8s.JNET_CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager, cancellationToken);
                 }
                 else
                 {
@@ -472,7 +485,7 @@ namespace Neon.Kube
                 }
             }
 
-            return await k8s.ReplaceClusterCustomObjectAsync<T>(
+            return await k8s.JNET_ReplaceClusterCustomObjectAsync<T>(
                 body:              body, 
                 name:              name, 
                 dryRun:            dryRun,
@@ -508,7 +521,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
-        public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task<T> JNET_PatchClusterCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
             V1Patch             patch,
             string              name,
@@ -572,7 +586,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        public static async Task DeleteClusterCustomObjectAsync<T>(
+        [Obsolete("Use corresponding method in the [k8s.Util] namespace.")]
+        public static async Task JNET_DeleteClusterCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              name,
             V1DeleteOptions     body               = null,
