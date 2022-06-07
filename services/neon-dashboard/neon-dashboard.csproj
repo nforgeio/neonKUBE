@@ -38,6 +38,7 @@
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
 		<PackageReference Include="PSC.Blazor.Components.Chartjs" Version="6.0.8" />
+		<PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -68,13 +69,13 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared --style compressed --load-path=Styles --update" />
+		<Exec Command="./prebuild.ps1" ContinueOnError="true" />
 	</Target>
 
-	<Target Name="SassCheck" BeforeTargets="PreBuild">
-		<Exec Command="sass --version" ContinueOnError="true">
-			<Output TaskParameter="ExitCode" PropertyName="ErrorCodeSass" />
+	<Target Name="NodeCheck" BeforeTargets="PreBuild">
+		<Exec Command="npm --version" ContinueOnError="true">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCodeNode" />
 		</Exec>
-		<Error Condition="'$(ErrorCodeSass)' != '0'" Text="dart-sass is required for this project. https://github.com/sass/dart-sass/releases" />
+		<Error Condition="'$(ErrorCodeNode)' != '0'" Text="NPM is required for this project. please install Node.js" />
 	</Target>
 </Project>

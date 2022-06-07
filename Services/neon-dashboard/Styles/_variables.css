@@ -1,9 +1,9 @@
 ﻿:root {
-    //colors
+    /*colors*/
     --c-bg: #232323;
     --c-bg-dark: #333;
     --c-fg: #eee;
-    //typescale
+    /*typescale*/
     --base: 16px;
     --f1: 0.625rem;
     --f2: 0.750rem;
