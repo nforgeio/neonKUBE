@@ -15,7 +15,9 @@
     "tailwindcss": "^3.0.24"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development postcss -i ./Styles/index.css -o ./wwwroot/css/index.css --watch"
+    "dev": "cross-env NODE_ENV=development postcss -i ./Styles/index.css -o ./wwwroot/css/index.css --watch",
+    "build": "cross-env NODE_ENV=development postcss -i ./Styles/index.css -o ./wwwroot/css/index.css "
+
   },
   "author": "",
   "license": "ISC"

@@ -42,6 +42,8 @@ using Segment;
 
 using StackExchange.Redis;
 
+using Tailwind;
+
 namespace NeonDashboard
 {
     /// <summary>
@@ -157,6 +159,8 @@ namespace NeonDashboard
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.RunTailwind("dev","./");
+
 
                 app.UseCookiePolicy(new CookiePolicyOptions()
                 {
