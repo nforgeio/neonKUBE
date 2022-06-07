@@ -54,7 +54,14 @@ namespace Neon.Kube
             Value = value;
         }
 
+        /// <summary>
+        ///  The Time.
+        /// </summary>
         public int Time { get; set; }
+
+        /// <summary>
+        /// The value.
+        /// </summary>
         public string Value { get; set; }
     }
 
