@@ -72,6 +72,8 @@ namespace Neon.Kube.Operator
 
                             if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
                             {
+                                // This is SPAM because we're logging info like this ourselves.
+
                                 if (logEvent.Message.Contains("successfully reconciled"))
                                 {
                                     return false;
@@ -82,7 +84,17 @@ namespace Neon.Kube.Operator
 
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
+                                // I believe we're seeing this when there are no resources for given watch.
+                                // KubeOps seems to be having trouble with empty list responses.
+
                                 if (logEvent.Message.StartsWith("Trying to reconnect with exponential backoff"))
+                                {
+                                    return false;
+                                }
+
+                                // This seems to be a transient that happens occasionally on startup.
+
+                                if (logEvent.Message.Contains("[inner:System.IO.IOException: Unable to read data from the transport connection: Connection reset by peer.]"))
                                 {
                                     return false;
                                 }
