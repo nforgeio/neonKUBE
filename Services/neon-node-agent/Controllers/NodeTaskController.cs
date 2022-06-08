@@ -271,7 +271,7 @@ log.LogDebug($"*** RECONCILE: 6");
                         // For new tasks, update the status to: PENDING
                         
 log.LogDebug($"*** RECONCILE: 7");
-                        if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.New)
+                        if (nodeTask.Status.Phase == V1NodeTask.Phase.New)
                         {
 log.LogDebug($"*** RECONCILE: 8A");
                             //nodeTask.Status.State = V1NodeTask.NodeTaskState.Pending;
@@ -279,8 +279,8 @@ log.LogDebug($"*** RECONCILE: 8A");
 log.LogDebug($"*** RECONCILE: 8B");
                             var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                            patch.Replace(path => path.Status, new V1NodeTask.NodeTaskStatus());
-                            patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
+                            patch.Replace(path => path.Status, new V1NodeTask.TaskStatus());
+                            patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Pending);
 
                             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                             log.LogDebug($"*** RECONCILE: 9");
@@ -305,8 +305,8 @@ log.LogDebug($"*** RECONCILE: 13");
 
                         // Execute the task if it's pending.
 
-log.LogDebug($"*** RECONCILE: 14");
-                        if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Pending)
+log.LogDebug($"*** RECONCILE: 14: phase = {nodeTask.Status.Phase}");
+                        if (nodeTask.Status.Phase == V1NodeTask.Phase.Pending)
                         {
 log.LogDebug($"*** RECONCILE: 15");
                             await ExecuteTaskAsync(nodeTask);
@@ -377,13 +377,13 @@ log.LogDebug($"*** RECONCILE: 16");
         /// </para>
         /// <list type="bullet">
         /// <item>
-        /// Tasks whose <see cref="V1NodeTask.NodeTaskStatus.AgentId"/> doesn't match
-        /// the ID for the current agent will be marked as <see cref="V1NodeTask.NodeTaskPhase.Orphaned"/>
+        /// Tasks whose <see cref="V1NodeTask.TaskStatus.AgentId"/> doesn't match
+        /// the ID for the current agent will be marked as <see cref="V1NodeTask.Phase.Orphaned"/>
         /// and the finish time will be set to now.  This sets the task up for eventual
         /// deletion.
         /// </item>
         /// <item>
-        /// Tasks with a finish time that is older than <see cref="V1NodeTask.NodeTaskSpec.RetainSeconds"/>
+        /// Tasks with a finish time that is older than <see cref="V1NodeTask.TaskSpec.RetainSeconds"/>
         /// will be removed.
         /// </item>
         /// </list>
@@ -418,7 +418,7 @@ log.LogDebug($"*** RECONCILE: 16");
                     continue;
                 }
 
-                if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Running)
+                if (nodeTask.Status.Phase == V1NodeTask.Phase.Running)
                 {
                     // Detect and kill orphaned tasks.
 
@@ -431,7 +431,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                        patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Orphaned);
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Orphaned);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
@@ -450,7 +450,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                        patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Timeout);
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExecutionSeconds, (utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
                         patch.Replace(path => path.Status.ExitCode, -1);
@@ -494,7 +494,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
             var taskName = nodeTask.Name();
 
-            if (nodeTask.Status.Phase != V1NodeTask.NodeTaskPhase.Running)
+            if (nodeTask.Status.Phase != V1NodeTask.Phase.Running)
             {
                 return;
             }
@@ -544,7 +544,7 @@ log.LogDebug($"*** RECONCILE: 16");
 log.LogDebug($"*** EXECUTE: 0");
             var taskName = nodeTask.Name();
 
-            if (nodeTask.Status.Phase != V1NodeTask.NodeTaskPhase.Pending)
+            if (nodeTask.Status.Phase != V1NodeTask.Phase.Pending)
             {
 log.LogDebug($"*** EXECUTE: 1");
                 return;
@@ -552,12 +552,11 @@ log.LogDebug($"*** EXECUTE: 1");
 log.LogDebug($"*** EXECUTE: 2");
 
             // Start and execute the command.  The trick here is that we need the
-            // ID of the process launched.
+            // ID of the process launched before we can update the status.
 
-            var process       = (Process)null;
-            var statusUpdated = false;
+            var process = (Process)null;
 
-            // Generate the execution UUID and determin where the script will be located.
+            // Generate the execution UUID and determine where the script will be located.
 
             var executionId = NeonHelper.CreateBase36Guid();
             var taskFolder  = LinuxPath.Combine(hostAgentTasksFolder, executionId);
@@ -582,13 +581,6 @@ export SCRIPT_DIR={taskFolder}
             Directory.CreateDirectory(taskFolder);
             File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(deployedScript));
 
-            nodeTask.Status.Phase           = V1NodeTask.NodeTaskPhase.Running;
-            nodeTask.Status.StartTimestamp  = DateTime.UtcNow;
-            nodeTask.Status.AgentId         = Node.AgentId;
-            nodeTask.Status.CommandLine     = Node.GetBashCommandLine(scriptPath);
-            nodeTask.Status.ExecutionId     = executionId;
-log.LogDebug($"*** EXECUTE: 4");
-
             // Start the command process.
 
             var task = (Task<ExecuteResponse>)null;
@@ -605,13 +597,10 @@ log.LogDebug($"*** EXECUTE: 5");
                     {
 log.LogDebug($"*** EXECUTE: 6A: processID is NULL: {newProcess == null}");
 log.LogDebug($"*** EXECUTE: 6B: processID = {newProcess.Id}");
-                        process                   = newProcess;
-                        nodeTask.Status.ProcessId = process.Id;
+                        process = newProcess;
 
 log.LogDebug($"*** EXECUTE: 7");
                         log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={process.Id}]");
-
-                        statusUpdated = true;
                     };
 
 log.LogDebug($"*** EXECUTE: 9");
@@ -623,47 +612,50 @@ log.LogDebug($"*** EXECUTE: 10");
             }
             catch (Exception e)
             {
+log.LogDebug($"*** EXECUTE: 11A");
                 // We shouldn't ever see an error here because [/bin/bash] should always
                 // exist, but we'll log something just in case.
 
                 log.LogWarn(e);
 
-                nodeTask.Status.Phase           = V1NodeTask.NodeTaskPhase.Finished;
-                nodeTask.Status.FinishTimestamp = DateTime.UtcNow;
-                nodeTask.Status.ExitCode        = -1;
-                nodeTask.Status.Error           = $"EXECUTE FAILED: {e.Message}";
+                var failedPatch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-log.LogDebug($"*** EXECUTE: 11");
-                await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+                failedPatch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Failed);
+                failedPatch.Replace(path => path.Status.FinishTimestamp, DateTime.UtcNow);
+                failedPatch.Replace(path => path.Status.ExitCode, -1);
+                failedPatch.Replace(path => path.Status.Error, $"EXECUTE FAILED: {e.Message}");
+
+log.LogDebug($"*** EXECUTE: 11B");
+                await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(failedPatch), nodeTask.Name());
 log.LogDebug($"*** EXECUTE: 12");
                 return;
             }
 
-            // Mitigate the possiblity of a race condition updating the node task status
-            // by waiting for the update above to complete first.
+            // We need to wait for the [Node.BashExecuteCaptureAsync()] call above to 
+            // report the process for the executed script.
 
             try
             {
-                NeonHelper.WaitFor(() => statusUpdated, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
+                NeonHelper.WaitFor(() => process != null, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
             }
             catch (TimeoutException e)
             {
                 // It's possible but unlikely that the update above failed for some reason.
-                // We'll log this hope for the best.
+                // We'll log this and then hope for the best.
 
                 log.LogWarn(e);
             }
 log.LogDebug($"*** EXECUTE: 13");
 
-            // Update the node task status.
+            // Update the node task status to: RUNNING
 
             var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-            patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
-            patch.Replace(path => path.Status.StartTimestamp, nodeTask.Status.StartTimestamp);
-            patch.Replace(path => path.Status.AgentId, nodeTask.Status.AgentId);
-            patch.Replace(path => path.Status.CommandLine, nodeTask.Status.CommandLine);
-            patch.Replace(path => path.Status.ExecutionId, nodeTask.Status.ExecutionId);
+            patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Running);
+            patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
+            patch.Replace(path => path.Status.AgentId, Node.AgentId);
+            patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(scriptPath));
+            patch.Replace(path => path.Status.ExecutionId, executionId);
 
             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
 
@@ -689,7 +681,7 @@ log.LogDebug($"*** EXECUTE: 15");
                     log.LogWarn($"Timeout [nodetask={taskName}]");
                 }
 
-                if (nodeTask.Status.Phase == V1NodeTask.NodeTaskPhase.Running)
+                if (nodeTask.Status.Phase == V1NodeTask.Phase.Running)
                 {
 log.LogDebug($"*** EXECUTE: 16");
                     nodeTask.Status.FinishTimestamp  = DateTime.UtcNow;
@@ -698,13 +690,13 @@ log.LogDebug($"*** EXECUTE: 16");
                     if (timeout)
                     {
 log.LogDebug($"*** EXECUTE: 17");
-                        nodeTask.Status.Phase    = V1NodeTask.NodeTaskPhase.Timeout;
+                        nodeTask.Status.Phase    = V1NodeTask.Phase.Timeout;
                         nodeTask.Status.ExitCode = -1;
                     }
                     else
                     {
 log.LogDebug($"*** EXECUTE: 18");
-                        nodeTask.Status.Phase    = result.ExitCode == 0 ? V1NodeTask.NodeTaskPhase.Finished : V1NodeTask.NodeTaskPhase.Failed;
+                        nodeTask.Status.Phase    = result.ExitCode == 0 ? V1NodeTask.Phase.Finished : V1NodeTask.Phase.Failed;
                         nodeTask.Status.ExitCode = result.ExitCode;
 
                         if (nodeTask.Spec.CaptureOutput)
@@ -717,19 +709,35 @@ log.LogDebug($"*** EXECUTE: 18");
 log.LogDebug($"*** EXECUTE: 19");
                     patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                    patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
-                    patch.Replace(path => path.Status.FinishTimestamp, nodeTask.Status.FinishTimestamp);
-                    patch.Replace(path => path.Status.ExecutionSeconds, nodeTask.Status.ExecutionSeconds);
-                    patch.Replace(path => path.Status.ExitCode, nodeTask.Status.ExitCode);
+                    patch.Replace(path => path.Status.FinishTimestamp, DateTime.UtcNow);
 
-                    if (nodeTask.Spec.CaptureOutput)
+                    if (timeout)
                     {
-                        patch.Replace(path => path.Status.Output, nodeTask.Status.Output);
-                        patch.Replace(path => path.Status.Error, nodeTask.Status.Error);
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Timeout);
+                        patch.Replace(path => path.Status.ExitCode, -1);
+                    }
+                    else if (result.ExitCode != 0)
+                    {
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Failed);
+                        patch.Replace(path => path.Status.ExecutionSeconds, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
+                        patch.Replace(path => path.Status.ExitCode, result.ExitCode);
+                    }
+                    else
+                    {
+                        patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Finished);
+                        patch.Replace(path => path.Status.ExecutionSeconds, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
+
+                        if (nodeTask.Spec.CaptureOutput)
+                        {
+                            patch.Replace(path => path.Status.Output, result.OutputText);
+                            patch.Replace(path => path.Status.Error, result.ErrorText);
+                            patch.Replace(path => path.Status.ExitCode, result.ExitCode);
+                        }
                     }
 
+log.LogDebug($"*** EXECUTE: 20");
                     nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
-                    log.LogDebug($"*** EXECUTE: 20");
+log.LogDebug($"*** EXECUTE: 21");
                 }
             }
             catch (Exception e)

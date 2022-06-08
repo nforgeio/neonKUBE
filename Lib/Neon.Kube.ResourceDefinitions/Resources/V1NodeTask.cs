@@ -113,8 +113,8 @@ namespace Neon.Kube.Resources
     /// <item>
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
-    /// <see cref="NodeTaskStatus.StartTimestamp"/> to the current time and change the state to
-    /// <see cref="NodeTaskPhase.Running"/>.
+    /// <see cref="TaskStatus.StartTimestamp"/> to the current time and change the state to
+    /// <see cref="Phase.Running"/>.
     /// </item>
     /// <item>
     /// The agent will assign a new UUID to the task and save this in the node task status.  This UUID will
@@ -122,7 +122,7 @@ namespace Neon.Kube.Resources
     /// The agent will then execute the script on the node, persisting the process ID to the node task 
     /// status along with the command line used to execute the script.  When the script finishes, the
     /// agent will capture its exit code and standard output and error streams as text.  The command 
-    /// execution time will be limited by <see cref="NodeTaskSpec.TimeoutSeconds"/>.
+    /// execution time will be limited by <see cref="TaskSpec.TimeoutSeconds"/>.
     /// </item>
     /// <note>
     /// <para>
@@ -138,29 +138,29 @@ namespace Neon.Kube.Resources
     /// </para>
     /// </note>
     /// <item>
-    /// When the command completes without timing out, the agent will set its state to <see cref="NodeTaskPhase.Finished"/>,
-    /// set <see cref="NodeTaskStatus.FinishTimestamp"/> to the current time and <see cref="NodeTaskStatus.ExitCode"/>,
-    /// <see cref="NodeTaskStatus.Output"/> and <see cref="NodeTaskStatus.Error"/> to the command results.
+    /// When the command completes without timing out, the agent will set its state to <see cref="Phase.Finished"/>,
+    /// set <see cref="TaskStatus.FinishTimestamp"/> to the current time and <see cref="TaskStatus.ExitCode"/>,
+    /// <see cref="TaskStatus.Output"/> and <see cref="TaskStatus.Error"/> to the command results.
     /// </item>
     /// <note>
-    /// The <see cref="V1NodeTask.NodeTaskSpec.CaptureOutput"/> property controls whether the standard
+    /// The <see cref="V1NodeTask.TaskSpec.CaptureOutput"/> property controls whether the standard
     /// output and error streams are captured.  This defaults to <c>true</c>.  <see cref="V1NodeTask"/>
     /// supports only text output encoded as UTF-8 or ASCII.  Binary output is not supported.  You should
-    /// set <see cref="V1NodeTask.NodeTaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
+    /// set <see cref="V1NodeTask.TaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
     /// the output may include secrets.
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="NodeTaskStatus.FinishTimestamp"/> to the
+    /// <see cref="Phase.Timeout"/> and set <see cref="TaskStatus.FinishTimestamp"/> to the
     /// current time.
     /// </item>
     /// <item>
     /// <b>neon-node-agents</b> also look for running tasks that are assigned to its node but include a 
-    /// <see cref="NodeTaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
+    /// <see cref="TaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
     /// happen when the previous agent pod started executing the command and then was terminated before the
     /// command completed.  The agent will attempt to locate the running pod by its command line and
-    /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskPhase.Orphaned"/>
-    /// and <see cref="NodeTaskStatus.FinishTimestamp"/> to the current time.
+    /// process ID and terminate when it exists and then set the state to <see cref="Phase.Orphaned"/>
+    /// and <see cref="TaskStatus.FinishTimestamp"/> to the current time.
     /// </item>
     /// <item>
     /// Finally, <b>neon-node-agent</b> periodically looks for Bash scripts that don't have corresponding node
@@ -179,7 +179,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE task to be executed on a specific cluster node.")]
 #endif
-    public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.NodeTaskSpec, V1NodeTask.NodeTaskStatus>
+    public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.TaskSpec, V1NodeTask.TaskStatus>
     {
         /// <summary>
         /// Object API group.
@@ -207,7 +207,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Enumerates the possible status of a <see cref="V1NodeTask"/>.
         /// </summary>
-        public enum NodeTaskPhase
+        public enum Phase
         {
             /// <summary>
             /// The task has been newly submitted.  <b>neon-node-agent</b> will set this
@@ -262,7 +262,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task specification.
         /// </summary>
-        public class NodeTaskSpec
+        public class TaskSpec
         {
             /// <summary>
             /// Identifies the target node where the command will be executed.
@@ -308,7 +308,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
             /// ended, for any reason.  <b>neon-cluster-operator</b> will add
-            /// this to <see cref="NodeTaskStatus.FinishTimestamp"/> to determine
+            /// this to <see cref="TaskStatus.FinishTimestamp"/> to determine
             /// when it should delete the task.  This defaults to 600 seconds
             /// (10 minutes).
             /// </summary>
@@ -361,7 +361,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task status.
         /// </summary>
-        public class NodeTaskStatus
+        public class TaskStatus
         {
             /// <summary>
             /// The globally unique ID of the <b>neon-node-agent</b> instance that executed
@@ -372,12 +372,10 @@ namespace Neon.Kube.Resources
             public string AgentId { get; set; }
 
             /// <summary>
-            /// Indicates the current task phase.  This defaults to <see cref="NodeTaskPhase.New"/>
-            /// when the task is constructed which can be used to detect whether the status is
-            /// actually persisted to Kubernetes.
+            /// Indicates the current task phase.  This defaults to <see cref="Phase.New"/>.
             /// </summary>
             [JsonConverter(typeof(JsonStringEnumMemberConverter))]
-            public NodeTaskPhase Phase { get; set; } = NodeTaskPhase.New;
+            public Phase Phase { get; set; } = Phase.New;
 
             /// <summary>
             /// Indicates when the task started executing. 

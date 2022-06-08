@@ -43,6 +43,7 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.Net.Http;
 
 namespace Neon.Kube.Operator
 {
@@ -65,6 +66,7 @@ namespace Neon.Kube.Operator
                     {
                         case LogLevel.Info:
 
+                            //---------------------------------------------
                             // KubeOps spams the logs with unnecessary INFO events when events are raised to
                             // the controller.  We're going to filter these and do our own logging using this
                             // filter.  The filter returns TRUE for events to be logged and FALSE for events
@@ -80,6 +82,7 @@ namespace Neon.Kube.Operator
                                 }
                             }
 
+                            //---------------------------------------------
                             // KubeOPs also spams the logs with reconnection attempts.
 
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
@@ -91,25 +94,38 @@ namespace Neon.Kube.Operator
                                 {
                                     return false;
                                 }
-
-                                // This seems to be a transient that happens occasionally on startup.
-
-                                if (logEvent.Message.Contains("[inner:System.IO.IOException: Unable to read data from the transport connection: Connection reset by peer.]"))
-                                {
-                                    return false;
-                                }
                             }
                             break;
 
                         case LogLevel.Error:
 
-                            // Kubernetes client is not handling watches correctly when there are no objects
-                            // to be watched.  I read that the API server is returning a blank body in this
-                            // case but the Kubernetes client is expecting valid JSON, like an empty array.
-
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
+                                //---------------------------------------------
+                                // Kubernetes client is not handling watches correctly when there are no objects
+                                // to be watched.  I read that the API server is returning a blank body in this
+                                // case but the Kubernetes client is expecting valid JSON, like an empty array.
+
                                 if (logEvent.Message.Contains("The input does not contain any JSON tokens"))
+                                {
+                                    return false;
+                                }
+
+                                //---------------------------------------------
+                                // These seem to be a transient problems happens occasionally on operator start.
+
+                                if (logEvent.Exception != null &&
+                                    logEvent.Exception.InnerException != null &&
+                                    logEvent.Exception.InnerException is IOException &&
+                                    logEvent.Exception.InnerException.Message.Contains("Unable to read data from the transport connection: Connection reset by peer."))
+                                {
+                                    return false;
+                                }
+
+                                if (logEvent.Exception != null &&
+                                    logEvent.Exception.InnerException != null &&
+                                    logEvent.Exception.InnerException is IOException &&
+                                    logEvent.Exception.InnerException.Message.Contains("The request was aborted."))
                                 {
                                     return false;
                                 }

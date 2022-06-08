@@ -109,18 +109,6 @@ namespace TestKube
         }
 
         [ClusterFact]
-        public void Patch()
-        {
-            var task  = new V1NodeTask();
-            var patch = OperatorHelper.CreatePatch<V1NodeTask>();
-
-            patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
-            patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Running);
-
-            var v1Patch = OperatorHelper.ToV1Patch(patch);
-        }
-
-        [ClusterFact]
         public async Task NodeTask_Basic()
         {
             // We're going to schedule simple node tasks for all cluster nodes that 
@@ -158,12 +146,14 @@ namespace TestKube
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
                 var filePath   = GetTestFilePath(node.Name);
-                var folderPath = Path.GetDirectoryName(filePath);
+                var folderPath = LinuxPath.GetDirectoryName(filePath);
 
                 spec.Node       = node.Name;
                 spec.BashScript = 
 $@"
-mkdir -f $NODE_ROOT{folderPath}
+set -euo pipefail
+
+mkdir -p $NODE_ROOT{folderPath}
 touch $NODE_ROOT{filePath}
 ";
                 await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
@@ -185,9 +175,9 @@ touch $NODE_ROOT{filePath}
                     {
                         switch (nodeTask.Status.Phase)
                         {
-                            case V1NodeTask.NodeTaskPhase.New:
-                            case V1NodeTask.NodeTaskPhase.Pending:
-                            case V1NodeTask.NodeTaskPhase.Running:
+                            case V1NodeTask.Phase.New:
+                            case V1NodeTask.Phase.Pending:
+                            case V1NodeTask.Phase.Running:
 
                                 return false;
                         }
