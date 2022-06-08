@@ -32,6 +32,9 @@ namespace Newtonsoft.Json.Linq
     /// </summary>
     public static class JsonExtensions
     {
+        //---------------------------------------------------------------------
+        // JObject extensions
+
         /// <summary>
         /// Attempts to return the value of a specified <see cref="JObject"/> property
         /// converted to a specific type.
@@ -55,5 +58,45 @@ namespace Newtonsoft.Json.Linq
             value = jObject.Value<T>(propertyName);
             return true;
         }
+
+        //---------------------------------------------------------------------
+        // JsonSerializerSettings extensions
+
+        /// <summary>
+        /// Copies the settings from one <see cref="JsonSerializerSettings"/> instance to another.
+        /// </summary>
+        /// <param name="source">The source settings.</param>
+        /// <param name="target">The target instance.</param>
+        public static void CopyTo(this JsonSerializerSettings source, JsonSerializerSettings target)
+        {
+            target.CheckAdditionalContent         = source.CheckAdditionalContent;
+            target.ConstructorHandling            = source.ConstructorHandling;
+            target.Context                        = source.Context;
+            target.ContractResolver               = source.ContractResolver;
+            target.Converters                     = source.Converters;
+            target.Culture                        = source.Culture;
+            target.DateFormatHandling             = source.DateFormatHandling;
+            target.DateFormatString               = source.DateFormatString;
+            target.DateParseHandling              = source.DateParseHandling;
+            target.DateTimeZoneHandling           = source.DateTimeZoneHandling;
+            target.DefaultValueHandling           = source.DefaultValueHandling;
+            target.EqualityComparer               = source.EqualityComparer;
+            target.Error                          = source.Error;
+            target.FloatFormatHandling            = source.FloatFormatHandling;
+            target.FloatParseHandling             = source.FloatParseHandling;
+            target.Formatting                     = source.Formatting;
+            target.MaxDepth                       = source.MaxDepth;
+            target.MetadataPropertyHandling       = source.MetadataPropertyHandling;
+            target.MissingMemberHandling          = source.MissingMemberHandling;
+            target.NullValueHandling              = source.NullValueHandling;
+            target.ObjectCreationHandling         = source.ObjectCreationHandling;
+            target.PreserveReferencesHandling     = source.PreserveReferencesHandling;
+            target.ReferenceLoopHandling          = source.ReferenceLoopHandling;
+            target.ReferenceResolverProvider      = source.ReferenceResolverProvider;
+            target.SerializationBinder            = source.SerializationBinder;
+            target.StringEscapeHandling           = source.StringEscapeHandling;
+            target.TraceWriter                    = source.TraceWriter;
+            target.TypeNameAssemblyFormatHandling = source.TypeNameAssemblyFormatHandling;
+            target.TypeNameHandling               = source.TypeNameHandling;
     }
 }
