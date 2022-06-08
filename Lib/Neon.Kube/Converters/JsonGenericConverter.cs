@@ -25,10 +25,7 @@ namespace Neon.Kube
     public class JsonGenericConverter<T> : JsonConverter<T>
     {
         /// <inheritdoc/>
-        public override T Read(
-            ref Utf8JsonReader      reader,
-            Type                    type,
-            JsonSerializerOptions   options)
+        public override T Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
             reader.GetString();
 
@@ -36,10 +33,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Write(
-            Utf8JsonWriter          writer,
-            T                       value,
-            JsonSerializerOptions   options)
+        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
             var stringValue = NeonHelper.JsonSerialize(value);
 

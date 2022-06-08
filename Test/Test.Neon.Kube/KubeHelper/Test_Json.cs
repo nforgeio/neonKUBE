@@ -48,8 +48,9 @@ namespace TestKube
             var serializerOptions = new JsonSerializerOptions();
 
             serializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
+
             var t = DataRaidGroupType.Stripe;
-            string jsonString = JsonSerializer.Serialize(t, serializerOptions);
+            var jsonString = JsonSerializer.Serialize(t, serializerOptions);
         }
 
         [Fact]

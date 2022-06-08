@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -50,11 +51,20 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Shared fields
 
-        private static JsonSerializerOptions serializeOptions
-            = new JsonSerializerOptions()
+        private static readonly JsonSerializerOptions serializeOptions;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubernetesExtensions()
+        {
+            serializeOptions = new JsonSerializerOptions()
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
+
+            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
+        }
 
         //---------------------------------------------------------------------
         // V1ObjectMeta extensions

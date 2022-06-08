@@ -378,6 +378,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Indicates when the task started executing. 
             /// </summary>
+            [JsonConverter(typeof(JsonMicrosoftDateTimeConverter))]
             public DateTime? StartTimestamp { get; set; }
 
             /// <summary>

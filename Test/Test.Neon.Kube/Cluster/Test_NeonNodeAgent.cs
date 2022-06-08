@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
@@ -105,6 +106,18 @@ namespace TestKube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(fileName), nameof(fileName));
 
             return LinuxPath.Combine(testFolderPath, fileName);
+        }
+
+        [ClusterFact]
+        public void Patch()
+        {
+            var task  = new V1NodeTask();
+            var patch = OperatorHelper.CreatePatch<V1NodeTask>();
+
+            patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
+            patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Running);
+
+            var v1Patch = OperatorHelper.ToV1Patch(patch);
         }
 
         [ClusterFact]

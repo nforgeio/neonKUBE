@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -50,7 +51,7 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class OperatorHelper
     {
-        private static Assembly     operatorAssembly;
+        private static readonly JsonSerializerSettings  k8sSerializerSettings;
 
         /// <summary>
         /// Static constructor.
@@ -106,6 +107,14 @@ namespace Neon.Kube.Operator
 
                     return true;
                 };
+
+            // Create a NewtonSoft JSON serializer with settings compatible with Kubernetes.
+
+            k8sSerializerSettings = new JsonSerializerSettings()
+            { 
+                DateFormatString = "yyyy-MM-ddTHH:mm:ssZ",
+                Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() }
+            };
         }
 
         /// <summary>
@@ -116,7 +125,7 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// Handles <b>generator</b> commands invoked on an operator application
-        /// during build by the built-in KubrOps build targets.
+        /// during build by the built-in KubeOps build targets.
         /// </summary>
         /// <typeparam name="TStartup">Specifies the operator's ASP.NET startup type.</typeparam>
         /// <param name="args">The command line arguments.</param>
@@ -165,8 +174,6 @@ namespace Neon.Kube.Operator
                     return false;
                 }
 
-                OperatorHelper.operatorAssembly = Assembly.GetCallingAssembly();
-
                 await Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })
                     .Build()
@@ -212,9 +219,9 @@ namespace Neon.Kube.Operator
         {
             Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
-            var patchString = JsonConvert.SerializeObject(patchDoc, Formatting.None, NeonHelper.JsonRelaxedSerializerSettings.Value);
+            var patchJson = JsonConvert.SerializeObject(patchDoc, Formatting.None, k8sSerializerSettings);
 
-            return new V1Patch(patchString, V1Patch.PatchType.JsonPatch);
+            return new V1Patch(patchJson, V1Patch.PatchType.JsonPatch);
         }
     }
 }
