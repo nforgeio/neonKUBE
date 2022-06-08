@@ -57,7 +57,7 @@ namespace Neon.Kube
 
             jsonSerializerOptions = new JsonSerializerOptions();
 
-            jsonSerializerOptions.Converters.Add(new V1ResourceConverter());
+            jsonSerializerOptions.Converters.Add(new JsonV1ResourceConverter());
             jsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
         }
 

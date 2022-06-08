@@ -23,9 +23,9 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Converts generic types using JSON.NET.
+    /// <see cref="System.Text.Json"/>: Converts <see cref="V1ResourceRequirements"/>.
     /// </summary>
-    public class V1ResourceConverter : JsonConverter<V1ResourceRequirements>
+    public class JsonV1ResourceConverter : JsonConverter<V1ResourceRequirements>
     {
         /// <inheritdoc/>
         public override bool CanConvert(Type typeToConvert)

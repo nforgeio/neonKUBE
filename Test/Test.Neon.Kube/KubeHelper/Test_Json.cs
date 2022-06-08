@@ -58,7 +58,7 @@ namespace TestKube
         {
             var serializerOptions = new JsonSerializerOptions();
 
-            serializerOptions.Converters.Add(new V1ResourceConverter());
+            serializerOptions.Converters.Add(new JsonV1ResourceConverter());
             var cStorPoolCluster = new V1CStorPoolCluster()
             {
                 Metadata = new V1ObjectMeta()

@@ -17,10 +17,10 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.JsonConverters
 {
     /// <summary>
-    /// Converts generic types using JSON.NET.
+    /// <see cref="System.Text.Json"/>: Converts generic types.
     /// </summary>
     public class JsonGenericConverter<T> : JsonConverter<T>
     {

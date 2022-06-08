@@ -8,6 +8,7 @@
 // formal written and signed agreement with neonFORGE, LLC.
 
 using System;
+using System.Diagnostics.Contracts;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,10 +19,10 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.JsonConverters
 {
     /// <summary>
-    /// Converts generic types using JSON.NET.
+    /// Converts <see cref="DateTime"/> for <see cref="System.Text.Json"/> based serialization.
     /// </summary>
     public class JsonDateTimeConverter : JsonConverter<DateTime>
     {
@@ -30,17 +31,11 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override DateTime Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
+            Covenant.Requires<ArgumentException>(type == typeof(DateTime), nameof(type));
+
             reader.GetString();
 
             var input = reader.GetString();
-
-            // $debug(jefflill)
-
-            Console.WriteLine();
-            Console.WriteLine("###########################################");
-            Console.WriteLine($"input: {input}");
-            Console.WriteLine("###########################################");
-            Console.WriteLine();
 
             return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture);
         }
@@ -49,13 +44,6 @@ namespace Neon.Kube
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
             // $debug(jefflill)
-
-            Console.WriteLine();
-            Console.WriteLine("###########################################");
-            Console.WriteLine($"output: {value.ToString(dateFormat)}");
-            Console.WriteLine("###########################################");
-            Console.WriteLine();
-
             writer.WriteRawValue(value.ToString(dateFormat));
         }
     }

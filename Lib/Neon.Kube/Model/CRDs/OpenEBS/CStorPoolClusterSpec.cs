@@ -48,14 +48,14 @@ namespace Neon.Kube
         /// <summary>
         /// Compute resources for the cstor pool containers.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConverter(typeof(V1ResourceConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         [JsonProperty(PropertyName = "resources", Required = Required.Always)]
         public V1ResourceRequirements Resources { get; set; }
 
         /// <summary>
         /// Compute resources for the cstor sidecar containers.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConverter(typeof(V1ResourceConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         [JsonProperty(PropertyName = "auxResources", Required = Required.Always)]
         public V1ResourceRequirements AuxResources { get; set; }
     }
