@@ -32,7 +32,7 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Data
 {
     /// <summary>
-    /// Implements a type converter that converts between integers and an enum type.
+    /// <b>Newtonsoft:</b> Implements a type converter that converts between integers and an enum type.
     /// </summary>
     /// <typeparam name="TEnum">The enumation type being converted.</typeparam>
     /// <remarks>
