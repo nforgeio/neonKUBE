@@ -1,4 +1,9 @@
-﻿#blazor-error-ui {
+﻿/*-----------------------------------------------------------------------------
+// FILE: _BlazorFix.css
+// CONTRIBUTOR: Simon Zhang
+// COPYRIGHT: Copyright (c) 2005-2022 by neonFORGE LLC. All rights reserved.*/
+
+#blazor-error-ui {
     display: none;
     position: absolute;
     top: var(--f3);
