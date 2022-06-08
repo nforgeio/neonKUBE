@@ -8,27 +8,36 @@
 
 <PageBase PageTitle="@PageTitle" />
 
-<h1>Hello, world!</h1>
+<h1>uwu neonkube!</h1>
 
-<p>Cluster Version: @clusterInfo.ClusterVersion</p>
+<p>Name: @clusterInfo.Name</p>
+<p>Version: @clusterInfo.ClusterVersion</p>
 <p>DataCenter: @clusterInfo.Datacenter</p>
 <p>Hosting Environment: @clusterInfo.HostingEnvironment</p>
+<p>Domain: @clusterInfo.Domain</p>
+<p>CreationTimestamp: @clusterInfo.CreationTimestamp</p>
+<p>Environment: @clusterInfo.Environment</p>
 
 
-@if (nodeList != null)
+@if (AppState.Kube.Nodes != null)
 {
   <table>
-  <tr>
-    <td>Name</td>
-    <td>Status</td>
-  </tr>
-  @foreach(var node in nodeList.Items)
-  {
-    <tr>
-      <td>@node.Metadata.Name</td>
-      <td>@(bool.Parse(node.Status.Conditions.Where(c => c.Type == "Ready").First().Status) ? "Ready" : "Not Ready")</td>
-    </tr>
-  }
+      <tr>
+        <td>Name</td>
+        <td>Status</td>
+      </tr>
+      <tr>
+         <td>Total Nodes</td>
+         <td>@(AppState.Kube?.TotalNodes)</td>
+      </tr>
+      <tr>
+         <td>Active Nodes</td>
+         <td>@(AppState.Kube?.ActiveNodes)</td>
+      </tr>
+      <tr>
+         <td>Failed Nodes</td>
+         <td>@(AppState.Kube?.FailedNodes)</td>
+      </tr>
   </table>
 }
 

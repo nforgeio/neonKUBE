@@ -52,6 +52,9 @@ namespace NeonDashboard.Pages
         {
             PageTitle   = NeonDashboardService.ClusterInfo.Name;
             clusterInfo = NeonDashboardService.ClusterInfo;
+
+            AppState.Kube.OnChange += StateHasChanged;
+            AppState.Metrics.OnChange += StateHasChanged;
         }
 
         /// <inheritdoc/>
@@ -68,11 +71,21 @@ namespace NeonDashboard.Pages
         {
             if (firstRender)
             {
-                nodeList = await AppState.Kube.GetNodesAsync();
-                nodeMetrics = await AppState.Kube.GetNodeMetricsAsync();
-                await AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow);
-                StateHasChanged();
+                await GetNodeStatusAsync();
             }
+        }
+
+        private async Task GetNodeStatusAsync()
+        {
+            await SyncContext.Clear;
+
+            var tasks = new List<Task>();
+
+            tasks.Add(AppState.Kube.GetNodesStatusAsync());
+            tasks.Add(AppState.Kube.GetNodeMetricsAsync());
+            tasks.Add(AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow));
+
+            await Task.WhenAll(tasks);
         }
     }
 }

@@ -42,6 +42,11 @@ namespace NeonDashboard
         public Service NeonDashboardService;
 
         /// <summary>
+        /// Cluster Info
+        /// </summary>
+        public ClusterInfo ClusterInfo => NeonDashboardService.ClusterInfo;
+
+        /// <summary>
         /// Kubernetes related state.
         /// </summary>
         public __Kube Kube;

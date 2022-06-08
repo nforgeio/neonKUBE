@@ -47,6 +47,12 @@ namespace NeonDashboard
     {
         public class __Metrics : AppStateBase
         {
+            /// <summary>
+            /// Event action for updates to Kube properties.
+            /// </summary>
+            public event Action OnChange;
+            private void NotifyStateChanged() => OnChange?.Invoke();
+
             private PrometheusClient mimirClient;
 
             /// <summary>
@@ -57,13 +63,15 @@ namespace NeonDashboard
                 : base(state)
             {
                 AppState = state;
-                mimirClient = new PrometheusClient("http://localhost:1234/prometheus/");
+                mimirClient = new PrometheusClient("http://10.10.100.2:1234/prometheus/");
             }
 
             public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
             {
                 var query = $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
                 var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
+
+                NotifyStateChanged();
 
                 return result;
             }
