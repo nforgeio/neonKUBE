@@ -17,6 +17,12 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
+// $todo(jefflill):
+//
+// We shouldn't be relying on JSON.NET here.
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1587
+
 namespace Neon.JsonConverters
 {
     /// <summary>
