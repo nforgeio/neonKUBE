@@ -157,9 +157,15 @@ namespace TestKube
 
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-                spec.Node       = node.Name;
-                spec.BashScript = $"touch $NODE_ROOT{GetTestFilePath(node.Name)}";
+                var filePath   = GetTestFilePath(node.Name);
+                var folderPath = Path.GetDirectoryName(filePath);
 
+                spec.Node       = node.Name;
+                spec.BashScript = 
+$@"
+mkdir -f $NODE_ROOT{folderPath}
+touch $NODE_ROOT{filePath}
+";
                 await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
             }
 

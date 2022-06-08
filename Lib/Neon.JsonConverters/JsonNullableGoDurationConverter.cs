@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    JsonDateTimeConverter.cs
+// FILE:	    JsonNullableGoDurationConverter.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -18,18 +18,17 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Time;
 
 namespace Neon.JsonConverters
 {
     /// <summary>
-    /// Converts <see cref="DateTime"/> values for <see cref="System.Text.Json"/> based serialization.
+    /// Converts <see cref="Nullable<TimeSpan></TimeSpan>"/> values serialized as a <see cref="GoDuration"/> for <see cref="System.Text.Json"/> based serialization.
     /// </summary>
-    public class JsonDateTimeConverter : JsonConverter<DateTime>
+    public class JsonNullableGoDurationConverter : JsonConverter<TimeSpan?>
     {
-        private const string dateFormat = "yyyy-MM-ddTHH:mm:ssZ";
-
         /// <inheritdoc/>
-        public override DateTime Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
+        public override TimeSpan? Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
             Covenant.Requires<ArgumentException>(type == typeof(DateTime), nameof(type));
 
@@ -37,13 +36,20 @@ namespace Neon.JsonConverters
 
             var input = reader.GetString();
 
-            return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture);
+            if (input == "null")
+            {
+                return null;
+            }
+            else
+            {
+                return GoDuration.Parse(input).TimeSpan;
+            }
         }
 
         /// <inheritdoc/>
-        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TimeSpan? value, JsonSerializerOptions options)
         {
-            writer.WriteRawValue(value.ToString(dateFormat));
+            writer.WriteRawValue(value.HasValue ? GoDuration.FromTimeSpan(value.Value).ToString() : "null");
         }
     }
 }

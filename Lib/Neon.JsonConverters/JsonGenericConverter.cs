@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.JsonConverters
 {
     /// <summary>
-    /// <see cref="System.Text.Json"/>: Converts generic types.
+    /// Converts generic types for <see cref="System.Text.Json"/> based serialization.
     /// </summary>
     public class JsonGenericConverter<T> : JsonConverter<T>
     {

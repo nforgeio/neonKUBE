@@ -279,7 +279,7 @@ log.LogDebug($"*** RECONCILE: 8A");
 log.LogDebug($"*** RECONCILE: 8B");
                             var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
-                            patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
+                            patch.Replace(path => path.Status, new V1NodeTask.NodeTaskStatus());
                             patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
 
                             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -377,13 +377,13 @@ log.LogDebug($"*** RECONCILE: 16");
         /// </para>
         /// <list type="bullet">
         /// <item>
-        /// Tasks whose <see cref="V1NodeTask.V1NodeTaskStatus.AgentId"/> doesn't match
+        /// Tasks whose <see cref="V1NodeTask.NodeTaskStatus.AgentId"/> doesn't match
         /// the ID for the current agent will be marked as <see cref="V1NodeTask.NodeTaskPhase.Orphaned"/>
         /// and the finish time will be set to now.  This sets the task up for eventual
         /// deletion.
         /// </item>
         /// <item>
-        /// Tasks with a finish time that is older than <see cref="V1NodeTask.V1NodeTaskSpec.RetainSeconds"/>
+        /// Tasks with a finish time that is older than <see cref="V1NodeTask.NodeTaskSpec.RetainSeconds"/>
         /// will be removed.
         /// </item>
         /// </list>
@@ -433,7 +433,6 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Orphaned);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -453,7 +452,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
                         patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                        patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
+                        patch.Replace(path => path.Status.ExecutionSeconds, (utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -631,7 +630,6 @@ log.LogDebug($"*** EXECUTE: 10");
 
                 nodeTask.Status.Phase           = V1NodeTask.NodeTaskPhase.Finished;
                 nodeTask.Status.FinishTimestamp = DateTime.UtcNow;
-                nodeTask.Status.ExecutionTime   = (nodeTask.Status.StartTimestamp - nodeTask.Status.FinishTimestamp).ToString();
                 nodeTask.Status.ExitCode        = -1;
                 nodeTask.Status.Error           = $"EXECUTE FAILED: {e.Message}";
 
@@ -695,7 +693,7 @@ log.LogDebug($"*** EXECUTE: 15");
                 {
 log.LogDebug($"*** EXECUTE: 16");
                     nodeTask.Status.FinishTimestamp  = DateTime.UtcNow;
-                    nodeTask.Status.ExecutionTime    = (nodeTask.Status.FinishTimestamp - nodeTask.Status.StartTimestamp).ToString();
+                    nodeTask.Status.ExecutionSeconds = (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds;
 
                     if (timeout)
                     {
@@ -721,7 +719,7 @@ log.LogDebug($"*** EXECUTE: 19");
 
                     patch.Replace(path => path.Status.Phase, nodeTask.Status.Phase);
                     patch.Replace(path => path.Status.FinishTimestamp, nodeTask.Status.FinishTimestamp);
-                    patch.Replace(path => path.Status.ExecutionTime, nodeTask.Status.ExecutionTime);
+                    patch.Replace(path => path.Status.ExecutionSeconds, nodeTask.Status.ExecutionSeconds);
                     patch.Replace(path => path.Status.ExitCode, nodeTask.Status.ExitCode);
 
                     if (nodeTask.Spec.CaptureOutput)

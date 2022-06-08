@@ -30,6 +30,7 @@ using KubeOps.Operator.Entities.Annotations;
 #endif
 
 using Neon.JsonConverters;
+using Neon.Time;
 
 #if KUBEOPS
 namespace Neon.Kube.ResourceDefinitions
@@ -112,7 +113,7 @@ namespace Neon.Kube.Resources
     /// <item>
     /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
-    /// <see cref="V1NodeTaskStatus.StartTimestamp"/> to the current time and change the state to
+    /// <see cref="NodeTaskStatus.StartTimestamp"/> to the current time and change the state to
     /// <see cref="NodeTaskPhase.Running"/>.
     /// </item>
     /// <item>
@@ -121,7 +122,7 @@ namespace Neon.Kube.Resources
     /// The agent will then execute the script on the node, persisting the process ID to the node task 
     /// status along with the command line used to execute the script.  When the script finishes, the
     /// agent will capture its exit code and standard output and error streams as text.  The command 
-    /// execution time will be limited by <see cref="V1NodeTaskSpec.TimeoutSeconds"/>.
+    /// execution time will be limited by <see cref="NodeTaskSpec.TimeoutSeconds"/>.
     /// </item>
     /// <note>
     /// <para>
@@ -138,28 +139,28 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command completes without timing out, the agent will set its state to <see cref="NodeTaskPhase.Finished"/>,
-    /// set <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the current time and <see cref="V1NodeTaskStatus.ExitCode"/>,
-    /// <see cref="V1NodeTaskStatus.Output"/> and <see cref="V1NodeTaskStatus.Error"/> to the command results.
+    /// set <see cref="NodeTaskStatus.FinishTimestamp"/> to the current time and <see cref="NodeTaskStatus.ExitCode"/>,
+    /// <see cref="NodeTaskStatus.Output"/> and <see cref="NodeTaskStatus.Error"/> to the command results.
     /// </item>
     /// <note>
-    /// The <see cref="V1NodeTask.V1NodeTaskSpec.CaptureOutput"/> property controls whether the standard
+    /// The <see cref="V1NodeTask.NodeTaskSpec.CaptureOutput"/> property controls whether the standard
     /// output and error streams are captured.  This defaults to <c>true</c>.  <see cref="V1NodeTask"/>
     /// supports only text output encoded as UTF-8 or ASCII.  Binary output is not supported.  You should
-    /// set <see cref="V1NodeTask.V1NodeTaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
+    /// set <see cref="V1NodeTask.NodeTaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
     /// the output may include secrets.
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the
+    /// <see cref="NodeTaskPhase.Timeout"/> and set <see cref="NodeTaskStatus.FinishTimestamp"/> to the
     /// current time.
     /// </item>
     /// <item>
     /// <b>neon-node-agents</b> also look for running tasks that are assigned to its node but include a 
-    /// <see cref="V1NodeTaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
+    /// <see cref="NodeTaskStatus.AgentId"/> that doesn't match the current agent's ID.  This can
     /// happen when the previous agent pod started executing the command and then was terminated before the
     /// command completed.  The agent will attempt to locate the running pod by its command line and
     /// process ID and terminate when it exists and then set the state to <see cref="NodeTaskPhase.Orphaned"/>
-    /// and <see cref="V1NodeTaskStatus.FinishTimestamp"/> to the current time.
+    /// and <see cref="NodeTaskStatus.FinishTimestamp"/> to the current time.
     /// </item>
     /// <item>
     /// Finally, <b>neon-node-agent</b> periodically looks for Bash scripts that don't have corresponding node
@@ -178,7 +179,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE task to be executed on a specific cluster node.")]
 #endif
-    public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.V1NodeTaskSpec, V1NodeTask.V1NodeTaskStatus>
+    public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.NodeTaskSpec, V1NodeTask.NodeTaskStatus>
     {
         /// <summary>
         /// Object API group.
@@ -261,7 +262,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task specification.
         /// </summary>
-        public class V1NodeTaskSpec
+        public class NodeTaskSpec
         {
             /// <summary>
             /// Identifies the target node where the command will be executed.
@@ -307,7 +308,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
             /// ended, for any reason.  <b>neon-cluster-operator</b> will add
-            /// this to <see cref="V1NodeTaskStatus.FinishTimestamp"/> to determine
+            /// this to <see cref="NodeTaskStatus.FinishTimestamp"/> to determine
             /// when it should delete the task.  This defaults to 600 seconds
             /// (10 minutes).
             /// </summary>
@@ -360,7 +361,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task status.
         /// </summary>
-        public class V1NodeTaskStatus
+        public class NodeTaskStatus
         {
             /// <summary>
             /// The globally unique ID of the <b>neon-node-agent</b> instance that executed
@@ -391,9 +392,9 @@ namespace Neon.Kube.Resources
             public DateTime? FinishTimestamp { get; set;}
 
             /// <summary>
-            /// Set to the task execution time serialized to a string.
+            /// Set to the task execution time serialized as seconds.
             /// </summary>
-            public string ExecutionTime { get; set; }
+            public double ExecutionSeconds { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.
