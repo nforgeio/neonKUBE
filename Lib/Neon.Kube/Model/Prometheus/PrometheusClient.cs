@@ -100,17 +100,14 @@ namespace Neon.Kube
         /// <param name="stepSize"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<PrometheusResponse<PrometheusMatrixResult>> QueryAsync(
+        public async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(
             string query,
-            DateTime start,
-            DateTime end,
-            string stepSize = "15s",
             CancellationToken cancellationToken = default)
         {
             var args = new ArgDictionary();
             args.Add("query", query);
 
-            return await GetAsync<PrometheusResponse<PrometheusMatrixResult>>("api/v1/query", args, cancellationToken);
+            return await GetAsync<PrometheusResponse<PrometheusVectorResult>>("api/v1/query", args, cancellationToken);
         }
 
         /// <summary>
