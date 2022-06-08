@@ -142,13 +142,12 @@ namespace TestKube
                 var metadata = nodeTask.Metadata;
                 var spec     = nodeTask.Spec;
 
-                metadata.Name = nodeToTaskName[node.Name];
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
                 spec.Node       = node.Name;
-                spec.BashScript = $"touch $NODE_ROOT/{GetTestFilePath(node.Name)}";
+                spec.BashScript = $"touch $NODE_ROOT{GetTestFilePath(node.Name)}";
 
-                await fixture.K8s.JNET_CreateClusterCustomObjectAsync(nodeTask);
+                await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
             }
 
             // Wait for all of the node tasks to report completion.
@@ -163,7 +162,7 @@ namespace TestKube
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    foreach (var nodeTask in (await fixture.K8s.JNET_ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                    foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                     {
                         switch (nodeTask.Status.Phase)
                         {

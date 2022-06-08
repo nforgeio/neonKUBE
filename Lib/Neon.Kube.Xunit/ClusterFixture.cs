@@ -367,12 +367,6 @@ namespace Neon.Kube.Xunit
         public IKubernetes K8s => Cluster?.K8s;
 
         /// <summary>
-        /// Returns the <see cref="KubeGenericClient"/> that can be used to manipulate custom
-        /// Kubernetes objects.
-        /// </summary>
-        public KubeGenericClient K8sGeneric => Cluster?.K8sGeneric;
-
-        /// <summary>
         /// Returns the cluster definition for cluster deployed by this fixture via one of the
         /// <b>Start()</b> methods or <c>null</c> when the fixture was connected to the cluster
         /// via one of the <b>ConnectAsync()</b> methods.

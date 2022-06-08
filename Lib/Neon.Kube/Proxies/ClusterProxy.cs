@@ -100,7 +100,6 @@ namespace Neon.Kube
         private string                  nodeImageUri;
         private string                  nodeImagePath;
         private IKubernetes             cachedK8s;
-        private KubeGenericClient       cachedK8sGeneric;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/>.
@@ -580,32 +579,10 @@ namespace Neon.Kube
 
                     var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
 
-                    cachedK8s        = new KubernetesWithRetry(new KubernetesClient(config));
-                    cachedK8sGeneric = new KubeGenericClient(cachedK8s);
+                    cachedK8s = new KubernetesWithRetry(new KubernetesClient(config));
 
                     return cachedK8s;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Returns the <see cref="KubeGenericClient"/> that can be used to manipulate custom
-        /// Kubernetes objects.
-        /// </summary>
-        public KubeGenericClient K8sGeneric
-        {
-            get
-            {
-                if (cachedK8sGeneric != null)
-                {
-                    return cachedK8sGeneric;
-                }
-
-                // $hack(jefflill): This is a bit of a hack to initialize the client.
-
-                _ = K8s;
-
-                return cachedK8sGeneric;
             }
         }
 
@@ -761,7 +738,7 @@ namespace Neon.Kube
                 clusterRegistry.Spec.Username    = registry.Username;
                 clusterRegistry.Spec.Password    = registry.Password;
 
-                await K8sGeneric.CreateAsync(clusterRegistry, registry.Name);
+                await K8s.CreateClusterCustomObjectAsync(clusterRegistry, registry.Name);
             }
         }
 
@@ -1162,13 +1139,13 @@ namespace Neon.Kube
                 .ToArray();
 
             // Remove any cluster scoped neonKUBE resources that are labeled indicating that
-            // they removed on cluster reset.
+            // they should be removed on cluster reset.
 
             foreach (var crd in neonKubeCrds)
             {
                 foreach (var version in crd.Spec.Versions.Select(ver => ver.Name))
                 {
-                    foreach (var resource in (await K8s.JNET_ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
+                    foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
                     {
                         await K8s.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
                     }
@@ -1183,7 +1160,7 @@ namespace Neon.Kube
 
             if (options.ResetCrio)
             {
-                await Parallel.ForEachAsync((await K8s.JNET_ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
+                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
                     async (item, cancellationToken) =>
                     {
                         var metadata = item.GetKubernetesTypeMetadata();

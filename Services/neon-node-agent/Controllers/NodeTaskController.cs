@@ -262,7 +262,7 @@ log.LogDebug($"*** RECONCILE: 5");
                         {
                             log.LogWarn($"Invalid NodeTask: [{name}]", e);
                             log.LogWarn($"Deleting invalid NodeTask: [{name}]");
-                            await k8s.JNET_DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+                            await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
 log.LogDebug($"*** RECONCILE: 6");
 
                             return null;
@@ -282,7 +282,7 @@ log.LogDebug($"*** RECONCILE: 8B");
                             patch.Replace(path => path.Status, new V1NodeTask.V1NodeTaskStatus());
                             patch.Replace(path => path.Status.Phase, V1NodeTask.NodeTaskPhase.Pending);
 
-                            nodeTask = await k8s.JNET_PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                             log.LogDebug($"*** RECONCILE: 9");
                         }
 log.LogDebug($"*** RECONCILE: 10");
@@ -296,7 +296,7 @@ log.LogDebug($"*** RECONCILE: 11");
                             {
 log.LogDebug($"*** RECONCILE: 12");
                                 log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                                await k8s.JNET_DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+                                await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
 log.LogDebug($"*** RECONCILE: 13");
 
                                 return null;
@@ -414,7 +414,7 @@ log.LogDebug($"*** RECONCILE: 16");
                 {
                     log.LogWarn($"Invalid NodeTask: [{taskName}]", e);
                     log.LogWarn($"Deleting invalid NodeTask: [{taskName}]");
-                    await k8s.JNET_DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+                    await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
                     continue;
                 }
 
@@ -436,7 +436,7 @@ log.LogDebug($"*** RECONCILE: 16");
                         patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.JNET_PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                        await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                         continue;
                     }
 
@@ -456,7 +456,7 @@ log.LogDebug($"*** RECONCILE: 16");
                         patch.Replace(path => path.Status.ExecutionTime, (utcNow - nodeTask.Status.StartTimestamp).ToString());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.JNET_PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                        await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                         continue;
                     }
                 }
@@ -636,7 +636,7 @@ log.LogDebug($"*** EXECUTE: 10");
                 nodeTask.Status.Error           = $"EXECUTE FAILED: {e.Message}";
 
 log.LogDebug($"*** EXECUTE: 11");
-                await k8s.JNET_UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
+                await k8s.UpsertClusterCustomObjectAsync<V1NodeTask>(nodeTask, taskName);
 log.LogDebug($"*** EXECUTE: 12");
                 return;
             }
@@ -667,7 +667,7 @@ log.LogDebug($"*** EXECUTE: 13");
             patch.Replace(path => path.Status.CommandLine, nodeTask.Status.CommandLine);
             patch.Replace(path => path.Status.ExecutionId, nodeTask.Status.ExecutionId);
 
-            nodeTask = await k8s.JNET_PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
 
             // Wait for the command to complete and the update the node task status.
 
@@ -730,7 +730,7 @@ log.LogDebug($"*** EXECUTE: 19");
                         patch.Replace(path => path.Status.Error, nodeTask.Status.Error);
                     }
 
-                    nodeTask = await k8s.JNET_PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
+                    nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
                     log.LogDebug($"*** EXECUTE: 20");
                 }
             }

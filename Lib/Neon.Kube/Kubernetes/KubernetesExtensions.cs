@@ -48,6 +48,15 @@ namespace Neon.Kube
     public static partial class KubernetesExtensions
     {
         //---------------------------------------------------------------------
+        // Shared fields
+
+        private static JsonSerializerOptions serializeOptions
+            = new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+        //---------------------------------------------------------------------
         // V1ObjectMeta extensions
 
         /// <summary>

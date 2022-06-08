@@ -15,13 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $todo(jefflill):
-//
-// These methods are deprecated and stupid and this file should be deleted after
-// existing code referencing this is fixed.
-//
-//      https://github.com/nforgeio/neonKUBE/issues/1585
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -34,14 +27,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Rest;
 
 using Neon.Common;
 using Neon.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Models;
@@ -137,8 +126,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<V1CustomObjectList<T>> JNET_ListClusterCustomObjectAsync<T>(
+        public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
@@ -173,7 +161,7 @@ namespace Neon.Kube
                 pretty:                 false,
                 cancellationToken:      cancellationToken);
 
-            return NeonHelper.JsonDeserialize<V1CustomObjectList<T>>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<V1CustomObjectList<T>>(options: serializeOptions);
         }
 
         /// <summary>
@@ -263,8 +251,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> JNET_ListClusterCustomObjectMetadataAsync(
+        public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> ListClusterCustomObjectMetadataAsync(
             this IKubernetes    k8s,
             string              group,
             string              version,
@@ -301,7 +288,7 @@ namespace Neon.Kube
                 pretty:                 false,
                 cancellationToken:      cancellationToken);
 
-            return NeonHelper.JsonDeserialize<V1CustomObjectList<KubernetesObjectMetadata>>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<V1CustomObjectList<KubernetesObjectMetadata>>(options: serializeOptions);
         }
 
         /// <summary>
@@ -310,6 +297,7 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">The object data.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -323,10 +311,10 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_CreateClusterCustomObjectAsync<T>(
+        public static async Task<T> CreateClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
+            string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default) 
@@ -334,7 +322,10 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(
@@ -347,7 +338,7 @@ namespace Neon.Kube
                 pretty:            false, 
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -358,8 +349,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_GetClusterCustomObjectAsync<T>(
+        public static async Task<T> GetClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              name,
             CancellationToken   cancellationToken = default(CancellationToken)) 
@@ -376,7 +366,7 @@ namespace Neon.Kube
                 name:              name,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -399,8 +389,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_ReplaceClusterCustomObjectAsync<T>(
+        public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -423,7 +412,7 @@ namespace Neon.Kube
                 fieldManager:      fieldManager,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -447,8 +436,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_UpsertClusterCustomObjectAsync<T>(
+        public static async Task<T> UpsertClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
             string              name, 
@@ -464,20 +452,18 @@ namespace Neon.Kube
             // 
             //      https://github.com/nforgeio/neonKUBE/issues/1578 
 
-            body.Metadata.Name = name;
-
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create a new resource otherwise we'll replace the existing resource.
 
             try
             {
-                await k8s.JNET_GetClusterCustomObjectAsync<T>(name, cancellationToken);
+                await k8s.GetClusterCustomObjectAsync<T>(name, cancellationToken);
             }
             catch (HttpOperationException e)
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.JNET_CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager, cancellationToken);
+                    return await k8s.CreateClusterCustomObjectAsync<T>(body, name, dryRun, fieldManager, cancellationToken);
                 }
                 else
                 {
@@ -485,7 +471,7 @@ namespace Neon.Kube
                 }
             }
 
-            return await k8s.JNET_ReplaceClusterCustomObjectAsync<T>(
+            return await k8s.ReplaceClusterCustomObjectAsync<T>(
                 body:              body, 
                 name:              name, 
                 dryRun:            dryRun,
@@ -521,8 +507,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_PatchClusterCustomObjectStatusAsync<T>(
+        public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
             V1Patch             patch,
             string              name,
@@ -538,7 +523,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var jsonElement  = await k8s.PatchClusterCustomObjectStatusAsync(
+            var result       = await k8s.PatchClusterCustomObjectStatusAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -549,7 +534,7 @@ namespace Neon.Kube
                 force:             force,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(jsonElement.ToString());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -586,8 +571,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
-        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task JNET_DeleteClusterCustomObjectAsync<T>(
+        public static async Task DeleteClusterCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              name,
             V1DeleteOptions     body               = null,

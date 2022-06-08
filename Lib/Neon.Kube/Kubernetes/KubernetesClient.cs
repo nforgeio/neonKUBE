@@ -55,63 +55,6 @@ namespace Neon.Kube
     public class KubernetesClient : Kubernetes
     {
         //---------------------------------------------------------------------
-        // Static methods
-
-        private static bool isInitialized = false;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static KubernetesClient()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Handles initialzation of the stock <see cref="Kubernetes"/> client's JSON serializer to
-        /// support <see cref="EnumMemberAttribute"/> and perhaps customize other settings.  This
-        /// is required to support our custom resources.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This must be called before any stock <see cref="Kubernetes"/> instances are created because
-        /// the JSON serializer settings cannot be changed after and client instances are created.
-        /// </para>
-        /// <para>
-        /// Services derived from <b>Neon.Service.NeonService</b> shouldn't need to worry about this
-        /// because its constructor calls this whenever the <b>Neon.Kube</b> assembly is loaded in
-        /// the current appdomain.  For other secenarios, you may need to call this explicitly 
-        /// early in your application.
-        /// </para>
-        /// </remarks>
-        public static void Initialize()
-        {
-            // $hack(jefflill/marcusbooyah):
-            //
-            // The stock Kubernetes client doesn't honor [EnumMember] attributes when serializing
-            // Kubernetes objects to JSON.  This code uses reflection to add a [JsonStringEnumMemberConverter]
-            // to the [Kubernetes] class.
-            //
-            // More info: https://github.com/nforgeio/neonKUBE/issues/1517
-
-            if (isInitialized)
-            {
-                return;
-            }
-
-            var kubernetesJsonType = typeof(Kubernetes).Assembly.GetType("k8s.KubernetesJson");
-
-            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
-
-            var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
-
-            options.Converters.Add(new JsonStringEnumMemberConverter());
-
-            isInitialized = true;
-        }
-
-        //---------------------------------------------------------------------
         // Instance methods
 
         /// <summary>

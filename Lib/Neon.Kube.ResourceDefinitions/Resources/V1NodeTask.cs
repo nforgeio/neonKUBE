@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
@@ -371,6 +372,7 @@ namespace Neon.Kube.Resources
             /// when the task is constructed which can be used to detect whether the status is
             /// actually persisted to Kubernetes.
             /// </summary>
+            [JsonConverter(typeof(JsonStringEnumMemberConverter))]
             public NodeTaskPhase Phase { get; set; } = NodeTaskPhase.New;
 
             /// <summary>

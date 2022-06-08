@@ -46,7 +46,6 @@ namespace NeonClusterOperator
         public static async Task Main(string[] args)
         {
             NeonService.Initialize();
-            KubernetesClient.Initialize();
 
             try
             {
