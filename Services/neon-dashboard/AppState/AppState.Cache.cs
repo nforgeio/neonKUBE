@@ -59,6 +59,8 @@ namespace NeonDashboard
 
             public async Task SetAsync(string key, object value)
             {
+                await SyncContext.Clear;
+
                 await cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
             }
 
@@ -69,6 +71,8 @@ namespace NeonDashboard
 
             public async Task<T> GetAsync<T>(string key)
             {
+                await SyncContext.Clear;
+                
                 var value = await cache.GetAsync(key);
 
                 if (value != null)

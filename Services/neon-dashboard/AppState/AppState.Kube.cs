@@ -99,6 +99,8 @@ namespace NeonDashboard
 
             public async Task GetNodesStatusAsync()
             {
+                await SyncContext.Clear;
+
                 var key = "nodes";
 
                 try
@@ -125,6 +127,8 @@ namespace NeonDashboard
 
             public async Task<NodeMetricsList> GetNodeMetricsAsync()
             {
+                await SyncContext.Clear;
+
                 var key = "node-metrics";
 
                 try
@@ -148,8 +152,6 @@ namespace NeonDashboard
 
                 return nodeMetricsList;
             }
-
-            
         }
     }
 }

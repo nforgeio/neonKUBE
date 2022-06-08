@@ -82,6 +82,8 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
+            await SyncContext.Clear;
+            
             AppState.CurrentDashboard = "neonkube";
             AppState.NotifyDashboardChanged();
 
@@ -91,6 +93,8 @@ namespace NeonDashboard.Pages
         /// <inheritdoc/>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            await SyncContext.Clear;
+
             if (firstRender)
             {
                 await GetNodeStatusAsync();
@@ -101,14 +105,16 @@ namespace NeonDashboard.Pages
         {
             await SyncContext.Clear;
 
-            var tasks = new List<Task>();
+            var tasks = new List<Task>()
+            {
+                AppState.Kube.GetNodesStatusAsync(),
+                AppState.Kube.GetNodeMetricsAsync(),
+                UpdateMemoryAsync(),
+                UpdateCpuAsync(),
+                UpdateDiskAsync()
+            };
 
-            await AppState.Kube.GetNodesStatusAsync();
-            await AppState.Kube.GetNodeMetricsAsync();
-
-            await UpdateMemoryAsync();
-            await UpdateCpuAsync();
-            await UpdateDiskAsync();
+            await Task.WhenAll(tasks);
         }
 
         private async Task UpdateMemoryAsync()
