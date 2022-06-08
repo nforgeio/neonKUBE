@@ -9,20 +9,22 @@
     top: var(--f3);
     z-index: 99999;
     width: 100%;
+    background-color: red;
+    /* margin: 1rem; */
+    padding: 1rem;
+}
+.error__content {
+    background: darkred;
+    padding: 1rem;
+    border-radius: var(--f1);
+    color: var(--c-fg);
+    margin: 8px auto;
+    filter: var(--shadow);
+}
 
-    .error__content {
-        background: darkred;
-        padding: 1rem;
-        border-radius: var(--f1);
-        color: var(--c-fg);
-        margin: 8px auto;
-        filter: var(--shadow);
-    }
+.dismiss {
+    cursor: pointer;
+}
 
-    .dismiss {
-        cursor: pointer;
-    }
-
-    .reload {
-    }
+.reload {
 }

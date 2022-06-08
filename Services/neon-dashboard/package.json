@@ -11,13 +11,11 @@
     "postcss": "^8.4.14",
     "postcss-cli": "^9.1.0",
     "postcss-import": "^14.1.0",
-    "postcss-nested": "^5.0.6",
     "tailwindcss": "^3.0.24"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development postcss -i ./Styles/index.css -o ./wwwroot/css/index.css --watch",
-    "build": "cross-env NODE_ENV=development postcss -i ./Styles/index.css -o ./wwwroot/css/index.css "
-
+    "dev": "cross-env NODE_ENV=development postcss  ./Styles/index.css -o ./wwwroot/css/index.css --watch",
+    "build": "cross-env NODE_ENV=production postcss  ./Styles/index.css -o ./wwwroot/css/index.css "
   },
   "author": "",
   "license": "ISC"

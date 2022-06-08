@@ -9,7 +9,7 @@
     background: var(--c-bg-dark);
 }
 
-.container {
+.containermain {
     display: grid;
     grid-template-rows: 1fr auto;
     overflow: hidden;
