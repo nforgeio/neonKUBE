@@ -29,6 +29,8 @@ using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
 #endif
 
+using Neon.JsonConverters;
+
 #if KUBEOPS
 namespace Neon.Kube.ResourceDefinitions
 #else
@@ -290,6 +292,7 @@ namespace Neon.Kube.Resources
             /// afterwards.
             /// </note>
             /// </summary>
+            [JsonConverter(typeof(JsonNullableDateTimeConverter))]
             public DateTime? StartAfterTimestamp { get; set; }
 
             /// <summary>
@@ -378,12 +381,13 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Indicates when the task started executing. 
             /// </summary>
-            [JsonConverter(typeof(JsonMicrosoftDateTimeConverter))]
+            [JsonConverter(typeof(JsonNullableDateTimeConverter))]
             public DateTime? StartTimestamp { get; set; }
 
             /// <summary>
             /// Indicates when the task finished executing.
             /// </summary>
+            [JsonConverter(typeof(JsonNullableDateTimeConverter))]
             public DateTime? FinishTimestamp { get; set;}
 
             /// <summary>
