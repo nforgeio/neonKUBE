@@ -23,7 +23,7 @@ using Neon.Time;
 namespace Neon.JsonConverters
 {
     /// <summary>
-    /// Converts <see cref="Nullable<TimeSpan></TimeSpan>"/> values serialized as a <see cref="GoDuration"/> for <see cref="System.Text.Json"/> based serialization.
+    /// Converts <see cref="Nullable{TimeSpan}"/> values serialized as a <see cref="GoDuration"/> for <see cref="System.Text.Json"/> based serialization.
     /// </summary>
     public class JsonNullableGoDurationConverter : JsonConverter<TimeSpan?>
     {

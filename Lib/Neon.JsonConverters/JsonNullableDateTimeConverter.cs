@@ -22,7 +22,7 @@ using Neon.Common;
 namespace Neon.JsonConverters
 {
     /// <summary>
-    /// Converts <see cref="Nullable<DateTime></DateTime>"/> values for <see cref="System.Text.Json"/> based serialization.
+    /// Converts <see cref="Nullable{DateTime}"/> values for <see cref="System.Text.Json"/> based serialization.
     /// </summary>
     public class JsonNullableDateTimeConverter : JsonConverter<DateTime?>
     {
