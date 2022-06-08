@@ -41,3 +41,8 @@
   </table>
 }
 
+@if (memoryChartConfig != null)
+{
+    <Chart Config="memoryChartConfig" @ref="memoryChart" Style="display: block; box-sizing: border-box; height: 200px; width: 500px;"></Chart>
+}
+

@@ -31,6 +31,12 @@ using NeonDashboard.Shared.Components;
 using k8s;
 using k8s.Models;
 
+using PSC.Blazor.Components.Chartjs;
+using PSC.Blazor.Components.Chartjs.Enums;
+using PSC.Blazor.Components.Chartjs.Models;
+using PSC.Blazor.Components.Chartjs.Models.Common;
+using PSC.Blazor.Components.Chartjs.Models.Line;
+
 namespace NeonDashboard.Pages
 {
     [Authorize]
@@ -40,11 +46,17 @@ namespace NeonDashboard.Pages
         private V1NodeList nodeList;
         private NodeMetricsList nodeMetrics;
 
+        private LineChartConfig memoryChartConfig;
+        private List<string>    memoryUsageX;
+        private List<decimal>   memoryUsageY;
+        private Chart           memoryChart;
+
         /// <summary>
         /// Constructor.
         /// </summary>
         public Home()
         {
+
         }
 
         /// <inheritdoc/>
@@ -81,11 +93,28 @@ namespace NeonDashboard.Pages
 
             var tasks = new List<Task>();
 
-            tasks.Add(AppState.Kube.GetNodesStatusAsync());
-            tasks.Add(AppState.Kube.GetNodeMetricsAsync());
-            tasks.Add(AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow));
+            await AppState.Kube.GetNodesStatusAsync();
+            await AppState.Kube.GetNodeMetricsAsync();
+            await AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow);
+            await AppState.Metrics.GetMemoryTotalAsync();
 
-            await Task.WhenAll(tasks);
+            await DrawChartsAsync();
+        }
+
+        private async Task DrawChartsAsync()
+        {
+            memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+            memoryChartConfig = new LineChartConfig();
+            memoryChartConfig.Data.Labels = memoryUsageX;
+            memoryChartConfig.Data.Datasets.Add(new LineDataset()
+            {
+                Label = "Memory usage",
+                Data = memoryUsageY,
+                Tension = 0.1M
+            });
+
+            StateHasChanged();
         }
     }
 }

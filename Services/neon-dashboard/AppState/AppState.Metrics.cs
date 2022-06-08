@@ -10,7 +10,6 @@ using System.Net.Http;
 using System.IO;
 using System.Reflection;
 using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,6 +54,11 @@ namespace NeonDashboard
 
             private PrometheusClient mimirClient;
 
+            public PrometheusResponse<PrometheusMatrixResult> MemoryUsageBytes;
+            public decimal MemoryTotalBytes;
+            public PrometheusResponse<PrometheusMatrixResult> CPUUsage;
+            public PrometheusResponse<PrometheusMatrixResult> DiskUsage;
+
             /// <summary>
             /// Constructor.
             /// </summary>
@@ -63,17 +67,92 @@ namespace NeonDashboard
                 : base(state)
             {
                 AppState = state;
-                mimirClient = new PrometheusClient("http://10.10.100.2:1234/prometheus/");
+                mimirClient = new PrometheusClient("https://metrics.9cfe8456addfb3ee.neoncluster.io/prometheus/");
             }
 
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            public async Task GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
             {
-                var query = $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
+                await SyncContext.Clear;
+                
+                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}) - sum(node_memory_MemFree_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                MemoryUsageBytes = await QueryRangeAsync(query, start, end, stepSize);
 
                 NotifyStateChanged();
+            }
+
+            public async Task GetMemoryTotalAsync()
+            {
+                await SyncContext.Clear;
+
+                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                MemoryTotalBytes = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+
+                NotifyStateChanged();
+            }
+
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> QueryRangeAsync(string query, DateTime start, DateTime end, string stepSize = "15s")
+            {
+                await SyncContext.Clear;
+                
+                var key = $"neon-dashboard_{Neon.Cryptography.CryptoHelper.ComputeMD5String(query)}";
+
+                try
+                {
+                    var value = await Cache.GetAsync<PrometheusResponse<PrometheusMatrixResult>>(key);
+                    if (value != null)
+                    {
+                        return value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+
+                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
+
+                _ = Cache.SetAsync(key, result);
 
                 return result;
+            }
+
+            private async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(string query)
+            {
+                await SyncContext.Clear;
+
+                var key = Neon.Cryptography.CryptoHelper.ComputeMD5String(query);
+
+                try
+                {
+                    var value = await Cache.GetAsync<PrometheusResponse<PrometheusVectorResult>>(key);
+                    if (value != null)
+                    {
+                        return value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+
+                var result = await mimirClient.QueryAsync(query);
+
+                _ = Cache.SetAsync(key, result);
+
+                return result;
+            }
+
+            /// <summary>
+            /// Converts unix timestamp to <see cref="DateTime"/>.
+            /// </summary>
+            /// <param name="unixTimeStamp"></param>
+            /// <returns></returns>
+            public DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+            {
+                // Unix timestamp is seconds past epoch
+                DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                dateTime = dateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+                return dateTime;
             }
         }
     }
