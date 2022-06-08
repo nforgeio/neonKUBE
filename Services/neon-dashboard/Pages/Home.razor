@@ -43,6 +43,23 @@
 
 @if (memoryChartConfig != null)
 {
-    <Chart Config="memoryChartConfig" @ref="memoryChart" Style="display: block; box-sizing: border-box; height: 200px; width: 500px;"></Chart>
+
+    <div id="header" style="width:500px;">
+        <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
+    </div>
+}
+
+@if (cpuChartConfig != null)
+{
+    <div id="header" style="width:500px;">
+        <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
+    </div>
+}
+
+@if (diskChartConfig != null)
+{
+    <div id="header" style="width:500px;">
+        <Chart Config="diskChartConfig" @ref="diskChart"></Chart>
+    </div>
 }
 

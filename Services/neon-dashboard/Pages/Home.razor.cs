@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
 using Neon.Kube;
 using Neon.Tasks;
 
@@ -31,11 +32,14 @@ using NeonDashboard.Shared.Components;
 using k8s;
 using k8s.Models;
 
-using PSC.Blazor.Components.Chartjs;
-using PSC.Blazor.Components.Chartjs.Enums;
-using PSC.Blazor.Components.Chartjs.Models;
-using PSC.Blazor.Components.Chartjs.Models.Common;
-using PSC.Blazor.Components.Chartjs.Models.Line;
+using ChartJs.Blazor;
+using ChartJs.Blazor.LineChart;
+using ChartJs.Blazor.Common;
+using ChartJs.Blazor.Util;
+using ChartJs.Blazor.Common.Axes;
+using ChartJs.Blazor.Common.Enums;
+using ChartJs.Blazor.Interop;
+using ChartJs.Blazor.Common.Handlers;
 
 namespace NeonDashboard.Pages
 {
@@ -43,20 +47,26 @@ namespace NeonDashboard.Pages
     public partial class Home : PageBase
     {
         private ClusterInfo clusterInfo;
-        private V1NodeList nodeList;
-        private NodeMetricsList nodeMetrics;
 
-        private LineChartConfig memoryChartConfig;
-        private List<string>    memoryUsageX;
-        private List<decimal>   memoryUsageY;
-        private Chart           memoryChart;
+        private LineConfig memoryChartConfig;
+        private Chart      memoryChart;
+
+        private LineConfig cpuChartConfig;
+        private Chart      cpuChart;
+
+        private LineConfig diskChartConfig;
+        private Chart      diskChart;
+
+        private static int chartLookBack = 60;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public Home()
         {
-
+            memoryChartConfig = new LineConfig();
+            cpuChartConfig    = new LineConfig();
+            diskChartConfig   = new LineConfig();
         }
 
         /// <inheritdoc/>
@@ -65,7 +75,7 @@ namespace NeonDashboard.Pages
             PageTitle   = NeonDashboardService.ClusterInfo.Name;
             clusterInfo = NeonDashboardService.ClusterInfo;
 
-            AppState.Kube.OnChange += StateHasChanged;
+            AppState.Kube.OnChange    += StateHasChanged;
             AppState.Metrics.OnChange += StateHasChanged;
         }
 
@@ -95,24 +105,98 @@ namespace NeonDashboard.Pages
 
             await AppState.Kube.GetNodesStatusAsync();
             await AppState.Kube.GetNodeMetricsAsync();
-            await AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow);
-            await AppState.Metrics.GetMemoryTotalAsync();
 
-            await DrawChartsAsync();
+            await UpdateMemoryAsync();
+            await UpdateCpuAsync();
+            await UpdateDiskAsync();
         }
 
-        private async Task DrawChartsAsync()
+        private async Task UpdateMemoryAsync()
         {
-            memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
-            memoryChartConfig = new LineChartConfig();
-            memoryChartConfig.Data.Labels = memoryUsageX;
-            memoryChartConfig.Data.Datasets.Add(new LineDataset()
+            await SyncContext.Clear;
+            
+            var tasks = new List<Task>()
             {
-                Label = "Memory usage",
-                Data = memoryUsageY,
-                Tension = 0.1M
+                AppState.Metrics.GetMemoryUsageAsync(DateTime.UtcNow.AddMinutes(chartLookBack * -1), DateTime.UtcNow),
+                AppState.Metrics.GetMemoryTotalAsync()
+            };
+
+            await Task.WhenAll(tasks);
+
+            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+
+            memoryChartConfig.Data.Labels.Clear();
+            foreach (var label in memoryUsageX)
+            {
+                memoryChartConfig.Data.Labels.Add(label);
+            }
+
+            memoryChartConfig.Data.Datasets.Clear();
+            memoryChartConfig.Data.Datasets.Add(new LineDataset<decimal>(memoryUsageY)
+            {
+                Label = $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})",
             });
+
+            await memoryChart.Update();
+
+            StateHasChanged();
+        }
+
+        private async Task UpdateCpuAsync()
+        {
+            await SyncContext.Clear;
+
+            var tasks = new List<Task>()
+            {
+                AppState.Metrics.GetCpuUsageAsync(DateTime.UtcNow.AddMinutes(chartLookBack * -1), DateTime.UtcNow),
+                AppState.Metrics.GetCpuTotalAsync()
+            };
+
+            await Task.WhenAll(tasks);
+
+            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) * AppState.Metrics.CPUTotal).ToList();
+
+            foreach (var l in cpuUsageX)
+            {
+                cpuChartConfig.Data.Labels.Add(l);
+            }
+            cpuChartConfig.Data.Datasets.Add(new LineDataset<decimal>(cpuUsageY)
+            {
+                Label = $"CPU usage (total cores: {AppState.Metrics.CPUTotal})",
+            });
+
+            await cpuChart.Update();
+
+            StateHasChanged();
+        }
+
+        private async Task UpdateDiskAsync()
+        {
+            await SyncContext.Clear;
+
+            var tasks = new List<Task>()
+            {
+                AppState.Metrics.GetDiskUsageAsync(DateTime.UtcNow.AddMinutes(chartLookBack * -1), DateTime.UtcNow),
+                AppState.Metrics.GetDiskTotalAsync()
+            };
+
+            await Task.WhenAll(tasks);
+
+            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+
+            foreach (var l in diskUsageX)
+            {
+                diskChartConfig.Data.Labels.Add(l);
+            }
+            diskChartConfig.Data.Datasets.Add(new LineDataset<decimal>(diskUsageY)
+            {
+                Label = $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})",
+            });
+
+            await diskChart.Update();
 
             StateHasChanged();
         }

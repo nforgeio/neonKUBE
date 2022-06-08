@@ -95,9 +95,6 @@ namespace Neon.Kube
         /// Gets a regular query from the Prometheus API.
         /// </summary>
         /// <param name="query"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <param name="stepSize"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(
