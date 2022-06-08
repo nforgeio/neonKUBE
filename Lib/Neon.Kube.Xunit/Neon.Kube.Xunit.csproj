@@ -7,7 +7,7 @@
 		<PackageId>Neon.Kube.Xunit</PackageId>
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Authors>neonFORGE Team</Authors>
-		<Product>neonLIBRARY</Product>
+		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>

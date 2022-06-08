@@ -7,7 +7,7 @@
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>XenServer/XCP-ng client for .NET</Description>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>

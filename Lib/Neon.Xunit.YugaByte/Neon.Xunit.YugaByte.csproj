@@ -6,7 +6,7 @@
 		<LangVersion>latest</LangVersion>
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>Xunit test fixture for YugaByteDB</Description>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>

@@ -8,7 +8,7 @@
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>
 			Includes the [neon-model] client which can be referenced from your project build targets as required.
 
