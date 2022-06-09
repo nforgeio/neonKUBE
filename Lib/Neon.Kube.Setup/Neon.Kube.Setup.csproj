@@ -144,6 +144,7 @@
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
+		<PackageReference Include="SSH.NET" Version="2020.0.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
 	</ItemGroup>
