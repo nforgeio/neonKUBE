@@ -58,6 +58,8 @@ namespace NeonSsoSessionProxy
                         var code = NeonHelper.GetCryptoRandomPassword(10);
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
+                        logger.LogDebug($"Request Query: [{NeonHelper.JsonSerialize(context.Request.Query)}]");
+
                         var query = new Dictionary<string, string>()
                         {
                             { "code", code }
@@ -70,14 +72,21 @@ namespace NeonSsoSessionProxy
 
                         if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
                         {
-                            logger.LogDebug($"Redirect URI: {redirectUri}");
-
                             if (context.Request.Query.TryGetValue("client_id", out var client_id))
                             {
-                                if (!NeonSsoSessionProxyService.Config["staticClients"].Where(client => (dynamic)client["id"] == client_id ))
+                                if (NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == client_id).First().RedirectUris.Contains(redirectUri))
+                                {
+                                    logger.LogError("Invalid redirect URI");
 
+                                    throw new HttpRequestException("No redirect_uri specified.");
+                                }
+                                
                                 context.Response.StatusCode = StatusCodes.Status302Found;
                                 context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+                            }
+                            else
+                            {
+                                logger.LogError("No Client ID specified.");
                             }
                             
                             return;
