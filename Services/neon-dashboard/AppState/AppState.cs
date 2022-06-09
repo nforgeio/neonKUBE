@@ -34,6 +34,9 @@ using Blazored.LocalStorage;
 
 namespace NeonDashboard
 {
+    /// <summary>
+    /// App state scoped to the user session.
+    /// </summary>
     public partial class AppState
     {
         /// <summary>

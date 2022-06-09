@@ -44,6 +44,9 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
         public class __Metrics : AppStateBase
         {
             /// <summary>

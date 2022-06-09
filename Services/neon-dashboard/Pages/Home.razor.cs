@@ -108,7 +108,6 @@ namespace NeonDashboard.Pages
             var tasks = new List<Task>()
             {
                 AppState.Kube.GetNodesStatusAsync(),
-                AppState.Kube.GetNodeMetricsAsync(),
                 UpdateMemoryAsync(),
                 UpdateCpuAsync(),
                 UpdateDiskAsync()
