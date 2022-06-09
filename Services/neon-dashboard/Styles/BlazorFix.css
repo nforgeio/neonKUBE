@@ -12,6 +12,7 @@
     background-color: red;
     /* margin: 1rem; */
     padding: 1rem;
+    border-radius: var(--f3);
 }
 .error__content {
     background: darkred;

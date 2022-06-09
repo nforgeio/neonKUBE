@@ -56,9 +56,10 @@ namespace NeonDashboard.Pages
 
         private LineConfig diskChartConfig;
         private Chart      diskChart;
-
+        
         private static int chartLookBack = 60;
 
+        private Dictionary<string, string> clusterMetaData;
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -77,6 +78,18 @@ namespace NeonDashboard.Pages
 
             AppState.Kube.OnChange    += StateHasChanged;
             AppState.Metrics.OnChange += StateHasChanged;
+
+            clusterMetaData = new Dictionary<string, string>()
+            {
+                {"Version", clusterInfo.ClusterVersion },
+                {"Data Center",  clusterInfo.Datacenter },
+                {"Hosting Enviroment", clusterInfo.HostingEnvironment.ToString() },
+                {"Environment", clusterInfo.Environment.ToString() }
+
+
+
+
+            };
         }
 
         /// <inheritdoc/>

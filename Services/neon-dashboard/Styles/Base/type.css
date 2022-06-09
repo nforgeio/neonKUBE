@@ -22,10 +22,10 @@ body {
 }
 
 
-h1, h2, h3, h4, p, label {
+/*h1, h2, h3, h4, p, label {
     margin: 0;
     font-size: var(--f2);
-}
+}*/
 
 .f1 {
     font-size: var(--f1);
