@@ -97,6 +97,8 @@ namespace Neon.Kube.Operator
                             }
                             break;
 
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
                         case LogLevel.Error:
 
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
@@ -131,6 +133,7 @@ namespace Neon.Kube.Operator
                                 }
                             }
                             break;
+#endif
                     }
 
                     return true;

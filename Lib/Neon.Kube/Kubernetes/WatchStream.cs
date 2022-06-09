@@ -24,8 +24,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest.Serialization;
-
 using Neon.Common;
 
 using k8s;

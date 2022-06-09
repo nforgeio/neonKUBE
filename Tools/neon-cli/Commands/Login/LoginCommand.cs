@@ -116,7 +116,7 @@ ARGUMENTS:
 
             try
             {
-                using (var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath)))
+                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath)))
                 {
                     await k8s.ListNamespaceAsync();
                 }

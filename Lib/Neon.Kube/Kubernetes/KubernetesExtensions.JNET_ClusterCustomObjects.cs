@@ -34,9 +34,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
-
 using Neon.Common;
 using Neon.Tasks;
 
@@ -44,6 +41,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube

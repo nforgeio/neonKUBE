@@ -27,12 +27,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.Rest;
-
 using Neon.Common;
 using Neon.Tasks;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube

@@ -28,9 +28,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
-
 using Neon.Common;
 using Neon.Retry;
 using Neon.Tasks;
@@ -39,6 +36,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -1006,13 +1004,22 @@ namespace Neon.Kube
             requestUri.Append($"&watch={(watch ? "1" : "0")}");
             requestUri.Append($"&resourceVersion={resourceVersion}");
 
-
             var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(requestUri.ToString()),
             };
 
-            return await k8s.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            // $debug(jefflill):
+            //
+            // This doesn't compile because the [IKubernetes.HttpClient] property no longer exists for
+            // KubernetesClient v7.2.19.
+            //
+            // I'm going to comment this out for now so this will build
+            // but we'll need to fix this.
+
+            // return await k8s.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+            return null;
         }
     }
 }

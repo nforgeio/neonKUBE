@@ -29,9 +29,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest;
-
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 using Neon.Common;

@@ -3,6 +3,9 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -379,3 +382,5 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
         }
     }
 }
+
+#endif
