@@ -39,6 +39,9 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
+        /// <summary>
+        /// Kubernetes related state.
+        /// </summary>
         public class __Kube : AppStateBase
         {
             /// <summary>
@@ -97,8 +100,14 @@ namespace NeonDashboard
             {
             }
 
+            /// <summary>
+            /// Get node status from the Kubernetes API server.
+            /// </summary>
+            /// <returns></returns>
             public async Task GetNodesStatusAsync()
             {
+                await SyncContext.Clear;
+
                 var key = "nodes";
 
                 try
@@ -122,34 +131,6 @@ namespace NeonDashboard
 
                 NotifyStateChanged();
             }
-
-            public async Task<NodeMetricsList> GetNodeMetricsAsync()
-            {
-                var key = "node-metrics";
-
-                try
-                {
-                    var value = await Cache.GetAsync<NodeMetricsList>(key);
-                    if (value != null)
-                    {
-                        return value;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e);
-                }
-
-                var nodeMetricsList = await K8s.GetKubernetesNodesMetricsAsync();
-
-                _ = Cache.SetAsync(key, nodeMetricsList);
-
-                NotifyStateChanged();
-
-                return nodeMetricsList;
-            }
-
-            
         }
     }
 }

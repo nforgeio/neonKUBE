@@ -39,6 +39,9 @@ namespace NeonDashboard
 {
     public partial class AppState 
     {
+        /// <summary>
+        /// Handles the Cache.
+        /// </summary>
         public class __Cache : AppStateBase
         {
             private static DistributedCacheEntryOptions cacheEntryOptions;
@@ -57,18 +60,39 @@ namespace NeonDashboard
                 };
             }
 
-            public async Task SetAsync(string key, object value)
-            {
-                await cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
-            }
-
+            /// <summary>
+            /// Generate a cache key.
+            /// </summary>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public string CreateKey(string key)
             {
                 return $"neon-dashboard_{key}";
             }
 
+            /// <summary>
+            /// Add an object to the cache.
+            /// </summary>
+            /// <param name="key"></param>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            public async Task SetAsync(string key, object value)
+            {
+                await SyncContext.Clear;
+
+                await cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
+            }
+
+            /// <summary>
+            /// Get a generic object from the cache.
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public async Task<T> GetAsync<T>(string key)
             {
+                await SyncContext.Clear;
+                
                 var value = await cache.GetAsync(key);
 
                 if (value != null)

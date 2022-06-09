@@ -54,3 +54,25 @@
 
 </div>
 
+@if (memoryChartConfig != null)
+{
+
+    <div id="header" style="width:500px;">
+        <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
+    </div>
+}
+
+@if (cpuChartConfig != null)
+{
+    <div id="header" style="width:500px;">
+        <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
+    </div>
+}
+
+@if (diskChartConfig != null)
+{
+    <div id="header" style="width:500px;">
+        <Chart Config="diskChartConfig" @ref="diskChart"></Chart>
+    </div>
+}
+

@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the status of the request.
         /// </summary>
-        [JsonProperty(PropertyName = "status", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "status", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
         public PrometheusResponseStatus Status { get; set; }
 
         /// <summary>

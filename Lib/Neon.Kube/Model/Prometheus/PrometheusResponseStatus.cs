@@ -42,6 +42,7 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies response status from Prometheus HTTP API.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum PrometheusResponseStatus
     {
         /// <summary>
