@@ -11,4 +11,6 @@
     --f4: 1.062rem;
     --f5: 1.5rem;
     --shadow: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.15));
+    --c-bg: #0B0E15;
+    --c-card: 1E293B;
 }

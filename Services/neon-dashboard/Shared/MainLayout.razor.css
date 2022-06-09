@@ -22,7 +22,6 @@
     grid-row: 1;
     height: 100%;
     border-radius: var(--f1);
-    background: var(--c-fg);
     border: 2px solid var(--c-bg-dark);
     height: 94vh;
 }

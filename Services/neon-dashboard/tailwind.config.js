@@ -1,4 +1,5 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
+const colors = require('tailwindcss/colors')
 
 
 module.exports = {
@@ -8,9 +9,10 @@ module.exports = {
         colors: {
             transparent: 'transparent',
             current: 'currentColor',
-            'light': 'var(--light)',
-            'dark': 'var(--dark)',
-            'link': 'var(--link)'
+            'bg': 'var(--c-bg)',
+            'card': 'var(--c-card)',
+            slate: colors.slate
+
         },
         fontFamily: {
             'sans': ['Pangram Sans', ...defaultTheme.fontFamily.sans],

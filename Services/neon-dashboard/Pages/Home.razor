@@ -7,19 +7,25 @@
 @inherits PageBase
 
 <PageBase PageTitle="@PageTitle" />
+<div class="container w-screen grid grid-cols-12 gap-3"> 
 
-<h1 class="font-sans text-5">uwu neonkube!</h1>
+</div>
 
-<p>Name: @clusterInfo.Name</p>
-<p>Version: @clusterInfo.ClusterVersion</p>
-<p>DataCenter: @clusterInfo.Datacenter</p>
-<p>Hosting Environment: @clusterInfo.HostingEnvironment</p>
-<p>Domain: @clusterInfo.Domain</p>
-<p>CreationTimestamp: @clusterInfo.CreationTimestamp</p>
-<p>Environment: @clusterInfo.Environment</p>
+<div class="container w-screen grid grid-cols-12 gap-3">
+  <div class="col-span-8">
+     <h1 class=" text-5">uwu neonkube!</h1>
 
+      <p>Name: @clusterInfo.Name</p>
+      <p>Version: @clusterInfo.ClusterVersion</p>
+      <p>DataCenter: @clusterInfo.Datacenter</p>
+      <p>Hosting Environment: @clusterInfo.HostingEnvironment</p>
+      <p>Domain: @clusterInfo.Domain</p>
+      <p>CreationTimestamp: @clusterInfo.CreationTimestamp</p>
+      <p>Environment: @clusterInfo.Environment</p>
+  </div>
 
-@if (AppState.Kube.Nodes != null)
+   <div class="col-start-10 col-end-[-1]">
+     @if (AppState.Kube.Nodes != null)
 {
   <table>
       <tr>
@@ -40,4 +46,11 @@
       </tr>
   </table>
 }
+  </div>
+ 
+
+
+
+
+</div>
 
