@@ -18,20 +18,35 @@ namespace NeonDashboard.Shared.Components
 
     public partial class AlertCard: ComponentBase, IDisposable
     {
+        /// <summary>
+        /// alert card css style one of StyleType
+        /// </summary>
         [Parameter]
         public StyleType Type { get; set; } = StyleType.Default;
 
+        /// <summary>
+        /// title text
+        /// </summary>
         [Parameter]
         public string Title { get; set; }
 
+        /// <summary>
+        /// content on left side of body
+        /// </summary>
         [Parameter]
-        public RenderFragment? Left { get; set; }
+        public RenderFragment Left { get; set; }
 
+        /// <summary>
+        /// content on right side of body
+        /// </summary>
         [Parameter]
-        public RenderFragment? Right { get; set; }
+        public RenderFragment Right { get; set; }
 
+        /// <summary>
+        /// main body content. eg. description 
+        /// </summary>
         [Parameter]
-        public RenderFragment? Body { get; set; }
+        public RenderFragment Body { get; set; }
 
         private static  Dictionary<StyleType, string> CardStyle = new Dictionary<StyleType, string>()
         {

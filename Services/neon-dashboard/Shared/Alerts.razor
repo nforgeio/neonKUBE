@@ -5,7 +5,7 @@
     </label>
     <AlertCard Title="All Clear!" >
       <Left>
-        <Icon content=@Icons.ArrowRight />
+        <Icon content=@Icons.Smile />
       </Left>
       <Body>
         <p class="text">The cluster looks healthy</p>
@@ -29,9 +29,40 @@
      <label class="text-4 text-slate-300 font-bold mt-2" >
       Past Events
   </label>
+        @if (demoTimeStamp != null)
+        {
+          <div class="flex space-x-1 justify-between  items-baseline">
+         
+          <div class="  flex space-x-1 items-baseline ">
+            <div class=" px-1 py-0 bg-slate-800  rounded">
+               <p class=" text-1 font-bold tracking-wide text-slate-300 leading-none">
+            @(demoTimeStamp.Value.ToString(" HH:mm tt"))
+          </p>
+          </div>
+           <p class="text-slate-100 ">
+            Cluster Started
+          </p>
+ 
+            </div>
+             <p class="text-2 text-slate-400">
+            @(demoTimeStamp.Value.ToString("MM/dd/yyyy "))
+          </p>
+         </div>
+        }
+      
     </div>
 
 
 
   
 </div>
+
+@code {
+    /// <summary>
+    /// adds timestamp to "events" for demo purposes, refactor later
+    /// </summary>
+
+    [Parameter]
+    public DateTime? demoTimeStamp { get; set; }
+
+}

@@ -57,7 +57,7 @@ namespace NeonDashboard.Pages
         private LineConfig diskChartConfig;
         private Chart      diskChart;
         
-        private static int chartLookBack = 60;
+        private static int chartLookBack = 10;
 
         private Dictionary<string, string> clusterMetaData;
         /// <summary>
@@ -65,9 +65,25 @@ namespace NeonDashboard.Pages
         /// </summary>
         public Home()
         {
-            memoryChartConfig = new LineConfig();
-            cpuChartConfig    = new LineConfig();
-            diskChartConfig   = new LineConfig();
+            LineOptions options = new LineOptions()
+            {
+                Responsive = true,
+                MaintainAspectRatio = false
+            };
+            memoryChartConfig = new LineConfig()
+            {
+                Options = options
+            };
+            cpuChartConfig    = new LineConfig()
+            {
+                Options = options
+
+            };
+            diskChartConfig   = new LineConfig() 
+            {
+                Options = options
+
+            };
         }
 
         /// <inheritdoc/>
@@ -129,6 +145,26 @@ namespace NeonDashboard.Pages
             await Task.WhenAll(tasks);
         }
 
+        private async Task UpdateChartAsync(PrometheusResponse<PrometheusMatrixResult> dataPoints, LineConfig config, Chart chart, string labelname)
+        {
+            var usageX = dataPoints.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var usageY = dataPoints.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+
+            config.Data.Labels.Clear();
+            foreach (var label in usageX)
+            {
+                config.Data.Labels.Add(label);
+            }
+
+            config.Data.Datasets.Clear();
+            config.Data.Datasets.Add(new LineDataset<decimal>(usageY)
+            {
+                Label = labelname,
+            });
+
+            await chart.Update();
+
+        }
         private async Task UpdateMemoryAsync()
         {
             await SyncContext.Clear;
@@ -141,22 +177,8 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+            await UpdateChartAsync(AppState.Metrics.MemoryUsageBytes, memoryChartConfig, memoryChart, $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})");
 
-            memoryChartConfig.Data.Labels.Clear();
-            foreach (var label in memoryUsageX)
-            {
-                memoryChartConfig.Data.Labels.Add(label);
-            }
-
-            memoryChartConfig.Data.Datasets.Clear();
-            memoryChartConfig.Data.Datasets.Add(new LineDataset<decimal>(memoryUsageY)
-            {
-                Label = $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})",
-            });
-
-            await memoryChart.Update();
 
             StateHasChanged();
         }
@@ -173,19 +195,8 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) * AppState.Metrics.CPUTotal).ToList();
+            await UpdateChartAsync(AppState.Metrics.CPUUsagePercent, cpuChartConfig, cpuChart, $"CPU usage (total cores: {AppState.Metrics.CPUTotal})");
 
-            foreach (var l in cpuUsageX)
-            {
-                cpuChartConfig.Data.Labels.Add(l);
-            }
-            cpuChartConfig.Data.Datasets.Add(new LineDataset<decimal>(cpuUsageY)
-            {
-                Label = $"CPU usage (total cores: {AppState.Metrics.CPUTotal})",
-            });
-
-            await cpuChart.Update();
 
             StateHasChanged();
         }
@@ -201,20 +212,8 @@ namespace NeonDashboard.Pages
             };
 
             await Task.WhenAll(tasks);
+            await UpdateChartAsync(AppState.Metrics.DiskUsageBytes, diskChartConfig, diskChart, $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})");
 
-            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
-
-            foreach (var l in diskUsageX)
-            {
-                diskChartConfig.Data.Labels.Add(l);
-            }
-            diskChartConfig.Data.Datasets.Add(new LineDataset<decimal>(diskUsageY)
-            {
-                Label = $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})",
-            });
-
-            await diskChart.Update();
 
             StateHasChanged();
         }

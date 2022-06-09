@@ -7,7 +7,7 @@
 @inherits PageBase
 
 <PageBase PageTitle="@PageTitle" />
-<div class="container w-screen grid grid-cols-12 gap-3 my-5"> 
+<div class="container w-screen grid grid-cols-12 gap-3 my-8"> 
   <div class="h-[3rem]">
       <Logo />
   </div>
@@ -22,7 +22,7 @@
      <h1 class="text-8 mt-[-0.5rem] leading-tight">@clusterInfo.Name</h1>
 
     </div>
-    <div class="flex space-x-4">
+    <div class="flex space-x-6">
       @if (clusterMetaData != null) {
         foreach (KeyValuePair<string, string> data in clusterMetaData)
       {
@@ -30,7 +30,7 @@
         <label class="text-2 text-slate-300" >
           @data.Key
         </label>
-        <p class="font-bold leading-tight">@data.Value</p>
+        <p class="text-4 leading-tight">@data.Value</p>
       </div> 
       }
       }
@@ -38,32 +38,86 @@
   
     </div>
    
-      <p>CreationTimestamp: @clusterInfo.CreationTimestamp</p>
-           @if (AppState.Kube.Nodes != null)
-      {
-        <table>
-            <tr>
-              <td>Name</td>
-              <td>Status</td>
-            </tr>
-            <tr>
-               <td>Total Nodes</td>
-               <td>@(AppState.Kube?.TotalNodes)</td>
-            </tr>
-            <tr>
-               <td>Active Nodes</td>
-               <td>@(AppState.Kube?.ActiveNodes)</td>
-            </tr>
-            <tr>
-               <td>Failed Nodes</td>
-               <td>@(AppState.Kube?.FailedNodes)</td>
-            </tr>
-        </table>
-      }
+    <div class="w-full grid grid-cols-8 gap-3">
+      <div class="col-span-2 bg-card rounded-4 py-2 flex flex-col justify-between ">
+
+        <div class=" px-6 my-2">
+          <LoadingCircle 
+            width="3.5" 
+            bgColor="text-slate-700" 
+            color="text-[#14D46C]" 
+            progress=@(AppState.Kube.Nodes != null ?  ((double)AppState.Kube.ActiveNodes / (double)AppState.Kube.TotalNodes) : 0)
+          >
+            <div class="text-center text-5 text-slate-50 font-bold leading-tight">
+        
+                 @if (AppState.Kube.Nodes != null)
+                    {
+                      <p>@AppState.Kube?.ActiveNodes@("/")@AppState.Kube?.TotalNodes </p>
+                  } else
+                  {
+                      <p>Loading</p>
+                  }
+
+              <label class="text-2 text-slate-300 font-normal">
+                Active Nodes
+              </label>
+            </div>
+
+          </LoadingCircle>
+        </div>
+        <div class="flex flex-col mt-2 py-2 px-4 bg-slate-900 mx-2 rounded-2">
+          <p class="text-4">
+             @(AppState.Kube.Nodes != null ? AppState.Kube?.FailedNodes : "-")
+
+          </p>
+        <label class="text-2 text-slate-300">
+          failed nodes
+        </label>
+          </div>
+       
+    
+      </div>
+      <div class="grid grid-cols-1 col-span-6 bg-card rounded-4 py-2 space-y-2 divide-y divide-slate-500">
+        <div class="px-3 ">
+            <label class="text-2 text-slate-300">Memory</label>
+            @if (memoryChartConfig != null)
+            {
+              <div id="header" class="w-1/2 h-auto">
+                      <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
+                  </div>
+    
+            }
+            
+        </div>
+        <div class="px-3 ">
+            <label class="text-2 text-slate-300">CPU</label>
+            @if (cpuChartConfig != null)
+        {
+            <div id="header" class="w-1/2 h-auto">
+                <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
+            </div>
+        }
+        </div>
+        <div class="px-3 ">
+            <label class="text-2 text-slate-300">Utilization</label>
+            @if (diskChartConfig != null)
+        {
+            <div id="header" class="w-1/2 h-auto">
+                <Chart Config="diskChartConfig" @ref="diskChart"></Chart>
+            </div>
+        }
+
+
+        </div>
+    
+
+      </div>
+    </div>
+ 
   </section>
 
    <div class="col-start-10 col-end-[-1]">
-     <Alerts />
+     <Alerts demoTimeStamp=@(clusterInfo!= null ? clusterInfo.CreationTimestamp : null) />
   </div>
  
 
@@ -72,20 +126,9 @@
 
 </div>
 
-@if (memoryChartConfig != null)
-{
 
-    <div id="header" style="width:500px;">
-        <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
-    </div>
-}
 
-@if (cpuChartConfig != null)
-{
-    <div id="header" style="width:500px;">
-        <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
-    </div>
-}
+
 
 @if (diskChartConfig != null)
 {
