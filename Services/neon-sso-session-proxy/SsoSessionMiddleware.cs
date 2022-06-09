@@ -44,7 +44,8 @@ namespace NeonSsoSessionProxy
             Service                         NeonSsoSessionProxyService,
             IDistributedCache               cache, 
             AesCipher                       cipher,
-            DistributedCacheEntryOptions    cacheOptions)
+            DistributedCacheEntryOptions    cacheOptions,
+            INeonLogger                     logger)
         {
             try
             {
@@ -69,8 +70,16 @@ namespace NeonSsoSessionProxy
 
                         if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
                         {
-                            context.Response.StatusCode = StatusCodes.Status302Found;
-                            context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+                            logger.LogDebug($"Redirect URI: {redirectUri}");
+
+                            if (context.Request.Query.TryGetValue("client_id", out var client_id))
+                            {
+                                if (!NeonSsoSessionProxyService.Config["staticClients"].Where(client => (dynamic)client["id"] == client_id ))
+
+                                context.Response.StatusCode = StatusCodes.Status302Found;
+                                context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+                            }
+                            
                             return;
                         }
                         else

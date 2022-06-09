@@ -40,12 +40,22 @@ namespace NeonSsoSessionProxy
         public const string SessionCookieName = ".NeonKUBE.SsoProxy.Session.Cookie";
 
         /// <summary>
+        /// The Dex configuration.
+        /// </summary>
+        public readonly dynamic Config;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
              : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonssosessionproxy")
         {
+            var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
+            using (var stream = File.OpenRead(configFile))
+            {
+                Config = NeonHelper.YamlDeserialize<DexConfig>(stream);
+            }
         }
 
         /// <inheritdoc/>
