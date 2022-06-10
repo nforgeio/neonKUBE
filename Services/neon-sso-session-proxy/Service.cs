@@ -76,7 +76,7 @@ namespace NeonSsoSessionProxy
             var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
             using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
             {
-                Config = NeonHelper.YamlDeserialize<DexConfig>(await reader.ReadToEndAsync());
+                Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
             }
 
             // Start the web service.

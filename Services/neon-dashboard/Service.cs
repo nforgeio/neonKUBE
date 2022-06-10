@@ -161,9 +161,9 @@ namespace NeonDashboard
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
                 // Configure cluster callback url to allow local dev
-
+                
                 var dexConfigMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
-                var dexConfig    = NeonHelper.YamlDeserialize<DexConfig>(dexConfigMap.Data["config.yaml"]);
+                var dexConfig    = NeonHelper.YamlDeserializeViaJson<DexConfig>(dexConfigMap.Data["config.yaml"]);
                 var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
 
                 if (!clientConfig.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
