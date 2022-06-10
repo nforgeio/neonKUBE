@@ -75,7 +75,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SSH.NET" Version="2020.0.1" />
+		<PackageReference Include="SSH.NET" Version="2020.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -90,7 +90,7 @@
 
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true"/>
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

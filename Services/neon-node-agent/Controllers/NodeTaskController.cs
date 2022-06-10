@@ -229,8 +229,9 @@ rm $0
         public async Task<ResourceControllerResult> ReconcileAsync(V1NodeTask task)
         {
             reconciledReceivedCounter.Inc();
-
-log.LogInfo($"*** RECONCILE-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
+log.LogInfo("#######################################################################");
+log.LogInfo($"*** RECONCILE-RECEIVED: tasknull={task == null} name=[{task?.Metadata.Name}]");
+log.LogInfo("#######################################################################");
             await resourceManager.ReconciledAsync(task,
                 async (name, resources) =>
                 {
@@ -343,8 +344,10 @@ log.LogDebug($"*** RECONCILE: 16");
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             deletedReceivedCounter.Inc();
-
-log.LogInfo($"*** DELETE-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
+            
+log.LogInfo("#######################################################################");
+log.LogInfo($"*** DELETE-RECEIVED: tasknull={task == null} name= [{task?.Metadata.Name}]");
+log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
@@ -370,7 +373,9 @@ log.LogDebug($"*** DELETE: 0: count={resources.Count}");
 
             statusModifiedReceivedCounter.Inc();
 
-log.LogInfo($"*** STATUSMODIFIED-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
+log.LogInfo("#######################################################################");
+log.LogInfo($"*** STATUSMODIFIED-RECEIVED: tasknull={task == null} name = [{task?.Metadata.Name}]");
+log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
