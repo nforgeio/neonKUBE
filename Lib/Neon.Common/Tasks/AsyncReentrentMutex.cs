@@ -45,7 +45,7 @@ namespace Neon.Tasks
     ///     {
     ///         // Protected code
     ///         
-    ///         await mutex.AcquireExecuteAsync(   // &lt;--- This doesn't block
+    ///         await mutex.ExecuteActionAsync(   // &lt;--- This doesn't block
     ///             async () =>
     ///             {
     ///                 // More protected code
@@ -53,8 +53,8 @@ namespace Neon.Tasks
     ///     });
     /// </code>
     /// <para>
-    /// The <see cref="AcquireExecuteAsync(Func{Task})"/> can be used to execute an async function
-    /// instead.
+    /// The <see cref="ExecuteFuncAsync{TResult}(Func{Task{TResult}})"/> can be used to execute an async
+    /// function that returns a result instead.
     /// </para>
     /// <para>
     /// <see cref="AsyncReentrantMutex"/> is disposable.  Calling dispose will cause
@@ -133,7 +133,7 @@ namespace Neon.Tasks
         /// </summary>
         /// <param name="action">The asynchronous action.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task AcquireExecuteAsync(Func<Task> action)
+        public async Task ExecuteActionAsync(Func<Task> action)
         {
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
@@ -182,7 +182,7 @@ namespace Neon.Tasks
         /// <typeparam name="TResult">Specifies the result returned by the async function.</typeparam>
         /// <param name="function">The asynchronous function.</param>
         /// <returns>The function result.</returns>
-        public async Task<TResult> AcquireExecuteFuncAsync<TResult>(Func<Task<TResult>> function)
+        public async Task<TResult> ExecuteFuncAsync<TResult>(Func<Task<TResult>> function)
         {
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
 

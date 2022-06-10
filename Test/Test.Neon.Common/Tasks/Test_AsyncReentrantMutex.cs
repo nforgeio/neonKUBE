@@ -49,17 +49,17 @@ namespace TestCommon
 
             using (var mutex = new AsyncReentrantMutex())
             {
-                await mutex.AcquireExecuteAsync(
+                await mutex.ExecuteActionAsync(
                     async () =>
                     {
                         inner1 = true;
 
-                        await mutex.AcquireExecuteAsync(
+                        await mutex.ExecuteActionAsync(
                             async () =>
                             {
                                 inner2 = true;
 
-                                await mutex.AcquireExecuteAsync(
+                                await mutex.ExecuteActionAsync(
                                     async () =>
                                     {
                                         inner3 = true;
@@ -85,7 +85,7 @@ namespace TestCommon
                 var task1Time = DateTime.MinValue;
                 var task2Time = DateTime.MinValue;
 
-                var task1 = mutex.AcquireExecuteAsync(
+                var task1 = mutex.ExecuteActionAsync(
                     async () =>
                     {
                         task1Time = DateTime.UtcNow;
@@ -93,7 +93,7 @@ namespace TestCommon
                         await Task.Delay(TimeSpan.FromSeconds(2));
                     });
 
-                var task2 = mutex.AcquireExecuteAsync(
+                var task2 = mutex.ExecuteActionAsync(
                     async () =>
                     {
                         task2Time = DateTime.UtcNow;
@@ -141,7 +141,7 @@ namespace TestCommon
                 var task2Acquired = false;
                 var task3Acquired = false;
 
-                var task1 = mutex.AcquireExecuteAsync(
+                var task1 = mutex.ExecuteActionAsync(
                     async () =>
                     {
                         task1Acquired = true;
@@ -154,14 +154,14 @@ namespace TestCommon
 
                 // Start two new tasks that will block.
 
-                var task2 = mutex.AcquireExecuteAsync(
+                var task2 = mutex.ExecuteActionAsync(
                     async () =>
                     {
                         task2Acquired = true;
                         await Task.CompletedTask;
                     });
 
-                var task3 = mutex.AcquireExecuteAsync(
+                var task3 = mutex.ExecuteActionAsync(
                     async () =>
                     {
                         task3Acquired = true;
@@ -202,17 +202,17 @@ namespace TestCommon
 
             using (var mutex = new AsyncReentrantMutex())
             {
-                var result = await mutex.AcquireExecuteFuncAsync(
+                var result = await mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         inner1 = true;
 
-                        return await mutex.AcquireExecuteFuncAsync(
+                        return await mutex.ExecuteFuncAsync(
                             async () =>
                             {
                                 inner2 = true;
 
-                                return await mutex.AcquireExecuteFuncAsync(
+                                return await mutex.ExecuteFuncAsync(
                                     async () =>
                                     {
                                         inner3 = true;
@@ -240,7 +240,7 @@ namespace TestCommon
                 var task1Time = DateTime.MinValue;
                 var task2Time = DateTime.MinValue;
 
-                var task1 = mutex.AcquireExecuteFuncAsync(
+                var task1 = mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         task1Time = DateTime.UtcNow;
@@ -249,7 +249,7 @@ namespace TestCommon
                         return "TASK1";
                     });
 
-                var task2 = mutex.AcquireExecuteFuncAsync(
+                var task2 = mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         task2Time = DateTime.UtcNow;
@@ -301,7 +301,7 @@ namespace TestCommon
                 var task2Acquired = false;
                 var task3Acquired = false;
 
-                var task1 = mutex.AcquireExecuteFuncAsync(
+                var task1 = mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         task1Acquired = true;
@@ -315,7 +315,7 @@ namespace TestCommon
 
                 // Start two new tasks that will block.
 
-                var task2 = mutex.AcquireExecuteFuncAsync(
+                var task2 = mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         task2Acquired = true;
@@ -323,7 +323,7 @@ namespace TestCommon
                         return "TASK2";
                     });
 
-                var task3 = mutex.AcquireExecuteFuncAsync(
+                var task3 = mutex.ExecuteFuncAsync(
                     async () =>
                     {
                         task3Acquired = true;
