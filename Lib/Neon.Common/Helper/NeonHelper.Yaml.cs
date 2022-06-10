@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -214,6 +215,53 @@ namespace Neon.Common
             }
         }
 
+        /// <summary>
+        /// Deserializes YAML to an object via JSON.NET. This allows the use of <see cref="JsonConverter"/>s to deserialize complex types.
+        /// Strict requires mapping of input properties in the target type.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="yaml">The YAML text.</param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <exception cref="YamlException"></exception>
+        public static T YamlDeserializeViaJson<T>(string yaml, bool strict = false)
+        {
+            try
+            {
+                object dynamicYaml;
+                if (strict)
+                {
+                    dynamicYaml = strictYamlDeserializer.Value.Deserialize<dynamic>(yaml);
+                }
+                else
+                {
+                    dynamicYaml = relaxedYamlDeserializer.Value.Deserialize<dynamic>(yaml);
+                }
+
+                return JsonDeserialize<T>(JsonSerialize(dynamicYaml));
+            }
+            catch (YamlException e)
+            {
+                // The default parsing exceptions thrown by YamlDotNet aren't super 
+                // helpful because the actual error is reported by the inner exception.
+                // We're going to throw a new exception using the inner message,
+                // if any.
+
+                string message;
+
+                if (e.InnerException != null)
+                {
+                    message = e.InnerException.Message;
+                }
+                else
+                {
+                    message = e.Message;
+                }
+
+                throw new YamlException(e.Start, e.End, message ?? e.Message, e.InnerException);
+            }
+        }
+        
         /// <summary>
         /// Converts a JSON text to YAML.
         /// </summary>
