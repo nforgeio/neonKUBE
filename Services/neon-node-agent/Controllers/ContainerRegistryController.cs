@@ -4,7 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 // $debug(jefflill): RESTORE THIS!
-#if !DISABLED
+#if DISABLED
 
 using System;
 using System.Collections.Generic;
@@ -94,7 +94,6 @@ namespace NeonNodeAgent
 
         // Configuration settings
 
-        private static bool         configured = false;
         private static TimeSpan     reconciledNoChangeInterval;
         private static TimeSpan     errorMinRequeueInterval;
         private static TimeSpan     errorMaxRequeueInterval;

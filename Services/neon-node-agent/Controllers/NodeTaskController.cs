@@ -160,9 +160,16 @@ rm $0
 
             // Load the configuration settings.
 
-            reconciledNoChangeInterval = Program.Service.Environment.Get("NODETASK_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(1));
-            errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
-            errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
+            //################################
+            // $debug(jefflill): RESTORE THIS!
+            //reconciledNoChangeInterval = Program.Service.Environment.Get("NODETASK_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(1));
+            //errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
+            //errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
+
+            reconciledNoChangeInterval = TimeSpan.FromMinutes(0.25);
+            errorMinRequeueInterval    = TimeSpan.FromSeconds(15);
+            errorMaxRequeueInterval    = TimeSpan.FromMinutes(10);
+            //################################
 
             var leaderConfig = 
                 new LeaderElectionConfig(
@@ -223,12 +230,13 @@ rm $0
         {
             reconciledReceivedCounter.Inc();
 
+log.LogInfo($"*** RECONCILE-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
             await resourceManager.ReconciledAsync(task,
                 async (name, resources) =>
                 {
-                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]}"}");
                     reconciledProcessedCounter.Inc();
-log.LogDebug($"*** RECONCILE: 0");
+log.LogDebug($"*** RECONCILE: 0: count={resources.Count}");
 
                     if (name == null)
                     {
@@ -336,10 +344,12 @@ log.LogDebug($"*** RECONCILE: 16");
 
             deletedReceivedCounter.Inc();
 
+log.LogInfo($"*** DELETE-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
                     log.LogInfo($"DELETED: {name}");
+log.LogDebug($"*** DELETE: 0: count={resources.Count}");
                     deletedProcessedCounter.Inc();
 
                     // This is a NOP.
@@ -360,10 +370,12 @@ log.LogDebug($"*** RECONCILE: 16");
 
             statusModifiedReceivedCounter.Inc();
 
+log.LogInfo($"*** STATUSMODIFIED-RECEIVED: task is null = {task == null} task name = [{task?.Metadata.Name}]");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
                     log.LogInfo($"STATUS-MODIFIED: {name}");
+log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
                     statusModifiedProcessedCounter.Inc();
 
                     // This is a NOP.
