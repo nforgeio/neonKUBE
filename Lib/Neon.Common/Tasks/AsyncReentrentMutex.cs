@@ -45,13 +45,17 @@ namespace Neon.Tasks
     ///     {
     ///         // Protected code
     ///         
-    ///         await mutex.AcquireAsync(   // &lt;--- This doesn't block
+    ///         await mutex.AcquireExecuteAsync(   // &lt;--- This doesn't block
     ///             async () =>
     ///             {
     ///                 // More protected code
     ///             });
     ///     });
     /// </code>
+    /// <para>
+    /// The <see cref="AcquireExecuteAsync(Func{Task})"/> can be used to execute an async function
+    /// instead.
+    /// </para>
     /// <para>
     /// <see cref="AsyncReentrantMutex"/> is disposable.  Calling dispose will cause
     /// <see cref="ObjectDisposedException"/> to be thrown on any tasks waiting
@@ -129,9 +133,9 @@ namespace Neon.Tasks
         /// </summary>
         /// <param name="action">The asynchronous action.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task AcquireAsync(Func<Task> action)
+        public async Task AcquireExecuteAsync(Func<Task> action)
         {
-            Covenant.Requires<ArgumentNullException>(action != null, nameof(Action));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             if (isDisposed)
             {
@@ -162,6 +166,55 @@ namespace Neon.Tasks
                 try
                 {
                     await action.Invoke();
+                }
+                finally
+                {
+                    nesting.Value--;
+                    Covenant.Assert(nesting.Value >= 0, "Nesting underflow.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Acquires the mutex and then invokes the asynchronous function passed, returning
+        /// the function's result.
+        /// </summary>
+        /// <typeparam name="TResult">Specifies the result returned by the async function.</typeparam>
+        /// <param name="function">The asynchronous function.</param>
+        /// <returns>The function result.</returns>
+        public async Task<TResult> AcquireExecuteFuncAsync<TResult>(Func<Task<TResult>> function)
+        {
+            Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
+
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(ObjectName);
+            }
+
+            if (nesting.Value == 0)
+            {
+                using (await mutex.AcquireAsync())
+                {
+                    nesting.Value++;
+
+                    try
+                    {
+                        return await function();
+                    }
+                    finally
+                    {
+                        nesting.Value--;
+                        Covenant.Assert(nesting.Value >= 0, "Nesting underflow.");
+                    }
+                }
+            }
+            else
+            {
+                nesting.Value++;
+
+                try
+                {
+                    return await function.Invoke();
                 }
                 finally
                 {

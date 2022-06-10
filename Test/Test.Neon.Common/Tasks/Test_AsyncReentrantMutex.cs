@@ -39,9 +39,9 @@ namespace TestCommon
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);  // Maximum time to wait for a test operation to complete.
 
         [Fact]
-        public async Task Nested()
+        public async Task Nested_Action()
         {
-            // Verify that reentrancy actually works.
+            // Verify that action reentrancy actually works.
 
             var inner1 = false;
             var inner2 = false;
@@ -49,17 +49,17 @@ namespace TestCommon
 
             using (var mutex = new AsyncReentrantMutex())
             {
-                await mutex.AcquireAsync(
+                await mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         inner1 = true;
 
-                        await mutex.AcquireAsync(
+                        await mutex.AcquireExecuteAsync(
                             async () =>
                             {
                                 inner2 = true;
 
-                                await mutex.AcquireAsync(
+                                await mutex.AcquireExecuteAsync(
                                     async () =>
                                     {
                                         inner3 = true;
@@ -76,16 +76,16 @@ namespace TestCommon
         }
 
         [Fact]
-        public async Task Blocked()
+        public async Task Blocked_Action()
         {
-            // Verify that non-nested acquistions block.
+            // Verify that non-nested action acquistions block.
 
             using (var mutex = new AsyncReentrantMutex())
             {
                 var task1Time = DateTime.MinValue;
                 var task2Time = DateTime.MinValue;
 
-                var task1 = mutex.AcquireAsync(
+                var task1 = mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         task1Time = DateTime.UtcNow;
@@ -93,7 +93,7 @@ namespace TestCommon
                         await Task.Delay(TimeSpan.FromSeconds(2));
                     });
 
-                var task2 = mutex.AcquireAsync(
+                var task2 = mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         task2Time = DateTime.UtcNow;
@@ -126,9 +126,9 @@ namespace TestCommon
         }
 
         [Fact]
-        public async Task Dispose()
+        public async Task Dispose_Action()
         {
-            // Verify that [ObjectDisposedException] is thrown for tasks waiting
+            // Verify that [ObjectDisposedException] is thrown for action tasks waiting
             // to acquire the mutex.
 
             var mutex = new AsyncReentrantMutex();
@@ -141,7 +141,7 @@ namespace TestCommon
                 var task2Acquired = false;
                 var task3Acquired = false;
 
-                var task1 = mutex.AcquireAsync(
+                var task1 = mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         task1Acquired = true;
@@ -154,18 +154,181 @@ namespace TestCommon
 
                 // Start two new tasks that will block.
 
-                var task2 = mutex.AcquireAsync(
+                var task2 = mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         task2Acquired = true;
                         await Task.CompletedTask;
                     });
 
-                var task3 = mutex.AcquireAsync(
+                var task3 = mutex.AcquireExecuteAsync(
                     async () =>
                     {
                         task3Acquired = true;
                         await Task.CompletedTask;
+                    });
+
+                // Dispose the mutex.  We're expecting [task1] to complete normally and
+                // [task2] and [task3] to fail with an [OperationCancelledException] with
+                // their actions never being invoked.
+
+                mutex.Dispose();
+
+                await Assert.ThrowsAsync<ObjectDisposedException>(async () => await task2);
+                Assert.False(task2Acquired);
+
+                await Assert.ThrowsAsync<ObjectDisposedException>(async () => await task3);
+                Assert.False(task3Acquired);
+
+                await task1;
+                Assert.True(task1Acquired);
+            }
+            finally
+            {
+                // Disposing this again shouldn't cause any trouble.
+
+                mutex.Dispose();
+            }
+        }
+
+        [Fact]
+        public async Task Nested_Func()
+        {
+            // Verify that function reentrancy actually works.
+
+            var inner1 = false;
+            var inner2 = false;
+            var inner3 = false;
+
+            using (var mutex = new AsyncReentrantMutex())
+            {
+                var result = await mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        inner1 = true;
+
+                        return await mutex.AcquireExecuteFuncAsync(
+                            async () =>
+                            {
+                                inner2 = true;
+
+                                return await mutex.AcquireExecuteFuncAsync(
+                                    async () =>
+                                    {
+                                        inner3 = true;
+
+                                        return await Task.FromResult("HELLO WORLD!");
+                                    });
+                            });
+                    });
+
+                Assert.Equal("HELLO WORLD!", result);
+            }
+
+            Assert.True(inner1);
+            Assert.True(inner2);
+            Assert.True(inner3);
+        }
+
+        [Fact]
+        public async Task Blocked_Func()
+        {
+            // Verify that non-nested function acquistions block.
+
+            using (var mutex = new AsyncReentrantMutex())
+            {
+                var task1Time = DateTime.MinValue;
+                var task2Time = DateTime.MinValue;
+
+                var task1 = mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        task1Time = DateTime.UtcNow;
+
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        return "TASK1";
+                    });
+
+                var task2 = mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        task2Time = DateTime.UtcNow;
+
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        return "TASK2";
+                    });
+
+                var result1 = await task1;
+                var result2 = await task2;
+
+                Assert.Equal("TASK1", result1);
+                Assert.Equal("TASK2", result2);
+
+                // So the two tasks above could execute in any order, but only
+                // one at a time.  With the delay, this means that the recorded
+                // times should be at least 2 seconds apart.
+                //
+                // We'll verify at least a 1 second difference to mitigate any
+                // clock skew.
+
+                Assert.True(task1Time > DateTime.MinValue);
+                Assert.True(task2Time > DateTime.MinValue);
+
+                var delta = task1Time - task2Time;
+
+                if (delta < TimeSpan.Zero)
+                {
+                    delta = -delta;
+                }
+
+                Assert.True(delta >= TimeSpan.FromSeconds(1));
+            }
+        }
+
+        [Fact]
+        public async Task Dispose_Func()
+        {
+            // Verify that [ObjectDisposedException] is thrown for function tasks waiting
+            // to acquire the mutex.
+
+            var mutex = new AsyncReentrantMutex();
+
+            try
+            {
+                // Hold the mutex for 2 seconds so the tasks below will block.
+
+                var task1Acquired = false;
+                var task2Acquired = false;
+                var task3Acquired = false;
+
+                var task1 = mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        task1Acquired = true;
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        return "TASK1";
+                    });
+
+                // Wait for [task1] to actually acquire to mutex.
+
+                NeonHelper.WaitFor(() => task1Acquired, defaultTimeout);
+
+                // Start two new tasks that will block.
+
+                var task2 = mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        task2Acquired = true;
+                        await Task.CompletedTask;
+                        return "TASK2";
+                    });
+
+                var task3 = mutex.AcquireExecuteFuncAsync(
+                    async () =>
+                    {
+                        task3Acquired = true;
+                        await Task.CompletedTask;
+                        return "TASK1";
                     });
 
                 // Dispose the mutex.  We're expecting [task1] to complete normally and
