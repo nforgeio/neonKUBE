@@ -4,7 +4,7 @@
 
 @using Neon.Common;
 
-<div class="icon">
+<div class="icon @color">
     @((MarkupString)content)
 </div>
 
@@ -14,4 +14,9 @@
     /// </summary>
     [Parameter]
     public string content { get; set; }
+    /// <summary>
+    /// override color, by default copies current text color
+    /// </summary>
+    [Parameter]
+    public string color { get; set; }
 }

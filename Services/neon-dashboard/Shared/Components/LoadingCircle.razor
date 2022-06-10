@@ -1,0 +1,52 @@
+﻿<div class="w-full relative z-0">
+  <svg viewBox="0 0 36 36" class=" absolute z-[-1] @bgColor">
+    <path class="circle_bg"
+      d="M18 2.0845
+          a 15.9155 15.9155 0 0 1 0 31.831
+          a 15.9155 15.9155 0 0 1 0 -31.831"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="@(width)"
+      />
+  </svg>
+  <svg viewBox="0 0 36 36" class="	 @(color)">
+    <path class="circle_animation"
+      d="M18 2.0845
+          a 15.9155 15.9155 0 0 1 0 31.831
+          a 15.9155 15.9155 0 0 1 0 -31.831"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="@(width)"
+      stroke-dasharray="@(Math.Round(100 *progress)), 100"
+
+      />
+  </svg>
+  <div class="w-full h-full grid place-items-center absolute top-[0] left-[0]">
+    @ChildContent
+  </div>
+  </div>
+@code {
+    /// <summary>
+    /// width of progress circle
+    /// </summary>
+    [Parameter]
+    public double width { get; set; } = 10;
+    /// <summary>
+    /// color of front
+    /// </summary>
+    [Parameter]
+    public string color { get; set; } = "";
+    /// <summary>
+    /// color of bg of circle
+    /// </summary>
+    [Parameter]
+    public string bgColor { get; set; } = "";
+    /// <summary>
+    /// current progress percentage, from 0-1
+    /// </summary>
+    [Parameter]
+    public double progress { get; set; } = 0;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

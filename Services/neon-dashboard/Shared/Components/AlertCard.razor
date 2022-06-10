@@ -1,0 +1,15 @@
+﻿<div class="py-2 px-4 space-x-1 rounded-4 flex w-full @CardStyle[Type] @(Body!= null ? "" : "items-center")">
+  @Left
+  <div class="">
+        @if (Title != "")
+        {
+          <label class="text-base font-bold ">
+      @Title
+    </label>
+            
+        }
+        
+    @Body
+  </div>
+  @Right
+</div>
