@@ -159,6 +159,17 @@ namespace NeonNodeAgent
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 
+            // Start the controllers.
+
+            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            //###############################
+            // $debug(jefflill): RESTORE THIS
+            // await ContainerRegistryController.StartAsync(k8s);
+            //###############################
+
+            await NodeTaskController.StartAsync(k8s);
+
             // Indicate that the service is running.
 
             await StartedAsync();

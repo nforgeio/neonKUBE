@@ -64,6 +64,8 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
                         case LogLevel.Info:
 
                             //---------------------------------------------
@@ -97,8 +99,6 @@ namespace Neon.Kube.Operator
                             }
                             break;
 
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
                         case LogLevel.Error:
 
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")

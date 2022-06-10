@@ -4,7 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 // $debug(jefflill): RESTORE THIS!
-#if DISABLED
+#if !DISABLED
 
 using System;
 using System.Collections.Generic;
@@ -88,9 +88,9 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger                     log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
-        private static readonly string                          configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
-        private static ResourceManager<V1ContainerRegistry>     resourceManager;
+        private static readonly INeonLogger                                                 log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
+        private static readonly string                                                      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static ResourceManager<V1ContainerRegistry, ContainerRegistryController>    resourceManager;
 
         // Configuration settings
 
@@ -120,6 +120,41 @@ namespace NeonNodeAgent
         private static readonly Counter demotedCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_demoted", "Leader demotions");
         private static readonly Counter newLeaderCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes");
 
+        /// <summary>
+        /// Starts the controller.
+        /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task StartAsync(IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            // Load the configuration settings.
+
+            reconciledNoChangeInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
+            errorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
+            errorMaxRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
+
+            var leaderConfig = 
+                new LeaderElectionConfig(
+                    k8s,
+                    @namespace:       KubeNamespace.NeonSystem,
+                    leaseName:        $"{Program.Service.Name}.containerregistry-{Node.Name}",
+                    identity:         Pod.Name,
+                    promotionCounter: promotionCounter,
+                    demotionCounter:  demotedCounter,
+                    newLeaderCounter: newLeaderCounter);
+
+            resourceManager = new ResourceManager<V1ContainerRegistry, ContainerRegistryController>(
+                k8s,
+                leaderConfig:              leaderConfig,
+                reconcileNoChangeInterval: reconciledNoChangeInterval,
+                errorMinRequeueInterval:   errorMinRequeueInterval,
+                errorMaxRequeueInterval:   errorMaxRequeueInterval);
+
+            await resourceManager.StartAsync();
+        }
+        
         //---------------------------------------------------------------------
         // Instance members
 
@@ -133,34 +168,6 @@ namespace NeonNodeAgent
             Covenant.Requires(k8s != null, nameof(k8s));
 
             this.k8s = k8s;
-
-            // Load the configuration settings the first time a controller instance is created.
-
-            if (!configured)
-            {
-                reconciledNoChangeInterval = Program.Service.Environment.Get("CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
-                errorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
-                errorMaxRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
-
-                var leaderConfig = 
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.containerregistry-{Node.Name}",
-                        identity:         Pod.Name,
-                        promotionCounter: promotionCounter,
-                        demotionCounter:  demotedCounter,
-                        newLeaderCounter: newLeaderCounter);
-
-                resourceManager = new ResourceManager<V1ContainerRegistry>(leaderConfig: leaderConfig)
-                {
-                    ReconcileNoChangeInterval = reconciledNoChangeInterval,
-                    ErrorMinRequeueInterval   = errorMinRequeueInterval,
-                    ErrorMaxRequeueInterval   = errorMaxRequeueInterval
-                };
-
-                configured = true;
-            }
         }
 
         /// <summary>
@@ -168,7 +175,7 @@ namespace NeonNodeAgent
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="registry">The new entity.</param>
+        /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry registry)
         {

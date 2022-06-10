@@ -539,7 +539,7 @@ namespace Neon.Kube
                 // The lock here may be a bit excessive, but there's a slight chance that
                 // multiple client could be created without it.  [ClusterProxy] isn't really
                 // intended for super high transaction volumes and even for applications 
-                // doing that, they can mitegate this by save the client instance to a
+                // doing that, they can mitigate this by save the client instance to a
                 // local variable (or something) and using that instead.
                 //
                 // I thought briefly about adding a [ConnectK8s()] method that would need
