@@ -40,7 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
+		<PackageReference Include="KubeOps" Version="6.5.3" />
 	</ItemGroup>
 
 	<ItemGroup>
