@@ -5,17 +5,17 @@
 
 <div class="dropup__wrapper relative" @onmouseenter="MouseIn" @onmouseleave="MouseOut">
 	<div class="dropup button" @onclick="Show">
-		<Icon content=@Icon />
+		<Icon Content=@Icon />
 		<div class="noselect name">
 			<p>@Title</p>
 			<h3>@((Active != null) ? Active.Name : "Loading")</h3>
 		</div>
-		<Icon content=@Icons.ChevronUp />
+		<Icon Content=@Icons.ChevronUp />
 	</div>
 	
 	<div class="absolute menu @(HideMenu ? "hide" : "")">
 		<div class="menu-header button__icon" @onmouseout:stopPropagation>
-			<Icon content=@Icon />
+			<Icon Content=@Icon />
 			<h3>@Title</h3>
 		</div>
 		@foreach (var item in Items)
@@ -27,7 +27,7 @@
 				  @if (item.GetId() == AppState.CurrentDashboard)
 				  {
 					  <div style="right: 20px;position: absolute;">
-						  <Icon content=@Icons.Check />
+						  <Icon Content=@Icons.Check />
 						  </div>
 				  }
 				  </div>

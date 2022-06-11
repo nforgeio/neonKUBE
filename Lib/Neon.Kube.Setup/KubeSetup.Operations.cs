@@ -1501,7 +1501,7 @@ kubectl apply -f priorityclasses.yaml
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -3185,7 +3185,7 @@ $@"- name: StorageType
                     values.Add($"resources.agentNode.requests.memory", ToSiString(agentNodeAdvice.PodMemoryRequest));
                     values.Add($"resources.agentNode.limits.memory", ToSiString(agentNodeAdvice.PodMemoryLimit));
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -3731,6 +3731,15 @@ $@"- name: StorageType
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
+                    int i = 0;
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
+
                     await master.InstallHelmChartAsync(controller, "kube-state-metrics",
                         releaseName:  "kube-state-metrics",
                         @namespace:   KubeNamespace.NeonMonitor,
@@ -3858,7 +3867,7 @@ $@"- name: StorageType
 
                     int i = 0;
 
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetrics, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);

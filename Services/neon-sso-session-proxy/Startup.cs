@@ -69,22 +69,18 @@ namespace NeonSsoSessionProxy
                     options.ConfigurationOptions.EndPoints.Add("neon-redis.neon-system:26379");
                 });
             }
-
+            services.AddSingleton<INeonLogger>(NeonSsoSessionProxyService.Log);
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();
 
             // Dex config
-
-            var configFile = NeonSsoSessionProxyService.GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
-            var config     = NeonHelper.YamlDeserialize<dynamic>(File.ReadAllText(configFile));
             var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Log);
             
             // Load in each of the clients from the Dex config into the client.
-
-            foreach (var client in config["staticClients"])
+            foreach (var client in NeonSsoSessionProxyService.Config.StaticClients)
             {
-                dexClient.AuthHeaders.Add(client["id"], new BasicAuthenticationHeaderValue(client["id"], client["secret"]));
+                dexClient.AuthHeaders.Add(client.Id, new BasicAuthenticationHeaderValue(client.Id, client.Secret));
             }
 
             services.AddSingleton(dexClient);

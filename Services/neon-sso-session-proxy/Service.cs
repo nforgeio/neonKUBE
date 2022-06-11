@@ -40,12 +40,18 @@ namespace NeonSsoSessionProxy
         public const string SessionCookieName = ".NeonKUBE.SsoProxy.Session.Cookie";
 
         /// <summary>
+        /// The Dex configuration.
+        /// </summary>
+        public DexConfig Config { get; private set; }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
              : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonssosessionproxy")
         {
+            
         }
 
         /// <inheritdoc/>
@@ -66,6 +72,12 @@ namespace NeonSsoSessionProxy
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
+
+            var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
+            using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
+            {
+                Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
+            }
 
             // Start the web service.
 

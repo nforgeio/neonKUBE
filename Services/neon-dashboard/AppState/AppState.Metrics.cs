@@ -55,7 +55,7 @@ namespace NeonDashboard
             public event Action OnChange;
             private void NotifyStateChanged() => OnChange?.Invoke();
 
-            private PrometheusClient mimirClient;
+            private PrometheusClient PrometheusClient => NeonDashboardService.PrometheusClient;
 
             /// <summary>
             /// Prometheis result containing the total memory usage for the cluster.
@@ -94,8 +94,7 @@ namespace NeonDashboard
             public __Metrics(AppState state)
                 : base(state)
             {
-                AppState = state;
-                mimirClient = new PrometheusClient("https://metrics.9cfe8456addfb3ee.neoncluster.io/prometheus/");
+                
             }
 
             /// <summary>
@@ -220,6 +219,8 @@ namespace NeonDashboard
                 start = start.RoundDown(TimeSpan.FromMinutes(cacheInterval));
                 end   = end.RoundDown(TimeSpan.FromMinutes(cacheInterval));
 
+                Logger.LogDebug($"[Metrics] Executing range query. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+
                 var key = $"neon-dashboard_{Neon.Cryptography.CryptoHelper.ComputeMD5String(query)}";
 
                 try
@@ -227,6 +228,8 @@ namespace NeonDashboard
                     var value = await Cache.GetAsync<PrometheusResponse<PrometheusMatrixResult>>(key);
                     if (value != null)
                     {
+                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+
                         return value;
                     }
                 }
@@ -235,16 +238,26 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
+                try
+                {
+                    var result = await PrometheusClient.QueryRangeAsync(query, start, end, stepSize);
 
-                _ = Cache.SetAsync(key, result);
+                    _ = Cache.SetAsync(key, result);
 
-                return result;
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                    throw;
+                }
             }
 
             private async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(string query)
             {
                 await SyncContext.Clear;
+
+                Logger.LogDebug($"[Metrics] Executing query. Query: [{query}]");
 
                 var key = Neon.Cryptography.CryptoHelper.ComputeMD5String(query);
 
@@ -253,6 +266,8 @@ namespace NeonDashboard
                     var value = await Cache.GetAsync<PrometheusResponse<PrometheusVectorResult>>(key);
                     if (value != null)
                     {
+                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}]");
+
                         return value;
                     }
                 }
@@ -261,11 +276,19 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                var result = await mimirClient.QueryAsync(query);
+                try
+                {
+                    var result = await PrometheusClient.QueryAsync(query);
 
-                _ = Cache.SetAsync(key, result);
+                    _ = Cache.SetAsync(key, result);
 
-                return result;
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                    throw;
+                }
             }
 
             /// <summary>

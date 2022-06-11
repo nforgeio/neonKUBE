@@ -123,7 +123,7 @@ namespace Neon.Service
     /// can configure themselves using the same code for both environments. 
     /// </para>
     /// <para>
-    /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
+    /// Services should use the <see cref="GetEnvironmentVariable(string, string, bool)"/> method to 
     /// retrieve important environment variables rather than using <see cref="Environment.GetEnvironmentVariable(string)"/>.
     /// In production, this simply returns the variable directly from the current process.
     /// For tests, the environment variable will be returned from a local dictionary
@@ -888,7 +888,7 @@ namespace Neon.Service
         /// <summary>
         /// Provides support for retrieving environment variables as well as
         /// parsing common value types as well as custom value parsers.  We
-        /// recommend that services use this rather than <see cref="GetEnvironmentVariable(string, string)"/>
+        /// recommend that services use this rather than <see cref="GetEnvironmentVariable(string, string, bool)"/>
         /// when possible as a way to standardize on how settings are formatted,
         /// parsed and validated.
         /// </summary>
@@ -1845,17 +1845,18 @@ namespace Neon.Service
         /// </summary>
         /// <param name="name">The environment variable name (case sensitive).</param>
         /// <param name="def">The value to be returned when the environment variable doesn't exist (defaults to <c>null</c>).</param>
+        /// <param name="redacted">Optionally redact log output of the variable.</param>
         /// <returns>The variable value or <paramref name="def"/> if the variable doesn't exist.</returns>
-        public string GetEnvironmentVariable(string name, string def = null)
+        public string GetEnvironmentVariable(string name, string def = null, bool redacted = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            return Environment.Get(name, def);
+            return Environment.Get(name, def, redacted: redacted);
         }
 
         /// <summary>
         /// Used by the <see cref="EnvironmentParser"/> to retrieve environment variables
-        /// via <see cref="GetEnvironmentVariable(string, string)"/>.
+        /// via <see cref="GetEnvironmentVariable(string, string, bool)"/>.
         /// </summary>
         /// <param name="name">The variable name.</param>
         /// <returns>The variable value or <c>null</c>.</returns>

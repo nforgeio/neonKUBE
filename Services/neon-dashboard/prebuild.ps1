@@ -16,7 +16,7 @@ $InformationPreference = 'Continue'
 $devdep = (Get-Content package.json) -join "`n" | ConvertFrom-Json -AsHashtable | Select -ExpandProperty "devDependencies"
 $_, $installedList = npm list --depth=0 
 
-$shouldRunInstall = $FALSE
+$shouldRunInstall = $false
 Write-Information -MessageData ('[NPM Package Check]-----------') 
 $count = 0
 foreach ($key in $devdep.keys)
@@ -26,14 +26,17 @@ foreach ($key in $devdep.keys)
     #Write-Information -MessageData ('   - '+$Key+' is installed')
 
     $count++
-  } else {
-    shouldRunInstall = $TRUE
+  } 
+  else 
+  {
+    $shouldRunInstall = $true
     Write-Information -MessageData ($key+' is not installed on this machine >_>') 
     break;
   }
 }
 
-if ($shouldRunInstall) {
+if ( $shouldRunInstall ) 
+{
   Write-Information -MessageData "Installing node packages ^_^" 
   npm i
 } else {

@@ -1,23 +1,28 @@
-﻿<div class="w-full relative z-0">
-  <svg viewBox="0 0 36 36" class=" absolute z-[-1] @bgColor">
+﻿@*-----------------------------------------------------------------------------
+// FILE:	      LoadingCircle.razor
+// CONTRIBUTOR: Simon Zhang
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
+
+<div class="w-full relative z-0">
+  <svg viewBox="0 0 36 36" class=" absolute z-[-1] @BackgroundColor">
     <path class="circle_bg"
       d="M18 2.0845
           a 15.9155 15.9155 0 0 1 0 31.831
           a 15.9155 15.9155 0 0 1 0 -31.831"
       fill="none"
       stroke="currentColor"
-      stroke-width="@(width)"
+      stroke-width="@(Width)"
       />
   </svg>
-  <svg viewBox="0 0 36 36" class="	 @(color)">
+  <svg viewBox="0 0 36 36" class="	 @(Color)">
     <path class="circle_animation"
       d="M18 2.0845
           a 15.9155 15.9155 0 0 1 0 31.831
           a 15.9155 15.9155 0 0 1 0 -31.831"
       fill="none"
       stroke="currentColor"
-      stroke-width="@(width)"
-      stroke-dasharray="@(Math.Round(100 *progress)), 100"
+      stroke-width="@(Width)"
+      stroke-dasharray="@(Math.Round(100 *Progress)), 100"
 
       />
   </svg>
@@ -25,28 +30,3 @@
     @ChildContent
   </div>
   </div>
-@code {
-    /// <summary>
-    /// width of progress circle
-    /// </summary>
-    [Parameter]
-    public double width { get; set; } = 10;
-    /// <summary>
-    /// color of front
-    /// </summary>
-    [Parameter]
-    public string color { get; set; } = "";
-    /// <summary>
-    /// color of bg of circle
-    /// </summary>
-    [Parameter]
-    public string bgColor { get; set; } = "";
-    /// <summary>
-    /// current progress percentage, from 0-1
-    /// </summary>
-    [Parameter]
-    public double progress { get; set; } = 0;
-
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
-}

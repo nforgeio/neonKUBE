@@ -44,7 +44,8 @@ namespace NeonSsoSessionProxy
             Service                         NeonSsoSessionProxyService,
             IDistributedCache               cache, 
             AesCipher                       cipher,
-            DistributedCacheEntryOptions    cacheOptions)
+            DistributedCacheEntryOptions    cacheOptions,
+            INeonLogger                     logger)
         {
             try
             {
@@ -56,6 +57,8 @@ namespace NeonSsoSessionProxy
                     {
                         var code = NeonHelper.GetCryptoRandomPassword(10);
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
+
+                        logger.LogDebug($"Request Query: [{NeonHelper.JsonSerialize(context.Request.Query)}]");
 
                         var query = new Dictionary<string, string>()
                         {
@@ -69,8 +72,27 @@ namespace NeonSsoSessionProxy
 
                         if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
                         {
-                            context.Response.StatusCode = StatusCodes.Status302Found;
-                            context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+                            if (context.Request.Query.TryGetValue("client_id", out var client_id))
+                            {
+                                if (!NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == client_id).First().RedirectUris.Contains(redirectUri))
+                                {
+                                    logger.LogError("Invalid redirect URI");
+
+                                    throw new HttpRequestException("Invalid redirect URI.");
+                                }
+                                
+                                context.Response.StatusCode = StatusCodes.Status302Found;
+                                context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+
+                                logger.LogDebug($"Client and Redirect URI confirmed.");
+                            }
+                            else
+                            {
+                                logger.LogError("No Client ID specified.");
+
+                                throw new HttpRequestException("Invalid Client ID.");
+                            }
+                            
                             return;
                         }
                         else
